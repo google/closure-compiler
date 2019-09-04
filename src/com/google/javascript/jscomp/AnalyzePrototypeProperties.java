@@ -555,6 +555,27 @@ class AnalyzePrototypeProperties implements CompilerPass {
       if (n.isGetProp()) {
         symbolGraph.connect(
             externNode, firstModule, getNameInfoForName(n.getLastChild().getString(), PROPERTY));
+      } else if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
+        // As of 2019-08-29 the only user of this class is CrossChunkMethodMotion, which never
+        // moves static methods, but that could change. So, we're intentionally including static
+        // methods, static getters, and static setters here, because there are cases where they
+        // could act like prototype properties.
+        //
+        // e.g.
+        // // externs.js
+        // class Foo {
+        //   static foo() {}
+        // }
+        //
+        // // src.js
+        // /** @record */
+        // class ObjWithFooMethod {
+        //   foo() {}
+        // }
+        // /** @type {!ObjWithFooMethod} */
+        // let objWithFooMethod = Foo; // yes, this is valid
+        //
+        symbolGraph.connect(externNode, firstModule, getNameInfoForName(n.getString(), PROPERTY));
       }
     }
   }

@@ -39,6 +39,14 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    // pretty printing makes it much easier to read the failure messages.
+    options.setPrettyPrint(true);
+    return options;
+  }
+
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
@@ -289,6 +297,50 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Test
+  public void movePrototypeMethodImplementingInterfaceWithoutStub() {
+    testSame(
+        externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
+        srcs(
+            createModuleChain(
+                lines(
+                    "/**", //
+                    " * @constructor",
+                    " * @implements {IFoo}",
+                    " */",
+                    "function Foo() {}",
+                    "Foo.prototype.ifooMethod = function() {};"),
+                // Chunk 2
+                "(new Foo).ifooMethod()")));
+
+    canMoveExterns = true;
+    noStubs = true;
+    test(
+        externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
+        srcs(
+            createModuleChain(
+                lines(
+                    "/**", //
+                    " * @constructor",
+                    " * @implements {IFoo}",
+                    " */",
+                    "function Foo() {}",
+                    "Foo.prototype.ifooMethod = function() {};"),
+                // Chunk 2
+                "(new Foo).ifooMethod()")),
+        expected(
+            lines(
+                "/**", //
+                " * @constructor",
+                " * @implements {IFoo}",
+                " */",
+                "function Foo() {}"),
+            // Chunk 2
+            lines(
+                "Foo.prototype.ifooMethod = function() {};", //
+                "(new Foo).ifooMethod()")));
+  }
+
+  @Test
   public void moveClassMethodWithoutStub() {
     testSame(
         externs("IFoo.prototype.bar;"),
@@ -313,6 +365,42 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
             lines(
                 "Foo.prototype.bar = function() {};", //
                 "(new Foo).bar()")));
+  }
+
+  @Test
+  public void moveClassMethodImplementingExternsInterfaceWithoutStub() {
+    testSame(
+        externs(lines("/** @interface */", "class IFoo {", "  ifooMethod() {}", "}", "")),
+        srcs(
+            createModuleChain(
+                "/** @implements {IFoo} */",
+                "class Foo { ifooMethod() {} }",
+                // Chunk 2
+                "(new Foo).ifooMethod()")));
+
+    canMoveExterns = true;
+    noStubs = true;
+    test(
+        externs(
+            lines(
+                "/** @interface */", //
+                "class IFoo {",
+                "  ifooMethod() {}",
+                "}",
+                "")),
+        srcs(
+            createModuleChain(
+                "/** @implements {IFoo} */",
+                "class Foo { ifooMethod() {} }",
+                // Chunk 2
+                "(new Foo).ifooMethod()")),
+        expected(
+            "/** @implements {IFoo} */",
+            "class Foo {}",
+            // Chunk 2
+            lines(
+                "Foo.prototype.ifooMethod = function() {};", //
+                "(new Foo).ifooMethod()")));
   }
 
   @Test
