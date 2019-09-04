@@ -30,11 +30,23 @@ public final class JSError implements Serializable {
   /** Description of the error */
   public final String description;
 
+  public String getDescription() {
+    return description;
+  }
+
   /** Name of the source */
   public final String sourceName;
 
+  public String getSourceName() {
+    return sourceName;
+  }
+
   /** Node where the warning occurred. */
   public final Node node;
+
+  public Node getNode() {
+    return node;
+  }
 
   /** Line number of the source */
   public final int lineNumber;
