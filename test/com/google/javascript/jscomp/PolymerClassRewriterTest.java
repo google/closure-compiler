@@ -197,6 +197,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
   @Test
   public void testVarTarget_inEsModule() {
+    inGlobalScope = false;
     test(
         lines(
             "var X = Polymer({", //

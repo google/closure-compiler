@@ -156,11 +156,14 @@ final class PolymerClassRewriter {
               parent,
               node ->
                   node.isScript() || node.isModuleBody() || isFunctionArgInGoogLoadModule(node));
-      if (enclosingNode.isModuleBody()
-          && enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
-        // The goog.module('ns'); call must remain the first statement in the module.
-        Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
-        enclosingNode.addChildrenAfter(statements, insertionPoint);
+      if (enclosingNode.isModuleBody()) {
+        if (enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
+          // The goog.module('ns'); call must remain the first statement in the module.
+          Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
+          enclosingNode.addChildrenAfter(statements, insertionPoint);
+        } else {
+          enclosingNode.addChildrenToFront(statements);
+        }
       } else if (enclosingNode.isScript()) {
         enclosingNode.addChildrenToFront(statements);
         compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));

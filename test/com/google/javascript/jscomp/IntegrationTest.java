@@ -752,6 +752,33 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testPolymerCallWithinES6Modules() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    addPolymerExterns();
+
+    options.setRewriteModules(false);
+
+    test(
+        options,
+        lines(
+            "var X = Polymer({", //
+            "  is: 'x-element',",
+            "});",
+            "export {X};"),
+        lines(
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+            "var X = function() {};",
+            "X = Polymer(/** @lends {X.prototype} */ {",
+            "  is: 'x-element',",
+            "});",
+            "export {X};"));
+  }
+
+  @Test
   public void testPolymer1() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
