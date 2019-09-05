@@ -20,10 +20,7 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createGenericType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
-import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -113,12 +110,7 @@ class Es6TemplateLiterals {
     Node cooked =
         createCookedStringArray(templateLit, templateArrayType, stringType, voidType, numberType);
 
-    // Specify the type of the first argument to be ITemplateArray.
-    JSTypeExpression nonNullSiteObject = new JSTypeExpression(
-        JsDocInfoParser.parseTypeString("!ITemplateArray"), "<Es6TemplateLiterals.java>");
-    JSDocInfoBuilder info = new JSDocInfoBuilder(false);
-    info.recordType(nonNullSiteObject);
-    Node siteObject = withType(IR.cast(cooked, info.build()), templateArrayType);
+    Node siteObject = withType(cooked, templateArrayType);
 
     // Create a variable representing the template literal.
     Node callsiteId =

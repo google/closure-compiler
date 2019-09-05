@@ -2428,28 +2428,28 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "tag``",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['']);",
+            "var $jscomp$templatelit$0 = [''];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag`${hello} world`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
+            "var $jscomp$templatelit$0 = ['', ' world'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello);"));
 
     test(
         "tag`${hello} ${world}`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' ', '']);",
+            "var $jscomp$templatelit$0 = ['', ' ', ''];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello, world);"));
 
     test(
         "tag`\"`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['\\\"']);",
+            "var $jscomp$templatelit$0 = ['\\\"'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
@@ -2468,21 +2468,21 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "tag`a\\tb`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['a\\tb']);",
+            "var $jscomp$templatelit$0 = ['a\\tb'];",
             "$jscomp$templatelit$0.raw = ['a\\\\tb'];",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag()`${hello} world`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
+            "var $jscomp$templatelit$0 = ['', ' world'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag()($jscomp$templatelit$0, hello);"));
 
     test(
         "a.b`${hello} world`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
+            "var $jscomp$templatelit$0 = ['', ' world'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "a.b($jscomp$templatelit$0, hello);"));
 
@@ -2490,15 +2490,13 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "tag`<p class=\"foo\">${x}</p>`",
         lines(
-            "var $jscomp$templatelit$0 = "
-                + "/** @type {!ITemplateArray} */ (['<p class=\"foo\">', '</p>']);",
+            "var $jscomp$templatelit$0 = ['<p class=\"foo\">', '</p>'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
     test(
         "tag`<p class='foo'>${x}</p>`",
         lines(
-            "var $jscomp$templatelit$0 = "
-                + "/** @type {!ITemplateArray} */ (['<p class=\\'foo\\'>', '</p>']);",
+            "var $jscomp$templatelit$0 = ['<p class=\\'foo\\'>', '</p>'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
   }

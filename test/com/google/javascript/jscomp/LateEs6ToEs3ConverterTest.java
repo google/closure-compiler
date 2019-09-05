@@ -238,28 +238,28 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "tag``",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['']);",
+            "var $jscomp$templatelit$0 = [''];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag`${hello} world`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
+            "var $jscomp$templatelit$0 = ['', ' world'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello);"));
 
     test(
         "tag`${hello} ${world}`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' ', '']);",
+            "var $jscomp$templatelit$0 = ['', ' ', ''];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, hello, world);"));
 
     test(
         "tag`\"`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['\\\"']);",
+            "var $jscomp$templatelit$0 = ['\\\"'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0);"));
 
@@ -278,14 +278,14 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "tag`a\\tb`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['a\\tb']);",
+            "var $jscomp$templatelit$0 = ['a\\tb'];",
             "$jscomp$templatelit$0.raw = ['a\\\\tb'];",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag()`${hello} world`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
+            "var $jscomp$templatelit$0 = ['', ' world'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag()($jscomp$templatelit$0, hello);"));
 
@@ -294,7 +294,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         srcs("a.b`${hello} world`"),
         expected(
             lines(
-                "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
+                "var $jscomp$templatelit$0 = ['', ' world'];",
                 "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
                 "a.b($jscomp$templatelit$0, hello);")));
 
@@ -302,15 +302,13 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "tag`<p class=\"foo\">${x}</p>`",
         lines(
-            "var $jscomp$templatelit$0 = "
-                + "/** @type {!ITemplateArray} */ (['<p class=\"foo\">', '</p>']);",
+            "var $jscomp$templatelit$0 = " + "['<p class=\"foo\">', '</p>'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
     test(
         "tag`<p class='foo'>${x}</p>`",
         lines(
-            "var $jscomp$templatelit$0 = "
-                + "/** @type {!ITemplateArray} */ (['<p class=\\'foo\\'>', '</p>']);",
+            "var $jscomp$templatelit$0 = " + "['<p class=\\'foo\\'>', '</p>'];",
             "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "tag($jscomp$templatelit$0, x);"));
 
@@ -318,7 +316,7 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "tag`\\unicode`",
         lines(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ ([void 0]);",
+            "var $jscomp$templatelit$0 = [void 0];",
             "$jscomp$templatelit$0.raw = ['\\\\unicode'];",
             "tag($jscomp$templatelit$0);"));
   }
