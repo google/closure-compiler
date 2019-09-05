@@ -34,21 +34,29 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 class Es6TemplateLiterals {
   private static final String TEMPLATELIT_VAR = "$jscomp$templatelit$";
 
+  private final AstFactory astFactory;
+  private final AbstractCompiler compiler;
+  private final JSTypeRegistry registry;
+
+  Es6TemplateLiterals(AbstractCompiler compiler) {
+    this.compiler = compiler;
+    this.astFactory = compiler.createAstFactory();
+    this.registry = compiler.getTypeRegistry();
+  }
+
   /**
    * Converts `${a} b ${c} d ${e}` to (a + " b " + c + " d " + e)
    *
    * @param n A TEMPLATELIT node that is not prefixed with a tag
    */
-  static void visitTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
-    JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
-    JSType stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
+  void visitTemplateLiteral(NodeTraversal t, Node n) {
     int length = n.getChildCount();
     if (length == 0) {
-      n.replaceWith(withType(IR.string("\"\""), stringType));
+      n.replaceWith(astFactory.createString("\"\""));
     } else {
       Node first = n.removeFirstChild();
       checkState(first.isTemplateLitString() && first.getCookedString() != null);
-      Node firstStr = withType(IR.string(first.getCookedString()), stringType);
+      Node firstStr = astFactory.createString(first.getCookedString());
       if (length == 1) {
         n.replaceWith(firstStr);
       } else {
@@ -73,7 +81,7 @@ class Es6TemplateLiterals {
                   IR.add(
                       add,
                       child.isTemplateLitString()
-                          ? withType(IR.string(child.getCookedString()), stringType)
+                          ? astFactory.createString(child.getCookedString())
                           : child.removeFirstChild()),
                   n.getJSType());
         }
@@ -85,38 +93,35 @@ class Es6TemplateLiterals {
 
   /**
    * Converts tag`a\tb${bar}` to:
+   *
+   * <p><code>
    *   // A global (module) scoped variable
    *   var $jscomp$templatelit$0 = ["a\tb"];   // cooked string array
    *   $jscomp$templatelit$0.raw = ["a\\tb"];  // raw string array
    *   ...
    *   // A call to the tagging function
    *   tag($jscomp$templatelit$0, bar);
+   * </code>
    *
-   *   See template_literal_test.js for more examples.
+   * <p>See template_literal_test.js for more examples.
    *
    * @param n A TAGGED_TEMPLATELIT node
    */
-  static void visitTaggedTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
-    AstFactory astFactory = t.getCompiler().createAstFactory();
-    JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
+  void visitTaggedTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
     JSType stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
     JSType arrayType = createGenericType(addTypes, registry, JSTypeNative.ARRAY_TYPE, stringType);
     JSType templateArrayType =
         createType(addTypes, registry, JSTypeNative.I_TEMPLATE_ARRAY_TYPE);
-    JSType voidType = createType(addTypes, registry, JSTypeNative.VOID_TYPE);
-    JSType numberType = createType(addTypes, registry, JSTypeNative.NUMBER_TYPE);
 
     Node templateLit = n.getLastChild();
-    Node cooked =
-        createCookedStringArray(templateLit, templateArrayType, stringType, voidType, numberType);
+    Node cooked = createCookedStringArray(templateLit, templateArrayType);
 
     Node siteObject = withType(cooked, templateArrayType);
 
     // Create a variable representing the template literal.
     Node callsiteId =
-        withType(
-            IR.name(TEMPLATELIT_VAR + t.getCompiler().getUniqueNameIdSupplier().get()),
-            templateArrayType);
+        astFactory.createName(
+            TEMPLATELIT_VAR + compiler.getUniqueNameIdSupplier().get(), templateArrayType);
     Node var = IR.var(callsiteId, siteObject).useSourceInfoIfMissingFromForTree(n);
     Node script = NodeUtil.getEnclosingScript(n);
     script.addChildToFront(var);
@@ -136,7 +141,7 @@ class Es6TemplateLiterals {
               .useSourceInfoIfMissingFromForTree(n);
     } else {
       // The raw string array is different, so we need to construct it.
-      Node raw = createRawStringArray(templateLit, arrayType, stringType);
+      Node raw = createRawStringArray(templateLit, arrayType);
       defineRaw =
           IR.exprResult(
                   astFactory.createAssign(
@@ -159,26 +164,25 @@ class Es6TemplateLiterals {
     t.reportCodeChange();
   }
 
-  private static Node createRawStringArray(Node n, JSType arrayType, JSType stringType) {
+  private Node createRawStringArray(Node n, JSType arrayType) {
     Node array = withType(IR.arraylit(), arrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isTemplateLitString()) {
-        array.addChildToBack(withType(IR.string(child.getRawString()), stringType));
+        array.addChildToBack(astFactory.createString(child.getRawString()));
       }
     }
     return array;
   }
 
-  private static Node createCookedStringArray(
-      Node n, JSType templateArrayType, JSType stringType, JSType voidType, JSType numberType) {
+  private Node createCookedStringArray(Node n, JSType templateArrayType) {
     Node array = withType(IR.arraylit(), templateArrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isTemplateLitString()) {
         if (child.getCookedString() != null) {
-          array.addChildToBack(withType(IR.string(child.getCookedString()), stringType));
+          array.addChildToBack(astFactory.createString(child.getCookedString()));
         } else {
           // undefined cooked string due to exception in template escapes
-          array.addChildToBack(withType(IR.voidNode(withType(IR.number(0), numberType)), voidType));
+          array.addChildToBack(astFactory.createVoid(astFactory.createNumber(0)));
         }
       }
     }
