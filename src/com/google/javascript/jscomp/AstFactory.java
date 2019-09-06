@@ -237,22 +237,6 @@ final class AstFactory {
     return result;
   }
 
-  Node createVoid(Node child) {
-    Node result = IR.voidNode(child);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.VOID_TYPE));
-    }
-    return result;
-  }
-
-  Node createNot(Node child) {
-    Node result = IR.not(child);
-    if (isAddingTypes()) {
-      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
-    }
-    return result;
-  }
-
   Node createThis(JSType thisType) {
     Node result = IR.thisNode();
     if (isAddingTypes()) {

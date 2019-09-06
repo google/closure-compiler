@@ -45,8 +45,6 @@ import java.util.List;
 // TODO(tbreisacher): This class does too many things. Break it into smaller passes.
 public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
-  private final AstFactory astFactory;
-  private final Es6TemplateLiterals templateLiteralConverter;
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(
           Feature.COMPUTED_PROPERTIES,
@@ -55,17 +53,17 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   // addTypes indicates whether we should add type information when transpiling.
   private final boolean addTypes;
   private final JSTypeRegistry registry;
+  private final JSType unknownType;
   private final JSType stringType;
 
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 
   public LateEs6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.astFactory = compiler.createAstFactory();
-    this.templateLiteralConverter = new Es6TemplateLiterals(compiler);
-    // Only add type information if typechecking has been run.
+    // Only add type information if NTI has been run.
     this.addTypes = compiler.hasTypeCheckingRun();
     this.registry = compiler.getTypeRegistry();
+    this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
     this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
   }
 
@@ -116,11 +114,11 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
         }
         break;
       case TAGGED_TEMPLATELIT:
-        templateLiteralConverter.visitTaggedTemplateLiteral(t, n, addTypes);
+        Es6TemplateLiterals.visitTaggedTemplateLiteral(t, n, addTypes);
         break;
       case TEMPLATELIT:
         if (!parent.isTaggedTemplateLit()) {
-          templateLiteralConverter.visitTemplateLiteral(t, n);
+          Es6TemplateLiterals.visitTemplateLiteral(t, n, addTypes);
         }
         break;
       default:
@@ -135,7 +133,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   private void visitMemberFunctionDefInObjectLit(Node n, Node parent) {
     String name = n.getString();
     Node nameNode = n.getFirstFirstChild();
-    Node stringKey = astFactory.createStringKey(name, n.getFirstChild().detach());
+    Node stringKey = withType(IR.stringKey(name, n.getFirstChild().detach()), n.getJSType());
     stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
     stringKey.useSourceInfoFrom(nameNode);
@@ -190,32 +188,37 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     String objName = FRESH_COMP_PROP_VAR + compiler.getUniqueNameIdSupplier().get();
 
     props = Lists.reverse(props);
-    Node result = astFactory.createName(objName, objectType);
+    Node result = withType(IR.name(objName), objectType);
     for (Node propdef : props) {
       if (propdef.isComputedProp()) {
         Node propertyExpression = propdef.removeFirstChild();
         Node value = propdef.removeFirstChild();
+        JSType valueType = value.getJSType();
         result =
-            astFactory.createComma(
-                astFactory.createAssign(
-                    astFactory.createGetElem(
-                        astFactory.createName(objName, objectType), propertyExpression),
-                    value),
-                result);
+            withType(
+                IR.comma(
+                    withType(
+                        IR.assign(
+                            withUnknownType(
+                                IR.getelem(
+                                    withType(IR.name(objName), objectType), propertyExpression)),
+                            value),
+                        valueType),
+                    result),
+                objectType);
       } else {
         Node val = propdef.removeFirstChild();
-        boolean isQuotedAccess = propdef.isQuotedString();
+        JSType valueType = val.getJSType();
+        Token token = propdef.isQuotedString() ? Token.GETELEM : Token.GETPROP;
 
         propdef.setToken(Token.STRING);
         propdef.setJSType(stringType);
         propdef.putBooleanProp(Node.QUOTED_PROP, false);
 
-        Node objNameNode = astFactory.createName(objName, objectType);
         Node access =
-            isQuotedAccess
-                ? astFactory.createGetElem(objNameNode, propdef)
-                : astFactory.createGetProp(objNameNode, propdef.getString());
-        result = astFactory.createComma(astFactory.createAssign(access, val), result);
+            withType(new Node(token, withType(IR.name(objName), objectType), propdef), valueType);
+        result =
+            withType(IR.comma(withType(IR.assign(access, val), valueType), result), objectType);
       }
     }
 
@@ -228,9 +231,13 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     obj.replaceWith(result);
 
     JSType simpleObjectType = null;
-    Node var = IR.var(astFactory.createName(objName, objectType), withType(obj, simpleObjectType));
+    Node var = IR.var(withType(IR.name(objName), objectType), withType(obj, simpleObjectType));
     var.useSourceInfoIfMissingFromForTree(statement);
     statement.getParent().addChildBefore(var, statement);
     compiler.reportChangeToEnclosingScope(var);
+  }
+
+  private Node withUnknownType(Node n) {
+    return withType(n, unknownType);
   }
 }
