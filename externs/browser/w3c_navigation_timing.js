@@ -155,6 +155,19 @@ function LayoutShift() {}
 /** @type {boolean} */ LayoutShift.prototype.hadRecentInput;
 /** @type {number} */ LayoutShift.prototype.lastInputTime;
 
+/**
+ * https://wicg.github.io/largest-contentful-paint/#largestcontentfulpaint
+ * @constructor
+ * @extends {PerformanceEntry}
+ */
+function LargestContentfulPaint() {}
+/** @type {number} */ LargestContentfulPaint.prototype.renderTime;
+/** @type {number} */ LargestContentfulPaint.prototype.loadTime;
+/** @type {number} */ LargestContentfulPaint.prototype.size;
+/** @type {string} */ LargestContentfulPaint.prototype.id;
+/** @type {string} */ LargestContentfulPaint.prototype.url;
+/** @type {?Element} */ LargestContentfulPaint.prototype.element;
+
 /** @constructor */
 function Performance() {}
 
