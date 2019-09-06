@@ -4024,7 +4024,7 @@ public final class NodeUtil {
       case SHNE: {
         Node other = parent.getFirstChild() == propAccess
             ? parent.getSecondChild() : parent.getFirstChild();
-        return isUndefined(other);
+          return isUndefined(other) || (parent.isNE() && other.isNull());
       }
 
       case HOOK:
@@ -4049,7 +4049,7 @@ public final class NodeUtil {
       case SHEQ: {
         Node other = parent.getFirstChild() == propAccess
             ? parent.getSecondChild() : parent.getFirstChild();
-        return isUndefined(other);
+          return isUndefined(other) || (parent.getToken() == Token.EQ && other.isNull());
       }
       default:
         return false;

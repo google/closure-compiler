@@ -24840,6 +24840,29 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "service.Service = function() {};"));
   }
 
+  @Test
+  public void testNullCheckAvoidsInexistentPropertyError() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "function use(x) {}",
+            "/** @constructor */ function Foo() {}",
+            "var /** !Foo */ foo = new Foo();",
+            "if (foo.bar != null) use(foo);"));
+  }
+
+  @Test
+  public void testTripleEqualsNonNullCheckGivesInexistentPropertyError() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "function use(x) {}",
+            "/** @constructor */ function Foo() {}",
+            "var /** !Foo */ foo = new Foo();",
+            "if (foo.bar !== null) use(foo);"),
+        "Property bar never defined on Foo");
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
