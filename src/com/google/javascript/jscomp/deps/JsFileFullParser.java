@@ -135,13 +135,13 @@ public class JsFileFullParser {
               public void println(CheckLevel level, JSError error) {
                 if (level == CheckLevel.ERROR) {
                   errorReporter.error(
-                      error.description,
+                      error.getDescription(),
                       error.sourceName,
                       error.getLineNumber(),
                       error.getCharno());
                 } else if (level == CheckLevel.WARNING) {
                   errorReporter.warning(
-                      error.description,
+                      error.getDescription(),
                       error.sourceName,
                       error.getLineNumber(),
                       error.getCharno());

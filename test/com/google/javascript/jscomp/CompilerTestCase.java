@@ -1884,10 +1884,10 @@ public abstract class CompilerTestCase {
     // Make sure that source information is always provided.
     if (!allowSourcelessWarnings) {
       assertWithMessage("Missing source file name in warning: " + jserror)
-          .that(jserror.sourceName != null && !jserror.sourceName.isEmpty())
+          .that(jserror.getSourceName() != null && !jserror.getSourceName().isEmpty())
           .isTrue();
       assertWithMessage("Missing line number in warning: " + jserror)
-          .that(-1 != jserror.lineNumber)
+          .that(-1 != jserror.getLineNumber())
           .isTrue();
       assertWithMessage("Missing char number in warning: " + jserror)
           .that(-1 != jserror.getCharno())

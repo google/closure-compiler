@@ -52,6 +52,6 @@ public final class JSErrorSubject extends Subject {
   }
 
   public void hasMessage(String msg) {
-    check("description").that(actual.description).isEqualTo(msg);
+    check("description").that(actual.getDescription()).isEqualTo(msg);
   }
 }

@@ -922,7 +922,7 @@ public final class MissingRequireTest extends CompilerTestCase {
     String expectation = "missing require: 'foo.bar.goo'";
 
     for (JSError warning : warnings) {
-      if (expectation.equals(warning.description)) {
+      if (expectation.equals(warning.getDescription())) {
         return;
       }
     }

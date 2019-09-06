@@ -323,8 +323,13 @@ public final class GwtRunner {
     for (int i = 0; i < errors.size(); ++i) {
       JSError error = errors.get(i);
       DiagnosticType type = error.getType();
-      out[i] = createError(error.sourceName, error.description, type != null ? type.key : null,
-          error.lineNumber, error.getCharno());
+      out[i] =
+          createError(
+              error.getSourceName(),
+              error.getDescription(),
+              type != null ? type.key : null,
+              error.getLineNumber(),
+              error.getCharno());
     }
     return out;
   }

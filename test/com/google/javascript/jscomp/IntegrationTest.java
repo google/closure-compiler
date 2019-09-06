@@ -1271,7 +1271,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertThat(warnings).hasSize(1);
     JSError warning = warnings.get(0);
     assertThat(warning.getType()).isEqualTo(POLYMER_MISPLACED_PROPERTY_JSDOC);
-    assertThat(warning.node.getString()).isEqualTo("p1");
+    assertThat(warning.getNode().getString()).isEqualTo("p1");
   }
 
   @Test

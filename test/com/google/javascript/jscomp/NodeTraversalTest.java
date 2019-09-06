@@ -64,7 +64,7 @@ public final class NodeTraversalTest {
 
     t.report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
     assertThat(errors).hasSize(1);
-    assertThat(errors.get(0).description).isEqualTo("Foo, Bar - Hello");
+    assertThat(errors.get(0).getDescription()).isEqualTo("Foo, Bar - Hello");
   }
 
   private static final String TEST_EXCEPTION = "test me";

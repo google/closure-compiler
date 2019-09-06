@@ -180,11 +180,11 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    */
   protected String formatWarning(JSError error, boolean withMetaData) {
     StringBuilder sb = new StringBuilder();
-    sb.append(error.sourceName).append(":");
+    sb.append(error.getSourceName()).append(":");
     if (withMetaData) {
-      sb.append(error.lineNumber);
+      sb.append(error.getLineNumber());
     }
-    List<String> lines = LINE_SPLITTER.splitToList(error.description);
+    List<String> lines = LINE_SPLITTER.splitToList(error.getDescription());
     sb.append("  ").append(lines.get(0));
 
     // Add the rest of the message as a comment.

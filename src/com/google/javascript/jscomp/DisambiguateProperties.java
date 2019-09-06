@@ -809,7 +809,7 @@ class DisambiguateProperties implements CompilerPass {
               .transform(Suppliers.supplierFunction())
               .limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY);
       for (JSError error : invalidations) {
-        errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
+        errors.add(t + " at " + error.getSourceName() + ":" + error.getLineNumber());
       }
     }
   }

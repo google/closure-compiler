@@ -32,7 +32,7 @@ public final class JSCompCorrespondences {
       Correspondence.transforming(JSError::getType, "has diagnostic type equal to");
 
   public static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =
-      Correspondence.transforming((e) -> e.description, "has description equal to");
+      Correspondence.transforming((e) -> e.getDescription(), "has description equal to");
 
   public static final Correspondence<CompilerInput, String> INPUT_NAME_EQUALITY =
       Correspondence.transforming(CompilerInput::getName, "has name equal to");

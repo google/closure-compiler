@@ -339,7 +339,7 @@ public final class JsMessageVisitorTest {
 
     JSError malformedTreeError = compiler.getErrors().get(0);
     assertError(malformedTreeError).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertThat(malformedTreeError.description)
+    assertThat(malformedTreeError.getDescription())
         .isEqualTo("Message parse tree malformed. " + "STRING or ADD node expected; found: POS");
   }
 
@@ -370,9 +370,10 @@ public final class JsMessageVisitorTest {
 
     JSError malformedTreeError = compiler.getErrors().get(0);
     assertError(malformedTreeError).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertThat(malformedTreeError.description).isEqualTo(
-        "Message parse tree malformed."
-            + " Template literals with substitutions are not allowed.");
+    assertThat(malformedTreeError.getDescription())
+        .isEqualTo(
+            "Message parse tree malformed."
+                + " Template literals with substitutions are not allowed.");
   }
 
   @Test
@@ -734,7 +735,7 @@ public final class JsMessageVisitorTest {
     assertThat(errors).hasSize(1);
     JSError error = errors.get(0);
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertThat(error.description)
+    assertThat(error.getDescription())
         .isEqualTo(
             "Message parse tree malformed. Unrecognized message " + "placeholder referenced: foo");
   }
@@ -748,7 +749,7 @@ public final class JsMessageVisitorTest {
     assertThat(errors).hasSize(1);
     JSError error = errors.get(0);
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertThat(error.description)
+    assertThat(error.getDescription())
         .isEqualTo("Message parse tree malformed. Unused message placeholder: " + "foo");
   }
 
@@ -762,7 +763,7 @@ public final class JsMessageVisitorTest {
     assertThat(errors).hasSize(1);
     JSError error = errors.get(0);
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertThat(error.description)
+    assertThat(error.getDescription())
         .isEqualTo("Message parse tree malformed. Duplicate placeholder " + "name: foo");
   }
 
@@ -800,7 +801,7 @@ public final class JsMessageVisitorTest {
     assertThat(errors).hasSize(1);
     JSError error = errors.get(0);
     assertThat(error.getType()).isEqualTo(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
-    assertThat(error.description)
+    assertThat(error.getDescription())
         .isEqualTo(
             "Message parse tree malformed. Placeholder name not in "
                 + "lowerCamelCase: slide_number");
