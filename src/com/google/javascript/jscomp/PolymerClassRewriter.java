@@ -76,6 +76,38 @@ final class PolymerClassRewriter {
     return parent != null && isBundledGoogModuleCall(parent);
   }
 
+  private void insertCodeForEnclosedCalls(Node enclosingNode, Node statements) {
+    switch (enclosingNode.getToken()) {
+      case MODULE_BODY:
+        if (enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
+          // The goog.module('ns'); call must remain the first statement in the module.
+          Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
+          enclosingNode.addChildrenAfter(statements, insertionPoint);
+        } else {
+          enclosingNode.addChildrenToFront(statements);
+        }
+        break;
+      case SCRIPT:
+        enclosingNode.addChildrenToFront(statements);
+        compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
+        break;
+      case FUNCTION:
+        // This case represents only the Polymer calls that are inside a function which is an arg
+        // to goog.loadModule
+        Node functionBlock = enclosingNode.getLastChild();
+        Node insertionPoint = getInsertionPointForGoogModule(functionBlock);
+        // Node insertionPoint will be null here if functionBlock does not contain a goog.module()
+        // Missing goog.module inside the loadModule's functionBlock is semantically incorrect
+        // That will cause the compiler to crash in closureRewriteModule pass.
+        if (insertionPoint != null) {
+          functionBlock.addChildrenAfter(statements, insertionPoint);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   /**
    * Rewrites a given call to Polymer({}) to a set of declarations and assignments which can be
    * understood by the compiler.
@@ -118,23 +150,7 @@ final class PolymerClassRewriter {
       ctorKey.removeProp(Node.JSDOC_INFO_PROP);
     }
 
-    if (cls.target.isGetProp()) {
-      // foo.bar = Polymer({...});
-      Node assign = IR.assign(cls.target.cloneTree(), cls.constructor.value.cloneTree());
-      NodeUtil.markNewScopesChanged(assign, compiler);
-      assign.setJSDocInfo(constructorDoc.build());
-      Node exprResult = IR.exprResult(assign);
-      exprResult.useSourceInfoIfMissingFromForTree(cls.target);
-      block.addChildToBack(exprResult);
-    } else {
-      // var foo = Polymer({...}); OR Polymer({...});
-      Node var = IR.var(cls.target.cloneTree(), cls.constructor.value.cloneTree());
-      NodeUtil.markNewScopesChanged(var, compiler);
-      var.useSourceInfoIfMissingFromForTree(exprRoot);
-      var.setJSDocInfo(constructorDoc.build());
-      block.addChildToBack(var);
-    }
-
+    appendDeclarationToBlock(exprRoot, cls, block, constructorDoc);
     appendPropertiesToBlock(cls.props, block, cls.target.getQualifiedName() + ".prototype.");
     appendBehaviorMembersToBlock(cls, block);
     ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
@@ -156,27 +172,7 @@ final class PolymerClassRewriter {
               parent,
               node ->
                   node.isScript() || node.isModuleBody() || isFunctionArgInGoogLoadModule(node));
-      if (enclosingNode.isModuleBody()) {
-        if (enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
-          // The goog.module('ns'); call must remain the first statement in the module.
-          Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
-          enclosingNode.addChildrenAfter(statements, insertionPoint);
-        } else {
-          enclosingNode.addChildrenToFront(statements);
-        }
-      } else if (enclosingNode.isScript()) {
-        enclosingNode.addChildrenToFront(statements);
-        compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
-      } else if (enclosingNode.isFunction()) {
-        Node functionBlock = enclosingNode.getLastChild();
-        Node insertionPoint = getInsertionPointForGoogModule(functionBlock);
-        // Node insertionPoint will be null here if functionBlock does not contain a goog.module()
-        // Missing goog.module inside the loadModule's functionBlock is semantically incorrect
-        // That will cause the compiler to crash in closureRewriteModule pass.
-        if (insertionPoint != null) {
-          functionBlock.addChildrenAfter(statements, insertionPoint);
-        }
-      }
+      insertCodeForEnclosedCalls(enclosingNode, statements);
     } else {
       Node beforeRoot = exprRoot.getPrevious();
       if (beforeRoot == null) {
@@ -459,6 +455,30 @@ final class PolymerClassRewriter {
     constructorDoc.recordImplementedInterface(interfaceType);
 
     return constructorDoc;
+  }
+
+  /* Appends var declaration code created from the Polymer call to the given block */
+  private void appendDeclarationToBlock(
+      Node exprRoot,
+      final PolymerClassDefinition cls,
+      Node block,
+      JSDocInfoBuilder constructorDoc) {
+    if (cls.target.isGetProp()) {
+      // foo.bar = Polymer({...});
+      Node assign = IR.assign(cls.target.cloneTree(), cls.constructor.value.cloneTree());
+      NodeUtil.markNewScopesChanged(assign, compiler);
+      assign.setJSDocInfo(constructorDoc.build());
+      Node exprResult = IR.exprResult(assign);
+      exprResult.useSourceInfoIfMissingFromForTree(cls.target);
+      block.addChildToBack(exprResult);
+    } else {
+      // var foo = Polymer({...}); OR Polymer({...});
+      Node var = IR.var(cls.target.cloneTree(), cls.constructor.value.cloneTree());
+      NodeUtil.markNewScopesChanged(var, compiler);
+      var.useSourceInfoIfMissingFromForTree(exprRoot);
+      var.setJSDocInfo(constructorDoc.build());
+      block.addChildToBack(var);
+    }
   }
 
   /** Appends all of the given properties to the given block. */
