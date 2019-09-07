@@ -300,7 +300,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       classType.setSource(constructor);
     }
 
-    constructor.putBooleanProp(Node.IS_ES6_CLASS, true);
     t.reportCodeChange();
   }
 

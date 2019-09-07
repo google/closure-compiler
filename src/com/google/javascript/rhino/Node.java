@@ -116,8 +116,6 @@ public class Node implements Serializable {
     // Whether a STRING node contains a \v vertical tab escape. This is a total hack. See comments
     // in IRFactory about this.
     SLASH_V,
-    // Marks a function whose parameter types have been inferred.
-    INFERRED,
     // For passes that work only on changed funs.
     CHANGE_TIME,
     // An object that's used for goog.object.reflect-style reflection.
@@ -187,8 +185,6 @@ public class Node implements Serializable {
     IS_MODULE_NAME,
     // Indicates a namespace that was provided at some point in the past.
     WAS_PREVIOUSLY_PROVIDED,
-    // Indicates that a FUNCTION node is converted from an ES6 class
-    IS_ES6_CLASS,
     // Indicates that a SCRIPT represents a transpiled file
     TRANSPILED,
     // For passes that work only on deleted funs.
@@ -267,7 +263,6 @@ public class Node implements Serializable {
   public static final Prop FEATURE_SET = Prop.FEATURE_SET;
   public static final Prop IS_MODULE_NAME = Prop.IS_MODULE_NAME;
   public static final Prop WAS_PREVIOUSLY_PROVIDED = Prop.WAS_PREVIOUSLY_PROVIDED;
-  public static final Prop IS_ES6_CLASS = Prop.IS_ES6_CLASS;
   public static final Prop TRANSPILED = Prop.TRANSPILED;
   public static final Prop MODULE_ALIAS = Prop.MODULE_ALIAS;
   public static final Prop MODULE_EXPORT = Prop.MODULE_EXPORT;
@@ -2793,11 +2788,6 @@ public class Node implements Serializable {
    */
   public final boolean isYieldAll() {
     return getBooleanProp(Prop.YIELD_ALL);
-  }
-
-  /** Returns true if this is or ever was a CLASS node (i.e. even after transpilation). */
-  public final boolean isEs6Class() {
-    return isClass() || getBooleanProp(Prop.IS_ES6_CLASS);
   }
 
   /** Returns any goog.define'd name corresponding to this NAME or GETPROP node. */

@@ -2368,8 +2368,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (n.isFunction()
           && baseConstructor != null
           && baseConstructor.getSource() != null
-          && baseConstructor.getSource().isEs6Class()
-          && !functionType.getSource().isEs6Class()) {
+          && baseConstructor.getSource().isClass()
+          && !functionType.getSource().isClass()) {
         // Warn if an ES5 class extends an ES6 class.
         compiler.report(
             JSError.make(
@@ -2470,7 +2470,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             && n.getFirstChild().matchesQualifiedName("goog.inherits")
             && subClass.toMaybeFunctionType() != null
             && subClass.toMaybeFunctionType().getSource() != null
-            && subClass.toMaybeFunctionType().getSource().isEs6Class()) {
+            && subClass.toMaybeFunctionType().getSource().isClass()) {
           compiler.report(JSError.make(n, ES6_CLASS_EXTENDING_CLASS_WITH_GOOG_INHERITS));
         }
         validator.expectSuperType(n, superClassInstanceType, subClassInstance);
