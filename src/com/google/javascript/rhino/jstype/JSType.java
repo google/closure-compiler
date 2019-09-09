@@ -314,14 +314,6 @@ public abstract class JSType implements Serializable {
     return toMaybeUnionType() != null;
   }
 
-  public boolean isFullyInstantiated() {
-    return getTemplateTypeMap().isFull();
-  }
-
-  public boolean isPartiallyInstantiated() {
-    return getTemplateTypeMap().isPartiallyFull();
-  }
-
   public final boolean isRawTypeOfTemplatizedType() {
     return this.getTemplateParamCount() > 0 && !this.isTemplatizedType();
   }

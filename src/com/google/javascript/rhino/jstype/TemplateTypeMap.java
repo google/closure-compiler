@@ -227,28 +227,8 @@ public class TemplateTypeMap implements Serializable {
     return false;
   }
 
-  /**
-   * Returns the number of template keys in this map that do not have a
-   * corresponding JSType value.
-   */
-  int numUnfilledTemplateKeys() {
+  private int numUnfilledTemplateKeys() {
     return templateKeys.size() - templateValues.size();
-  }
-
-  boolean isFull() {
-    return numUnfilledTemplateKeys() == 0;
-  }
-
-  boolean isPartiallyFull() {
-    return !this.templateValues.isEmpty();
-  }
-
-  /**
-   * Returns a list of template keys in this map that do not have corresponding
-   * JSType values.
-   */
-  ImmutableList<TemplateType> getUnfilledTemplateKeys() {
-    return templateKeys.subList(templateValues.size(), templateKeys.size());
   }
 
   /**

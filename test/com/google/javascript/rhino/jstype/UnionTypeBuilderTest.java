@@ -227,8 +227,8 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     JSType result = builder.build();
 
     // Then
+    assertThat(result.isRawTypeOfTemplatizedType()).isFalse();
     assertType(result).isEqualTo(arrayOfUnknown);
-    assertThat(result.getTemplateTypeMap().numUnfilledTemplateKeys()).isEqualTo(0);
   }
 
   @Test

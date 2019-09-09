@@ -1308,7 +1308,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   @Override
   final boolean hasAnyTemplateTypesInternal() {
-    return getTemplateTypeMap().numUnfilledTemplateKeys() > 0
+    return this.getTemplateParamCount() > 0
         || typeOfThis.hasAnyTemplateTypes()
         || call.hasAnyTemplateTypes();
   }
@@ -1462,19 +1462,14 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   /** Returns a list of template types present on the constructor but not on the instance. */
   public final ImmutableList<TemplateType> getConstructorOnlyTemplateParameters() {
-    TemplateTypeMap ctorMap = getTemplateTypeMap();
-    TemplateTypeMap instanceMap = getInstanceType().getTemplateTypeMap();
-    if (ctorMap == instanceMap) {
-      return ImmutableList.of();
-    }
-    ImmutableList.Builder<TemplateType> ctorKeys = ImmutableList.builder();
-    Set<TemplateType> instanceKeys = ImmutableSet.copyOf(instanceMap.getUnfilledTemplateKeys());
-    for (TemplateType ctorKey : ctorMap.getUnfilledTemplateKeys()) {
-      if (!instanceKeys.contains(ctorKey)) {
-        ctorKeys.add(ctorKey);
-      }
-    }
-    return ctorKeys.build();
+    checkState(this.isConstructor(), this);
+
+    // Within the `TemplateTypeMap` of a ctor type, the ctor only keys always appear after the
+    // instance type keys.
+    TemplateTypeMap map = getTemplateTypeMap();
+    int ctorOnlyKeyCount =
+        this.getTemplateParamCount() - this.getInstanceType().getTemplateParamCount();
+    return map.getTemplateKeys().subList(map.size() - ctorOnlyKeyCount, map.size());
   }
 
   boolean createsAmbiguousObjects() {

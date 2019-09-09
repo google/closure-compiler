@@ -343,7 +343,7 @@ class TypeTransformation {
   private JSType evalTemplatizedType(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
     JSType firstParam = evalInternal(params.get(0), nameResolver);
-    if (firstParam.isFullyInstantiated()) {
+    if (!firstParam.isRawTypeOfTemplatizedType()) {
       reportWarning(ttlAst, BASETYPE_INVALID, firstParam.toString());
       return getUnknownType();
     }
@@ -427,7 +427,7 @@ class TypeTransformation {
       case ISCTOR:
         return type.isConstructor();
       case ISTEMPLATIZED:
-        return type.isTemplatizedType() && type.isPartiallyInstantiated();
+        return type.isTemplatizedType();
       case ISRECORD:
         return type.isRecordType();
       case ISUNKNOWN:

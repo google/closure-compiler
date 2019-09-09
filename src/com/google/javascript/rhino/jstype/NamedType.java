@@ -273,7 +273,7 @@ public final class NamedType extends ProxyObjectType {
 
     JSType result = getReferencedType();
     if (isSuccessfullyResolved()) {
-      int numKeys = result.getTemplateTypeMap().numUnfilledTemplateKeys();
+      int numKeys = result.getTemplateParamCount();
       if (result.isObjectType()
           && (templateTypes != null && !templateTypes.isEmpty())
           && numKeys > 0) {

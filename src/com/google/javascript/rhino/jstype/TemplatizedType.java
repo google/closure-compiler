@@ -70,8 +70,7 @@ public final class TemplatizedType extends ProxyObjectType {
 
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     boolean maybeIsSpecializedOnlyWithUnknown = true;
-    for (TemplateType newlyFilledTemplateKey :
-        objectType.getTemplateTypeMap().getUnfilledTemplateKeys()) {
+    for (TemplateType newlyFilledTemplateKey : objectType.getTypeParameters()) {
       JSType resolvedType = getTemplateTypeMap().getResolvedTemplateType(newlyFilledTemplateKey);
 
       builder.add(resolvedType);

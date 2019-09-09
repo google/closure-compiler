@@ -197,7 +197,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
               .withParamsNode(paramBuilder.build())
               .withReturnType(afterReturn)
               .withTypeOfThis(afterThis)
-              .withTemplateKeys(type.getTemplateTypeMap().getUnfilledTemplateKeys())
+              .withTemplateKeys(type.getTypeParameters())
               .withClosurePrimitiveId(type.getClosurePrimitive())
               .build();
       return ft;

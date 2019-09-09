@@ -296,9 +296,7 @@ public class JSTypeRegistry implements Serializable {
     JSType type = getType(null, fnName);
     ObjectType objType = type == null ? null : type.toObjectType();
     if (objType != null && objType.isNativeObjectType()) {
-      ImmutableList<TemplateType> templateKeys =
-          objType.getTemplateTypeMap().getUnfilledTemplateKeys();
-      return templateKeys;
+      return objType.getTypeParameters();
     }
     return null;
   }
@@ -1812,8 +1810,7 @@ public class JSTypeRegistry implements Serializable {
   public TemplatizedType createTemplatizedType(
       ObjectType baseType, Map<TemplateType, JSType> templatizedTypes) {
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-    TemplateTypeMap baseTemplateTypeMap = baseType.getTemplateTypeMap();
-    for (TemplateType key : baseTemplateTypeMap.getUnfilledTemplateKeys()) {
+    for (TemplateType key : baseType.getTypeParameters()) {
       JSType templatizedType =
           templatizedTypes.containsKey(key)
               ? templatizedTypes.get(key)
@@ -2013,7 +2010,7 @@ public class JSTypeRegistry implements Serializable {
               n.getString().equals("Object") || n.getString().equals("window.Object");
           int requiredTemplateArgCount =
               // TODO(b/138617950): Eliminate the specical case for `Object`.
-              isObject ? 2 : nominalType.getTemplateTypeMap().numUnfilledTemplateKeys();
+              isObject ? 2 : nominalType.getTemplateParamCount();
           List<JSType> templateArgs = new ArrayList<>();
 
           for (Node templateNode : typeList.children()) {
