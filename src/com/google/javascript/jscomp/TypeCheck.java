@@ -1571,6 +1571,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (implementedInterface.isUnknownType() || implementedInterface.isEmptyType()) {
         continue;
       }
+      checkState(implementedInterface.isInstanceType(), implementedInterface);
       OwnedProperty propSlot = implementedInterface.findClosestDefinition(propertyName);
       boolean interfaceHasProperty = propSlot != null;
       foundProperty |= interfaceHasProperty;
@@ -1593,9 +1594,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
   private static boolean isDeclaredLocally(FunctionType ctorType, String propertyName) {
-    return ctorType.isConstructor()
-        && (ctorType.getPrototype().hasOwnProperty(propertyName)
-            || ctorType.getInstanceType().hasOwnProperty(propertyName));
+    checkState(ctorType.isConstructor());
+    return ctorType.getPrototype().hasOwnProperty(propertyName)
+        || ctorType.getInstanceType().hasOwnProperty(propertyName);
   }
 
   /**
