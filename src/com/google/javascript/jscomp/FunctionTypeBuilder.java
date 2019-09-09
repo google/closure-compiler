@@ -980,7 +980,7 @@ final class FunctionTypeBuilder {
     }
 
     fnType.setPrototypeBasedOn(baseType);
-    fnType.getInstanceType().prependTemplateTypeMap(baseType.getTemplateTypeMap());
+    fnType.getInstanceType().mergeSupertypeTemplateTypes(baseType);
   }
 
   /**

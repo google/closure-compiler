@@ -614,7 +614,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
     for (ObjectType type : implementedInterfaces) {
       registry.registerTypeImplementingInterface(this, type);
-      typeOfThis.prependTemplateTypeMap(type.getTemplateTypeMap());
+      typeOfThis.mergeSupertypeTemplateTypes(type);
     }
   }
 
@@ -633,7 +633,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     this.extendedInterfaces = ImmutableList.copyOf(extendedInterfaces);
     for (ObjectType extendedInterface : extendedInterfaces) {
-      typeOfThis.prependTemplateTypeMap(extendedInterface.getTemplateTypeMap());
+      typeOfThis.mergeSupertypeTemplateTypes(extendedInterface);
     }
   }
 

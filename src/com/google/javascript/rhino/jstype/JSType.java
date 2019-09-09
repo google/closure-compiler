@@ -322,6 +322,10 @@ public abstract class JSType implements Serializable {
     return getTemplateTypeMap().isPartiallyFull();
   }
 
+  public final boolean isRawTypeOfTemplatizedType() {
+    return this.getTemplateParamCount() > 0 && !this.isTemplatizedType();
+  }
+
   /**
    * Returns true iff {@code this} can be a {@code struct}.
    * UnionType overrides the method, assume {@code this} is not a union here.
@@ -529,7 +533,7 @@ public abstract class JSType implements Serializable {
   }
 
   boolean hasAnyTemplateTypesInternal() {
-    return templateTypeMap.hasAnyTemplateTypesInternal();
+    return getTemplateTypeMap().hasAnyTemplateTypesInternal();
   }
 
   /**
@@ -540,7 +544,7 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Return, in order, the sequence of parameters declared for this type.
+   * Return, in order, the sequence of type parameters declared for this type.
    *
    * <p>In general, this value corresponds to an element for every `@template` declaration on the
    * type definition. It does not include template parameters from superclasses or superinterfaces.
@@ -564,8 +568,13 @@ public abstract class JSType implements Serializable {
    * Prepends the template type map associated with this type, merging in the keys and values of the
    * specified map.
    */
-  public void prependTemplateTypeMap(TemplateTypeMap otherMap) {
-    templateTypeMap = otherMap.copyWithExtension(templateTypeMap);
+  public void mergeSupertypeTemplateTypes(ObjectType other) {
+    if (other.isRawTypeOfTemplatizedType()) {
+      // Before a type can be prepended it needs to be fully specialized. This can happen, for
+      // example, when type arguments are not specified in an `@extends` annotation.
+      other = registry.createTemplatizedType(other, ImmutableList.of());
+    }
+    templateTypeMap = other.getTemplateTypeMap().copyWithExtension(this.getTemplateTypeMap());
   }
 
   /**
