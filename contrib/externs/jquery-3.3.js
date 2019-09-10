@@ -1320,7 +1320,7 @@ jQuery.prototype.length;
 
 /**
  * @param {*} obj
- * @return {Array<*>}
+ * @return {!Array<*>}
  * @nosideeffects
  */
 jQuery.makeArray = function(obj) {};
