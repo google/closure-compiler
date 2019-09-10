@@ -49,6 +49,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -767,7 +768,7 @@ final class FunctionTypeBuilder {
 
     // Evaluate template type bounds with bootstrapped environment and reroute the bounds to these
     ImmutableList.Builder<TemplateType> templates = ImmutableList.builder();
-    HashMap<TemplateType, JSType> templatesToBounds = new HashMap<>();
+    Map<TemplateType, JSType> templatesToBounds = new LinkedHashMap<>();
     for (Map.Entry<String, JSTypeExpression> entry : infoTypeKeys.entrySet()) {
       JSType typeBound = typeRegistry.evaluateTypeExpression(entry.getValue(), templateScope);
       TemplateType template =
