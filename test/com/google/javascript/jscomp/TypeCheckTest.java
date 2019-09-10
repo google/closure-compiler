@@ -5885,7 +5885,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of A does not match formal parameter",
             "found   : string",
-            "required: T extends number"));
+            "required: number"));
   }
 
   @Test
@@ -5930,7 +5930,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of A does not match formal parameter",
             "found   : null",
-            "required: T extends number"));
+            "required: number"));
   }
 
   @Test
@@ -6199,11 +6199,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           lines(
               "actual parameter 1 of foo does not match formal parameter",
               "found   : string",
-              "required: T extends boolean"),
+              "required: boolean"),
           lines(
               "actual parameter 1 of bar does not match formal parameter",
               "found   : boolean",
-              "required: T extends string")
+              "required: string")
         });
   }
 
@@ -6251,11 +6251,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           lines(
               "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
               "found   : boolean",
-              "required: T extends string"),
+              "required: string"),
           lines(
               "actual parameter 1 of foo does not match formal parameter",
               "found   : string",
-              "required: T extends boolean")
+              "required: boolean")
         });
   }
 
@@ -6461,7 +6461,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of f does not match formal parameter",
             "found   : (C<boolean>|null)",
-            "required: (C<U extends (number|string)>|null)"));
+            "required: (C<(number|string)>|null)"));
   }
 
   @Test
@@ -6482,10 +6482,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x,y) {}",
             "var /** C<string> */ c;",
             "f(c,false);"),
-        lines(
-            "actual parameter 1 of f does not match formal parameter",
-            "found   : (C<string>|null)",
-            "required: (C<(boolean|string)>|null)"));
+        new String[] {
+          lines(
+              "actual parameter 1 of f does not match formal parameter",
+              "found   : (C<string>|null)",
+              "required: (C<(number|string)>|null)"),
+          lines(
+              "actual parameter 2 of f does not match formal parameter",
+              "found   : boolean",
+              "required: (number|string)"),
+        });
   }
 
   @Test

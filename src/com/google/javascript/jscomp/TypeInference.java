@@ -2012,26 +2012,12 @@ class TypeInference
 
   private static void resolvedTemplateType(
       Map<TemplateType, JSType> map, TemplateType template, JSType resolved) {
-    JSType previous = map.get(template);
-    if (!resolved.isUnknownType()) {
-      if (previous == null) {
-        if (template.getBound().isUnknownType()) {
-          map.put(template, resolved);
-        } else {
-          JSType meet = template.getBound().getGreatestSubtype(resolved);
-          if (meet.isNoType()) {
-            // There will be a mismatch thrown further up so we return the actual template
-            // rather than `None` for a better error message
-            map.put(template, template);
-          } else {
-            map.put(template, meet);
-          }
-        }
-      } else {
-        JSType join = previous.getLeastSupertype(resolved);
-        map.put(template, join);
-      }
+    if (resolved.isUnknownType()) {
+      return;
     }
+
+    // Don't worry about checking bounds here. We'll validate them once they're all collected.
+    map.merge(template, resolved, (a, b) -> a.getLeastSupertype(b));
   }
 
   /**
@@ -2094,15 +2080,15 @@ class TypeInference
     }
 
     // Try to infer the template types
-    Map<TemplateType, JSType> rawInferrence = inferTemplateTypesFromParameters(fnType, n, scope);
+    Map<TemplateType, JSType> bindings = inferTemplateTypesFromParameters(fnType, n, scope);
     Map<TemplateType, JSType> inferred = Maps.newIdentityHashMap();
     for (TemplateType key : keys) {
-      JSType type = rawInferrence.get(key);
-      if (type == null) {
-        type = unknownType;
-      }
-      inferred.put(key, type);
+      inferred.put(key, bindings.getOrDefault(key, unknownType));
     }
+
+    // If the inferred type doesn't satisfy the template bound, swap to using the bound. This
+    // ensures errors will be reported in type-checking.
+    inferred.replaceAll((k, v) -> v.isSubtypeOf(k.getBound()) ? v : k.getBound());
 
     // Try to infer the template types using the type transformations
     Map<TemplateType, JSType> typeTransformations =
