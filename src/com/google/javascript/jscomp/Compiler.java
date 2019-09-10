@@ -175,8 +175,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final Map<InputId, CompilerInput> inputsById = new ConcurrentHashMap<>();
 
-  private final Map<String, Node> scriptNodeByFilename = new ConcurrentHashMap<>();
-
   private transient IncrementalScopeCreator scopeCreator = null;
 
   private ImmutableMap<String, String> inputPathByWebpackId;
@@ -1171,7 +1169,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   @Nullable
   final Node getScriptNode(String filename) {
-    return scriptNodeByFilename.get(checkNotNull(filename));
+    checkNotNull(filename);
+    if (jsRoot == null) {
+      return null;
+    }
+    for (Node file : Iterables.concat(externsRoot.children(), jsRoot.children())) {
+      if (file.getSourceFileName() != null && file.getSourceFileName().endsWith(filename)) {
+        return file;
+      }
+    }
+    return null;
   }
 
   /**
@@ -1302,7 +1309,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
     checkState(input.isExtern(), "Not an extern input: %s", input.getName());
-    scriptNodeByFilename.remove(input.getSourceFile().getName());
     inputsById.remove(id);
     externs.remove(input);
     Node root = checkNotNull(input.getAstRoot(this));
@@ -1323,16 +1329,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       throw new IllegalArgumentException("Conflicting externs name: " + name);
     }
     CompilerInput input = new CompilerInput(ast, true);
-    Node root = checkNotNull(ast.getAstRoot(this));
     putCompilerInput(input.getInputId(), input);
     if (pos == SyntheticExternsPosition.START) {
-      externsRoot.addChildToFront(root);
+      externsRoot.addChildToFront(checkNotNull(ast.getAstRoot(this)));
       externs.add(0, input);
     } else {
-      externsRoot.addChildToBack(root);
+      externsRoot.addChildToBack(checkNotNull(ast.getAstRoot(this)));
       externs.add(input);
     }
-    scriptNodeByFilename.put(input.getSourceFile().getName(), root);
     return input;
   }
 
@@ -1593,7 +1597,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // individual file parse trees.
     externsRoot.detachChildren();
     jsRoot.detachChildren();
-    scriptNodeByFilename.clear();
 
     Tracer tracer = newTracer(PassNames.PARSE_INPUTS);
     beforePass(PassNames.PARSE_INPUTS);
@@ -1609,7 +1612,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           return null;
         }
         externsRoot.addChildToBack(n);
-        scriptNodeByFilename.put(input.getSourceFile().getName(), n);
       }
 
       if (options.transformAMDToCJSModules) {
@@ -1738,7 +1740,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         } else {
           jsRoot.addChildToBack(n);
         }
-        scriptNodeByFilename.put(input.getSourceFile().getName(), n);
       }
 
       if (hasErrors()) {
@@ -3418,7 +3419,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Node jsRoot;
     private final FeatureSet featureSet;
     private final List<CompilerInput> externs;
-    private final Map<String, Node> scriptNodeByFilename;
     private final Map<InputId, CompilerInput> inputsById;
     private final JSTypeRegistry typeRegistry;
     private final TypeValidator typeValidator;
@@ -3454,7 +3454,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.featureSet = checkNotNull(compiler.featureSet);
       this.typeRegistry = compiler.typeRegistry;
       this.externs = compiler.externs;
-      this.scriptNodeByFilename = checkNotNull(compiler.scriptNodeByFilename);
       this.inputsById = checkNotNull(compiler.inputsById);
       this.typeCheckingHasRun = compiler.typeCheckingHasRun;
       this.synthesizedExternsInput = compiler.synthesizedExternsInput;
@@ -3546,8 +3545,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     featureSet = compilerState.featureSet;
     externs = compilerState.externs;
-    scriptNodeByFilename.clear();
-    scriptNodeByFilename.putAll(compilerState.scriptNodeByFilename);
     inputsById.clear();
     inputsById.putAll(compilerState.inputsById);
     typeRegistry = compilerState.typeRegistry;
