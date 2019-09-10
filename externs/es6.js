@@ -1216,6 +1216,50 @@ Promise.reject = function(opt_error) {};
  */
 Promise.all = function(iterable) {};
 
+/**
+ * Record type representing a single element of the array value one gets from
+ * Promise.allSettled.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
+ * @record
+ * @template VALUE
+ */
+Promise.AllSettledResultElement = function() {};
+
+/**
+ * 'fulfilled' or 'rejected' to indicate the final state of the corresponding
+ * Promise.
+ * @type {string}
+ */
+Promise.AllSettledResultElement.prototype.status;
+
+/**
+ * Exists only if the status field is 'fulfilled'
+ * @type {VALUE|undefined}
+ */
+Promise.AllSettledResultElement.prototype.value;
+
+/**
+ * Exists only if the status field is 'rejected'
+ * @type {*|undefined}
+ */
+Promise.AllSettledResultElement.prototype.reason;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
+ * @param {!Iterable<VALUE>} iterable
+ * @return {!Promise<!Array<!Promise.AllSettledResultElement<RESULT>>>}
+ * @template VALUE
+ * @template RESULT := mapunion(VALUE, (V) =>
+ *     cond(isUnknown(V),
+ *         unknown(),
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *             templateTypeOf(V, 0),
+ *             cond(sub(V, 'Thenable'), unknown(), V))))
+ * =:
+ */
+Promise.allSettled = function(iterable) {};
+
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
