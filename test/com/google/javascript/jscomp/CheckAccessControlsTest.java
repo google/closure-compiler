@@ -2308,10 +2308,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testConstantPropertyReassigned_crossModuleWithCollidingNames() {
-    // TODO(b/133447431): This code should not cause a warning, but the compiler incorrectly treats
-    // both 'A' instances as the same type.
     disableRewriteClosureCode();
-    test(
+    testNoWarning(
         srcs(
             "var goog = {}; goog.module = function(ns) {};",
             lines(
@@ -2327,8 +2325,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "function A() {",
                 "  /** @const */",
                 "  this.bar = 3;",
-                "}")),
-        error(CONST_PROPERTY_REASSIGNED_VALUE));
+                "}")));
   }
 
   @Test

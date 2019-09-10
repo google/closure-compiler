@@ -4782,6 +4782,32 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testSuperclassMixinDoesntCollideWithAnotherScope() {
+    testTypes(
+        lines(
+            "class ParentOne {}",
+            "class ParentTwo {}",
+            "function fn(x) {",
+            "  let klass;",
+            "  if (x) {",
+            "    /** @constructor @extends {ParentOne} */",
+            "    let templatizedBase = SomeVar;",
+            "    klass = class TE extends templatizedBase {};",
+            "  } else {",
+            "    /** @constructor @extends {ParentTwo} */",
+            "    let templatizedBase = OtherVar;",
+            "    klass = class TY extends templatizedBase {};",
+            "  }",
+            "}"),
+        // TODO(b/140735194): stop reporting this error, and either ban this pattern of reassigning
+        // klass outright or make it work as expected.
+        lines(
+            "mismatch in declaration of superclass type",
+            "found   : templatizedBase",
+            "required: templatizedBase"));
+  }
+
+  @Test
   public void testAsyncFunction_cannotDeclareReturnToBe_aSubtypeOfPromise() {
     testTypesWithCommonExterns(
         lines(

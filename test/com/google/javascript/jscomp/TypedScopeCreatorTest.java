@@ -5550,7 +5550,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testGoogRequire_multipleRequiresInModule() {
-    // TODO(b/132208293): we should not get this error.
+    // TODO(b/136284768): we should not get this error.
     testSame(
         srcs(
             lines(
@@ -5572,10 +5572,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedScope modCScope = getLabeledStatement("MOD_C").enclosingScope;
     FunctionType aCtor = modCScope.getVar("A").getType().toMaybeFunctionType();
+    FunctionType bCtor = modCScope.getVar("B").getType().toMaybeFunctionType();
     FunctionType cCtor = modCScope.getVar("C").getType().toMaybeFunctionType();
 
-    // TODO(b/132208293): This list should include B.
-    assertThat(cCtor.getAllImplementedInterfaces()).containsExactly(aCtor.getInstanceType());
+    assertThat(cCtor.getAllImplementedInterfaces())
+        .containsExactly(aCtor.getInstanceType(), bCtor.getInstanceType());
   }
 
   @Test

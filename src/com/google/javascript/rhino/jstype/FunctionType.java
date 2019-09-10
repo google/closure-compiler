@@ -896,9 +896,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
     switch (kind) {
       case CONSTRUCTOR:
-        return false; // constructors use identity semantics, which we already checked for above.
       case INTERFACE:
-        return getReferenceName().equals(that.getReferenceName());
+        // constructors and interfaces use identity semantics, which we checked for above.
+        return false;
       case ORDINARY:
         return typeOfThis.checkEquivalenceHelper(that.typeOfThis, eqMethod, eqCache)
             && call.checkArrowEquivalenceHelper(that.call, eqMethod, eqCache);
@@ -912,9 +912,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     int hc = kind.hashCode();
     switch (kind) {
       case CONSTRUCTOR:
-        return 31 * hc + System.identityHashCode(this); // constructors use identity semantics
       case INTERFACE:
-        return 31 * hc + getReferenceName().hashCode();
+        return 31 * hc + System.identityHashCode(this); // constructors use identity semantics
       case ORDINARY:
         hc = 31 * hc + typeOfThis.hashCode();
         hc = 31 * hc + call.hashCode();

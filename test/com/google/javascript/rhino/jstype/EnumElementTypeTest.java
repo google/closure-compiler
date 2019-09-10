@@ -39,6 +39,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import org.junit.Test;
@@ -94,13 +95,51 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
         "typeB", null, NUMBER_TYPE).getElementsType();
 
     JSType meet = typeA.meet(typeB);
-    assertThat(meet.isSubtypeOf(typeA)).isTrue();
-    assertThat(meet.isSubtypeOf(typeB)).isTrue();
 
-    // TODO(b/136298690): it's wrong for typeA to be a subtype of meet but not typeB.
-    // typeA <= meet, and meet <= typeB, but typeA !<= typeB.
-    assertThat(typeA.isSubtypeOf(meet)).isTrue();
-    assertThat(typeA.isSubtypeOf(typeB)).isFalse();
+    assertType(meet).isSubtypeOf(typeA);
+    assertType(meet).isSubtypeOf(typeB);
+    // This equality is because comparing unresolved type equality is just dependent on reference
+    // name, due to 'NamedTypes' being difficult or impossible to correctly check equality on.
+    assertType(meet).isEqualTo(typeA);
+    assertType(meet).isNotEqualTo(typeB);
 
+    assertType(typeA).isNotSubtypeOf(meet);
+    assertType(typeB).isNotSubtypeOf(meet);
+  }
+
+  @Test
+  public void testMeetTwoEnumElementTypes_postResolution() {
+    EnumElementType typeA = registry.createEnumType("typeA", null, NUMBER_TYPE).getElementsType();
+    EnumElementType typeB = registry.createEnumType("typeB", null, NUMBER_TYPE).getElementsType();
+    typeA.resolve(null);
+    typeB.resolve(null);
+
+    JSType meet = typeA.meet(typeB);
+    meet.resolve(null);
+
+    assertType(meet).isSubtypeOf(typeA);
+    assertType(meet).isSubtypeOf(typeB);
+    assertType(meet).isNotEqualTo(typeA);
+    assertType(meet).isNotEqualTo(typeB);
+
+    assertType(typeA).isNotSubtypeOf(meet);
+    assertType(typeB).isNotSubtypeOf(meet);
+  }
+
+  @Test
+  public void testEqualityOfEnumTypes_withSameReferenceName() {
+    EnumType firstFoo = registry.createEnumType("Foo", null, NUMBER_TYPE);
+    EnumType secondFoo = registry.createEnumType("Foo", null, NUMBER_TYPE);
+
+    assertType(firstFoo).isNotEqualTo(secondFoo);
+    // Pre-resolution type equality is intentionally loose because of NamedTypes, so treat these
+    // types as potentially equal.
+    assertType(firstFoo.getElementsType()).isEqualTo(secondFoo.getElementsType());
+
+    firstFoo.resolve(registry.getErrorReporter());
+    secondFoo.resolve(registry.getErrorReporter());
+
+    assertType(firstFoo).isNotEqualTo(secondFoo);
+    assertType(firstFoo.getElementsType()).isNotEqualTo(secondFoo.getElementsType());
   }
 }

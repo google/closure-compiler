@@ -117,6 +117,8 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
 
     JSType templatizedStringNumber =
         registry.createTemplatizedType(rawType, ImmutableList.of(STRING_TYPE, NUMBER_TYPE));
+    JSType secondTemplatizedStringNumber =
+        registry.createTemplatizedType(rawType, ImmutableList.of(STRING_TYPE, NUMBER_TYPE));
     JSType templatizedStringAll =
         registry.createTemplatizedType(rawType, ImmutableList.of(STRING_TYPE, ALL_TYPE));
     JSType templatizedStringUnknown =
@@ -133,6 +135,7 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     assertTypeNotEquals(templatizedStringAll, rawType);
     assertTypeNotEquals(templatizedStringUnknown, rawType);
 
+    assertTypeEquals(templatizedStringNumber, secondTemplatizedStringNumber);
     // TODO(b/110224889): This case should probably be `assertTypeNotEquals`.
     assertTypeEquals(templatizedUnknownUnknown, rawType);
 
@@ -141,6 +144,7 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     assertThat(rawType.isSubtypeOf(templatizedStringUnknown)).isTrue();
     assertThat(rawType.isSubtypeOf(templatizedUnknownUnknown)).isTrue();
 
+    assertType(templatizedStringNumber).isSubtypeOf(secondTemplatizedStringNumber);
     assertThat(templatizedStringNumber.isSubtypeOf(templatizedStringAll)).isFalse();
     assertThat(templatizedStringAll.isSubtypeOf(templatizedStringNumber)).isFalse();
 

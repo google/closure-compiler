@@ -6258,6 +6258,51 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testEqualityOfClassTypes_withSameReferenceName_preResolution() {
+    FunctionType classACtor =
+        FunctionType.builder(registry).forConstructor().withName("Foo").build();
+
+    FunctionType classBCtor =
+        FunctionType.builder(registry).forConstructor().withName("Foo").build();
+
+    // Currently, to handle NamedTypes, we treat unresolved type equality as purely based on
+    // reference name.
+    assertType(classACtor.getInstanceType()).isEqualTo(classBCtor.getInstanceType());
+  }
+
+  @Test
+  public void testEqualityOfClassTypes_withSameReferenceName_postResolution() {
+    FunctionType classACtor =
+        FunctionType.builder(registry).forConstructor().withName("Foo").build();
+
+    FunctionType classBCtor =
+        FunctionType.builder(registry).forConstructor().withName("Foo").build();
+
+    classACtor.resolve(registry.getErrorReporter());
+    classBCtor.resolve(registry.getErrorReporter());
+
+    assertType(classACtor).isNotEqualTo(classBCtor);
+    assertType(classACtor.getInstanceType()).isNotEqualTo(classBCtor.getInstanceType());
+    assertType(classACtor.getPrototype()).isNotEqualTo(classBCtor.getPrototype());
+  }
+
+  @Test
+  public void testEqualityOfInterfaceTypes_withSameReferenceName_postResolution() {
+    FunctionType interfaceACtor =
+        FunctionType.builder(registry).forInterface().withName("Foo").build();
+
+    FunctionType interfaceBCtor =
+        FunctionType.builder(registry).forInterface().withName("Foo").build();
+
+    interfaceACtor.resolve(registry.getErrorReporter());
+    interfaceBCtor.resolve(registry.getErrorReporter());
+
+    assertType(interfaceACtor).isNotEqualTo(interfaceBCtor);
+    assertType(interfaceACtor.getInstanceType()).isNotEqualTo(interfaceBCtor.getInstanceType());
+    assertType(interfaceACtor.getPrototype()).isNotEqualTo(interfaceBCtor.getPrototype());
+  }
+
+  @Test
   public void testRecordTypeEquality() {
     // {x: number}
     JSType firstType = registry.createRecordType(ImmutableMap.of("x", NUMBER_TYPE));

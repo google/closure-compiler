@@ -164,6 +164,70 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testEqualityOfTypesWithSameReferenceName_preResolution() {
+    // Given
+    ObjectType barTypeA = createNominalType("Bar", /* resolve= */ false);
+    ObjectType barTypeB = createNominalType("Bar", /* resolve= */ false);
+    FunctionType anonType = forceResolutionOf(FunctionType.builder(registry).build());
+
+    NamedTypeBuilder namedFooBuilder = new NamedTypeBuilder().setName("Foo");
+    NamedType namedFooUnresolved = namedFooBuilder.build();
+
+    NamedTypeBuilder namedBarBuilder = new NamedTypeBuilder().setName("Bar");
+    NamedType namedBarUnresolved = namedBarBuilder.build();
+
+    // Then
+    new EqualsTester()
+        .addEqualityGroup(fooType, namedFooUnresolved)
+        .addEqualityGroup(namedBarUnresolved, barTypeA, barTypeB)
+        .addEqualityGroup(anonType)
+        // TODO(b/112425334): Either re-enable this equality group or remove the NO_RESOLVED_TYPE
+        // from the typesystem.
+        // .addEqualityGroup(NO_RESOLVED_TYPE)
+        .testEquals();
+  }
+
+  @Test
+  public void testEqualityOfTypesWithSameReferenceName_postResolution() {
+    // Given
+    ObjectType barTypeA = createNominalType("Bar", /* resolve= */ true);
+    ObjectType barTypeB = createNominalType("Bar", /* resolve= */ true);
+    FunctionType anonType = forceResolutionOf(FunctionType.builder(registry).build());
+
+    NamedTypeBuilder namedFooBuilder = new NamedTypeBuilder().setName("Foo");
+    NamedType namedFooUnsuccessfullyResolved =
+        forceResolutionWith(NO_RESOLVED_TYPE, namedFooBuilder.build());
+    NamedType namedFooResolvedToFoo = forceResolutionWith(fooType, namedFooBuilder.build());
+    NamedType namedFooResolvedToAnon = forceResolutionWith(anonType, namedFooBuilder.build());
+    NamedType namedFooResolvedToBarA = forceResolutionWith(barTypeA, namedFooBuilder.build());
+    NamedType namedFooResolvedToBarB = forceResolutionWith(barTypeB, namedFooBuilder.build());
+
+    NamedTypeBuilder namedBarBuilder = new NamedTypeBuilder().setName("Bar");
+    NamedType namedBarUnsuccessfullyResolved =
+        forceResolutionWith(NO_RESOLVED_TYPE, namedBarBuilder.build());
+    NamedType namedBarResolvedToFoo = forceResolutionWith(fooType, namedBarBuilder.build());
+    NamedType namedBarResolvedToAnon = forceResolutionWith(anonType, namedBarBuilder.build());
+    NamedType namedBarResolvedToBarA = forceResolutionWith(barTypeA, namedBarBuilder.build());
+    NamedType namedBarResolvedToBarB = forceResolutionWith(barTypeB, namedBarBuilder.build());
+
+    barTypeA.resolve(registry.getErrorReporter());
+    barTypeB.resolve(registry.getErrorReporter());
+
+    // Then
+    new EqualsTester()
+        .addEqualityGroup(fooType, namedFooResolvedToFoo, namedBarResolvedToFoo)
+        .addEqualityGroup(barTypeA, namedFooResolvedToBarA, namedBarResolvedToBarA)
+        .addEqualityGroup(barTypeB, namedFooResolvedToBarB, namedBarResolvedToBarB)
+        .addEqualityGroup(anonType, namedFooResolvedToAnon, namedBarResolvedToAnon)
+        .addEqualityGroup(namedFooUnsuccessfullyResolved)
+        .addEqualityGroup(namedBarUnsuccessfullyResolved)
+        // TODO(b/112425334): Either re-enable this equality group or remove the NO_RESOLVED_TYPE
+        // from the typesystem.
+        // .addEqualityGroup(NO_RESOLVED_TYPE)
+        .testEquals();
+  }
+
+  @Test
   public void testForwardDeclaredNamedType() {
     NamedType a = new NamedTypeBuilder().setName("Unresolvable").build();
 
@@ -259,6 +323,12 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     FunctionType ctorType =
         forceResolutionOf(FunctionType.builder(registry).forConstructor().withName(name).build());
     return forceResolutionOf(ctorType.getInstanceType());
+  }
+
+  private ObjectType createNominalType(String name, boolean resolve) {
+    FunctionType ctorType =
+        forceResolutionOf(FunctionType.builder(registry).forConstructor().withName(name).build());
+    return resolve ? forceResolutionOf(ctorType.getInstanceType()) : ctorType.getInstanceType();
   }
 
   private class NamedTypeBuilder {

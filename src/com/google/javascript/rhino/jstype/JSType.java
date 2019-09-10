@@ -751,10 +751,23 @@ public abstract class JSType implements Serializable {
     }
 
     if (isNominalType() && that.isNominalType()) {
-      // TODO(johnlenz): is this valid across scopes?
-      @Nullable String nameOfThis = deepestResolvedTypeNameOf(this.toObjectType());
-      @Nullable String nameOfThat = deepestResolvedTypeNameOf(that.toObjectType());
+      JSType thisUnwrapped = unwrapNamedTypeAndTemplatizedType(this.toObjectType());
+      JSType thatUnwrapped = unwrapNamedTypeAndTemplatizedType(that.toObjectType());
+      if (isResolved() && that.isResolved()) {
+        return areIdentical(thisUnwrapped, thatUnwrapped);
+      }
 
+      // TODO(b/140763807): this is not valid across scopes pre-resolution.
+      @Nullable
+      String nameOfThis =
+          thisUnwrapped.toObjectType() != null
+              ? thisUnwrapped.toObjectType().getReferenceName()
+              : null;
+      @Nullable
+      String nameOfThat =
+          thatUnwrapped.toObjectType() != null
+              ? thatUnwrapped.toObjectType().getReferenceName()
+              : null;
       if ((nameOfThis == null) && (nameOfThat == null)) {
         // These are two anonymous types that were masquerading as nominal, so don't compare names.
       } else {
@@ -788,17 +801,21 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
-  // Named types may be proxies of concrete types.
-  @Nullable
-  private String deepestResolvedTypeNameOf(ObjectType objType) {
-    if (!objType.isResolved() || !objType.isNamedType()) {
-      return objType.getReferenceName();
+  private static JSType unwrapNamedTypeAndTemplatizedType(ObjectType objType) {
+    if (!objType.isResolved() || (!objType.isNamedType() && !objType.isTemplatizedType())) {
+      // Don't unwrap TemplateTypes, as they should use identity semantics even if their bounds
+      // are compatible. On the other hand, different TemplatizedType instances may be equal if
+      // their TemplateTypeMaps are compatible (which was checked for earlier).
+      return objType;
     }
 
-    ObjectType internal = objType.toMaybeNamedType().getReferencedObjTypeInternal();
+    ObjectType internal =
+        objType.isNamedType()
+            ? objType.toMaybeNamedType().getReferencedObjTypeInternal()
+            : objType.toMaybeTemplatizedType().getReferencedObjTypeInternal();
     return (internal != null && internal.isNominalType())
-        ? deepestResolvedTypeNameOf(internal)
-        : null;
+        ? unwrapNamedTypeAndTemplatizedType(internal)
+        : internal;
   }
 
   /**

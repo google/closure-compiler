@@ -43,13 +43,16 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.testing.EqualsTester;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.MapBasedScope;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -264,6 +267,52 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
     assertThat(barCtor.getImplicitPrototype()).isEqualTo(fooCtor);
     assertThat(barCtor.getSlot("foo").getType()).isEqualTo(NUMBER_TYPE);
+  }
+
+  @Test
+  public void testEqualityOfProxyForCtor() {
+    StaticTypedScope emptyScope = new MapBasedScope(ImmutableMap.of());
+    TemplateType key = registry.createTemplateType("KEY");
+    FunctionType fooCtor =
+        FunctionType.builder(registry)
+            .forConstructor()
+            .withName("Foo")
+            .withTemplateKeys(key)
+            .build();
+
+    // Bar points to `typeof Foo`.
+    NamedType barType = new NamedType(emptyScope, registry, "Bar", "", -1, -1);
+    registry.declareType(emptyScope, "Bar", fooCtor);
+    barType.resolve(null);
+
+    assertType(fooCtor).isEqualTo(barType);
+    assertType(fooCtor).isSubtypeOf(barType);
+    assertThat(barType.isFunctionType()).isTrue();
+  }
+
+  @Test
+  public void testCtorsSpecializedOnTemplateTypes() {
+    TemplateType key = registry.createTemplateType("KEY");
+    FunctionType fooCtor =
+        FunctionType.builder(registry)
+            .forConstructor()
+            .withName("Foo")
+            .withTemplateKeys(key)
+            .withReturnType(key)
+            .build();
+
+    TemplateTypeReplacer stringReplacer =
+        TemplateTypeReplacer.forInference(registry, ImmutableMap.of(key, STRING_TYPE));
+    TemplateTypeReplacer numberReplacer =
+        TemplateTypeReplacer.forInference(registry, ImmutableMap.of(key, NUMBER_TYPE));
+    JSType fooOfString = fooCtor.visit(stringReplacer).toMaybeFunctionType();
+    JSType fooOfNumber = fooCtor.visit(numberReplacer).toMaybeFunctionType();
+
+    new EqualsTester()
+        .addEqualityGroup(fooCtor)
+        .addEqualityGroup(fooOfString)
+        .addEqualityGroup(fooOfNumber)
+        .testEquals();
   }
 
   @Test
