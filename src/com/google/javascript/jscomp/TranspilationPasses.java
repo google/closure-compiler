@@ -378,6 +378,8 @@ public class TranspilationPasses {
       AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
       FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
+      ScopeCreator scopeCreator =
+          new MemoizedScopeCreator(SyntacticScopeCreator.withForcingGlobalRoot(compiler));
       for (Node singleRoot : combinedRoot.children()) {
 
         // Only run the transpilation if this file has features not in the compiler's target output
@@ -390,7 +392,7 @@ public class TranspilationPasses {
         if (doesScriptHaveUnsupportedFeatures(singleRoot, languageOutFeatures)) {
           for (Callback callback : callbacks) {
             singleRoot.putBooleanProp(Node.TRANSPILED, true);
-            NodeTraversal.traverse(compiler, singleRoot, callback);
+            new NodeTraversal(compiler, callback, scopeCreator).traverse(singleRoot);
           }
         }
       }
@@ -410,10 +412,12 @@ public class TranspilationPasses {
       AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
       FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
+      ScopeCreator scopeCreator =
+          new MemoizedScopeCreator(SyntacticScopeCreator.withForcingGlobalRoot(compiler));
       if (doesScriptHaveUnsupportedFeatures(scriptRoot, languageOutFeatures)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);
-          NodeTraversal.traverse(compiler, scriptRoot, callback);
+          new NodeTraversal(compiler, callback, scopeCreator).traverse(scriptRoot);
         }
       }
     }

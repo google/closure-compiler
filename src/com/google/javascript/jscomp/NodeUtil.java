@@ -4142,6 +4142,20 @@ public final class NodeUtil {
     }
   }
 
+  /** A predicate for matching name nodes with the specified node. */
+  static class MatchQualifiedNameNode implements Predicate<Node> {
+    final String name;
+
+    MatchQualifiedNameNode(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public boolean apply(Node n) {
+      return n.matchesQualifiedName(name);
+    }
+  }
+
   /**
    * A predicate for matching nodes with the specified type.
    */
@@ -4238,6 +4252,22 @@ public final class NodeUtil {
     }
 
     return false;
+  }
+
+  /** @return Whether the predicate is true for the node or any of its descendants. */
+  static Node find(Node node, Predicate<Node> pred) {
+    if (pred.apply(node)) {
+      return node;
+    }
+
+    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+      Node result = find(c, pred);
+      if (result != null) {
+        return result;
+      }
+    }
+
+    return null;
   }
 
   /**

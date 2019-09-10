@@ -36,6 +36,7 @@ public class SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private final RedeclarationHandler redeclarationHandler;
   private final ScopeFactory scopeFactory;
+  private final boolean forceGlobalRoot; // use the global ROOT instead of a SCRIPT
 
   // The arguments variable is special, in that it's declared for every function,
   // but not explicitly declared.
@@ -60,9 +61,23 @@ public class SyntacticScopeCreator implements ScopeCreator {
       AbstractCompiler compiler,
       RedeclarationHandler redeclarationHandler,
       ScopeFactory scopeFactory) {
+    this(compiler, redeclarationHandler, scopeFactory, false);
+  }
+
+  private SyntacticScopeCreator(
+      AbstractCompiler compiler,
+      RedeclarationHandler redeclarationHandler,
+      ScopeFactory scopeFactory,
+      boolean forceGlobalRoot) {
     this.compiler = compiler;
     this.redeclarationHandler = redeclarationHandler;
     this.scopeFactory = scopeFactory;
+    this.forceGlobalRoot = forceGlobalRoot;
+  }
+
+  static SyntacticScopeCreator withForcingGlobalRoot(AbstractCompiler compiler) {
+    return new SyntacticScopeCreator(
+        compiler, DEFAULT_REDECLARATION_HANDLER, new DefaultScopeFactory(), true);
   }
 
   @Override
@@ -86,6 +101,14 @@ public class SyntacticScopeCreator implements ScopeCreator {
 
   @Override
   public Scope createScope(Node n, AbstractScope<?, ?> parent) {
+    if (forceGlobalRoot) {
+      if (n.isScript()) {
+        n = n.getParent();
+      }
+      if (n.isRoot() && n.getParent() != null) {
+        n = n.getParent();
+      }
+    }
     Scope scope = scopeFactory.create((Scope) parent, n);
     new ScopeScanner(compiler, redeclarationHandler, scope, null).populate();
     return scope;

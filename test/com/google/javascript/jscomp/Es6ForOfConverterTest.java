@@ -15,9 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +37,8 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
           MINIMAL_EXTERNS,
           "/** @constructor @template T */",
           "function Arguments() {}",
+          "/** @const */",
+          "var $jscomp = {};",
           "/**",
           " * @param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
           " * @return {!Iterator<T>}",
@@ -78,7 +81,6 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "    console.log(i);",
             "  }",
             "}"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
 
     // With simple assign instead of var declaration in bound variable.
     test(
@@ -226,6 +228,44 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "  f()['x' + 1] = $jscomp$key$a.value;",
             "  {}",
             "}"));
+  }
+
+  @Test
+  public void testForOfPropagatesCorrectTypeOntoProperties() {
+    test(
+        lines(
+            "/** @type {!Array<number>} */ const arr = [1, 2, 3];",
+            "for (var i of arr) {",
+            "  console.log(i);",
+            "}"),
+        lines(
+            "/** @type {!Array<number>} */ const arr = [1, 2, 3];",
+            "for (var $jscomp$iter$0 = $jscomp.makeIterator(arr),",
+            "    $jscomp$key$i = $jscomp$iter$0.next();",
+            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+            "  var i = $jscomp$key$i.value;",
+            "  {",
+            "    console.log(i);",
+            "  }",
+            "}"));
+
+    Node astRoot = getLastCompiler().getRoot();
+
+    // Test properties in particular (instead of other nodes) because property typing is critical
+    // for property disambiguation.
+
+    Node value = NodeUtil.find(astRoot, new NodeUtil.MatchQualifiedNameNode("$jscomp$key$i.value"));
+    assertNode(value).hasJSTypeThat().isNumber();
+
+    Node done = NodeUtil.find(astRoot, new NodeUtil.MatchQualifiedNameNode("$jscomp$key$i.done"));
+    assertNode(done).hasJSTypeThat().isBoolean();
+
+    Node next = NodeUtil.find(astRoot, new NodeUtil.MatchQualifiedNameNode("$jscomp$iter$0.next"));
+    assertNode(next)
+        .hasJSTypeThat()
+        .isFunctionTypeThat()
+        .hasReturnTypeThat()
+        .getReferenceNameIsEqualTo("IIterableResult");
   }
 
   @Override
