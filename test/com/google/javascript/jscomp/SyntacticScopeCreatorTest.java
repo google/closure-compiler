@@ -28,7 +28,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import org.junit.Before;
@@ -1246,22 +1245,6 @@ public final class SyntacticScopeCreatorTest {
     checkState(moduleBody.isModuleBody(), moduleBody);
     Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
     assertScope(moduleScope).declares("Clazz").directly();
-  }
-
-  @Test
-  public void testForceGlobalRoot() {
-    Node scriptOne = getRoot("var one = '1';");
-    Node scriptTwo = getRoot("var two = 2;");
-    Node root = IR.root(IR.root(scriptOne), IR.root(scriptTwo));
-
-    SyntacticScopeCreator globalScopeCreator =
-        SyntacticScopeCreator.withForcingGlobalRoot(compiler);
-
-    Scope globalScopeFromScript = globalScopeCreator.createScope(scriptOne, null);
-    Scope globalScopeFromExternsRoot = globalScopeCreator.createScope(root.getSecondChild(), null);
-
-    assertScope(globalScopeFromScript).declares("two").globally();
-    assertScope(globalScopeFromExternsRoot).declares("two").globally();
   }
 
   @Test

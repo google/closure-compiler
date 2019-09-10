@@ -17,14 +17,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
-import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -1579,48 +1577,6 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   @Test
-  public void testArrayDestructuring_getsCorrectTypes_acrossTwoFiles() {
-    // inject libraries to get the correct $jscomp.makeIterator type
-    useNoninjectingCompiler = false;
-    ensureLibraryInjected("es6/util/makeiterator");
-    disableCompareSyntheticCode();
-    allowExternsChanges();
-
-    // regression test for b/136592294, where scripts (besides the first script in a compile) did
-    // not have access to the entire global scope. This caused $jscomp.makeIterator to be '?'.
-    test(
-        externs(DEFAULT_EXTERNS),
-        srcs(
-            "",
-            lines(
-                "function takesIterable(/** !Iterable<number> */ iterable) {", //
-                "  const [a] = iterable;",
-                "}")),
-        expected(
-            "",
-            lines(
-                "function takesIterable(/** !Iterable<number> */ iterable) {", //
-                "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(iterable);",
-                "  const a = $jscomp$destructuring$var0.next().value;",
-                "}")));
-
-    Compiler lastCompiler = getLastCompiler();
-    JSTypeRegistry registry = lastCompiler.getTypeRegistry();
-
-    // `$jscomp.makeIterator(iterable)` returns an Iterator<number>
-    Node makeIteratorCall =
-        getNodeMatchingQName(lastCompiler.getJsRoot(), "$jscomp.makeIterator").getParent();
-
-    assertNode(makeIteratorCall).hasToken(Token.CALL);
-    assertNode(makeIteratorCall)
-        .hasJSTypeThat()
-        .isEqualTo(
-            registry.createTemplatizedType(
-                registry.getNativeObjectType(JSTypeNative.ITERATOR_TYPE),
-                registry.getNativeType(JSTypeNative.NUMBER_TYPE)));
-  }
-
-  @Test
   public void testArrayDestructuringRest_getsCorrectTypes() {
     // inject libraries to get the correct $jscomp.arrayFromIterator type
     useNoninjectingCompiler = false;
@@ -1797,7 +1753,16 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   /** Returns the first node (preorder) in the given AST that matches the given qualified name */
   private Node getNodeMatchingQName(Node root, String qname) {
-    return NodeUtil.find(root, new NodeUtil.MatchQualifiedNameNode(qname));
+    if (root.matchesQualifiedName(qname)) {
+      return root;
+    }
+    for (Node child : root.children()) {
+      Node result = getNodeMatchingQName(child, qname);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
   }
 
   @Override
