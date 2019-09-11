@@ -26,7 +26,9 @@ requirement: {
   value: 'eval'
 
   whitelist: 'javascript/closure/base.js'
+  whitelist: 'third_party/javascript/closure/base.js'
   whitelist: 'javascript/closure/json/json.js'
+  whitelist: 'third_party/javascript/closure/json/json.js'
 }
 
 requirement: {
@@ -39,7 +41,9 @@ requirement: {
   value: 'Arguments.prototype.callee'
 
   whitelist: 'javascript/closure/base.js'  # goog.base uses arguments.callee
+  whitelist: 'third_party/javascript/closure/base.js'  # goog.base uses arguments.callee
   whitelist: 'javascript/closure/debug/'  # legacy stack trace support, etc
+  whitelist: 'third_party/javascript/closure/debug/'  # legacy stack trace support, etc
 }
 
 requirement: {
@@ -52,10 +56,12 @@ requirement: {
 
   # Safe wrapper for this property.
   whitelist: 'javascript/closure/dom/safe.js'
+  whitelist: 'third_party/javascript/closure/dom/safe.js'
 
   # Safely used in goog.string.unescapeEntitiesUsingDom_; the string assigned to
   # innerHTML is a single HTML entity.
   whitelist: 'javascript/closure/string/string.js'
+  whitelist: 'third_party/javascript/closure/string/string.js'
 }
 
 requirement: {
@@ -68,6 +74,7 @@ requirement: {
 
   # Safe wrapper for this property.
   whitelist: 'javascript/closure/dom/safe.js'
+  whitelist: 'third_party/javascript/closure/dom/safe.js'
 }
 
 requirement: {
@@ -82,6 +89,7 @@ requirement: {
 
   # Safe wrapper for this property.
   whitelist: 'javascript/closure/dom/safe.js'
+  whitelist: 'third_party/javascript/closure/dom/safe.js'
 }
 
 requirement: {
@@ -112,6 +120,7 @@ requirement: {
 
   # Safe wrapper for this property.
   whitelist: 'javascript/closure/dom/safe.js'
+  whitelist: 'third_party/javascript/closure/dom/safe.js'
 }
 
 requirement: {
