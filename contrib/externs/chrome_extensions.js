@@ -3333,9 +3333,11 @@ chrome.i18n.getAcceptLanguages = function(callback) {};
 /**
  * @param {string} messageName
  * @param {(string|Array<string>)=} opt_args
+ * @param {{escapeLt: boolean}=} opt_options
  * @return {string}
+ * @see https://developer.chrome.com/extensions/i18n#method-getMessage
  */
-chrome.i18n.getMessage = function(messageName, opt_args) {};
+chrome.i18n.getMessage = function(messageName, opt_args, opt_options) {};
 
 
 /**
