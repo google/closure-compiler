@@ -386,9 +386,10 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       }
       joinedGroups.setJSType(arrayType);
     }
+    boolean isFreeCall = spreadParent.getBooleanProp(Node.FREE_CALL);
 
     final Node callToApply;
-    if (calleeMayHaveSideEffects && callee.isGetProp()) {
+    if (calleeMayHaveSideEffects && callee.isGetProp() && !isFreeCall) {
       JSType receiverType = callee.getFirstChild().getJSType(); // Type of `foo()`.
 
       // foo().method(...[a, b, c])
@@ -417,7 +418,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       // or
       // foo(...[a, b, c]) -> foo.apply(null, [a, b, c])
       Node context =
-          (callee.isGetProp() || callee.isGetElem())
+          (callee.isGetProp() || callee.isGetElem()) && !isFreeCall
               ? callee.getFirstChild().cloneTree()
               : nullWithJSType();
       callToApply = IR.call(getpropInferringJSType(callee, "apply"), context, joinedGroups);

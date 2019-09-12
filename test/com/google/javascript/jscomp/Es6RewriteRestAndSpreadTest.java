@@ -228,6 +228,37 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSpreadVariableIntoMethodParameterList_freeCall() {
+    test(
+        externs(
+            lines(
+                "/**",
+                " * @constructor",
+                // Skipping @struct here to allow for string access.
+                " */",
+                "function TestClass() { }",
+                "",
+                // Add @this {?} to allow calling testMethod without passing a TestClass as `this`
+                "/** @param {...string} args @this {?} */",
+                "TestClass.prototype.testMethod = function(args) { }",
+                "",
+                "/** @return {!TestClass} */",
+                "function testClassFactory() { }")),
+        srcs(
+            lines(
+                "var obj = new TestClass();",
+                // The (0, obj.testMethod) tells the compiler that this is a 'free call'.
+                "(0, obj.testMethod)(...arr);",
+                "(0, obj['testMethod'])(...arr);")),
+        expected(
+            lines(
+                "var obj = new TestClass();",
+                "(0, obj.testMethod).apply(null, $jscomp.arrayFromIterable(arr));",
+                "(0, obj[\"testMethod\"]).apply(null, $jscomp.arrayFromIterable(arr));")));
+    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
+  }
+
+  @Test
   public void testSpreadMultipleArrayLiteralsIntoParameterList() {
     test(
         externs(
@@ -281,6 +312,40 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
                 "var $jscomp$spread$args0;",
                 "($jscomp$spread$args0 = testClassFactory()).testMethod.apply(",
                 "    $jscomp$spread$args0, $jscomp.arrayFromIterable(stringIterable));")));
+  }
+
+  @Test
+  public void testSpreadVariableIntoMethodParameterListOnReceiverWithSideEffects_freeCall() {
+    test(
+        externs(
+            lines(
+                MINIMAL_EXTERNS,
+                "/**",
+                " * @constructor",
+                // Skip @struct to allow for bracket access
+                " */",
+                "function TestClass() { }",
+                "",
+                // Add @this {?} to allow calling testMethod without passing a TestClass as `this`
+                "/** @param {...string} args @this {null} */",
+                "TestClass.prototype.testMethod = function(args) { }",
+                "",
+                "/** @return {!TestClass} */",
+                "function testClassFactory() { }",
+                "",
+                "/** @type {!Iterable<string>} */ var stringIterable;")),
+        srcs(
+            lines(
+                // The (0, [...].testMethod) tells the compiler that this is a 'free call'.
+                "(0, testClassFactory().testMethod)(...stringIterable);",
+                "(0, testClassFactory()['testMethod'])(...stringIterable);")),
+        expected(
+            lines(
+                "(0, testClassFactory().testMethod).apply(",
+                "    null, $jscomp.arrayFromIterable(stringIterable));",
+                "(0, testClassFactory()[\"testMethod\"]).apply(",
+                "    null, $jscomp.arrayFromIterable(stringIterable));")));
+    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 
   @Test
