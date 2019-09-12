@@ -40,7 +40,7 @@ class VerboseMessageFormatter extends AbstractMessageFormatter {
 
   private String format(JSError message) {
     String description = message.description;
-    String sourceName = message.sourceName;
+    String sourceName = message.getSourceName();
     int lineNumber = message.lineNumber;
     Region sourceRegion = getSource().getSourceRegion(sourceName, lineNumber);
     String lineSource = null;

@@ -151,8 +151,8 @@ public class SortingErrorManager implements ErrorManager {
       }
 
       // sourceName comparison
-      String source1 = p1.error.sourceName;
-      String source2 = p2.error.sourceName;
+      String source1 = p1.error.getSourceName();
+      String source2 = p2.error.getSourceName();
       if (source1 != null && source2 != null) {
         int sourceCompare = source1.compareTo(source2);
         if (sourceCompare != 0) {
@@ -164,8 +164,8 @@ public class SortingErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // lineno comparison
-      int lineno1 = p1.error.lineNumber;
-      int lineno2 = p2.error.lineNumber;
+      int lineno1 = p1.error.getLineNumber();
+      int lineno2 = p2.error.getLineNumber();
       if (lineno1 != lineno2) {
         return lineno1 - lineno2;
       } else if (lineno1 < 0 && 0 <= lineno2) {
@@ -184,7 +184,7 @@ public class SortingErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // description
-      return p1.error.description.compareTo(p2.error.description);
+      return p1.error.description.compareTo(p2.error.getDescription());
     }
   }
 
@@ -200,7 +200,11 @@ public class SortingErrorManager implements ErrorManager {
     @Override
     public int hashCode() {
       return Objects.hash(
-          level, error.description, error.sourceName, error.lineNumber, error.getCharno());
+          level,
+          error.getDescription(),
+          error.getSourceName(),
+          error.getLineNumber(),
+          error.getCharno());
     }
 
     @Override
@@ -210,9 +214,9 @@ public class SortingErrorManager implements ErrorManager {
       }
       ErrorWithLevel e = (ErrorWithLevel) obj;
       return Objects.equals(level, e.level)
-          && Objects.equals(error.description, e.error.description)
-          && Objects.equals(error.sourceName, e.error.sourceName)
-          && error.lineNumber == e.error.lineNumber
+          && Objects.equals(error.getDescription(), e.error.getDescription())
+          && Objects.equals(error.getSourceName(), e.error.getSourceName())
+          && error.getLineNumber() == e.error.getLineNumber()
           && error.getCharno() == e.error.getCharno();
     }
   }

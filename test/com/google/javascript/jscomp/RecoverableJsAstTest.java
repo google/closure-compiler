@@ -180,6 +180,6 @@ public class RecoverableJsAstTest {
 
   private static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =
       Correspondence.from(
-          (error, description) -> Objects.equals(error.description, description),
+          (error, description) -> Objects.equals(error.getDescription(), description),
           "has description equal to");
 }

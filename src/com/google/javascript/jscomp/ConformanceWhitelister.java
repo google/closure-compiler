@@ -29,17 +29,15 @@ public class ConformanceWhitelister {
 
   public static ImmutableSet<String> getViolatingPaths(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
-    return getConformanceErrors(compiler, externs, ast, requirement)
-        .stream()
-        .map(e -> e.sourceName)
+    return getConformanceErrors(compiler, externs, ast, requirement).stream()
+        .map(JSError::getSourceName)
         .collect(ImmutableSet.toImmutableSet());
   }
 
   public static ImmutableSet<Node> getViolatingNodes(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
-    return getConformanceErrors(compiler, externs, ast, requirement)
-        .stream()
-        .map(e -> e.node)
+    return getConformanceErrors(compiler, externs, ast, requirement).stream()
+        .map(JSError::getNode)
         .collect(ImmutableSet.toImmutableSet());
   }
 

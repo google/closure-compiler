@@ -208,6 +208,6 @@ public abstract class BaseReplaceScriptTestCase {
 
   protected void assertErrorType(JSError e, DiagnosticType type, int lineNumber) {
     assertError(e).hasType(type);
-    assertThat(lineNumber).isEqualTo(e.lineNumber);
+    assertThat(lineNumber).isEqualTo(e.getLineNumber());
   }
 }

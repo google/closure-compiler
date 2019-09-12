@@ -140,7 +140,7 @@ public final class RhinoErrorReporterTest {
 
     JSError error = Iterables.getOnlyElement(compiler.getErrors());
     assertThat(error.getType()).isEqualTo(type);
-    assertThat(error.description).isEqualTo(description);
+    assertThat(error.getDescription()).isEqualTo(description);
     return error;
   }
 
@@ -154,7 +154,7 @@ public final class RhinoErrorReporterTest {
 
     JSError error = Iterables.getOnlyElement(compiler.getWarnings());
     assertThat(error.getType()).isEqualTo(type);
-    assertThat(error.description).isEqualTo(description);
+    assertThat(error.getDescription()).isEqualTo(description);
     return error;
   }
 

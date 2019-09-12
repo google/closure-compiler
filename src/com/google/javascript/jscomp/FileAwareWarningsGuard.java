@@ -36,15 +36,15 @@ public abstract class FileAwareWarningsGuard extends WarningsGuard {
   @Nullable
   protected final Node getScriptNodeForError(JSError error) {
     // If error.node is connected to AST, this will be much faster than compiler.getScriptNode
-    for (Node n = error.node; n != null; n = n.getParent()) {
+    for (Node n = error.getNode(); n != null; n = n.getParent()) {
       if (n.isScript()) {
         return n;
       }
     }
-    if (error.sourceName == null) {
+    if (error.getSourceName() == null) {
       return null;
     }
-    Node scriptNode = compiler.getScriptNode(error.sourceName);
+    Node scriptNode = compiler.getScriptNode(error.getSourceName());
     if (scriptNode != null) {
       // TODO(b/73088845): This should always be a SCRIPT node
       if (!scriptNode.isScript()) {

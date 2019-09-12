@@ -1838,7 +1838,7 @@ public abstract class CompilerTestCase {
       for (JSError error : compiler.getErrors()) {
         validateSourceLocation(error);
         assertWithMessage("Some placeholders in the error message were not replaced")
-            .that(error.description)
+            .that(error.getDescription())
             .doesNotContainMatch("\\{\\d\\}");
       }
     }
@@ -2042,7 +2042,7 @@ public abstract class CompilerTestCase {
     if (warnings != null) {
       String warningMessage = "";
       for (JSError actualWarning : compiler.getWarnings()) {
-        warningMessage += actualWarning.description + "\n";
+        warningMessage += actualWarning.getDescription() + "\n";
       }
       assertWithMessage("There should be " + warnings.length + " warnings. " + warningMessage)
           .that(compiler.getWarningCount())
@@ -2461,14 +2461,14 @@ public abstract class CompilerTestCase {
 
     private boolean matches(JSError error) {
       return diagnostic == error.getType()
-          && (messagePredicate == null || messagePredicate.apply(error.description));
+          && (messagePredicate == null || messagePredicate.apply(error.getDescription()));
     }
 
     private String formatDiff(JSError error) {
       if (diagnostic != error.getType()) {
         return "diagnostic type " + error.getType().key + " did not match";
       }
-      return "message \"" + error.description + "\" was not " + messagePredicate;
+      return "message \"" + error.getDescription() + "\" was not " + messagePredicate;
     }
 
     protected Diagnostic withMessage(final String expected) {

@@ -16386,7 +16386,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .process(externs, secondScript.getParent());
 
     assertThat(compiler.getWarningCount()).isEqualTo(1);
-    assertThat(compiler.getWarnings().get(0).description)
+    assertThat(compiler.getWarnings().get(0).getDescription())
         .isEqualTo("cannot instantiate non-constructor");
   }
 
@@ -24911,7 +24911,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           .isEqualTo(descriptions.size());
       Set<String> actualWarningDescriptions = new HashSet<>();
       for (int i = 0; i < descriptions.size(); i++) {
-        actualWarningDescriptions.add(compiler.getWarnings().get(i).description);
+        actualWarningDescriptions.add(compiler.getWarnings().get(i).getDescription());
       }
       assertThat(actualWarningDescriptions).isEqualTo(new HashSet<>(descriptions));
     }

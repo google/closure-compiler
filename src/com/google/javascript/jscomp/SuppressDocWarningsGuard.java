@@ -81,7 +81,7 @@ class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
 
   @Override
   public CheckLevel level(JSError error) {
-    Node node = error.node;
+    Node node = error.getNode();
     if (node == null) {
       node = getScriptNodeForError(error);
     }

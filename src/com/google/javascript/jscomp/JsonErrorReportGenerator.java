@@ -58,7 +58,7 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
     try (JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(bufferedStream, "UTF-8"))) {
       jsonWriter.beginArray();
       for (ErrorWithLevel message : manager.getSortedDiagnostics()) {
-        String sourceName = message.error.sourceName;
+        String sourceName = message.error.getSourceName();
         int lineNumber = message.error.getLineNumber();
         int charno = message.error.getCharno();
 
@@ -89,12 +89,14 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
                 b.append(' ');
               }
             }
-            if (message.error.node == null) {
+            if (message.error.getNode() == null) {
               b.append("^");
             } else {
               int length =
                   Math.max(
-                      1, Math.min(message.error.node.getLength(), sourceExcerpt.length() - charno));
+                      1,
+                      Math.min(
+                          message.error.getNode().getLength(), sourceExcerpt.length() - charno));
               for (int i = 0; i < length; i++) {
                 b.append("^");
               }
@@ -106,7 +108,7 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
 
         OriginalMapping mapping =
             sourceExcerptProvider.getSourceMapping(
-                sourceName, message.error.lineNumber, message.error.getCharno());
+                sourceName, message.error.getLineNumber(), message.error.getCharno());
 
         if (mapping != null) {
           jsonWriter.name("originalLocation").beginObject();
