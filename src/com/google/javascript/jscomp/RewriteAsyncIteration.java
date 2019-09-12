@@ -61,7 +61,6 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
   static final DiagnosticType CANNOT_CONVERT_ASYNCGEN =
       DiagnosticType.error("JSC_CANNOT_CONVERT_ASYNCGEN", "Cannot convert async generator. {0}");
 
-  private static final String GENERATOR_WRAPPER_NAME = "$jscomp.AsyncGeneratorWrapper";
   private static final String ACTION_RECORD_NAME = "$jscomp.AsyncGeneratorWrapper$ActionRecord";
 
   private static final String ACTION_ENUM_AWAIT =
