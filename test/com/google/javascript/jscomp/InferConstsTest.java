@@ -248,6 +248,7 @@ public final class InferConstsTest extends CompilerTestCase {
     assertConsts("import x from './mod';", notInferred("x"));
     assertConsts("import {x as y, z} from './mod';", notInferred("y", "z"));
     assertConsts("import * as x from './mod';", notInferred("x"));
+    assertConsts("import * as CONST_NAME from './mod';", declared("CONST_NAME"));
   }
 
   private void assertNotConsts(String js, String... names) {
@@ -317,7 +318,7 @@ public final class InferConstsTest extends CompilerTestCase {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       for (String name : names) {
-        if (n.isName() && n.matchesQualifiedName(name)) {
+        if ((n.isName() || n.isImportStar()) && n.matchesQualifiedName(name)) {
           if (n.isDeclaredConstantVar()) {
             declaredNodes.add(name);
           }

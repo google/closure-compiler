@@ -2193,6 +2193,7 @@ public class Node implements Serializable {
 
     switch (this.getToken()) {
       case NAME:
+      case IMPORT_STAR:
         String name = getString();
         return start == 0 && !name.isEmpty() && name.length() == endIndex && qname.startsWith(name);
       case THIS:
@@ -3067,7 +3068,10 @@ public class Node implements Serializable {
    * <p>Only valid to call on a {@linkplain #isName name} node.
    */
   public final boolean isDeclaredConstantVar() {
-    checkState(isName(), "Should only be called on name nodes.");
+    checkState(
+        isName() || isImportStar(),
+        "Should only be called on name or import * nodes. Found %s",
+        this);
     return anyBitSet(getConstantVarFlags(), ConstantVarFlags.DECLARED);
   }
 
@@ -3077,7 +3081,10 @@ public class Node implements Serializable {
    * <p>See {@link #isDeclaredConstantVar} for the rules.
    */
   public final void setDeclaredConstantVar(boolean value) {
-    checkState(isName(), "Should only be called on name nodes.");
+    checkState(
+        isName() || isImportStar(),
+        "Should only be called on name or import * nodes. Found %s",
+        this);
     setConstantVarFlag(ConstantVarFlags.DECLARED, value);
   }
 
@@ -3095,7 +3102,10 @@ public class Node implements Serializable {
    * <p>Only valid to call on a {@linkplain #isName name} node.
    */
   public final boolean isInferredConstantVar() {
-    checkState(isName(), "Should only be called on name nodes.");
+    checkState(
+        isName() || isImportStar(),
+        "Should only be called on name or import * nodes. Found %s",
+        this);
     return anyBitSet(getConstantVarFlags(), ConstantVarFlags.INFERRED);
   }
 
@@ -3105,7 +3115,10 @@ public class Node implements Serializable {
    * <p>See {@link #isInferredConstantVar} for the rules.
    */
   public final void setInferredConstantVar(boolean value) {
-    checkState(isName(), "Should only be called on name nodes.");
+    checkState(
+        isName() || isImportStar(),
+        "Should only be called on name or import * nodes. Found %s",
+        this);
     setConstantVarFlag(ConstantVarFlags.INFERRED, value);
   }
 

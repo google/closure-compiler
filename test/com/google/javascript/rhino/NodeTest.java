@@ -267,6 +267,9 @@ public class NodeTest {
     assertThat(qname("a.b.c").matchesQualifiedName("a.b.c")).isTrue();
     assertThat(qname("a.b.c").matchesQualifiedName("a.b.c")).isTrue();
 
+    assertThat(IR.importStar("a").matchesQualifiedName("a")).isTrue();
+    assertThat(IR.importStar("a").matchesQualifiedName("b")).isFalse();
+
     assertThat(IR.number(0).matchesQualifiedName("a.b")).isFalse();
     assertThat(IR.arraylit().matchesQualifiedName("a.b")).isFalse();
     assertThat(IR.objectlit().matchesQualifiedName("a.b")).isFalse();
