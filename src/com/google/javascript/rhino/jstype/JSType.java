@@ -1485,15 +1485,14 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * the logic of this method is similar to isSubtype,
-   * except that it does not perform structural interface matching
+   * the logic of this method is similar to isSubtype, except that it does not perform structural
+   * interface matching
    *
-   * This function is added for disambiguate properties,
-   * and is deprecated for the other use cases.
+   * <p>This function is added for disambiguate properties, and is deprecated for the other use
+   * cases.
    */
-  public boolean isSubtypeWithoutStructuralTyping(JSType that) {
-    return isSubtype(
-        that, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
+  public boolean isSubtypeWithoutStructuralTyping(JSType supertype) {
+    return isSubtype(supertype, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
   }
 
   /**
@@ -1505,117 +1504,114 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Checks whether {@code this} is a subtype of {@code that}.<p>
-   * Note this function also returns true if this type structurally
-   * matches the protocol define by that type (if that type is an
-   * interface function type)
+   * Checks whether {@code this} is a subtype of {@code that}.
    *
-   * Subtyping rules:
+   * <p>Note this function also returns true if this type structurally matches the protocol define
+   * by that type (if that type is an interface function type)
+   *
+   * <p>Subtyping rules:
+   *
    * <ul>
-   * <li>(unknown) &mdash; every type is a subtype of the Unknown type.</li>
-   * <li>(no) &mdash; the No type is a subtype of every type.</li>
-   * <li>(no-object) &mdash; the NoObject type is a subtype of every object
-   * type (i.e. subtypes of the Object type).</li>
-   * <li>(ref) &mdash; a type is a subtype of itself.</li>
-   * <li>(union-l) &mdash; A union type is a subtype of a type U if all the
-   * union type's constituents are a subtype of U. Formally<br>
-   * <code>(T<sub>1</sub>, &hellip;, T<sub>n</sub>) &lt;: U</code> if and only
-   * <code>T<sub>k</sub> &lt;: U</code> for all <code>k &isin; 1..n</code>.</li>
-   * <li>(union-r) &mdash; A type U is a subtype of a union type if it is a
-   * subtype of one of the union type's constituents. Formally<br>
-   * <code>U &lt;: (T<sub>1</sub>, &hellip;, T<sub>n</sub>)</code> if and only
-   * if <code>U &lt;: T<sub>k</sub></code> for some index {@code k}.</li>
-   * <li>(objects) &mdash; an Object <code>O<sub>1</sub></code> is a subtype
-   * of an object <code>O<sub>2</sub></code> if it has more properties
-   * than <code>O<sub>2</sub></code> and all common properties are
-   * pairwise subtypes.</li>
+   *   <li>(unknown) &mdash; every type is a subtype of the Unknown type.
+   *   <li>(no) &mdash; the No type is a subtype of every type.
+   *   <li>(no-object) &mdash; the NoObject type is a subtype of every object type (i.e. subtypes of
+   *       the Object type).
+   *   <li>(ref) &mdash; a type is a subtype of itself.
+   *   <li>(union-l) &mdash; A union type is a subtype of a type U if all the union type's
+   *       constituents are a subtype of U. Formally<br>
+   *       <code>(T<sub>1</sub>, &hellip;, T<sub>n</sub>) &lt;: U</code> if and only <code>
+   *       T<sub>k</sub> &lt;: U</code> for all <code>k &isin; 1..n</code>.
+   *   <li>(union-r) &mdash; A type U is a subtype of a union type if it is a subtype of one of the
+   *       union type's constituents. Formally<br>
+   *       <code>U &lt;: (T<sub>1</sub>, &hellip;, T<sub>n</sub>)</code> if and only if <code>
+   *       U &lt;: T<sub>k</sub></code> for some index {@code k}.
+   *   <li>(objects) &mdash; an Object <code>O<sub>1</sub></code> is a subtype of an object <code>
+   *       O<sub>2</sub></code> if it has more properties than <code>O<sub>2</sub></code> and all
+   *       common properties are pairwise subtypes.
    * </ul>
    *
    * @return <code>this &lt;: that</code>
    */
-  public boolean isSubtype(JSType that) {
-    return isSubtypeHelper(this, that,
-        ImplCache.create(), SubtypingMode.NORMAL);
+  public boolean isSubtype(JSType supertype) {
+    return isSubtypeHelper(this, supertype, ImplCache.create(), SubtypingMode.NORMAL);
   }
 
-  public boolean isSubtype(JSType that, SubtypingMode mode) {
-    return isSubtype(that, ImplCache.create(), mode);
+  public boolean isSubtype(JSType supertype, SubtypingMode mode) {
+    return isSubtype(supertype, ImplCache.create(), mode);
   }
 
   /**
    * checking isSubtype with structural interface matching
-   * @param implicitImplCache a cache that records the checked
-   * or currently checking type pairs, for example, if previous
-   * checking found that constructor C is a subtype of interface I,
-   * then in the cache, table key {@code <I,C>} maps to IMPLEMENT status.
+   *
+   * @param implicitImplCache a cache that records the checked or currently checking type pairs, for
+   *     example, if previous checking found that constructor C is a subtype of interface I, then in
+   *     the cache, table key {@code <I,C>} maps to IMPLEMENT status.
    */
-  protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    return isSubtypeHelper(this, that, implicitImplCache, subtypingMode);
+  protected boolean isSubtype(
+      JSType supertype, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
+    return isSubtypeHelper(this, supertype, implicitImplCache, subtypingMode);
   }
 
-  /**
-   * if implicitImplCache is null, there is no structural interface matching
-   */
-  static boolean isSubtypeHelper(JSType thisType, JSType thatType,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    checkNotNull(thisType);
+  /** if implicitImplCache is null, there is no structural interface matching */
+  static boolean isSubtypeHelper(
+      JSType subtype, JSType supertype, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
+    checkNotNull(subtype);
     // unknown
-    if (thatType.isUnknownType()) {
+    if (supertype.isUnknownType()) {
       return true;
     }
     // all type
-    if (thatType.isAllType()) {
+    if (supertype.isAllType()) {
       return true;
     }
     // equality
-    if (thisType.isEquivalentTo(thatType, implicitImplCache.isStructuralTyping())) {
+    if (subtype.isEquivalentTo(supertype, implicitImplCache.isStructuralTyping())) {
       return true;
     }
     // unions
-    if (thatType.isUnionType()) {
-      UnionType union = thatType.toMaybeUnionType();
+    if (supertype.isUnionType()) {
+      UnionType union = supertype.toMaybeUnionType();
       // use an indexed for-loop to avoid allocations
       ImmutableList<JSType> alternates = union.getAlternates();
       for (int i = 0; i < alternates.size(); i++) {
         JSType element = alternates.get(i);
-        if (thisType.isSubtype(element, implicitImplCache, subtypingMode)) {
+        if (subtype.isSubtype(element, implicitImplCache, subtypingMode)) {
           return true;
         }
       }
       return false;
     }
     if (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
-        && (thisType.isNullType() || thisType.isVoidType())) {
+        && (subtype.isNullType() || subtype.isVoidType())) {
       return true;
     }
 
     // TemplateTypeMaps. This check only returns false if the TemplateTypeMaps
     // are not equivalent.
-    TemplateTypeMap thisTypeParams = thisType.getTemplateTypeMap();
-    TemplateTypeMap thatTypeParams = thatType.getTemplateTypeMap();
+    TemplateTypeMap subtypeParams = subtype.getTemplateTypeMap();
+    TemplateTypeMap supertypeParams = supertype.getTemplateTypeMap();
     boolean templateMatch = true;
-    if (isBivariantType(thatType)) {
+    if (isBivariantType(supertype)) {
       // Array and Object are exempt from template type invariance; their
       // template types maps are bivariant.  That is they are considered
       // a match if either ObjectElementKey values are subtypes of the
       // other.
-      TemplateType key = thisType.registry.getObjectElementKey();
-      JSType thisElement = thisTypeParams.getResolvedTemplateType(key);
-      JSType thatElement = thatTypeParams.getResolvedTemplateType(key);
+      TemplateType key = subtype.registry.getObjectElementKey();
+      JSType thisElement = subtypeParams.getResolvedTemplateType(key);
+      JSType thatElement = supertypeParams.getResolvedTemplateType(key);
 
       templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode)
           || thatElement.isSubtype(thisElement, implicitImplCache, subtypingMode);
     } else {
-      TemplateType covariantKey = getTemplateKeyIfCovariantType(thatType);
+      TemplateType covariantKey = getTemplateKeyIfCovariantType(supertype);
       if (covariantKey != null) {
-        JSType thisElement = thisTypeParams.getResolvedTemplateType(covariantKey);
-        JSType thatElement = thatTypeParams.getResolvedTemplateType(covariantKey);
+        JSType thisElement = subtypeParams.getResolvedTemplateType(covariantKey);
+        JSType thatElement = supertypeParams.getResolvedTemplateType(covariantKey);
         templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode);
       } else {
         templateMatch =
-            thisTypeParams.checkEquivalenceHelper(
-                thatTypeParams, EquivalenceMethod.INVARIANT, subtypingMode);
+            subtypeParams.checkEquivalenceHelper(
+                supertypeParams, EquivalenceMethod.INVARIANT, subtypingMode);
       }
     }
     if (!templateMatch) {
@@ -1624,27 +1620,27 @@ public abstract class JSType implements Serializable {
 
     // If the super type is a structural type, then we can't safely remove a templatized type
     // (since it might affect the types of the properties)
-    if (implicitImplCache.shouldMatchStructurally(thisType, thatType)) {
-      return thisType
+    if (implicitImplCache.shouldMatchStructurally(subtype, supertype)) {
+      return subtype
           .toMaybeObjectType()
-          .isStructuralSubtype(thatType.toMaybeObjectType(), implicitImplCache, subtypingMode);
+          .isStructuralSubtype(supertype.toMaybeObjectType(), implicitImplCache, subtypingMode);
     }
 
     // Templatized types. For nominal types, the above check guarantees TemplateTypeMap
     // equivalence; check if the base type is a subtype.
-    if (thisType.isTemplatizedType()) {
-      return thisType
+    if (subtype.isTemplatizedType()) {
+      return subtype
           .toMaybeTemplatizedType()
           .getReferencedType()
-          .isSubtype(thatType, implicitImplCache, subtypingMode);
+          .isSubtype(supertype, implicitImplCache, subtypingMode);
     }
 
     // proxy types
-    if (thatType instanceof ProxyObjectType && !thatType.isTemplateType()) {
+    if (supertype instanceof ProxyObjectType && !supertype.isTemplateType()) {
       // `TemplateType` is only a proxy because sometimes it needs to mimic the behaviour of `?`. In
       // every other respect it's a unique type.
-      return thisType.isSubtype(
-          ((ProxyObjectType) thatType).getReferencedTypeInternal(),
+      return subtype.isSubtype(
+          ((ProxyObjectType) supertype).getReferencedTypeInternal(),
           implicitImplCache,
           subtypingMode);
     }
