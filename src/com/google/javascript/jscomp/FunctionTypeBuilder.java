@@ -45,9 +45,9 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -767,7 +767,7 @@ final class FunctionTypeBuilder {
 
     // Evaluate template type bounds with bootstrapped environment and reroute the bounds to these
     ImmutableList.Builder<TemplateType> templates = ImmutableList.builder();
-    HashMap<TemplateType, JSType> templatesToBounds = new HashMap<>();
+    Map<TemplateType, JSType> templatesToBounds = new LinkedHashMap<>();
     for (Map.Entry<String, JSTypeExpression> entry : infoTypeKeys.entrySet()) {
       JSType typeBound = typeRegistry.evaluateTypeExpression(entry.getValue(), templateScope);
       TemplateType template =
