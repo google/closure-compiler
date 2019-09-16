@@ -408,35 +408,6 @@ public class CompilerOptions implements Serializable {
    */
   Set<String> extraAnnotationNames;
 
-  /** @deprecated No longer has any effect. */
-  @Deprecated
-  public enum DisposalCheckingPolicy {
-    /**
-     * Don't check any disposal.
-     */
-    OFF,
-
-    /**
-     * Default/conservative disposal checking.
-     */
-    ON,
-
-    /**
-     * Aggressive disposal checking.
-     */
-    AGGRESSIVE,
-  }
-
-  /** @deprecated No longer has any effect. */
-  @Deprecated
-  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {}
-
-  /** @deprecated No longer has any effect. */
-  @Deprecated
-  public DisposalCheckingPolicy getCheckEventfulObjectDisposalPolicy() {
-    return DisposalCheckingPolicy.OFF;
-  }
-
   /**
    * Used for projects that are not well maintained, but are still used.
    * Does not allow promoting warnings to errors, and disables some potentially
