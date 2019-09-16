@@ -112,6 +112,13 @@ function PerformanceNavigationTiming() {}
 /** @type {NavigationType} */ PerformanceNavigationTiming.prototype.type;
 /** @type {number} */ PerformanceNavigationTiming.prototype.redirectCount;
 
+/**
+ * https://w3c.github.io/paint-timing/#sec-PerformancePaintTiming
+ * @constructor
+ * @extends {PerformanceEntry}
+ */
+function PerformancePaintTiming() {}
+
 /** @constructor */
 function PerformanceNavigation() {}
 /** @const {number} */ PerformanceNavigation.TYPE_NAVIGATE;
