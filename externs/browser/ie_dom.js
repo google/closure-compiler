@@ -914,6 +914,12 @@ Element.prototype.fireEvent;
 Element.prototype.hideFocus;
 
 /**
+ * @type {string}
+ * @implicitCast
+ *
+ * TODO(lharker): remove the @implicitCast to enforce assigning an explicit
+ * string to innerText instead of relying on coercion.
+ *
  * @see http://msdn.microsoft.com/en-us/library/ms533899.aspx
  */
 Element.prototype.innerText;
