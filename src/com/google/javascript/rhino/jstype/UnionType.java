@@ -490,35 +490,6 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  @Override
-  protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    // unknown
-    if (that.isUnknownType() || this.isUnknownType()) {
-      return true;
-    }
-    // all type
-    if (that.isAllType()) {
-      return true;
-    }
-    for (int i = 0; i < alternates.size(); i++) {
-      JSType element = alternates.get(i);
-      if (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
-          && (element.isNullType() || element.isVoidType())) {
-        continue;
-      }
-      if (!element.isSubtype(that, implicitImplCache, subtypingMode)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  @Override
   public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
     return mapTypes((t) -> t.getRestrictedTypeGivenToBooleanOutcome(outcome), this);
   }

@@ -40,6 +40,8 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.javascript.rhino.jstype.JSTypeIterations.allTypesMatch;
+import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -1564,27 +1566,28 @@ public abstract class JSType implements Serializable {
       return true;
     }
 
+    // Special consideration for `null` and `undefined` in J2CL.
+    if (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
+        && (subtype.isNullType() || subtype.isVoidType())) {
+      return true;
+    }
+
     // Reflexive case.
     if (subtype.isEquivalentTo(supertype, implicitImplCache.isStructuralTyping())) {
       return true;
     }
 
-    // unions
-    if (supertype.isUnionType()) {
-      UnionType union = supertype.toMaybeUnionType();
-      // use an indexed for-loop to avoid allocations
-      ImmutableList<JSType> alternates = union.getAlternates();
-      for (int i = 0; i < alternates.size(); i++) {
-        JSType element = alternates.get(i);
-        if (subtype.isSubtype(element, implicitImplCache, subtypingMode)) {
-          return true;
-        }
-      }
-      return false;
-    }
-    if (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
-        && (subtype.isNullType() || subtype.isVoidType())) {
-      return true;
+    // Union decomposition.
+    if (subtype.isUnionType()) {
+      // All alternates must be subtypes.
+      return allTypesMatch(
+          (sub) -> sub.isSubtype(supertype, implicitImplCache, subtypingMode),
+          subtype.toMaybeUnionType());
+    } else if (supertype.isUnionType()) {
+      // Some alternate must be a supertype.
+      return anyTypeMatches(
+          (sup) -> subtype.isSubtype(sup, implicitImplCache, subtypingMode),
+          supertype.toMaybeUnionType());
     }
 
     // TemplateTypeMaps. This check only returns false if the TemplateTypeMaps
