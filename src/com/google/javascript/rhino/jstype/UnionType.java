@@ -63,19 +63,18 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
- * The {@code UnionType} implements a common JavaScript idiom in which the
- * code is specifically designed to work with multiple input types.  Because
- * JavaScript always knows the run-time type of an object value, this is safer
- * than a C union.<p>
+ * A type that may be any one of a set of types, and thus has the intersection of the properties of
+ * those types.
  *
- * For instance, values of the union type {@code (String,boolean)} can be of
- * type {@code String} or of type {@code boolean}. The commutativity of the
- * statement is captured by making {@code (String,boolean)} and
- * {@code (boolean,String)} equal.<p>
+ * <p>The {@code UnionType} implements a common JavaScript idiom in which the code is specifically
+ * designed to work with multiple input types. Because JavaScript always knows the run-time type of
+ * an object value, this is safer than a C union.
  *
+ * <p>For instance, values of the union type {@code (String,boolean)} can be of type {@code String}
+ * or of type {@code boolean}. The commutativity of the statement is captured by making {@code
+ * (String,boolean)} and {@code (boolean,String)} equal.
  *
- * The implementation of this class prevents the creation of nested
- * unions.<p>
+ * <p>The implementation of this class prevents the creation of nested unions.
  */
 public class UnionType extends JSType {
   private static final long serialVersionUID = 2L;
@@ -132,7 +131,7 @@ public class UnionType extends JSType {
    * @return The alternate types of this union type. The returned set is immutable.
    */
   public ImmutableList<JSType> getAlternates() {
-    if (anyTypeMatches(JSType::isUnionType, this.alternates)) {
+    if (!this.isResolved() && anyTypeMatches(JSType::isUnionType, this.alternates)) {
       rebuildAlternates();
     }
     return alternates;
