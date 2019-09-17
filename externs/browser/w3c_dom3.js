@@ -155,12 +155,6 @@ Document.prototype.documentURI;
 Document.prototype.inputEncoding;
 
 /**
- * @type {boolean}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-strictErrorChecking
- */
-Document.prototype.strictErrorChecking;
-
-/**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-encoding
  */
@@ -177,21 +171,6 @@ Document.prototype.xmlStandalone;
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-version
  */
 Document.prototype.xmlVersion;
-
-/**
- * @return {undefined}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-normalizeDocument
- */
-Document.prototype.normalizeDocument = function() {};
-
-/**
- * @param {Node} n
- * @param {?string} namespaceURI
- * @param {string} qualifiedName
- * @return {Node}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Document3-renameNode
- */
-Document.prototype.renameNode = function(n, namespaceURI, qualifiedName) {};
 
 /**
  * @type {?string}
@@ -437,31 +416,6 @@ Element.prototype.setAttributeNodeNS = function(newAttr) {};
 Element.prototype.setAttributeNS = function(namespaceURI, qualifiedName, value) {};
 
 /**
- * @param {string} name
- * @param {boolean} isId
- * @return {undefined}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElSetIdAttr
- */
-Element.prototype.setIdAttribute = function(name, isId) {};
-
-/**
- * @param {Attr} idAttr
- * @param {boolean} isId
- * @return {undefined}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElSetIdAttrNode
- */
-Element.prototype.setIdAttributeNode = function(idAttr, isId) {};
-
-/**
- * @param {?string} namespaceURI
- * @param {string} localName
- * @param {boolean} isId
- * @return {undefined}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElSetIdAttrNS
- */
-Element.prototype.setIdAttributeNS = function(namespaceURI, localName, isId) {};
-
-/**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Text3-wholeText
  */
@@ -587,12 +541,6 @@ DOMLocator.prototype.uri;
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMLocator-utf16Offset
  */
 DOMLocator.prototype.utf16Offset;
-
-/**
- * @type {string}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-Core-DocType-internalSubset
- */
-DocumentType.prototype.internalSubset;
 
 /**
  * @type {string}

@@ -167,7 +167,6 @@ Document.prototype.anchors;
  * @type {HTMLCollection<!HTMLAppletElement>}
  */
 Document.prototype.applets;
-/** @type {boolean} */ Document.prototype.async;
 /** @type {?string} */ Document.prototype.baseURI;
 
 /**
@@ -227,9 +226,6 @@ Document.prototype.fgColor;
  * @type {HTMLCollection<!HTMLFormElement>}
  */
 Document.prototype.forms;
-
-/** @type {number} */
-Document.prototype.height;
 
 /** @type {HTMLCollection<!HTMLImageElement>} */
 Document.prototype.images;
@@ -313,11 +309,6 @@ Document.prototype.evaluate;
  */
 Document.prototype.execCommand;
 
-/**
- * @param {string} uri
- * @return {undefined}
- */
-Document.prototype.load = function(uri) {};
 Document.prototype.loadOverlay;
 
 /**

@@ -121,14 +121,6 @@ XMLDOMDocument.prototype.abort = function() {};
 XMLDOMDocument.prototype.createNode = function(type, name, namespaceURI) {};
 
 /**
- * @param {string} xmlSource
- * @return {undefined}
- * @see http://msdn.microsoft.com/en-us/library/ms762722(VS.85).aspx
- * @override
- */
-XMLDOMDocument.prototype.load = function(xmlSource) {};
-
-/**
  * @param {string} xmlString
  * @return {boolean}
  * @see http://msdn.microsoft.com/en-us/library/ms754585(VS.85).aspx
@@ -690,11 +682,6 @@ Document.prototype.charset;
  * @see http://msdn.microsoft.com/en-us/library/ms533693(VS.85).aspx
  */
 Document.prototype.cookie;
-
-/**
- * @see http://msdn.microsoft.com/en-us/library/ms533714(VS.85).aspx
- */
-Document.prototype.defaultCharset;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms533731(VS.85).aspx
