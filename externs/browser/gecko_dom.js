@@ -281,6 +281,8 @@ Document.prototype.tooltipNode;
  */
 Document.prototype.vlinkColor;
 
+/** @type {number} */ Document.prototype.width;
+
 // Methods of Document
 /**
  * @see https://developer.mozilla.org/en/DOM/document.clear

@@ -340,6 +340,12 @@ Node.prototype.querySelectorAll = function(query) {};
 Attr.prototype.ownerElement;
 
 /**
+ * @type {boolean}
+ * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Attr-isId
+ */
+Attr.prototype.isId;
+
+/**
  * @param {?string} namespaceURI
  * @param {string} localName
  * @return {Attr}
