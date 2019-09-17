@@ -1556,18 +1556,19 @@ public abstract class JSType implements Serializable {
   static boolean isSubtypeHelper(
       JSType subtype, JSType supertype, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
     checkNotNull(subtype);
-    // unknown
-    if (supertype.isUnknownType()) {
+    // Axiomatic cases.
+    if (supertype.isUnknownType()
+        || supertype.isAllType()
+        || subtype.isUnknownType()
+        || subtype.isNoType()) {
       return true;
     }
-    // all type
-    if (supertype.isAllType()) {
-      return true;
-    }
-    // equality
+
+    // Reflexive case.
     if (subtype.isEquivalentTo(supertype, implicitImplCache.isStructuralTyping())) {
       return true;
     }
+
     // unions
     if (supertype.isUnionType()) {
       UnionType union = supertype.toMaybeUnionType();
