@@ -67,6 +67,10 @@ final class PolymerClassRewriter {
     this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
+  static boolean isIIFE(Node n) {
+    return n.isCall() && n.getFirstChild().isFunction();
+  }
+
   static boolean isFunctionArgInGoogLoadModule(Node n) {
     if (!n.isFunction()) {
       return false;
@@ -76,9 +80,73 @@ final class PolymerClassRewriter {
     return parent != null && isBundledGoogModuleCall(parent);
   }
 
-  private void insertCodeForEnclosedCalls(Node enclosingNode, Node statements) {
+  /**
+   * This function accepts declaration code generated for a nonGlobal Polymer call and inserts that
+   * into the AST depending on the enclosing scope of the Polymer call.
+   *
+   * @param enclosingNode The enclosing scope of the Polymer call decided by the rewritePolymerCall
+   * @param declarationCode declaration code generated for Polymer call
+   */
+  private void insertGeneratedDeclarationCodeToGlobalScope(
+      Node enclosingNode, Node declarationCode) {
     switch (enclosingNode.getToken()) {
       case MODULE_BODY:
+        {
+          Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+          insertionPoint.addChildToFront(declarationCode);
+          compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
+        }
+        break;
+      case SCRIPT:
+        {
+          enclosingNode.addChildToFront(declarationCode);
+          compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
+        }
+        break;
+      case CALL:
+        {
+          // This case represents only the Polymer calls which are enclosed inside an IIFE
+          checkState(isIIFE(enclosingNode));
+          Node enclosingNodeForIIFE =
+              NodeUtil.getEnclosingNode(
+                  enclosingNode.getParent(), node -> node.isScript() || node.isModuleBody());
+          if (enclosingNodeForIIFE.isScript()) {
+            enclosingNodeForIIFE.addChildToFront(declarationCode);
+            compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNodeForIIFE));
+          } else {
+            checkState(enclosingNodeForIIFE.isModuleBody());
+            Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+            insertionPoint.addChildToFront(declarationCode);
+            compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
+          }
+        }
+        break;
+      case FUNCTION:
+        {
+          // This case represents only the Polymer calls that are inside a function which is an arg
+          // to goog.loadModule
+          checkState(isFunctionArgInGoogLoadModule(enclosingNode));
+          Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+          insertionPoint.addChildToFront(declarationCode);
+          compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
+        }
+        break;
+      default:
+        throw new RuntimeException("Enclosing node for Polymer is incorrect");
+    }
+  }
+
+  /**
+   * This function accepts code generated for a nonGlobal Polymer call and inserts that code into
+   * the AST depending on the enclosing scope of the Polymer call.
+   *
+   * @param enclosingNode The enclosing scope of the Polymer call decided by the rewritePolymerCall
+   * @param statements code generated for Polymer's properties and behavior
+   */
+  private void insertGeneratedPropsAndBehaviorCode(Node enclosingNode, Node statements) {
+    switch (enclosingNode.getToken()) {
+      case MODULE_BODY:
+        {
         if (enclosingNode.getParent().getBooleanProp(Node.GOOG_MODULE)) {
           // The goog.module('ns'); call must remain the first statement in the module.
           Node insertionPoint = getInsertionPointForGoogModule(enclosingNode);
@@ -86,14 +154,25 @@ final class PolymerClassRewriter {
         } else {
           enclosingNode.addChildrenToFront(statements);
         }
+        }
         break;
       case SCRIPT:
         enclosingNode.addChildrenToFront(statements);
         compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNode));
         break;
+      case CALL:
+        {
+          // This case represents only the Polymer calls which are enclosed inside an IIFE
+          checkState(isIIFE(enclosingNode));
+          Node functionNode = enclosingNode.getFirstChild();
+          Node functionBlock = functionNode.getLastChild();
+          functionBlock.addChildrenToFront(statements);
+        }
+        break;
       case FUNCTION:
         // This case represents only the Polymer calls that are inside a function which is an arg
         // to goog.loadModule
+        checkState(isFunctionArgInGoogLoadModule(enclosingNode));
         Node functionBlock = enclosingNode.getLastChild();
         Node insertionPoint = getInsertionPointForGoogModule(functionBlock);
         // Node insertionPoint will be null here if functionBlock does not contain a goog.module()
@@ -115,10 +194,10 @@ final class PolymerClassRewriter {
    * @param exprRoot The root expression of the call to Polymer({}).
    * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
    *     call.
-   * @param isInGlobalScope whether this call is directly in a script
+   * @param traversal Nodetraversal used here to identify the scope in which Polymer exists
    */
   void rewritePolymerCall(
-      Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+      Node exprRoot, final PolymerClassDefinition cls, NodeTraversal traversal) {
     Node objLit = checkNotNull(cls.descriptor);
 
     // Add {@code @lends} to the object literal.
@@ -139,8 +218,8 @@ final class PolymerClassRewriter {
       }
     }
 
-    // For simplicity add everything into a block, before adding it to the AST.
-    Node block = IR.block();
+    // The propsAndBehaviorBlock holds code generated for the  Polymer's properties and behaviors
+    Node propsAndBehaviorBlock = IR.block();
 
     JSDocInfoBuilder constructorDoc = this.getConstructorDoc(cls);
 
@@ -150,39 +229,60 @@ final class PolymerClassRewriter {
       ctorKey.removeProp(Node.JSDOC_INFO_PROP);
     }
 
-    appendDeclarationToBlock(exprRoot, cls, block, constructorDoc);
-    appendPropertiesToBlock(cls.props, block, cls.target.getQualifiedName() + ".prototype.");
-    appendBehaviorMembersToBlock(cls, block);
-    ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
+    Node declarationCode = generateDeclarationCode(exprRoot, cls, constructorDoc);
+    appendPropertiesToBlock(
+        cls.props, propsAndBehaviorBlock, cls.target.getQualifiedName() + ".prototype.");
+    appendBehaviorMembersToBlock(cls, propsAndBehaviorBlock);
+    ImmutableList<MemberDefinition> readOnlyProps =
+        parseReadOnlyProperties(cls, propsAndBehaviorBlock);
     ImmutableList<MemberDefinition> attributeReflectedProps =
         parseAttributeReflectedProperties(cls);
     createExportsAndExterns(cls, readOnlyProps, attributeReflectedProps);
     removePropertyDocs(objLit, PolymerClassDefinition.DefinitionType.ObjectLiteral);
 
-    Node statements = block.removeChildren();
+    Node propsAndBehaviorCode = propsAndBehaviorBlock.removeChildren();
     Node parent = exprRoot.getParent();
 
     // Put the type declaration in to either the enclosing module scope, if in a module, or the
     // enclosing script node. Compiler support for local scopes like IIFEs is sometimes lacking but
     // module scopes are well-supported. If this is not in a module or the global scope it is likely
     // exported.
-    if (!isInGlobalScope && !cls.target.isGetProp()) {
+    if (!traversal.inGlobalScope() && !cls.target.isGetProp()) {
       Node enclosingNode =
           NodeUtil.getEnclosingNode(
               parent,
               node ->
-                  node.isScript() || node.isModuleBody() || isFunctionArgInGoogLoadModule(node));
-      insertCodeForEnclosedCalls(enclosingNode, statements);
+                  node.isScript()
+                      || node.isModuleBody()
+                      || isIIFE(node)
+                      || isFunctionArgInGoogLoadModule(node));
+
+      // For module, IIFE and goog.LoadModule enclosed Polymer calls, the declaration code and the
+      // code generated from properties and behavior have to be hoisted in different places within
+      // the AST. We want to insert the generated declarations to global scope, and insert the
+      // propsAndbehaviorCode in the same scope. Hence, dealing with them separately.
+      insertGeneratedDeclarationCodeToGlobalScope(enclosingNode, declarationCode);
+      if (propsAndBehaviorCode != null) {
+        insertGeneratedPropsAndBehaviorCode(enclosingNode, propsAndBehaviorCode);
+      }
     } else {
       Node beforeRoot = exprRoot.getPrevious();
       if (beforeRoot == null) {
-        parent.addChildrenToFront(statements);
+        if (propsAndBehaviorCode != null) {
+          parent.addChildrenToFront(propsAndBehaviorCode);
+        }
+        parent.addChildToFront(declarationCode);
       } else {
-        parent.addChildrenAfter(statements, beforeRoot);
+        if (propsAndBehaviorCode != null) {
+          parent.addChildrenAfter(propsAndBehaviorCode, beforeRoot);
+        }
+        parent.addChildAfter(declarationCode, beforeRoot);
       }
       compiler.reportChangeToEnclosingScope(parent);
     }
-    compiler.reportChangeToEnclosingScope(statements);
+    if (propsAndBehaviorCode != null) {
+      compiler.reportChangeToEnclosingScope(propsAndBehaviorCode);
+    }
 
     // Since behavior files might contain language features that aren't present in the class file,
     // we might need to update the FeatureSet.
@@ -458,11 +558,8 @@ final class PolymerClassRewriter {
   }
 
   /* Appends var declaration code created from the Polymer call to the given block */
-  private void appendDeclarationToBlock(
-      Node exprRoot,
-      final PolymerClassDefinition cls,
-      Node block,
-      JSDocInfoBuilder constructorDoc) {
+  private Node generateDeclarationCode(
+      Node exprRoot, final PolymerClassDefinition cls, JSDocInfoBuilder constructorDoc) {
     if (cls.target.isGetProp()) {
       // foo.bar = Polymer({...});
       Node assign = IR.assign(cls.target.cloneTree(), cls.constructor.value.cloneTree());
@@ -470,14 +567,14 @@ final class PolymerClassRewriter {
       assign.setJSDocInfo(constructorDoc.build());
       Node exprResult = IR.exprResult(assign);
       exprResult.useSourceInfoIfMissingFromForTree(cls.target);
-      block.addChildToBack(exprResult);
+      return exprResult;
     } else {
       // var foo = Polymer({...}); OR Polymer({...});
       Node var = IR.var(cls.target.cloneTree(), cls.constructor.value.cloneTree());
       NodeUtil.markNewScopesChanged(var, compiler);
       var.useSourceInfoIfMissingFromForTree(exprRoot);
       var.setJSDocInfo(constructorDoc.build());
-      block.addChildToBack(var);
+      return var;
     }
   }
 

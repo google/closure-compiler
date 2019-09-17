@@ -27,6 +27,7 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNANNOTATED
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNEXPECTED_PARAMS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -178,6 +179,264 @@ public class PolymerPassTest extends CompilerTestCase {
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
     enableCreateModuleMap();
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclarationOutsideLoadModule() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('ytu.app.ui.shared.YtuIcon');",
+                "  YtuIcon = Polymer({is: 'ytu-icon' });",
+                "  exports = YtuIcon;",
+                "  return exports;",
+                "})")),
+        expected(
+            lines(
+                "/**",
+                "     * @constructor",
+                "     * @extends {PolymerElement}",
+                "     * @implements {PolymerYtuIconInterface}",
+                "     */",
+                "  var YtuIcon = function(){}",
+                CLOSURE_DEFS),
+            lines(
+                "goog.loadModule(function(exports) {",
+                "goog.module('ytu.app.ui.shared.YtuIcon');",
+                "  YtuIcon = Polymer(/** @lends {YtuIcon.prototype} */ {is:\"ytu-icon\"});",
+                "  exports = YtuIcon;",
+                "  return exports;",
+                "})")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclarationOutsideLoadModule2() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.loadModule(function(exports) {",
+                "  goog.module('ytu.app.ui.shared.YtuIcon');",
+                "  Polymer({is: 'ytu-icon' });",
+                "  return exports;",
+                "})")),
+        expected(
+            lines(
+                "/**",
+                "     * @constructor",
+                "     * @extends {PolymerElement}",
+                "     * @implements {PolymerYtuIconElementInterface}",
+                "     */",
+                "  var YtuIconElement = function(){}",
+                CLOSURE_DEFS),
+            lines(
+                "goog.loadModule(function(exports) {",
+                "goog.module('ytu.app.ui.shared.YtuIcon');",
+                "  Polymer(/** @lends {YtuIconElement.prototype} */ {is:\"ytu-icon\"});",
+                "  return exports;",
+                "})")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideGoogModule() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('mod');", //
+                "var X = Polymer({",
+                "  is: 'x-element',",
+                "});")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+                "var X = function() {};",
+                CLOSURE_DEFS),
+            lines(
+                "goog.module('mod');",
+                "X = Polymer(/** @lends {X.prototype} */ {",
+                "  is: 'x-element',",
+                "});")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideGoogModule2() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('mod');", //
+                "Polymer({",
+                "  is: 'x-element',",
+                "});")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerXElementElementInterface} */",
+                "var XElementElement = function() {};",
+                CLOSURE_DEFS),
+            lines(
+                "goog.module('mod');",
+                "Polymer(/** @lends {XElementElement.prototype} */ {",
+                "  is: 'x-element',",
+                "});")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideES6Module() {
+    test(
+        srcs(
+            lines(""), // empty script for getNodeForCodeInsertion
+            lines(
+                "var X = Polymer({", //
+                "  is: 'x-element',",
+                "});",
+                "export {X};")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+                "var X = function() {};"),
+            lines(
+                "X = Polymer(/** @lends {X.prototype} */ {",
+                "  is: 'x-element',})",
+                "export {X};")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideES6Module2() {
+    test(
+        srcs(
+            lines(""), // empty script for getNodeForCodeInsertion
+            lines(
+                "var PI = 3.14",
+                "Polymer({", //
+                "  is: 'x-element',",
+                "});",
+                "export {PI};")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerXElementElementInterface} */",
+                "var XElementElement = function() {};"),
+            lines(
+                "var PI = 3.14",
+                "Polymer(/** @lends {XElementElement.prototype} */ {",
+                "  is: 'x-element',})",
+                "export {PI};")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideModule_IIFE() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('mod');", //
+                "(function() {",
+                "  var X = Polymer({",
+                "    is: 'x-element',",
+                "  });",
+                "})();")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+                "var X = function() {};",
+                CLOSURE_DEFS),
+            lines(
+                "goog.module('mod');",
+                "(function() {",
+                "    X = Polymer(/** @lends {X.prototype} */ {",
+                "    is: 'x-element',",
+                "  });",
+                "})();")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideModule_IIFE2() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('mod');", //
+                "(function() {",
+                "  Polymer({",
+                "    is: 'x-element',",
+                "  });",
+                "})();")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerXElementElementInterface} */",
+                "var XElementElement = function() {};",
+                CLOSURE_DEFS),
+            lines(
+                "goog.module('mod');",
+                "(function() {",
+                "    Polymer(/** @lends {XElementElement.prototype} */ {",
+                "    is: 'x-element',",
+                "  });",
+                "})();")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideModule_WithRequires() {
+    ignoreWarnings(MISSING_NAMESPACE_IMPORT);
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('mod');", //
+                "const Component = goog.require('a');",
+                "goog.forwardDeclare('something.else');",
+                "const someLocal = (function() { return 0; })();",
+                "var X = Polymer({",
+                "  is: 'x-element',",
+                "});")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+                "var X = function() {};",
+                CLOSURE_DEFS),
+            lines(
+                "goog.module('mod');",
+                "const Component = goog.require('a');",
+                "goog.forwardDeclare('something.else');",
+                "const someLocal = (function() { return 0; })();",
+                "X = Polymer(/** @lends {X.prototype} */ {",
+                "  is: 'x-element',",
+                "});")));
+  }
+
+  @Test
+  public void testPolymerRewriterGeneratesDeclaration_OutsideModule_WithRequires2() {
+    ignoreWarnings(MISSING_NAMESPACE_IMPORT);
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('mod');", //
+                "const Component = goog.require('a');",
+                "goog.forwardDeclare('something.else');",
+                "const someLocal = (function() { return 0; })();",
+                "Polymer({",
+                "  is: 'x-element',",
+                "});")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements"
+                    + " {PolymerXElementElementInterface} */",
+                "var XElementElement = function() {};",
+                CLOSURE_DEFS),
+            lines(
+                "goog.module('mod');",
+                "const Component = goog.require('a');",
+                "goog.forwardDeclare('something.else');",
+                "const someLocal = (function() { return 0; })();",
+                "Polymer(/** @lends {XElementElement.prototype} */ {",
+                "  is: 'x-element',",
+                "});")));
   }
 
   @Test
@@ -334,6 +593,16 @@ public class PolymerPassTest extends CompilerTestCase {
             "  /** @return {" + POLYMER_ELEMENT_PROP_CONFIG + "} */",
             "  static get properties() { return {}; }",
             "};"));
+
+    test(
+        lines("var x = {};", "x.Z = Polymer({", "  is: 'x-element',", "});"),
+        lines(
+            "var x = {};",
+            "/** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface} */",
+            "x.Z = function() {};",
+            "x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
+            "  is: 'x-element',",
+            "});"));
   }
 
   @Test

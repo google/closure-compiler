@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerTestCase.CLOSURE_DEFS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -752,7 +753,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testPolymerCallWithinES6Modules() {
+  public void testPolymerCallWithinES6Modules_CreatesDeclarationOutsideModule() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
@@ -762,20 +763,30 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setRewriteModules(false);
 
-    test(
-        options,
-        lines(
-            "var X = Polymer({", //
-            "  is: 'x-element',",
-            "});",
-            "export {X};"),
-        lines(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
-            "var X = function() {};",
-            "X = Polymer(/** @lends {X.prototype} */ {",
-            "  is: 'x-element',",
-            "});",
-            "export {X};"));
+    String[] srcs =
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "var X = Polymer({", //
+              "  is: 'x-element',",
+              "});",
+              "export {X};"),
+        };
+
+    String[] compiledOut =
+        new String[] {
+          lines(
+              "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+              "var X = function() {};",
+              CLOSURE_DEFS),
+          lines(
+              "X = Polymer(/** @lends {X.prototype} */ {",
+              "  is: 'x-element',",
+              "});",
+              "export {X};"),
+        };
+
+    test(options, srcs, compiledOut);
   }
 
   @Test

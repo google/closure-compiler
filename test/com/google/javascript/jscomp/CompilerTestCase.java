@@ -57,6 +57,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.junit.Before;
 
@@ -593,7 +594,9 @@ public abstract class CompilerTestCase {
           "goog.module = function(ns) {};",
           "goog.module.declareLegacyNamespace = function() {};",
           "goog.provide = function(ns) {};",
-          "goog.require = function(ns) {};");
+          "goog.require = function(ns) {};",
+          "goog.loadModule = function(ns) {}",
+          "goog.forwardDeclare = function(ns) {};");
 
   /**
    * Constructs a test.
@@ -1670,7 +1673,7 @@ public abstract class CompilerTestCase {
           changeVerifier.checkRecordedChanges(mainRoot);
         }
 
-        verifyGetterAndSetterCollection(compiler, externsRoot, mainRoot);
+        verifyGetterAndSetterCollection(compiler, mainRoot);
 
         if (astValidationEnabled) {
           new AstValidator(compiler, scriptFeatureValidationEnabled)
@@ -1900,7 +1903,7 @@ public abstract class CompilerTestCase {
     normalize.process(externsRoot, mainRoot);
   }
 
-  private void verifyGetterAndSetterCollection(Compiler compiler, Node externsRoot, Node mainRoot) {
+  private void verifyGetterAndSetterCollection(Compiler compiler, Node mainRoot) {
     if (compiler.getOptions().getAssumeGettersArePure()) {
       assertWithMessage("Should not be validated when getter / setters are side-effect free")
           .that(verifyGetterAndSetterUpdates)
@@ -2460,12 +2463,12 @@ public abstract class CompilerTestCase {
     }
 
     private boolean matches(JSError error) {
-      return diagnostic == error.getType()
+      return Objects.equals(diagnostic, error.getType())
           && (messagePredicate == null || messagePredicate.apply(error.getDescription()));
     }
 
     private String formatDiff(JSError error) {
-      if (diagnostic != error.getType()) {
+      if (!Objects.equals(diagnostic, error.getType())) {
         return "diagnostic type " + error.getType().key + " did not match";
       }
       return "message \"" + error.getDescription() + "\" was not " + messagePredicate;
