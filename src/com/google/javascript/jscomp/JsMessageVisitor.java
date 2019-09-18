@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CaseFormat;
@@ -175,6 +176,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     checkMessageInitialization(traversal, node);
   }
 
+  /** This method is called for every Node in the sources AST. */
   private void checkMessageInitialization(NodeTraversal traversal, Node node) {
     final Node parent = node.getParent();
 
@@ -211,10 +213,18 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
       case STRING_KEY:
         // Case: `var t = {MSG_HELLO: 'Message'}`;
-        // Case: `var {MSG_HELLO} = x;
-        if (node.isQuotedString() || !node.hasChildren()) {
+        if (node.isQuotedString() || !node.hasChildren() || parent.isObjectPattern()) {
+          // Don't require goog.getMsg() for quoted keys
+          // Case: `var msgs = { 'MSG_QUOTED': anything };`
+          //
+          // Don't try to require goog.getMsg() for destructuring assignment targets.
+          // goog.getMsg() needs to be used in a direct assignment to a variable or property
+          // only.
+          // Case: `var {MSG_HELLO} = anything;
+          // Case: `var {something: MSG_HELLO} = anything;
           return;
         }
+        checkState(parent.isObjectLit(), parent);
 
         messageKey = node.getString();
         originalMessageKey = node.getOriginalName();
@@ -229,6 +239,11 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
     if (originalMessageKey != null) {
       messageKey = originalMessageKey;
     }
+
+    // If we've reached this point, then messageKey is the name of a variable or a property that is
+    // being assigned a value and msgNode is the Node representing the value being assigned.
+    // However, we haven't actually determined yet that name looks like it should be a translatable
+    // message or that the value is a call to goog.getMsg().
 
     // Is this a message name?
     boolean isNewStyleMessage = msgNode != null && msgNode.isCall();
@@ -349,6 +364,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    *
    * <p>These exceptions are generally due to the pass being designed before new syntax was
    * introduced.
+   *
+   * @param msgNode Node representing the value assigned to the message variable or property
+   * @param msgKey Name of the message variable or property that is being assigned to. Note that
+   *     this will be "MSG_PROP_NAME" for "some.object.MSG_PROP_NAME".
    */
   private static boolean isLegalMessageVarAlias(Node msgNode, String msgKey) {
     if (msgNode.isGetProp()
@@ -358,6 +377,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       //
       // This kind of construct is created by Es6ToEs3ClassSideInheritance. Just ignore it; the
       // message will have already been extracted from the base class.
+      //
+      // TODO(bradfordcsmith): Should `foo.Thing.MSG_EXAMPLE_ALIAS = bar.OtherThing.MSG_EXAMPLE`
+      // also be allowed for consistency with variable names below?
       return true;
     }
 
@@ -365,45 +387,20 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       return false;
     }
 
-    // In modules, the NAME node will be rewritten with a module-qualified name (e.g.
-    // `var {MSG_HELLO: goog$module$my$module_MSG_HELLO} = x;`).
-    String aliasName =
+    String originalName =
         (msgNode.getOriginalName() != null) ? msgNode.getOriginalName() : msgNode.getString();
 
-    if (msgNode.getGrandparent().isObjectPattern()) {
-      // Case: `var {MSG_HELLO} = x;
-      //
-      // It's a destructuring import. Ignore it if the name is the same.
-      if (aliasName.equals(msgKey)) {
-        return true;
-      }
-    }
-
-    if (msgNode.getParent().isAssign() && msgNode.getPrevious().isGetProp()) {
-      // Case: `exports = {MSG_FOO}` or 'exports = {MSG_FOO: MSG_FOO}' when used with
-      // declareLegacyNamespace.
-      if (aliasName.equals(msgKey)) {
-        return true;
-      }
-    }
-
-    Node greatGrandparent = msgNode.getGrandparent().getParent();
-    if (greatGrandparent == null) {
-      return false;
-    }
-    if (msgNode.isName()
-        && msgNode.getString().equals(msgKey)
-        && msgNode.getGrandparent().isObjectLit()
-        && greatGrandparent.isAssign()
-        && greatGrandparent.getFirstChild().isName()
-        && greatGrandparent.getFirstChild().getString().equals("exports")) {
-      // Case: 'exports = {MSG_FOO};' or 'exports = {MSG_FOO: MSG_FOO}'
-      //
-      // This is an export of a message variable.
+    if (originalName.startsWith("MSG_")) {
+      // Creating an alias for a message is also allowed, and sometimes happens in generated code,
+      // including some of the code generated by this compiler's transpilations.
+      // e.g.
+      // `var MSG_EXAMPLE_ALIAS = MSG_EXAMPLE;`
+      // `var {MSG_HELLO_ALIAS} = MSG_HELLO;
+      // `var {MSG_HELLO_ALIAS: goog$module$my$module_MSG_HELLO} = x;`).
+      // `exports = {MSG_FOO}`
+      // or `exports = {MSG_FOO: MSG_FOO}` when used with declareLegacyNamespace.
       return true;
     }
-
-    // TODO(nickreid): Should `var MSG_HELLO = x.MSG_HELLO;` also be allowed?
 
     return false;
   }

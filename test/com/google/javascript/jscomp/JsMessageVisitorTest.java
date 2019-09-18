@@ -53,6 +53,10 @@ import org.junit.runners.JUnit4;
 public final class JsMessageVisitorTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
+  private static String lines(String... lines) {
+    return LINE_JOINER.join(lines);
+  }
+
   private static class RenameMessagesVisitor extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -257,9 +261,16 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
-  public void testMessageAliasedToObject_mismatchedName() {
-    extractMessages("a.b.MSG_FOO_BAR = MSG_FOO;");
+  public void testMessageAliasedToObject_mismatchedMSGNameIsAllowed() {
+    extractMessages("a.b.MSG_FOO_ALIAS = MSG_FOO;");
+    assertThat(compiler.getErrors()).isEmpty();
+  }
+
+  @Test
+  public void testMessageAliasedToObject_nonMSGNameIsNotAllowed() {
+    extractMessages("a.b.MSG_FOO_ALIAS = someVarName;");
     assertThat(compiler.getErrors()).hasSize(1);
+    assertError(compiler.getErrors().get(0)).hasType(MESSAGE_TREE_MALFORMED);
   }
 
   @Test
@@ -290,10 +301,10 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
-  public void testJsMessageAlias_fromObjectDestrucuturing_longhand_invalid() {
-    extractMessages("({MSG_NOT_FOO: MSG_FOO} = x);");
+  public void testJsMessageAlias_fromObjectDestrucuturing_MSGlonghand_allowed() {
+    extractMessages("({MSG_FOO: MSG_FOO_ALIAS} = {MSG_FOO: goog.getMsg('Foo')});");
 
-    assertThat(compiler.getErrors()).hasSize(1);
+    assertThat(compiler.getErrors()).isEmpty();
   }
 
   @Test
@@ -472,6 +483,47 @@ public final class JsMessageVisitorTest {
     mode = CLOSURE;
 
     extractMessages("var MSG_FOO_HELP = 'I am a bad message';");
+
+    assertThat(messages).isEmpty();
+    assertThat(compiler.getWarnings()).hasSize(1);
+    assertError(compiler.getWarnings().get(0))
+        .hasType(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
+  }
+
+  @Test
+  public void testAllowOneMSGtoAliasAnotherMSG() {
+    mode = CLOSURE;
+
+    // NOTE: tsickle code generation can end up creating new MSG_* variables that are temporary
+    // aliases of existing ones that were defined correctly using goog.getMsg(). Don't complain
+    // about them.
+    extractMessages(
+        lines(
+            "/** @desc A foo message */",
+            "var MSG_FOO = goog.getMsg('Foo message');",
+            "var MSG_FOO_1 = MSG_FOO;",
+            ""));
+
+    assertThat(messages).hasSize(1);
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getKey()).isEqualTo("MSG_FOO");
+    assertThat(msg.toString()).isEqualTo("Foo message");
+    assertThat(compiler.getWarnings()).isEmpty();
+  }
+
+  @Test
+  public void testDisallowOneMSGtoAliasNONMSG() {
+    mode = CLOSURE;
+
+    // NOTE: tsickle code generation can end up creating new MSG_* variables that are temporary
+    // aliases of existing ones that were defined correctly using goog.getMsg(). Don't complain
+    // about them.
+    extractMessages(
+        lines(
+            "/** @desc A foo message */",
+            "var mymsg = 'Foo message';",
+            "var MSG_FOO_1 = mymsg;",
+            ""));
 
     assertThat(messages).isEmpty();
     assertThat(compiler.getWarnings()).hasSize(1);
