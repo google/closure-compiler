@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.VarCheck.BLOCK_SCOPED_DECL_MULTIPLY_DECLARED_ERROR;
+import static com.google.javascript.jscomp.VarCheck.UNDEFINED_EXTERN_VAR_ERROR;
 import static com.google.javascript.jscomp.VarCheck.UNDEFINED_VAR_ERROR;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
@@ -1017,11 +1018,40 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoogProvide_externs() {
+  public void testGoogProvide_externs_addsDeclForNamespace() {
     checkSynthesizedExtern(
         "var goog; goog.provide('a.b'); a.b.C = class {};",
         "",
         "var a;" + VAR_CHECK_EXTERNS + "var goog;goog.provide('a.b');a.b.C = class {};");
+  }
+
+  @Test
+  public void testGoogForwardDeclare_canBeReferencedInExternsIfInCode() {
+    testNoWarning(
+        // Allow referencing `goog` in externs even though it is actually only defined in code.
+        "goog.forwardDeclare('a.b.C');", "var /** !a.b.C */ c; var goog;");
+    checkSynthesizedExtern(
+        // Don't synthesize an extern for 'goog'.
+        "goog.forwardDeclare('a.b.C');",
+        "var goog;",
+        VAR_CHECK_EXTERNS + "goog.forwardDeclare('a.b.C');");
+  }
+
+  @Test
+  public void testArbitraryPropertyNamedForwardDeclare_cannotBeReferencedInExterns() {
+    testWarning("notGoog.forwardDeclare('a.b.C');", "var notGoog;", UNDEFINED_EXTERN_VAR_ERROR);
+  }
+
+  @Test
+  public void testGoogProvide_cannotBeReferencedInExterns() {
+    testWarning(
+        externs("goog.provide('a.b');"), srcs("var goog;"), warning(UNDEFINED_EXTERN_VAR_ERROR));
+  }
+
+  @Test
+  public void testGoogModule_cannotBeReferencedInExterns() {
+    testWarning(
+        externs("goog.module('a.b');"), srcs("var goog;"), warning(UNDEFINED_EXTERN_VAR_ERROR));
   }
 
   private static final class VariableTestCheck implements CompilerPass {

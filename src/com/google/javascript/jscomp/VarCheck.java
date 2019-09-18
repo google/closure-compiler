@@ -94,6 +94,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
 
   private static final Node googLoadModule = IR.getprop(IR.name("goog"), "loadModule");
   private static final Node googProvide = IR.getprop(IR.name("goog"), "provide");
+  private static final Node googForwardDeclare = IR.getprop(IR.name("goog"), "forwardDeclare");
 
   // Vars that still need to be declared in externs. These will be declared
   // at the end of the pass, or when we see the equivalent var declared
@@ -478,19 +479,26 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
             if (n == parent.getFirstChild()) {
               Scope scope = t.getScope();
               Var var = scope.getVar(n.getString());
-              if (var == null) {
-                if (!googProvidedRoots.contains(n.getString())) {
-                  t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
-                }
-                varsToDeclareInExterns.add(n.getString());
+              if (var != null) {
+                return;
               }
+              if (parent.matchesQualifiedName(googForwardDeclare)) {
+                // Allow using `goog.forwardDeclare` in the externs without an externs definition
+                // of goog.
+                return;
+              }
+              if (!googProvidedRoots.contains(n.getString())) {
+                t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
+              }
+              varsToDeclareInExterns.add(n.getString());
             }
             return;
           case ASSIGN:
             // Don't warn for the "window.foo = foo;" nodes added by
             // DeclaredGlobalExternsOnWindow, nor for alias declarations
             // of the form "/** @const */ ns.Foo = Bar;"
-            if (n == parent.getLastChild() && n.isQualifiedName()
+            if (n == parent.getLastChild()
+                && n.isQualifiedName()
                 && parent.getFirstChild().isQualifiedName()) {
               return;
             }
