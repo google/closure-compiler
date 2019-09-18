@@ -68,10 +68,11 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       throws MalformedException {
     Node newValueNode = getChromeI18nGetMessageNode(message.getId());
 
-    boolean isHtml = isHtml(origNode);
-    if (!message.placeholders().isEmpty() || isHtml) {
+    if (!message.placeholders().isEmpty()) {
       Node placeholderValues = origNode.getChildAtIndex(2);
       checkNode(placeholderValues, Token.OBJECTLIT);
+      // TODO(b/121116673): Pass {html: true} to chrome.i18n.getMessage after
+      // https://crrev.com/c/1728572.
 
       // Output the placeholders, sorted alphabetically by placeholder name,
       // regardless of what order they appear in the original message.
@@ -88,27 +89,10 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
         placeholderValueArray.addChildToBack(value);
       }
       newValueNode.addChildToBack(placeholderValueArray);
-      if (isHtml) {
-        newValueNode.addChildToBack(IR.objectlit(IR.stringKey("escapeLt", IR.trueNode())));
-      }
     }
 
     newValueNode.useSourceInfoIfMissingFromForTree(origNode);
     return newValueNode;
-  }
-
-  private boolean isHtml(Node node) throws MalformedException {
-    if (node.getChildCount() > 3) {
-      Node options = node.getChildAtIndex(3);
-      checkNode(options, Token.OBJECTLIT);
-      for (Node opt = options.getFirstChild(); opt != null; opt = opt.getNext()) {
-        checkNode(opt, Token.STRING_KEY);
-        if (opt.getString().equals("html")) {
-          return opt.getFirstChild().isTrue();
-        }
-      }
-    }
-    return false;
   }
 
   private static Node getPlaceholderValue(
