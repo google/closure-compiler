@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -802,10 +803,13 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     CompilerOptions options = getOptions();
     options.setCheckSymbols(true);
     String src =
-        "goog.provide('namespace.Bar');\n"
-        + "/** @constructor */ namespace.Bar = function() {};";
-    Result result = runReplaceScript(options,
-        ImmutableList.of(src), 0, 0, src, 0, false).getResult();
+        lines(
+            "/** @const */",
+            "var goog = {};",
+            "goog.provide('namespace.Bar');",
+            "/** @constructor */ namespace.Bar = function() {};");
+    Result result =
+        runReplaceScript(options, ImmutableList.of(src), 0, 0, src, 0, false).getResult();
     assertNoWarningsOrErrors(result);
   }
 

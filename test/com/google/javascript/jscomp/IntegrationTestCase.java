@@ -357,11 +357,8 @@ abstract class IntegrationTestCase {
     Compiler compiler = compile(options, original);
 
     Node root = compiler.getJsRoot();
-    if (compiled != null) {
-      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
-      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
-    }
 
+    // Verify that there are no unexpected errors before checking the compiled output
     assertWithMessage(
             "Expected no warnings or errors\n"
                 + "Errors: \n"
@@ -371,6 +368,11 @@ abstract class IntegrationTestCase {
                 + Joiner.on("\n").join(compiler.getWarnings()))
         .that(compiler.getErrors().size() + compiler.getWarnings().size())
         .isEqualTo(0);
+
+    if (compiled != null) {
+      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
+      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
+    }
   }
 
   /**

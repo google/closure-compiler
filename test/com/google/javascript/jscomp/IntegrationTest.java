@@ -1502,6 +1502,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         lines(
+            "/** @const */",
+            "var goog = {};",
             "goog.provide('ns');",
             "goog.provide('ns.SomeType');",
             "goog.provide('ns.SomeType.EnumValue');",
@@ -1586,9 +1588,14 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testExportTestFunctionsOn1() {
     CompilerOptions options = createCompilerOptions();
     options.exportTestFunctions = true;
-    test(options, "function testFoo() {}",
-        "/** @export */ function testFoo() {}"
-        + "goog.exportSymbol('testFoo', testFoo);");
+    test(
+        options,
+        "/** @const */ var goog = {}; function testFoo() {}",
+        lines(
+            "/** @const */",
+            "var goog = {};", //
+            "/** @export */ function testFoo() {}",
+            "goog.exportSymbol('testFoo', testFoo);"));
   }
 
   @Test
@@ -1664,15 +1671,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testExportTestFunctionsOff() {
     testSame(createCompilerOptions(), "function testFoo() {}");
-  }
-
-  @Test
-  public void testExportTestFunctionsOn() {
-    CompilerOptions options = createCompilerOptions();
-    options.exportTestFunctions = true;
-    test(options, "function testFoo() {}",
-         "/** @export */ function testFoo() {}" +
-         "goog.exportSymbol('testFoo', testFoo);");
   }
 
   @Test
@@ -4901,12 +4899,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         .setOptionsForCompilationLevel(options);
     WarningLevel.VERBOSE
         .setOptionsForWarningLevel(options);
-    test(options,
-         "goog.scope(function () {" +
-         "  /** @constructor */ function F(x) { this.x = x; }" +
-         "  alert(new F(1));" +
-         "});",
-         "alert(new function(){}(1));");
+    test(
+        options,
+        lines(
+            "/** @const */",
+            "var goog = {};",
+            "goog.scope(function () {",
+            "  /** @constructor */ function F(x) { this.x = x; }",
+            "  alert(new F(1));",
+            "});"),
+        "alert(new function(){}(1));");
   }
 
   @Test
@@ -5458,13 +5460,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     level.setOptionsForCompilationLevel(options);
     level.setTypeBasedOptimizationOptions(options);
 
-    String code = "" +
-        "var ns = {};\n" +
-        "ns.C = goog.defineClass(null, {\n" +
-        "  /** @constructor */\n" +
-        "  constructor: function () {this.someProperty = 1}\n" +
-        "});\n" +
-        "alert(new ns.C().someProperty + new ns.C().someProperty);\n";
+    String code =
+        lines(
+            "var goog = {};",
+            "var ns = {};",
+            "ns.C = goog.defineClass(null, {",
+            "  /** @constructor */",
+            "  constructor: function () {this.someProperty = 1}",
+            "});",
+            "alert(new ns.C().someProperty + new ns.C().someProperty);");
     assertThat(options.shouldInlineProperties()).isTrue();
     assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
@@ -5479,12 +5483,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     level.setOptionsForCompilationLevel(options);
     level.setTypeBasedOptimizationOptions(options);
 
-    String code = "" +
-        "var C = goog.defineClass(null, {\n" +
-        "  /** @constructor */\n" +
-        "  constructor: function () {this.someProperty = 1}\n" +
-        "});\n" +
-        "alert(new C().someProperty + new C().someProperty);\n";
+    String code =
+        lines(
+            "/** @const */",
+            "var goog = {};",
+            "var C = goog.defineClass(null, {",
+            "  /** @constructor */",
+            "  constructor: function () {this.someProperty = 1}",
+            "});",
+            "alert(new C().someProperty + new C().someProperty);");
     assertThat(options.shouldInlineProperties()).isTrue();
     assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
@@ -5500,17 +5507,20 @@ public final class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.VERBOSE;
     warnings.setOptionsForWarningLevel(options);
 
-    String code = "" +
-        "var C = goog.defineClass(null, {\n" +
-        "  /** @constructor */\n" +
-        "  constructor: function () {\n" +
-        "    /** @type {number} */\n" +
-        "    this.someProperty = 1},\n" +
-        "  /** @param {string} a */\n" +
-        "  someMethod: function (a) {}\n" +
-        "});" +
-        "var x = new C();\n" +
-        "x.someMethod(x.someProperty);\n";
+    String code =
+        lines(
+            "/** @const */",
+            "var goog = {};",
+            "var C = goog.defineClass(null, {",
+            "  /** @constructor */",
+            "  constructor: function () {",
+            "    /** @type {number} */",
+            "    this.someProperty = 1},",
+            "  /** @param {string} a */",
+            "  someMethod: function (a) {}",
+            "});",
+            "var x = new C();",
+            "x.someMethod(x.someProperty);");
     assertThat(options.shouldInlineProperties()).isTrue();
     assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
@@ -5527,11 +5537,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setWarningLevel(
         DiagnosticGroups.GLOBAL_THIS, CheckLevel.WARNING);
 
-    String code = "" +
-        "var C = goog.defineClass(null, {\n" +
-        "  /** @param {string} a */\n" +
-        "  constructor: function (a) {this.someProperty = 1}\n" +
-        "});\n";
+    String code =
+        lines(
+            "/** @const */",
+            "var goog = {};",
+            "var C = goog.defineClass(null, {",
+            "  /** @param {string} a */",
+            "  constructor: function (a) {this.someProperty = 1}",
+            "});");
     test(options, code, "");
   }
 
@@ -5885,10 +5898,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
 
-    externs = ImmutableList.of(SourceFile.fromCode("<externs>",
-        "goog.provide('foo.bar'); /** @type {!Array<number>} */ foo.bar;"));
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "<externs>",
+                lines(
+                    "/** @fileoverview @suppress {externsValidation} */",
+                    "goog.provide('foo.bar');",
+                    "/** @type {!Array<number>} */ foo.bar;")));
 
-    test(options, "", "");
+    test(options, "var goog;", "var goog;");
   }
 
   @Test
@@ -5981,17 +6000,19 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-            LINE_JOINER.join(
-                "/** @externs */",
-                "goog.provide('ext.Bar');",
-                "/** @constructor */ ext.Bar = function() {};",
-                ""),
-            LINE_JOINER.join(
-                "goog.module('ns');",
-                "const Bar = goog.require('ext.Bar');",
-                "",
-                "exports.Foo = class extends Bar {}",
-                ""),
+          lines(
+              "/** @externs */",
+              "goog.provide('ext.Bar');",
+              "/** @const */",
+              "var goog = {};",
+              "/** @constructor */ ext.Bar = function() {};",
+              ""),
+          lines(
+              "goog.module('ns');",
+              "const Bar = goog.require('ext.Bar');",
+              "",
+              "exports.Foo = class extends Bar {}",
+              ""),
         },
         (String[]) null);
   }
@@ -6813,6 +6834,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "/** @externs */",
             "var ns = {};",
             "ns.subns.foo = function() {};",
+            "var goog;",
             // even when there is a goog.provide statement
             "goog.provide('provided');"));
   }
@@ -6827,6 +6849,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     String externs =
         lines(
             "/** @externs */",
+            "var goog;",
             "/** @const */",
             "var mangled$name$from$externs = {};",
             "/** @constructor */",
@@ -7166,5 +7189,27 @@ public final class IntegrationTest extends IntegrationTestCase {
     // options.setChecksOnly(true);
 
     test(options, new String[] {"goog.reflect.objectProperty();"}, (String[]) null);
+  }
+
+  @Test
+  public void testGoogForwardDeclareInExterns_doesNotBlockGoogRenaming() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setVariableRenaming(VariableRenamingPolicy.ALL);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(SourceFile.fromCode("abc.js", "goog.forwardDeclare('a.b.c');"))
+            .build();
+
+    test(
+        options,
+        lines(
+            "/** @type {!a.b.c} */ var x;", //
+            "/** @const */",
+            "var goog = {};"),
+        "var a; var b = {};");
   }
 }
