@@ -395,6 +395,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     printStream.println("==== Externs ====");
     printStream.println(externs);
     printStream.println("==== Inputs ====");
+    // To get a pretty-printed JSON module graph, change this line to
+    //
+    // printStream.println(
+    //     new GsonBuilder().setPrettyPrinting().create().toJson(moduleGraph.toJson()));
+    //
+    // TODO(bradfordcsmith): Come up with a JSON-printing version that will work when this code is
+    // compiled with J2CL, so we can permanently improve this.
     printStream.println(Iterables.toString(moduleGraph.getAllInputs()));
     printStream.println("==== CompilerOptions ====");
     printStream.println(options);
