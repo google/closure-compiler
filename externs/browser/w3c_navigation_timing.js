@@ -175,6 +175,16 @@ function LargestContentfulPaint() {}
 /** @type {string} */ LargestContentfulPaint.prototype.url;
 /** @type {?Element} */ LargestContentfulPaint.prototype.element;
 
+/**
+ * https://wicg.github.io/event-timing/#sec-performance-event-timing
+ * @constructor
+ * @extends {PerformanceEntry}
+ */
+function PerformanceEventTiming() {}
+/** @type {number} */ PerformanceEventTiming.prototype.processingStart;
+/** @type {number} */ PerformanceEventTiming.prototype.processingEnd;
+/** @type {boolean} */ PerformanceEventTiming.prototype.cancelable;
+
 /** @constructor */
 function Performance() {}
 
