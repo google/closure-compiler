@@ -347,21 +347,21 @@ public final class ErrorToFixMapper {
   }
 
   private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {
-    SuggestedFix.Builder fix =
-        new SuggestedFix.Builder().attachMatchedNodeInfo(error.getNode(), compiler);
-    boolean destructuring =
-        NodeUtil.getEnclosingType(error.getNode(), Token.OBJECT_PATTERN) != null;
+    Node node = error.getNode();
+
+    SuggestedFix.Builder fix = new SuggestedFix.Builder().attachMatchedNodeInfo(node, compiler);
+    boolean destructuring = NodeUtil.getEnclosingType(node, Token.OBJECT_PATTERN) != null;
     if (destructuring) {
       fix.setDescription("Delete unused symbol");
-      if (error.getNode().isStringKey()) {
-        fix.delete(error.getNode());
+      if (node.isStringKey()) {
+        fix.delete(node);
       } else {
-        checkState(error.getNode().getParent().isStringKey(), error.getNode().getParent());
-        fix.delete(error.getNode().getParent());
+        checkState(node.getParent().isStringKey(), node.getParent());
+        fix.delete(node.getParent());
       }
     } else {
       fix.setDescription("Delete extra require");
-      fix.deleteWithoutRemovingWhitespaceBefore(NodeUtil.getEnclosingStatement(error.getNode()));
+      fix.deleteWithoutRemovingWhitespaceBefore(NodeUtil.getEnclosingStatement(node));
     }
     return fix.build();
   }

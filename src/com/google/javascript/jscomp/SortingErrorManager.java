@@ -184,7 +184,7 @@ public class SortingErrorManager implements ErrorManager {
         return P1_GT_P2;
       }
       // description
-      return p1.error.description.compareTo(p2.error.getDescription());
+      return p1.error.getDescription().compareTo(p2.error.getDescription());
     }
   }
 
