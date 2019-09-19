@@ -39,21 +39,13 @@
 
 package com.google.javascript.rhino.jstype;
 
-
-
-
+import com.google.errorprone.annotations.ForOverride;
+import javax.annotation.Nullable;
 
 /**
- * A type visitor.<p>
+ * A vistor for {@code JSType}s.
  *
- * This code will calculate a specific value of type {@code T} from a type
- * based on its structure:
- *
- * <pre>JSType type = &hellip;;
- * T value = type.visit(new Visitor&lt;T&gt;() {
- * &nbsp;&nbsp;&hellip;
- * });</pre>
- *
+ * <p>During visitation, an instance may calculate a result value.
  */
 public interface Visitor<T> {
   /**
@@ -145,4 +137,107 @@ public interface Visitor<T> {
    * Template type's case.
    */
   T caseTemplateType(TemplateType templateType);
+
+  /** A type visitor with a default behaviour. */
+  public abstract class WithDefaultCase<T> implements Visitor<T> {
+
+    /**
+     * Called for all cases unless the specific case is overridden in the concrete subclass.
+     *
+     * <p>{@code null} is passed iff the caller is a spcific case that has no {@code JSType}
+     * argument, example {@link #caseAllType()}.
+     */
+    @ForOverride
+    protected abstract T caseDefault(@Nullable JSType type);
+
+    @Override
+    public T caseNoType(NoType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseEnumElementType(EnumElementType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseAllType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseBooleanType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseNoObjectType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseFunctionType(FunctionType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseObjectType(ObjectType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseUnknownType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseNullType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseNamedType(NamedType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseProxyObjectType(ProxyObjectType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseNumberType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseStringType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseSymbolType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseVoidType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseUnionType(UnionType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseTemplatizedType(TemplatizedType type) {
+      return this.caseDefault(type);
+    }
+
+    @Override
+    public T caseTemplateType(TemplateType type) {
+      return this.caseDefault(type);
+    }
+  }
 }

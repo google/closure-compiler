@@ -38,101 +38,87 @@
  * ***** END LICENSE BLOCK ***** */
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
-import java.util.AbstractMap;
-import java.util.IdentityHashMap;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * A type visitor that traverse through the referenced types of {@link ProxyObjectType} and the
- * alternate types of {@link UnionType} to search for a target type. If the target type is found,
- * a Result object FOUND is returned. If it is not found, a Result of NOT_FOUND is returned.
- * If a cycle is found before the target type is found, a Result containing the cycle-forming type
- * encountered in the reference chain is returned.
+ * A type visitor that traverse through the referenced types of "forwaring types" to search for a
+ * target type.
  *
- * This is used by {@link TemplateType} as a helper in cycle detection and subtyping. Cycles are
+ * <p>The result of the visitation indicates whether the target type was present, absent, or
+ * undcidable due to a cycle.
+ *
+ * <p>This is used by {@link TemplateType} as a helper in cycle detection and subtyping. Cycles are
  * checked for once after TemplateTypes are constructed in FunctionTypeBuilder and an error is
  * emitted if they are found.
- *
- * @author liuamanda@google.com (Amanda Liu)
  */
-class ContainsUpperBoundSuperTypeVisitor extends AbstractDefaultValueVisitor<Result> {
+final class ContainsUpperBoundSuperTypeVisitor extends Visitor.WithDefaultCase<Result> {
+
   private final JSType target;
-  // NOTE: An IdentityHashMap is used to keep track of seen ProxyObjectTypes since these types
-  // normally toss the hashing to their referenced type. This is used instead to maintain uniqueness
-  // of inserted types and avoid false positives in cycle detection.
-  private final AbstractMap<ProxyObjectType, Void> seen;
+  private final Set<JSType> seen = Sets.newIdentityHashSet();
 
   public ContainsUpperBoundSuperTypeVisitor(JSType target) {
-    super(NOT_FOUND);
     this.target = target;
-    this.seen = new IdentityHashMap<>();
+  }
+
+  @Override
+  protected Result caseDefault(@Nullable JSType type) {
+    if (this.target == null) {
+      return Result.ABSENT;
+    }
+
+    return JSType.areIdentical(type, this.target) ? Result.PRESENT : Result.ABSENT;
   }
 
   @Override
   public Result caseTemplateType(TemplateType type) {
-    return caseProxyObjectTypeHelper(type, type.getBound());
+    return caseForwardingType(type, type.getBound());
   }
 
   @Override
   public Result caseNamedType(NamedType type) {
-    return caseProxyObjectTypeHelper(type, type.getReferencedType());
+    return caseForwardingType(type, type.getReferencedType());
   }
 
   @Override
   public Result caseTemplatizedType(TemplatizedType type) {
-    return caseProxyObjectTypeHelper(type, type.getReferencedType());
+    return caseForwardingType(type, type.getReferencedType());
   }
 
   @Override
   public Result caseUnionType(UnionType type) {
     if (JSType.areIdentical(type, target)) {
-      return FOUND;
-    } else {
-      for (JSType alt : type.getAlternates()) {
-        Result foundInAlt = alt.visit(this);
-        if (foundInAlt != NOT_FOUND) {
-          return foundInAlt;
-        }
-      }
-      return NOT_FOUND;
+      return Result.PRESENT;
     }
+
+    for (JSType alt : type.getAlternates()) {
+      Result foundInAlt = alt.visit(this);
+      if (foundInAlt != Result.ABSENT) {
+        return foundInAlt;
+      }
+    }
+
+    return Result.ABSENT;
   }
 
-  private Result caseProxyObjectTypeHelper(ProxyObjectType type, JSType reference) {
+  private Result caseForwardingType(JSType type, JSType reference) {
     if (JSType.areIdentical(type, target)) {
-      return FOUND;
-    } else if (seen.containsKey(type)) {
-      // A cycle has been detected
-      return cycle(type);
+      return Result.PRESENT;
+    } else if (seen.contains(type)) {
+      return Result.CYCLE;
     } else {
-      // We only care about uniqueness of keys, so store a dummy value
-      seen.put(type, null);
+      seen.add(type);
       return reference.visit(this);
     }
   }
 
-  /**
-   * This class represents all possible resulting states of a traversal of
-   * the ContainsUpperBoundSuperTypeVisitor.
-   *
-   * The result of a traversal of this visitor may either find the target type,
-   * not find the target type, or encounter a cycle.
-   */
-  static class Result {
-    boolean foundSupertype;
-    @Nullable JSType cycle;
-
-    Result(boolean foundSupertype, JSType cycle) {
-      this.foundSupertype = foundSupertype;
-      this.cycle = cycle;
-    }
-  }
-
-  static final Result FOUND = new Result(true, null);
-  static final Result NOT_FOUND = new Result(false, null);
-
-  static Result cycle(JSType type) {
-    return new Result(false, type);
+  /** Represents the outcome of a visitation of the {@link ContainsUpperBoundSuperTypeVisitor}. */
+  enum Result {
+    PRESENT,
+    ABSENT,
+    /** Containment is undecidable due to a reference cycle. */
+    CYCLE;
   }
 }

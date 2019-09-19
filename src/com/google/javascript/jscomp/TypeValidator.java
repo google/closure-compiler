@@ -41,7 +41,6 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.JsIterables.MaybeBoxedIterableOrAsyncIterable;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.AbstractDefaultValueVisitor;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -59,6 +58,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.UnknownType;
+import com.google.javascript.rhino.jstype.Visitor;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -1182,12 +1182,16 @@ class TypeValidator implements Serializable {
     }
   }
 
-  class WellFormedTemplatizedTypeVerifier extends AbstractDefaultValueVisitor<Boolean> {
+  final class WellFormedTemplatizedTypeVerifier extends Visitor.WithDefaultCase<Boolean> {
     Node node;
 
     WellFormedTemplatizedTypeVerifier(Node node) {
-      super(true);
       this.node = node;
+    }
+
+    @Override
+    protected Boolean caseDefault(@Nullable JSType type) {
+      return true;
     }
 
     @Override

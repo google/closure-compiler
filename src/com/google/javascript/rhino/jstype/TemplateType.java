@@ -47,7 +47,6 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.ContainsUpperBoundSuperTypeVisitor.Result;
 
 /** A placeholder type, used as keys in {@link TemplateTypeMap}s. */
 public final class TemplateType extends ProxyObjectType {
@@ -139,9 +138,8 @@ public final class TemplateType extends ProxyObjectType {
     if (!this.getBound().isUnknownType()
         && that.isTemplateType()
         && !that.toMaybeTemplateType().getBound().isUnknownType()) {
-      Visitor<Result> typeVisitor = new ContainsUpperBoundSuperTypeVisitor(that);
-      return JSType.areIdentical(this, that)
-          || this.visit(typeVisitor) == ContainsUpperBoundSuperTypeVisitor.FOUND;
+      return this.visit(new ContainsUpperBoundSuperTypeVisitor(that))
+          == ContainsUpperBoundSuperTypeVisitor.Result.PRESENT;
     } else {
       return super.isSubtype(that, implicitImplCache, subtypingMode);
     }
@@ -168,9 +166,7 @@ public final class TemplateType extends ProxyObjectType {
   public boolean containsCycle() {
     // By passing in an unreachable type `null` as the target, the visitor will only return if a
     // cycle is found or a terminating type is reached.
-    Visitor<Result> typeVisitor = new ContainsUpperBoundSuperTypeVisitor(null);
-    // If a terminating type is reached, `null` is returned. If a cycle is found, the re-encountered
-    // type is returned.
-    return this.visit(typeVisitor).cycle != null;
+    ContainsUpperBoundSuperTypeVisitor typeVisitor = new ContainsUpperBoundSuperTypeVisitor(null);
+    return this.visit(typeVisitor) == ContainsUpperBoundSuperTypeVisitor.Result.CYCLE;
   }
 }
