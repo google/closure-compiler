@@ -2117,36 +2117,48 @@ class TypeInference
     return traverseInstantiation(n, constructorType, scope);
   }
 
-  private FlowScope traverseInstantiation(Node n, JSType constructorType, FlowScope scope) {
-    JSType type = null;
-    if (constructorType != null) {
-      constructorType = constructorType.restrictByNotNullOrUndefined();
-      if (constructorType.isUnknownType()) {
-        type = unknownType;
-      } else {
-        FunctionType ct = constructorType.toMaybeFunctionType();
-        if (ct == null && constructorType instanceof FunctionType) {
-          // If constructorType is a NoObjectType, then toMaybeFunctionType will
-          // return null. But NoObjectType implements the FunctionType
-          // interface, precisely because it can validly construct objects.
-          ct = (FunctionType) constructorType;
-        }
-        if (ct != null && ct.isConstructor()) {
-          backwardsInferenceFromCallSite(n, ct, scope);
-
-          // If necessary, create a TemplatizedType wrapper around the instance
-          // type, based on the types of the constructor parameters.
-          ObjectType instanceType = ct.getInstanceType();
-          Map<TemplateType, JSType> inferredTypes = inferTemplateTypesFromParameters(ct, n, scope);
-          if (inferredTypes.isEmpty()) {
-            type = instanceType;
-          } else {
-            type = registry.createTemplatizedType(instanceType, inferredTypes);
-          }
-        }
-      }
+  private FlowScope traverseInstantiation(Node n, JSType ctorType, FlowScope scope) {
+    if (ctorType == null) {
+      n.setJSType(null);
+      return scope;
+    } else if (ctorType.isUnknownType()) {
+      n.setJSType(unknownType);
+      return scope;
     }
-    n.setJSType(type);
+
+    ctorType = ctorType.restrictByNotNullOrUndefined();
+
+    FunctionType ctorFnType = ctorType.toMaybeFunctionType();
+    if (ctorFnType == null && ctorType instanceof FunctionType) {
+      // If ctorType is a NoObjectType, then toMaybeFunctionType will
+      // return null. But NoObjectType implements the FunctionType
+      // interface, precisely because it can validly construct objects.
+      ctorFnType = (FunctionType) ctorType;
+    }
+
+    if (ctorFnType == null || !ctorFnType.isConstructor()) {
+      n.setJSType(null);
+      return scope;
+    }
+
+    // TODO(nickreid): This probably isn't the right thing to do based on the differences between
+    // the `this` parameter between CALL and NEW.
+    backwardsInferenceFromCallSite(n, ctorFnType, scope);
+
+    ObjectType instantiatedType = ctorFnType.getInstanceType();
+    if (ctorFnType == registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE)) {
+      // TODO(b/138617950): Delete this case when `Object` and `Object<?, ?> are sparate.
+    } else if (ctorFnType.hasAnyTemplateTypes()) {
+      if (instantiatedType.isTemplatizedType()) {
+        instantiatedType = instantiatedType.toMaybeTemplatizedType().getRawType();
+      }
+      // If necessary, templatized the instance type based on the the constructor parameters.
+      Map<TemplateType, JSType> inferredTypes =
+          inferTemplateTypesFromParameters(ctorFnType, n, scope);
+      instantiatedType = registry.createTemplatizedType(instantiatedType, inferredTypes);
+    }
+
+    n.setJSType(instantiatedType);
     return scope;
   }
 

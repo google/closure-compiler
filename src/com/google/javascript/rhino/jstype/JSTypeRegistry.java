@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.JSTypeIterations.mapTypes;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
@@ -1809,15 +1810,12 @@ public class JSTypeRegistry implements Serializable {
    */
   public TemplatizedType createTemplatizedType(
       ObjectType baseType, Map<TemplateType, JSType> templatizedTypes) {
-    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
-    for (TemplateType key : baseType.getTypeParameters()) {
-      JSType templatizedType =
-          templatizedTypes.containsKey(key)
-              ? templatizedTypes.get(key)
-              : getNativeType(UNKNOWN_TYPE);
-      builder.add(templatizedType);
-    }
-    return createTemplatizedType(baseType, builder.build());
+    JSType unknownType = getNativeType(UNKNOWN_TYPE);
+    return createTemplatizedType(
+        baseType,
+        mapTypes(
+            (key) -> templatizedTypes.getOrDefault(key, unknownType),
+            baseType.getTypeParameters()));
   }
 
   /**

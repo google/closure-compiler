@@ -8481,10 +8481,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testReturn4() {
-    testTypes("/**@return {!Number}\n*/\n function a(){return new Array();}",
-        "inconsistent return type\n" +
-        "found   : Array\n" +
-        "required: Number");
+    testTypes(
+        "/**@return {!Number}\n*/\n function a(){return new Array();}",
+        "inconsistent return type\n" + "found   : Array<?>\n" + "required: Number");
   }
 
   @Test
@@ -9877,7 +9876,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "(new Element).innerHTML = new Array();"),
         lines(
             "assignment to property innerHTML of Element", // preserve new line
-            "found   : Array",
+            "found   : Array<?>",
             "required: string"));
   }
 
@@ -19537,10 +19536,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "f(new Foo)"),
         lines(
             "actual parameter 1 of f does not match formal parameter",
-            "found   : Foo",
+            "found   : Foo<?>",
             "required: WithPropT<number>",
-        "missing : []",
-        "mismatch: [prop]"));
+            "missing : []",
+            "mismatch: [prop]"));
   }
 
   @Test
