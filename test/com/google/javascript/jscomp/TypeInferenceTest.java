@@ -1187,6 +1187,46 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testNew_onCtor_instantiatingTemplatizedType_withNoTemplateInformation() {
+    inFunction(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "",
+            "var result = new Foo();"));
+
+    assertThat(getType("result").toString()).isEqualTo("Foo<?>");
+  }
+
+  @Test
+  public void testNew_onCtor_instantiatingTemplatizedType_specializedOnSecondaryTemplate() {
+    inFunction(
+        lines(
+            "/**",
+            " * @constructor",
+            " * @template T",
+            " */",
+            "function Foo() {}",
+            "",
+            "/**",
+            " * @template U",
+            " * @param {function(new:Foo<U>)} ctor",
+            " * @param {U} arg",
+            " * @return {!Foo<U>}",
+            " */",
+            "function create(ctor, arg) {",
+            "  return new ctor(arg);",
+            "}",
+            "",
+            "var result = create(Foo, 0);"));
+
+    assertThat(getType("result").toString()).isEqualTo("Foo<number>");
+  }
+
+  @Test
   public void testNewRest() {
     inFunction(
         lines(
