@@ -52,6 +52,14 @@ import java.io.Serializable;
 public final class JSTypeExpression implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  static final JSTypeExpression IMPLICIT_TEMPLATE_BOUND =
+      new JSTypeExpression(new Node(Token.QMARK), "");
+
+  static {
+    IMPLICIT_TEMPLATE_BOUND.getRoot().setStaticSourceFile(
+        new SimpleSourceFile("<IMPLICT_TEMPLATE_BOUND>", StaticSourceFile.SourceKind.STRONG));
+  }
+
   /** The root of the AST. */
   private final Node root;
 
@@ -128,5 +136,11 @@ public final class JSTypeExpression implements Serializable {
 
   public JSTypeExpression copy() {
     return new JSTypeExpression(root.cloneTree(), sourceName);
+  }
+
+  /** Whether this expression is an explicit unknown template bound. */
+  @SuppressWarnings("ReferenceEquality")
+  public boolean isExplicitUnknownTemplateBound() {
+    return this != IMPLICIT_TEMPLATE_BOUND && this.equals(IMPLICIT_TEMPLATE_BOUND);
   }
 }

@@ -5873,6 +5873,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testGenericBoundExplicitUnknown() {
+    testTypes(
+        lines(
+            "/**", //
+            " * @param {T} x",
+            " * @template {?} T",
+            " */",
+            "function f(x) {}"),
+        "Illegal upper bound '?' on template type parameter T",
+        true);
+  }
+
+  @Test
   public void testGenericBoundArgAppError() {
     testTypes(
         lines(
@@ -5880,10 +5893,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} x",
             " * @template {number} T",
             " */",
-            "function A(x) {}",
-            "var a = A('a');"),
+            "function f(x) {}",
+            "var a = f('a');"),
         lines(
-            "actual parameter 1 of A does not match formal parameter",
+            "actual parameter 1 of f does not match formal parameter",
             "found   : string",
             "required: number"));
   }
@@ -5896,8 +5909,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} x",
             " * @template {number} T",
             " */",
-            "function A(x) {}",
-            "var a = A(3);"));
+            "function f(x) {}",
+            "var a = f(3);"));
   }
 
   @Test
@@ -5909,8 +5922,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @return {T}",
             " * @template {number} T",
             " */",
-            "function A(x) { return 'a'; }",
-            "var a = A(0);"),
+            "function f(x) { return 'a'; }",
+            "var a = f(0);"),
         lines(
             "inconsistent return type", //
             "found   : string", //
@@ -5925,10 +5938,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} x",
             " * @template {number} T",
             " */",
-            "function A(x) { return x; }",
-            "var a = A(null);"),
+            "function f(x) { return x; }",
+            "var a = f(null);"),
         lines(
-            "actual parameter 1 of A does not match formal parameter",
+            "actual parameter 1 of f does not match formal parameter",
             "found   : null",
             "required: number"));
   }
@@ -5941,8 +5954,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} x",
             " * @template {?number} T",
             " */",
-            "function A(x) { return x; }",
-            "var a = A(null);"));
+            "function f(x) { return x; }",
+            "var a = f(null);"));
   }
 
   @Test

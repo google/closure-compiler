@@ -152,6 +152,11 @@ final class FunctionTypeBuilder {
       "JSC_TEMPLATE_TYPE_EXPECTED",
       "The template type must be a parameter type");
 
+  static final DiagnosticType TEMPLATE_TYPE_ILLEGAL_BOUND =
+      DiagnosticType.error(
+          "JSC_TEMPLATE_TYPE_ILLEGAL_BOUND",
+          "Illegal upper bound ''{0}'' on template type parameter {1}");
+
   static final DiagnosticType THIS_TYPE_NON_OBJECT =
       DiagnosticType.warning(
           "JSC_THIS_TYPE_NON_OBJECT",
@@ -178,6 +183,7 @@ final class FunctionTypeBuilder {
           TEMPLATE_TRANSFORMATION_ON_CLASS,
           TEMPLATE_TYPE_DUPLICATED,
           TEMPLATE_TYPE_EXPECTED,
+          TEMPLATE_TYPE_ILLEGAL_BOUND,
           THIS_TYPE_NON_OBJECT,
           SAME_INTERFACE_MULTIPLE_IMPLEMENTS);
 
@@ -759,9 +765,8 @@ final class FunctionTypeBuilder {
 
     // Temporarily bootstrap the template environment with unbound (unknown bound) template types
     List<TemplateType> unboundedTemplates = new ArrayList<>();
-    for (Map.Entry<String, JSTypeExpression> entry : infoTypeKeys.entrySet()) {
-      TemplateType template = typeRegistry.createTemplateType(entry.getKey());
-      unboundedTemplates.add(template);
+    for (String templateKey : infoTypeKeys.keySet()) {
+      unboundedTemplates.add(typeRegistry.createTemplateType(templateKey));
     }
     this.templateScope = typeRegistry.createScopeWithTemplates(templateScope, unboundedTemplates);
 
@@ -769,7 +774,14 @@ final class FunctionTypeBuilder {
     ImmutableList.Builder<TemplateType> templates = ImmutableList.builder();
     Map<TemplateType, JSType> templatesToBounds = new LinkedHashMap<>();
     for (Map.Entry<String, JSTypeExpression> entry : infoTypeKeys.entrySet()) {
+      JSTypeExpression expr = entry.getValue();
       JSType typeBound = typeRegistry.evaluateTypeExpression(entry.getValue(), templateScope);
+      // It's an error to mark a template bound explicitly {?}. Unbounded templates have an implicit
+      // unknown bound. Allowing explicit unknowns would make it more difficult to stricten their
+      // treatment in the future, since "unknown" is currently used as a proxy for "implicit".
+      if (expr.isExplicitUnknownTemplateBound()) {
+        reportError(TEMPLATE_TYPE_ILLEGAL_BOUND, String.valueOf(typeBound), entry.getKey());
+      }
       TemplateType template =
           typeRegistry.getType(templateScope, entry.getKey()).toMaybeTemplateType();
       if (template != null) {

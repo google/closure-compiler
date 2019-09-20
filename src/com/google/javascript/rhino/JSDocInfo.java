@@ -75,15 +75,6 @@ import javax.annotation.Nullable;
 public class JSDocInfo implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeExpression IMPLICT_TEMPLATE_BOUND;
-
-  static {
-    Node n = new Node(Token.QMARK);
-    n.setStaticSourceFile(
-        new SimpleSourceFile("<IMPLICT_TEMPLATE_BOUND>", StaticSourceFile.SourceKind.STRONG));
-    IMPLICT_TEMPLATE_BOUND = new JSTypeExpression(n, "");
-  }
-
   /**
    * Visibility categories. The {@link Visibility#ordinal()} can be used as a
    * numerical indicator of privacy, where 0 is the most private. This means
@@ -1363,7 +1354,9 @@ public class JSDocInfo implements Serializable {
     lazyInitInfo();
 
     newTemplateTypeBound =
-        newTemplateTypeBound == null ? IMPLICT_TEMPLATE_BOUND : newTemplateTypeBound;
+        newTemplateTypeBound == null
+            ? JSTypeExpression.IMPLICIT_TEMPLATE_BOUND
+            : newTemplateTypeBound;
 
     if (isTypeTransformationName(newTemplateTypeName) || hasTypedefType()) {
       return false;
