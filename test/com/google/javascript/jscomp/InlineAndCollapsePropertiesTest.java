@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
+import static com.google.javascript.jscomp.CollapseProperties.PARTIAL_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
 
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -253,32 +253,36 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testAliasCreatedForClassDepth1_1() {
-    // A class's name is always collapsed, even if one of its prefixes is
-    // referenced in such a way that an alias is created for it.
-    test("var a = {}; /** @constructor */ a.b = function(){};"
-         + "var c = a; c.b = 0; a.b != c.b;",
-         "/** @constructor */ var a$b = function(){}; var c = null; a$b = 0; a$b != a$b;");
+    test(
+        lines(
+            "var a = {}; /** @constructor */ a.b = function(){};",
+            "var c = a; c.b = 0; a.b == c.b;"),
+        lines(
+            "/** @constructor */ var a$b = function(){};", //
+            "var c = null; a$b = 0; a$b == a$b;"));
+
+    testSame(
+        lines(
+            "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
+            "var c = 1; c = a; c.b = 0; a.b == c.b;"),
+        PARTIAL_NAMESPACE_WARNING);
 
     test(
         lines(
             "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
-            "var c = 1; c = a; c.b = 0; a.b == c.b;"),
+            "var c = a; c.b = 0; a.b == c.b;"),
         lines(
             "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
-            "var c = 1; c = a; c.b = 0; a.b == c.b;"),
-        warning(UNSAFE_NAMESPACE_WARNING));
-
-    test("var a = {}; /** @constructor @nocollapse */ a.b = function(){};"
-        + "var c = a; c.b = 0; a.b == c.b;",
-        "var a = {}; /** @constructor @nocollapse */ a.b = function(){};"
-        + "var c = null; a.b = 0; a.b == a.b;");
+            "var c = null; a.b = 0; a.b == a.b;"));
 
     test(
-        "var a = {}; /** @constructor @nocollapse */ a.b = function(){};"
-        + "var c = a; c.b = 0; a.b == c.b; use(c);",
-        "var a = {}; /** @constructor @nocollapse */ a.b = function(){};"
-        + "var c = null; a.b = 0; a.b == a.b; use(a);",
-        warning(UNSAFE_NAMESPACE_WARNING));
+        lines(
+            "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
+            "var c = a; c.b = 0; a.b == c.b; use(c);"),
+        lines(
+            "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
+            "var c = null; a.b = 0; a.b == a.b; use(a);"),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -396,15 +400,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var a = {};",
             "/** @constructor */",
-            "var a$b = function (){};",
-            "var a$b$y;",
-            "var a$b$x = 0;",
+            "a.b = function (){};",
+            "a.b.x = 0;",
             "var c = null;",
-            "(function() {a$b$y = 1;})();",
-            "a$b$x;",
-            "a$b$y;",
+            "(function() {a.b.y = 1;})();",
+            "a.b.x;",
+            "a.b.y;",
             "use(a);"),
-        warning(UNSAFE_NAMESPACE_WARNING));
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test

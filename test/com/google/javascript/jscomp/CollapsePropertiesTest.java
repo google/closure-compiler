@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
-import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
+import static com.google.javascript.jscomp.CollapseProperties.PARTIAL_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
 
 import com.google.common.collect.ImmutableMap;
@@ -490,11 +490,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // a.b *is* safely collapsible, the Boolean logic should be smart enough to
     // only consider the right side of the && as aliasing.
     test(
-        "var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){};"
-            + " a.b.z = 1; var d = a.b && a.b.c;",
-        "var a$b = {}; /** @constructor */ var a$b$c = function(){};"
-            + " a$b.z = 1; var d = a$b && a$b$c;",
-        warning(UNSAFE_NAMESPACE_WARNING));
+        lines(
+            "var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){};",
+            " a.b.z = 1; var d = a.b && a.b.c;"),
+        lines(
+            "var a$b = {}; /** @constructor */ a$b.c = function(){};",
+            " a$b.z = 1; var d = a$b && a$b.c;"),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -594,12 +596,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAliasCreatedForObjectDepth1_2() {
+  public void testDontCollapseAliasedNamespace_1() {
     testSame("var a = {b: 0}; f(a); a.b;");
   }
 
   @Test
-  public void testAliasCreatedForObjectDepth1_3() {
+  public void testDontCollapseAliasedNamespace_2() {
     testSame("var a = {b: 0}; new f(a); a.b;");
   }
 
@@ -692,13 +694,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAliasCreatedForEnumDepth2_3() {
-    test(
-        "var a = {}; var d = 1; d = a; /** @enum */ a.b = {c: 0};"
-            + "for (var p in a.b) { f(a.b[p]); }",
-        "var a = {}; var d = 1; d = a; var a$b$c = 0; /** @enum */ var a$b = {c: a$b$c};"
-            + "for (var p in a$b) { f(a$b[p]); }",
-        warning(UNSAFE_NAMESPACE_WARNING));
+  public void testDontCollapseEnumWhenParentNamespaceAliased() {
+    testSame(
+        lines(
+            "var a = {}; var d = 1; d = a; /** @enum */ a.b = {c: 0};",
+            "for (var p in a.b) { f(a.b[p]); }"),
+        PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test
@@ -771,22 +772,40 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testAliasCreatedForClassDepth1_2() {
-    test(
+    testSame(
         "var a = {}; /** @constructor */ a.b = function(){}; f(a); a.b;",
-        "var a = {}; /** @constructor */ var a$b = function(){}; f(a); a$b;",
-        warning(UNSAFE_NAMESPACE_WARNING));
+        PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test
   public void testAliasCreatedForClassDepth1_3() {
-    test(
+    testSame(
         "var a = {}; /** @constructor */ a.b = function(){}; new f(a); a.b;",
-        "var a = {}; /** @constructor */ var a$b = function(){}; new f(a); a$b;",
-        warning(UNSAFE_NAMESPACE_WARNING));
+        PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test
   public void testAliasCreatedForClassDepth2_1() {
+    test(
+        lines("var a = {};", "a.b = {};", "/** @constructor */", "a.b.c = function(){};", "a.b.c;"),
+        lines("/** @constructor */", "var a$b$c = function(){};", "a$b$c;"));
+
+    test(
+        lines(
+            "var a = {};", //
+            "a.b = {};",
+            " /** @constructor @nocollapse */",
+            " a.b.c = function(){}; ",
+            "a.b.c;"),
+        lines(
+            "var a$b = {};", //
+            "/** @constructor @nocollapse */",
+            "a$b.c = function(){};",
+            "a$b.c;"));
+  }
+
+  @Test
+  public void testDontCollapseClassIfParentNamespaceAliased() {
     test(
         lines(
             "var a = {};",
@@ -795,49 +814,31 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "a.b.c = function(){};",
             "var d = 1;",
             "d = a.b;",
-            "a.b.c != d.c;"),
+            "a.b.c == d.c;"),
         lines(
             "var a$b = {}; ",
             "/** @constructor */",
-            "var a$b$c = function(){};",
-            "var d = 1;",
-            "d = a$b;",
-            "a$b$c != d.c;"),
-        warning(UNSAFE_NAMESPACE_WARNING));
-
-    test(
-        lines(
-            "var a = {};",
-            "a.b = {};",
-            " /** @constructor @nocollapse */",
-            " a.b.c = function(){}; ",
-            "var d = 1;",
-            " d = a.b; ",
-            "a.b.c == d.c;"),
-        lines(
-            "var a$b = {};",
-            "/** @constructor @nocollapse */",
             "a$b.c = function(){};",
-            "var d = 1; ",
+            "var d = 1;",
             "d = a$b;",
             "a$b.c == d.c;"),
-        warning(UNSAFE_NAMESPACE_WARNING));
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
-  public void testAliasCreatedForClassDepth2_2() {
+  public void testDontCollapseIfParentNamespaceAliased2() {
     test(
         "var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){}; f(a.b); a.b.c;",
-        "var a$b = {}; /** @constructor */ var a$b$c = function(){}; f(a$b); a$b$c;",
-        warning(UNSAFE_NAMESPACE_WARNING));
+        "var a$b = {}; /** @constructor */ a$b.c = function(){}; f(a$b); a$b.c;",
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
-  public void testAliasCreatedForClassDepth2_3() {
+  public void testDontCollapseIfParentNamespaceAliased3() {
     test(
         "var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){}; new f(a.b); a.b.c;",
-        "var a$b = {}; /** @constructor */ var a$b$c = function(){}; new f(a$b); a$b$c;",
-        warning(UNSAFE_NAMESPACE_WARNING));
+        "var a$b = {}; /** @constructor */ a$b.c = function(){}; new f(a$b); a$b.c;",
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -1467,8 +1468,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testChainedAssignments7() {
     test(
         "var x = {}; a = x.y = {}; /** @constructor */ x.y.z = function() {};",
-        "var x$y; a = x$y = {}; /** @constructor */ var x$y$z = function() {};",
-        warning(UNSAFE_NAMESPACE_WARNING));
+        "var x$y; a = x$y = {}; /** @constructor */ x$y.z = function() {};",
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -1866,21 +1867,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testIssue389() {
-    test("function alias() {}"
-    + "var dojo = {};"
-    + "dojo.gfx = {};"
-    + "dojo.declare = function() {};"
-    + "/** @constructor */"
-    + "dojo.gfx.Shape = function() {};"
-    + "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');"
-    + "alias(dojo);", "function alias() {}"
-    + "var dojo = {};"
-    + "dojo.gfx = {};"
-    + "dojo.declare = function() {};"
-    + "/** @constructor */"
-    + "var dojo$gfx$Shape = function() {};"
-    + "dojo$gfx$Shape = dojo.declare('dojo.gfx.Shape');"
-    + "alias(dojo);", warning(UNSAFE_NAMESPACE_WARNING));
+    testSame(
+        lines(
+            "function alias() {}",
+            "var dojo = {};",
+            "dojo.gfx = {};",
+            "dojo.declare = function() {};",
+            "/** @constructor */",
+            "dojo.gfx.Shape = function() {};",
+            "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');",
+            "alias(dojo);"),
+        PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test
@@ -1898,23 +1895,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testAliasedTopLevelEnum() {
-    test("function alias() {}"
-    + "var dojo = {};"
-    + "dojo.gfx = {};"
-    + "dojo.declare = function() {};"
-    + "/** @enum {number} */"
-    + "dojo.gfx.Shape = {SQUARE: 2};"
-    + "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');"
-    + "alias(dojo);"
-    + "alias(dojo.gfx.Shape.SQUARE);", "function alias() {}"
-    + "var dojo = {};"
-    + "dojo.gfx = {};"
-    + "dojo.declare = function() {};"
-    + "/** @enum {number} */"
-    + "var dojo$gfx$Shape = {SQUARE: 2};"
-    + "dojo$gfx$Shape = dojo.declare('dojo.gfx.Shape');"
-    + "alias(dojo);"
-    + "alias(dojo$gfx$Shape.SQUARE);", warning(UNSAFE_NAMESPACE_WARNING));
+    testSame(
+        lines(
+            "function alias() {}",
+            "var dojo = {};",
+            "dojo.gfx = {};",
+            "dojo.declare = function() {};",
+            "/** @enum {number} */",
+            "dojo.gfx.Shape = {SQUARE: 2};",
+            "dojo.gfx.Shape = dojo.declare('dojo.gfx.Shape');",
+            "alias(dojo);",
+            "alias(dojo.gfx.Shape.SQUARE);"),
+        PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test

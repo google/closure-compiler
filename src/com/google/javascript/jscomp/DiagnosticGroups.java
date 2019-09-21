@@ -152,6 +152,7 @@ public class DiagnosticGroups {
           + "msgDescriptions, "
           + "newCheckTypes, "
           + "nonStandardJsDocs, "
+          + "partialAlias, "
           + "polymer, "
           + "reportUnknownTypes, "
           + "strictCheckTypes, "
@@ -603,6 +604,9 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup TYPE_IMPORT_CODE_REFERENCES =
       DiagnosticGroups.registerGroup(
           "typeImportCodeReferences", CheckTypeImportCodeReferences.TYPE_IMPORT_CODE_REFERENCE);
+
+  public static final DiagnosticGroup PARTIAL_ALIAS =
+      DiagnosticGroups.registerGroup("partialAlias", CollapseProperties.PARTIAL_NAMESPACE_WARNING);
 
   // Warnings reported by the linter. If you enable these as errors in your build targets,
   // the JS Compiler team will break your build and not rollback.

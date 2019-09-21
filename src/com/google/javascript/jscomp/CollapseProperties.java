@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -35,6 +36,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Flattens global objects/namespaces by replacing each '.' with '$' in their names.
@@ -70,11 +72,11 @@ import java.util.Map;
  */
 class CollapseProperties implements CompilerPass {
   // Warnings
-  static final DiagnosticType UNSAFE_NAMESPACE_WARNING =
+  static final DiagnosticType PARTIAL_NAMESPACE_WARNING =
       DiagnosticType.warning(
-          "JSC_UNSAFE_NAMESPACE",
-          "incomplete alias created for namespace {0}, possibly due to await/yield"
-              + " transpilation.\n"
+          "JSC_PARTIAL_NAMESPACE",
+          "Partial alias created for namespace {0}, possibly due to await/yield transpilation.\n"
+              + "This may prevent optimization of anything nested under this namespace.\n"
               + "See https://github.com/google/closure-compiler/wiki/FAQ#i-got-an-incomplete-alias-created-for-namespace-error--what-do-i-do"
               + " for more details.");
 
@@ -110,17 +112,16 @@ class CollapseProperties implements CompilerPass {
     GlobalNamespace namespace = new GlobalNamespace(compiler, root);
     nameMap = namespace.getNameIndex();
     globalNames = namespace.getNameForest();
-    checkNamespaces();
-
+    Set<Name> escaped = checkNamespaces();
     for (Name name : globalNames) {
-      flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName());
+      flattenReferencesToCollapsibleDescendantNames(name, name.getBaseName(), escaped);
     }
 
     // We collapse property definitions after collapsing property references
     // because this step can alter the parse tree above property references,
     // invalidating the node ancestry stored with each reference.
     for (Name name : globalNames) {
-      collapseDeclarationOfNameAndDescendants(name, name.getBaseName());
+      collapseDeclarationOfNameAndDescendants(name, name.getBaseName(), escaped);
     }
 
     // This shouldn't be necessary, this pass should already be setting new constants as constant.
@@ -159,7 +160,8 @@ class CollapseProperties implements CompilerPass {
    * Runs through all namespaces (prefixes of classes and enums), and checks if any of them have
    * been used in an unsafe way.
    */
-  private void checkNamespaces() {
+  private Set<Name> checkNamespaces() {
+    ImmutableSet.Builder<Name> escaped = ImmutableSet.builder();
     for (Name name : nameMap.values()) {
       if (name.isNamespaceObjectLit()
           && (name.getAliasingGets() > 0
@@ -185,10 +187,13 @@ class CollapseProperties implements CompilerPass {
             initialized = true;
           } else if (ref.type == Ref.Type.ALIASING_GET) {
             warnAboutNamespaceAliasing(name, ref);
+            escaped.add(name);
+            break;
           }
         }
       }
     }
+    return escaped.build();
   }
 
   static boolean isSafeNamespaceReinit(Ref ref) {
@@ -224,7 +229,7 @@ class CollapseProperties implements CompilerPass {
    * @param ref The reference that forced the alias
    */
   private void warnAboutNamespaceAliasing(Name nameObj, Ref ref) {
-    compiler.report(JSError.make(ref.getNode(), UNSAFE_NAMESPACE_WARNING, nameObj.getFullName()));
+    compiler.report(JSError.make(ref.getNode(), PARTIAL_NAMESPACE_WARNING, nameObj.getFullName()));
   }
 
   /**
@@ -239,15 +244,15 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Flattens all references to collapsible properties of a global name except
-   * their initial definitions. Recurs on subnames.
+   * Flattens all references to collapsible properties of a global name except their initial
+   * definitions. Recurs on subnames.
    *
    * @param n An object representing a global name
    * @param alias The flattened name for {@code n}
    */
   private void flattenReferencesToCollapsibleDescendantNames(
-      Name n, String alias) {
-    if (n.props == null || n.isCollapsingExplicitlyDenied()) {
+      Name n, String alias, Set<Name> escaped) {
+    if (n.props == null || n.isCollapsingExplicitlyDenied() || escaped.contains(n)) {
       return;
     }
 
@@ -265,7 +270,7 @@ class CollapseProperties implements CompilerPass {
         flattenSimpleStubDeclaration(p, propAlias);
       }
 
-      flattenReferencesToCollapsibleDescendantNames(p, propAlias);
+      flattenReferencesToCollapsibleDescendantNames(p, propAlias, escaped);
     }
   }
 
@@ -430,26 +435,26 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Collapses definitions of the collapsible properties of a global name.
-   * Recurs on subnames that also represent JavaScript objects with
-   * collapsible properties.
+   * Collapses definitions of the collapsible properties of a global name. Recurs on subnames that
+   * also represent JavaScript objects with collapsible properties.
    *
    * @param n A node representing a global name
    * @param alias The flattened name for {@code n}
    */
-  private void collapseDeclarationOfNameAndDescendants(Name n, String alias) {
-    boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
+  private void collapseDeclarationOfNameAndDescendants(Name n, String alias, Set<Name> escaped) {
+    boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames() && !escaped.contains(n);
 
     // Handle this name first so that nested object literals get unrolled.
     if (canCollapse(n)) {
       updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
     }
 
-    if (n.props == null) {
+    if (n.props == null || escaped.contains(n)) {
       return;
     }
     for (Name p : n.props) {
-      collapseDeclarationOfNameAndDescendants(p, appendPropForAlias(alias, p.getBaseName()));
+      collapseDeclarationOfNameAndDescendants(
+          p, appendPropForAlias(alias, p.getBaseName()), escaped);
     }
   }
 
