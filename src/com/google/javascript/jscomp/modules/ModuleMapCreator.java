@@ -44,6 +44,10 @@ public class ModuleMapCreator implements HotSwapCompilerPass {
       DiagnosticType.error(
           "JSC_DOES_NOT_HAVE_EXPORT", "Requested module does not have an export \"{0}\".");
 
+  public static final DiagnosticType DOES_NOT_HAVE_EXPORT_WITH_DETAILS =
+      DiagnosticType.error(
+          "JSC_DOES_NOT_HAVE_EXPORT", "Requested module does not have an export \"{0}\".{1}");
+
   private final class ModuleRequestResolverImpl implements ModuleRequestResolver {
     private UnresolvedModule getFallbackForMissingNonClosureModule(ModuleLoader.ModulePath path) {
       ModuleMetadata metadata =

@@ -15,9 +15,11 @@
  */
 package com.google.javascript.jscomp.modules;
 
-import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -155,13 +157,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
                 new HashSet<>(),
                 new HashSet<>());
         if (!result.found() && !result.hadError()) {
-          compiler.report(
-              JSError.make(
-                  srcFileName,
-                  importRecord.importNode().getLineno(),
-                  importRecord.importNode().getCharno(),
-                  DOES_NOT_HAVE_EXPORT,
-                  importRecord.importName()));
+          reportInvalidDestructuringRequire(requested, importRecord);
           return ResolveExportResult.ERROR;
         }
         Node forSourceInfo =
@@ -191,6 +187,80 @@ final class ClosureModuleProcessor implements ModuleProcessor {
     void reset() {
       resolved = null;
     }
+
+    /** Reports an error given an invalid destructuring require. */
+    private void reportInvalidDestructuringRequire(
+        UnresolvedModule requested, Import importRecord) {
+      String additionalInfo = "";
+      if (requested instanceof UnresolvedGoogModule) {
+        // Detect some edge cases and given more helpful error messages.
+        Map<String, Binding> exports = ((UnresolvedGoogModule) requested).namespace;
+        if (exports.containsKey(Export.NAMESPACE)) {
+          // Can't use destructuring imports on a goog.module with a default export like
+          //   exports = class {
+          // (even if there is an assignment like `exports.Bar = 0;` later)
+          additionalInfo =
+              Strings.lenientFormat( // Use Strings.lenientFormat for GWT/J2CL compatability
+                  "\n"
+                      + "The goog.module \"%s\" cannot be destructured as it contains a default"
+                      + " export, not named exports. See %s.",
+                  importRecord.moduleRequest(),
+                  "https://github.com/google/closure-library/wiki/goog.module%3A-an-ES6-module-like-alternative-to-goog.provide#destructuring-imports");
+
+          if (mayBeAccidentalDefaultExport(importRecord.importName(), exports)) {
+            // Give the user a more detailed error message, since this is a tricky edge case.
+            additionalInfo +=
+                Strings.lenientFormat(
+                    "\n"
+                        + "Either use a non-destructuring require or rewrite the goog.module"
+                        + " \"%s\" to support destructuring requires. For example, consider"
+                        + " replacing\n"
+                        + "  exports = {%s: <value>[, ...]};\n"
+                        + "with individual named export assignments like\n"
+                        + "  exports.%s = <value>;\n",
+                    importRecord.moduleRequest(),
+                    importRecord.importName(),
+                    importRecord.importName());
+          }
+        }
+      }
+      compiler.report(
+          JSError.make(
+              srcFileName,
+              importRecord.importNode().getLineno(),
+              importRecord.importNode().getCharno(),
+              DOES_NOT_HAVE_EXPORT_WITH_DETAILS,
+              importRecord.importName(),
+              additionalInfo));
+    }
+  }
+
+  /**
+   * Returns whether the user appears to have confused a default export of an object literal with
+   * the named export object literal shorthand.
+   *
+   * <p>Basically, `exports = {foo: 0};`, does /not/ create a 'named export' of 'foo' because 0 is
+   * not a name. So users cannot destructuring-require `const {foo} = goog.require('the.module');`.
+   * However, if instead of `0` the user exported a name like `bar`, the user could use a
+   * destructuring require.
+   */
+  private static boolean mayBeAccidentalDefaultExport(
+      String importName, Map<String, Binding> exports) {
+    Node defaultExport = exports.get(Export.NAMESPACE).originatingExport().exportNode();
+    checkState(
+        defaultExport.matchesName("exports") && defaultExport.getParent().isAssign(),
+        defaultExport);
+    Node exportedValue = defaultExport.getNext();
+    if (!exportedValue.isObjectLit()) {
+      return false;
+    }
+    // Look for `importName` in the exported object literal.
+    for (Node key : exportedValue.children()) {
+      if (key.isStringKey() && key.getString().equals(importName)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private final AbstractCompiler compiler;
