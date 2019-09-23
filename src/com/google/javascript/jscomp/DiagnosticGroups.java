@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
+import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -616,6 +617,7 @@ public class DiagnosticGroups {
           CheckJSDocStyle.LINT_DIAGNOSTICS,
           new DiagnosticGroup(
               CheckClosureImports.LET_CLOSURE_IMPORT,
+              CheckConstantCaseNames.MISSING_CONST_PROPERTY,
               CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
               CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
               CheckEnums.DUPLICATE_ENUM_VALUE,

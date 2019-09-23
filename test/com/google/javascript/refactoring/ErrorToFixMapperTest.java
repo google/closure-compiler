@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
 import java.util.Collection;
@@ -65,6 +66,7 @@ public class ErrorToFixMapperTest {
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, ERROR);
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_CHECKS, WARNING);
+    options.setCodingConvention(new GoogleCodingConvention());
   }
 
   @AutoValue
@@ -1962,6 +1964,38 @@ public class ErrorToFixMapperTest {
     assertNoChanges(
         fileWithImports(
             "const a = goog.require('a'), b = goog.require('b');", useInCode("a", "b")));
+  }
+
+  @Test
+  public void testConstantCaseName_let() {
+    assertExpectedFixes(
+        "goog.module('m'); let CONSTANT_CASE = 'value';",
+        ExpectedFix.builder()
+            .description("Make explicitly constant")
+            .fixedCode("goog.module('m'); const CONSTANT_CASE = 'value';")
+            .build());
+  }
+
+  @Test
+  public void testConstantCaseName_var() {
+    assertExpectedFixes(
+        lines(
+            "goog.module('m');", //
+            "var CONSTANT_CASE = 'value';"),
+        ExpectedFix.builder()
+            .description("Make explicitly constant")
+            .fixedCode(
+                lines(
+                    "goog.module('m');", //
+                    "/** @const */",
+                    "var CONSTANT_CASE = 'value';"))
+            .build());
+  }
+
+  @Test
+  public void testConstantCaseName_varWithExistingJSDoc() {
+    assertNoChanges(
+        "goog.module('m'); /** @type {string} Some description */ var CONSTANT_CASE = 'value';");
   }
 
   private String fileWithImports(String... imports) {

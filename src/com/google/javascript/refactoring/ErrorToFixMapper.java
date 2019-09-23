@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.lint.CheckProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
@@ -111,6 +112,8 @@ public final class ErrorToFixMapper {
         return getFixForReferenceToShortImportByLongName(error, compiler);
       case "JSC_REDUNDANT_NULLABILITY_MODIFIER_JSDOC":
         return getFixForRedundantNullabilityModifierJsDoc(error, compiler);
+      case "JSC_MISSING_CONST_ON_CONSTANT_CASE":
+        return getFixForConstantCaseErrors(error, compiler);
       default:
         return null;
     }
@@ -406,5 +409,40 @@ public final class ErrorToFixMapper {
         .attachMatchedNodeInfo(error.getNode(), compiler)
         .replaceText(error.getNode(), 1, "")
         .build();
+  }
+  /**
+   * Suggests a fix for a constant case error.
+   *
+   * <p>If the variable is in a let clause, suggest adding a const. If the variable is not, suggest
+   * adding a @const annotation. Don't try to adjust the JSDoc, because that can produce invalid
+   * output.
+   */
+  private static SuggestedFix getFixForConstantCaseErrors(
+      JSError error, AbstractCompiler compiler) {
+    Node n = error.getNode();
+    Node parent = n.getParent();
+    if (!n.isName() || !NodeUtil.isNameDeclaration(parent)) {
+      return null;
+    }
+
+    if (parent.isLet()) {
+      // Convert to a `const` declaration
+      return new SuggestedFix.Builder()
+          .setDescription("Make explicitly constant")
+          .attachMatchedNodeInfo(parent, compiler)
+          .replaceText(parent, 3, "const")
+          .build();
+    }
+    // Don't convert a `var` to a `const` to avoid breaking variable scoping.
+    checkState(parent.isVar(), parent);
+    JSDocInfo info = parent.getJSDocInfo();
+    if (info == null) {
+      return new SuggestedFix.Builder()
+          .setDescription("Make explicitly constant")
+          .attachMatchedNodeInfo(parent, compiler)
+          .addOrReplaceJsDoc(parent, "/** @const */\n")
+          .build();
+    }
+    return null;
   }
 }
