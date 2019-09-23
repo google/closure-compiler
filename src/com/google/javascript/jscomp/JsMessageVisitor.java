@@ -256,7 +256,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       return;
     }
 
-    if (isLegalMessageVarAlias(msgNode, messageKey)) {
+    if (isLegalMessageVarAlias(msgNode)) {
       return;
     }
 
@@ -366,20 +366,16 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
    * introduced.
    *
    * @param msgNode Node representing the value assigned to the message variable or property
-   * @param msgKey Name of the message variable or property that is being assigned to. Note that
-   *     this will be "MSG_PROP_NAME" for "some.object.MSG_PROP_NAME".
    */
-  private static boolean isLegalMessageVarAlias(Node msgNode, String msgKey) {
+  private static boolean isLegalMessageVarAlias(Node msgNode) {
     if (msgNode.isGetProp()
         && msgNode.isQualifiedName()
-        && msgNode.getLastChild().getString().equals(msgKey)) {
-      // Case: `foo.Thing.MSG_EXAMPLE = bar.OtherThing.MSG_EXAMPLE;`
+        && msgNode.getLastChild().getString().startsWith("MSG_")) {
+      // Case: `foo.Thing.MSG_EXAMPLE_ALIAS = bar.OtherThing.MSG_EXAMPLE;`
       //
-      // This kind of construct is created by Es6ToEs3ClassSideInheritance. Just ignore it; the
-      // message will have already been extracted from the base class.
-      //
-      // TODO(bradfordcsmith): Should `foo.Thing.MSG_EXAMPLE_ALIAS = bar.OtherThing.MSG_EXAMPLE`
-      // also be allowed for consistency with variable names below?
+      // This kind of construct is created by TypeScript code generation and
+      // Es6ToEs3ClassSideInheritance. Just ignore it; the message will have already been extracted
+      // from the base class.
       return true;
     }
 

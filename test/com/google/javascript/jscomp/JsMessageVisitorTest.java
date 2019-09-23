@@ -261,8 +261,14 @@ public final class JsMessageVisitorTest {
   }
 
   @Test
-  public void testMessageAliasedToObject_mismatchedMSGNameIsAllowed() {
+  public void testMsgPropertyAliasesMsgVariable_mismatchedMSGNameIsAllowed() {
     extractMessages("a.b.MSG_FOO_ALIAS = MSG_FOO;");
+    assertThat(compiler.getErrors()).isEmpty();
+  }
+
+  @Test
+  public void testMsgPropertyAliasesMsgProperty_mismatchedMSGNameIsAllowed() {
+    extractMessages("a.b.MSG_FOO_ALIAS = c.d.MSG_FOO;");
     assertThat(compiler.getErrors()).isEmpty();
   }
 
