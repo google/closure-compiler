@@ -226,6 +226,25 @@ public final class DefaultPassConfig extends PassConfig {
     }
   }
 
+  private void addModuleRewritingPasses(List<PassFactory> checks, CompilerOptions options) {
+    if (options.isModuleRewritingDisabled()) {
+      return;
+    }
+    if (options.closurePass) {
+      checks.add(rewriteClosureImports);
+    }
+
+    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      checks.add(rewriteGoogJsImports);
+      TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
+    }
+
+    if (options.closurePass) {
+      checks.add(closureRewriteModule);
+    }
+    // TODO(b/141389184): include processClosureProvidesAndRequires here
+  }
+
   @Override
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
@@ -292,25 +311,12 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(checkClosureImports);
-      if (!options.isModuleRewritingDisabled()) {
-        checks.add(rewriteClosureImports);
-      }
-    }
-
-    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
-      if (!options.isModuleRewritingDisabled()) {
-        checks.add(rewriteGoogJsImports);
-        TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
-      }
     }
 
     checks.add(checkStrictMode);
 
     if (options.closurePass) {
       checks.add(closureCheckModule);
-      if (!options.isModuleRewritingDisabled()) {
-        checks.add(closureRewriteModule);
-      }
     }
 
     if (options.declaredGlobalExternsOnWindow) {
@@ -318,6 +324,9 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkSuper);
+
+    // TODO(b/141389184): Move this after the Polymer pass
+    addModuleRewritingPasses(checks, options);
 
     if (options.closurePass) {
       checks.add(closureGoogScopeAliases);
