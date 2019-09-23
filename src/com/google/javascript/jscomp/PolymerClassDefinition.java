@@ -19,6 +19,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -50,6 +51,9 @@ final class PolymerClassDefinition {
   /** The target node (LHS) for the Polymer element definition. */
   final Node target;
 
+  /** Whether the target of this element is a generated node */
+  final boolean hasGeneratedLhs;
+
   /** The object literal passed to the call to the Polymer() function. */
   final Node descriptor;
 
@@ -71,10 +75,13 @@ final class PolymerClassDefinition {
   /** Language features that should be carried over to the extraction destination. */
   @Nullable final FeatureSet features;
 
+  private String interfaceName = null;
+
   PolymerClassDefinition(
       DefinitionType defType,
       Node definition,
       Node target,
+      boolean hasGeneratedLhs,
       Node descriptor,
       JSDocInfo classInfo,
       MemberDefinition constructor,
@@ -86,6 +93,7 @@ final class PolymerClassDefinition {
     this.defType = defType;
     this.definition = definition;
     this.target = target;
+    this.hasGeneratedLhs = hasGeneratedLhs;
     checkState(descriptor == null || descriptor.isObjectLit());
     this.descriptor = descriptor;
     this.constructor = constructor;
@@ -125,11 +133,19 @@ final class PolymerClassDefinition {
       return null;
     }
 
+    boolean hasGeneratedLhs = false;
     Node target;
     if (NodeUtil.isNameDeclaration(callNode.getGrandparent())) {
       target = IR.name(callNode.getParent().getString());
     } else if (callNode.getParent().isAssign()) {
-      target = callNode.getParent().getFirstChild().cloneTree();
+      if (isGoogModuleExports(callNode.getParent())) {
+        // `exports = Polymer({` in a goog.module requires special handling, as adding a
+        // duplicate assignment to exports just confuses the compiler. Create a dummy declaration
+        // var exportsForPolymer$jscomp0 = Polymer({ // ...
+        target = createDummyGoogModuleExportsTarget(compiler, callNode);
+      } else {
+        target = callNode.getParent().getFirstChild().cloneTree();
+      }
     } else {
       String elNameStringBase =
           elName.isQualifiedName()
@@ -138,6 +154,7 @@ final class PolymerClassDefinition {
       String elNameString = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, elNameStringBase);
       elNameString += "Element";
       target = IR.name(elNameString);
+      hasGeneratedLhs = true;
     }
 
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(target);
@@ -195,6 +212,7 @@ final class PolymerClassDefinition {
         DefinitionType.ObjectLiteral,
         callNode,
         target,
+        hasGeneratedLhs,
         descriptor,
         classInfo,
         new MemberDefinition(ctorInfo, null, constructor),
@@ -203,6 +221,47 @@ final class PolymerClassDefinition {
         methods,
         behaviors,
         newFeatures);
+  }
+
+  private static boolean isGoogModuleExports(Node assign) {
+    // Verify this is an assignment to a name `exports`
+    if (!assign.getParent().isExprResult() || !assign.getFirstChild().matchesName("exports")) {
+      return false;
+    }
+    // Verify the assignment is within either a goog.module or goog.loadModule
+    Node containingBlock = assign.getGrandparent();
+    return (containingBlock.isModuleBody()
+            && containingBlock.getParent().getBooleanProp(Node.GOOG_MODULE))
+        || NodeUtil.isBundledGoogModuleScopeRoot(containingBlock);
+  }
+
+  /**
+   * Adding our usual multiple assignments <code>
+   *
+   *   /** @constructor @extends {PolymerElement} * /
+   *   var FooElement = function() {};
+   *   FooElement = Polymer() {
+   *
+   *   }
+   *   </code> confuses goog.module rewriting when the Polymer call is assigned to `exports. Instead
+   * create a new module local, and export that name.
+   *
+   * @param callNode a Polymer({}) call
+   * @return The new target node for the Polymer call
+   */
+  private static Node createDummyGoogModuleExportsTarget(AbstractCompiler compiler, Node callNode) {
+    String madeUpName = "exportsForPolymer$jscomp" + compiler.getUniqueNameIdSupplier().get();
+    Node assignExpr = callNode.getGrandparent();
+    Node moduleBody = assignExpr.getParent();
+
+    Node exportName = callNode.getParent().getFirstChild();
+    Node target = IR.name(madeUpName).clonePropsFrom(exportName).srcref(exportName);
+    callNode.replaceWith(target);
+    Node newDecl = IR.var(target.cloneNode(), callNode).srcref(assignExpr);
+    moduleBody.addChildBefore(newDecl, assignExpr);
+    newDecl.setJSDocInfo(assignExpr.getJSDocInfo());
+    assignExpr.setJSDocInfo(null);
+    return target;
   }
 
   /**
@@ -278,6 +337,7 @@ final class PolymerClassDefinition {
         DefinitionType.ES6Class,
         classNode,
         target,
+        /* hasGeneratedLhs= */ false,
         propertiesDescriptor,
         classInfo,
         new MemberDefinition(ctorInfo, null, constructor),
@@ -314,5 +374,16 @@ final class PolymerClassDefinition {
         .add("nativeBaseElement", nativeBaseElement)
         .omitNullValues()
         .toString();
+  }
+
+  String getInterfaceName(Supplier<String> uniqueIdSupplier) {
+    if (interfaceName == null) {
+      interfaceName =
+          "Polymer"
+              + target.getQualifiedName().replace('.', '_')
+              + "Interface"
+              + uniqueIdSupplier.get();
+    }
+    return interfaceName;
   }
 }

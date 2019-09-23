@@ -191,13 +191,14 @@ final class PolymerClassRewriter {
    * Rewrites a given call to Polymer({}) to a set of declarations and assignments which can be
    * understood by the compiler.
    *
-   * @param exprRoot The root expression of the call to Polymer({}).
    * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
    *     call.
    * @param traversal Nodetraversal used here to identify the scope in which Polymer exists
    */
-  void rewritePolymerCall(
-      Node exprRoot, final PolymerClassDefinition cls, NodeTraversal traversal) {
+  void rewritePolymerCall(final PolymerClassDefinition cls, NodeTraversal traversal) {
+    Node callParent = cls.definition.getParent();
+    // Determine whether we are in a Polymer({}) call at the top level versus in an assignment.
+    Node exprRoot = callParent.isExprResult() ? callParent : callParent.getParent();
     Node objLit = checkNotNull(cls.descriptor);
 
     // Add {@code @lends} to the object literal.
@@ -247,7 +248,7 @@ final class PolymerClassRewriter {
     // enclosing script node. Compiler support for local scopes like IIFEs is sometimes lacking but
     // module scopes are well-supported. If this is not in a module or the global scope it is likely
     // exported.
-    if (!traversal.inGlobalScope() && !cls.target.isGetProp()) {
+    if (!traversal.inGlobalScope() && cls.hasGeneratedLhs && !cls.target.isGetProp()) {
       Node enclosingNode =
           NodeUtil.getEnclosingNode(
               parent,
@@ -354,7 +355,7 @@ final class PolymerClassRewriter {
         || !attributeReflectedProps.isEmpty()) {
       Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(clazz);
       JSDocInfoBuilder classInfo = JSDocInfoBuilder.maybeCopyFrom(jsDocInfoNode.getJSDocInfo());
-      String interfaceName = getInterfaceName(cls);
+      String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
       JSTypeExpression interfaceType =
           new JSTypeExpression(new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
       classInfo.recordImplementedInterface(interfaceType);
@@ -549,7 +550,7 @@ final class PolymerClassRewriter {
             VIRTUAL_FILE);
     constructorDoc.recordBaseType(baseType);
 
-    String interfaceName = getInterfaceName(cls);
+    String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
     JSTypeExpression interfaceType =
         new JSTypeExpression(new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
     constructorDoc.recordImplementedInterface(interfaceType);
@@ -754,7 +755,7 @@ final class PolymerClassRewriter {
       List<MemberDefinition> attributeReflectedProps) {
     Node block = IR.block();
 
-    String interfaceName = getInterfaceName(cls);
+    String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
     Node fnNode = NodeUtil.emptyFunction();
     compiler.reportChangeToChangeScope(fnNode);
     Node varNode = IR.var(NodeUtil.newQName(compiler, interfaceName), fnNode);
@@ -866,11 +867,6 @@ final class PolymerClassRewriter {
     }
     insertAfter.getParent().addChildAfter(expression, insertAfter);
     compiler.reportChangeToEnclosingScope(expression);
-  }
-
-  /** Returns the name of the generated extern interface which the element implements. */
-  private static String getInterfaceName(final PolymerClassDefinition cls) {
-    return "Polymer" + cls.target.getQualifiedName().replace('.', '_') + "Interface";
   }
 
   /** Returns an assign replacing the equivalent var or let declaration. */

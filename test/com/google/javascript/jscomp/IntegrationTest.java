@@ -767,23 +767,23 @@ public final class IntegrationTest extends IntegrationTestCase {
         new String[] {
           CLOSURE_DEFS,
           lines(
-              "var X = Polymer({", //
-              "  is: 'x-element',",
+              "Polymer({", //
+              "  is: 'x',",
               "});",
-              "export {X};"),
+              "export {}"),
         };
 
     String[] compiledOut =
         new String[] {
           lines(
-              "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
-              "var X = function() {};",
+              "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
+              "var XElement = function() {};",
               CLOSURE_DEFS),
           lines(
-              "X = Polymer(/** @lends {X.prototype} */ {",
-              "  is: 'x-element',",
+              "Polymer(/** @lends {X.prototype} */ {", //
+              "  is: 'x',",
               "});",
-              "export {X};"),
+              "export {}"),
         };
 
     test(options, srcs, compiledOut);

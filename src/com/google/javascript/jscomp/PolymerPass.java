@@ -166,11 +166,7 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
               polymerVersion,
               polymerExportPolicy,
               this.propertyRenamingEnabled);
-      if (NodeUtil.isNameDeclaration(grandparent) || parent.isAssign()) {
-        rewriter.rewritePolymerCall(grandparent, def, traversal);
-      } else {
-        rewriter.rewritePolymerCall(parent, def, traversal);
-      }
+      rewriter.rewritePolymerCall(def, traversal);
     }
   }
 
