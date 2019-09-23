@@ -418,16 +418,22 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       Node decl =
           IR.declaration(cls.name.cloneTree(), cls.constructor.value, exprRoot.getToken())
               .srcref(exprRoot);
-      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, decl);
+      // TODO(b/138324343): remove this special case for names in module scopes, which is
+      // here only to unblock moving module rewriting later. this should warn instead of being
+      // a no-op.
+      JSDocInfo mergedClassInfo =
+          mergeJsDocFor(
+              cls, decl, /* includeConstructorExport= */ !exprRoot.getParent().isModuleBody());
       decl.setJSDocInfo(mergedClassInfo);
       block.addChildToBack(decl);
     } else {
       // example: ns.ctr = function(){}
-      Node assign = IR.assign(cls.name.cloneTree(), cls.constructor.value)
-          .srcref(exprRoot)
-          .setJSDocInfo(cls.constructor.info);
+      Node assign =
+          IR.assign(cls.name.cloneTree(), cls.constructor.value)
+              .srcref(exprRoot)
+              .setJSDocInfo(cls.constructor.info);
 
-      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, assign);
+      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, assign, /* includeConstructorExport= */ true);
       assign.setJSDocInfo(mergedClassInfo);
 
       Node expr = IR.exprResult(assign).srcref(exprRoot);
@@ -437,12 +443,13 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     if (cls.superClass != null) {
       // example: goog.inherits(ctr, superClass)
       block.addChildToBack(
-          fixupSrcref(IR.exprResult(
-              IR.call(
-                  NodeUtil.newQName(compiler, "goog.inherits")
-                      .srcrefTree(cls.superClass),
-                  cls.name.cloneTree(),
-                  cls.superClass.cloneTree()).srcref(cls.superClass))));
+          fixupSrcref(
+              IR.exprResult(
+                  IR.call(
+                          NodeUtil.newQName(compiler, "goog.inherits").srcrefTree(cls.superClass),
+                          cls.name.cloneTree(),
+                          cls.superClass.cloneTree())
+                      .srcref(cls.superClass))));
     }
 
     for (MemberDefinition def : cls.staticProps) {
@@ -565,22 +572,35 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     return new JSTypeExpression(new Node(Token.BANG, IR.string(superName)), VIRTUAL_FILE);
   }
 
-  private JSDocInfo mergeJsDocFor(ClassDefinition cls, Node associatedNode) {
+  /**
+   * Merges the JSDoc from the class and constructor into a single function-level JSDoc
+   *
+   * @param includeConstructorExport if false, disregards the @export JSDoc from the constructor, if
+   *     any. This is a workaround for b/138324343.
+   */
+  private JSDocInfo mergeJsDocFor(
+      ClassDefinition cls, Node associatedNode, boolean includeConstructorExport) {
     // avoid null checks
-    JSDocInfo classInfo = (cls.classInfo != null)
-        ? cls.classInfo
-        : new JSDocInfoBuilder(true).build(true);
+    JSDocInfo classInfo =
+        (cls.classInfo != null) ? cls.classInfo : new JSDocInfoBuilder(true).build(true);
 
-    JSDocInfo ctorInfo = (cls.constructor.info != null)
-        ? cls.constructor.info
-        : new JSDocInfoBuilder(true).build(true);
+    JSDocInfo ctorInfo =
+        (cls.constructor.info != null)
+            ? cls.constructor.info
+            : new JSDocInfoBuilder(true).build(true);
 
     Node superNode = cls.superClass;
 
     // Start with a clone of the constructor info if there is one.
-    JSDocInfoBuilder mergedInfo = cls.constructor.info != null
-        ? JSDocInfoBuilder.copyFrom(ctorInfo)
-        : new JSDocInfoBuilder(true);
+    JSDocInfoBuilder mergedInfo =
+        cls.constructor.info != null
+            ? JSDocInfoBuilder.copyFrom(ctorInfo)
+            : new JSDocInfoBuilder(true);
+    // Optionally, remove @export from the cloned constructor info.
+    // TODO(b/138324343): remove this case (or, even better, just delete goog.defineClass support).
+    if (!includeConstructorExport && ctorInfo.isExport()) {
+      mergedInfo.removeExport();
+    }
 
     // merge block description
     String blockDescription = Joiner.on("\n").skipNulls().join(

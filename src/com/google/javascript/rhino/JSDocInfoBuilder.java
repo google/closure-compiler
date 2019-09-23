@@ -1131,6 +1131,20 @@ public final class JSDocInfoBuilder {
   }
 
   /**
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExport()}
+   * flag set to {@code false}.
+   */
+  public boolean removeExport() {
+    if (currentInfo.isExport()) {
+      currentInfo.setExport(false);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isExpose()} flag set to {@code true}.
    */
