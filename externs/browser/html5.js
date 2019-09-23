@@ -5347,9 +5347,9 @@ var StorageEstimate;
  * See https://html.spec.whatwg.org/multipage/interaction.html#focus-management-apis
  */
 
+
 /**
- * TODO(blickly): This should be nullable as per spec
- * @type {!Element}
+ * @type {?Element}
  * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
  */
 Document.prototype.activeElement;
