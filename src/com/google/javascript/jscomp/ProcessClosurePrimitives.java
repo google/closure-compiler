@@ -135,6 +135,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       "JSC_CLOSURE_DEFINES_ERROR",
       "Invalid CLOSURE_DEFINES definition");
 
+  static final DiagnosticType DEFINE_CALL_WITHOUT_ASSIGNMENT =
+      DiagnosticType.error(
+          "JSC_DEFINE_CALL_WITHOUT_ASSIGNMENT",
+          "The result of a goog.define call must be assigned as an isolated statement.");
+
   static final DiagnosticType INVALID_FORWARD_DECLARE = DiagnosticType.error(
       "JSC_INVALID_FORWARD_DECLARE",
       "Malformed goog.forwardDeclaration");
@@ -199,12 +204,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     Node value = n.getChildAtIndex(2).detach();
 
     switch (parent.getToken()) {
-      case EXPR_RESULT:
-        Node replacement = NodeUtil.newQNameDeclaration(compiler, name, value, jsdoc);
-        replacement.useSourceInfoIfMissingFromForTree(parent);
-        parent.replaceWith(replacement);
-        compiler.reportChangeToEnclosingScope(replacement);
-        break;
       case NAME:
         parent.setDefineName(name);
         n.replaceWith(value);
@@ -217,7 +216,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
         compiler.reportChangeToEnclosingScope(parent);
         break;
       default:
-        throw new IllegalStateException("goog.define outside of EXPR_RESULT, NAME, or ASSIGN");
+        throw new IllegalStateException("goog.define outside of NAME, or ASSIGN");
     }
   }
 
@@ -835,13 +834,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       return false;
     }
 
-    // It is an error for goog.define to show up anywhere except on its own or immediately after =.
+    // It is an error for goog.define to show up anywhere except immediately after =.
     if (parent.isAssign() && parent.getParent().isExprResult()) {
       parent = parent.getParent();
     } else if (parent.isName() && NodeUtil.isNameDeclaration(parent.getParent())) {
       parent = parent.getParent();
-    } else if (!parent.isExprResult()) {
-      compiler.report(JSError.make(methodName.getParent(), INVALID_CLOSURE_CALL_SCOPE_ERROR));
+    } else {
+      compiler.report(JSError.make(methodName.getParent(), DEFINE_CALL_WITHOUT_ASSIGNMENT));
       return false;
     }
 

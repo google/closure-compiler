@@ -2327,29 +2327,30 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testGoogDefine1() {
-    String code = CLOSURE_BOILERPLATE +
-        "/** @define {boolean} */ goog.define('FLAG', true);";
+    String code =
+        CLOSURE_BOILERPLATE + "/** @define {boolean} */ var FLAG = goog.define('FLAG_XYZ', true);";
 
     CompilerOptions options = createCompilerOptions();
 
     options.setClosurePass(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    options.setDefineToBooleanLiteral("FLAG", false);
+    options.setDefineToBooleanLiteral("FLAG_XYZ", false);
 
     test(options, code, CLOSURE_COMPILED + " var FLAG = false;");
   }
 
   @Test
   public void testGoogDefine2() {
-    String code = CLOSURE_BOILERPLATE +
-        "goog.provide('ns');" +
-        "/** @define {boolean} */ goog.define('ns.FLAG', true);";
+    String code =
+        CLOSURE_BOILERPLATE
+            + "goog.provide('ns');"
+            + "/** @define {boolean} */ ns.FLAG = goog.define('ns.FLAG_XYZ', true);";
 
     CompilerOptions options = createCompilerOptions();
 
     options.setClosurePass(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    options.setDefineToBooleanLiteral("ns.FLAG", false);
+    options.setDefineToBooleanLiteral("ns.FLAG_XYZ", false);
     test(options, code, CLOSURE_COMPILED + "var ns$FLAG = false;");
   }
 
