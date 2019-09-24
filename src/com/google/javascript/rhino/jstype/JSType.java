@@ -676,13 +676,11 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Whether this type is meaningfully different from {@code that} type for
-   * the purposes of data flow analysis.
+   * Whether this type is meaningfully different from {@code that} type for the purposes of data
+   * flow analysis.
    *
-   * This is a trickier check than pure equality, because it has to properly
-   * handle unknown types. See {@code EquivalenceMethod} for more info.
-   *
-   * @see <a href="http://www.youtube.com/watch?v=_RpSv3HjpEw">Unknown unknowns</a>
+   * <p>This is a trickier check than pure equality, because it has to properly handle unknown
+   * types. See {@code EquivalenceMethod} for more info.
    */
   public final boolean differsFrom(JSType that) {
     return !checkEquivalenceHelper(that, EquivalenceMethod.DATA_FLOW, EqCache.create());
