@@ -254,9 +254,11 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
         && !isClassDecl(n)
         && !info.containsFunctionDeclaration()) {
       if (getFunctionDecl(n) != null) {
-        reportMisplaced(n, "template",
-            "The template variable is unused."
-            + " Please remove the @template annotation.");
+        reportMisplaced(
+            n,
+            "template",
+            "The template variable is unused in the function signature."
+                + " Please remove the @template annotation.");
       } else {
         reportMisplaced(n, "template",
             "@template is only allowed in class, constructor, interface, function "
