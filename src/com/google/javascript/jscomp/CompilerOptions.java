@@ -1853,6 +1853,10 @@ public class CompilerOptions implements Serializable {
     this.polymerVersion = polymerVersion;
   }
 
+  public void setPolymerExportPolicy(PolymerExportPolicy polymerExportPolicy) {
+    this.polymerExportPolicy = polymerExportPolicy;
+  }
+
   public void setChromePass(boolean chromePass) {
     this.chromePass = chromePass;
   }
