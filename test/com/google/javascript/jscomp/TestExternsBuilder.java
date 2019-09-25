@@ -637,6 +637,11 @@ public class TestExternsBuilder {
     return LINE_JOINER.join(externSections);
   }
 
+  public SourceFile buildExternsFile(String filePath) {
+    String externsString = build();
+    return SourceFile.fromCode(filePath, externsString);
+  }
+
   private static String lines(String... lines) {
     return LINE_JOINER.join(lines);
   }

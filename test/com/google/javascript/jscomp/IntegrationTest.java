@@ -112,6 +112,61 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testUnusedTaggedTemplateLiteralGetsRemoved() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    options.setVariableRenaming(VariableRenamingPolicy.OFF);
+    options.setPrettyPrint(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(
+                    "var goog;",
+                    "",
+                    "/**",
+                    " * @param {string} msg",
+                    " * @return {string}",
+                    " * @nosideeffects",
+                    " */",
+                    "goog.getMsg = function(msg) {};",
+                    "",
+                    "/**",
+                    " * @param {...*} template_args",
+                    " * @return {string}",
+                    " */",
+                    "function $localize(template_args){}",
+                    "")
+                .buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "var i18n_7;",
+            "var ngI18nClosureMode = true;",
+            "if (ngI18nClosureMode) {",
+            "    /**",
+            "     * @desc Some message",
+            "     */",
+            "    const MSG_A = goog.getMsg(\"test\");",
+            "    i18n_7 = MSG_A;",
+            "}",
+            "else {",
+            "    i18n_7 = $localize `...`;",
+            "}",
+            "console.log(i18n_7);",
+            ""),
+        lines(
+            // TODO(b/141326511): The template literal assignment should be removed.
+            "var $jscomp$templatelit$0 = ['...'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "console.log(goog.getMsg('test'));"));
+  }
+
+  @Test
   public void testClassConstructorSuperCallIsNeverRemoved() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
