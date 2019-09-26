@@ -1069,9 +1069,9 @@ public abstract class JSType implements Serializable {
       // In practice, how a function serializes to a string is
       // implementation-dependent, so it does not really make sense to test
       // for equality with a string.
-      JSType meet = otherType.getGreatestSubtype(
-          getNativeType(JSTypeNative.OBJECT_TYPE));
-      if (meet.isNoType() || meet.isNoObjectType()) {
+      JSType greatestSubtype =
+          otherType.getGreatestSubtype(getNativeType(JSTypeNative.OBJECT_TYPE));
+      if (greatestSubtype.isNoType() || greatestSubtype.isNoObjectType()) {
         return TernaryValue.FALSE;
       } else {
         return TernaryValue.UNKNOWN;
