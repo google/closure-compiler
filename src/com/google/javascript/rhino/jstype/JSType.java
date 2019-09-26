@@ -1191,10 +1191,6 @@ public abstract class JSType implements Serializable {
             thisType.registry.createUnionType(thisType, thatType));
   }
 
-  public JSType meetWith(JSType that) {
-    return getGreatestSubtype(this, that);
-  }
-
   /**
    * Gets the greatest subtype of {@code this} and {@code that}. The greatest subtype is the meet
    * (&#8743;) or infimum of both types in the type lattice.

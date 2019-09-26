@@ -621,7 +621,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     private boolean isLocalValueType(JSType typei, AbstractCompiler compiler) {
       checkNotNull(typei);
       JSType nativeObj = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
-      JSType subtype = typei.meetWith(nativeObj);
+      JSType subtype = typei.getGreatestSubtype(nativeObj);
       // If the type includes anything related to a object type, don't assume
       // anything about the locality of the value.
       return subtype.isEmptyType();
