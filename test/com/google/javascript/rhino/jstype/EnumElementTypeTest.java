@@ -71,7 +71,7 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testMeet() {
+  public void testGetGreatestSubtype() {
     EnumElementType typeA = registry.createEnumType(
         "typeA", null, createUnionType(NUMBER_TYPE, STRING_TYPE))
         .getElementsType();
@@ -88,42 +88,42 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testMeetTwoEnumElementTypes() {
+  public void testGetGreatestSubtype_twoEnumElementTypes() {
     EnumElementType typeA = registry.createEnumType(
         "typeA", null, NUMBER_TYPE).getElementsType();
     EnumElementType typeB = registry.createEnumType(
         "typeB", null, NUMBER_TYPE).getElementsType();
 
-    JSType meet = typeA.meet(typeB);
+    JSType greatestSubtype = EnumElementType.getGreatestSubtype(typeA, typeB);
 
-    assertType(meet).isSubtypeOf(typeA);
-    assertType(meet).isSubtypeOf(typeB);
+    assertType(greatestSubtype).isSubtypeOf(typeA);
+    assertType(greatestSubtype).isSubtypeOf(typeB);
     // This equality is because comparing unresolved type equality is just dependent on reference
     // name, due to 'NamedTypes' being difficult or impossible to correctly check equality on.
-    assertType(meet).isEqualTo(typeA);
-    assertType(meet).isNotEqualTo(typeB);
+    assertType(greatestSubtype).isEqualTo(typeA);
+    assertType(greatestSubtype).isNotEqualTo(typeB);
 
-    assertType(typeA).isNotSubtypeOf(meet);
-    assertType(typeB).isNotSubtypeOf(meet);
+    assertType(typeA).isNotSubtypeOf(greatestSubtype);
+    assertType(typeB).isNotSubtypeOf(greatestSubtype);
   }
 
   @Test
-  public void testMeetTwoEnumElementTypes_postResolution() {
+  public void testGetGreatestSubtype_twoEnumElementTypes_postResolution() {
     EnumElementType typeA = registry.createEnumType("typeA", null, NUMBER_TYPE).getElementsType();
     EnumElementType typeB = registry.createEnumType("typeB", null, NUMBER_TYPE).getElementsType();
     typeA.resolve(null);
     typeB.resolve(null);
 
-    JSType meet = typeA.meet(typeB);
-    meet.resolve(null);
+    JSType greatestSubtype = EnumElementType.getGreatestSubtype(typeA, typeB);
+    greatestSubtype.resolve(null);
 
-    assertType(meet).isSubtypeOf(typeA);
-    assertType(meet).isSubtypeOf(typeB);
-    assertType(meet).isNotEqualTo(typeA);
-    assertType(meet).isNotEqualTo(typeB);
+    assertType(greatestSubtype).isSubtypeOf(typeA);
+    assertType(greatestSubtype).isSubtypeOf(typeB);
+    assertType(greatestSubtype).isNotEqualTo(typeA);
+    assertType(greatestSubtype).isNotEqualTo(typeB);
 
-    assertType(typeA).isNotSubtypeOf(meet);
-    assertType(typeB).isNotSubtypeOf(meet);
+    assertType(typeA).isNotSubtypeOf(greatestSubtype);
+    assertType(typeB).isNotSubtypeOf(greatestSubtype);
   }
 
   @Test

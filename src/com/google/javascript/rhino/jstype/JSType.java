@@ -1252,12 +1252,12 @@ public abstract class JSType implements Serializable {
     }
 
     if (thisType.isEnumElementType()) {
-      JSType inf = thisType.toMaybeEnumElementType().meet(thatType);
+      JSType inf = EnumElementType.getGreatestSubtype(thisType.toMaybeEnumElementType(), thatType);
       if (inf != null) {
         return inf;
       }
     } else if (thatType.isEnumElementType()) {
-      JSType inf = thatType.toMaybeEnumElementType().meet(thisType);
+      JSType inf = EnumElementType.getGreatestSubtype(thatType.toMaybeEnumElementType(), thisType);
       if (inf != null) {
         return inf;
       }
