@@ -23,6 +23,9 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SimpleSourceFile;
+import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import javax.annotation.Nullable;
 
@@ -31,6 +34,10 @@ import javax.annotation.Nullable;
  */
 final class JsdocUtil {
   private JsdocUtil() {}
+
+  private static final String SYNTHETIC_FILE_NAME = "<synthetic>";
+  private static final StaticSourceFile SYNTHETIC_FILE =
+      new SimpleSourceFile(SYNTHETIC_FILE_NAME, SourceKind.EXTERN);
 
   static boolean isPrivate(@Nullable JSDocInfo jsdoc) {
     return jsdoc != null && jsdoc.getVisibility().equals(Visibility.PRIVATE);
@@ -46,7 +53,8 @@ final class JsdocUtil {
 
   private static JSDocInfoBuilder makeBuilderWithType(@Nullable JSDocInfo oldJSDoc, Node typeAst) {
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
-    builder.recordType(new JSTypeExpression(typeAst, "<synthetic>"));
+    builder.recordType(
+        new JSTypeExpression(typeAst.setStaticSourceFile(SYNTHETIC_FILE), SYNTHETIC_FILE_NAME));
     return builder;
   }
 

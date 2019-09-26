@@ -569,7 +569,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       checkState(NodeUtil.isCallTo(superNode, "goog.module.get"));
       superName = superNode.getLastChild().getString();
     }
-    return new JSTypeExpression(new Node(Token.BANG, IR.string(superName)), VIRTUAL_FILE);
+    return new JSTypeExpression(
+        new Node(Token.BANG, IR.string(superName)).srcrefTree(superNode), VIRTUAL_FILE);
   }
 
   /**

@@ -604,8 +604,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         // /** @typedef {foo} */
         // moduleName.foo;
         JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
-        JSTypeExpression typeExpr = new JSTypeExpression(
-            IR.string(exportedName), script.getSourceFileName());
+        JSTypeExpression typeExpr =
+            new JSTypeExpression(
+                IR.string(exportedName).srcref(nodeForSourceInfo), script.getSourceFileName());
         builder.recordTypedef(typeExpr);
         JSDocInfo info = builder.build();
         getProp.setJSDocInfo(info);
@@ -647,7 +648,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
     JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
     builder.recordReturnType(
-        new JSTypeExpression(new Node(Token.QMARK), script.getSourceFileName()));
+        new JSTypeExpression(
+            new Node(Token.QMARK).srcref(forSourceInfo), script.getSourceFileName()));
     getter.setJSDocInfo(builder.build());
 
     getter.useSourceInfoIfMissingFromForTree(forSourceInfo);

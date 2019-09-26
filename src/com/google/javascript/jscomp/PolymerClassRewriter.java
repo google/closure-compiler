@@ -205,7 +205,8 @@ final class PolymerClassRewriter {
     JSDocInfoBuilder objLitDoc = new JSDocInfoBuilder(true);
     JSTypeExpression jsTypeExpression =
         new JSTypeExpression(
-            IR.string(cls.target.getQualifiedName() + ".prototype"), exprRoot.getSourceFileName());
+            IR.string(cls.target.getQualifiedName() + ".prototype").srcref(exprRoot),
+            exprRoot.getSourceFileName());
     objLitDoc.recordLends(jsTypeExpression);
     objLit.setJSDocInfo(objLitDoc.build());
 
@@ -357,7 +358,9 @@ final class PolymerClassRewriter {
       JSDocInfoBuilder classInfo = JSDocInfoBuilder.maybeCopyFrom(jsDocInfoNode.getJSDocInfo());
       String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
       JSTypeExpression interfaceType =
-          new JSTypeExpression(new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
+          new JSTypeExpression(
+              new Node(Token.BANG, IR.string(interfaceName)).srcrefTree(jsDocInfoNode),
+              VIRTUAL_FILE);
       classInfo.recordImplementedInterface(interfaceType);
       jsDocInfoNode.setJSDocInfo(classInfo.build());
     }
@@ -434,6 +437,7 @@ final class PolymerClassRewriter {
       if (info == null || !info.hasReturnType()) {
         JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
         builder.recordReturnType(jsType);
+        jsType.getRoot().useSourceInfoIfMissingFromForTree(getter);
         getter.setJSDocInfo(builder.build());
       }
     }
@@ -466,7 +470,8 @@ final class PolymerClassRewriter {
       if (value != null && value.isFunction()) {
         JSDocInfoBuilder fnDoc = JSDocInfoBuilder.maybeCopyFrom(keyNode.getJSDocInfo());
         fnDoc.recordThisType(
-            new JSTypeExpression(new Node(Token.BANG, IR.string(thisType)), VIRTUAL_FILE));
+            new JSTypeExpression(
+                new Node(Token.BANG, IR.string(thisType)).srcrefTree(keyNode), VIRTUAL_FILE));
         keyNode.setJSDocInfo(fnDoc.build());
       }
     }
@@ -490,7 +495,8 @@ final class PolymerClassRewriter {
       Node defaultValueKey = defaultValue.getParent();
       JSDocInfoBuilder fnDoc = JSDocInfoBuilder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
       fnDoc.recordThisType(
-          new JSTypeExpression(new Node(Token.BANG, IR.string(thisType)), VIRTUAL_FILE));
+          new JSTypeExpression(
+              new Node(Token.BANG, IR.string(thisType)).srcrefTree(defaultValueKey), VIRTUAL_FILE));
       fnDoc.recordReturnType(PolymerPassStaticUtils.getTypeFromProperty(property, compiler));
       defaultValueKey.setJSDocInfo(fnDoc.build());
     }
@@ -546,13 +552,16 @@ final class PolymerClassRewriter {
 
     JSTypeExpression baseType =
         new JSTypeExpression(
-            new Node(Token.BANG, IR.string(PolymerPassStaticUtils.getPolymerElementType(cls))),
+            new Node(Token.BANG, IR.string(PolymerPassStaticUtils.getPolymerElementType(cls)))
+                .srcrefTree(cls.definition),
             VIRTUAL_FILE);
     constructorDoc.recordBaseType(baseType);
 
     String interfaceName = cls.getInterfaceName(compiler.getUniqueNameIdSupplier());
     JSTypeExpression interfaceType =
-        new JSTypeExpression(new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
+        new JSTypeExpression(
+            new Node(Token.BANG, IR.string(interfaceName)).srcrefTree(cls.definition),
+            VIRTUAL_FILE);
     constructorDoc.recordImplementedInterface(interfaceType);
 
     return constructorDoc;
@@ -976,7 +985,8 @@ final class PolymerClassRewriter {
     JSDocInfoBuilder classTypeDoc = new JSDocInfoBuilder(false);
     JSTypeExpression classType =
         new JSTypeExpression(
-            new Node(Token.BANG, IR.string(className.getQualifiedName())),
+            new Node(Token.BANG, IR.string(className.getQualifiedName()))
+                .srcrefTree(methodSignature),
             className.getSourceFileName());
     classTypeDoc.recordType(classType);
     Node classTypeExpression = IR.cast(IR.objectlit(), classTypeDoc.build());

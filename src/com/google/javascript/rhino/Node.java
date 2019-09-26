@@ -1470,8 +1470,9 @@ public class Node implements Serializable {
     setStaticSourceFile(other.getStaticSourceFile());
   }
 
-  public final void setStaticSourceFile(@Nullable StaticSourceFile file) {
+  public final Node setStaticSourceFile(@Nullable StaticSourceFile file) {
     this.putProp(Prop.SOURCE_FILE, file);
+    return this;
   }
 
   /** Sets the source file to a non-extern file of the given name. */

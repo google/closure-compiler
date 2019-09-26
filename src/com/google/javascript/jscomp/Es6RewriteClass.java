@@ -239,12 +239,14 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       if (newInfo.isInterfaceRecorded()) {
         newInfo.recordExtendedInterface(
             new JSTypeExpression(
-                new Node(Token.BANG, IR.string(superClassString)),
+                new Node(Token.BANG, IR.string(superClassString))
+                    .srcrefTree(metadata.getSuperClassNameNode()),
                 metadata.getSuperClassNameNode().getSourceFileName()));
       } else {
         newInfo.recordBaseType(
             new JSTypeExpression(
-                new Node(Token.BANG, IR.string(superClassString)),
+                new Node(Token.BANG, IR.string(superClassString))
+                    .srcrefTree(metadata.getSuperClassNameNode()),
                 metadata.getSuperClassNameNode().getSourceFileName()));
       }
       if (!classNode.isFromExterns()) {
@@ -412,7 +414,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
     info.recordThisType(
         new JSTypeExpression(
-            new Node(Token.BANG, IR.string(metadata.getFullClassNameNode().getQualifiedName())),
+            new Node(Token.BANG, IR.string(metadata.getFullClassNameNode().getQualifiedName()))
+                .srcrefTree(member),
             member.getSourceFileName()));
     Node stringKey =
         astFactory.createStringKey(
@@ -476,7 +479,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       if (member.getJSDocInfo() != null && member.getJSDocInfo().isOverride()) {
         jsDoc.recordOverride();
       } else if (typeExpr == null) {
-        typeExpr = new JSTypeExpression(new Node(Token.QMARK), member.getSourceFileName());
+        typeExpr =
+            new JSTypeExpression(new Node(Token.QMARK).srcref(member), member.getSourceFileName());
       }
       if (typeExpr != null) {
         jsDoc.recordType(typeExpr.copy());
@@ -506,8 +510,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
       JSDocInfoBuilder memberDoc = JSDocInfoBuilder.maybeCopyFrom(info);
       memberDoc.recordThisType(
-          new JSTypeExpression(new Node(Token.BANG, new Node(Token.QMARK)),
-          member.getSourceFileName()));
+          new JSTypeExpression(
+              new Node(Token.BANG, new Node(Token.QMARK)).srcrefTree(member),
+              member.getSourceFileName()));
       info = memberDoc.build();
     }
     if (info != null) {

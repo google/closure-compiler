@@ -222,35 +222,40 @@ final class PolymerPassStaticUtils {
       return property.info.getType();
     }
 
-    String typeString;
+    Node typeValue;
     if (property.value.isObjectLit()) {
-      Node typeValue = NodeUtil.getFirstPropMatchingKey(property.value, "type");
+      typeValue = NodeUtil.getFirstPropMatchingKey(property.value, "type");
       if (typeValue == null || !typeValue.isName()) {
         compiler.report(JSError.make(property.name, PolymerPassErrors.POLYMER_INVALID_PROPERTY));
         return null;
       }
-      typeString = typeValue.getString();
     } else if (property.value.isName()) {
-      typeString = property.value.getString();
+      typeValue = property.value;
     } else {
-      typeString = "";
+      typeValue = null;
     }
 
+    if (typeValue == null) {
+      compiler.report(JSError.make(property.value, PolymerPassErrors.POLYMER_INVALID_PROPERTY));
+      return null;
+    }
+
+    String typeString = typeValue.getString();
     Node typeNode;
     switch (typeString) {
       case "Boolean":
       case "String":
       case "Number":
-        typeNode = IR.string(typeString.toLowerCase());
+        typeNode = IR.string(typeString.toLowerCase()).srcref(typeValue);
         break;
       case "Array":
       case "Function":
       case "Object":
       case "Date":
-        typeNode = new Node(Token.BANG, IR.string(typeString));
+        typeNode = new Node(Token.BANG, IR.string(typeString)).srcrefTree(typeValue);
         break;
       default:
-        compiler.report(JSError.make(property.name, PolymerPassErrors.POLYMER_INVALID_PROPERTY));
+        compiler.report(JSError.make(property.value, PolymerPassErrors.POLYMER_INVALID_PROPERTY));
         return null;
     }
 

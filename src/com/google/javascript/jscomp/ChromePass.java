@@ -21,6 +21,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +51,9 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private static final String CR_EXPORT_PATH = "cr.exportPath";
   private static final String OBJECT_DEFINE_PROPERTY = "Object.defineProperty";
   private static final String CR_DEFINE_PROPERTY = "cr.defineProperty";
+  private static final String VIRTUAL_FILE = "<ChromePass.java>";
+  private static final Node VIRTUAL_NODE =
+      IR.empty().setStaticSourceFile(new SourceFile(VIRTUAL_FILE, SourceKind.EXTERN));
 
   private static final String CR_DEFINE_COMMON_EXPLANATION =
       "It should be called like this:"
@@ -195,7 +199,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
   private static void setJsDocWithType(Node target, Node type) {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-    builder.recordType(new JSTypeExpression(type, "<ChromePass.java>"));
+    builder.recordType(new JSTypeExpression(type.srcrefTree(VIRTUAL_NODE), VIRTUAL_FILE));
     target.setJSDocInfo(builder.build());
   }
 

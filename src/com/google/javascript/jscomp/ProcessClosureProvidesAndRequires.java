@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSUR
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -858,7 +857,8 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
             // expect the namespace to have a value.
             if (hasAChildNamespace) {
               createNamespaceInitialization(
-                  createDeclarationNode(IR.cast(IR.objectlit(), createUnknownTypeJsDocInfo())));
+                  createDeclarationNode(
+                      IR.cast(IR.objectlit(), createUnknownTypeJsDocInfo(exprNode))));
             }
           }
         }
@@ -1017,11 +1017,11 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     }
   }
 
-  private JSDocInfo createUnknownTypeJsDocInfo() {
+  private JSDocInfo createUnknownTypeJsDocInfo(Node sourceNode) {
     JSDocInfoBuilder castToUnknownBuilder = new JSDocInfoBuilder(true);
     castToUnknownBuilder.recordType(
         new JSTypeExpression(
-            JsDocInfoParser.parseTypeString("?"), "<ProcessClosurePrimitives.java>"));
+            new Node(Token.QMARK).srcref(sourceNode), "<ProcessClosurePrimitives.java>"));
     return castToUnknownBuilder.build();
   }
 

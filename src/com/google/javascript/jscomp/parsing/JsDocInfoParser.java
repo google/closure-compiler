@@ -1966,7 +1966,7 @@ public final class JsDocInfoParser {
       if (token == JsDocToken.RIGHT_CURLY) {
         restoreLookAhead(token);
         // EMPTY represents the UNKNOWN type in the Type AST.
-        return wrapNode(Token.ITER_REST, IR.empty());
+        return wrapNode(Token.ITER_REST, newNode(Token.EMPTY));
       }
       restArg = true;
     }
@@ -2058,7 +2058,7 @@ public final class JsDocInfoParser {
     if (typeExpr == null) {
       return null;
     }
-    Node typeList = IR.block();
+    Node typeList = newNode(Token.BLOCK);
     int numTypeExprs = 1;
     typeList.addChildToBack(typeExpr);
     while (match(JsDocToken.COMMA)) {

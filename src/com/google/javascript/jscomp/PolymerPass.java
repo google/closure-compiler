@@ -222,7 +222,9 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
       return;
     }
     JSTypeExpression elementBaseType =
-        new JSTypeExpression(new Node(Token.BANG, IR.string(elementType)), VIRTUAL_FILE);
+        new JSTypeExpression(
+            new Node(Token.BANG, IR.string(elementType).srcrefTree(polymerElementExterns)),
+            VIRTUAL_FILE);
     JSDocInfoBuilder baseDocs = JSDocInfoBuilder.copyFrom(baseExterns.getJSDocInfo());
     baseDocs.changeBaseType(elementBaseType);
     baseExterns.setJSDocInfo(baseDocs.build());
