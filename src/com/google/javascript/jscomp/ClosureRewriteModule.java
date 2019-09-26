@@ -991,31 +991,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     checkState(currentScript.defaultExportRhs == null, currentScript.defaultExportRhs);
     Node exportRhs = n.getNext();
-    if (isNamedExportsLiteral(exportRhs)) {
-      boolean areAllExportsInlinable = true;
-      List<ExportDefinition> inlinableExports = new ArrayList<>();
-      for (Node key = exportRhs.getFirstChild(); key != null; key = key.getNext()) {
-        String exportName = key.getString();
-        Node rhs = key.hasChildren() ? key.getFirstChild() : key;
-        ExportDefinition namedExport = ExportDefinition.newNamedExport(t, exportName, rhs);
-        currentScript.namedExports.add(exportName);
-        if (currentScript.declareLegacyNamespace
-            || !namedExport.hasInlinableName(currentScript.exportsToInline.keySet())) {
-          areAllExportsInlinable = false;
-        } else {
-          inlinableExports.add(namedExport);
-        }
-      }
-      if (areAllExportsInlinable) {
-        for (ExportDefinition export : inlinableExports) {
-          recordExportToInline(export);
-        }
-        NodeUtil.removeChild(n.getGrandparent(), n.getParent());
-      } else {
-        currentScript.willCreateExportsObject = true;
-      }
-      return;
-    }
 
     // Exports object should have already been converted in ScriptPreprocess step.
     checkState(!isNamedExportsLiteral(exportRhs),
