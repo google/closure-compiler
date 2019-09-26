@@ -1449,7 +1449,7 @@ public final class ExpressionDecomposerTest {
   }
 
   private void validateSourceInfo(Compiler compiler, Node subtree) {
-    new LineNumberCheck(compiler).setCheckSubTree(subtree);
+    new SourceInfoCheck(compiler).setCheckSubTree(subtree);
     // Source information problems are reported as compiler errors.
     assertThat(compiler.getErrors()).isEmpty();
   }

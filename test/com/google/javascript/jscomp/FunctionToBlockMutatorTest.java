@@ -267,7 +267,7 @@ public final class FunctionToBlockMutatorTest {
   }
 
   private void validateSourceInfo(Compiler compiler, Node subtree) {
-    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
+    new SourceInfoCheck(compiler).setCheckSubTree(subtree);
     assertThat(compiler.getErrors()).isEmpty();
   }
 

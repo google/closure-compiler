@@ -1907,7 +1907,7 @@ public final class FunctionInjectorTest {
   }
 
   private void validateSourceInfo(Compiler compiler, Node subtree) {
-    (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
+    new SourceInfoCheck(compiler).setCheckSubTree(subtree);
     // Source information problems are reported as compiler errors.
     if (compiler.getErrorCount() != 0) {
       String msg = "Error encountered: ";

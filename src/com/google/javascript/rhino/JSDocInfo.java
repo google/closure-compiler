@@ -2113,6 +2113,91 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
+   * Returns a collection of all JSTypeExpressions that are a part of this JSDocInfo.
+   *
+   * <p>This includes:
+   *
+   * <ul>
+   *   <li>@extends
+   *   <li>@implements
+   *   <li>@lend
+   *   <li>@param
+   *   <li>@return
+   *   <li>@template
+   *   <li>@this
+   *   <li>@throws
+   *   <li>@type
+   * </ul>
+   *
+   * Any future type specific JSDoc should make sure to add the appropriate nodes here.
+   *
+   * @return collection of all type nodes
+   */
+  public Collection<JSTypeExpression> getTypeExpressions() {
+    List<JSTypeExpression> nodes = new ArrayList<>();
+
+    if (type != null) {
+      nodes.add(type);
+    }
+
+    if (thisType != null) {
+      nodes.add(thisType);
+    }
+
+    if (info != null) {
+      if (info.baseType != null) {
+        nodes.add(info.baseType);
+      }
+
+      if (info.extendedInterfaces != null) {
+        for (JSTypeExpression interfaceType : info.extendedInterfaces) {
+          if (interfaceType != null) {
+            nodes.add(interfaceType);
+          }
+        }
+      }
+
+      if (info.implementedInterfaces != null) {
+        for (JSTypeExpression interfaceType : info.implementedInterfaces) {
+          if (interfaceType != null) {
+            nodes.add(interfaceType);
+          }
+        }
+      }
+
+      if (info.parameters != null) {
+        for (JSTypeExpression parameterType : info.parameters.values()) {
+          if (parameterType != null) {
+            nodes.add(parameterType);
+          }
+        }
+      }
+
+      if (info.thrownTypes != null) {
+        for (JSTypeExpression thrownType : info.thrownTypes) {
+          if (thrownType != null) {
+            nodes.add(thrownType);
+          }
+        }
+      }
+
+      if (info.lendsName != null) {
+        nodes.add(info.lendsName);
+      }
+
+      if (info.templateTypeNames != null) {
+        for (JSTypeExpression upperBound : info.templateTypeNames.values()) {
+          if (upperBound != null) {
+            nodes.add(upperBound);
+          }
+        }
+      }
+    }
+
+    return nodes;
+  }
+
+  /**
    * Returns a collection of all type nodes that are a part of this JSDocInfo.
    *
    * <p>This includes:
@@ -2136,62 +2221,8 @@ public class JSDocInfo implements Serializable {
   public Collection<Node> getTypeNodes() {
     List<Node> nodes = new ArrayList<>();
 
-    if (type != null) {
+    for (JSTypeExpression type : getTypeExpressions()) {
       nodes.add(type.getRoot());
-    }
-
-    if (thisType != null) {
-      nodes.add(thisType.getRoot());
-    }
-
-    if (info != null) {
-      if (info.baseType != null) {
-        nodes.add(info.baseType.getRoot());
-      }
-
-      if (info.extendedInterfaces != null) {
-        for (JSTypeExpression interfaceType : info.extendedInterfaces) {
-          if (interfaceType != null) {
-            nodes.add(interfaceType.getRoot());
-          }
-        }
-      }
-
-      if (info.implementedInterfaces != null) {
-        for (JSTypeExpression interfaceType : info.implementedInterfaces) {
-          if (interfaceType != null) {
-            nodes.add(interfaceType.getRoot());
-          }
-        }
-      }
-
-      if (info.parameters != null) {
-        for (JSTypeExpression parameterType : info.parameters.values()) {
-          if (parameterType != null) {
-            nodes.add(parameterType.getRoot());
-          }
-        }
-      }
-
-      if (info.thrownTypes != null) {
-        for (JSTypeExpression thrownType : info.thrownTypes) {
-          if (thrownType != null) {
-            nodes.add(thrownType.getRoot());
-          }
-        }
-      }
-
-      if (info.lendsName != null) {
-        nodes.add(info.lendsName.getRoot());
-      }
-
-      if (info.templateTypeNames != null) {
-        for (JSTypeExpression upperBound : info.templateTypeNames.values()) {
-          if (upperBound != null) {
-            nodes.add(upperBound.getRoot());
-          }
-        }
-      }
     }
 
     return nodes;

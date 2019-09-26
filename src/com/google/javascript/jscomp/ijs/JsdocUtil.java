@@ -38,6 +38,8 @@ final class JsdocUtil {
   private static final String SYNTHETIC_FILE_NAME = "<synthetic>";
   private static final StaticSourceFile SYNTHETIC_FILE =
       new SimpleSourceFile(SYNTHETIC_FILE_NAME, SourceKind.EXTERN);
+  private static final Node SYNTETIC_SRCINFO_NODE =
+      new Node(Token.EMPTY).setStaticSourceFile(SYNTHETIC_FILE);
 
   static boolean isPrivate(@Nullable JSDocInfo jsdoc) {
     return jsdoc != null && jsdoc.getVisibility().equals(Visibility.PRIVATE);
@@ -54,7 +56,7 @@ final class JsdocUtil {
   private static JSDocInfoBuilder makeBuilderWithType(@Nullable JSDocInfo oldJSDoc, Node typeAst) {
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
     builder.recordType(
-        new JSTypeExpression(typeAst.setStaticSourceFile(SYNTHETIC_FILE), SYNTHETIC_FILE_NAME));
+        new JSTypeExpression(typeAst.srcrefTree(SYNTETIC_SRCINFO_NODE), SYNTHETIC_FILE_NAME));
     return builder;
   }
 

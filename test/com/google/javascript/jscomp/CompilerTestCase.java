@@ -1681,7 +1681,7 @@ public abstract class CompilerTestCase {
               .validateRoot(root);
         }
         if (checkLineNumbers) {
-          (new LineNumberCheck(compiler)).process(externsRoot, mainRoot);
+          new SourceInfoCheck(compiler).process(externsRoot, mainRoot);
         }
 
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
