@@ -328,10 +328,16 @@ public class UnionType extends JSType {
 
   }
 
-  JSType meet(JSType that) {
+  static JSType getGreatestSubtype(UnionType union, JSType that) {
+    // This method is implemented as a static because we don't want polymorphism. Ideally all the
+    // `greatestSubtype` code would be in one place. Until then, using static calls minimizes
+    // confusion.
+
+    JSTypeRegistry registry = union.registry;
     Builder builder = builder(registry);
-    for (int i = 0; i < alternates.size(); i++) {
-      JSType alternate = alternates.get(i);
+
+    for (int i = 0; i < union.alternates.size(); i++) {
+      JSType alternate = union.alternates.get(i);
       if (alternate.isSubtypeOf(that)) {
         builder.addAlternate(alternate);
       }
@@ -341,20 +347,21 @@ public class UnionType extends JSType {
       List<JSType> thoseAlternates = that.toMaybeUnionType().getAlternates();
       for (int i = 0; i < thoseAlternates.size(); i++) {
         JSType otherAlternate = thoseAlternates.get(i);
-        if (otherAlternate.isSubtypeOf(this)) {
+        if (otherAlternate.isSubtypeOf(union)) {
           builder.addAlternate(otherAlternate);
         }
       }
-    } else if (that.isSubtypeOf(this)) {
+    } else if (that.isSubtypeOf(union)) {
       builder.addAlternate(that);
     }
+
     JSType result = builder.build();
     if (!result.isNoType()) {
       return result;
-    } else if (this.isObject() && (that.isObject() && !that.isNoType())) {
-      return getNativeType(JSTypeNative.NO_OBJECT_TYPE);
+    } else if (union.isObject() && (that.isObject() && !that.isNoType())) {
+      return registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE);
     } else {
-      return getNativeType(JSTypeNative.NO_TYPE);
+      return registry.getNativeType(JSTypeNative.NO_TYPE);
     }
   }
 
