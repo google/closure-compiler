@@ -36,17 +36,17 @@ import com.google.javascript.rhino.jstype.UnionType;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCallback
+    implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.FOR_OF);
   // addTypes indicates whether we should add type information when transpiling.
   private final boolean addTypes;
   private final JSTypeRegistry registry;
   private final JSType unknownType;
-  private final JSType stringType;
-  private final JSType booleanType;
   private final JSType makeIteratorTypeArg;
   private final DefaultNameGenerator namer;
+  private final AstFactory astFactory;
 
   private static final String ITER_BASE = "$jscomp$iter$";
 
@@ -58,10 +58,9 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
     this.addTypes = compiler.hasTypeCheckingRun();
     this.registry = compiler.getTypeRegistry();
     this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
-    this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
-    this.booleanType = createType(addTypes, registry, JSTypeNative.BOOLEAN_TYPE);
     this.makeIteratorTypeArg = createMakeIteratorTypeArg();
     this.namer = new DefaultNameGenerator();
+    this.astFactory = compiler.createAstFactory();
   }
 
   @Override
@@ -78,18 +77,9 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    return true;
-  }
-
-  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case FOR_OF:
-        visitForOf(n, parent);
-        break;
-      default:
-        break;
+    if (n.isForOf()) {
+      visitForOf(n, parent);
     }
   }
 
@@ -120,15 +110,9 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
 
     JSDocInfo varJSDocInfo = variable.getJSDocInfo();
     Node iterName =
-        withType(IR.name(ITER_BASE + compiler.getUniqueNameIdSupplier().get()), iteratorType);
+        astFactory.createName(ITER_BASE + compiler.getUniqueNameIdSupplier().get(), iteratorType);
     iterName.makeNonIndexable();
-    Node getNext =
-        withType(
-            IR.call(
-                withType(
-                    IR.getprop(iterName.cloneTree(), withStringType(IR.string("next"))),
-                    iteratorNextType)),
-            iIterableResultType);
+    Node getNext = astFactory.createCall(astFactory.createGetProp(iterName.cloneTree(), "next"));
     String iteratorResultName = ITER_RESULT;
     if (NodeUtil.isNameDeclaration(variable)) {
       iteratorResultName += variable.getFirstChild().getString();
@@ -138,9 +122,11 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
       // give arbitrary lhs expressions an arbitrary name
       iteratorResultName += namer.generateNextName();
     }
-    Node iterResult = withType(IR.name(iteratorResultName), iIterableResultType);
+    Node iterResult = astFactory.createName(iteratorResultName, iIterableResultType);
     iterResult.makeNonIndexable();
 
+    // TODO(lharker): replace this with astFactory.createJscompMakeIteratorCall once b/136592294 is
+    // fixed.
     Node call = Es6ToEs3Util.makeIterator(compiler, iterable);
     if (addTypes) {
       // Put types on the $jscomp.makeIterator getprop
@@ -158,38 +144,28 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
     initIterResult.addChildToFront(getNext.cloneTree());
     init.addChildToBack(initIterResult);
 
-    Node cond =
-        withBooleanType(
-            IR.not(
-                withBooleanType(
-                    IR.getprop(iterResult.cloneTree(), withStringType(IR.string("done"))))));
-    Node incr =
-        withType(IR.assign(iterResult.cloneTree(), getNext.cloneTree()), iIterableResultType);
+    Node cond = astFactory.createNot(astFactory.createGetProp(iterResult.cloneTree(), "done"));
+    Node incr = astFactory.createAssign(iterResult.cloneTree(), getNext.cloneTree());
 
     Node declarationOrAssign;
     if (!NodeUtil.isNameDeclaration(variable)) {
       declarationOrAssign =
-          withType(
-              IR.assign(
-                  withType(variable.cloneTree().setJSDocInfo(null), typeParam),
-                  withType(
-                      IR.getprop(iterResult.cloneTree(), withStringType(IR.string("value"))),
-                      typeParam)),
-              typeParam);
+          astFactory.createAssign(
+              withType(variable.cloneTree().setJSDocInfo(null), typeParam),
+              astFactory.createGetProp(iterResult.cloneTree(), "value"));
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
       declarationOrAssign = IR.exprResult(declarationOrAssign);
     } else {
       Token declarationType = variable.getToken(); // i.e. VAR, CONST, or LET.
       declarationOrAssign =
           new Node(
-                  declarationType,
-                  IR.name(variable.getFirstChild().getString())
-                      .useSourceInfoFrom(variable.getFirstChild()))
-              .setJSType(typeParam);
-      declarationOrAssign.getFirstChild().addChildToBack(
-              withType(
-                  IR.getprop(iterResult.cloneTree(), withStringType(IR.string("value"))),
-                  typeParam));
+              declarationType,
+              astFactory
+                  .createName(variable.getFirstChild().getString(), typeParam)
+                  .useSourceInfoFrom(variable.getFirstChild()));
+      declarationOrAssign
+          .getFirstChild()
+          .addChildToBack(astFactory.createGetProp(iterResult.cloneTree(), "value"));
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
     }
     Node newBody = IR.block(declarationOrAssign, body).useSourceInfoFrom(body);
@@ -201,14 +177,6 @@ public final class Es6ForOfConverter implements NodeTraversal.Callback, HotSwapC
 
   private JSType createGenericType(JSTypeNative typeName, JSType typeArg) {
     return Es6ToEs3Util.createGenericType(addTypes, registry, typeName, typeArg);
-  }
-
-  private Node withStringType(Node n) {
-    return withType(n, stringType);
-  }
-
-  private Node withBooleanType(Node n) {
-    return withType(n, booleanType);
   }
 
   /**

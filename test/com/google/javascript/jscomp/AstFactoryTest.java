@@ -142,6 +142,24 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testVoidExpression() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node voidNode = astFactory.createVoid(astFactory.createNumber(0));
+    assertNode(voidNode).hasType(Token.VOID);
+    assertNode(voidNode).hasJSTypeThat().isVoid();
+  }
+
+  @Test
+  public void testNotExpression() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node notNode = astFactory.createNot(astFactory.createNumber(0));
+    assertNode(notNode).hasType(Token.NOT);
+    assertNode(notNode).hasJSTypeThat().isBoolean();
+  }
+
+  @Test
   public void testCreateArgumentsReference() {
     // Make sure the compiler's type registry includes the standard externs definition for
     // Arguments.
