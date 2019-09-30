@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -41,6 +40,7 @@ import org.junit.runners.JUnit4;
 public final class AstValidatorTest extends CompilerTestCase {
 
   private boolean lastCheckWasValid = true;
+  private boolean enableTypeInfoValidation = true;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -56,15 +56,18 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   private AstValidator createValidator(Compiler compiler) {
     lastCheckWasValid = true;
-    return new AstValidator(
-        compiler,
-        new ViolationHandler() {
-          @Override
-          public void handleViolation(String message, Node n) {
-            lastCheckWasValid = false;
-          }
-        },
-        /* validateScriptFeatures= */ true);
+    AstValidator astValidator =
+        new AstValidator(
+            compiler,
+            new ViolationHandler() {
+              @Override
+              public void handleViolation(String message, Node n) {
+                lastCheckWasValid = false;
+              }
+            },
+            /* validateScriptFeatures= */ true);
+    astValidator.setTypeValidationEnabled(enableTypeInfoValidation);
+    return astValidator;
   }
 
   @Override
@@ -74,18 +77,25 @@ public final class AstValidatorTest extends CompilerTestCase {
     disableAstValidation();
     disableNormalize();
     disableLineNumberCheck();
+    enableTypeCheck();
   }
 
   @Test
   public void testClass() {
-    valid(lines(
-        "class C {",
-        "  get m1() {return 1}",
-        "  set m1(a) {}",
-        "  m2(a) {}",
-        "  ['m2']() {}",
-        "  [m2]() {}",
-        "}"));
+    valid(
+        lines(
+            "class C {",
+            "  get m1() {return 1}",
+            "  set m1(a) {}",
+            "  m2(a) {}",
+            "}",
+            "",
+            "/** @dict */",
+            "class D {",
+            "  ['m2']() {}",
+            "  [m2]() {}",
+            "}",
+            ""));
 
     Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
     Node members = new Node(Token.CLASS_MEMBERS);
@@ -123,7 +133,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for(const a of b);");
     valid("for(a of b);");
     valid("for(a of []);");
-    valid("for(a of {});");
+    valid("for(a of /** @type {!Iterable<?>} */ ({}));");
   }
 
   @Test
@@ -134,7 +144,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("async () => { for await(const a of b); }");
     valid("async () => { for await(a of b); }");
     valid("async () => { for await(a of []); }");
-    valid("async () => { for await(a of {}); }");
+    valid("async () => { for await(a of /** @type {!Iterable<?>} */ ({})); }");
   }
 
   @Test
@@ -151,6 +161,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testValidScript() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = new Node(Token.SCRIPT);
     expectInvalid(n, Check.SCRIPT);
     n.setInputId(new InputId("something_input"));
@@ -162,6 +175,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testValidStatement1() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = new Node(Token.RETURN);
     expectInvalid(n, Check.EXPRESSION);
     expectValid(n, Check.STATEMENT);
@@ -170,6 +186,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testValidExpression1() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = new Node(Token.ARRAYLIT, new Node(Token.EMPTY));
     expectValid(n, Check.EXPRESSION);
     expectInvalid(n, Check.STATEMENT);
@@ -178,6 +197,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testValidExpression2() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = new Node(Token.NOT, new Node(Token.TRUE));
     expectValid(n, Check.EXPRESSION);
     expectInvalid(n, Check.STATEMENT);
@@ -188,10 +210,10 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testValidConst() {
     valid("const x = r;");
     valid("const [x] = r;");
-    valid("const {x} = r;");
+    valid("const {x} = {x: 1};");
     valid("const x = r, y = r;");
-    valid("const {x} = r, y = r;");
-    valid("const x = r, {y} = r;");
+    valid("const {x} = {x: 1}, y = r;");
+    valid("const x = r, {y} = {y: 1};");
   }
 
   @Test
@@ -211,6 +233,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidConstLanguageLevel() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = IR.constNode(IR.name("x"), IR.number(3));
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
@@ -222,6 +247,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidLetLanguageLevel() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = IR.let(IR.name("x"), IR.number(3));
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
@@ -233,12 +261,18 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testNewTargetIsValidExpression() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = new Node(Token.NEW_TARGET);
     expectValid(n, Check.EXPRESSION);
   }
 
   @Test
   public void testImportMetaIsValidExpression() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     Node n = new Node(Token.IMPORT_META);
     expectValid(n, Check.EXPRESSION);
@@ -246,6 +280,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testCastOnLeftSideOfAssign() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
     jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));
     Node n = IR.exprResult(
@@ -266,6 +303,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidNumberStatement() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = IR.number(1);
     expectInvalid(n, Check.STATEMENT);
     n = IR.exprResult(n);
@@ -282,11 +322,14 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testDefaultParameter() {
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
-    valid("function f(a = 0, b){}");
+    valid("function f(a, b = 0){}");
   }
 
   @Test
   public void testAwaitExpression() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
     awaitNode.addChildToBack(IR.number(1));
@@ -309,6 +352,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testAwaitExpressionNoFunction() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node n = new Node(Token.AWAIT);
     n.addChildToBack(IR.number(1));
@@ -317,6 +363,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidArrayPattern0() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
     // [...x = 1] = [];
@@ -362,16 +411,16 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testValidDestructuringAssignment1() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    valid("var {a:b} = obj;");
-    valid("({a:b} = obj);");
-    valid("({a:b.c} = obj);");
-    valid("({a:b().c} = obj);");
-    valid("({a:b['c']} = obj);");
-    valid("({a:b()['c']} = obj);");
-    valid("({a:b.c = 1} = obj);");
-    valid("({a:b().c = 1} = obj);");
-    valid("({a:b['c'] = 1} = obj);");
-    valid("({a:b()['c'] = 1} = obj);");
+    valid("var {a:b} = {a: 1};");
+    valid("({a:b} = {a: 1});");
+    valid("({a:b.c} = {a: 1});");
+    valid("({a:b().c} = {a: 1});");
+    valid("({a:b['c']} = {a: 1});");
+    valid("({a:b()['c']} = {a: 1});");
+    valid("({a:b.c = 1} = {a: 1});");
+    valid("({a:b().c = 1} = {a: 1});");
+    valid("({a:b['c'] = 1} = {a: 1});");
+    valid("({a:b()['c'] = 1} = {a: 1});");
   }
 
   @Test
@@ -393,20 +442,23 @@ public final class AstValidatorTest extends CompilerTestCase {
   @Test
   public void testObjectRestAssignment() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
-    valid("var {a, ...rest} = obj;");
-    valid("({a:b, ...rest} = obj);");
-    valid("({a:b.c, ...rest} = obj);");
-    valid("({a:b().c, ...rest} = obj);");
-    valid("({a:b['c'], ...rest} = obj);");
-    valid("({a:b()['c'], ...rest} = obj);");
-    valid("({a:b.c = 1, ...rest} = obj);");
-    valid("({a:b().c = 1, ...rest} = obj);");
-    valid("({a:b['c'] = 1, ...rest} = obj);");
-    valid("({a:b()['c'] = 1, ...rest} = obj);");
+    valid("var {a, ...rest} = {a: 1, b: 2};");
+    valid("({a:b, ...rest} = {a: 1, b: 2});");
+    valid("({a:b.c, ...rest} = {a: 1, b: 2});");
+    valid("({a:b().c, ...rest} = {a: 1, b: 2});");
+    valid("({a:b['c'], ...rest} = {a: 1, b: 2});");
+    valid("({a:b()['c'], ...rest} = {a: 1, b: 2});");
+    valid("({a:b.c = 1, ...rest} = {a: 1, b: 2});");
+    valid("({a:b().c = 1, ...rest} = {a: 1, b: 2});");
+    valid("({a:b['c'] = 1, ...rest} = {a: 1, b: 2});");
+    valid("({a:b()['c'] = 1, ...rest} = {a: 1, b: 2});");
   }
 
   @Test
   public void testInvalidObjectRestForLanguageLevel() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = IR.assign(IR.objectPattern(IR.objectRest(IR.name("x"))), IR.objectlit());
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
@@ -418,6 +470,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidArrayRestForLanguageLevel() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     Node n = IR.assign(IR.arrayPattern(IR.iterRest(IR.name("x"))), IR.arraylit());
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
@@ -429,6 +484,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testInvalidDestructuringAssignment() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
     Node n = IR.assign(
@@ -452,8 +510,16 @@ public final class AstValidatorTest extends CompilerTestCase {
         lines(
             "class C {", //
             "  get m1() {return 1}",
+            "}",
+            "",
+            "/** @dict */",
+            "class D {", //
             "  get ['m2']() {return 2}",
-            "}"));
+            "}",
+            ""));
+
+    // Since we're modifying the AST by hand below, there won't be any types on it.
+    enableTypeInfoValidation = false;
 
     Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
     Node members = new Node(Token.CLASS_MEMBERS);
@@ -505,8 +571,17 @@ public final class AstValidatorTest extends CompilerTestCase {
         lines(
             "class C {", //
             "  set m1(value) {}",
+            "}",
+            "",
+            "/** @dict */",
+            "class D {", //
             "  set ['m2'](value) {}",
-            "}"));
+            "}",
+            ""));
+
+    // Since we're modifying the AST by hand below, there won't be types on some nodes that need
+    // them.
+    enableTypeInfoValidation = false;
 
     Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
     Node members = new Node(Token.CLASS_MEMBERS);
@@ -571,7 +646,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_classExtends() {
-    testFeatureValidation("class C extends B {}", Feature.CLASS_EXTENDS);
+    testFeatureValidation("class B {} class C extends B {}", Feature.CLASS_EXTENDS);
   }
 
   @Test
@@ -599,7 +674,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testFeatureValidation_computedProperties() {
     testFeatureValidation("var obj = { ['foo' + 3]: 4};", Feature.COMPUTED_PROPERTIES);
     testFeatureValidation("var { ['foo' + 3]: x} = obj;", Feature.COMPUTED_PROPERTIES);
-    testFeatureValidation("class C { ['foobar']() {} }", Feature.COMPUTED_PROPERTIES);
+    testFeatureValidation("/** @dict */ class C { ['foobar']() {} }", Feature.COMPUTED_PROPERTIES);
   }
 
   @Test
@@ -618,10 +693,21 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_objectDestructuring() {
-    testFeatureValidation("var x, {a, b} = obj;", Feature.OBJECT_DESTRUCTURING);
-    testFeatureValidation("(x = 0, {a, b} = obj);", Feature.OBJECT_DESTRUCTURING);
-    testFeatureValidation("for ({a, b} of c) {}", Feature.OBJECT_DESTRUCTURING);
-    testFeatureValidation("function f({a, b}) {}", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("var x, {a, b} = {a: 1, b: 2};", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation("(x = 0, {a, b} = {a: 1, b: 2});", Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation(
+        lines(
+            "/** @type {!Array<{a: string, b:string}>} */",
+            "const c = [];",
+            "for ({a, b} of c) {}",
+            ""),
+        Feature.OBJECT_DESTRUCTURING);
+    testFeatureValidation(
+        lines(
+            "/** @param {{a: string, b:string}} p1 */", //
+            "function f({a, b}) {}",
+            ""),
+        Feature.OBJECT_DESTRUCTURING);
   }
 
   @Test
@@ -671,8 +757,8 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_super() {
-    testFeatureValidation("class C extends B { constructor() { super(); } }", Feature.SUPER);
-    testFeatureValidation("class C extends B { f() { super.method(); } }", Feature.SUPER);
+    testFeatureValidation("class C { constructor() { super(); } }", Feature.SUPER);
+    testFeatureValidation("class C { f() { super.toString(); } }", Feature.SUPER);
   }
 
   @Test
@@ -691,6 +777,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_modules() {
+    // Modules need to be set up better than we're doing here to avoid type check throwing an
+    // exception
+    disableTypeCheck();
     testFeatureValidation("export {x};", Feature.MODULES);
     testFeatureValidation("import {x} from './foo.js';", Feature.MODULES);
   }
@@ -723,6 +812,9 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testValidFeatureInScript() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
     Node n = new Node(Token.SCRIPT);
@@ -779,8 +871,8 @@ public final class AstValidatorTest extends CompilerTestCase {
    * b) AstValidator does not validate {@code feature}'s presence in the AST.
    */
   private void testFeatureValidation(String code, Feature feature) {
-    Node script = parseScriptWithoutCheckingLanguageLevel(code);
-    expectValid(script, Check.SCRIPT);
+    valid(code);
+    Node script = getLastCompiler().getJsRoot().getFirstChild();
 
     // Remove `feature` from the SCRIPT node's feature set, checking that it was originally present,
     // and then validate that AstValidator errors because it expects `feature` to be present.
@@ -789,15 +881,5 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     script.putProp(Node.FEATURE_SET, currentFeatures.without(feature));
     expectInvalid(script, Check.SCRIPT);
-  }
-
-  private Node parseScriptWithoutCheckingLanguageLevel(String code) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
-    Node n = parseExpectedJs(code);
-    Node script = n.getFirstChild();
-    assertNode(script).hasType(Token.SCRIPT);
-    script.setInputId(new InputId("something_input"));
-    script.setStaticSourceFile(new SimpleSourceFile("something", SourceKind.STRONG));
-    return script;
   }
 }
