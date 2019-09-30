@@ -675,4 +675,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
     Path file = Paths.get(dir.toString(), owner.getSimpleName(), name);
     return LogFile.createOrReopen(file);
   }
+
+  /**
+   * Adds a synthetic script to the front of the AST
+   *
+   * <p>Useful to allow inserting code into the global scope, earlier than any of the user-provided
+   * code, in the case that the first user-provided input is a module.
+   */
+  abstract void initializeSyntheticCodeInput();
+
+  /** Removes the script added by {@link #initializeSyntheticCodeInput} */
+  abstract void removeSyntheticCodeInput();
 }

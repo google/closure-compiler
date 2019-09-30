@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -2457,8 +2458,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Prefix of the generated file name for synthetic injected libraries */
   static final String SYNTHETIC_CODE_PREFIX = " [synthetic:";
 
+  static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(SYNTHETIC_CODE_PREFIX + "input]");
+
   private CompilerInput synthesizedExternsInput = null;
   private CompilerInput synthesizedExternsInputAtEnd = null;
+  private CompilerInput synthesizedCodeInput = null;
 
   private ImmutableMap<String, Node> defaultDefineValues = ImmutableMap.of();
 
@@ -2910,17 +2914,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Node getNodeForCodeInsertion(@Nullable JSModule module) {
+    if (synthesizedCodeInput != null) {
+      return synthesizedCodeInput.getAstRoot(this);
+    }
     if (module == null) {
       if (moduleGraph == null || Iterables.isEmpty(moduleGraph.getAllInputs())) {
         throw new IllegalStateException("No inputs");
       }
       CompilerInput firstInput = Iterables.getFirst(moduleGraph.getAllInputs(), null);
+      // TODO(lharker): add `checkNotModule(`.
       return firstInput.getAstRoot(this);
     }
 
     List<CompilerInput> moduleInputs = module.getInputs();
     if (!moduleInputs.isEmpty()) {
-      return moduleInputs.get(0).getAstRoot(this);
+      return checkNotModule(
+          moduleInputs.get(0).getAstRoot(this), "Cannot insert code into a module");
     }
     throw new IllegalStateException("Root module has no inputs");
   }
@@ -3123,6 +3132,52 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       synthesizedExternsInput = newExternInput(SYNTHETIC_EXTERNS, SyntheticExternsPosition.START);
     }
     return synthesizedExternsInput;
+  }
+
+  @Override
+  void initializeSyntheticCodeInput() {
+    checkState(synthesizedCodeInput == null, "Already initialized synthetic input");
+    SourceAst ast = new SyntheticAst(SYNTHETIC_CODE_INPUT_ID.getIdName());
+    if (inputsById.containsKey(ast.getInputId())) {
+      throw new IllegalStateException("Conflicting synthetic id name");
+    }
+    CompilerInput input = new CompilerInput(ast, false);
+    jsRoot.addChildToFront(checkNotNull(ast.getAstRoot(this)));
+
+    JSModule firstModule = Iterables.getFirst(getModules(), null);
+    if (firstModule.getName().equals(JSModule.STRONG_MODULE_NAME)) {
+      firstModule.add(input);
+    }
+    input.setModule(firstModule);
+    putCompilerInput(input.getInputId(), input);
+
+    synthesizedCodeInput = input;
+    commentsPerFile.put(SYNTHETIC_CODE_INPUT_ID.getIdName(), ImmutableList.of());
+    reportChangeToChangeScope(ast.getAstRoot(this));
+  }
+
+  @Override
+  void removeSyntheticCodeInput() {
+    checkNotNull(synthesizedCodeInput, "Never initialized the synthetic input");
+    CompilerInput input = synthesizedCodeInput;
+    Node astRoot = input.getAstRoot(this);
+    checkState(astRoot.isFirstChildOf(jsRoot));
+    if (astRoot.hasChildren()) {
+      // If we've inserted anything into the synthetic AST, move it into the top of the next script.
+      Node next = astRoot.getNext();
+      checkNotNull(next, "Must provide at least one source");
+      checkNotModule(
+          next, "Cannot remove synthetic code input until modules are rewritten: %s", next);
+      next.addChildrenToFront(astRoot.removeChildren());
+      reportChangeToChangeScope(next);
+    }
+    checkState(SYNTHETIC_CODE_INPUT_ID.equals(input.getInputId()));
+    jsRoot.removeChild(astRoot);
+    input.getModule().remove(input);
+    inputsById.remove(input.getInputId());
+    reportChangeToChangeScope(astRoot);
+    astRoot.setDeleted(true);
+    synthesizedCodeInput = null;
   }
 
   @Override
@@ -3689,5 +3744,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         addFilesToSourceMap(sourceFiles);
       }
     }
+  }
+
+  private static Node checkNotModule(Node script, String msg, Object... args) {
+    checkArgument(script.isScript(), script);
+    if (!script.hasOneChild()) {
+      return script;
+    }
+    checkState(!script.getFirstChild().isModuleBody(), msg, args);
+    return script;
   }
 }

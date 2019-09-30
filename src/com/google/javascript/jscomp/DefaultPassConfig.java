@@ -250,12 +250,17 @@ public final class DefaultPassConfig extends PassConfig {
     List<PassFactory> checks = new ArrayList<>();
 
     if (options.shouldGenerateTypedExterns()) {
+      checks.add(addSyntheticScript);
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
       checks.add(generateIjs);
       checks.add(whitespaceWrapGoogModules);
+      checks.add(removeSyntheticScript);
       return checks;
     }
+
+    // Run this pass before any pass tries to inject new runtime libraries
+    checks.add(addSyntheticScript);
 
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
@@ -474,6 +479,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
+
+    checks.add(removeSyntheticScript);
 
     if (!options.checksOnly && options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.add(j2clPass);
@@ -1057,6 +1064,16 @@ public final class DefaultPassConfig extends PassConfig {
         dartSuperAccessorsPass,
         TranspilationPasses.es6ConvertSuper,
         "The Dart super accessors pass must run before ES6->ES3 super lowering.");
+    assertPassOrder(
+        checks,
+        addSyntheticScript,
+        gatherModuleMetadataPass,
+        "Cannot add a synthetic script node after module metadata creation.");
+    assertPassOrder(
+        checks,
+        closureRewriteModule,
+        removeSyntheticScript,
+        "Synthetic script node should be removed only after module rewriting.");
 
     if (checks.contains(closureGoogScopeAliases)) {
       checkState(
@@ -2899,5 +2916,20 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.GATHER_GETTERS_AND_SETTERS)
           .setInternalFactory(GatherGetterAndSetterProperties::new)
           .setFeatureSet(ES_NEXT)
+          .build();
+
+  private final PassFactory addSyntheticScript =
+      PassFactory.builder()
+          .setName("ADD_SYNTHETIC_SCRIPT")
+          .setFeatureSet(TYPESCRIPT)
+          .setInternalFactory(
+              (compiler) -> (externs, js) -> compiler.initializeSyntheticCodeInput())
+          .build();
+
+  private final PassFactory removeSyntheticScript =
+      PassFactory.builder()
+          .setName("REMOVE_SYNTHETIC_SCRIPT")
+          .setFeatureSet(TYPESCRIPT)
+          .setInternalFactory((compiler) -> (externs, js) -> compiler.removeSyntheticCodeInput())
           .build();
 }

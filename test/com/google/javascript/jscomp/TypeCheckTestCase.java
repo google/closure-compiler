@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
@@ -33,7 +32,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Before;
@@ -277,14 +275,6 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externsNode, jsNode);
 
     assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
-
-    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
-      List<PassFactory> passes = new ArrayList<>();
-      TranspilationPasses.addPreTypecheckTranspilationPasses(passes, compiler.getOptions());
-      PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
-      phaseopt.consume(passes);
-      phaseopt.process(externsNode, jsNode);
-    }
 
     TypedScope s = makeTypeCheck().processForTesting(externsNode, jsNode);
     return new TypeCheckResult(jsNode.getFirstChild(), s);

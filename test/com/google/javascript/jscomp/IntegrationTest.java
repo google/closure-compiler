@@ -5996,23 +5996,44 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-            "/** @typeSummary */ /** @const */ var goog = {};",
-            LINE_JOINER.join(
-                "goog.provide('foo.baz');",
-                "",
-                "goog.scope(function() {",
-                "",
-                "var RESULT = 5;",
-                "/** @return {number} */",
-                "foo.baz = function() { return RESULT; }",
-                "",
-                "}); // goog.scope"),
+          "/** @typeSummary */ /** @const */ var goog = {};",
+          lines(
+              "goog.provide('foo.baz');",
+              "",
+              "goog.scope(function() {",
+              "",
+              "var RESULT = 5;",
+              "/** @return {number} */",
+              "foo.baz = function() { return RESULT; }",
+              "",
+              "}); // goog.scope"),
         },
         new String[] {
-            LINE_JOINER.join(
-                "var foo = {};",
-                "/** @const */ $jscomp.scope.RESULT = 5;",
-                "/** @return {number} */ foo.baz = function() { return $jscomp.scope.RESULT; }"),
+          lines(
+              "var $jscomp = $jscomp || {};",
+              "$jscomp.scope = {};",
+              "var foo = {};",
+              "/** @const */ $jscomp.scope.RESULT = 5;",
+              "/** @return {number} */ foo.baz = function() { return $jscomp.scope.RESULT; }"),
+        });
+  }
+
+  @Test
+  public void testGenerateIjsWithGoogModuleAndGoogScopeWorks() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.GENERATE_IJS);
+
+    testNoWarnings(
+        options,
+        new String[] {
+          "goog.module('m');",
+          lines(
+              "goog.scope(function() {", //
+              "var RESULT = 5;",
+              "",
+              "}); // goog.scope")
         });
   }
 
