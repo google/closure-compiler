@@ -894,28 +894,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testTypeOnlyModuleImportFromLegacyFile_ofLegacyModule() {
-    test(
-        srcs(
-            lines(
-                "goog.module('ns.C');",
-                "goog.module.declareLegacyNamespace();",
-                "/** @constructor */ exports = function() {};"),
-            lines(
-                "goog.provide('ns.a');",
-                "goog.requireType('ns.C');",
-                "/** @type {ns.C} */ var c;")),
-        expected(
-            lines(
-                "goog.provide('ns.C');", //
-                "/** @constructor @const */ ns.C = function() {};"),
-            lines(
-                "goog.provide('ns.a');", //
-                "goog.requireType('ns.C');",
-                "/** @type {ns.C} */ var c;")));
-  }
-
-  @Test
   public void testBundle1() {
     test(
         new String[] {
@@ -1258,7 +1236,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testGoogModuleGet_missing() {
-    allowExternsChanges();
     test(
         srcs(lines(
             "goog.module('x.y.z');",
@@ -1274,82 +1251,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "function module$contents$x$y$z_f() {}",
             "",
             "module$contents$x$y$z_f();")),
-        warning(MISSING_MODULE_OR_PROVIDE));
-  }
-
-  @Test
-  public void testGoogRequire_missing_createSyntheticExterns() {
-    testExternChanges(
-        lines(
-            "goog.module('mod');", //
-            "const c = goog.require('a.b.c');",
-            "c;"),
-        "var c;");
-
-    testExternChanges(
-        lines(
-            "goog.module('mod');", //
-            "const {D: LocalD, E} = goog.require('a.b.c');",
-            "LocalD;",
-            "E"),
-        "var LocalD;var E;");
-  }
-
-  @Test
-  public void testGoogModuleGet_missing_createSyntheticExterns() {
-    testExternChanges(
-        lines(
-            "(function() {",
-            "  const c = goog.module.get('a.b.c');",
-            "  const f = goog.module.get('d.e.f');",
-            "})"),
-        "var c;var f;");
-
-    // Declare the 'lhs' even when goog.module.get is nested within the right-hand side.
-    testExternChanges(
-        lines(
-            "(function() {", //
-            "  const result = process(goog.module.get('a.b.c').d) * 2;",
-            "})"),
-        "var result;");
-
-    // Don't declare any names multiple times.
-    testExternChanges(
-        lines(
-            "(function() {",
-            "  const c = goog.module.get('a.b.c');",
-            "  c;",
-            "  {",
-            "    const c = goog.module.get('other.a.b.c');",
-            "  }",
-            "})"),
-        "var c;");
-  }
-
-  @Test
-  public void testGoogModuleGet_missing_noSyntheticExternForExistingGlobals() {
-    testWarning(
-        srcs(lines("var c;", "(function() {", "  const c = goog.module.get('a.b.c');", "})")),
-        warning(MISSING_MODULE_OR_PROVIDE));
-
-    testWarning(
-        srcs(
-            lines(
-                "goog.provide('c.d');",
-                "(function() {",
-                "  const c = goog.module.get('a.b.c');",
-                "})")),
-        warning(MISSING_MODULE_OR_PROVIDE));
-
-    testWarning(
-        srcs(
-            lines(
-                "goog.module('c.d');", //
-                "goog.module.declareLegacyNamespace();"),
-            lines(
-                "(function() {", //
-                "  const c = goog.module.get('a.b.c');",
-                "})")),
         warning(MISSING_MODULE_OR_PROVIDE));
   }
 
