@@ -959,11 +959,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return passes;
   }
 
-  /**
-   * Create the passes object. Clients should use setPassConfig instead of
-   * overriding this.
-   */
-  PassConfig createPassConfigInternal() {
+  /** Create the passes object. Clients should use setPassConfig instead of overriding this. */
+  protected PassConfig createPassConfigInternal() {
     return new DefaultPassConfig(options);
   }
 
