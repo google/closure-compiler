@@ -330,11 +330,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkSuper);
 
-    // TODO(b/141389184): Move this after the Polymer pass
-    addModuleRewritingPasses(checks, options);
-
     if (options.closurePass) {
-      checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
     }
 
@@ -348,11 +344,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
-    if (options.exportTestFunctions) {
-      checks.add(exportTestFunctions);
-    }
+    // TODO(b/141389184): Move this after the Polymer pass
+    addModuleRewritingPasses(checks, options);
 
     if (options.closurePass) {
+      // TODO(b/137397799): move closureGoogScopeAliases before module rewriting
+      checks.add(closureGoogScopeAliases);
       checks.add(closurePrimitives);
       if (!options.isModuleRewritingDisabled()) {
         checks.add(closureProvidesRequires);
@@ -488,6 +485,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (!options.checksOnly) {
       // At this point all checks have been done.
+      if (options.exportTestFunctions) {
+        checks.add(exportTestFunctions);
+      }
+
       // There's no need to complete transpilation if we're only running checks.
       TranspilationPasses.addPostCheckTranspilationPasses(checks, options);
 
