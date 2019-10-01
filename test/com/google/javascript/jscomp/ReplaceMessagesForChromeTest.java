@@ -214,6 +214,33 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "var MSG_C = goog.getMsg('Hello, {$name}', {name: 'Tyler'}, {html: true});"),
         lines(
             "/** @desc A message with one placeholder. */\n",
-            "var MSG_C=chrome.i18n.getMessage('4985325380591528435', ['Tyler']);"));
+            "var MSG_C=chrome.i18n.getMessage.apply(null, ['4985325380591528435',"
+                + " ['Tyler']].concat(/Chrome\\/(\\d+)/.exec(navigator.userAgent)[1] >= 79 ?"
+                + " [{escapeLt: true}] : []));"));
+
+    test(
+        lines(
+            "/** @desc A simple message. */\n",
+            "var MSG_A = goog.getMsg('Hello world', {}, {html: true});"),
+        lines(
+            "/** @desc A simple message. */\n",
+            "var MSG_A=chrome.i18n.getMessage.apply(null, ['8660696502365331902',"
+                + " []].concat(/Chrome\\/(\\d+)/.exec(navigator.userAgent)[1] >= 79 ? [{escapeLt:"
+                + " true}] : []));"));
+
+    test(
+        lines(
+            "/** @desc A simple message. */\n",
+            "var MSG_A = goog.getMsg('Hello world', {}, {html: false});"),
+        lines(
+            "/** @desc A simple message. */\n",
+            "var MSG_A=chrome.i18n.getMessage('8660696502365331902');"));
+
+    test(
+        lines(
+            "/** @desc A simple message. */\n", "var MSG_A = goog.getMsg('Hello world', {}, {});"),
+        lines(
+            "/** @desc A simple message. */\n",
+            "var MSG_A=chrome.i18n.getMessage('8660696502365331902');"));
   }
 }
