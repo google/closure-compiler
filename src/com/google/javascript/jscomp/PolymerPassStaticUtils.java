@@ -219,7 +219,7 @@ final class PolymerPassStaticUtils {
   static JSTypeExpression getTypeFromProperty(
       MemberDefinition property, AbstractCompiler compiler) {
     if (property.info != null && property.info.hasType()) {
-      return property.info.getType();
+      return property.info.getType().copy();
     }
 
     Node typeValue;
