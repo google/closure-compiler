@@ -460,7 +460,7 @@ public class IR {
     return binaryOp(Token.LT, expr1, expr2);
   }
 
-  /** ">=" */
+  /** "&gt;=" */
   public static Node ge(Node expr1, Node expr2) {
     return binaryOp(Token.GE, expr1, expr2);
   }
