@@ -1826,7 +1826,7 @@ HTMLAreaElement.prototype.ping;
 HTMLIFrameElement.prototype.srcdoc;
 
 /**
- * @type {?string}
+ * @type {?string|?DOMTokenList}
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-iframe-element.html#attr-iframe-sandbox
  */
 HTMLIFrameElement.prototype.sandbox;
@@ -3604,6 +3604,12 @@ function DOMTokenList() {}
  * @type {number}
  */
 DOMTokenList.prototype.length;
+
+/**
+ * Returns the string value applied to this Element.
+ * @type {string|undefined}
+ */
+DOMTokenList.prototype.value;
 
 /**
  * @param {number} index The index of the item to return.
