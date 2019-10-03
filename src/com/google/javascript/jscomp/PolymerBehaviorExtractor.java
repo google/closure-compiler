@@ -110,7 +110,7 @@ final class PolymerBehaviorExtractor {
                     /* constructor= */ null),
                 getBehaviorFunctionsToCopy(behaviorName),
                 getNonPropertyMembersToCopy(behaviorName),
-                !NodeUtil.isInFunction(behaviorName),
+                /* isGlobalDeclaration= */ NodeUtil.getEnclosingScopeRoot(behaviorName).isRoot(),
                 (FeatureSet) NodeUtil.getEnclosingScript(behaviorName).getProp(Node.FEATURE_SET)));
         continue;
       }
