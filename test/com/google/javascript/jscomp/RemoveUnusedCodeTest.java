@@ -2238,7 +2238,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
-                "console.log(Array.from());")));
+                "console.log(Array.from([]));")));
 
     // Used polyfill is retained, even if accessed via a global object.
     testSame(
@@ -2281,7 +2281,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "/** @const */ var MyArray = Array;",
-                "console.log(MyArray.from());")));
+                "console.log(MyArray.from([]));")));
 
     // Used polyfill via subclass: retains definition.
     testSame(
@@ -2290,7 +2290,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "class SubArray extends Array {}",
-                "console.log(SubArray.from());")));
+                "console.log(SubArray.from([]));")));
 
     // Distinguish static polyfills on different types: remove the unused one.
     test(
@@ -2299,11 +2299,11 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "$jscomp.polyfill('Set.from', function() {}, 'es6', 'es3');",
-                "console.log(Array.from());")),
+                "console.log(Array.from([]));")),
         expected(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
-                "console.log(Array.from());")));
+                "console.log(Array.from([]));")));
   }
 
   @Test

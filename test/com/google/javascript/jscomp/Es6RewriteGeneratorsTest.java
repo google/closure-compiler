@@ -31,7 +31,8 @@ import org.junit.runners.JUnit4;
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   public Es6RewriteGeneratorsTest() {
-    super(DEFAULT_EXTERNS);
+    super(
+        new TestExternsBuilder().addAsyncIterable().addArray().addArguments().addObject().build());
   }
 
   @Override

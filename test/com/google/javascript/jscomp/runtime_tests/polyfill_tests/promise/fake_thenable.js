@@ -36,7 +36,7 @@ var asyncExecute = promiseTesting.asyncExecute;
  * @param {string} fulfillOrRejectOrThrow Should {@code then()} call
  *     `onFullfill` ('fulfill') or `onReject` ('reject') or throw an
  *     exception ('throw')? Throwing an exception is bad behavior, and always
- *     happens during the {@link throw()} call regardless of the value of
+ *     happens during the {@link then()} call regardless of the value of
  *     `immediateOrAsync` parameter.
  * @param {*} valueOrReason The value passed to `onFulfill` or
  *     `onReject` or thrown as an exception.
