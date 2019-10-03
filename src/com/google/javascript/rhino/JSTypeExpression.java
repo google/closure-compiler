@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
@@ -142,5 +143,28 @@ public final class JSTypeExpression implements Serializable {
   @SuppressWarnings("ReferenceEquality")
   public boolean isExplicitUnknownTemplateBound() {
     return this != IMPLICIT_TEMPLATE_BOUND && this.equals(IMPLICIT_TEMPLATE_BOUND);
+  }
+
+  /**
+   * Returns a set of keys of all record types (e.g. {{key : string }}) present in this
+   * JSTypeExpression.
+   */
+  public ImmutableSet<String> getRecordPropertyNames() {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    getRecordPropertyNamesRecursive(this.root, builder);
+    return builder.build();
+  }
+
+  private static void getRecordPropertyNamesRecursive(Node n, ImmutableSet.Builder<String> names) {
+    if (n == null) {
+      return;
+    }
+
+    for (Node child : n.children()) {
+      getRecordPropertyNamesRecursive(child, names);
+    }
+    if (n.isStringKey()) {
+      names.add(n.getString());
+    }
   }
 }

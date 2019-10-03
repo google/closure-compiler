@@ -543,6 +543,7 @@ public class JSDocInfo implements Serializable {
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
+  private static final int COMPLEMENT_TYPEFIELD = 0x1FFFFFFF; // 0001...
   private static final int MASK_TYPEFIELD    = 0xE0000000; // 1110...
   private static final int TYPEFIELD_TYPE    = 0x20000000; // 0010...
   private static final int TYPEFIELD_RETURN  = 0x40000000; // 0100...
@@ -563,6 +564,13 @@ public class JSDocInfo implements Serializable {
   @SuppressWarnings("MissingOverride")  // Adding @Override breaks the GWT compilation.
   public JSDocInfo clone() {
     return clone(false);
+  }
+
+  public JSDocInfo cloneWithNewType(boolean cloneTypeNodes, JSTypeExpression typeExpression) {
+    JSDocInfo other = clone(cloneTypeNodes);
+    other.bitset = other.bitset & COMPLEMENT_TYPEFIELD;
+    other.setType(typeExpression);
+    return other;
   }
 
   public JSDocInfo clone(boolean cloneTypeNodes) {

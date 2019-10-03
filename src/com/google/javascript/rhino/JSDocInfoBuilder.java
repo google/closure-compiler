@@ -91,6 +91,12 @@ public final class JSDocInfoBuilder {
     return new JSDocInfoBuilder(clone, info.isDocumentationIncluded(), true);
   }
 
+  public static JSDocInfoBuilder copyFromWithNewType(
+      JSDocInfo info, JSTypeExpression typeExpression) {
+    JSDocInfo newTypeInfo = info.cloneWithNewType(false, typeExpression);
+    return new JSDocInfoBuilder(newTypeInfo, info.isDocumentationIncluded(), true);
+  }
+
   public static JSDocInfoBuilder maybeCopyFrom(@Nullable JSDocInfo info) {
     if (info == null) {
       return new JSDocInfoBuilder(true);

@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
@@ -844,6 +845,222 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testPolymerCorrectlyResolvesGlobalTypedefs_forIIFEs() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+    addPolymerExterns();
+
+    test(
+        options,
+        lines(
+            "/** @typedef {{foo: string}} */",
+            "let MyTypedef;",
+            "(function() {",
+            "Polymer({",
+            "is: 'x-foo',",
+            "properties: {",
+            "/** @type {!MyTypedef} */",
+            "value: string,",
+            "},",
+            "});",
+            "})();"),
+        lines(
+            "var XFooElement=function(){};",
+            "var MyTypedef;",
+            "(function(){",
+            "XFooElement.prototype.value;",
+            "Polymer({",
+            "is:'x-foo',",
+            "properties: {",
+            "value:string}",
+            "}",
+            ")",
+            "})()"));
+  }
+
+  @Test
+  public void testPolymerPropertiesDoNotGetRenamed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+    addPolymerExterns();
+
+    testNoWarnings(
+        options,
+        lines(
+            "(function() {",
+            "  Polymer({",
+            "    is: 'foo',",
+            "    properties: {",
+            "     /** @type {{randomProperty: string}} */",
+            "     value: Object",
+            "  }",
+            "  });",
+            "})();",
+            "",
+            "const obj = {randomProperty: 0, otherProperty: 1};"));
+
+    String source = lastCompiler.getCurrentJsSource();
+    String expectedSource =
+        EMPTY_JOINER.join(
+            "var a=function(){};",
+            "(function(){",
+            "a.prototype.value;",
+            "Polymer({",
+            "a:\"foo\",",
+            "c:{value:Object}})})();",
+            "var b={randomProperty:0,b:1};");
+    assertThat(source).isEqualTo(expectedSource);
+  }
+
+  @Test
+  public void testPolymerImplicitlyUnknownPropertiesDoNotGetRenamed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+    addPolymerExterns();
+
+    testNoWarnings(
+        options,
+        lines(
+            "(function() {",
+            "  Polymer({",
+            "    is: 'foo',",
+            "    properties: {",
+            "     /** @type {{randomProperty}} */",
+            "     value: Object",
+            "  }",
+            "  });",
+            "})();",
+            "",
+            "const obj = {randomProperty: 0, otherProperty: 1};"));
+
+    String source = lastCompiler.getCurrentJsSource();
+    String expectedSource =
+        EMPTY_JOINER.join(
+            "var a=function(){};",
+            "(function(){a.prototype.value;",
+            "Polymer({",
+            "a:\"foo\",",
+            "c:{value:Object}})})();",
+            "var b={randomProperty:0,b:1};");
+    assertThat(source).isEqualTo(expectedSource);
+  }
+
+  @Test
+  public void testPolymerCorrectlyResolvesUserDefinedLocalTypedefs_forIIFEs() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+    addPolymerExterns();
+
+    test(
+        options,
+        lines(
+            "(function() {",
+            "/** @typedef {{foo: string}} */",
+            "let localTypeDef;",
+            "Polymer({",
+            "is: 'x-foo',",
+            "properties: {",
+            "/** @type {localTypeDef} */",
+            "value: string,",
+            "},",
+            "});",
+            "})();"),
+        lines(
+            "var XFooElement=function(){};",
+            "(function(){",
+            "XFooElement.prototype.value;",
+            "var localTypeDef;",
+            "Polymer({is:'x-foo',properties:{value:string}})})()"));
+  }
+
+  @Test
+  public void testPolymerCorrectlyResolvesPrimitiveLocalTypes_forIIFEs() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+    options.setClosurePass(true);
+    addPolymerExterns();
+
+    test(
+        options,
+        lines(
+            "(function() {",
+            "Polymer({",
+            "is: 'x-foo',",
+            "properties: {",
+            "/** @type {string} */",
+            "value: string,",
+            "},",
+            "});",
+            "})();"),
+        lines(
+            "var XFooElement=function(){};",
+            "(function(){",
+            "XFooElement.prototype.value;",
+            "Polymer({is:'x-foo',properties:{value:string}})})()"));
+  }
+
+  @Test
+  public void testPolymerCorrectlyResolvesLocalTypes_forModules() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPolymerVersion(1);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
+    options.setClosurePass(true);
+    addPolymerExterns();
+    test(
+        options,
+        lines(
+            "goog.module('a');",
+            "/** @typedef {{foo: number}} */",
+            "let MyTypedef;",
+            "Polymer({",
+            "is: 'x-foo',",
+            "properties: {",
+            "/** @type {MyTypedef} */",
+            "value: number,",
+            "},",
+            "});"),
+        lines(
+            "var module$exports$a={};",
+            "var module$contents$a_MyTypedef;",
+            "var XFooElement=function(){};",
+            "XFooElement.prototype.value;",
+            "Polymer({is:\"x-foo\",properties:{value:number}})"));
+  }
+
+  @Test
   public void testPolymerCallWithinES6Modules_CreatesDeclarationOutsideModule() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
@@ -1541,14 +1758,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckMissingGetCssNameBlacklist("foo");
     test(
         options,
-        "var goog = {};\n"
-        + "/**\n"
-        + " * @param {string} className\n"
-        + " * @param {string=} opt_modifier\n"
-        + " * @return {string}\n"
-        + "*/\n"
-        + "goog.getCssName = function(className, opt_modifier) {}\n"
-        + "var x = goog.getCssName(123, 'a');",
+        lines(
+            "var goog = {};",
+            "/**",
+            " * @param {string} className",
+            " * @param {string=} opt_modifier",
+            " * @return {string}",
+            "*/",
+            "goog.getCssName = function(className, opt_modifier) {}",
+            "var x = goog.getCssName(123, 'a');"),
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -1887,24 +2105,26 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
     test(
         options,
-        "function someTest() {\n"
-        + "  /** @constructor */\n"
-        + "  function Foo() { this.instProp = 3; }\n"
-        + "  Foo.prototype.protoProp = function(a, b) {};\n"
-        + "  /** @constructor\n @extends Foo */\n"
-        + "  function Bar() {}\n"
-        + "  goog.inherits(Bar, Foo);\n"
-        + "  var o = new Bar();\n"
-        + "  o.protoProp(o.protoProp, o.instProp);\n"
-        + "}",
-        "function someTest() {\n"
-        + "  function Foo() { this.b = 3; }\n"
-        + "  function Bar() {}\n"
-        + "  Foo.prototype.a = function(a, b) {};\n"
-        + "  goog.c(Bar, Foo);\n"
-        + "  var o = new Bar();\n"
-        + "  o.a(o.a, o.b);\n"
-        + "}");
+        lines(
+            "function someTest() {",
+            "  /** @constructor */",
+            "  function Foo() { this.instProp = 3; }",
+            "  Foo.prototype.protoProp = function(a, b) {};",
+            "  /** @constructor\n @extends Foo */",
+            "  function Bar() {}",
+            "  goog.inherits(Bar, Foo);",
+            "  var o = new Bar();",
+            "  o.protoProp(o.protoProp, o.instProp);",
+            "}"),
+        lines(
+            "function someTest() {",
+            "  function Foo() { this.b = 3; }",
+            "  function Bar() {}",
+            "  Foo.prototype.a = function(a, b) {};",
+            "  goog.c(Bar, Foo);",
+            "  var o = new Bar();",
+            "  o.a(o.a, o.b);",
+            "}"));
   }
 
   @Test
