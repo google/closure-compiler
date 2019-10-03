@@ -504,7 +504,7 @@ Object.prototype.__proto__;
  * for..in loop, with the exception of properties inherited through the
  * prototype chain.
  *
- * @param {string} propertyName
+ * @param {string|symbol} propertyName
  * @return {boolean}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable
