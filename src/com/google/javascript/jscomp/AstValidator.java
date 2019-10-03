@@ -1038,6 +1038,7 @@ public final class AstValidator implements CompilerPass {
         return;
     }
     validateChildCount(n);
+    validateExpression(n.getFirstChild());
 
     Node parent = n.getParent();
     switch (parent.getToken()) {
