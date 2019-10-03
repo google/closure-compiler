@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.InputId;
@@ -431,6 +432,35 @@ public final class AstValidator implements CompilerPass {
 
       default:
         violation("Expected expression but was " + n.getToken(), n);
+    }
+  }
+
+  /**
+   * Validate an expression or expresison-like construct.
+   *
+   * <p>An expression-like construct (pseudoexpression) is an AST fragment that is valid in some,
+   * but not all, of the same contexts as true expressions. For example, a VANILLA_FOR permits EMPTY
+   * as its condition and increment expressions, even though EMPTY is not valid as an expression in
+   * general.
+   *
+   * <p>{@code allowedPseudoexpressions} allows the caller to specify which pseudoexpressions are
+   * valid for their context. {@code n} cannot be valid unless its token is in this set.
+   */
+  private void validatePseudoExpression(Node n, Token... allowedPseudoexpressions) {
+    switch (n.getToken()) {
+      case EMPTY:
+        validateChildless(n);
+        break;
+      default:
+        validateExpression(n);
+        return;
+    }
+
+    // This also implicitly validates that only known expression and pseudo-expression tokens are
+    // permitted.
+    ImmutableSet<Token> set = ImmutableSet.copyOf(allowedPseudoexpressions);
+    if (!set.contains(n.getToken())) {
+      violation("Expected expression or " + set + " but was " + n.getToken(), n);
     }
   }
 
@@ -1212,8 +1242,8 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.FOR, n);
     validateChildCount(n, 4);
     validateVarOrOptionalExpression(n.getFirstChild());
-    validateOptionalExpression(n.getSecondChild());
-    validateOptionalExpression(n.getChildAtIndex(2));
+    validatePseudoExpression(n.getSecondChild(), Token.EMPTY);
+    validatePseudoExpression(n.getChildAtIndex(2), Token.EMPTY);
     validateBlock(n.getLastChild());
   }
 
@@ -1247,7 +1277,7 @@ public final class AstValidator implements CompilerPass {
     if (NodeUtil.isNameDeclaration(n)) {
       validateNameDeclarationHelper(n.getToken(), n);
     } else {
-      validateOptionalExpression(n);
+      validatePseudoExpression(n, Token.EMPTY);
     }
   }
 
@@ -1421,14 +1451,6 @@ public final class AstValidator implements CompilerPass {
     validateBlock(n.getLastChild());
   }
 
-  private void validateOptionalExpression(Node n) {
-    if (n.isEmpty()) {
-      validateChildless(n);
-    } else {
-      validateExpression(n);
-    }
-  }
-
   private void validateChildless(Node n) {
     validateChildCount(n, 0);
   }
@@ -1505,7 +1527,7 @@ public final class AstValidator implements CompilerPass {
           break;
         default:
           // Optional because array-literals may have empty slots.
-          validateOptionalExpression(c);
+          validatePseudoExpression(c, Token.EMPTY);
           break;
       }
     }
