@@ -1706,7 +1706,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             // Get inline JSDocInfo if there is no JSDoc on the actual declaration.
             jsdoc = nameNode.getJSDocInfo();
           }
-          Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, rhs, jsdoc);
+          Node newStatement =
+              NodeUtil.newQNameDeclaration(compiler, newString, nameNode, rhs, jsdoc);
           if (NodeUtil.isExprAssign(newStatement) && nameParent.isConst()) {
             // When replacing `const name = ...;` with `some.prop = ...`, ensure that `some.prop`
             // is annotated @const.

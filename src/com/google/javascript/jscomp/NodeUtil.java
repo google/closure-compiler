@@ -932,8 +932,10 @@ public final class NodeUtil {
     }
     Node parent = lhs.getParent();
     return (lhs.isName() && parent.isVar())
-        || (lhs.isGetProp() && lhs.isQualifiedName()
-            && parent.isAssign() && parent.getParent().isExprResult());
+        || (lhs.isGetProp()
+            && lhs.isQualifiedName()
+            && parent.isAssign()
+            && parent.getParent().isExprResult());
   }
 
   static boolean isTypedefDecl(Node n) {
@@ -3583,6 +3585,28 @@ public final class NodeUtil {
   }
 
   /**
+   * Attaches nameNode to a new qualified name declaration and returns the new qualified declaration
+   *
+   * @return a new qualified name declaration
+   */
+  private static Node getDeclarationFromName(
+      Node nameNode, Node value, Token type, JSDocInfo info) {
+    Node result;
+    if (nameNode.isName()) {
+      result =
+          value == null ? IR.declaration(nameNode, type) : IR.declaration(nameNode, value, type);
+      result.setJSDocInfo(info);
+    } else if (value != null) {
+      result = IR.exprResult(IR.assign(nameNode, value));
+      result.getFirstChild().setJSDocInfo(info);
+    } else {
+      result = IR.exprResult(nameNode);
+      result.getFirstChild().setJSDocInfo(info);
+    }
+    return result;
+  }
+
+  /**
    * Creates a property access on the {@code context} tree.
    */
   public static Node newPropertyAccess(AbstractCompiler compiler, Node context, String name) {
@@ -3605,6 +3629,18 @@ public final class NodeUtil {
   }
 
   /**
+   * Creates a node representing a qualified name. For origNodes that are lhs of goog.define calls,
+   * this function also sets the defineName in the result node.
+   *
+   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
+   * @return A VAR node, or an EXPR_RESULT node containing an ASSIGN or NAME node.
+   */
+  public static Node newQNameDeclaration(
+      AbstractCompiler compiler, String name, Node origNode, Node value, JSDocInfo info) {
+    return newQNameDeclaration(compiler, name, origNode, value, info, Token.VAR);
+  }
+
+  /**
    * Creates a node representing a qualified name.
    *
    * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
@@ -3614,19 +3650,30 @@ public final class NodeUtil {
   public static Node newQNameDeclaration(
       AbstractCompiler compiler, String name, Node value, JSDocInfo info, Token type) {
     checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
-    Node result;
     Node nameNode = newQName(compiler, name);
-    if (nameNode.isName()) {
-      result =
-          value == null ? IR.declaration(nameNode, type) : IR.declaration(nameNode, value, type);
-      result.setJSDocInfo(info);
-    } else if (value != null) {
-      result = IR.exprResult(IR.assign(nameNode, value));
-      result.getFirstChild().setJSDocInfo(info);
-    } else {
-      result = IR.exprResult(nameNode);
-      result.getFirstChild().setJSDocInfo(info);
-    }
+    Node result = getDeclarationFromName(nameNode, value, type, info);
+    return result;
+  }
+
+  /**
+   * Creates a node representing a qualified name. For origNodes that are lhs of goog.define calls,
+   * this function also sets the defineName in the result node.
+   *
+   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
+   * @param type Must be VAR, CONST, or LET. Ignored if {@code name} is dotted.
+   * @return A VAR/CONST/LET node, or an EXPR_RESULT node containing an ASSIGN or NAME node.
+   */
+  private static Node newQNameDeclaration(
+      AbstractCompiler compiler,
+      String name,
+      Node origNode,
+      Node value,
+      JSDocInfo info,
+      Token type) {
+    checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
+    Node nameNode = newQName(compiler, name);
+    Node result = getDeclarationFromName(nameNode, value, type, info);
+    nameNode.setDefineName(origNode.getDefineName());
     return result;
   }
 

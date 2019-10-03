@@ -63,6 +63,42 @@ public final class IntegrationTest extends IntegrationTestCase {
           "};");
 
   @Test
+  public void testProcessDefinesInModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setChecksOnly(true);
+    options.setDefineToBooleanLiteral("USE", false);
+    test(
+        options,
+        lines(
+            "goog.module('X');",
+            "/** @define {boolean} */",
+            "const USE = goog.define('USE', false);",
+            "/** @const {boolean} */",
+            "exports.USE = USE;"),
+        "var module$exports$X={};module$exports$X.USE=false");
+  }
+
+  @Test
+  public void testProcessDefinesInModuleWithDifferentDefineName() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setChecksOnly(true);
+    options.setDefineToBooleanLiteral("MY_USE", false);
+    test(
+        options,
+        lines(
+            "goog.module('X');",
+            "/** @define {boolean} */",
+            "const USE = goog.define('MY_USE', false);",
+            "/** @const {boolean} */",
+            "exports.USE = USE;"),
+        "var module$exports$X={};module$exports$X.USE=false");
+  }
+
+  @Test
   public void testStaticMemberClass() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
