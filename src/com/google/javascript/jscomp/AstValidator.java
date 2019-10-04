@@ -444,12 +444,18 @@ public final class AstValidator implements CompilerPass {
    * general.
    *
    * <p>{@code allowedPseudoexpressions} allows the caller to specify which pseudoexpressions are
-   * valid for their context. {@code n} cannot be valid unless its token is in this set.
+   * valid for their context. If {@code n} is a pseudoexpression, it will be considered invalid
+   * unless its token is in this set.
    */
   private void validatePseudoExpression(Node n, Token... allowedPseudoexpressions) {
     switch (n.getToken()) {
       case EMPTY:
         validateChildless(n);
+        break;
+      case ITER_SPREAD:
+        validateChildCount(n);
+        validateFeature(Feature.SPREAD_EXPRESSIONS, n);
+        validateExpression(n.getFirstChild());
         break;
       default:
         validateExpression(n);
@@ -1010,15 +1016,10 @@ public final class AstValidator implements CompilerPass {
   private void validateCall(Node n) {
     validateNodeType(Token.CALL, n);
     validateMinimumChildCount(n, 1);
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      switch (c.getToken()) {
-        case ITER_SPREAD:
-          validateSpread(c);
-          break;
-        default:
-          validateExpression(c);
-          break;
-      }
+
+    validateExpression(n.getFirstChild());
+    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+      validatePseudoExpression(c, Token.ITER_SPREAD);
     }
   }
 
@@ -1058,50 +1059,19 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateSpread(Node n) {
-    switch (n.getToken()) {
-      case ITER_SPREAD:
-      case OBJECT_SPREAD:
-        break;
-      default:
-        violation("Unexpected node type.", n);
-        return;
-    }
+  private void validateObjectSpread(Node n) {
     validateChildCount(n);
+    validateFeature(Feature.OBJECT_LITERALS_WITH_SPREAD, n);
     validateExpression(n.getFirstChild());
-
-    Node parent = n.getParent();
-    switch (parent.getToken()) {
-      case CALL:
-      case NEW:
-        if (n == parent.getFirstChild()) {
-          violation("SPREAD node is not callable.", n);
-        }
-        validateFeature(Feature.SPREAD_EXPRESSIONS, n);
-        break;
-      case ARRAYLIT:
-        validateFeature(Feature.SPREAD_EXPRESSIONS, n);
-        break;
-      case OBJECTLIT:
-        validateFeature(Feature.OBJECT_LITERALS_WITH_SPREAD, n);
-        break;
-      default:
-        violation("SPREAD node should not be the child of a " + parent.getToken() + " node.", n);
-    }
   }
 
   private void validateNew(Node n) {
     validateNodeType(Token.NEW, n);
     validateMinimumChildCount(n, 1);
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      switch (c.getToken()) {
-        case ITER_SPREAD:
-          validateSpread(c);
-          break;
-        default:
-          validateExpression(c);
-          break;
-      }
+
+    validateExpression(n.getFirstChild());
+    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+      validatePseudoExpression(c, Token.ITER_SPREAD);
     }
   }
 
@@ -1521,15 +1491,9 @@ public final class AstValidator implements CompilerPass {
   private void validateArrayLit(Node n) {
     validateNodeType(Token.ARRAYLIT, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      switch (c.getToken()) {
-        case ITER_SPREAD:
-          validateSpread(c);
-          break;
-        default:
-          // Optional because array-literals may have empty slots.
-          validatePseudoExpression(c, Token.EMPTY);
-          break;
-      }
+      // Array-literals may have empty slots.
+      validatePseudoExpression(c, Token.EMPTY, Token.ITER_SPREAD);
+      break;
     }
   }
 
@@ -1561,7 +1525,7 @@ public final class AstValidator implements CompilerPass {
         validateObjectLitComputedPropKey(n);
         return;
       case OBJECT_SPREAD:
-        validateSpread(n);
+        validateObjectSpread(n);
         return;
       default:
         violation("Expected object literal key expression but was " + n.getToken(), n);
