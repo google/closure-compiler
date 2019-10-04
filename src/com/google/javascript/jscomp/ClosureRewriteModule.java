@@ -283,6 +283,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
+  private static class AliasName {
+    final String newName;
+    @Nullable final String legacyNamespace; // non-null only if this is an alias of a module itself
+
+    AliasName(String newName, @Nullable String legacyNamespace) {
+      this.newName = newName;
+      this.legacyNamespace = legacyNamespace;
+    }
+  }
+
   private static final class ScriptDescription {
     boolean isModule;
     boolean declareLegacyNamespace;
@@ -290,7 +300,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String contentsPrefix; // "module$contents$a$b$c_
     final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
     final Deque<ScriptDescription> childScripts = new ArrayDeque<>();
-    final Map<String, String> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
+    final Map<String, AliasName> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
 
     /**
      * Transient state.
@@ -558,7 +568,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
               maybeAddAliasToSymbolTable(moduleOnlyNode, currentScript.legacyNamespace);
             }
 
-            String aliasedNamespace = currentScript.namesToInlineByAlias.get(rootOfType);
+            String aliasedNamespace = currentScript.namesToInlineByAlias.get(rootOfType).newName;
             String remainder = dot == -1 ? "" : typeName.substring(dot);
             safeSetString(typeRefNode, aliasedNamespace + remainder);
           } else if (currentScript.isModule && currentScript.topLevelNames.contains(rootOfType)) {
@@ -1116,7 +1126,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       } else if (lhs.isName()) {
         // `var Foo` case
         String aliasName = statementNode.getFirstChild().getString();
-        recordNameToInline(aliasName, exportedNamespace);
+        recordNameToInline(aliasName, exportedNamespace, legacyNamespace);
         maybeAddAliasToSymbolTable(statementNode.getFirstChild(), currentScript.legacyNamespace);
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
@@ -1127,7 +1137,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           Node aliasNode = importSpec.getFirstChild();
           String aliasName = aliasNode.getString();
           String fullName = exportedNamespace + "." + importedProperty;
-          recordNameToInline(aliasName, fullName);
+          recordNameToInline(aliasName, fullName, /* legacyNamespace= */ null);
 
           // Record alias before we rename node.
           maybeAddAliasToSymbolTable(aliasNode, currentScript.legacyNamespace);
@@ -1270,7 +1280,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node exportsNameNode = getpropNode.getFirstChild();
     checkState(exportsNameNode.getString().equals("exports"));
     String exportedNamespace = currentScript.getExportedNamespace();
-    safeSetMaybeQualifiedString(exportsNameNode, exportedNamespace);
+    safeSetMaybeQualifiedString(exportsNameNode, exportedNamespace, /* isModuleNamespace= */ false);
 
     Node jsdocNode = parent.isAssign() ? parent : getpropNode;
     markConstAndCopyJsDoc(jsdocNode, jsdocNode);
@@ -1310,17 +1320,24 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
     }
 
-    // If the name is an alias for an imported namespace rewrite from
-    // "new Foo;" to "new module$exports$Foo;"
+    // If the name is an alias for an imported namespace or an exported local, rewrite from
+    // "new Foo;" to "new module$exports$Foo;" or "new Foo" to "new module$contents$bar$Foo".
     boolean nameIsAnAlias = currentScript.namesToInlineByAlias.containsKey(name);
     if (nameIsAnAlias && var.getNode() != nameNode) {
       maybeAddAliasToSymbolTable(nameNode, currentScript.legacyNamespace);
 
-      String namespaceToInline = currentScript.namesToInlineByAlias.get(name);
+      AliasName inline = currentScript.namesToInlineByAlias.get(name);
+      String namespaceToInline = inline.newName;
       if (namespaceToInline.equals(currentScript.getBinaryNamespace())) {
         currentScript.hasCreatedExportObject = true;
       }
-      safeSetMaybeQualifiedString(nameNode, namespaceToInline);
+      boolean isModuleNamespace =
+          inline.legacyNamespace != null
+              && rewriteState.scriptDescriptionsByGoogModuleNamespace.containsKey(
+                  inline.legacyNamespace)
+              && !rewriteState.scriptDescriptionsByGoogModuleNamespace.get(inline.legacyNamespace)
+                  .willCreateExportsObject;
+      safeSetMaybeQualifiedString(nameNode, namespaceToInline, isModuleNamespace);
 
       // Make sure this action won't shadow a local variable.
       if (namespaceToInline.indexOf('.') != -1) {
@@ -1485,7 +1502,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     for (ExportDefinition export : currentScript.exportsToInline.values()) {
       Node nameNode = export.nameDecl.getNameNode();
       safeSetMaybeQualifiedString(
-          nameNode, currentScript.getBinaryNamespace() + export.getExportPostfix());
+          nameNode, currentScript.getBinaryNamespace() + export.getExportPostfix(), false);
     }
     checkState(currentScript.isModule, currentScript);
     checkState(
@@ -1591,15 +1608,19 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String localName = exportDefinition.getLocalName();
     String fullExportedName =
         currentScript.getBinaryNamespace() + exportDefinition.getExportPostfix();
-    recordNameToInline(localName, fullExportedName);
+    recordNameToInline(localName, fullExportedName, /* legacyNamespace= */ null);
   }
 
-  private void recordNameToInline(String aliasName, String legacyNamespace) {
+  private void recordNameToInline(
+      String aliasName, String newName, @Nullable String legacyNamespace) {
     checkNotNull(aliasName);
-    checkNotNull(legacyNamespace);
+    checkNotNull(newName);
     checkState(
-        null == currentScript.namesToInlineByAlias.put(aliasName, legacyNamespace),
-        "Already found a mapping for inlining short name: %s", aliasName);
+        null
+            == currentScript.namesToInlineByAlias.put(
+                aliasName, new AliasName(newName, legacyNamespace)),
+        "Already found a mapping for inlining short name: %s",
+        aliasName);
   }
 
   /**
@@ -1671,9 +1692,19 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private void safeSetMaybeQualifiedString(Node nameNode, String newString) {
+  private void safeSetMaybeQualifiedString(
+      Node nameNode, String newString, boolean isModuleNamespace) {
     if (!newString.contains(".")) {
       safeSetString(nameNode, newString);
+      Node parent = nameNode.getParent();
+      if (isModuleNamespace
+          && parent.isGetProp()
+          && nameNode.getGrandparent().isCall()
+          && parent.isFirstChildOf(nameNode.getGrandparent())) {
+        // In cases where we're calling a function off a module namespace, don't pass the module
+        // namespace as `this`.
+        nameNode.getGrandparent().putBooleanProp(Node.FREE_CALL, true);
+      }
       return;
     }
     // When replacing with a dotted fully qualified name it's already better than an original

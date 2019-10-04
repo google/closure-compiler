@@ -7545,4 +7545,48 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var goog = {};"),
         "var a; var b = {};");
   }
+
+  @Test
+  public void testCanSpreadOnGoogModuleImport() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
+    options.setClosurePass(true);
+    useNoninjectingCompiler = true;
+
+    String originalModule =
+        lines(
+            "goog.module('utils');", //
+            "exports.Klazz = class {};",
+            "exports.fn = function() {};");
+
+    String originalModuleCompiled =
+        lines(
+            "var module$exports$utils$Klazz = function() {};",
+            "var module$exports$utils$fn = function() {};");
+
+    // Test destructuring import
+    test(
+        options,
+        new String[] {
+          originalModule,
+          lines(
+              "goog.module('client');", //
+              "const {fn} = goog.require('utils');",
+              "fn(...[]);")
+        },
+        new String[] {originalModuleCompiled, "module$exports$utils$fn.apply(null, []);"});
+
+    // Test non-destructuring import
+    test(
+        options,
+        new String[] {
+          originalModule,
+          lines(
+              "goog.module('client');", //
+              "const utils = goog.require('utils');",
+              "utils.fn(...[]);")
+        },
+        new String[] {originalModuleCompiled, "module$exports$utils$fn.apply(null,[])"});
+  }
 }

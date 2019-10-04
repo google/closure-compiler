@@ -2955,6 +2955,94 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void addFreeCallToNamedExports() {
+    disableCompareAsTree(); // necessary to compare 'free call' marking
+    test(
+        srcs(
+            lines(
+                "goog.module('mod');", //
+                "exports.fn = function() {};"),
+            lines(
+                "goog.module('client');", //
+                "const mod = goog.require('mod');",
+                "mod.fn();")),
+        expected(
+            "/** @const */ var module$exports$mod={};"
+                + "/** @const */ module$exports$mod.fn=function(){};",
+            "/** @const */ var module$exports$client={};" + "(0,module$exports$mod.fn)()"));
+  }
+
+  @Test
+  public void addFreeCallToNamedExportsLiteral() {
+    disableCompareAsTree(); // necessary to compare 'free call' marking
+    test(
+        srcs(
+            lines(
+                "goog.module('mod');", //
+                "const fn = function() {};",
+                "exports = {fn}"),
+            lines(
+                "goog.module('client');", //
+                "const mod = goog.require('mod');",
+                "mod.fn();")),
+        expected(
+            "/** @const */ var module$exports$mod={};"
+                + "/** @const */ module$exports$mod.fn=function(){};",
+            lines("/** @const */ var module$exports$client={};(0,module$exports$mod.fn)()")));
+  }
+
+  @Test
+  public void dontAddFreeCallToPropertiesOnDefaultExports() {
+    test(
+        srcs(
+            lines(
+                "goog.module('mod.Bar');", //
+                "/** @const */",
+                "exports = class Bar {",
+                "  static fn() { use(this); }",
+                "}"),
+            lines(
+                "goog.module('client');", //
+                "const Bar = goog.require('mod.Bar');",
+                "Bar.fn();")),
+        expected(
+            lines(
+                "/** @const */",
+                "var module$exports$mod$Bar = class Bar {",
+                "  static fn() { use(this); }",
+                "}"),
+            lines(
+                "/** @const */", //
+                "var module$exports$client = {};",
+                // preserve the 'this' value of 'class Bar {' - don't make this a free call.
+                "module$exports$mod$Bar.fn();")));
+  }
+
+  @Test
+  public void dontAddFreeCallIfModuleNotCallee() {
+    test(
+        srcs(
+            lines(
+                "goog.module('mod.Bar');", //
+                "exports.NAME = 'BAR';"),
+            lines(
+                "goog.module('client');", //
+                "const Bar = goog.require('mod.Bar');",
+                "console.log(Bar.NAME);")),
+        expected(
+            lines(
+                "/** @const */",
+                "var module$exports$mod$Bar = {};",
+                "/** @const */",
+                "module$exports$mod$Bar.NAME = 'BAR'"),
+            lines(
+                "/** @const */", //
+                "var module$exports$client = {};",
+                // don't mistake the Bar.NAME argument for the callee
+                "console.log(module$exports$mod$Bar.NAME);")));
+  }
+
+  @Test
   public void rewriteLendsAnnotation() {
     test(
         lines(
