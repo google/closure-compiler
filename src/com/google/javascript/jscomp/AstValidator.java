@@ -561,6 +561,8 @@ public final class AstValidator implements CompilerPass {
   private void validateAwait(Node n) {
     validateFeature(Feature.ASYNC_FUNCTIONS, n);
     validateNodeType(Token.AWAIT, n);
+    validateChildCount(n);
+    validateExpression(n.getFirstChild());
     validateWithinAsyncFunction(n);
   }
 

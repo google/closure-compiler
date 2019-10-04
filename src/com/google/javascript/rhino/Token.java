@@ -298,6 +298,7 @@ public enum Token {
       case THIS:
       case TRUE:
         return 0;
+      case AWAIT:
       case BITNOT:
       case CALL_SIGNATURE:
       case CAST:
@@ -308,18 +309,16 @@ public enum Token {
       case GETTER_DEF:
       case INC:
       case INDEX_SIGNATURE:
+      case ITER_REST:
+      case ITER_SPREAD:
       case MEMBER_FUNCTION_DEF:
       case NAMED_TYPE:
       case NEG:
       case NOT:
-      case POS:
-
-      case ITER_REST:
       case OBJECT_REST:
-      case SETTER_DEF:
-
-      case ITER_SPREAD:
       case OBJECT_SPREAD:
+      case POS:
+      case SETTER_DEF:
       case TEMPLATELIT_SUB:
       case THROW:
       case TYPEOF:
