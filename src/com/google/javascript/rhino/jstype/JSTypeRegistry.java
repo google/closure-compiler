@@ -621,9 +621,8 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN, numberStringBoolean);
 
     // (string|number|boolean|symbol)
-    JSType numberStringBooleanSymbol =
-        createUnionType(numberType, stringType, booleanType, symbolType);
-    registerNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL, numberStringBooleanSymbol);
+    JSType valueTypes = createUnionType(numberType, stringType, booleanType, symbolType);
+    registerNativeType(JSTypeNative.VALUE_TYPES, valueTypes);
 
     // (number|symbol)
     JSType numberSymbol = createUnionType(numberType, symbolType);

@@ -300,8 +300,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
         "goog.isObject",
         getNativeAllType(),
         getNativeNoObjectType(),
-        createUnionType(
-            getNativeNumberStringBooleanSymbolType(), getNativeNullType(), getNativeVoidType()));
+        createUnionType(getNativeValueTypes(), getNativeNullType(), getNativeVoidType()));
   }
 
   @Test
@@ -317,9 +316,9 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
   public void testGoogIsObject2b() {
     testClosureFunction(
         "goog.isObject",
-        createUnionType(getNativeObjectType(), getNativeNumberStringBooleanSymbolType()),
+        createUnionType(getNativeObjectType(), getNativeValueTypes()),
         getNativeObjectType(),
-        getNativeNumberStringBooleanSymbolType());
+        getNativeValueTypes());
   }
 
   @Test
@@ -341,13 +340,9 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     testClosureFunction(
         "goog.isObject",
         createUnionType(
-            getNativeObjectType(),
-            getNativeNumberStringBooleanSymbolType(),
-            getNativeNullType(),
-            getNativeVoidType()),
+            getNativeObjectType(), getNativeValueTypes(), getNativeNullType(), getNativeVoidType()),
         getNativeObjectType(),
-        createUnionType(
-            getNativeNumberStringBooleanSymbolType(), getNativeNullType(), getNativeVoidType()));
+        createUnionType(getNativeValueTypes(), getNativeNullType(), getNativeVoidType()));
   }
 
   @Test

@@ -168,10 +168,8 @@ public enum JSTypeNative {
    */
   NUMBER_STRING_BOOLEAN,
 
-  /**
-   * (number,string,boolean,symbol)
-   */
-  NUMBER_STRING_BOOLEAN_SYMBOL,
+  /** (number,string,boolean,symbol) */
+  VALUE_TYPES,
 
   /**
    * (number,symbol)

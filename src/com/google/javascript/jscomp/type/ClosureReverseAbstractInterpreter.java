@@ -20,8 +20,8 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.VALUE_TYPES;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Function;
@@ -65,16 +65,13 @@ public final class ClosureReverseAbstractInterpreter
         }
       };
 
-  /**
-   * For when {@code goog.isObject} returns false.
-   */
+  /** For when {@code goog.isObject} returns false. */
   private final Visitor<JSType> restrictToNotObjectVisitor =
       new RestrictByFalseTypeOfResultVisitor() {
 
         @Override
         public JSType caseAllType() {
-          return typeRegistry.createUnionType(
-              getNativeType(NUMBER_STRING_BOOLEAN_SYMBOL), getNativeType(NULL_VOID));
+          return typeRegistry.createUnionType(getNativeType(VALUE_TYPES), getNativeType(NULL_VOID));
         }
 
         @Override

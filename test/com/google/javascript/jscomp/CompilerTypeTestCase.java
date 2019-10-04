@@ -312,8 +312,8 @@ abstract class CompilerTypeTestCase {
         OBJECT_TYPE, NUMBER_TYPE, STRING_TYPE, BOOLEAN_TYPE, SYMBOL_TYPE);
   }
 
-  protected JSType getNativeNumberStringBooleanSymbolType() {
-    return getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN_SYMBOL);
+  protected JSType getNativeValueTypes() {
+    return getNativeType(JSTypeNative.VALUE_TYPES);
   }
 
   JSType getNativeAllType() {
