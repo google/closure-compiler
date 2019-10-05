@@ -7579,7 +7579,7 @@ ContentSetting.prototype.clear = function(details, opt_callback) {};
 /**
  * @param {!Object<string,(string|boolean|ResourceIdentifier)>} details
  *     Settings details.
- * @param {function(): void} callback Callback function.
+ * @param {function({setting: *}): void} callback Callback function.
  * @return {undefined}
  */
 ContentSetting.prototype.get = function(details, callback) {};
