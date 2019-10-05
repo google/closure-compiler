@@ -16165,6 +16165,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testMissingProperty_notReportedInPropertyAbsenceCheck() {
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "function f(/** !Object */ x) {", //
+            "  if (x.y == null) throw new Error();",
+            "}"));
+  }
+
+  @Test
   public void testReflectObject1() {
     testClosureTypes(
         "var goog = {}; goog.reflect = {}; " +

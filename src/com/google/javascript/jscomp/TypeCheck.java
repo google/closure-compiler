@@ -2140,9 +2140,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     return n.getParent().isTypeOf();
   }
 
+  /**
+   * Checks whether a property access is either (1) a stub declaration, or (2) a property presence
+   * or absence test.
+   *
+   * <p>Presence and absence are both allowed here because both are valid for conditional use of a
+   * property (e.g. {@code if (x.y != null) use(x.y);} but also the opposite, {@code if (x.y ==
+   * null) return; use(x.y);}).
+   */
   private boolean allowLoosePropertyAccessOnNode(Node n) {
     Node parent = n.getParent();
     return NodeUtil.isPropertyTest(compiler, n)
+        || NodeUtil.isPropertyAbsenceTest(n)
         // Stub property declaration
         || (n.isQualifiedName() && parent.isExprResult());
   }
