@@ -14718,7 +14718,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   // TODO(johnlenz): This test causes an infinite loop,
-  public void disable_testInterfaceExtendsLoop() {
+  @Test
+  @Ignore
+  public void testInterfaceExtendsLoop() {
     testClosureTypesMultipleWarnings(
         lines(
             "/** @interface \n * @extends {F} */var G = function() {};",
@@ -17394,7 +17396,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         );
   }
 
-  public void disable_testBadTemplateType4() {
+  @Test
+  @Ignore
+  public void testBadTemplateType4() {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in
     // a definition it isn't useful.
@@ -17407,7 +17411,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
-  public void disable_testBadTemplateType5() {
+  @Test
+  @Ignore
+  public void testBadTemplateType5() {
     // TODO(johnlenz): Add a check for useless of template types.
     // Unless there are at least two references to a Template type in
     // a definition it isn't useful.
@@ -17421,7 +17427,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         FunctionTypeBuilder.TEMPLATE_TYPE_EXPECTED.format());
   }
 
-  public void disable_testFunctionLiteralUndefinedThisArgument() {
+  @Test
+  @Ignore
+  public void testFunctionLiteralUndefinedThisArgument() {
     // TODO(johnlenz): this was a weird error.  We should add a general
     // restriction on what is accepted for T. Something like:
     // "@template T of {Object|string}" or some such.
@@ -18320,7 +18328,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "required: null");
   }
 
-  public void disable_testTemplatized8() {
+  @Test
+  @Ignore
+  public void testTemplatized8() {
     // TODO(johnlenz): this should generate a warning but does not.
     testTypes(
         "/** @interface\n" +
