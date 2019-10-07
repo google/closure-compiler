@@ -20,12 +20,16 @@ import static com.google.javascript.jscomp.ClosureCheckModule.DUPLICATE_NAME_SHO
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_AT_MODULE_SCOPE;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_NOT_A_STATEMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ERROR;
+import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE;
+import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_MISPLACED;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE;
+import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.MULTIPLE_MODULES_IN_FILE;
 import static com.google.javascript.jscomp.ClosureCheckModule.ONE_REQUIRE_PER_DECLARATION;
@@ -150,6 +154,39 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "",
             "var x = goog.require('other.x');"),
         MULTIPLE_MODULES_IN_FILE);
+  }
+
+  @Test
+  public void testMisplacedGoogModuleCall() {
+    testError(
+        lines(
+            "var x;", //
+            "goog.module('xyz');"),
+        GOOG_MODULE_MISPLACED);
+
+    testError(
+        lines(
+            ";", //
+            "goog.module('xyz');"),
+        GOOG_MODULE_MISPLACED);
+
+    testError(
+        lines(
+            "function fn() {", //
+            "  goog.module('xyz');",
+            " }"),
+        GOOG_MODULE_MISPLACED);
+
+    testError("const mod =  goog.module('xyz');", GOOG_MODULE_MISPLACED);
+
+    testError(
+        lines(
+            "goog.loadModule(function(exports) {",
+            "  var x;",
+            "  goog.module('xyz');",
+            "  return exports;",
+            "})"),
+        GOOG_MODULE_IN_NON_MODULE);
   }
 
   @Test
@@ -422,9 +459,40 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   public void testIllegalDeclareLegacyNamespace() {
     testError(
         lines(
-            "goog.provide('a.provided.namespace');",
+            "goog.provide('a.provided.namespace');", //
             "goog.module.declareLegacyNamespace();"),
         DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
+
+    testError(
+        lines(
+            "goog.module('xyz');", //
+            "const ns = goog.module.declareLegacyNamespace();"),
+        LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL);
+
+    testError(
+        lines(
+            "goog.module('xyz');", //
+            "if (cond) {",
+            "  goog.module.declareLegacyNamespace();",
+            "}"),
+        LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
+
+    testError(
+        lines(
+            "goog.module('xyz');", //
+            "var foo = 0;",
+            "goog.module.declareLegacyNamespace();"),
+        LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
+
+    testError(
+        lines(
+            "goog.loadModule(function(exports) {",
+            "  goog.module('xyz');",
+            "  var x;",
+            "  goog.module.declareLegacyNamespace();",
+            "  return exports",
+            "});"),
+        LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
   }
 
   @Test

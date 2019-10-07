@@ -61,6 +61,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "JSC_GOOG_MODULE_IN_NON_MODULE",
           "goog.module() call must be the first statement in a module.");
 
+  static final DiagnosticType GOOG_MODULE_MISPLACED =
+      DiagnosticType.error(
+          "JSC_GOOG_MODULE_MISPLACED", "goog.module() call must be the first statement in a file.");
+
   static final DiagnosticType DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE =
       DiagnosticType.error(
           "JSC_DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE",
@@ -151,6 +155,17 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL", "goog.require() must be called at file scope.");
 
+  static final DiagnosticType LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL =
+      DiagnosticType.error(
+          "JSC_LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL",
+          "goog.module.declareLegacyNamespace() does not return a value");
+
+  static final DiagnosticType LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE =
+      DiagnosticType.error(
+          "JSC_LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL",
+          "goog.module.declareLegacyNamespace() must be immediately after the"
+              + " goog.module('...'); call");
+
   private static class ModuleInfo {
     // Name of the module in question (i.e. the argument to goog.module)
     private final String name;
@@ -222,15 +237,20 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     switch (n.getToken()) {
       case CALL:
         Node callee = n.getFirstChild();
-        if (callee.matchesQualifiedName("goog.module")
-            && !currentModuleInfo.name.equals(extractFirstArgumentName(n))) {
-          t.report(n, MULTIPLE_MODULES_IN_FILE);
+        if (callee.matchesQualifiedName("goog.module")) {
+          if (!currentModuleInfo.name.equals(extractFirstArgumentName(n))) {
+            t.report(n, MULTIPLE_MODULES_IN_FILE);
+          } else if (!isFirstExpressionInGoogModule(parent)) {
+            t.report(n, GOOG_MODULE_MISPLACED);
+          }
         } else if (callee.matchesQualifiedName("goog.require")
             || callee.matchesQualifiedName("goog.requireType")
             || callee.matchesQualifiedName("goog.forwardDeclare")) {
           checkRequireCall(t, n, parent);
         } else if (callee.matchesQualifiedName("goog.module.get") && t.inModuleHoistScope()) {
           t.report(n, MODULE_USES_GOOG_MODULE_GET);
+        } else if (callee.matchesQualifiedName("goog.module.declareLegacyNamespace")) {
+          checkLegacyNamespaceCall(t, n, parent);
         }
         break;
       case ASSIGN:
@@ -364,7 +384,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   }
 
   /** Is this the LHS of a goog.module export? i.e. Either "exports" or "exports.name" */
-  private boolean isExportLhs(Node lhs) {
+  private static boolean isExportLhs(Node lhs) {
     if (!lhs.isQualifiedName()) {
       return false;
     }
@@ -404,7 +424,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     }
   }
 
-  private String extractFirstArgumentName(Node callNode) {
+  private static String extractFirstArgumentName(Node callNode) {
     Node firstArg = callNode.getSecondChild();
     if (firstArg != null && firstArg.isString()) {
       return firstArg.getString();
@@ -494,5 +514,27 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       }
     }
     return true;
+  }
+
+  /** Validates the position of a goog.module.declareLegacyNamespace(); call */
+  private static void checkLegacyNamespaceCall(NodeTraversal t, Node callNode, Node parent) {
+    checkArgument(callNode.isCall());
+    if (!parent.isExprResult()) {
+      t.report(callNode, LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL);
+      return;
+    }
+    Node prev = parent.getPrevious();
+    if (prev == null || !NodeUtil.isGoogModuleCall(prev)) {
+      t.report(callNode, LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
+    }
+  }
+
+  /** Whether this is the first statement in a module */
+  private static boolean isFirstExpressionInGoogModule(Node node) {
+    if (!node.isExprResult() || node.getPrevious() != null) {
+      return false;
+    }
+    Node statementBlock = node.getParent();
+    return statementBlock.isModuleBody() || NodeUtil.isBundledGoogModuleScopeRoot(statementBlock);
   }
 }

@@ -7589,4 +7589,26 @@ public final class IntegrationTest extends IntegrationTestCase {
         },
         new String[] {originalModuleCompiled, "module$exports$utils$fn.apply(null,[])"});
   }
+
+  @Test
+  public void testMalformedGoogModulesGracefullyError() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(SourceFile.fromCode("closure_externs.js", CLOSURE_DEFS))
+            .build();
+
+    test(
+        options,
+        lines(
+            "goog.module('m');", //
+            "var x;",
+            "goog.module.declareLegacyNamespace();"),
+        ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
+
+    test(options, "var x; goog.module('m');", ClosureCheckModule.GOOG_MODULE_MISPLACED);
+  }
 }
