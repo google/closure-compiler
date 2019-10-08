@@ -1826,7 +1826,7 @@ HTMLAreaElement.prototype.ping;
 HTMLIFrameElement.prototype.srcdoc;
 
 /**
- * @type {?string|?DOMTokenList}
+ * @type {?DOMTokenList}
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-iframe-element.html#attr-iframe-sandbox
  */
 HTMLIFrameElement.prototype.sandbox;
