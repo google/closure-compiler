@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The Closure Compiler Authors.
+ * Copyright 2015 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,145 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.javascript.jscomp.gwt.client;
 
-import com.google.gwt.core.client.EntryPoint;
+import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.deps.JsFileFullParser;
+import com.google.javascript.jscomp.gwt.client.Util.JsArray;
+import com.google.javascript.jscomp.gwt.client.Util.JsObject;
+import java.util.Map;
+import javax.annotation.Nullable;
+import jsinterop.annotations.JsFunction;
+import jsinterop.annotations.JsMethod;
 
 /**
- * Entry point that exports just the JsfileParser.
+ * GWT module to parse files for dependency and {@literal @}{@code fileoverview} annotation
+ * information.
  */
-final class JsfileParserMain implements EntryPoint {
-  private static final JsfileParserGwt jsFileParser = new JsfileParserGwt();
+public class JsfileParserMain {
+  /**
+   * Exports the {@link #gjd} method via JSNI.
+   *
+   * <p>This will be placed on {@code module.exports.gjd} or the global {@code jscomp.gjd}.
+   */
+  public native void exportGjd() /*-{
+    var fn = $entry(@com.google.javascript.jscomp.gwt.client.JsfileParserMain::gjd(*));
+    if (typeof module !== 'undefined' && module.exports) {
+      module.exports.gjd = fn;
+    }
+  }-*/;
 
-  @Override
-  public void onModuleLoad() {
-    jsFileParser.exportGjd();
+  /**
+   * Method exported to JS to parse a file for dependencies and annotations.
+   *
+   * <p>The result is a JSON object:
+   *
+   * <pre> {@code {
+   *   "custom_annotations": {?Array<[string, string]>},  @.*
+   *   "goog": {?bool},  whether 'goog' is implicitly required
+   *   "has_soy_delcalls": {?Array<string>},  @fileoverview @hassoydelcall {.*}
+   *   "has_soy_deltemplates": {?Array<string>},  @fileoverview @hassoydeltemplate {.*}
+   *   "imported_modules": {?Array<string>},  import ... from .*
+   *   "is_config": {?bool},  @fileoverview @config
+   *   "is_externs": {?bool},  @fileoverview @externs
+   *   "load_flags": {?Array<[string, string]>},
+   *   "mod_name": {?Array<string>},  @fileoverview @modName .*, @modName {.*}
+   *   "mods": {?Array<string>},  @fileoverview @mods {.*}
+   *   "provide_goog": {?bool},  @fileoverview @provideGoog
+   *   "provides": {?Array<string>},
+   *   "requires": {?Array<string>},  note: look for goog.* for 'goog'
+   *   "requires_css": {?Array<string>},  @fileoverview @requirecss {.*}
+   *   "testonly": {?bool},  goog.setTestOnly
+   *   "type_requires": {?Array<string>},
+   *   "visibility: {?Array<string>},  @fileoverview @visibility {.*}
+   * }}</pre>
+   *
+   * <p>Any trivial values are omitted.
+   */
+  @JsMethod(namespace = "jscomp")
+  public static JsObject<Object> gjd(String code, String filename, @Nullable Reporter reporter) {
+    JsFileFullParser.FileInfo info =
+        JsFileFullParser.parse(code, filename, adaptReporter(reporter));
+    if (info.provideGoog) {
+      info.provides.add("goog");
+    } else if (info.goog) {
+      info.requires.add("goog");
+    }
+    return new SparseObject()
+        .set("custom_annotations", info.customAnnotations)
+        .set("goog", info.goog)
+        .set("has_soy_delcalls", info.hasSoyDelcalls)
+        .set("has_soy_deltemplates", info.hasSoyDeltemplates)
+        .set("imported_modules", info.importedModules)
+        .set("is_config", info.isConfig)
+        .set("is_externs", info.isExterns)
+        .set("load_flags", info.loadFlags)
+        .set("modName", info.modName)
+        .set("mods", info.mods)
+        .set("provide_goog", info.provideGoog)
+        .set("provides", info.provides)
+        .set("requires", info.requires)
+        .set("requiresCss", info.requiresCss)
+        .set("testonly", info.testonly)
+        .set("type_requires", info.typeRequires)
+        .set("visibility", info.visibility)
+        .object;
+  }
+
+  /** JS function interface for reporting errors. */
+  @JsFunction
+  public interface Reporter {
+    void report(boolean fatal, String message, String sourceName, int line, int lineOffset);
+  }
+
+  private static JsFileFullParser.Reporter adaptReporter(@Nullable Reporter r) {
+    if (r == null) {
+      return null;
+    }
+    return (fatal, message, sourceName, line, lineOffset) -> {
+      r.report(fatal, message, sourceName, line, lineOffset);
+    };
+  }
+
+  /** Sparse object helper class: only adds non-trivial values. */
+  private static class SparseObject {
+    final JsObject<Object> object = new JsObject<>();
+
+    SparseObject set(String key, Iterable<String> iterable) {
+      JsArray<String> array = JsArray.copyOf(iterable);
+      if (array.getLength() > 0) {
+        object.set(key, array);
+      }
+      return this;
+    }
+
+    SparseObject set(String key, Multimap<String, String> map) {
+      JsArray<JsArray<String>> array = new JsArray<>();
+      for (Map.Entry<String, String> entry : map.entries()) {
+        JsArray<String> pair = new JsArray<>();
+        pair.push(entry.getKey());
+        pair.push(entry.getValue());
+        array.push(pair);
+      }
+      if (array.getLength() > 0) {
+        object.set(key, array);
+      }
+      return this;
+    }
+
+    SparseObject set(String key, String value) {
+      if (value != null && !value.isEmpty()) {
+        object.set(key, value);
+      }
+      return this;
+    }
+
+    SparseObject set(String key, boolean value) {
+      if (value) {
+        object.set(key, value);
+      }
+      return this;
+    }
   }
 }

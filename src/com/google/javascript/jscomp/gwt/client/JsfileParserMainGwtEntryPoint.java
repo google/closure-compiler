@@ -17,17 +17,12 @@ package com.google.javascript.jscomp.gwt.client;
 
 import com.google.gwt.core.client.EntryPoint;
 
-/**
- * Entry point that exports the GWT version of the compiler and the JsfileParser in the same binary.
- * These two classes share a lot of code and thus producing one binary should save code over two.
- */
-final class CompilerMain implements EntryPoint {
-  private static final GwtRunner gwtRunner = new GwtRunner();
+/** Entry point that exports just the JsfileParser. */
+final class JsfileParserMainGwtEntryPoint implements EntryPoint {
   private static final JsfileParserMain jsFileParser = new JsfileParserMain();
 
   @Override
   public void onModuleLoad() {
-    gwtRunner.exportCompile();
     jsFileParser.exportGjd();
   }
 }
