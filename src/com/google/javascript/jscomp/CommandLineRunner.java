@@ -666,6 +666,12 @@ public class CommandLineRunner extends
     private String j2clPassMode = "AUTO";
 
     @Option(
+        name = "--remove_j2cl_asserts",
+        hidden = true,
+        usage = "Remove calls to J2CL assertions.")
+    private boolean removeJ2cLAsserts = true;
+
+    @Option(
         name = "--output_manifest",
         usage =
             "Prints out a list of all the files in the compilation. "
@@ -1872,6 +1878,8 @@ public class CommandLineRunner extends
             "Unknown J2clPassMode `" + flags.j2clPassMode + "' specified.");
       }
     }
+
+    options.removeJ2clAsserts = flags.removeJ2cLAsserts;
 
     options.renamePrefix = flags.renamePrefix;
 
