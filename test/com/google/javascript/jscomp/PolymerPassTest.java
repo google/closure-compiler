@@ -1639,7 +1639,11 @@ public class PolymerPassTest extends CompilerTestCase {
   @Test
   public void testArrowFunctionDefinition() {
     test(
-        lines("var ES6Test = Polymer({", "  is: 'x-element',", "  sayHi: ()=>42,", "});"),
+        lines(
+            "var ES6Test = Polymer({", //
+            "  is: 'x-element',",
+            "  sayHi: () => 42,",
+            "});"),
         lines(
             "/** ",
             " * @constructor @extends {PolymerElement} ",
@@ -1650,8 +1654,52 @@ public class PolymerPassTest extends CompilerTestCase {
             "ES6Test = Polymer(/** @lends {ES6Test.prototype} */ {",
             "  is: 'x-element',",
             "  /** @this {ES6Test} */",
-            "  sayHi: ()=>42,",
+            "  sayHi: () => 42,",
             "});"));
+  }
+
+  @Test
+  public void testArrowFunctionDefinitionInIifeBehavior() {
+    test(
+        srcs(
+            lines(
+                "var es6 = {};",
+                "(function() {",
+                "  class Foo {}",
+                "  /** @polymerBehavior */",
+                "  es6.Behavior = {",
+                "    sayHi: () => new Foo(),",
+                "  };",
+                "})();",
+                "es6.Test = Polymer({", //
+                "  is: 'x-element',",
+                "  behaviors: [es6.Behavior]",
+                "});")),
+        expected(
+            lines(
+                "var es6 = {};",
+                "",
+                "(function() {",
+                "  class Foo {}",
+                "  /** @polymerBehavior @nocollapse */",
+                "  es6.Behavior = {",
+                "    /** @suppress {checkTypes,globalThis,visibility} */",
+                "    sayHi: () => new Foo(),",
+                "  };",
+                "})();",
+                "",
+                "/** ",
+                " * @constructor @extends {PolymerElement} ",
+                " * @implements {Polymeres6_TestInterface0} ",
+                " */",
+                "es6.Test = function() {};",
+                "/** @suppress {unusedPrivateMembers} */",
+                "es6.Test.prototype.sayHi = () => void 0;",
+                "",
+                "es6.Test = Polymer(/** @lends {es6.Test.prototype} */ {",
+                "  is: 'x-element',",
+                "  behaviors: [es6.Behavior]",
+                "});")));
   }
 
   @Test
@@ -3197,7 +3245,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "Polymer.VeryFunBehavior = [",
                 "  Polymer.FunBehavior,",
                 "  {",
-                "    doSomethingVeryFun: function(veryFunAmount = MODULE_LOCAL) {",
+                "    doSomethingVeryFun: function(a, [b], c, veryFun = MODULE_LOCAL) {",
                 "      alert(MODULE_LOCAL);",
                 "      alert('Something very ' + veryFunAmount + ' fun!');",
                 "    },",
@@ -3245,7 +3293,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  Polymer.FunBehavior,",
                 "  {",
                 "    /** @suppress {checkTypes|globalThis|visibility} */",
-                "    doSomethingVeryFun: function(veryFunAmount = MODULE_LOCAL) {",
+                "    doSomethingVeryFun: function(a, [b], c, veryFun = MODULE_LOCAL) {",
                 "      alert(MODULE_LOCAL);",
                 "      alert('Something very ' + veryFunAmount + ' fun!');",
                 "    },",
@@ -3276,8 +3324,8 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/**",
                 " * @suppress {unusedPrivateMembers}",
                 " */",
-                // TODO(b/142015482): stop copying over MODULE_LOCAL
-                "A.prototype.doSomethingVeryFun = function(veryFunAmount = MODULE_LOCAL) {};",
+                "A.prototype.doSomethingVeryFun =",
+                "    function(a, param$polymer$1, c, veryFun = void 0) {};",
                 "/**",
                 " * @param {string} coolAmount",
                 " * @suppress {unusedPrivateMembers}",
@@ -3289,6 +3337,70 @@ public class PolymerPassTest extends CompilerTestCase {
                 "    name: String,",
                 "  },",
                 "  behaviors: [ Polymer.VeryFunBehavior, behaviors.CoolBehavior ],",
+                "});")));
+  }
+
+  /**
+   * See {@link #testBehaviorInIIFE()} for more information on what this is testing.
+   *
+   */
+  @Test
+  public void testBehaviorInModule_destructuringRestParams() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('behaviors.CoolBehavior');",
+                "goog.module.declareLegacyNamespace();",
+                "const MODULE_LOCAL = 0;",
+                "/** @polymerBehavior */",
+                "exports = {",
+                "  doSomethingCool: function([coolAmount = MODULE_LOCAL] = [], ...[more]) {",
+                "    alert(MODULE_LOCAL);",
+                "    alert('Something ' + funAmount + ' cool!');",
+                "  },",
+                "  /** @override */",
+                "  created: function() {}",
+                "};"),
+            lines(
+                "goog.require('behaviors.CoolBehavior');",
+                "var A = Polymer({",
+                "  is: 'x-element',",
+                "  properties: {",
+                "    name: String,",
+                "  },",
+                "  behaviors: [ behaviors.CoolBehavior ],",
+                "});")),
+        expected(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('behaviors.CoolBehavior');",
+                "goog.module.declareLegacyNamespace();",
+                "const MODULE_LOCAL = 0;",
+                "/** @polymerBehavior @nocollapse */",
+                "exports = {",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
+                "  doSomethingCool: function([coolAmount = MODULE_LOCAL] = [], ...[more]) {",
+                "    alert(MODULE_LOCAL);",
+                "    alert('Something ' + funAmount + ' cool!');",
+                "  },",
+                "  /** @suppress {checkTypes|globalThis|visibility} */",
+                "  created: function() {}",
+                "};"),
+            lines(
+                "goog.require('behaviors.CoolBehavior');",
+                "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+                "var A = function() {};",
+                "/** @type {string} */ A.prototype.name;",
+                "/** @suppress {unusedPrivateMembers} */",
+                "A.prototype.doSomethingCool =",
+                "    function(param$polymer$0 = void 0, ...param$polymer$1) {};",
+                "A = Polymer(/** @lends {A.prototype} */ {",
+                "  is: 'x-element',",
+                "  properties: {",
+                "    name: String,",
+                "  },",
+                "  behaviors: [ behaviors.CoolBehavior ],",
                 "});")));
   }
 

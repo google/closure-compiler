@@ -436,7 +436,7 @@ final class PolymerClassRewriter {
   }
 
   /** Adds return type information to class getters */
-  private void addReturnTypeIfMissing(
+  private static void addReturnTypeIfMissing(
       PolymerClassDefinition cls, String getterPropName, JSTypeExpression jsType) {
     Node classMembers = NodeUtil.getClassMembers(cls.definition);
     Node getter = NodeUtil.getFirstGetterMatchingKey(classMembers, getterPropName);
@@ -536,7 +536,7 @@ final class PolymerClassRewriter {
     return readOnlyProps.build();
   }
 
-  private ImmutableList<MemberDefinition> parseAttributeReflectedProperties(
+  private static ImmutableList<MemberDefinition> parseAttributeReflectedProperties(
       final PolymerClassDefinition cls) {
     ImmutableList.Builder<MemberDefinition> attrReflectedProps = ImmutableList.builder();
 
@@ -738,7 +738,18 @@ final class PolymerClassRewriter {
         // Behaviors whose declarations are not in the global scope may contain references to
         // symbols which do not exist in the element's scope. Only copy a function stub.
         if (!behavior.isGlobalDeclaration) {
-          NodeUtil.getFunctionBody(fnValue).removeChildren();
+          Node body = NodeUtil.getFunctionBody(fnValue);
+          if (fnValue.isArrowFunction() && !NodeUtil.getFunctionBody(fnValue).isBlock()) {
+            // replace `() => <someExpr>` with `() => undefined`
+            body.replaceWith(NodeUtil.newUndefinedNode(body));
+          } else {
+            body.removeChildren();
+          }
+          // Remove any non-named parameters, which may reference locals.
+          int paramIndex = 0;
+          for (Node param : NodeUtil.getFunctionParameters(fnValue).children()) {
+            makeParamSafe(param, paramIndex++);
+          }
         }
 
         exprResult.getFirstChild().setJSDocInfo(info.build());
@@ -768,6 +779,23 @@ final class PolymerClassRewriter {
         block.addChildToBack(exprResult);
         nameToExprResult.put(propName, exprResult);
       }
+    }
+  }
+
+  /** Removes any potential local names referenced within a formal parameter */
+  private static void makeParamSafe(Node param, int index) {
+    if (param.isRest()) {
+      // The lhs may be a destructuring pattern.
+      param = param.getOnlyChild();
+    } else if (param.isDefaultValue()) {
+      // Replace default value with void 0, then look at the lhs
+      Node value = param.getSecondChild();
+      value.replaceWith(NodeUtil.newUndefinedNode(param));
+      param = param.getFirstChild();
+    }
+
+    if (param.isDestructuringPattern()) {
+      param.replaceWith(IR.name("param$polymer$" + index).srcref(param));
     }
   }
 
