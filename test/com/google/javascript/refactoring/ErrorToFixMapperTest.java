@@ -780,6 +780,52 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testFileOverviewCommentsPreservedAfterSortingProvides() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        lines(
+            "// Copyright 2011 The Closure Library Authors. All Rights Reserved.",
+            "/**",
+            " * @fileoverview Date/time formatting symbols for all locales.",
+            " * @suppress {const} */",
+            "// clang-format off",
+            "goog.provide('goog.i18n.DateTimeSymbols_af');",
+            "goog.provide('goog.i18n.DateTimeSymbols');",
+            "goog.provide('goog.i18n.DateTimeSymbolsType');"),
+        lines(
+            "// Copyright 2011 The Closure Library Authors. All Rights Reserved.",
+            "/**",
+            " * @fileoverview Date/time formatting symbols for all locales.",
+            " * @suppress {const} */",
+            "// clang-format off",
+            "goog.provide('goog.i18n.DateTimeSymbols');",
+            "goog.provide('goog.i18n.DateTimeSymbolsType');",
+            "goog.provide('goog.i18n.DateTimeSymbols_af');"));
+  }
+
+  @Test
+  public void testFileOverviewCommentsPreservedAfterSortingProvides2() {
+    options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
+    assertChanges(
+        lines(
+            "// clang-format off",
+            "/**",
+            " * @fileoverview Date/time formatting symbols for all locales.",
+            " * @suppress {const} */",
+            "goog.provide('goog.i18n.DateTimeSymbols_af');",
+            "goog.provide('goog.i18n.DateTimeSymbols');",
+            "goog.provide('goog.i18n.DateTimeSymbolsType');"),
+        lines(
+            "// clang-format off",
+            "/**",
+            " * @fileoverview Date/time formatting symbols for all locales.",
+            " * @suppress {const} */",
+            "goog.provide('goog.i18n.DateTimeSymbols');",
+            "goog.provide('goog.i18n.DateTimeSymbolsType');",
+            "goog.provide('goog.i18n.DateTimeSymbols_af');"));
+  }
+
+  @Test
   public void testBothJSDocAndNonJSDocCommentsTogether2() {
     options.setParseJsDocDocumentation(INCLUDE_ALL_COMMENTS);
     assertChanges(

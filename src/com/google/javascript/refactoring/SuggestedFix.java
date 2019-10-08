@@ -388,6 +388,10 @@ public final class SuggestedFix {
       checkState(first.getParent() == last.getParent());
 
       int start = getStartPositionForNodeConsideringComments(first);
+      if (start == 0) {
+        // if there are file-level comments at the top of the file, we do not wish to remove them
+        start = first.getSourceOffset();
+      }
       int end = last.getSourceOffset() + last.getLength();
       int length = end - start;
       replacements.put(
