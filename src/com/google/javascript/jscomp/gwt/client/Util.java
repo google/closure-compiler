@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.gwt.client;
 
 import java.util.AbstractList;
 import java.util.List;
-import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
@@ -29,6 +28,8 @@ import jsinterop.base.JsPropertyMap;
 
 /**
  * GWT/J2CL utilities to abstract out JS interop.
+ *
+ * <p>TODO(nickreid): Replace this file with a common library from J2CL.
  */
 public class Util {
 
@@ -135,12 +136,12 @@ public class Util {
 
     @JsOverlay
     public static <T> JsArray<T> of(T... elems) {
-      return slice(elems);
+      JsArray<T> arr = new JsArray<>();
+      for (T elem : elems) {
+        arr.push(elem);
+      }
+      return arr;
     }
-
-    @SuppressWarnings("unusable-by-js")
-    @JsMethod(name = "call", namespace = "Array.prototype.slice")
-    public static native <T> JsArray<T> slice(T[] elems);
 
     @JsOverlay
     public static <T> JsArray<T> copyOf(Iterable<? extends T> elems) {

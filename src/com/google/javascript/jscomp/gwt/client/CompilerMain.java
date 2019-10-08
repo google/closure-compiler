@@ -23,11 +23,10 @@ import com.google.gwt.core.client.EntryPoint;
  */
 final class CompilerMain implements EntryPoint {
   private static final GwtRunner gwtRunner = new GwtRunner();
-  private static final JsfileParserMain jsFileParser = new JsfileParserMain();
 
   @Override
   public void onModuleLoad() {
     gwtRunner.exportCompile();
-    jsFileParser.exportGjd();
+    JsfileParserMain.exportGjd();
   }
 }

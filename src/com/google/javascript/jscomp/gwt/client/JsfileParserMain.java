@@ -35,7 +35,7 @@ public class JsfileParserMain {
    *
    * <p>This will be placed on {@code module.exports.gjd} or the global {@code jscomp.gjd}.
    */
-  public native void exportGjd() /*-{
+  public static native void exportGjd() /*-{
     var fn = $entry(@com.google.javascript.jscomp.gwt.client.JsfileParserMain::gjd(*));
     if (typeof module !== 'undefined' && module.exports) {
       module.exports.gjd = fn;
@@ -69,7 +69,7 @@ public class JsfileParserMain {
    *
    * <p>Any trivial values are omitted.
    */
-  @JsMethod(namespace = "jscomp")
+  @JsMethod
   public static JsObject<Object> gjd(String code, String filename, @Nullable Reporter reporter) {
     JsFileFullParser.FileInfo info =
         JsFileFullParser.parse(code, filename, adaptReporter(reporter));
@@ -154,4 +154,6 @@ public class JsfileParserMain {
       return this;
     }
   }
+
+  private JsfileParserMain() {}
 }
