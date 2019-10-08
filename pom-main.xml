@@ -116,6 +116,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.jsinterop</groupId>
+      <artifactId>base</artifactId>
+      <version>1.0.0-RC1</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
       <version>0.45</version>
