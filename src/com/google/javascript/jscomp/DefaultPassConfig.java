@@ -314,6 +314,15 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkVariableReferences);
 
+    if (options.declaredGlobalExternsOnWindow) {
+      checks.add(declaredGlobalExternsOnWindow);
+    }
+
+    if (!options.processCommonJSModules) {
+      // TODO(ChadKillingsworth): move CommonJS module rewriting after VarCheck
+      checks.add(checkVars);
+    }
+
     if (options.closurePass) {
       checks.add(checkClosureImports);
     }
@@ -322,10 +331,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closureCheckModule);
-    }
-
-    if (options.declaredGlobalExternsOnWindow) {
-      checks.add(declaredGlobalExternsOnWindow);
     }
 
     checks.add(checkSuper);
@@ -371,7 +376,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(createSyntheticBlocks);
     }
 
-    checks.add(checkVars);
+    if (options.processCommonJSModules) {
+      // TODO(ChadKillingsworth): remove this branch.
+      checks.add(checkVars);
+    }
 
     if (options.inferConsts) {
       checks.add(inferConsts);
@@ -1029,12 +1037,18 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   /**
-   * Certain checks need to run in a particular order. For example, the PolymerPass
-   * will not work correctly unless it runs after the goog.provide() processing.
-   * This enforces those constraints.
+   * Certain checks and rewriting passes need to run in a particular order. For example, the
+   * PolymerPass will not work correctly unless it runs after the goog.provide() processing. This
+   * enforces those constraints.
+   *
    * @param checks The list of check passes
    */
   private void assertValidOrderForChecks(List<PassFactory> checks) {
+    assertPassOrder(
+        checks,
+        declaredGlobalExternsOnWindow,
+        checkVars,
+        "declaredGlobalExternsOnWindow must happen before VarCheck, which adds synthetic externs");
     assertPassOrder(
         checks,
         chromePass,
@@ -2898,9 +2912,12 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName(PassNames.GATHER_MODULE_METADATA)
           .setInternalFactory(
-              (compiler) ->
-                  new GatherModuleMetadata(
-                      compiler, options.processCommonJSModules, options.moduleResolutionMode))
+              (compiler) -> {
+                // Force creation of the synthetic input so that we create metadata for it
+                compiler.getSynthesizedExternsInput();
+                return new GatherModuleMetadata(
+                    compiler, options.processCommonJSModules, options.moduleResolutionMode);
+              })
           .setFeatureSet(ES_NEXT)
           .build();
 
