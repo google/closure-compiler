@@ -17,14 +17,10 @@ package com.google.javascript.jscomp.gwt.client;
 
 import com.google.gwt.core.client.EntryPoint;
 
-/**
- * Entry point that exports just the GWT version of the compiler.
- */
-final class GwtRunnerMain implements EntryPoint {
-  private static final GwtRunner gwtRunner = new GwtRunner();
-
+/** Entry point that exports just the GWT version of the compiler. */
+final class JsRunnerMainGwtEntryPoint implements EntryPoint {
   @Override
   public void onModuleLoad() {
-    gwtRunner.exportCompile();
+    JsRunnerMain.exportCompile();
   }
 }

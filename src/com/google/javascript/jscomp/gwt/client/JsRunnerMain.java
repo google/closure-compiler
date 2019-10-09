@@ -71,10 +71,8 @@ import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 
-/**
- * Runner for the GWT-compiled JSCompiler.
- */
-public final class GwtRunner {
+/** Runner for the GWT-compiled JSCompiler. */
+public final class JsRunnerMain {
   private static final Logger phaseLogger =
       Logger.getLogger("com.google.javascript.jscomp.PhaseOptimizer");
 
@@ -125,9 +123,8 @@ public final class GwtRunner {
     String outputWrapper;
     String packageJsonEntryNames;
     boolean parseInlineSourceMaps;
-    @Deprecated
-    boolean polymerPass;
-    Double polymerVersion;  // nb. nullable JS number represented by java.lang.Double in GWT.
+    @Deprecated boolean polymerPass;
+    Double polymerVersion; // nb. nullable JS number represented by java.lang.Double in GWT.
     boolean preserveTypeAnnotations;
     boolean processClosurePrimitives;
     boolean processCommonJsModules;
@@ -142,15 +139,13 @@ public final class GwtRunner {
     String warningLevel;
 
     // These flags do not match the Java compiler JAR.
-    @Deprecated
-    File[] jsCode;
+    @Deprecated File[] jsCode;
     JsMap defines;
   }
 
   /**
    * defaultFlags must have a value set for each field. Otherwise, GWT has no way to create the
-   * fields inside Flags (as it's native). If Flags is not-native, GWT eats its field names
-   * anyway.
+   * fields inside Flags (as it's native). If Flags is not-native, GWT eats its field names anyway.
    */
   private static Flags defaultFlags;
 
@@ -238,9 +233,7 @@ public final class GwtRunner {
     @JsProperty JavaScriptObject[] warnings;
   }
 
-  /**
-   * Reliably returns a string array from the flags/key combo.
-   */
+  /** Reliably returns a string array from the flags/key combo. */
   private static native String[] getStringArray(Flags flags, String key) /*-{
     var value = flags[key];
     if (value == null) {
@@ -251,9 +244,7 @@ public final class GwtRunner {
     return [value];
   }-*/;
 
-  /**
-   * Wraps a generic JS object used as a map.
-   */
+  /** Wraps a generic JS object used as a map. */
   private static final class JsMap extends JavaScriptObject {
     protected JsMap() {}
 
@@ -310,14 +301,12 @@ public final class GwtRunner {
   @JsMethod(name = "keys", namespace = "Object")
   private static native String[] keys(Object o);
 
-  private static native JavaScriptObject createError(String file, String description, String type,
-        int lineNo, int charNo) /*-{
+  private static native JavaScriptObject createError(
+      String file, String description, String type, int lineNo, int charNo) /*-{
     return {file: file, description: description, type: type, lineNo: lineNo, charNo: charNo};
   }-*/;
 
-  /**
-   * Convert a list of {@link JSError} instances to a JS array containing plain objects.
-   */
+  /** Convert a list of {@link JSError} instances to a JS array containing plain objects. */
   private static JavaScriptObject[] toNativeErrorArray(List<JSError> errors) {
     JavaScriptObject[] out = new JavaScriptObject[errors.size()];
     for (int i = 0; i < errors.size(); ++i) {
@@ -461,13 +450,15 @@ public final class GwtRunner {
   }
 
   private static List<SourceFile> createExterns(CompilerOptions.Environment environment) {
-    String[] resources = ResourceLoader.resourceList(GwtRunner.class);
+    String[] resources = ResourceLoader.resourceList(JsRunnerMain.class);
     Map<String, SourceFile> all = new HashMap<>();
     for (String res : resources) {
       if (res.startsWith(EXTERNS_PREFIX)) {
         String filename = res.substring(EXTERNS_PREFIX.length());
-        all.put(filename, SourceFile.fromCode("externs.zip//" + res,
-              ResourceLoader.loadTextResource(GwtRunner.class, res)));
+        all.put(
+            filename,
+            SourceFile.fromCode(
+                "externs.zip//" + res, ResourceLoader.loadTextResource(JsRunnerMain.class, res)));
       }
     }
     return DefaultExterns.prepareExterns(environment, all);
@@ -531,13 +522,11 @@ public final class GwtRunner {
     if (flags.compilationLevel != null) {
       level = CompilationLevel.fromString(Ascii.toUpperCase(flags.compilationLevel));
       if (level == null) {
-        throw new RuntimeException(
-            "Bad value for compilationLevel: " + flags.compilationLevel);
+        throw new RuntimeException("Bad value for compilationLevel: " + flags.compilationLevel);
       }
     }
     if (level == CompilationLevel.ADVANCED_OPTIMIZATIONS && !flags.renaming) {
-      throw new RuntimeException(
-          "renaming cannot be disabled when ADVANCED_OPTIMIZATIONS is used");
+      throw new RuntimeException("renaming cannot be disabled when ADVANCED_OPTIMIZATIONS is used");
     }
     level.setOptionsForCompilationLevel(options);
     if (flags.debug) {
@@ -765,8 +754,8 @@ public final class GwtRunner {
   }
 
   /**
-   * Updates the destination flags (user input) with source flags (the defaults). Returns a list
-   * of flags that are on the destination, but not on the source.
+   * Updates the destination flags (user input) with source flags (the defaults). Returns a list of
+   * flags that are on the destination, but not on the source.
    */
   private static native String[] updateFlags(Flags dst, Flags src) /*-{
     for (var k in src) {
@@ -820,7 +809,7 @@ public final class GwtRunner {
         sourceMaps = ImmutableMap.copyOf(tempMaps);
       }
 
-      for (GwtRunner.File element : inputs) {
+      for (JsRunnerMain.File element : inputs) {
         if (element.webpackId != null && element.path != null) {
           inputPathByWebpackId.put(element.webpackId, element.path);
         }
@@ -888,8 +877,8 @@ public final class GwtRunner {
    * <p>This will be placed on {@code module.exports}, {@code self.compile} or {@code
    * window.compile}.
    */
-  public native void exportCompile() /*-{
-    var fn = $entry(@com.google.javascript.jscomp.gwt.client.GwtRunner::compile(*));
+  public static native void exportCompile() /*-{
+    var fn = $entry(@com.google.javascript.jscomp.gwt.client.JsRunnerMain::compile(*));
     if (typeof module !== 'undefined' && module.exports) {
       module.exports = fn;
     } else if (typeof self === 'object') {
@@ -899,9 +888,7 @@ public final class GwtRunner {
     }
   }-*/;
 
-  /**
-   * Custom {@link BasicErrorManager} to record {@link JSError} instances.
-   */
+  /** Custom {@link BasicErrorManager} to record {@link JSError} instances. */
   private static class NodeErrorManager extends BasicErrorManager {
     final List<JSError> errors = new ArrayList<>();
     final List<JSError> warnings = new ArrayList<>();
@@ -960,26 +947,23 @@ public final class GwtRunner {
       process.stderr.write(s);
     }-*/;
 
-
     // NOTE: console methods always add a newline following the text.
     private native void writeToConsole(String s) /*-{
        console.log(s);
     }-*/;
 
     @Override
-    public void close() {
-    }
+    public void close() {}
 
     @Override
-    public void flush() {
-    }
+    public void flush() {}
 
     @Override
-    public void write(byte[] buffer, int offset, int length) {
-    }
+    public void write(byte[] buffer, int offset, int length) {}
 
     @Override
-    public void write(int oneByte) {
-    }
+    public void write(int oneByte) {}
   }
+
+  private JsRunnerMain() {}
 }
