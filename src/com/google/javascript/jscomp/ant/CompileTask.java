@@ -101,6 +101,7 @@ public final class CompileTask
   private File sourceMapOutputFile;
   private String sourceMapLocationMapping;
   private boolean applyInputSourceMaps;
+  private boolean strictModeInput;
 
   public CompileTask() {
     this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT_2015;
@@ -109,6 +110,7 @@ public final class CompileTask
     this.debugOptions = false;
     this.compilationLevel = CompilationLevel.SIMPLE_OPTIMIZATIONS;
     this.environment = CompilerOptions.Environment.BROWSER;
+    this.strictModeInput = true;
     this.manageDependencies = false;
     this.prettyPrint = false;
     this.printInputDelimiter = false;
@@ -213,6 +215,10 @@ public final class CompileTask
       throw new BuildException(
           "Unrecognized 'compilation' option value (" + value + ")");
     }
+  }
+  
+  public void setStrictModeInput(boolean strictModeInput) {
+    this.strictModeInput = strictModeInput;
   }
 
   public void setManageDependencies(boolean value) {
@@ -427,6 +433,7 @@ public final class CompileTask
     }
 
     options.setEnvironment(this.environment);
+    options.setStrictModeInput(this.strictModeInput);
 
     options.setPrettyPrint(this.prettyPrint);
     options.setPrintInputDelimiter(this.printInputDelimiter);
