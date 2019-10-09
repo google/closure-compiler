@@ -127,25 +127,12 @@ public final class CompileTask
   }
 
   private static CompilerOptions.LanguageMode parseLanguageMode(String value) {
-    switch (value) {
-      case "ECMASCRIPT6_STRICT":
-      case "ES6_STRICT":
-      case "ECMASCRIPT6":
-      case "ES6":
-        return CompilerOptions.LanguageMode.ECMASCRIPT_2015;
-      case "ECMASCRIPT5_STRICT":
-      case "ES5_STRICT":
-        return CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
-      case "ECMASCRIPT5":
-      case "ES5":
-        return CompilerOptions.LanguageMode.ECMASCRIPT5;
-      case "ECMASCRIPT3":
-      case "ES3":
-        return CompilerOptions.LanguageMode.ECMASCRIPT3;
-      default:
+    CompilerOptions.LanguageMode language = CompilerOptions.LanguageMode.fromString(value);
+    if (language == null) {
         throw new BuildException(
             "Unrecognized 'languageIn' option value (" + value + ")");
     }
+    return language;
   }
 
   /**
