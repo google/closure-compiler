@@ -164,7 +164,7 @@
     <dependency>
       <groupId>com.google.elemental2</groupId>
       <artifactId>elemental2-core</artifactId>
-      <version>1.0.0-beta-1</version>
+      <version>1.0.0-RC1</version>
     </dependency>
 
     <!-- We need both the binary and the sources jar for RE2/J, since the source code and the GWT
