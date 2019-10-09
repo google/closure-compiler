@@ -92,7 +92,9 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
         Node options = IR.arraylit(IR.objectlit(IR.stringKey("escapeLt", IR.trueNode())));
         Node regexp = IR.regexp(IR.string("Chrome\\/(\\d+)"));
         Node userAgent = NodeUtil.newQName(compiler, "navigator.userAgent");
-        Node version = IR.getelem(IR.call(IR.getprop(regexp, "exec"), userAgent), IR.number(1));
+        Node version =
+            IR.getelem(
+                IR.or(IR.call(IR.getprop(regexp, "exec"), userAgent), IR.arraylit()), IR.number(1));
         Node condition = IR.ge(version, IR.number(79));
         args = IR.call(IR.getprop(args, "concat"), IR.hook(condition, options, IR.arraylit()));
         newValueNode =

@@ -215,8 +215,8 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
         lines(
             "/** @desc A message with one placeholder. */\n",
             "var MSG_C=chrome.i18n.getMessage.apply(null, ['4985325380591528435',"
-                + " ['Tyler']].concat(/Chrome\\/(\\d+)/.exec(navigator.userAgent)[1] >= 79 ?"
-                + " [{escapeLt: true}] : []));"));
+                + " ['Tyler']].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79"
+                + " ? [{escapeLt: true}] : []));"));
 
     test(
         lines(
@@ -225,8 +225,8 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
         lines(
             "/** @desc A simple message. */\n",
             "var MSG_A=chrome.i18n.getMessage.apply(null, ['8660696502365331902',"
-                + " []].concat(/Chrome\\/(\\d+)/.exec(navigator.userAgent)[1] >= 79 ? [{escapeLt:"
-                + " true}] : []));"));
+                + " []].concat((/Chrome\\/(\\d+)/.exec(navigator.userAgent) || [])[1] >= 79 ?"
+                + " [{escapeLt: true}] : []));"));
 
     test(
         lines(
