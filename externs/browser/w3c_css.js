@@ -2059,6 +2059,14 @@ CSSProperties.prototype.objectFit;
  */
 CSSProperties.prototype.objectPosition;
 
+// CSS Masking
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/css-masking-1/
+ */
+CSSProperties.prototype.clipPath;
+
 // CSS Containment
 
 /**
