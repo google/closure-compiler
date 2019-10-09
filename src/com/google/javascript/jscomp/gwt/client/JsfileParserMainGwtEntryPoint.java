@@ -16,9 +16,9 @@
 package com.google.javascript.jscomp.gwt.client;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.javascript.jscomp.gwt.client.Util.JsObject;
 import javax.annotation.Nullable;
 import jsinterop.annotations.JsMethod;
+import jsinterop.base.JsPropertyMap;
 
 /** Entry point that exports just the JsfileParser. */
 final class JsfileParserMainGwtEntryPoint implements EntryPoint {
@@ -30,7 +30,7 @@ final class JsfileParserMainGwtEntryPoint implements EntryPoint {
 
   // We need to forward this function from a GWT only file so we can specify a custom namespace.
   @JsMethod(namespace = "jscomp")
-  public static JsObject<Object> gjd(
+  public static JsPropertyMap<Object> gjd(
       String code, String filename, @Nullable JsfileParserMain.Reporter reporter) {
     return JsfileParserMain.gjd(code, filename, reporter);
   }

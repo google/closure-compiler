@@ -18,12 +18,12 @@ package com.google.javascript.jscomp.gwt.client;
 
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.deps.JsFileFullParser;
-import com.google.javascript.jscomp.gwt.client.Util.JsArray;
-import com.google.javascript.jscomp.gwt.client.Util.JsObject;
+import elemental2.core.JsArray;
 import java.util.Map;
 import javax.annotation.Nullable;
 import jsinterop.annotations.JsFunction;
 import jsinterop.annotations.JsMethod;
+import jsinterop.base.JsPropertyMap;
 
 /**
  * GWT module to parse files for dependency and {@literal @}{@code fileoverview} annotation
@@ -70,7 +70,8 @@ public class JsfileParserMain {
    * <p>Any trivial values are omitted.
    */
   @JsMethod
-  public static JsObject<Object> gjd(String code, String filename, @Nullable Reporter reporter) {
+  public static JsPropertyMap<Object> gjd(
+      String code, String filename, @Nullable Reporter reporter) {
     JsFileFullParser.FileInfo info =
         JsFileFullParser.parse(code, filename, adaptReporter(reporter));
     if (info.provideGoog) {
@@ -78,6 +79,7 @@ public class JsfileParserMain {
     } else if (info.goog) {
       info.requires.add("goog");
     }
+
     return new SparseObject()
         .set("custom_annotations", info.customAnnotations)
         .set("goog", info.goog)
@@ -116,10 +118,13 @@ public class JsfileParserMain {
 
   /** Sparse object helper class: only adds non-trivial values. */
   private static class SparseObject {
-    final JsObject<Object> object = new JsObject<>();
+    final JsPropertyMap<Object> object = JsPropertyMap.of();
 
     SparseObject set(String key, Iterable<String> iterable) {
-      JsArray<String> array = JsArray.copyOf(iterable);
+      JsArray<String> array = new JsArray<>();
+      for (String s : iterable) {
+        array.push(s);
+      }
       if (array.getLength() > 0) {
         object.set(key, array);
       }
@@ -129,10 +134,7 @@ public class JsfileParserMain {
     SparseObject set(String key, Multimap<String, String> map) {
       JsArray<JsArray<String>> array = new JsArray<>();
       for (Map.Entry<String, String> entry : map.entries()) {
-        JsArray<String> pair = new JsArray<>();
-        pair.push(entry.getKey());
-        pair.push(entry.getValue());
-        array.push(pair);
+        array.push(new JsArray<>(entry.getKey(), entry.getValue()));
       }
       if (array.getLength() > 0) {
         object.set(key, array);
