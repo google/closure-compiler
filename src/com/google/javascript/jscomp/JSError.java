@@ -28,28 +28,28 @@ public final class JSError implements Serializable {
   private final DiagnosticType type;
 
   /** Description of the error */
-  public final String description;
+  private final String description;
 
   public String getDescription() {
     return description;
   }
 
   /** Name of the source */
-  public final String sourceName;
+  private final String sourceName;
 
   public String getSourceName() {
     return sourceName;
   }
 
   /** Node where the warning occurred. */
-  public final Node node;
+  private final Node node;
 
   public Node getNode() {
     return node;
   }
 
   /** Line number of the source */
-  public final int lineNumber;
+  private final int lineNumber;
 
   private final CheckLevel defaultLevel;
 
