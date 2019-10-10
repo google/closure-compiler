@@ -403,6 +403,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
 
   /** Get a previously tracked message. */
   private JsMessage getTrackedMessage(NodeTraversal t, String msgName) {
+    // Trim anything before "MSG_" that might exist if the variable is an aliased import.
+    if (msgName.indexOf("MSG_") > 0) {
+      msgName = msgName.substring(msgName.indexOf("MSG_"));
+    }
     boolean isUnnamedMessage = isUnnamedMessageName(msgName);
     if (!isUnnamedMessage) {
       MessageLocation location = messageNames.get(msgName);
