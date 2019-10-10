@@ -200,6 +200,7 @@ final class PolymerClassRewriter {
     Node callParent = cls.definition.getParent();
     // Determine whether we are in a Polymer({}) call at the top level versus in an assignment.
     Node exprRoot = callParent.isExprResult() ? callParent : callParent.getParent();
+    checkState(NodeUtil.isStatementParent(exprRoot.getParent()), exprRoot.getParent());
     Node objLit = checkNotNull(cls.descriptor);
 
     // Add {@code @lends} to the object literal.

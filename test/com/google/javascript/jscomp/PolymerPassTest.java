@@ -4808,6 +4808,32 @@ public class PolymerPassTest extends CompilerTestCase {
             "JSCOMPILER_PRESERVE(XElement.prototype.thingToDo);"));
   }
 
+  @Test
+  public void testPolymerInEsModuleExport() {
+    test(
+        lines(
+            "export let PaperMenuButton = Polymer({",
+            "  is: 'paper-menu-button',",
+            "  properties: {",
+            "    opened: {type: Boolean, value: false}",
+            "  }",
+            "});"),
+        lines(
+            "/** @constructor @extends {PolymerElement}",
+            " * @implements {PolymerPaperMenuButtonInterface0}",
+            " */",
+            "var PaperMenuButton = function() {};",
+            "/** @type {boolean} */",
+            "PaperMenuButton.prototype.opened;",
+            "PaperMenuButton = Polymer(/** @lends {PaperMenuButton.prototype} */ {",
+            "  is: 'paper-menu-button',",
+            "  properties: {",
+            "    opened: {type: Boolean, value: false}",
+            "  }",
+            "});",
+            "export {PaperMenuButton};"));
+  }
+
   @Override
   public void test(String js, String expected) {
     polymerVersion = 1;

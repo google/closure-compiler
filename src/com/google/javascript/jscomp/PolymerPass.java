@@ -152,6 +152,10 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
       }
       traversal.reportCodeChange();
     }
+    if (NodeUtil.isNameDeclaration(grandparent) && grandparent.getParent().isExport()) {
+      normalizePolymerExport(grandparent, grandparent.getParent());
+      traversal.reportCodeChange();
+    }
     PolymerClassDefinition def =
         PolymerClassDefinition.extractFromCallNode(
             node, compiler, getModuleMetadata(traversal), behaviorExtractor);
@@ -186,6 +190,18 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
       rewriter.rewritePolymerClassDeclaration(node, traversal, def);
       propertySinkExternInjected = rewriter.propertySinkExternInjected;
     }
+  }
+
+  /** Replaces `export let Element = ...` with `let Element = ...; export {Element};` */
+  private void normalizePolymerExport(Node nameDecl, Node export) {
+    Node block = export.getParent();
+    Node name = nameDecl.getFirstChild();
+    block.addChildBefore(nameDecl.detach(), export);
+
+    Node exportSpec = new Node(Token.EXPORT_SPEC);
+    exportSpec.addChildToFront(name.cloneNode());
+    exportSpec.addChildToFront(name.cloneNode());
+    export.addChildToFront(new Node(Token.EXPORT_SPECS, exportSpec).srcrefTree(export));
   }
 
   private Node getExtensInsertionRef() {
