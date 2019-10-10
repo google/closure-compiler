@@ -17,12 +17,13 @@
 package com.google.debugging.sourcemap;
 
 import com.google.common.collect.ImmutableList;
+import elemental2.core.JSONType;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsType;
+import jsinterop.base.Js;
 import jsinterop.base.JsPropertyMap;
 
 /**
@@ -32,10 +33,7 @@ import jsinterop.base.JsPropertyMap;
  */
 public class SourceMapObjectParserJs {
 
-  @JsMethod
-  private static native <T> T parseJson(String json, Class<T> clazz) /*-{
-    return JSON.parse(json);
-  }-*/;
+  private static final JSONType JSON = Js.uncheckedCast(Js.global().get("JSON"));
 
   @JsType(
       isNative = true,
@@ -71,7 +69,7 @@ public class SourceMapObjectParserJs {
   }
 
   public static SourceMapObject parse(String contents) throws SourceMapParseException {
-    JsonMap sourceMap = parseJson(contents, JsonMap.class);
+    JsonMap sourceMap = Js.uncheckedCast(JSON.parse(contents));
     SourceMapObject.Builder builder = SourceMapObject.builder();
 
     builder.setVersion(sourceMap.version);
