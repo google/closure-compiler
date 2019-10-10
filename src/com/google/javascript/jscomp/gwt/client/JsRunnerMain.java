@@ -25,7 +25,6 @@ import static com.google.javascript.jscomp.AbstractCommandLineRunner.parseModule
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsModuleSpec;
 import com.google.javascript.jscomp.BasicErrorManager;
 import com.google.javascript.jscomp.CheckLevel;
@@ -55,6 +54,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
+import elemental2.core.JsArray;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -70,6 +70,7 @@ import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
+import jsinterop.base.JsPropertyMap;
 
 /** Runner for the GWT-compiled JSCompiler. */
 public final class JsRunnerMain {
@@ -140,7 +141,7 @@ public final class JsRunnerMain {
 
     // These flags do not match the Java compiler JAR.
     @Deprecated File[] jsCode;
-    JsMap defines;
+    JsPropertyMap<Object> defines;
   }
 
   /**
@@ -228,9 +229,9 @@ public final class JsRunnerMain {
   private static class ChunkOutput {
     @JsProperty @Deprecated String compiledCode;
     @JsProperty @Deprecated String sourceMap;
-    @JsProperty File[] compiledFiles;
-    @JsProperty JavaScriptObject[] errors;
-    @JsProperty JavaScriptObject[] warnings;
+    @JsProperty JsArray<File> compiledFiles;
+    @JsProperty JsArray<JsPropertyMap<Object>> errors;
+    @JsProperty JsArray<JsPropertyMap<Object>> warnings;
   }
 
   /** Reliably returns a string array from the flags/key combo. */
@@ -244,37 +245,23 @@ public final class JsRunnerMain {
     return [value];
   }-*/;
 
-  /** Wraps a generic JS object used as a map. */
-  private static final class JsMap extends JavaScriptObject {
-    protected JsMap() {}
-
-    /** @return This {@code JsMap} as a {@link Map}. */
-    ImmutableMap<String, Object> asMap() {
-      ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-      for (String key : keys(this)) {
-        builder.put(key, get(key));
-      }
-      return builder.build();
-    }
-
-    /**
-     * Validates that the values of this {@code JsMap} are primitives: either number, string or
-     * boolean. Note that {@code typeof null} is object.
-     */
-    private native void validatePrimitiveTypes() /*-{
-      var valid = {'number': '', 'string': '', 'boolean': ''};
-      Object.keys(this).forEach(function(key) {
-        var type = typeof this[key];
-        if (!(type in valid)) {
+  /**
+   * Validates that the values of this {@code JsMap} are primitives: either number, string or
+   * boolean. Note that {@code typeof null} is object.
+   */
+  private static native void validatePrimitiveTypes(JsPropertyMap<Object> jsmap) /*-{
+    for(var key in jsmap) {
+      var type = typeof jsmap[key];
+      switch (type) {
+        case 'number':
+        case 'boolean':
+        case 'string':
+          continue;
+        default:
           throw new TypeError('Type of define `' + key + '` unsupported: ' + type);
-        }
-      }, this);
-    }-*/;
-
-    private native Object get(String key) /*-{
-      return this[key];
-    }-*/;
-  }
+     }
+    }
+  }-*/;
 
   /**
    * @param jsFilePaths Array of file paths. If running under NodeJS, they will be loaded via the
@@ -298,27 +285,23 @@ public final class JsRunnerMain {
     return jsFiles;
   }-*/;
 
-  @JsMethod(name = "keys", namespace = "Object")
-  private static native String[] keys(Object o);
-
-  private static native JavaScriptObject createError(
+  private static native JsPropertyMap<Object> createError(
       String file, String description, String type, int lineNo, int charNo) /*-{
     return {file: file, description: description, type: type, lineNo: lineNo, charNo: charNo};
   }-*/;
 
   /** Convert a list of {@link JSError} instances to a JS array containing plain objects. */
-  private static JavaScriptObject[] toNativeErrorArray(List<JSError> errors) {
-    JavaScriptObject[] out = new JavaScriptObject[errors.size()];
-    for (int i = 0; i < errors.size(); ++i) {
-      JSError error = errors.get(i);
+  private static JsArray<JsPropertyMap<Object>> toNativeErrorArray(List<JSError> errors) {
+    JsArray<JsPropertyMap<Object>> out = new JsArray<>();
+    for (JSError error : errors) {
       DiagnosticType type = error.getType();
-      out[i] =
+      out.push(
           createError(
               error.getSourceName(),
               error.getDescription(),
               type != null ? type.key : null,
               error.getLineNumber(),
-              error.getCharno());
+              error.getCharno()));
     }
     return out;
   }
@@ -326,7 +309,7 @@ public final class JsRunnerMain {
   /** Generates the output code, taking into account the passed {@code flags}. */
   private static ChunkOutput writeChunkOutput(
       Compiler compiler, Flags flags, List<JSModule> chunks) {
-    ArrayList<File> outputFiles = new ArrayList<>();
+    JsArray<File> outputFiles = new JsArray<>();
     ChunkOutput output = new ChunkOutput();
 
     Map<String, String> parsedModuleWrappers =
@@ -390,16 +373,16 @@ public final class JsRunnerMain {
         }
         file.sourceMap = b.toString();
       }
-      outputFiles.add(file);
+      outputFiles.push(file);
     }
 
-    output.compiledFiles = outputFiles.toArray(new File[0]);
+    output.compiledFiles = outputFiles;
     return output;
   }
 
   /** Generates the output code, taking into account the passed {@code flags}. */
   private static ChunkOutput writeOutput(Compiler compiler, Flags flags) {
-    ArrayList<File> outputFiles = new ArrayList<>();
+    JsArray<File> outputFiles = new JsArray<>();
     ChunkOutput output = new ChunkOutput();
 
     File file = new File();
@@ -442,8 +425,8 @@ public final class JsRunnerMain {
     }
 
     file.src = prefix + code + postfix;
-    outputFiles.add(file);
-    output.compiledFiles = outputFiles.toArray(new File[0]);
+    outputFiles.push(file);
+    output.compiledFiles = outputFiles;
     output.compiledCode = file.src;
     output.sourceMap = file.sourceMap;
     return output;
@@ -656,8 +639,8 @@ public final class JsRunnerMain {
     if (flags.defines != null) {
       // CompilerOptions also validates types, but uses Preconditions and therefore won't generate
       // a useful exception.
-      flags.defines.validatePrimitiveTypes();
-      options.setDefineReplacements(flags.defines.asMap());
+      validatePrimitiveTypes(flags.defines);
+      options.setDefineReplacements(toMap(flags.defines));
     }
 
     DependencyMode dependencyMode = null;
@@ -731,6 +714,15 @@ public final class JsRunnerMain {
       }
     }
     return out;
+  }
+
+  private static ImmutableMap<String, Object> toMap(JsPropertyMap<Object> jsmap) {
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+    jsmap.forEach(
+        (k) -> {
+          builder.put(k, jsmap.get(k));
+        });
+    return builder.build();
   }
 
   private static ImmutableMap<String, SourceMapInput> buildSourceMaps(
