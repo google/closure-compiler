@@ -56,8 +56,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import elemental2.core.JsArray;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,9 +65,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jsinterop.annotations.JsMethod;
+import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsPackage;
-import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
+import jsinterop.base.Any;
+import jsinterop.base.Js;
 import jsinterop.base.JsPropertyMap;
 
 /** Runner for the GWT-compiled JSCompiler. */
@@ -85,8 +85,11 @@ public final class JsRunnerMain {
 
   private static final String EXTERNS_PREFIX = "externs/";
 
-  @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private static class Flags {
+  @JsType(
+      isNative = true,
+      name = "com_google_javascript_jscomp_gwt_client_JsRunnerMain$Flags",
+      namespace = JsPackage.GLOBAL)
+  abstract static class Flags {
     boolean angularPass;
     boolean applyInputSourceMaps;
     boolean assumeFunctionWrapper;
@@ -142,6 +145,11 @@ public final class JsRunnerMain {
     // These flags do not match the Java compiler JAR.
     @Deprecated File[] jsCode;
     JsPropertyMap<Object> defines;
+
+    @JsOverlay
+    static Flags create() {
+      return Js.uncheckedCast(JsPropertyMap.of());
+    }
   }
 
   /**
@@ -158,7 +166,7 @@ public final class JsRunnerMain {
     if (defaultFlags != null) {
       return defaultFlags;
     }
-    defaultFlags = new Flags();
+    defaultFlags = Flags.create();
     defaultFlags.angularPass = false;
     defaultFlags.applyInputSourceMaps = true;
     defaultFlags.assumeFunctionWrapper = false;
@@ -217,51 +225,69 @@ public final class JsRunnerMain {
   }
 
   /** Properties here should match the AbstractCommandLineRunner.JsonFileSpec */
-  @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private static class File {
-    @JsProperty String path;
-    @JsProperty String src;
-    @JsProperty String sourceMap;
-    @JsProperty String webpackId;
+  @JsType(
+      isNative = true,
+      name = "com_google_javascript_jscomp_gwt_client_JsRunnerMain$File",
+      namespace = JsPackage.GLOBAL)
+  abstract static class File {
+    String path;
+    String src;
+    String sourceMap;
+    String webpackId;
+
+    @JsOverlay
+    static File create() {
+      return Js.uncheckedCast(JsPropertyMap.of());
+    }
   }
 
-  @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
-  private static class ChunkOutput {
-    @JsProperty @Deprecated String compiledCode;
-    @JsProperty @Deprecated String sourceMap;
-    @JsProperty JsArray<File> compiledFiles;
-    @JsProperty JsArray<JsPropertyMap<Object>> errors;
-    @JsProperty JsArray<JsPropertyMap<Object>> warnings;
+  @JsType(
+      isNative = true,
+      name = "com_google_javascript_jscomp_gwt_client_JsRunnerMain$ChunkOutput",
+      namespace = JsPackage.GLOBAL)
+  abstract static class ChunkOutput {
+    @Deprecated String compiledCode;
+    @Deprecated String sourceMap;
+    JsArray<File> compiledFiles;
+    JsArray<JsPropertyMap<Object>> errors;
+    JsArray<JsPropertyMap<Object>> warnings;
+
+    @JsOverlay
+    static ChunkOutput create() {
+      return Js.uncheckedCast(JsPropertyMap.of());
+    }
   }
 
   /** Reliably returns a string array from the flags/key combo. */
-  private static native String[] getStringArray(Flags flags, String key) /*-{
-    var value = flags[key];
+  @JsMethod
+  private static String[] toStringArray(Object value) {
     if (value == null) {
-      return [];
-    } else if (Array.isArray(value)) {
-      return value;
+      return new String[0];
+    } else if (value instanceof Any[]) {
+      return Js.uncheckedCast(value);
     }
-    return [value];
-  }-*/;
+    return new String[] {Js.uncheckedCast(value)};
+  }
 
   /**
    * Validates that the values of this {@code JsMap} are primitives: either number, string or
    * boolean. Note that {@code typeof null} is object.
    */
-  private static native void validatePrimitiveTypes(JsPropertyMap<Object> jsmap) /*-{
-    for(var key in jsmap) {
-      var type = typeof jsmap[key];
-      switch (type) {
-        case 'number':
-        case 'boolean':
-        case 'string':
-          continue;
-        default:
-          throw new TypeError('Type of define `' + key + '` unsupported: ' + type);
-     }
-    }
-  }-*/;
+  private static void validatePrimitiveTypes(JsPropertyMap<Object> jsmap) {
+    jsmap.forEach(
+        (key) -> {
+          String type = Js.typeof(jsmap.get(key));
+          switch (type) {
+            case "number":
+            case "boolean":
+            case "string":
+              return;
+            default:
+              throw new IllegalArgumentException(
+                  "Type of define `" + key + "` unsupported: " + type);
+          }
+        });
+  }
 
   /**
    * @param jsFilePaths Array of file paths. If running under NodeJS, they will be loaded via the
@@ -269,7 +295,8 @@ public final class JsRunnerMain {
    * @return Array of File objects. If called without running under node, return null to indicate
    *     failure.
    */
-  private static native File[] getJsFiles(String[] jsFilePaths) /*-{
+  @JsMethod
+  private static native File[] filesFromPaths(String[] jsFilePaths) /*-{
     if (!(typeof process === 'object' && process.version)) {
       return null;
     }
@@ -285,10 +312,16 @@ public final class JsRunnerMain {
     return jsFiles;
   }-*/;
 
-  private static native JsPropertyMap<Object> createError(
-      String file, String description, String type, int lineNo, int charNo) /*-{
-    return {file: file, description: description, type: type, lineNo: lineNo, charNo: charNo};
-  }-*/;
+  private static JsPropertyMap<Object> createError(
+      String file, String description, String type, int lineNo, int charNo) {
+    JsPropertyMap<Object> result = JsPropertyMap.of();
+    result.set("file", file);
+    result.set("description", description);
+    result.set("type", type);
+    result.set("lineNo", lineNo);
+    result.set("charNo", charNo);
+    return result;
+  }
 
   /** Convert a list of {@link JSError} instances to a JS array containing plain objects. */
   private static JsArray<JsPropertyMap<Object>> toNativeErrorArray(List<JSError> errors) {
@@ -310,17 +343,17 @@ public final class JsRunnerMain {
   private static ChunkOutput writeChunkOutput(
       Compiler compiler, Flags flags, List<JSModule> chunks) {
     JsArray<File> outputFiles = new JsArray<>();
-    ChunkOutput output = new ChunkOutput();
+    ChunkOutput output = ChunkOutput.create();
 
     Map<String, String> parsedModuleWrappers =
-        parseModuleWrappers(Arrays.asList(getStringArray(flags, "chunkWrapper")), chunks);
+        parseModuleWrappers(Arrays.asList(toStringArray(flags.chunkWrapper)), chunks);
 
     for (JSModule c : chunks) {
       if (flags.createSourceMap != null && !flags.createSourceMap.equals(false)) {
         compiler.resetAndIntitializeSourceMap();
       }
 
-      File file = new File();
+      File file = File.create();
       file.path = flags.chunkOutputPathPrefix + c.getName() + ".js";
 
       String code = compiler.toSource(c);
@@ -383,9 +416,9 @@ public final class JsRunnerMain {
   /** Generates the output code, taking into account the passed {@code flags}. */
   private static ChunkOutput writeOutput(Compiler compiler, Flags flags) {
     JsArray<File> outputFiles = new JsArray<>();
-    ChunkOutput output = new ChunkOutput();
+    ChunkOutput output = ChunkOutput.create();
 
-    File file = new File();
+    File file = File.create();
     file.path = flags.jsOutputFile;
 
     String code = compiler.toSource();
@@ -550,7 +583,7 @@ public final class JsRunnerMain {
     warningLevel.setOptionsForWarningLevel(options);
 
     if (flags.formatting != null) {
-      List<String> formattingOptions = Arrays.asList(getStringArray(flags, "formatting"));
+      List<String> formattingOptions = Arrays.asList(toStringArray(flags.formatting));
       for (String formattingOption : formattingOptions) {
         switch (formattingOption) {
           case "PRETTY_PRINT":
@@ -619,21 +652,19 @@ public final class JsRunnerMain {
 
     // order matches setRunOptions in AbstractCommandLineRunner.java
 
-    applyWarnings(getStringArray(flags, "jscompOff"), options, diagnosticGroups, CheckLevel.OFF);
+    applyWarnings(toStringArray(flags.jscompOff), options, diagnosticGroups, CheckLevel.OFF);
     applyWarnings(
-        getStringArray(flags, "jscompWarning"), options, diagnosticGroups, CheckLevel.WARNING);
-    applyWarnings(
-        getStringArray(flags, "jscompError"), options, diagnosticGroups, CheckLevel.ERROR);
+        toStringArray(flags.jscompWarning), options, diagnosticGroups, CheckLevel.WARNING);
+    applyWarnings(toStringArray(flags.jscompError), options, diagnosticGroups, CheckLevel.ERROR);
 
     if (flags.hideWarningsFor != null) {
       options.addWarningsGuard(
           new ShowByPathWarningsGuard(
-              getStringArray(flags, "hideWarningsFor"), ShowByPathWarningsGuard.ShowType.EXCLUDE));
+              toStringArray(flags.hideWarningsFor), ShowByPathWarningsGuard.ShowType.EXCLUDE));
     }
 
     if (flags.define != null) {
-      createDefineOrTweakReplacements(
-          Arrays.asList(getStringArray(flags, "define")), options, false);
+      createDefineOrTweakReplacements(Arrays.asList(toStringArray(flags.define)), options, false);
     }
 
     if (flags.defines != null) {
@@ -647,7 +678,7 @@ public final class JsRunnerMain {
     if (flags.dependencyMode != null) {
       dependencyMode = DependencyMode.valueOf(Ascii.toUpperCase(flags.dependencyMode));
     }
-    List<String> entryPoints = Arrays.asList(getStringArray(flags, "entryPoint"));
+    List<String> entryPoints = Arrays.asList(toStringArray(flags.entryPoint));
     DependencyOptions dependencyOptions =
         DependencyOptions.fromFlags(
             dependencyMode,
@@ -675,7 +706,7 @@ public final class JsRunnerMain {
 
     options.setProcessCommonJSModules(flags.processCommonJsModules);
 
-    options.setModuleRoots(Arrays.asList(getStringArray(flags, "jsModuleRoot")));
+    options.setModuleRoots(Arrays.asList(toStringArray(flags.jsModuleRoot)));
   }
 
   /**
@@ -684,22 +715,18 @@ public final class JsRunnerMain {
    * @return Array of extern File objects. If an array of strings is passed without running under
    *     node, return null to indicate failure.
    */
-  private static native File[] fromExternsFlag(Object[] externs) /*-{
-    var externFiles = [];
-    for (var i = 0; i < externs.length; i++) {
-      if (externs[i].path || externs[i].src) {
-        externFiles.push(externs[i]);
-      } else if (typeof process === 'object' && process.version) {
-        externFiles.push({
-          path: externs[i],
-          src: require('fs').readFileSync(externs[i], 'utf8')
-        });
-      } else {
-        return null;
-      }
+  private static File[] filesFromFilesOrPaths(Object[] externs) {
+    if (externs.length == 0) {
+      return new File[0];
     }
-    return externFiles;
-  }-*/;
+
+    File first = Js.uncheckedCast(externs[0]);
+    if (first.path != null && first.src != null) {
+      return Js.uncheckedCast(Arrays.copyOf(externs, externs.length));
+    }
+
+    return filesFromPaths(Js.uncheckedCast(externs));
+  }
 
   private static List<SourceFile> fromFileArray(File[] src, String unknownPrefix) {
     List<SourceFile> out = new ArrayList<>();
@@ -749,31 +776,38 @@ public final class JsRunnerMain {
    * Updates the destination flags (user input) with source flags (the defaults). Returns a list of
    * flags that are on the destination, but not on the source.
    */
-  private static native String[] updateFlags(Flags dst, Flags src) /*-{
-    for (var k in src) {
-      if (!(k in dst)) {
-        dst[k] = src[k];
-      }
-    }
-    var unhandled = [];
-    for (var k in dst) {
-      if (!(k in src)) {
-        unhandled.push(k);
-      }
-    }
+  private static JsArray<String> updateFlags(Flags dst, Flags src) {
+    JsPropertyMap<Object> jssrc = Js.asPropertyMap(src);
+    JsPropertyMap<Object> jsdst = Js.asPropertyMap(dst);
+
+    jssrc.forEach(
+        (k) -> {
+          if (!jsdst.has(k)) {
+            jsdst.set(k, jssrc.get(k));
+          }
+        });
+
+    JsArray<String> unhandled = new JsArray<>();
+    jsdst.forEach(
+        (k) -> {
+          if (!jssrc.has(k)) {
+            unhandled.push(k);
+          }
+        });
+
     return unhandled;
-  }-*/;
+  }
 
   /** Public compiler call. Exposed in {@link #exportCompile}. */
-  @JsMethod(namespace = "jscomp")
+  @JsMethod
   public static ChunkOutput compile(Flags flags, File[] inputs) throws IOException {
     // The PhaseOptimizer logs skipped pass warnings that interfere with capturing
     // output and errors in the open source runners.
     phaseLogger.setLevel(Level.OFF);
 
-    String[] unhandled = updateFlags(flags, getDefaultFlags());
-    if (unhandled.length > 0) {
-      throw new RuntimeException("Unhandled flag: " + unhandled[0]);
+    JsArray<String> unhandled = updateFlags(flags, getDefaultFlags());
+    if (unhandled.getLength() > 0) {
+      throw new RuntimeException("Unhandled flag: " + unhandled.getAt(0));
     }
 
     List<SourceFile> jsCode = null;
@@ -809,7 +843,7 @@ public final class JsRunnerMain {
     }
 
     if (flags.js != null) {
-      File[] jsFiles = getJsFiles(getStringArray(flags, "js"));
+      File[] jsFiles = filesFromPaths(toStringArray(flags.js));
       if (jsFiles == null) {
         throw new RuntimeException(
             "Can only load files from the filesystem when running in NodeJS.");
@@ -825,7 +859,7 @@ public final class JsRunnerMain {
 
     List<SourceFile> externs = new ArrayList<>();
     if (flags.externs != null) {
-      File[] externFiles = fromExternsFlag(getStringArray(flags, "externs"));
+      File[] externFiles = filesFromFilesOrPaths(toStringArray(flags.externs));
       if (externFiles == null) {
         throw new RuntimeException(
             "Can only load files from the filesystem when running in NodeJS.");
@@ -869,6 +903,7 @@ public final class JsRunnerMain {
    * <p>This will be placed on {@code module.exports}, {@code self.compile} or {@code
    * window.compile}.
    */
+  @SuppressWarnings({"unusable-by-js"})
   public static native void exportCompile() /*-{
     var fn = $entry(@com.google.javascript.jscomp.gwt.client.JsRunnerMain::compile(*));
     if (typeof module !== 'undefined' && module.exports) {
@@ -896,65 +931,6 @@ public final class JsRunnerMain {
 
     @Override
     public void printSummary() {}
-  }
-
-  // TODO(johnlenz): remove this once GWT has a proper PrintStream implementation
-  private static class NodePrintStream extends PrintStream {
-    private String line = "";
-
-    NodePrintStream() {
-      super((OutputStream) null);
-    }
-
-    @Override
-    public void println(String s) {
-      print(s + "\n");
-    }
-
-    @Override
-    public void print(String s) {
-      if (useStdErr()) {
-        writeToStdErr(s);
-      } else {
-        writeFinishedLinesToConsole(s);
-      }
-    }
-
-    private void writeFinishedLinesToConsole(String s) {
-      line = line + s;
-      int start = 0;
-      int end = 0;
-      while ((end = line.indexOf('\n', start)) != -1) {
-        writeToConsole(line.substring(start, end));
-        start = end + 1;
-      }
-      line = line.substring(start);
-    }
-
-    private static native boolean useStdErr() /*-{
-      return !!(typeof process != "undefined" && process.stderr);
-    }-*/;
-
-    private native boolean writeToStdErr(String s) /*-{
-      process.stderr.write(s);
-    }-*/;
-
-    // NOTE: console methods always add a newline following the text.
-    private native void writeToConsole(String s) /*-{
-       console.log(s);
-    }-*/;
-
-    @Override
-    public void close() {}
-
-    @Override
-    public void flush() {}
-
-    @Override
-    public void write(byte[] buffer, int offset, int length) {}
-
-    @Override
-    public void write(int oneByte) {}
   }
 
   private JsRunnerMain() {}
