@@ -16,6 +16,8 @@
 
 /**
  * @fileoverview Definitions for node's "events" module.
+ * @externs
+ *
  * @see http://nodejs.org/api/events.html
  * @see https://github.com/joyent/node/blob/master/lib/events.js
  */
@@ -96,5 +98,3 @@ events.usingDomains;
  * @return {void}
  */
 events.EventEmitter.listenerCount;
-
-module.exports = events;

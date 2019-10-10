@@ -17,6 +17,8 @@
 /**
  * @fileoverview NodeJS built-ins.
  * @externs
+ * @suppress {duplicate,checkTypes}
+ *
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
 
@@ -212,6 +214,12 @@ Process.prototype.version;
  * @see http://nodejs.org/api/process.html#process_process_versions
  */
 Process.prototype.versions;
+
+/**
+ * @type {!stream.WritableStream}
+ * @see http://nodejs.org/api/process.html#process_process_stderr
+ */
+Process.prototype.stderr;
 
 /** @const {Process} */
 var process;
