@@ -632,7 +632,7 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void googForwardDeclareForGlobalInGoogModuleIsError() {
+  public void googForwardDeclareForGlobalInGoogModuleIsOk() {
     moduleType = ModuleType.GOOG_MODULE;
 
     test(
@@ -640,12 +640,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
             makeTestFile(
                 lines(
                     "goog.module('test');", //
-                    "goog.forwardDeclare('MyGlobal');"))),
-        error(MISSING_MODULE_OR_PROVIDE));
+                    "goog.forwardDeclare('MyGlobal');"))));
   }
 
   @Test
-  public void googForwardDeclarForGlobalInEsModuleIsError() {
+  public void googForwardDeclarForGlobalInEsModuleIsOk() {
     moduleType = ModuleType.ES6_MODULE;
 
     test(
@@ -653,8 +652,7 @@ public class CheckClosureImportsTest extends CompilerTestCase {
             makeTestFile(
                 lines(
                     "export {};", //
-                    "goog.forwardDeclare('MyGlobal');"))),
-        error(MISSING_MODULE_OR_PROVIDE));
+                    "goog.forwardDeclare('MyGlobal');"))));
   }
 
   @Test

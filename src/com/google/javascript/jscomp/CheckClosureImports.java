@@ -43,6 +43,9 @@ import javax.annotation.Nullable;
 /**
  * Checks all goog.requires, goog.module.gets, goog.forwardDeclares, and goog.requireTypes in all
  * files. This pass is a guard to {@link RewriteClosureImports}.
+ *
+ * <p>Checks that these dependency calls both contain a valid Closure namespace and are in an
+ * acceptable location (e.g. a goog.require cannot be within a function).
  */
 final class CheckClosureImports implements HotSwapCompilerPass {
 
@@ -187,6 +190,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
   private final ImmutableSet<ModuleType> moduleTypesToCheck;
   private final Checker checker;
   private final Set<String> namespacesSeen;
+  private boolean inHotSwap = false;
 
   /**
    * @param moduleTypesToCheck A temporary set of module types to check goog.requires in. As this
@@ -211,7 +215,9 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       return;
     }
 
+    inHotSwap = true;
     NodeTraversal.traverse(compiler, scriptRoot.getParent(), checker);
+    inHotSwap = false;
   }
 
   @Override
@@ -453,13 +459,15 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       ModuleMetadata requiredModule = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
       if (requiredModule == null) {
-        if (importType == ClosureImport.FORWARD_DECLARE && isNonModule) {
-          // Ok to forwardDeclare any global in a script... sadly. This is some bad legacy behavior
-          // and people ought to use externs.
+        if (importType == ClosureImport.FORWARD_DECLARE) {
+          // Ok to forwardDeclare any global, sadly. This is some bad legacy behavior and people
+          // ought to use externs.
           return;
         }
         t.report(call, MISSING_MODULE_OR_PROVIDE, namespace);
-      } else if (importType.mustBeOrdered() && !namespacesSeen.contains(namespace)) {
+      } else if (!inHotSwap && importType.mustBeOrdered() && !namespacesSeen.contains(namespace)) {
+        // Since hot swap passes run one file at a time, namespacesSeen will not include
+        // any provides earlier than this current file.
         t.report(call, LATE_PROVIDE_ERROR, namespace);
       }
 
