@@ -1873,6 +1873,7 @@ var MediaConstraints;
 /**
  * @interface
  * @extends {EventTarget}
+ * @see https://w3c.github.io/webrtc-pc/#dom-rtcdatachannel
  */
 function RTCDataChannel() {}
 
@@ -1901,6 +1902,11 @@ RTCDataChannel.prototype.readyState;
 RTCDataChannel.prototype.bufferedAmount;
 
 /**
+ * @type {number}
+ */
+RTCDataChannel.prototype.bufferedAmountLowThreshold;
+
+/**
  * @type {?function(!Event)}
  */
 RTCDataChannel.prototype.onopen;
@@ -1921,6 +1927,11 @@ RTCDataChannel.prototype.close = function() {};
  * @type {?function(!MessageEvent<*>)}
  */
 RTCDataChannel.prototype.onmessage;
+
+/**
+ * @type {?function(!Event)}
+ */
+RTCDataChannel.prototype.onbufferedamountlow;
 
 /**
  * @type {string}
