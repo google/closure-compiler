@@ -2705,6 +2705,29 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSame(js);
   }
 
+  // TODO(b/142431852): Delete this test as obsolete.
+  @Test
+  public void testDontCrashWhenConstructingPrimitve() {
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.abc = 123;",
+            "}",
+            "/**",
+            " * @template T",
+            " * @param {T} value",
+            " * @param {function(new:T)=} ctor",
+            " */",
+            "function f(value, ctor) {",
+            "  if (ctor.abc) { return ctor.abc; }",
+            "}",
+            // Bind `T` to `number` at this invocation.
+            "f(0);");
+
+    testSame(js);
+  }
+
   @Test
   public void testDontBackOffForCastsFromObject() {
     String js = lines(
