@@ -413,11 +413,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void initWarningsGuard(WarningsGuard warningsGuard) {
-    this.warningsGuard =
-        new ComposeWarningsGuard(
-            new J2clSuppressWarningsGuard(),
-            new SuppressDocWarningsGuard(this, DiagnosticGroups.getRegisteredGroups()),
-            warningsGuard);
+    ImmutableList.Builder<WarningsGuard> guards = ImmutableList.builder();
+    guards
+        .add(new J2clSuppressWarningsGuard())
+        .add(new SuppressDocWarningsGuard(this, DiagnosticGroups.getRegisteredGroups()))
+        .add(warningsGuard);
+    if (this.options != null && this.options.shouldSkipUnsupportedPasses()) {
+      guards.add(
+          new DiagnosticGroupWarningsGuard(
+              DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.WARNING));
+    }
+
+    this.warningsGuard = new ComposeWarningsGuard(guards.build());
   }
 
   /** When the CompilerOptions and its WarningsGuard overlap, reconcile any discrepancies. */

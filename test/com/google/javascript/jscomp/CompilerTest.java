@@ -999,6 +999,24 @@ public final class CompilerTest {
   }
 
   @Test
+  public void testErrorLeveling_forFeaturesNotSupportedByPass_controlledByOptions() {
+    JSError error = JSError.make(PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS, "");
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+
+    compiler.initOptions(options);
+    assertThat(compiler.getErrorLevel(error)).isNull();
+
+    options.setSkipUnsupportedPasses(false);
+    compiler.initOptions(options);
+    assertThat(compiler.getErrorLevel(error)).isNull();
+
+    options.setSkipUnsupportedPasses(true);
+    compiler.initOptions(options);
+    assertThat(compiler.getErrorLevel(error)).isEqualTo(CheckLevel.WARNING);
+  }
+
+  @Test
   public void testExportSymbolReservesNamesForRenameVars() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
