@@ -15,61 +15,44 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.emptyToNull;
+
+import com.google.auto.value.AutoValue;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 import javax.annotation.Nullable;
 
-/**
- * Compile error description
- *
- */
-public final class JSError implements Serializable {
-  /** A type of the error */
-  private final DiagnosticType type;
+/** Compile error description. */
+@AutoValue
+public abstract class JSError implements Serializable {
 
-  /** Description of the error */
-  private final String description;
+  /** A type of the error. */
+  public abstract DiagnosticType getType();
 
-  public String getDescription() {
-    return description;
-  }
+  /** Description of the error. */
+  public abstract String getDescription();
 
   /** Name of the source */
-  private final String sourceName;
+  @Nullable
+  public abstract String getSourceName();
 
-  public String getSourceName() {
-    return sourceName;
-  }
+  /** One-indexed line number of the error location. */
+  public abstract int getLineno();
+
+  /** Zero-indexed character number of the error location. */
+  public abstract int getCharno();
 
   /** Node where the warning occurred. */
-  private final Node node;
+  @Nullable
+  public abstract Node getNode();
 
-  public Node getNode() {
-    return node;
-  }
+  /** The default level, before any of the {@code WarningsGuard}s are applied. */
+  public abstract CheckLevel getDefaultLevel();
 
-  /** Line number of the source */
-  private final int lineNumber;
-
-  private final CheckLevel defaultLevel;
-
-  // character number
-  private final int charno;
-
-  //
-  // JSError.make - static factory methods for creating JSError objects
-  //
-  //  The general form of the arguments is
-  //
-  //    [source location] [level] DiagnosticType [argument ...]
-  //
-  //  This order echos a typical command line diagnostic.  Source location
-  //  arguments are arranged to be sources of information in the order
-  //  file-line-column.
-  //
-  //  If the level is not given, it is taken from the level of the
-  //  DiagnosticType.
-
+  private static final int DEFAULT_LINENO = -1;
+  private static final int DEFAULT_CHARNO = -1;
+  private static final String DEFAULT_SOURCENAME = null;
+  private static final Node DEFAULT_NODE = null;
 
   /**
    * Creates a JSError with no source information
@@ -78,7 +61,14 @@ public final class JSError implements Serializable {
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(DiagnosticType type, String... arguments) {
-    return new JSError(null, null, -1, -1, type, null, arguments);
+    return new AutoValue_JSError(
+        type,
+        type.format.format(arguments),
+        DEFAULT_SOURCENAME,
+        DEFAULT_LINENO,
+        DEFAULT_CHARNO,
+        DEFAULT_NODE,
+        type.level);
   }
 
   /**
@@ -89,7 +79,14 @@ public final class JSError implements Serializable {
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(CheckLevel level, DiagnosticType type, String... arguments) {
-    return new JSError(null, null, -1, -1, type, level, arguments);
+    return new AutoValue_JSError(
+        type,
+        type.format.format(arguments),
+        DEFAULT_SOURCENAME,
+        DEFAULT_LINENO,
+        DEFAULT_CHARNO,
+        DEFAULT_NODE,
+        level);
   }
 
   /**
@@ -101,9 +98,10 @@ public final class JSError implements Serializable {
    * @param type The DiagnosticType
    * @param arguments Arguments to be incorporated into the message
    */
-  public static JSError make(String sourceName, int lineno, int charno,
-                             DiagnosticType type, String... arguments) {
-    return new JSError(sourceName, null, lineno, charno, type, null, arguments);
+  public static JSError make(
+      String sourceName, int lineno, int charno, DiagnosticType type, String... arguments) {
+    return new AutoValue_JSError(
+        type, type.format.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, type.level);
   }
 
   /**
@@ -115,10 +113,15 @@ public final class JSError implements Serializable {
    * @param type The DiagnosticType
    * @param arguments Arguments to be incorporated into the message
    */
-  public static JSError make(String sourceName, int lineno, int charno,
-      CheckLevel level, DiagnosticType type, String... arguments) {
-    return new JSError(
-        sourceName, null, lineno, charno, type, level, arguments);
+  public static JSError make(
+      String sourceName,
+      int lineno,
+      int charno,
+      CheckLevel level,
+      DiagnosticType type,
+      String... arguments) {
+    return new AutoValue_JSError(
+        type, type.format.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, level);
   }
 
   /**
@@ -129,49 +132,47 @@ public final class JSError implements Serializable {
    * @param arguments Arguments to be incorporated into the message
    */
   public static JSError make(Node n, DiagnosticType type, String... arguments) {
-    return new JSError(n.getSourceFileName(), n, type, arguments);
+    return new AutoValue_JSError(
+        type,
+        type.format.format(arguments),
+        n.getSourceFileName(),
+        n.getLineno(),
+        n.getCharno(),
+        n,
+        type.level);
   }
 
+  /** Creates a JSError from a file and Node position. */
   public static JSError make(Node n, CheckLevel level, DiagnosticType type, String... arguments) {
-    return new JSError(
-        n.getSourceFileName(), n, n.getLineno(), n.getCharno(), type, level, arguments);
+    return new AutoValue_JSError(
+        type,
+        type.format.format(arguments),
+        n.getSourceFileName(),
+        n.getLineno(),
+        n.getCharno(),
+        n,
+        level);
   }
 
-  //
-  //  JSError constructors
-  //
+  /** @return the default rendering of an error as text. */
+  @Override
+  public final String toString() {
+    String sourceName =
+        emptyToNull(this.getSourceName()) != null ? this.getSourceName() : "(unknown source)";
+    String lineno =
+        this.getLineno() != DEFAULT_LINENO ? String.valueOf(this.getLineno()) : "(unknown line)";
+    String charno =
+        this.getCharno() != DEFAULT_CHARNO ? String.valueOf(this.getCharno()) : "(unknown column)";
 
-  /**
-   * Creates a JSError at a CheckLevel for a source file location.
-   * Private to avoid any entanglement with code outside of the compiler.
-   */
-  private JSError(
-      String sourceName, @Nullable Node node, int lineno, int charno,
-      DiagnosticType type, CheckLevel level, String... arguments) {
-    this.type = type;
-    this.node = node;
-    this.description = type.format.format(arguments);
-    this.lineNumber = lineno;
-    this.charno = charno;
-    this.sourceName = sourceName;
-    this.defaultLevel = level == null ? type.level : level;
-  }
-
-  /**
-   * Creates a JSError for a source file location.  Private to avoid
-   * any entanglement with code outside of the compiler.
-   */
-  private JSError(String sourceName, @Nullable Node node,
-                  DiagnosticType type, String... arguments) {
-    this(sourceName,
-         node,
-         (node != null) ? node.getLineno() : -1,
-         (node != null) ? node.getCharno() : -1,
-         type, null, arguments);
-  }
-
-  public DiagnosticType getType() {
-    return type;
+    return this.getType().key
+        + ". "
+        + this.getDescription()
+        + " at "
+        + sourceName
+        + " line "
+        + lineno
+        + " : "
+        + charno;
   }
 
   /**
@@ -179,7 +180,7 @@ public final class JSError implements Serializable {
    *
    * @return the formatted message or {@code null}
    */
-  public String format(CheckLevel level, MessageFormatter formatter) {
+  public final String format(CheckLevel level, MessageFormatter formatter) {
     switch (level) {
       case ERROR:
         return formatter.formatError(this);
@@ -192,92 +193,22 @@ public final class JSError implements Serializable {
     }
   }
 
-  @Override
-  public String toString() {
-    // TODO(user): remove custom toString.
-    return type.key + ". " + description + " at " +
-      (sourceName != null && sourceName.length() > 0 ?
-       sourceName : "(unknown source)") + " line " +
-      (lineNumber != -1 ? String.valueOf(lineNumber) : "(unknown line)") +
-      " : " + (charno != -1 ? String.valueOf(charno) : "(unknown column)");
+  /** @return the offset of the region the Error applies to, or -1 if the offset is unknown. */
+  public final int getNodeSourceOffset() {
+    return this.getNode() != null ? this.getNode().getSourceOffset() : -1;
   }
 
-  /**
-   * Get the character number.
-   */
-  public int getCharno() {
-    return charno;
+  /** @return the length of the region the Error applies to, or 0 if the length is unknown. */
+  public final int getNodeLength() {
+    return this.getNode() != null ? this.getNode().getLength() : 0;
   }
 
-  /**
-   * Get the line number. One-based.
-   */
-  public int getLineNumber() {
-    return lineNumber;
+  /** Alias for {@link #getLineno()}. */
+  public final int getLineNumber() {
+    return this.getLineno();
   }
 
-  /**
-   * @return the offset of the region the Error applies to, or -1 if the offset
-   *         is unknown.
-   */
-  public int getNodeSourceOffset() {
-    return node != null ? node.getSourceOffset() : -1;
-  }
-
-  /**
-   * @return the length of the region the Error applies to, or 0 if the length
-   *         is unknown.
-   */
-  public int getNodeLength() {
-    return node != null ? node.getLength() : 0;
-  }
-
-  /** The default level, before any of the WarningsGuards are applied. */
-  public CheckLevel getDefaultLevel() {
-    return defaultLevel;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    // Generated by Intellij IDEA
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    JSError jsError = (JSError) o;
-
-    if (charno != jsError.charno) {
-      return false;
-    }
-    if (lineNumber != jsError.lineNumber) {
-      return false;
-    }
-    if (!description.equals(jsError.description)) {
-      return false;
-    }
-    if (defaultLevel != jsError.defaultLevel) {
-      return false;
-    }
-    if (sourceName != null ? !sourceName.equals(jsError.sourceName)
-        : jsError.sourceName != null) {
-      return false;
-    }
-    return type.equals(jsError.type);
-
-  }
-
-  @Override
-  public int hashCode() {
-    // Generated by Intellij IDEA
-    int result = type.hashCode();
-    result = 31 * result + description.hashCode();
-    result = 31 * result + (sourceName != null ? sourceName.hashCode() : 0);
-    result = 31 * result + lineNumber;
-    result = 31 * result + defaultLevel.hashCode();
-    result = 31 * result + charno;
-    return result;
+  JSError() {
+    // Package private.
   }
 }
