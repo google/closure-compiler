@@ -377,11 +377,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
         ProvidedName previouslyProvided = providedNames.get(ns);
         if (!previouslyProvided.isExplicitlyProvided() || previouslyProvided.isPreviouslyProvided) {
           previouslyProvided.addProvide(parent, t.getModule(), true);
-        } else {
-          String explicitSourceName = previouslyProvided.explicitNode.getSourceFileName();
-          compiler.report(
-              JSError.make(
-                  n, ProcessClosurePrimitives.DUPLICATE_NAMESPACE_ERROR, ns, explicitSourceName));
         }
       } else {
         registerAnyProvidedPrefixes(ns, parent, t.getModule());

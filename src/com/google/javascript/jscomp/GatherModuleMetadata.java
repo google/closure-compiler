@@ -426,10 +426,10 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
           case ES6_MODULE:
           case GOOG_MODULE:
           case LEGACY_GOOG_MODULE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_MODULE, namespace);
+            t.report(n, ClosurePrimitiveErrors.DUPLICATE_MODULE, namespace);
             return;
           case GOOG_PROVIDE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_NAMESPACE, namespace);
+            t.report(n, ClosurePrimitiveErrors.DUPLICATE_NAMESPACE, namespace);
             return;
           case COMMON_JS:
           case SCRIPT:

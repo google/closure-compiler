@@ -68,12 +68,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       "JSC_TOO_MANY_ARGUMENTS_ERROR",
       "method \"{0}\" called with more than one argument");
 
-  static final DiagnosticType DUPLICATE_NAMESPACE_ERROR =
-      DiagnosticType.error(
-          "JSC_DUPLICATE_NAMESPACE_ERROR",
-          "namespace \"{0}\" cannot be provided twice\n" //
-              + "Originally provided at {1}");
-
   static final DiagnosticType WEAK_NAMESPACE_TYPE = DiagnosticType.warning(
       "JSC_WEAK_NAMESPACE_TYPE",
       "Provided symbol declared with type Object. This is rarely useful. "

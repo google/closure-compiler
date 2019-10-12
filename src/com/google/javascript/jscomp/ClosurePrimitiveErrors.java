@@ -20,6 +20,12 @@ final class ClosurePrimitiveErrors {
 
   private ClosurePrimitiveErrors() {}
 
+  static final DiagnosticType DUPLICATE_MODULE =
+      DiagnosticType.error("JSC_DUPLICATE_MODULE", "Duplicate module: {0}");
+
+  static final DiagnosticType DUPLICATE_NAMESPACE =
+      DiagnosticType.error("JSC_DUPLICATE_NAMESPACE", "Duplicate namespace: {0}");
+
   static final DiagnosticType INVALID_DESTRUCTURING_FORWARD_DECLARE =
       DiagnosticType.error(
           "JSC_INVALID_DESTRUCTURING_FORWARD_DECLARE",

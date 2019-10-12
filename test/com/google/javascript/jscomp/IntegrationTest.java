@@ -34,10 +34,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -7610,5 +7612,37 @@ public final class IntegrationTest extends IntegrationTestCase {
         ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
 
     test(options, "var x; goog.module('m');", ClosureCheckModule.GOOG_MODULE_MISPLACED);
+  }
+
+  @Test
+  public void testDuplicateClosureNamespacesError() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(SourceFile.fromCode("closure_externs.js", CLOSURE_DEFS))
+            .build();
+
+    ImmutableMap<String, ModuleType> namespaces =
+        ImmutableMap.of(
+            "goog.provide('a.b.c');", ModuleType.GOOG_PROVIDE,
+            "goog.module('a.b.c');", ModuleType.GOOG_MODULE,
+            "goog.declareModuleId('a.b.c'); export {};", ModuleType.ES6_MODULE,
+            "goog.module('a.b.c'); goog.module.declareLegacyNamespace();",
+                ModuleType.LEGACY_GOOG_MODULE);
+
+    for (Map.Entry<String, ModuleType> firstNs : namespaces.entrySet()) {
+      for (Map.Entry<String, ModuleType> secondNs : namespaces.entrySet()) {
+        // Error is based on whether the namespace originally came from a module or a provide.
+        DiagnosticType expectedError =
+            firstNs.getValue().equals(ModuleType.GOOG_PROVIDE)
+                ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
+                : ClosurePrimitiveErrors.DUPLICATE_MODULE;
+
+        test(options, new String[] {firstNs.getKey(), secondNs.getKey()}, expectedError);
+      }
+    }
   }
 }

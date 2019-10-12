@@ -409,24 +409,24 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testDuplicateProvides() {
     testError(
         new String[] {"goog.provide('duplciated');", "goog.provide('duplciated');"},
-        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
   }
 
   @Test
   public void testDuplicateProvidesInSameFile() {
     testError(
         "goog.provide('duplciated');\ngoog.provide('duplciated');",
-        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
   }
 
   @Test
   public void testDuplicateProvideAndGoogModule() {
     testError(
         new String[] {"goog.provide('duplciated');", "goog.module('duplciated');"},
-        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
     testError(
         new String[] {"goog.module('duplciated');", "goog.provide('duplciated');"},
-        ClosureRewriteModule.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
@@ -435,19 +435,19 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         new String[] {
           "goog.provide('duplciated');", "export {}; goog.declareModuleId('duplciated');"
         },
-        ClosureRewriteModule.DUPLICATE_NAMESPACE);
+        ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
     testError(
         new String[] {
           "export {}; goog.declareModuleId('duplciated');", "goog.provide('duplciated');"
         },
-        ClosureRewriteModule.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
   public void testDuplicateGoogModules() {
     testError(
         new String[] {"goog.module('duplciated');", "goog.module('duplciated');"},
-        ClosureRewriteModule.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
@@ -456,12 +456,12 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         new String[] {
           "goog.module('duplciated');", "export {}; goog.declareModuleId('duplciated');"
         },
-        ClosureRewriteModule.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_MODULE);
     testError(
         new String[] {
           "export {}; goog.declareModuleId('duplciated');", "goog.module('duplciated');"
         },
-        ClosureRewriteModule.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
@@ -471,13 +471,13 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
           "export {}; goog.declareModuleId('duplciated');",
           "export {}; goog.declareModuleId('duplciated');"
         },
-        ClosureRewriteModule.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_MODULE);
     testError(
         new String[] {
           "export {}; goog.declareModuleId('duplciated');",
           "export {}; goog.declareModuleId('duplciated');"
         },
-        ClosureRewriteModule.DUPLICATE_MODULE);
+        ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test

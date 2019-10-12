@@ -122,16 +122,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_USELESS_USE_STRICT_DIRECTIVE",
           "'use strict' is unnecessary in goog.module files.");
 
-  static final DiagnosticType DUPLICATE_MODULE =
-      DiagnosticType.error(
-          "JSC_DUPLICATE_MODULE",
-          "Duplicate module: {0}");
-
-  static final DiagnosticType DUPLICATE_NAMESPACE =
-      DiagnosticType.error(
-          "JSC_DUPLICATE_NAMESPACE",
-          "Duplicate namespace: {0}");
-
   static final DiagnosticType LATE_PROVIDE_ERROR =
       DiagnosticType.error(
           "JSC_LATE_PROVIDE_ERROR",
@@ -871,14 +861,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     currentScript.legacyNamespace = legacyNamespace;
     currentScript.contentsPrefix = toModuleContentsPrefix(legacyNamespace);
 
-    // If some other script is advertising itself as a goog.module() with this same namespace.
-    if (rewriteState.containsModule(legacyNamespace)) {
-      t.report(call, DUPLICATE_MODULE, legacyNamespace);
-    }
-    if (rewriteState.providedNamespaces.contains(legacyNamespace)) {
-      t.report(call, DUPLICATE_NAMESPACE, legacyNamespace);
-    }
-
     Node scriptNode = NodeUtil.getEnclosingScript(currentScript.rootNode);
     rewriteState.scriptDescriptionsByGoogModuleNamespace.put(legacyNamespace, currentScript);
     rewriteState.legacyNamespacesByScriptNode.put(scriptNode, legacyNamespace);
@@ -907,9 +889,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     if (currentScript.isModule) {
       t.report(legacyNamespaceNode, INVALID_PROVIDE_CALL);
-    }
-    if (rewriteState.containsModule(legacyNamespace)) {
-      t.report(call, DUPLICATE_NAMESPACE, legacyNamespace);
     }
 
     Node scriptNode = NodeUtil.getEnclosingScript(call);

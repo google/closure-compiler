@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_MODULE;
-import static com.google.javascript.jscomp.ClosureRewriteModule.DUPLICATE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_DESTRUCTURING_NOT_EXPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
@@ -2082,23 +2080,15 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDuplicateModule() {
-    testError(
-        new String[] {
-            "goog.module('ns.a');",
-            "goog.module('ns.a');"},
-
-        DUPLICATE_MODULE);
+  public void testDuplicateModuleDoesntCrash() {
+    // The compiler emits a warning elsewhere for this code
+    testNoWarning(new String[] {"goog.module('ns.a');", "goog.module('ns.a');"});
   }
 
   @Test
-  public void testDuplicateNamespace() {
-    testError(
-        new String[] {
-            "goog.module('ns.a');",
-            "goog.provide('ns.a');"},
-
-        DUPLICATE_NAMESPACE);
+  public void testDuplicateNamespaceDoesntCrash() {
+    // The compiler emits a warning elsewhere for this code
+    testNoWarning(new String[] {"goog.module('ns.a');", "goog.provide('ns.a');"});
   }
 
   @Test
