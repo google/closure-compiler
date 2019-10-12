@@ -200,7 +200,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   private void replaceGoogDefines(Node n) {
     Node parent = n.getParent();
     String name = n.getSecondChild().getString();
-    JSDocInfo jsdoc = n.getJSDocInfo();
     Node value = n.getChildAtIndex(2).detach();
 
     switch (parent.getToken()) {
