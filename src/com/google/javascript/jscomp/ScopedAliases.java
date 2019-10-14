@@ -401,12 +401,6 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (t.inGlobalHoistScope()) {
         return;
       }
-      if (inGoogScopeBody()) {
-        Scope hoistedScope = t.getClosestHoistScope().untyped();
-        if (isGoogScopeFunctionBody(hoistedScope.getRootNode())) {
-          findAliases(hoistedScope);
-        }
-      }
       Node scopeMethodCall = findScopeMethodCall(t.getScopeRoot());
       if (scopeMethodCall != null) {
         transformation = transformationHandler.logAliasTransformation(
@@ -427,6 +421,8 @@ class ScopedAliases implements HotSwapCompilerPass {
         transformation = null;
         hasNamespaceShadows = false;
       } else if (inGoogScopeBody()) {
+        // Called on inner scopes within a goog.scope, including both block scopes and
+        // function scopes.
         findNamespaceShadows(t);
         reportInvalidVariables(t);
       }
@@ -699,7 +695,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (type == Token.NAME) {
         String name = n.getString();
         Var lexicalVar = t.getScope().getVar(name);
-        if (lexicalVar != null && lexicalVar == aliases.get(name)) {
+        if (lexicalVar != null && lexicalVar.equals(aliases.get(name))) {
           aliasVar = lexicalVar;
           // For nodes that are referencing the aliased type, set the original name so it
           // can be accessed later in tools such as the CodePrinter or refactoring tools.
