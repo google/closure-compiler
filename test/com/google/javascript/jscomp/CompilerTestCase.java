@@ -1561,8 +1561,7 @@ public abstract class CompilerTestCase {
         if (rewriteClosureCode && i == 0) {
           new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
           new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
-          new ScopedAliases(compiler, null, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
-              .process(externsRoot, mainRoot);
+          ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
@@ -1961,8 +1960,7 @@ public abstract class CompilerTestCase {
     if (rewriteClosureCode) {
       new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
       new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
-      new ScopedAliases(compiler, null, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
-          .process(externsRoot, mainRoot);
+      ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
     }
 
     if (transpileEnabled && !compiler.hasErrors()) {

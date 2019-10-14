@@ -61,9 +61,9 @@ import javax.annotation.Nullable;
  * goog.dom.createElement(goog.dom.TagName.DIV);
  * </pre>
  *
- * The advantage of using goog.scope is that the compiler will *guarantee*
- * the anonymous function will be inlined, even if it can't prove
- * that it's semantically correct to do so. For example, consider this case:
+ * The advantage of using goog.scope is that the compiler will *guarantee* the anonymous function
+ * will be inlined, even if it can't prove that it's semantically correct to do so. For example,
+ * consider this case:
  *
  * <pre>
  * goog.scope(function() {
@@ -73,9 +73,9 @@ import javax.annotation.Nullable;
  * })
  * </pre>
  *
- * <p>In theory, the compiler can't inline 'alias' unless it can prove that
- * goog.getBar is called only after 'alias' is defined. In practice, the
- * compiler will inline 'alias' anyway, at the risk of 'fixing' bad code.
+ * <p>In theory, the compiler can't inline 'alias' unless it can prove that goog.getBar is called
+ * only after 'alias' is defined. In practice, the compiler will inline 'alias' anyway, at the risk
+ * of 'fixing' bad code.
  *
  * @author robbyw@google.com (Robby Walker)
  */
@@ -126,18 +126,51 @@ class ScopedAliases implements HotSwapCompilerPass {
       "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
       "The local variable {0} is in a goog.scope and is not an alias.");
 
-  static final DiagnosticType GOOG_SCOPE_INVALID_VARIABLE = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_INVALID_VARIABLE",
-      "The variable {0} cannot be declared in this scope");
+  static final DiagnosticType GOOG_SCOPE_INVALID_VARIABLE =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_INVALID_VARIABLE", "The variable {0} cannot be declared in this scope");
 
   private final Multiset<String> scopedAliasNames = HashMultiset.create();
 
-  ScopedAliases(AbstractCompiler compiler,
+  /** @deprecated use the builder instead of this constructor */
+  @Deprecated
+  ScopedAliases(
+      AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       AliasTransformationHandler transformationHandler) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.transformationHandler = transformationHandler;
+  }
+
+  static Builder builder(AbstractCompiler compiler) {
+    return new Builder(compiler);
+  }
+
+  static class Builder {
+
+    private final AbstractCompiler compiler;
+    @Nullable private PreprocessorSymbolTable preprocessorSymbolTable = null;
+    private AliasTransformationHandler transformationHandler =
+        CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER;
+
+    private Builder(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    Builder setPreprocessorSymbolTable(@Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
+      this.preprocessorSymbolTable = preprocessorSymbolTable;
+      return this;
+    }
+
+    Builder setAliasTransformationHandler(AliasTransformationHandler aliasTransformationHandler) {
+      this.transformationHandler = aliasTransformationHandler;
+      return this;
+    }
+
+    ScopedAliases build() {
+      return new ScopedAliases(compiler, preprocessorSymbolTable, transformationHandler);
+    }
   }
 
   @Override

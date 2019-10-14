@@ -1317,11 +1317,12 @@ public final class ScopedAliasesTest extends CompilerTestCase {
 
   @Override
   protected ScopedAliases getProcessor(Compiler compiler) {
-    return new ScopedAliases(compiler, null, transformationHandler);
+    return ScopedAliases.builder(compiler)
+        .setAliasTransformationHandler(transformationHandler)
+        .build();
   }
 
-  private static class TransformationHandlerSpy
-      implements AliasTransformationHandler {
+  private static class TransformationHandlerSpy implements AliasTransformationHandler {
 
     private final ListMultimap<String, SourcePosition<AliasTransformation>> observedPositions =
         MultimapBuilder.hashKeys().arrayListValues().build();

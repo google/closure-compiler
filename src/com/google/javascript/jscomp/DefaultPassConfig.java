@@ -251,7 +251,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.shouldGenerateTypedExterns()) {
       checks.add(addSyntheticScript);
-      checks.add(closureGoogScopeAliases);
+      checks.add(closureGoogScopeAliasesForIjs);
       checks.add(closureRewriteClass);
       checks.add(generateIjs);
       checks.add(whitespaceWrapGoogModules);
@@ -1354,16 +1354,27 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Applies aliases and inlines goog.scope. */
+  private final PassFactory closureGoogScopeAliasesForIjs =
+      PassFactory.builderForHotSwap()
+          .setName("closureGoogScopeAliasesForIjs")
+          .setInternalFactory((compiler) -> ScopedAliases.builder(compiler).build())
+          .setFeatureSet(ES_NEXT)
+          .build();
+
+  /**
+   * Applies aliases and inlines goog.scope, storing information about the transformations
+   * performed.
+   */
   private final PassFactory closureGoogScopeAliases =
       PassFactory.builderForHotSwap()
           .setName("closureGoogScopeAliases")
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
-                return new ScopedAliases(
-                    compiler,
-                    preprocessorSymbolTableFactory.getInstanceOrNull(),
-                    options.getAliasTransformationHandler());
+                return ScopedAliases.builder(compiler)
+                    .setPreprocessorSymbolTable(preprocessorSymbolTableFactory.getInstanceOrNull())
+                    .setAliasTransformationHandler(options.getAliasTransformationHandler())
+                    .build();
               })
           .setFeatureSet(ES_NEXT)
           .build();
