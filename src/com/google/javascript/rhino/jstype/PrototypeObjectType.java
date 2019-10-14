@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.rhino.jstype.ObjectType.PropertyOptionality.ALL_PROPS_ARE_REQUIRED;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
@@ -394,24 +393,6 @@ public class PrototypeObjectType extends ObjectType {
   @Override
   public boolean isSubtype(JSType that) {
     return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  /** Determines if typeA is a subtype of typeB */
-  static boolean isSubtype(
-      ObjectType typeA,
-      RecordType typeB,
-      ImplCache implicitImplCache,
-      SubtypingMode subtypingMode) {
-
-    MatchStatus cached = implicitImplCache.checkCache(typeA, typeB);
-    if (cached != null) {
-      return cached.subtypeValue();
-    }
-
-    boolean result =
-        isStructuralSubtypeHelper(
-            typeA, typeB, implicitImplCache, subtypingMode, ALL_PROPS_ARE_REQUIRED);
-    return implicitImplCache.updateCache(typeA, typeB, MatchStatus.valueOf(result));
   }
 
   /** Whether this is a built-in object. */

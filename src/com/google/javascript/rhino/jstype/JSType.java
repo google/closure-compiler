@@ -50,6 +50,7 @@ import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.jstype.ObjectType.PropertyOptionality;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Objects;
@@ -1649,14 +1650,16 @@ public abstract class JSType implements Serializable {
 
     // If the super type is a structural type, then we can't safely remove a templatized type
     // (since it might affect the types of the properties)
+    PropertyOptionality propOptionality = null;
     if (implicitImplCache.shouldMatchStructurally(subtype, supertype)) {
-      return subtype.isStructuralSubtype(supertype, implicitImplCache, subtypingMode);
+      propOptionality = PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL;
+    } else if (supertype.isRecordType()) {
+      propOptionality = PropertyOptionality.ALL_PROPS_ARE_REQUIRED;
     }
 
-    // record types
-    if (supertype.isRecordType()) {
-      return PrototypeObjectType.isSubtype(
-          subtype, supertype.toMaybeRecordType(), implicitImplCache, subtypingMode);
+    if (propOptionality != null) {
+      return ObjectType.isStructuralSubtypeHelper(
+          subtype, supertype, implicitImplCache, subtypingMode, propOptionality);
     }
 
     // Interfaces
