@@ -28,7 +28,7 @@
  * @param {string} typeArg
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
- * @param {Window} viewArg
+ * @param {?Window} viewArg
  * @param {string} keyIdentifierArg
  * @param {number} keyLocationArg
  * @param {string} modifiersList

@@ -38,10 +38,10 @@ MediaSource.prototype.removeEventListener = function(
 /** @override */
 MediaSource.prototype.dispatchEvent = function(evt) {};
 
-/** @type {Array<SourceBuffer>} */
+/** @type {?Array<?SourceBuffer>} */
 MediaSource.prototype.sourceBuffers;
 
-/** @type {Array<SourceBuffer>} */
+/** @type {?Array<?SourceBuffer>} */
 MediaSource.prototype.activeSourceBuffers;
 
 /** @type {number} */
@@ -49,12 +49,12 @@ MediaSource.prototype.duration;
 
 /**
  * @param {string} type
- * @return {SourceBuffer}
+ * @return {?SourceBuffer}
  */
 MediaSource.prototype.addSourceBuffer = function(type) {};
 
 /**
- * @param {SourceBuffer} sourceBuffer
+ * @param {?SourceBuffer} sourceBuffer
  * @return {undefined}
  */
 MediaSource.prototype.removeSourceBuffer = function(sourceBuffer) {};
@@ -111,7 +111,7 @@ SourceBuffer.prototype.appendMode;
 /** @type {boolean} */
 SourceBuffer.prototype.updating;
 
-/** @type {TimeRanges} */
+/** @type {?TimeRanges} */
 SourceBuffer.prototype.buffered;
 
 /** @type {number} */
@@ -124,13 +124,13 @@ SourceBuffer.prototype.appendWindowStart;
 SourceBuffer.prototype.appendWindowEnd;
 
 /**
- * @param {Uint8Array} data
+ * @param {?Uint8Array} data
  * @return {undefined}
  */
 SourceBuffer.prototype.append = function(data) {};
 
 /**
- * @param {ArrayBuffer|ArrayBufferView} data
+ * @param {?ArrayBuffer|?ArrayBufferView} data
  * @return {undefined}
  */
 SourceBuffer.prototype.appendBuffer = function(data) {};

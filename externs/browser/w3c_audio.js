@@ -271,7 +271,7 @@ OfflineAudioContext.prototype.oncomplete;
  */
 function OfflineAudioCompletionEvent() {}
 
-/** @type {AudioBuffer} */
+/** @type {?AudioBuffer} */
 OfflineAudioCompletionEvent.prototype.renderedBuffer;
 
 /**
@@ -303,7 +303,7 @@ AudioNode.prototype.dispatchEvent = function(evt) {};
  * @param {!AudioNode|!AudioParam} destination
  * @param {number=} output
  * @param {number=} input
- * @return {AudioNode|void}
+ * @return {?AudioNode|void}
  */
 AudioNode.prototype.connect = function(destination, output, input) {};
 
@@ -555,7 +555,7 @@ AudioBufferSourceNode.prototype.FINISHED_STATE;
  */
 AudioBufferSourceNode.prototype.playbackState;
 
-/** @type {AudioBuffer} */
+/** @type {?AudioBuffer} */
 AudioBufferSourceNode.prototype.buffer;
 
 /**
@@ -745,7 +745,7 @@ AudioWorkerNodeProcessor.prototype.postMessage = function(message, transfer) {};
 function JavaScriptAudioNode() {}
 
 /**
- * @type {EventListener|(function(!AudioProcessingEvent):(boolean|undefined))}
+ * @type {?EventListener|(function(!AudioProcessingEvent):(boolean|undefined))}
  * @deprecated Use AudioWorkerNode
  */
 JavaScriptAudioNode.prototype.onaudioprocess;
@@ -764,7 +764,7 @@ JavaScriptAudioNode.prototype.bufferSize;
 function ScriptProcessorNode() {}
 
 /**
- * @type {EventListener|(function(!AudioProcessingEvent):(boolean|undefined))}
+ * @type {?EventListener|(function(!AudioProcessingEvent):(boolean|undefined))}
  * @deprecated Use AudioWorkerNode
  */
 ScriptProcessorNode.prototype.onaudioprocess;
@@ -1318,9 +1318,9 @@ BiquadFilterNode.prototype.Q;
 /** @type {!AudioParam} */
 BiquadFilterNode.prototype.gain;
 /**
- * @param {Float32Array} frequencyHz
- * @param {Float32Array} magResponse
- * @param {Float32Array} phaseResponse
+ * @param {?Float32Array} frequencyHz
+ * @param {?Float32Array} magResponse
+ * @param {?Float32Array} phaseResponse
  * @return {undefined}
  */
 BiquadFilterNode.prototype.getFrequencyResponse = function(
@@ -1347,7 +1347,7 @@ IIRFilterNode.prototype.getFrequencyResponse = function(
  */
 function WaveShaperNode() {}
 
-/** @type {Float32Array} */
+/** @type {?Float32Array} */
 WaveShaperNode.prototype.curve;
 
 /** @type {string} */

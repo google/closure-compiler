@@ -144,7 +144,7 @@ function prompt(message, opt_value) {}
 function setImmediate(callback, callbackParams) {}
 
 /**
- * @param {Function|!TrustedScript|string} callback
+ * @param {?Function|!TrustedScript|string} callback
  * @param {number=} opt_delay
  * @param {...?} callbackParams
  * @return {number}
@@ -154,7 +154,7 @@ function setImmediate(callback, callbackParams) {}
 function setInterval(callback, opt_delay, callbackParams) {}
 
 /**
- * @param {Function|!TrustedScript|string} callback
+ * @param {?Function|!TrustedScript|string} callback
  * @param {number=} opt_delay
  * @param {...*} callbackParams
  * @return {number}

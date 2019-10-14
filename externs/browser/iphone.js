@@ -58,7 +58,7 @@ TouchEvent.prototype.rotation;
  * @param {string} type
  * @param {boolean} canBubble
  * @param {boolean} cancelable
- * @param {Window} view
+ * @param {?Window} view
  * @param {number} detail
  * @param {number} screenX
  * @param {number} screenY
@@ -68,9 +68,9 @@ TouchEvent.prototype.rotation;
  * @param {boolean} altKey
  * @param {boolean} shiftKey
  * @param {boolean} metaKey
- * @param {TouchList} touches
- * @param {TouchList} targetTouches
- * @param {TouchList} changedTouches
+ * @param {?TouchList} touches
+ * @param {?TouchList} targetTouches
+ * @param {?TouchList} changedTouches
  * @param {number} scale
  * @param {number} rotation
  * @return {undefined}
@@ -114,7 +114,7 @@ GestureEvent.prototype.rotation;
 
 /**
  * The target of this gesture.
- * @type {EventTarget}
+ * @type {?EventTarget}
  */
 GestureEvent.prototype.target;
 
@@ -123,7 +123,7 @@ GestureEvent.prototype.target;
  * @param {string} type
  * @param {boolean} canBubble
  * @param {boolean} cancelable
- * @param {Window} view
+ * @param {?Window} view
  * @param {number} detail
  * @param {number} screenX
  * @param {number} screenY
@@ -133,7 +133,7 @@ GestureEvent.prototype.target;
  * @param {boolean} altKey
  * @param {boolean} shiftKey
  * @param {boolean} metaKey
- * @param {EventTarget} target
+ * @param {?EventTarget} target
  * @param {number} scale
  * @param {number} rotation
  * @return {undefined}

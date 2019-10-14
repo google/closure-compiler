@@ -87,7 +87,7 @@ DOMImplementationList.prototype.length;
 
 /**
  * @param {number} index
- * @return {DOMImplementation}
+ * @return {?DOMImplementation}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMImplementationList-item
  * @nosideeffects
  */
@@ -102,8 +102,8 @@ function DOMImplementationSource() {}
 /**
  * @param {?string} namespaceURI
  * @param {string} publicId
- * @param {DocumentType} doctype
- * @return {Document}
+ * @param {?DocumentType} doctype
+ * @return {?Document}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-DOM-createDocument
  * @nosideeffects
  */
@@ -113,7 +113,7 @@ DOMImplementation.prototype.createDocument = function(namespaceURI, publicId, do
  * @param {string} qualifiedName
  * @param {string} publicId
  * @param {string} systemId
- * @return {DocumentType}
+ * @return {?DocumentType}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-DOM-createDocType
  * @nosideeffects
  */
@@ -121,7 +121,7 @@ DOMImplementation.prototype.createDocumentType = function(qualifiedName, publicI
 
 /**
  * @param {string} features
- * @return {DOMImplementation}
+ * @return {?DOMImplementation}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-getDOMImpl
  * @nosideeffects
  */
@@ -129,7 +129,7 @@ DOMImplementationSource.prototype.getDOMImplementation = function(features) {};
 
 /**
  * @param {string} features
- * @return {DOMImplementationList}
+ * @return {?DOMImplementationList}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-getDOMImpls
  * @nosideeffects
  */
@@ -240,7 +240,7 @@ Node.DOCUMENT_POSITION_CONTAINED_BY;
 Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
 
 /**
- * @param {Node} other
+ * @param {?Node} other
  * @return {number}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-compareDocumentPosition
  * @nosideeffects
@@ -250,7 +250,7 @@ Node.prototype.compareDocumentPosition = function(other) {};
 /**
  * @param {string} feature
  * @param {string} version
- * @return {Object}
+ * @return {?Object}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-getFeature
  * @nosideeffects
  */
@@ -258,7 +258,7 @@ Node.prototype.getFeature = function(feature, version) {};
 
 /**
  * @param {string} key
- * @return {Object}
+ * @return {?Object}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-getUserData
  * @nosideeffects
  */
@@ -280,7 +280,7 @@ Node.prototype.hasAttributes = function() {};
 Node.prototype.isDefaultNamespace = function(namespaceURI) {};
 
 /**
- * @param {Node} arg
+ * @param {?Node} arg
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isEqualNode
  * @nosideeffects
@@ -288,7 +288,7 @@ Node.prototype.isDefaultNamespace = function(namespaceURI) {};
 Node.prototype.isEqualNode = function(arg) {};
 
 /**
- * @param {Node} other
+ * @param {?Node} other
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isSameNode
  * @nosideeffects
@@ -334,7 +334,7 @@ Node.prototype.querySelector = function(query) {};
 Node.prototype.querySelectorAll = function(query) {};
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Attr-ownerElement
  */
 Attr.prototype.ownerElement;
@@ -348,7 +348,7 @@ Attr.prototype.isId;
 /**
  * @param {?string} namespaceURI
  * @param {string} localName
- * @return {Attr}
+ * @return {?Attr}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElGetAtNodeNS
  * @nosideeffects
  */
@@ -398,8 +398,8 @@ Element.prototype.hasAttributeNS = function(namespaceURI, localName) {};
 Element.prototype.removeAttributeNS = function(namespaceURI, localName) {};
 
 /**
- * @param {Attr} newAttr
- * @return {Attr}
+ * @param {?Attr} newAttr
+ * @return {?Attr}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ElSetAtNodeNS
  */
 Element.prototype.setAttributeNodeNS = function(newAttr) {};
@@ -428,7 +428,7 @@ Text.prototype.wholeText;
 function DOMError() {}
 
 /**
- * @type {DOMLocator}
+ * @type {?DOMLocator}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-location
  */
 DOMError.prototype.location;
@@ -440,13 +440,13 @@ DOMError.prototype.location;
 DOMError.prototype.message;
 
 /**
- * @type {Object}
+ * @type {?Object}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-relatedData
  */
 DOMError.prototype.relatedData;
 
 /**
- * @type {Object}
+ * @type {?Object}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ERROR-DOMError-relatedException
  */
 DOMError.prototype.relatedException;
@@ -494,7 +494,7 @@ DOMError.prototype.name;
 function DOMErrorHandler() {}
 
 /**
- * @param {DOMError} error
+ * @param {?DOMError} error
  * @return {boolean}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-ERRORS-DOMErrorHandler-handleError
  */
@@ -525,7 +525,7 @@ DOMLocator.prototype.columnNumber;
 DOMLocator.prototype.lineNumber;
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMLocator-node
  */
 DOMLocator.prototype.relatedNode;

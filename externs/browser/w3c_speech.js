@@ -35,7 +35,7 @@
  */
 function SpeechInputEvent() {}
 
-/** @type {SpeechInputResultList} */
+/** @type {?SpeechInputResultList} */
 SpeechInputEvent.prototype.results;
 
 
@@ -87,7 +87,7 @@ SpeechRecognition.prototype.removeEventListener = function(
 /** @override */
 SpeechRecognition.prototype.dispatchEvent = function(evt) {};
 
-/** @type {SpeechGrammarList} */
+/** @type {?SpeechGrammarList} */
 SpeechRecognition.prototype.grammars;
 
 /** @type {string} */
@@ -219,13 +219,13 @@ function SpeechRecognitionEvent() {}
 /** @type {number} */
 SpeechRecognitionEvent.prototype.resultIndex;
 
-/** @type {SpeechRecognitionResultList} */
+/** @type {?SpeechRecognitionResultList} */
 SpeechRecognitionEvent.prototype.results;
 
 /** @type {*} */
 SpeechRecognitionEvent.prototype.interpretation;
 
-/** @type {Document} */
+/** @type {?Document} */
 SpeechRecognitionEvent.prototype.emma;
 
 
@@ -306,7 +306,7 @@ function webkitSpeechRecognition() {}
 
 // W3C Web Speech Synthesis API is implemented in Chrome M33
 /**
- * @type {SpeechSynthesis}
+ * @type {?SpeechSynthesis}
  * @see https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html#tts-section
  */
 var speechSynthesis;
@@ -330,19 +330,19 @@ SpeechSynthesisUtterance.prototype.pitch;
 /** @type {number} */
 SpeechSynthesisUtterance.prototype.rate;
 
-/** @type {SpeechSynthesisVoice} */
+/** @type {?SpeechSynthesisVoice} */
 SpeechSynthesisUtterance.prototype.voice;
 
 /** @type {number} */
 SpeechSynthesisUtterance.prototype.volume;
 
 /**
- * @param {Event} event
+ * @param {?Event} event
  */
 SpeechSynthesisUtterance.prototype.onstart = function(event) {};
 
 /**
- * @param {Event} event
+ * @param {?Event} event
  */
 SpeechSynthesisUtterance.prototype.onend = function(event) {};
 
@@ -386,7 +386,7 @@ function SpeechSynthesisVoiceList() {}
 function SpeechSynthesis() {}
 
 /**
- * @param {SpeechSynthesisUtterance} utterance
+ * @param {?SpeechSynthesisUtterance} utterance
  * @return {undefined}
  */
 SpeechSynthesis.prototype.speak = function(utterance) {};
@@ -401,12 +401,12 @@ SpeechSynthesis.prototype.pause;
 SpeechSynthesis.prototype.resume;
 
 /**
- * @return {SpeechSynthesisVoiceList}
+ * @return {?SpeechSynthesisVoiceList}
  */
 SpeechSynthesis.prototype.getVoices = function() {};
 
 /**
- * @param {Event} event
+ * @param {?Event} event
  * @see https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi-errata.html
  */
 SpeechSynthesis.prototype.onvoiceschanged = function(event) {};

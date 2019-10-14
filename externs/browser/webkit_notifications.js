@@ -66,7 +66,7 @@ var NotificationOptionsInterface_ = function() {}
 
 /**
  * @param {string} title
- * @param {NotificationOptions=} opt_options
+ * @param {?NotificationOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
  * @see http://notifications.spec.whatwg.org/#notification
@@ -79,7 +79,7 @@ function Notification(title, opt_options) {}
 Notification.permission;
 
 /**
- * @param {NotificationPermissionCallback=} opt_callback
+ * @param {?NotificationPermissionCallback=} opt_callback
  * @return {!Promise<string>}
  */
 Notification.requestPermission = function(opt_callback) {};
@@ -209,7 +209,7 @@ function NotificationCenter() {}
  * @param {string} iconUrl
  * @param {string} title
  * @param {string} body
- * @return {Notification}
+ * @return {?Notification}
  */
 NotificationCenter.prototype.createNotification =
     function(iconUrl, title, body) {};
@@ -217,7 +217,7 @@ NotificationCenter.prototype.createNotification =
 /**
  * Creates an HTML notification and displays it to the user.
  * @param {string} url
- * @return {Notification}
+ * @return {?Notification}
  */
 NotificationCenter.prototype.createHTMLNotification = function(url) {};
 
@@ -229,7 +229,7 @@ NotificationCenter.prototype.checkPermission = function() {};
 
 /**
  * Requests permission from the user to display notifications.
- * @param {Function=} opt_callback
+ * @param {?Function=} opt_callback
  * @return {void}
  */
 NotificationCenter.prototype.requestPermission = function(opt_callback) {};
@@ -237,7 +237,7 @@ NotificationCenter.prototype.requestPermission = function(opt_callback) {};
 /**
  * WebKit browsers expose the NotificationCenter API through
  * window.webkitNotifications.
- * @type {NotificationCenter}
+ * @type {?NotificationCenter}
  */
 Window.prototype.webkitNotifications;
 

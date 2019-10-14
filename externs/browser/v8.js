@@ -30,7 +30,7 @@ function CallSite() {}
 
 /**
  * Returns the value of this.
- * @return {Object|undefined}
+ * @return {?Object|undefined}
  */
 CallSite.prototype.getThis = function() {};
 
@@ -92,7 +92,7 @@ CallSite.prototype.getColumnNumber = function() {};
 /**
  * If this function was created using a call to eval, returns a CallSite object
  * representing the location where eval was called
- * @return {CallSite|undefined}
+ * @return {?CallSite|undefined}
  */
 CallSite.prototype.getEvalOrigin = function() {};
 

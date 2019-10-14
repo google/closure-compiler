@@ -55,7 +55,7 @@ webCrypto.HashAlgorithmIdentifier;
 
 
 /**
- * @typedef {Uint8Array}
+ * @typedef {?Uint8Array}
  * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-BigInteger
  */
 webCrypto.BigInteger;

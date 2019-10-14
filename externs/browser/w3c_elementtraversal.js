@@ -38,25 +38,25 @@ var ParentNode;
 var NonDocumentTypeChildNode;
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see https://developer.mozilla.org/En/DOM/Element.firstElementChild
  */
 Element.prototype.firstElementChild;
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see https://developer.mozilla.org/En/DOM/Element.lastElementChild
  */
 Element.prototype.lastElementChild;
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see https://developer.mozilla.org/En/DOM/Element.previousElementSibling
  */
 Element.prototype.previousElementSibling;
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see https://developer.mozilla.org/En/DOM/Element.nextElementSibling
  */
 Element.prototype.nextElementSibling;

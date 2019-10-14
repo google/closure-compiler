@@ -30,7 +30,7 @@ function ServiceWorker() {}
 /** @type {string} */
 ServiceWorker.prototype.scriptURL;
 
-/** @type {ServiceWorkerState} */
+/** @type {?ServiceWorkerState} */
 ServiceWorker.prototype.state;
 
 /** @type {?function(!Event)} */
@@ -61,7 +61,7 @@ NavigationPreloadManager.prototype.disable = function() {};
  */
 NavigationPreloadManager.prototype.setHeaderValue = function(value) {};
 
-/** @return {!Promise<NavigationPreloadState>} */
+/** @return {!Promise<?NavigationPreloadState>} */
 NavigationPreloadManager.prototype.getState = function() {};
 
 /**
@@ -75,7 +75,7 @@ var NavigationPreloadState;
 /** @record */
 function PushSubscriptionOptions() {}
 
-/** @type {ArrayBuffer|undefined} */
+/** @type {?ArrayBuffer|undefined} */
 PushSubscriptionOptions.prototype.applicationServerKey;
 
 /** @type {boolean|undefined} */
@@ -84,7 +84,7 @@ PushSubscriptionOptions.prototype.userVisibleOnly;
 /** @record */
 function PushSubscriptionOptionsInit() {}
 
-/** @type {BufferSource|string|undefined} */
+/** @type {?BufferSource|string|undefined} */
 PushSubscriptionOptionsInit.prototype.applicationServerKey;
 
 /** @type {boolean|undefined} */
@@ -129,15 +129,15 @@ PushSubscription.prototype.unsubscribe = function() {};
 function PushManager() {}
 
 /**
- * @param {PushSubscriptionOptionsInit=} opt_options
+ * @param {?PushSubscriptionOptionsInit=} opt_options
  * @return {!Promise<!PushSubscription>}
  */
 PushManager.prototype.subscribe = function(opt_options) {};
 
-/** @return {!Promise<PushSubscription>} */
+/** @return {!Promise<?PushSubscription>} */
 PushManager.prototype.getSubscription = function() {};
 
-/** @return {!Promise<PushPermissionStatus>} */
+/** @return {!Promise<?PushPermissionStatus>} */
 // This is commented out since it has not been implemented yet in Chrome beta.
 // Uncomment once it is available.
 // PushManager.prototype.hasPermission = function() {};
@@ -155,7 +155,7 @@ function SyncManager() {}
 SyncManager.prototype.register = function(tag) {}
 
 /**
- * @return {!Promise<Array<string>>}
+ * @return {!Promise<?Array<string>>}
  */
 SyncManager.prototype.getTags = function() {}
 
@@ -211,16 +211,16 @@ PushEvent.prototype.data;
  */
 function ServiceWorkerRegistration() {}
 
-/** @type {ServiceWorker} */
+/** @type {?ServiceWorker} */
 ServiceWorkerRegistration.prototype.installing;
 
-/** @type {ServiceWorker} */
+/** @type {?ServiceWorker} */
 ServiceWorkerRegistration.prototype.waiting;
 
-/** @type {ServiceWorker} */
+/** @type {?ServiceWorker} */
 ServiceWorkerRegistration.prototype.active;
 
-/** @type {NavigationPreloadManager} */
+/** @type {?NavigationPreloadManager} */
 ServiceWorkerRegistration.prototype.navigationPreload;
 
 /** @type {string} */
@@ -244,7 +244,7 @@ ServiceWorkerRegistration.prototype.pushManager;
 /**
  * @see https://notifications.spec.whatwg.org/#service-worker-api
  * @param {string} title
- * @param {NotificationOptions=} opt_options
+ * @param {?NotificationOptions=} opt_options
  * @return {!Promise<void>}
  */
 ServiceWorkerRegistration.prototype.showNotification =
@@ -278,7 +278,7 @@ ServiceWorkerContainer.prototype.ready;
 
 /**
  * @param {string} scriptURL
- * @param {RegistrationOptions=} opt_options
+ * @param {?RegistrationOptions=} opt_options
  * @return {!Promise<!ServiceWorkerRegistration>}
  */
 ServiceWorkerContainer.prototype.register = function(scriptURL, opt_options) {};
@@ -290,7 +290,7 @@ ServiceWorkerContainer.prototype.register = function(scriptURL, opt_options) {};
 ServiceWorkerContainer.prototype.getRegistration = function(opt_documentURL) {};
 
 /**
- * @return {!Promise<Array<!ServiceWorkerRegistration>>}
+ * @return {!Promise<?Array<!ServiceWorkerRegistration>>}
  */
 ServiceWorkerContainer.prototype.getRegistrations = function() {};
 
@@ -392,7 +392,7 @@ ServiceWorkerClient.prototype.hidden;
 /** @type {boolean} */
 ServiceWorkerClient.prototype.focused;
 
-/** @type {VisibilityState} */
+/** @type {?VisibilityState} */
 ServiceWorkerClient.prototype.visibilityState;
 
 /** @type {string} */
@@ -434,13 +434,13 @@ function ServiceWorkerClients() {}
  * Deprecated in Chrome M43+, use matchAll instead. Reference:
  * https://github.com/slightlyoff/ServiceWorker/issues/610.
  * TODO(joeltine): Remove when getAll is fully deprecated.
- * @param {ServiceWorkerClientQueryOptions=} opt_options
+ * @param {?ServiceWorkerClientQueryOptions=} opt_options
  * @return {!Promise<!Array<!ServiceWorkerClient>>}
  */
 ServiceWorkerClients.prototype.getAll = function(opt_options) {};
 
 /**
- * @param {ServiceWorkerClientQueryOptions=} opt_options
+ * @param {?ServiceWorkerClientQueryOptions=} opt_options
  * @return {!Promise<!Array<!ServiceWorkerClient>>}
  */
 ServiceWorkerClients.prototype.matchAll = function(opt_options) {};
@@ -473,14 +473,14 @@ function Cache() {}
 
 /**
  * @param {!RequestInfo} request
- * @param {CacheQueryOptions=} opt_options
+ * @param {?CacheQueryOptions=} opt_options
  * @return {!Promise<!Response|undefined>}
  */
 Cache.prototype.match = function(request, opt_options) {};
 
 /**
- * @param {RequestInfo=} opt_request
- * @param {CacheQueryOptions=} opt_options
+ * @param {?RequestInfo=} opt_request
+ * @param {?CacheQueryOptions=} opt_options
  * @return {!Promise<!Array<!Response>>}
  */
 Cache.prototype.matchAll = function(opt_request, opt_options) {};
@@ -506,14 +506,14 @@ Cache.prototype.put = function(request, response) {};
 
 /**
  * @param {!RequestInfo} request
- * @param {CacheQueryOptions=} opt_options
+ * @param {?CacheQueryOptions=} opt_options
  * @return {!Promise<boolean>}
  */
 Cache.prototype.delete = function(request, opt_options) {};
 
 /**
- * @param {RequestInfo=} opt_request
- * @param {CacheQueryOptions=} opt_options
+ * @param {?RequestInfo=} opt_request
+ * @param {?CacheQueryOptions=} opt_options
  * @return {!Promise<!Array<!Request>>}
  */
 Cache.prototype.keys = function(opt_request, opt_options) {};
@@ -544,7 +544,7 @@ Window.prototype.caches;
 
 /**
  * @param {!RequestInfo} request
- * @param {CacheQueryOptions=} opt_options
+ * @param {?CacheQueryOptions=} opt_options
  * @return {!Promise<!Response|undefined>}
  */
 CacheStorage.prototype.match = function(request, opt_options) {};
@@ -574,13 +574,13 @@ CacheStorage.prototype.keys = function() {};
  * @see http://www.w3.org/TR/service-workers/#extendable-event-interface
  * @constructor
  * @param {string} type
- * @param {ExtendableEventInit=} opt_eventInitDict
+ * @param {?ExtendableEventInit=} opt_eventInitDict
  * @extends {Event}
  */
 function ExtendableEvent(type, opt_eventInitDict) {}
 
 /**
- * @param {IThenable} f
+ * @param {?IThenable} f
  * @return {undefined}
  */
 ExtendableEvent.prototype.waitUntil = function(f) {};
@@ -597,12 +597,12 @@ var ExtendableEventInit;
  * @see http://www.w3.org/TR/service-workers/#install-event-interface
  * @constructor
  * @param {string} type
- * @param {InstallEventInit=} opt_eventInitDict
+ * @param {?InstallEventInit=} opt_eventInitDict
  * @extends {ExtendableEvent}
  */
 function InstallEvent(type, opt_eventInitDict) {}
 
-/** @type {ServiceWorker} */
+/** @type {?ServiceWorker} */
 ExtendableEvent.prototype.activeWorker;
 
 /**
@@ -618,7 +618,7 @@ var InstallEventInit;
  * @see http://www.w3.org/TR/service-workers/#fetch-event-interface
  * @constructor
  * @param {string} type
- * @param {FetchEventInit=} opt_eventInitDict
+ * @param {?FetchEventInit=} opt_eventInitDict
  * @extends {ExtendableEvent}
  */
 function FetchEvent(type, opt_eventInitDict) {}
@@ -627,7 +627,7 @@ function FetchEvent(type, opt_eventInitDict) {}
 FetchEvent.prototype.request;
 
 /**
- * @type {!Promise<Response>}
+ * @type {!Promise<?Response>}
  */
 FetchEvent.prototype.preloadResponse;
 
@@ -647,7 +647,7 @@ FetchEvent.prototype.isReload;
 FetchEvent.prototype.resultingClientId;
 
 /**
- * @param {(Response|IThenable<Response>)} r
+ * @param {(?Response|?IThenable<?Response>)} r
  * @return {undefined}
  */
 FetchEvent.prototype.respondWith = function(r) {};
@@ -668,7 +668,7 @@ FetchEvent.prototype.default = function() {};
  *   bubbles: (boolean|undefined),
  *   cancelable: (boolean|undefined),
  *   request: (!Request|undefined),
- *   preloadResponse: (!Promise<Response>),
+ *   preloadResponse: (!Promise<?Response>),
  *   client: (!ServiceWorkerClient|undefined),
  *   isReload: (boolean|undefined)
  * }}

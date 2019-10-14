@@ -97,7 +97,7 @@ PointerEventInit.prototype.isPrimary;
  * @constructor
  * @extends {MouseEvent}
  * @param {string} type
- * @param {PointerEventInit=} opt_eventInitDict
+ * @param {?PointerEventInit=} opt_eventInitDict
  * @see http://www.w3.org/TR/pointerevents/#pointerevent-interface
  */
 function PointerEvent(type, opt_eventInitDict) {}

@@ -36,7 +36,7 @@ function XMLSerializer() {}
 
 /**
  * Returns the serialized subtree in the form of a string
- * @param {Node} subtree
+ * @param {?Node} subtree
  * @return {string}
  */
 XMLSerializer.prototype.serializeToString = function(subtree) {};
@@ -45,8 +45,8 @@ XMLSerializer.prototype.serializeToString = function(subtree) {};
  * The subtree rooted by the specified element is serialized to a byte stream
  * using the character set specified.
  *
- * @param {Node} subtree
- * @return {Object}
+ * @param {?Node} subtree
+ * @return {?Object}
  */
 XMLSerializer.prototype.serializeToStream = function(subtree) {};
 
@@ -68,6 +68,6 @@ function DOMParser() {}
  *
  * @param {!TrustedHTML|string} src The UTF16 string to be parsed.
  * @param {string} type The content type of the string.
- * @return {Document}
+ * @return {?Document}
  */
 DOMParser.prototype.parseFromString = function(src, type) {};

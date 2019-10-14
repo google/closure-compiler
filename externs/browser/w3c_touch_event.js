@@ -92,7 +92,7 @@ Touch.prototype.screenY;
 
 /**
  * The target of this touch.
- * @type {EventTarget}
+ * @type {?EventTarget}
  */
 Touch.prototype.target;
 
@@ -125,14 +125,14 @@ Touch.prototype.rotationAngle;
 /**
  * Creates a new Touch object.
  * @see http://www.w3.org/TR/touch-events/#widl-Document-createTouch-Touch-WindowProxy-view-EventTarget-target-long-identifier-long-pageX-long-pageY-long-screenX-long-screenY
- * @param {Window} view
- * @param {EventTarget} target
+ * @param {?Window} view
+ * @param {?EventTarget} target
  * @param {number} identifier
  * @param {number} pageX
  * @param {number} pageY
  * @param {number} screenX
  * @param {number} screenY
- * @return {Touch}
+ * @return {?Touch}
  */
 Document.prototype.createTouch = function(view, target, identifier, pageX,
     pageY, screenX, screenY) {};
@@ -170,7 +170,7 @@ TouchList.prototype.identifiedTouch = function(identifier) {};
  * Creates a new TouchList object.
  * @see http://www.w3.org/TR/touch-events/#widl-Document-createTouchList-TouchList-Touch-touches
  * @param {Array<?Touch>} touches
- * @return {TouchList}
+ * @return {?TouchList}
  */
 Document.prototype.createTouchList = function(touches) {};
 
@@ -226,20 +226,20 @@ function TouchEvent(type, opt_eventInitDict) {}
 /**
  * A collection of Touch objects representing all touches associated with this
  * target.
- * @type {TouchList}
+ * @type {?TouchList}
  */
 TouchEvent.prototype.touches;
 
 /**
  * A collection of Touch objects representing all touches associated with this
  * target.
- * @type {TouchList}
+ * @type {?TouchList}
  */
 TouchEvent.prototype.targetTouches;
 
 /**
  * A collection of Touch objects representing all touches that changed in this event.
- * @type {TouchList}
+ * @type {?TouchList}
  */
 TouchEvent.prototype.changedTouches;
 

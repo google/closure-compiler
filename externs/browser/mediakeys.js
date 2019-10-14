@@ -56,7 +56,7 @@ HTMLMediaElement.prototype.mediaKeys;
 
 
 /**
- * @param {MediaKeys} mediaKeys
+ * @param {?MediaKeys} mediaKeys
  * @return {!Promise}
  * @see https://w3c.github.io/encrypted-media/#widl-HTMLMediaElement-setMediaKeys-Promise-void--MediaKeys-mediaKeys
  */
@@ -252,7 +252,7 @@ MediaKeyMessageEventInit.prototype.message;
 /**
  * @constructor
  * @param {string} type
- * @param {MediaKeyMessageEventInit} eventInitDict
+ * @param {?MediaKeyMessageEventInit} eventInitDict
  * @extends {Event}
  * @see https://w3c.github.io/encrypted-media/#mediakeymessageevent
  */
@@ -279,13 +279,13 @@ function MediaEncryptedEventInit() {};
 /** @type {(string | undefined)} */
 MediaEncryptedEventInit.prototype.initDataType;
 
-/** @type {(ArrayBuffer | undefined)} */
+/** @type {(?ArrayBuffer | undefined)} */
 MediaEncryptedEventInit.prototype.initData;
 
 /**
  * @constructor
  * @param {string} type
- * @param {MediaEncryptedEventInit=} opt_eventInitDict
+ * @param {?MediaEncryptedEventInit=} opt_eventInitDict
  * @extends {Event}
  * @see https://w3c.github.io/encrypted-media/#mediaencryptedevent
  */

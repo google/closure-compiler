@@ -129,7 +129,7 @@ Node.prototype.removeEventListener = function(type, listener, opt_options) {};
 Node.prototype.dispatchEvent = function(evt) {};
 
 /**
- * @type {NamedNodeMap<!Attr>}
+ * @type {?NamedNodeMap<!Attr>}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-attributes
  */
 Node.prototype.attributes;
@@ -141,19 +141,19 @@ Node.prototype.attributes;
 Node.prototype.childNodes;
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-firstChild
  */
 Node.prototype.firstChild;
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-lastChild
  */
 Node.prototype.lastChild;
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-nextSibling
  */
 Node.prototype.nextSibling;
@@ -177,25 +177,25 @@ Node.prototype.nodeValue;
 Node.prototype.nodeType;
 
 /**
- * @type {Document}
+ * @type {?Document}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-ownerDocument
  */
 Node.prototype.ownerDocument;
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-parentNode
  */
 Node.prototype.parentNode;
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-previousSibling
  */
 Node.prototype.previousSibling;
 
 /**
- * @param {Node} newChild
+ * @param {?Node} newChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-appendChild
  */
@@ -217,23 +217,23 @@ Node.prototype.cloneNode = function(deep) {};
 Node.prototype.hasChildNodes = function() {};
 
 /**
- * @param {Node} newChild
- * @param {Node} refChild
+ * @param {?Node} newChild
+ * @param {?Node} refChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-insertBefore
  */
 Node.prototype.insertBefore = function(newChild, refChild) {};
 
 /**
- * @param {Node} oldChild
+ * @param {?Node} oldChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-removeChild
  */
 Node.prototype.removeChild = function(oldChild) {};
 
 /**
- * @param {Node} newChild
- * @param {Node} oldChild
+ * @param {?Node} newChild
+ * @param {?Node} oldChild
  * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-replaceChild
  */
@@ -326,7 +326,7 @@ function DocumentFragment() {}
 function Document() {}
 
 /**
- * @type {DocumentType}
+ * @type {?DocumentType}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-doctype
  */
 Document.prototype.doctype;
@@ -338,7 +338,7 @@ Document.prototype.doctype;
 Document.prototype.documentElement;
 
 /**
- * @type {DOMImplementation}
+ * @type {?DOMImplementation}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#attribute-implementation
  */
 Document.prototype.implementation;
@@ -489,7 +489,7 @@ NamedNodeMap.prototype.length;
 
 /**
  * @param {string} name
- * @return {Node}
+ * @return {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1074577549
  * @nosideeffects
  */
@@ -497,7 +497,7 @@ NamedNodeMap.prototype.getNamedItem = function(name) {};
 
 /**
  * @param {number} index
- * @return {Node}
+ * @return {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-349467F9
  * @nosideeffects
  */
@@ -505,14 +505,14 @@ NamedNodeMap.prototype.item = function(index) {};
 
 /**
  * @param {string} name
- * @return {Node}
+ * @return {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-D58B193
  */
 NamedNodeMap.prototype.removeNamedItem = function(name) {};
 
 /**
- * @param {Node} arg
- * @return {Node}
+ * @param {?Node} arg
+ * @return {?Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1025163788
  */
 NamedNodeMap.prototype.setNamedItem = function(arg) {};
@@ -653,7 +653,7 @@ Element.prototype.getAttribute = function(name, flags) {};
 
 /**
  * @param {string} name
- * @return {Attr}
+ * @return {?Attr}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-getAttributeNode
  * @nosideeffects
  */
@@ -675,7 +675,7 @@ Element.prototype.getElementsByTagName = function(tagname) {};
 Element.prototype.removeAttribute = function(name) {};
 
 /**
- * @param {Attr} oldAttr
+ * @param {?Attr} oldAttr
  * @return {?Attr}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-removeAttributeNode
  */
@@ -692,7 +692,7 @@ Element.prototype.removeAttributeNode = function(oldAttr) {};
 Element.prototype.setAttribute = function(name, value) {};
 
 /**
- * @param {Attr} newAttr
+ * @param {?Attr} newAttr
  * @return {?Attr}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-setAttributeNode
  */
@@ -750,7 +750,7 @@ function Text(contents) {}
 
 /**
  * @param {number} offset
- * @return {Text}
+ * @return {?Text}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-38853C1D
  */
 Text.prototype.splitText = function(offset) {};

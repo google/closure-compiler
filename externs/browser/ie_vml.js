@@ -23,13 +23,13 @@
 
 
 /**
- * @type {Object|string}
+ * @type {?Object|string}
  * @see http://msdn.microsoft.com/en-us/library/bb263836(VS.85).aspx
  */
 Element.prototype.coordorigin;
 
 /**
- * @type {Object|string}
+ * @type {?Object|string}
  * @see http://msdn.microsoft.com/en-us/library/bb263837(VS.85).aspx
  */
 Element.prototype.coordsize;

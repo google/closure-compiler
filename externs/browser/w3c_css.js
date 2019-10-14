@@ -45,13 +45,13 @@ StyleSheet.prototype.type;
 StyleSheet.prototype.disabled;
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-StyleSheet-owner
  */
 StyleSheet.prototype.ownerNode;
 
 /**
- * @type {StyleSheet}
+ * @type {?StyleSheet}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-StyleSheet-parentStyleSheet
  */
 StyleSheet.prototype.parentStyleSheet;
@@ -69,7 +69,7 @@ StyleSheet.prototype.href;
 StyleSheet.prototype.title;
 
 /**
- * @type {MediaList}
+ * @type {?MediaList}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-StyleSheet-media
  */
 StyleSheet.prototype.media;
@@ -89,7 +89,7 @@ StyleSheetList.prototype.length;
 
 /**
  * @param {number} index
- * @return {StyleSheet}
+ * @return {?StyleSheet}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-StyleSheetList-item
  */
 StyleSheetList.prototype.item = function(index) {};
@@ -127,7 +127,7 @@ MediaList.prototype.item = function(index) {};
 function LinkStyle() {}
 
 /**
- * @type {StyleSheet}
+ * @type {?StyleSheet}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-LinkStyle-sheet
  */
 LinkStyle.prototype.sheet;
@@ -139,7 +139,7 @@ LinkStyle.prototype.sheet;
 function DocumentStyle() {}
 
 /**
- * @type {StyleSheetList}
+ * @type {?StyleSheetList}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/stylesheets.html#StyleSheets-StyleSheet-DocumentStyle-styleSheets
  */
 DocumentStyle.prototype.styleSheets;
@@ -152,13 +152,13 @@ DocumentStyle.prototype.styleSheets;
 function CSSStyleSheet() {}
 
 /**
- * @type {CSSRule}
+ * @type {?CSSRule}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleSheet-ownerRule
  */
 CSSStyleSheet.prototype.ownerRule;
 
 /**
- * @type {CSSRuleList}
+ * @type {?CSSRuleList}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleSheet-cssRules
  */
 CSSStyleSheet.prototype.cssRules;
@@ -193,7 +193,7 @@ CSSRuleList.prototype.length;
 
 /**
  * @param {number} index
- * @return {CSSRule}
+ * @return {?CSSRule}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRuleList-item
  */
 CSSRuleList.prototype.item = function(index) {};
@@ -217,19 +217,19 @@ CSSRule.prototype.type;
 CSSRule.prototype.cssText;
 
 /**
- * @type {CSSStyleSheet}
+ * @type {?CSSStyleSheet}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-sheet
  */
 CSSRule.prototype.parentStyleSheet;
 
 /**
- * @type {CSSRule}
+ * @type {?CSSRule}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSRule-parentRule
  */
 CSSRule.prototype.parentRule;
 
 /**
- * @type {CSSStyleDeclaration}
+ * @type {?CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleRule
  */
 CSSRule.prototype.style;
@@ -297,7 +297,7 @@ function CSSStyleRule() {}
 CSSStyleRule.prototype.selectorText;
 
 /**
- * @type {CSSStyleDeclaration}
+ * @type {?CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleRule-style
  */
 CSSStyleRule.prototype.style;
@@ -310,13 +310,13 @@ CSSStyleRule.prototype.style;
 function CSSMediaRule() {}
 
 /**
- * @type {MediaList}
+ * @type {?MediaList}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSMediaRule-mediaTypes
  */
 CSSMediaRule.prototype.media;
 
 /**
- * @type {CSSRuleList}
+ * @type {?CSSRuleList}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSMediaRule-cssRules
  */
 CSSMediaRule.prototype.cssRules;
@@ -344,7 +344,7 @@ CSSMediaRule.prototype.deleteRule = function(index) {};
 function CSSFontFaceRule() {}
 
 /**
- * @type {CSSStyleDeclaration}
+ * @type {?CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSFontFaceRule-style
  */
 CSSFontFaceRule.prototype.style;
@@ -363,7 +363,7 @@ function CSSPageRule() {}
 CSSPageRule.prototype.selectorText;
 
 /**
- * @type {CSSStyleDeclaration}
+ * @type {?CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPageRule-style
  */
 CSSPageRule.prototype.style;
@@ -382,13 +382,13 @@ function CSSImportRule() {}
 CSSImportRule.prototype.href;
 
 /**
- * @type {MediaList}
+ * @type {?MediaList}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSImportRule-media
  */
 CSSImportRule.prototype.media;
 
 /**
- * @type {CSSStyleSheet}
+ * @type {?CSSStyleSheet}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSImportRule-styleSheet
  */
 CSSImportRule.prototype.styleSheet;
@@ -436,14 +436,14 @@ CSSStyleDeclaration.prototype.cssText;
 CSSStyleDeclaration.prototype.length;
 
 /**
- * @type {CSSRule}
+ * @type {?CSSRule}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-parentRule
  */
 CSSStyleDeclaration.prototype.parentRule;
 
 /**
  * @param {string} propertyName
- * @return {CSSValue}
+ * @return {?CSSValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSStyleDeclaration-getPropertyCSSValue
  */
 CSSStyleDeclaration.prototype.getPropertyCSSValue = function(propertyName) {};
@@ -751,7 +751,7 @@ CSSPrimitiveValue.CSS_RECT;
 CSSPrimitiveValue.CSS_RGBCOLOR;
 
 /**
- * @return {Counter}
+ * @return {?Counter}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue-getCounterValue
  * @throws DOMException {@see DomException.INVALID_ACCESS_ERR}
  */
@@ -766,14 +766,14 @@ CSSPrimitiveValue.prototype.getCounterValue = function() {};
 CSSPrimitiveValue.prototype.getFloatValue = function(unitType) {};
 
 /**
- * @return {RGBColor}
+ * @return {?RGBColor}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue-getRGBColorValue
  * @throws DOMException {@see DomException.INVALID_ACCESS_ERR}
  */
 CSSPrimitiveValue.prototype.getRGBColorValue = function() {};
 
 /**
- * @return {Rect}
+ * @return {?Rect}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSPrimitiveValue-getRectValue
  * @throws DOMException {@see DomException.INVALID_ACCESS_ERR}
  */
@@ -822,7 +822,7 @@ CSSValueList.prototype.length;
 
 /**
  * @param {number} index
- * @return {CSSValue}
+ * @return {?CSSValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSValueList-item
  */
 CSSValueList.prototype.item = function(index) {};
@@ -834,19 +834,19 @@ CSSValueList.prototype.item = function(index) {};
 function RGBColor() {}
 
 /**
- * @type {CSSPrimitiveValue}
+ * @type {?CSSPrimitiveValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-RGBColor-red
  */
 RGBColor.prototype.red;
 
 /**
- * @type {CSSPrimitiveValue}
+ * @type {?CSSPrimitiveValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-RGBColor-green
  */
 RGBColor.prototype.green;
 
 /**
- * @type {CSSPrimitiveValue}
+ * @type {?CSSPrimitiveValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-RGBColor-blue
  */
 RGBColor.prototype.blue;
@@ -858,25 +858,25 @@ RGBColor.prototype.blue;
 function Rect() {}
 
 /**
- * @type {CSSPrimitiveValue}
+ * @type {?CSSPrimitiveValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-Rect-top
  */
 Rect.prototype.top;
 
 /**
- * @type {CSSPrimitiveValue}
+ * @type {?CSSPrimitiveValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-Rect-right
  */
 Rect.prototype.right;
 
 /**
- * @type {CSSPrimitiveValue}
+ * @type {?CSSPrimitiveValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-Rect-bottom
  */
 Rect.prototype.bottom;
 
 /**
- * @type {CSSPrimitiveValue}
+ * @type {?CSSPrimitiveValue}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-Rect-left
  */
 Rect.prototype.left;
@@ -912,7 +912,7 @@ Counter.prototype.separator;
 function ViewCSS() {}
 
 /**
- * @param {Element} elt
+ * @param {?Element} elt
  * @param {?string=} opt_pseudoElt This argument is required according to the
  *     CSS2 specification, but optional in all major browsers. See the note at
  *     https://developer.mozilla.org/en-US/docs/Web/API/Window.getComputedStyle
@@ -929,9 +929,9 @@ ViewCSS.prototype.getComputedStyle = function(elt, opt_pseudoElt) {};
 function DocumentCSS() {}
 
 /**
- * @param {Element} elt
+ * @param {?Element} elt
  * @param {string} pseudoElt
- * @return {CSSStyleDeclaration}
+ * @return {?CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-DocumentCSS-getOverrideStyle
  */
 DocumentCSS.prototype.getOverrideStyle = function(elt, pseudoElt) {};
@@ -945,7 +945,7 @@ function DOMImplementationCSS() {}
 /**
  * @param {string} title
  * @param {string} media
- * @return {CSSStyleSheet}
+ * @return {?CSSStyleSheet}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-DOMImplementationCSS-createCSSStyleSheet
  * @throws DOMException {@see DomException.SYNTAX_ERR}
  */
@@ -958,7 +958,7 @@ DOMImplementationCSS.prototype.createCSSStyleSheet = function(title, media) {};
 function ElementCSSInlineStyle() {}
 
 /**
- * @type {CSSStyleDeclaration}
+ * @type {?CSSStyleDeclaration}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-ElementCSSInlineStyle-style
  */
 ElementCSSInlineStyle.prototype.style;
@@ -2257,14 +2257,14 @@ MediaQueryList.prototype.media;
 MediaQueryList.prototype.matches;
 
 /**
- * @param {MediaQueryListListener} listener
+ * @param {?MediaQueryListListener} listener
  * @see http://www.w3.org/TR/cssom-view/#dom-mediaquerylist-addlistener
  * @return {undefined}
  */
 MediaQueryList.prototype.addListener = function(listener) {};
 
 /**
- * @param {MediaQueryListListener} listener
+ * @param {?MediaQueryListListener} listener
  * @see http://www.w3.org/TR/cssom-view/#dom-mediaquerylist-removelistener
  * @return {undefined}
  */
@@ -2351,13 +2351,13 @@ Document.prototype.elementsFromPoint = function(x, y) {};
 /**
  * @param {number} x
  * @param {number} y
- * @return {CaretPosition}
+ * @return {?CaretPosition}
  * @see http://www.w3.org/TR/cssom-view/#dom-document-caretpositionfrompoint
  */
 Document.prototype.caretPositionFromPoint = function(x, y) {};
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see http://dev.w3.org/csswg/cssom-view/#dom-document-scrollingelement
  */
 Document.prototype.scrollingElement;
@@ -2369,7 +2369,7 @@ Document.prototype.scrollingElement;
 function CaretPosition() {}
 
 /**
- * @type {Node}
+ * @type {?Node}
  * @see http://www.w3.org/TR/cssom-view/#dom-caretposition-offsetnode
  */
 CaretPosition.prototype.offsetNode;
@@ -2461,7 +2461,7 @@ Element.prototype.clientHeight;
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-htmlelement-interface
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see http://www.w3.org/TR/cssom-view/#dom-htmlelement-offsetparent
  */
 HTMLElement.prototype.offsetParent;
@@ -2621,11 +2621,11 @@ CSSInterface.prototype.supports = function(property, opt_value) {};
  * TODO(nicksantos): This suppress tag probably isn't needed, and
  * should be removed.
  * @suppress {duplicate}
- * @type {CSSInterface}
+ * @type {?CSSInterface}
  */
 var CSS;
 
-/** @type {CSSInterface} */
+/** @type {?CSSInterface} */
 Window.prototype.CSS;
 
 // http://dev.w3.org/csswg/css-font-loading/
@@ -2653,7 +2653,7 @@ var FontFaceDescriptors;
 /**
  * @constructor
  * @param {string} fontFamily
- * @param {(string|ArrayBuffer|ArrayBufferView)} source
+ * @param {(string|?ArrayBuffer|?ArrayBufferView)} source
  * @param {!FontFaceDescriptors=} opt_descriptors
  * @see http://dev.w3.org/csswg/css-font-loading/#font-face-constructor
  */
@@ -2702,7 +2702,7 @@ FontFace.prototype.variant;
 FontFace.prototype.featureSettings;
 
 /**
- * @type {FontFaceLoadStatus}
+ * @type {?FontFaceLoadStatus}
  * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontface-status
  */
 FontFace.prototype.status;
@@ -2792,7 +2792,7 @@ FontFaceSet.prototype.check = function(font, opt_text) {};
 FontFaceSet.prototype.ready;
 
 /**
- * @type {FontFaceSetLoadStatus}
+ * @type {?FontFaceSetLoadStatus}
  * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-status
  */
 FontFaceSet.prototype.status;

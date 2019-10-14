@@ -23,7 +23,7 @@
 /**
  * @constructor
  * @param {string=} encoding
- * @param {Object=} options
+ * @param {?Object=} options
  */
 function TextDecoder(encoding, options) {}
 

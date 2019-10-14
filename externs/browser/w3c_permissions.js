@@ -66,11 +66,11 @@ var PermissionState;
  */
 function PermissionStatus() {}
 
-/** @type {PermissionState} */
+/** @type {?PermissionState} */
 PermissionStatus.prototype.state;
 
 /**
- * @type {PermissionState}
+ * @type {?PermissionState}
  * @deprecated, use PermissionStatus.state for newer clients
  */
 PermissionStatus.prototype.status;
@@ -97,12 +97,12 @@ PermissionStatus.prototype.dispatchEvent = function(evt) {};
 function Permissions() {}
 
 /**
- * @param {PermissionDescriptor} permission The permission to look up
+ * @param {?PermissionDescriptor} permission The permission to look up
  * @return {!Promise<!PermissionStatus>}
  * @see https://w3c.github.io/permissions/#dom-permissions-query
  */
 Permissions.prototype.query = function(permission) {};
 
 
-/** @type {Permissions} */
+/** @type {?Permissions} */
 Navigator.prototype.permissions;

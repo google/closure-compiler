@@ -35,7 +35,7 @@ Event.prototype.Banner;
 /**
  * A ClipboardData on IE, but a DataTransfer on WebKit.
  * @see http://msdn.microsoft.com/en-us/library/ms535220.aspx
- * @type {(ClipboardData|undefined)}
+ * @type {(?ClipboardData|undefined)}
  */
 Event.prototype.clipboardData;
 
@@ -50,7 +50,7 @@ Event.prototype.dataFld;
 
 Event.prototype.domain;
 
-/** @type {Element} */
+/** @type {?Element} */
 Event.prototype.fromElement;
 
 /** @type {string} */
@@ -74,7 +74,7 @@ Event.prototype.qualifier;
 /** @type {number} */
 Event.prototype.reason;
 
-/** @type {Object<*>} */
+/** @type {?Object<*>} */
 Event.prototype.recordset;
 
 /** @type {boolean} */
@@ -91,10 +91,10 @@ Event.prototype.scheme;
 /** @type {boolean} */
 Event.prototype.shiftLeft;
 
-/** @type {Window} */
+/** @type {?Window} */
 Event.prototype.source;
 
-/** @type {Element} */
+/** @type {?Element} */
 Event.prototype.srcElement;
 
 Event.prototype.srcFilter;
@@ -102,7 +102,7 @@ Event.prototype.srcFilter;
 /** @type {string} */
 Event.prototype.srcUrn;
 
-/** @type {Element} */
+/** @type {?Element} */
 Event.prototype.toElement;
 
 Event.prototype.userName;
@@ -193,7 +193,7 @@ MSPointerEvent.prototype.msSetPointerCapture;
  * @param {string} typeArg
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
- * @param {Window} viewArg
+ * @param {?Window} viewArg
  * @param {number} detailArg
  * @param {number} screenXArg
  * @param {number} screenYArg
@@ -204,7 +204,7 @@ MSPointerEvent.prototype.msSetPointerCapture;
  * @param {boolean} shiftKeyArg
  * @param {boolean} metaKeyArg
  * @param {number} buttonArg
- * @param {Element} relatedTargetArg
+ * @param {?Element} relatedTargetArg
  * @param {number} offsetXArg
  * @param {number} offsetYArg
  * @param {number} widthArg
@@ -229,7 +229,7 @@ MSPointerEvent.prototype.initPointerEvent;
 function MSGesture() {}
 
 /**
- * @type {Element}
+ * @type {?Element}
  */
 MSGesture.prototype.target;
 
@@ -285,7 +285,7 @@ MSGestureEvent.prototype.velocityY;
  * @param {string} typeArg
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
- * @param {Window} viewArg
+ * @param {?Window} viewArg
  * @param {number} detailArg
  * @param {number} screenXArg
  * @param {number} screenYArg
@@ -303,7 +303,7 @@ MSGestureEvent.prototype.velocityY;
  * @param {number} velocityExpansionArg
  * @param {number} velocityAngularArg
  * @param {number} hwTimestampArg
- * @param {EventTarget} relatedTargetArg
+ * @param {?EventTarget} relatedTargetArg
  * @return {undefined}
  * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh441187.aspx
  */

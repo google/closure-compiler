@@ -34,21 +34,21 @@
 /** @type {number} */ Event.prototype.clientX;
 /** @type {number} */ Event.prototype.clientY;
 /** @type {boolean} */ Event.prototype.ctrlKey;
-/** @type {EventTarget} */ Event.prototype.explicitOriginalTarget;
+/** @type {?EventTarget} */ Event.prototype.explicitOriginalTarget;
 /** @type {boolean} */ Event.prototype.isChar;
 /** @type {boolean} */ Event.prototype.isTrusted;
 /** @type {number} */ Event.prototype.keyCode;
 /** @type {number} */ Event.prototype.layerX;
 /** @type {number} */ Event.prototype.layerY;
 /** @type {boolean} */ Event.prototype.metaKey;
-/** @type {EventTarget} */ Event.prototype.originalTarget;
+/** @type {?EventTarget} */ Event.prototype.originalTarget;
 /** @type {number} */ Event.prototype.pageX;
 /** @type {number} */ Event.prototype.pageY;
-/** @type {EventTarget|undefined} */ Event.prototype.relatedTarget;
+/** @type {?EventTarget|undefined} */ Event.prototype.relatedTarget;
 /** @type {number} */ Event.prototype.screenX;
 /** @type {number} */ Event.prototype.screenY;
 /** @type {boolean} */ Event.prototype.shiftKey;
-/** @type {Window} */ Event.prototype.view;
+/** @type {?Window} */ Event.prototype.view;
 /** @type {number} */ Event.prototype.which;
 
 /** @constructor */ function nsIDOMPageTransitionEvent() {}

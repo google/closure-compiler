@@ -53,7 +53,7 @@ ScriptProfileNode.prototype.selfTime;
 /** @type {number} */
 ScriptProfileNode.prototype.numberOfCalls;
 
-/** @type {Array<ScriptProfileNode>} */
+/** @type {?Array<?ScriptProfileNode>} */
 ScriptProfileNode.prototype.children;
 
 /** @type {boolean} */

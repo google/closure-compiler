@@ -44,7 +44,7 @@ Element.prototype.slot;
  * prevent calling this on Nodes which are not Elements.
  * @see https://connect.microsoft.com/IE/feedback/details/780874/node-contains-is-incorrect
  *
- * @param {Node} n The node to check
+ * @param {?Node} n The node to check
  * @return {boolean} If 'n' is this Node, or is contained within this Node.
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Node.contains
  * @nosideeffects
@@ -104,8 +104,8 @@ HTMLCanvasElement.prototype.toDataURL = function(opt_type, var_args) {};
 /**
  * @modifies {this}
  * @param {string} contextId
- * @param {Object=} opt_args
- * @return {Object}
+ * @param {?Object=} opt_args
+ * @return {?Object}
  */
 HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 
@@ -174,7 +174,7 @@ OffscreenCanvas.prototype.convertToBlob = function(opt_options) {};
 // TODO(tjgq): Find a way to add SVGImageElement to this typedef without making
 // svg.js part of core.
 /**
- * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|
+ * @typedef {?HTMLImageElement|?HTMLVideoElement|?HTMLCanvasElement|?ImageBitmap}
  *     OffscreenCanvas}
  */
 var CanvasImageSource;
@@ -343,7 +343,7 @@ Path2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, optAnticlockwise) {};
 
 /**
- * @param {Path2D} path
+ * @param {?Path2D} path
  * @return {undefined}
  */
 Path2D.prototype.addPath = function(path) {};
@@ -367,7 +367,7 @@ CanvasDrawingStyles.prototype.lineJoin;
 CanvasDrawingStyles.prototype.miterLimit;
 
 /**
- * @param {Array<number>} segments
+ * @param {?Array<number>} segments
  * @return {undefined}
  */
 CanvasDrawingStyles.prototype.setLineDash = function(segments) {};
@@ -478,7 +478,7 @@ BaseRenderingContext2D.prototype.createRadialGradient = function(
     x0, y0, r0, x1, y1, r1) {};
 
 /**
- * @param {CanvasImageSource} image
+ * @param {?CanvasImageSource} image
  * @param {string} repetition
  * @return {?CanvasPattern}
  * @throws {Error}
@@ -616,26 +616,26 @@ BaseRenderingContext2D.prototype.ellipse = function(
 };
 
 /**
- * @param {Path2D|string=} optFillRuleOrPath
+ * @param {?Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
 BaseRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
 
 /**
- * @param {Path2D=} optStroke
+ * @param {?Path2D=} optStroke
  * @return {undefined}
  */
 BaseRenderingContext2D.prototype.stroke = function(optStroke) {};
 
 /**
- * @param {Element} element
+ * @param {?Element} element
  * @return {undefined}
  */
 BaseRenderingContext2D.prototype.drawFocusIfNeeded = function(element) {};
 
 /**
- * @param {Path2D|string=} optFillRuleOrPath
+ * @param {?Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
@@ -688,7 +688,7 @@ BaseRenderingContext2D.prototype.strokeText = function(
 BaseRenderingContext2D.prototype.measureText = function(text) {};
 
 /**
- * @param {CanvasImageSource} image
+ * @param {?CanvasImageSource} image
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
  * @param {number=} opt_dw Destination box width.  Defaults to the image width.
@@ -727,7 +727,7 @@ BaseRenderingContext2D.prototype.createImageData = function(sw, sh) {};
 BaseRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 
 /**
- * @param {ImageData} imagedata
+ * @param {?ImageData} imagedata
  * @param {number} dx
  * @param {number} dy
  * @param {number=} opt_dirtyX
@@ -774,7 +774,7 @@ BaseRenderingContext2D.prototype.setStrokeColor = function(
 BaseRenderingContext2D.prototype.getLineDash = function() {};
 
 /**
- * @param {Array<number>} segments
+ * @param {?Array<number>} segments
  * @return {undefined}
  * @override
  */
@@ -979,7 +979,7 @@ Database.prototype.version;
 /**
  * @param {function(!SQLTransaction) : void} callback
  * @param {(function(!SQLError) : void)=} opt_errorCallback
- * @param {Function=} opt_Callback
+ * @param {?Function=} opt_Callback
  * @return {undefined}
  */
 Database.prototype.transaction = function(
@@ -988,7 +988,7 @@ Database.prototype.transaction = function(
 /**
  * @param {function(!SQLTransaction) : void} callback
  * @param {(function(!SQLError) : void)=} opt_errorCallback
- * @param {Function=} opt_Callback
+ * @param {?Function=} opt_Callback
  * @return {undefined}
  */
 Database.prototype.readTransaction = function(
@@ -999,7 +999,7 @@ Database.prototype.readTransaction = function(
  * @param {string} newVersion
  * @param {function(!SQLTransaction) : void} callback
  * @param {function(!SQLError) : void} errorCallback
- * @param {Function} successCallback
+ * @param {?Function} successCallback
  * @return {undefined}
  */
 Database.prototype.changeVersion = function(
@@ -1038,8 +1038,8 @@ function SQLTransaction() {}
 
 /**
  * @param {string} sqlStatement
- * @param {Array<*>=} opt_queryArgs
- * @param {SQLStatementCallback=} opt_callback
+ * @param {?Array<*>=} opt_queryArgs
+ * @param {?SQLStatementCallback=} opt_callback
  * @param {(function(!SQLTransaction, !SQLError) : (boolean|void))=}
  *     opt_errorCallback
  * @return {undefined}
@@ -1086,7 +1086,7 @@ SQLResultSetRowList.prototype.length;
 
 /**
  * @param {number} index
- * @return {Object}
+ * @return {?Object}
  * @nosideeffects
  */
 SQLResultSetRowList.prototype.item = function(index) {};
@@ -1096,7 +1096,7 @@ SQLResultSetRowList.prototype.item = function(index) {};
  * @param {string} version
  * @param {string} description
  * @param {number} size
- * @param {(DatabaseCallback|function(Database))=} opt_callback
+ * @param {(?DatabaseCallback|function(?Database))=} opt_callback
  * @return {!Database}
  */
 function openDatabase(name, version, description, size, opt_callback) {}
@@ -1106,7 +1106,7 @@ function openDatabase(name, version, description, size, opt_callback) {}
  * @param {string} version
  * @param {string} description
  * @param {number} size
- * @param {(DatabaseCallback|function(Database))=} opt_callback
+ * @param {(?DatabaseCallback|function(?Database))=} opt_callback
  * @return {!Database}
  */
 Window.prototype.openDatabase =
@@ -1175,7 +1175,7 @@ Document.prototype.postMessage = function(message) {};
 /**
  * Document head accessor.
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/dom.html#the-head-element-0
- * @type {HTMLHeadElement}
+ * @type {?HTMLHeadElement}
  */
 Document.prototype.head;
 
@@ -1349,7 +1349,7 @@ ApplicationCache.prototype.update = function() {};
 /** @type {?ApplicationCache} */
 var applicationCache;
 
-/** @type {ApplicationCache} */
+/** @type {?ApplicationCache} */
 Window.prototype.applicationCache;
 
 /**
@@ -1453,7 +1453,7 @@ Worker.prototype.terminate = function() {};
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {?Array<!Transferable>=} opt_transfer
  * @return {undefined}
  */
 Worker.prototype.postMessage = function(message, opt_transfer) {};
@@ -1461,7 +1461,7 @@ Worker.prototype.postMessage = function(message, opt_transfer) {};
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {?Array<!Transferable>=} opt_transfer
  * @return {undefined}
  */
 Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
@@ -1621,7 +1621,7 @@ function DedicatedWorkerGlobalScope() {}
 /**
  * Posts a message to creator of this worker.
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {?Array<!Transferable>=} opt_transfer
  * @return {undefined}
  */
 DedicatedWorkerGlobalScope.prototype.postMessage =
@@ -1630,7 +1630,7 @@ DedicatedWorkerGlobalScope.prototype.postMessage =
 /**
  * Posts a message to creator of this worker.
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {?Array<!Transferable>=} opt_transfer
  * @return {undefined}
  */
 DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
@@ -1684,7 +1684,7 @@ HTMLElement.prototype.attributeChangedCallback = function(attributeName, oldValu
 /** @type {function()|undefined} */
 HTMLElement.prototype.connectedCallback;
 
-/** @type {Element} */
+/** @type {?Element} */
 HTMLElement.prototype.contextMenu;
 
 /** @type {function()|undefined} */
@@ -1698,7 +1698,7 @@ HTMLElement.prototype.draggable;
  * interface isn't currently defined and no known browsers implement this
  * feature, just define the property for now.
  *
- * @const {Object}
+ * @type {?Object}
  */
 HTMLElement.prototype.dropzone;
 
@@ -1718,7 +1718,7 @@ var GetRootNodeOptions;
 
 /**
  * @see https://dom.spec.whatwg.org/#dom-node-getrootnode
- * @param {GetRootNodeOptions=} opt_options
+ * @param {?GetRootNodeOptions=} opt_options
  * @return {!Node}
  */
 Node.prototype.getRootNode = function(opt_options) {};
@@ -1737,7 +1737,7 @@ HTMLElement.prototype.webkitCreateShadowRoot;
 
 /**
  * @see http://www.w3.org/TR/shadow-dom/
- * @type {ShadowRoot}
+ * @type {?ShadowRoot}
  */
 HTMLElement.prototype.shadowRoot;
 
@@ -1832,7 +1832,7 @@ HTMLIFrameElement.prototype.srcdoc;
 HTMLIFrameElement.prototype.sandbox;
 
 /**
- * @type {Window}
+ * @type {?Window}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/contentWindow
  */
 HTMLIFrameElement.prototype.contentWindow;
@@ -1843,7 +1843,7 @@ HTMLInputElement.prototype.autocomplete;
 /** @type {string} */
 HTMLInputElement.prototype.dirname;
 
-/** @type {FileList} */
+/** @type {?FileList} */
 HTMLInputElement.prototype.files;
 
 /**
@@ -1876,7 +1876,7 @@ HTMLInputElement.prototype.required;
 /** @implicitCast @type {string} */
 HTMLInputElement.prototype.step;
 
-/** @type {Date} */
+/** @type {?Date} */
 HTMLInputElement.prototype.valueAsDate;
 
 /** @type {number} */
@@ -1934,7 +1934,7 @@ HTMLMediaElement.HAVE_FUTURE_DATA;
 /** @const {number} */
 HTMLMediaElement.HAVE_ENOUGH_DATA;
 
-/** @type {MediaError} */
+/** @type {?MediaError} */
 HTMLMediaElement.prototype.error;
 
 /** @type {string} @implicitCast */
@@ -2078,10 +2078,10 @@ HTMLMediaElement.prototype.defaultPlaybackRate;
 /** @type {number} */
 HTMLMediaElement.prototype.playbackRate;
 
-/** @type {TimeRanges} */
+/** @type {?TimeRanges} */
 HTMLMediaElement.prototype.played;
 
-/** @type {TimeRanges} */
+/** @type {?TimeRanges} */
 HTMLMediaElement.prototype.seekable;
 
 /** @type {boolean} */
@@ -2188,7 +2188,7 @@ TextTrackList.prototype.length;
 
 /**
  * @param {string} id
- * @return {TextTrack}
+ * @return {?TextTrack}
  */
 TextTrackList.prototype.getTrackById = function(id) {};
 
@@ -2201,13 +2201,13 @@ TextTrackList.prototype.getTrackById = function(id) {};
 function TextTrack() {}
 
 /**
- * @param {TextTrackCue} cue
+ * @param {?TextTrackCue} cue
  * @return {undefined}
  */
 TextTrack.prototype.addCue = function(cue) {};
 
 /**
- * @param {TextTrackCue} cue
+ * @param {?TextTrackCue} cue
  * @return {undefined}
  */
 TextTrack.prototype.removeCue = function(cue) {};
@@ -2252,7 +2252,7 @@ TextTrackCueList.prototype.length;
 
 /**
  * @param {string} id
- * @return {TextTrackCue}
+ * @return {?TextTrackCue}
  */
 TextTrackCueList.prototype.getCueById = function(id) {};
 
@@ -2538,7 +2538,7 @@ MessagePort.prototype.dispatchEvent = function(evt) {};
  * Posts a message through the channel, optionally with the given
  * Array of Transferables.
  * @param {*} message
- * @param {Array<!Transferable>=} opt_transfer
+ * @param {?Array<!Transferable>=} opt_transfer
  * @return {undefined}
  */
 MessagePort.prototype.postMessage = function(message, opt_transfer) {
@@ -2564,7 +2564,7 @@ MessagePort.prototype.onmessage;
 
 // HTML5 MessageEvent class
 /**
- * @typedef {Window|MessagePort|ServiceWorker}
+ * @typedef {?Window|?MessagePort|?ServiceWorker}
  * @see https://html.spec.whatwg.org/multipage/comms.html#messageeventsource
  */
 var MessageEventSource;
@@ -2590,7 +2590,7 @@ MessageEventInit.prototype.lastEventId;
 /** @type {(?MessageEventSource|undefined)} */
 MessageEventInit.prototype.source;
 
-/** @type {(!Array<MessagePort>|undefined)} */
+/** @type {(!Array<?MessagePort>|undefined)} */
 MessageEventInit.prototype.ports;
 
 
@@ -2599,7 +2599,7 @@ MessageEventInit.prototype.ports;
  * @constructor
  * @extends {Event}
  * @param {string} type
- * @param {MessageEventInit<T>=} opt_eventInitDict
+ * @param {?MessageEventInit<T>=} opt_eventInitDict
  * @template T
  */
 function MessageEvent(type, opt_eventInitDict) {}
@@ -2625,14 +2625,14 @@ MessageEvent.prototype.lastEventId;
 
 /**
  * The window that dispatched the event.
- * @type {Window}
+ * @type {?Window}
  */
 MessageEvent.prototype.source;
 
 /**
  * The Array of MessagePorts sent with the message, for cross-document
  * messaging and channel messaging.
- * @type {!Array<MessagePort>}
+ * @type {!Array<?MessagePort>}
  */
 MessageEvent.prototype.ports;
 
@@ -2646,7 +2646,7 @@ MessageEvent.prototype.ports;
  * @param {string=} originArg
  * @param {string=} lastEventIdArg
  * @param {?MessageEventSource=} sourceArg
- * @param {!Array<MessagePort>=} portsArg
+ * @param {!Array<?MessagePort>=} portsArg
  * @return {undefined}
  */
 MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
@@ -2663,7 +2663,7 @@ MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
  * @param {string=} originArg
  * @param {string=} lastEventIdArg
  * @param {?MessageEventSource=} sourceArg
- * @param {!Array<MessagePort>=} portsArg
+ * @param {!Array<?MessagePort>=} portsArg
  * @return {undefined}
  */
 MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
@@ -2805,7 +2805,7 @@ DataTransfer.prototype.setData = function(format, data) {};
 DataTransfer.prototype.getData = function(format) { return ''; };
 
 /**
- * @param {HTMLElement} img The image to use when dragging.
+ * @param {?HTMLElement} img The image to use when dragging.
  * @param {number} x Horizontal position of the cursor.
  * @param {number} y Vertical position of the cursor.
  * @return {undefined}
@@ -2813,7 +2813,7 @@ DataTransfer.prototype.getData = function(format) { return ''; };
 DataTransfer.prototype.setDragImage = function(img, x, y) {};
 
 /**
- * @param {HTMLElement} elem Element to receive drag result events.
+ * @param {?HTMLElement} elem Element to receive drag result events.
  * @return {undefined}
  */
 DataTransfer.prototype.addElement = function(elem) {};
@@ -2821,7 +2821,7 @@ DataTransfer.prototype.addElement = function(elem) {};
 /**
  * Addition for accessing clipboard file data that are part of the proposed
  * HTML5 spec.
- * @type {DataTransfer}
+ * @type {?DataTransfer}
  */
 MouseEvent.prototype.dataTransfer;
 
@@ -2846,7 +2846,7 @@ WheelEventInit.prototype.deltaMode;
 
 /**
  * @param {string} type
- * @param {WheelEventInit=} opt_eventInitDict
+ * @param {?WheelEventInit=} opt_eventInitDict
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#interface-WheelEvent
  * @constructor
  * @extends {MouseEvent}
@@ -2920,7 +2920,7 @@ DataTransferItemList.prototype.length;
 
 /**
  * @param {number} i File to return from the list.
- * @return {DataTransferItem} The ith DataTransferItem in the list, or null.
+ * @return {?DataTransferItem} The ith DataTransferItem in the list, or null.
  * @nosideeffects
  */
 DataTransferItemList.prototype.item = function(i) { return null; };
@@ -2930,7 +2930,7 @@ DataTransferItemList.prototype.item = function(i) { return null; };
  * @param {string|!File} data Data for the item being added.
  * @param {string=} opt_type Mime type of the item being added. MUST be present
  *     if the {@code data} parameter is a string.
- * @return {DataTransferItem}
+ * @return {?DataTransferItem}
  */
 DataTransferItemList.prototype.add = function(data, opt_type) {};
 
@@ -2966,11 +2966,11 @@ DragEventInit.prototype.dataTransfer;
  * @constructor
  * @extends {MouseEvent}
  * @param {string} type
- * @param {DragEventInit=} opt_eventInitDict
+ * @param {?DragEventInit=} opt_eventInitDict
  */
 function DragEvent(type, opt_eventInitDict) {}
 
-/** @type {DataTransfer} */
+/** @type {?DataTransfer} */
 DragEvent.prototype.dataTransfer;
 
 
@@ -2993,7 +2993,7 @@ ProgressEventInit.prototype.total;
 /**
  * @constructor
  * @param {string} type
- * @param {ProgressEventInit=} opt_progressEventInitDict
+ * @param {?ProgressEventInit=} opt_progressEventInitDict
  * @extends {Event}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ProgressEvent
  */
@@ -3456,7 +3456,7 @@ FileList.prototype.length;
 
 /**
  * @param {number} i File to return from the list.
- * @return {File} The ith file in the list.
+ * @return {?File} The ith file in the list.
  * @nosideeffects
  */
 FileList.prototype.item = function(i) { return null; };
@@ -3504,7 +3504,7 @@ XMLHttpRequest.prototype.ontimeout;
 XMLHttpRequest.prototype.onloadend;
 
 /**
- * @type {XMLHttpRequestUpload}
+ * @type {?XMLHttpRequestUpload}
  * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-upload-attribute
  */
 XMLHttpRequest.prototype.upload;
@@ -3529,7 +3529,7 @@ XMLHttpRequest.prototype.response;
 
 
 /**
- * @type {ArrayBuffer}
+ * @type {?ArrayBuffer}
  * Implemented as a draft spec in Firefox 4 as the way to get a requested array
  * buffer from an XMLHttpRequest.
  * @see https://developer.mozilla.org/En/Using_XMLHttpRequest#Receiving_binary_data_using_JavaScript_typed_arrays
@@ -3751,7 +3751,7 @@ HTMLButtonElement.prototype.labels;
 HTMLButtonElement.prototype.validationMessage;
 
 /**
- * @const {ValidityState}
+ * @const {?ValidityState}
  */
 HTMLButtonElement.prototype.validity;
 
@@ -3861,7 +3861,7 @@ HTMLInputElement.prototype.selectionDirection;
 HTMLInputElement.prototype.setSelectionRange = function(start, end, direction) {};
 
 /**
- * @const {ValidityState}
+ * @const {?ValidityState}
  */
 HTMLInputElement.prototype.validity;
 
@@ -3880,7 +3880,7 @@ HTMLInputElement.prototype.reportValidity = function() {};
  */
 HTMLInputElement.prototype.setCustomValidity = function(message) {};
 
-/** @type {Element} */
+/** @type {?Element} */
 HTMLLabelElement.prototype.control;
 
 /** @type {boolean} */
@@ -3893,14 +3893,14 @@ HTMLSelectElement.prototype.autofocus;
  */
 HTMLSelectElement.prototype.labels;
 
-/** @type {HTMLCollection<!HTMLOptionElement>} */
+/** @type {?HTMLCollection<!HTMLOptionElement>} */
 HTMLSelectElement.prototype.selectedOptions;
 
 /** @type {string} */
 HTMLSelectElement.prototype.validationMessage;
 
 /**
- * @const {ValidityState}
+ * @const {?ValidityState}
  */
 HTMLSelectElement.prototype.validity;
 
@@ -3936,7 +3936,7 @@ HTMLTextAreaElement.prototype.placeholder;
 HTMLTextAreaElement.prototype.validationMessage;
 
 /**
- * @const {ValidityState}
+ * @const {?ValidityState}
  */
 HTMLTextAreaElement.prototype.validity;
 
@@ -4012,7 +4012,7 @@ Element.prototype.requestFullscreen = function(options) {};
 Document.prototype.fullscreenEnabled;
 
 /**
- * @type {Element}
+ * @type {?Element}
  * @see http://www.w3.org/TR/2012/WD-fullscreen-20120703/#dom-document-fullscreenelement
  */
 Document.prototype.fullscreenElement;
@@ -4034,7 +4034,7 @@ Document.prototype.mozFullScreen;
 
 Document.prototype.mozCancelFullScreen = function() {};
 
-/** @type {Element} */
+/** @type {?Element} */
 Document.prototype.mozFullScreenElement;
 
 /** @type {boolean} */
@@ -4067,10 +4067,10 @@ Document.prototype.webkitCancelFullScreen = function() {};
 /** @type {boolean} */
 Document.prototype.webkitFullscreenEnabled;
 
-/** @type {Element} */
+/** @type {?Element} */
 Document.prototype.webkitCurrentFullScreenElement;
 
-/** @type {Element} */
+/** @type {?Element} */
 Document.prototype.webkitFullscreenElement;
 
 /** @type {boolean} */
@@ -4087,7 +4087,7 @@ Document.prototype.msExitFullscreen = function() {};
 /** @type {boolean} */
 Document.prototype.msFullscreenEnabled;
 
-/** @type {Element} */
+/** @type {?Element} */
 Document.prototype.msFullscreenElement;
 
 /** @const {number} */
@@ -4117,7 +4117,7 @@ function MutationRecord() {}
 /** @type {string} */
 MutationRecord.prototype.type;
 
-/** @type {Node} */
+/** @type {?Node} */
 MutationRecord.prototype.target;
 
 /** @type {!NodeList<!Node>} */
@@ -4150,8 +4150,8 @@ MutationRecord.prototype.oldValue;
 function MutationObserver(callback) {}
 
 /**
- * @param {Node} target
- * @param {MutationObserverInit=} options
+ * @param {?Node} target
+ * @param {?MutationObserverInit=} options
  * @return {undefined}
  */
 MutationObserver.prototype.observe = function(target, options) {};
@@ -4164,19 +4164,19 @@ MutationObserver.prototype.disconnect = function() {};
 MutationObserver.prototype.takeRecords = function() {};
 
 /**
- * @type {function(new:MutationObserver, function(Array<MutationRecord>))}
+ * @type {function(new:MutationObserver, function(?Array<?MutationRecord>))}
  */
 Window.prototype.WebKitMutationObserver;
 
 /**
- * @type {function(new:MutationObserver, function(Array<MutationRecord>))}
+ * @type {function(new:MutationObserver, function(?Array<?MutationRecord>))}
  */
 Window.prototype.MozMutationObserver;
 
 
 /**
  * @see http://www.w3.org/TR/page-visibility/
- * @type {VisibilityState}
+ * @type {?VisibilityState}
  */
 Document.prototype.visibilityState;
 
@@ -4232,7 +4232,7 @@ Document.prototype.registerElement = function(type, options) {};
  * @see http://www.w3.org/TR/components-intro/
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type
- * @param {{extends: (string|undefined), prototype: (Object|undefined)}} options
+ * @param {{extends: (string|undefined), prototype: (?Object|undefined)}} options
  * @deprecated This method has been removed and will be removed soon from this file.
  */
 Document.prototype.register = function(type, options) {};
@@ -4271,14 +4271,14 @@ ShadowRoot.prototype.host;
 
 /**
  * @param {string} id id.
- * @return {HTMLElement}
+ * @return {?HTMLElement}
  * @nosideeffects
  */
 ShadowRoot.prototype.getElementById = function(id) {};
 
 
 /**
- * @return {Selection}
+ * @return {?Selection}
  * @nosideeffects
  */
 ShadowRoot.prototype.getSelection = function() {};
@@ -4287,7 +4287,7 @@ ShadowRoot.prototype.getSelection = function() {};
 /**
  * @param {number} x
  * @param {number} y
- * @return {Element}
+ * @return {?Element}
  * @nosideeffects
  */
 ShadowRoot.prototype.elementFromPoint = function(x, y) {};
@@ -4373,7 +4373,7 @@ HTMLShadowElement.prototype.getDistributedNodes = function() {};
  * @extends {Event}
  *
  * @param {string} type
- * @param {ErrorEventInit=} opt_eventInitDict
+ * @param {?ErrorEventInit=} opt_eventInitDict
  */
 function ErrorEvent(type, opt_eventInitDict) {}
 
@@ -4552,7 +4552,7 @@ HTMLMenuItemElement.prototype.default;
 /**
  * @see http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#relatedevent
  * @param {string} type
- * @param {{relatedTarget: (EventTarget|undefined)}=} opt_eventInitDict
+ * @param {{relatedTarget: (?EventTarget|undefined)}=} opt_eventInitDict
  * @constructor
  * @extends {Event}
  */
@@ -4560,7 +4560,7 @@ function RelatedEvent(type, opt_eventInitDict) {}
 
 /**
  * @see http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#dom-relatedevent-relatedtarget
- * @type {EventTarget|undefined}
+ * @type {?EventTarget|undefined}
  */
 RelatedEvent.prototype.relatedTarget;
 
@@ -4586,14 +4586,14 @@ HTMLDialogElement.prototype.returnValue;
 
 /**
  * @see http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#dom-dialog-show
- * @param {(MouseEvent|Element)=} opt_anchor
+ * @param {(?MouseEvent|?Element)=} opt_anchor
  * @return {undefined}
  */
 HTMLDialogElement.prototype.show = function(opt_anchor) {};
 
 /**
  * @see http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#dom-dialog-showmodal
- * @param {(MouseEvent|Element)=} opt_anchor
+ * @param {(?MouseEvent|?Element)=} opt_anchor
  * @return {undefined}
  */
 HTMLDialogElement.prototype.showModal = function(opt_anchor) {};
@@ -4648,7 +4648,7 @@ HTMLLinkElement.prototype.crossOrigin;
 HTMLFieldSetElement.prototype.checkValidity = function() {};
 
 /**
- * @type {HTMLCollection}
+ * @type {?HTMLCollection}
  * @see https://www.w3.org/TR/html5/forms.html#dom-fieldset-elements
  */
 HTMLFieldSetElement.prototype.elements;
@@ -4679,7 +4679,7 @@ HTMLFieldSetElement.prototype.type;
 HTMLFieldSetElement.prototype.validationMessage;
 
 /**
- * @type {ValidityState}
+ * @type {?ValidityState}
  * @see https://www.w3.org/TR/html5/forms.html#the-fieldset-element
  */
 HTMLFieldSetElement.prototype.validity;
@@ -4713,7 +4713,7 @@ RadioNodeList.prototype.value;
 function HTMLDataListElement() {}
 
 
-/** @type {HTMLCollection<!HTMLOptionElement>} */
+/** @type {?HTMLCollection<!HTMLOptionElement>} */
 HTMLDataListElement.prototype.options;
 
 
@@ -4762,7 +4762,7 @@ function HTMLOutputElement() {}
 HTMLOutputElement.prototype.htmlFor;
 
 /**
- * @type {HTMLFormElement}
+ * @type {?HTMLFormElement}
  */
 HTMLOutputElement.prototype.form;
 
@@ -5118,13 +5118,13 @@ PluginArray.prototype.length;
 
 /**
  * @param {number} index
- * @return {Plugin}
+ * @return {?Plugin}
  */
 PluginArray.prototype.item = function(index) {};
 
 /**
  * @param {string} name
- * @return {Plugin}
+ * @return {?Plugin}
  */
 PluginArray.prototype.namedItem = function(name) {};
 
@@ -5144,7 +5144,7 @@ function MimeTypeArray() {}
 
 /**
  * @param {number} index
- * @return {MimeType}
+ * @return {?MimeType}
  */
 MimeTypeArray.prototype.item = function(index) {};
 
@@ -5156,7 +5156,7 @@ MimeTypeArray.prototype.length;
 
 /**
  * @param {string} name
- * @return {MimeType}
+ * @return {?MimeType}
  */
 MimeTypeArray.prototype.namedItem = function(name) {};
 
@@ -5169,7 +5169,7 @@ function MimeType() {}
 /** @type {string} */
 MimeType.prototype.description;
 
-/** @type {Plugin} */
+/** @type {?Plugin} */
 MimeType.prototype.enabledPlugin;
 
 /** @type {string} */
@@ -5256,7 +5256,7 @@ HTMLSlotElement.prototype.assignedElements = function(options) {};
 Event.prototype.composed;
 
 /**
- * @return {!Array<!(Element|ShadowRoot|Document|Window)>}
+ * @return {!Array<!(?Element|?ShadowRoot|?Document|?Window)>}
  */
 Event.prototype.composedPath = function() {};
 
@@ -5335,7 +5335,7 @@ StorageManager.prototype.persisted = function() {};
 /** @return {!Promise<boolean>} */
 StorageManager.prototype.persist = function() {};
 
-/** @return {!Promise<StorageEstimate>} */
+/** @return {!Promise<?StorageEstimate>} */
 StorageManager.prototype.estimate = function() {};
 
 /**

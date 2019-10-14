@@ -25,13 +25,13 @@
  * @author nicksantos@google.com
  */
 
-/** @type {Element} */
+/** @type {?Element} */
 StyleSheet.prototype.owningElement;
 
 /** @type {boolean} */
 StyleSheet.prototype.readOnly;
 
-/** @type {StyleSheetList} */
+/** @type {?StyleSheetList} */
 StyleSheet.prototype.imports;
 
 /** @type {string} */
@@ -66,7 +66,7 @@ StyleSheet.prototype.removeRule;
 /** @type {string} */
 StyleSheet.prototype.cssText;
 
-/** @type {CSSRuleList} */
+/** @type {?CSSRuleList} */
 StyleSheet.prototype.rules;
 
 // StyleSheet methods

@@ -139,7 +139,7 @@ CSSMatrix.prototype.setMatrixValue = function(string) {};
 CSSMatrix.prototype.multiply = function(secondMatrix) {};
 
 /**
- * @return {CSSMatrix} Returns void if the matrix is non-invertable.
+ * @return {?CSSMatrix} Returns void if the matrix is non-invertable.
  * @see https://dvcs.w3.org/hg/FXTF/raw-file/tip/matrix/index.html#widl-CSSMatrix-inverse-CSSMatrix
  */
 CSSMatrix.prototype.inverse = function() {};

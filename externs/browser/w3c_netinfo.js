@@ -25,19 +25,19 @@
  */
 function NetworkInformation() {}
 
-/** @type {ConnectionType} */
+/** @type {?ConnectionType} */
 NetworkInformation.prototype.type;
 
-/** @type {EffectiveConnectionType} */
+/** @type {?EffectiveConnectionType} */
 NetworkInformation.prototype.effectiveType;
 
-/** @type {Megabit} */
+/** @type {?Megabit} */
 NetworkInformation.prototype.downlinkMax;
 
-/** @type {Megabit} */
+/** @type {?Megabit} */
 NetworkInformation.prototype.downlink;
 
-/** @type {Millisecond} */
+/** @type {?Millisecond} */
 NetworkInformation.prototype.rtt;
 
 /** @type {?function(Event)} */

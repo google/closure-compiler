@@ -52,7 +52,7 @@ function BlobBuilder() {}
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append0
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append2
- * @param {string|Blob|ArrayBuffer} data
+ * @param {string|?Blob|?ArrayBuffer} data
  * @param {string=} endings
  * @return {undefined}
  */
@@ -76,7 +76,7 @@ function WebKitBlobBuilder() {}
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append0
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append1
  * @see http://www.w3.org/TR/file-writer-api/#widl-BlobBuilder-append2
- * @param {string|Blob|ArrayBuffer} data
+ * @param {string|?Blob|?ArrayBuffer} data
  * @param {string=} endings
  * @return {undefined}
  */
@@ -447,7 +447,7 @@ FileSaver.prototype.readyState;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-error
- * @type {FileError}
+ * @type {?FileError}
  */
 FileSaver.prototype.error;
 

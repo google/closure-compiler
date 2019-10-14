@@ -32,7 +32,7 @@ function EventTarget() {}
 
 /**
  * @param {string} type
- * @param {EventListener|function(!Event):*} listener
+ * @param {?EventListener|function(!Event):*} listener
  * @param {(boolean|!AddEventListenerOptions)=} opt_options
  * @return {undefined}
  * @see https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
@@ -42,7 +42,7 @@ EventTarget.prototype.addEventListener = function(type, listener, opt_options) {
 
 /**
  * @param {string} type
- * @param {EventListener|function(!Event):*} listener
+ * @param {?EventListener|function(!Event):*} listener
  * @param {(boolean|!EventListenerOptions)=} opt_options
  * @return {undefined}
  * @see https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener
@@ -95,7 +95,7 @@ EventInit.prototype.composed;
 /**
  * @constructor
  * @param {string} type
- * @param {EventInit=} opt_eventInitDict
+ * @param {?EventInit=} opt_eventInitDict
  */
 function Event(type, opt_eventInitDict) {}
 
@@ -120,10 +120,10 @@ Event.BUBBLING_PHASE;
 /** @type {string} */
 Event.prototype.type;
 
-/** @type {EventTarget} */
+/** @type {?EventTarget} */
 Event.prototype.target;
 
-/** @type {EventTarget} */
+/** @type {?EventTarget} */
 Event.prototype.currentTarget;
 
 /** @type {number} */
@@ -140,7 +140,7 @@ Event.prototype.timeStamp;
 
 /**
  * Present for events spawned in browsers that support shadow dom.
- * @type {Array<!Element>|undefined}
+ * @type {?Array<!Element>|undefined}
  */
 Event.prototype.path;
 
@@ -184,7 +184,7 @@ CustomEventInit.prototype.detail;
  * @constructor
  * @extends {Event}
  * @param {string} type
- * @param {CustomEventInit<T>=} opt_eventInitDict
+ * @param {?CustomEventInit<T>=} opt_eventInitDict
  * @template T
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#interface-CustomEvent
  */
@@ -233,7 +233,7 @@ UIEventInit.prototype.detail;
  * @constructor
  * @extends {Event}
  * @param {string} type
- * @param {UIEventInit=} opt_eventInitDict
+ * @param {?UIEventInit=} opt_eventInitDict
  */
 function UIEvent(type, opt_eventInitDict) {}
 
@@ -244,7 +244,7 @@ UIEvent.prototype.detail;
  * @param {string} typeArg
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
- * @param {Window} viewArg
+ * @param {?Window} viewArg
  * @param {number} detailArg
  * @return {undefined}
  */
@@ -332,7 +332,7 @@ MouseEventInit.prototype.relatedTarget;
  * @constructor
  * @extends {UIEvent}
  * @param {string} type
- * @param {MouseEventInit=} opt_eventInitDict
+ * @param {?MouseEventInit=} opt_eventInitDict
  */
 function MouseEvent(type, opt_eventInitDict) {}
 
@@ -363,7 +363,7 @@ MouseEvent.prototype.metaKey;
 /** @type {number} */
 MouseEvent.prototype.button;
 
-/** @type {EventTarget} */
+/** @type {?EventTarget} */
 MouseEvent.prototype.relatedTarget;
 
 
@@ -373,7 +373,7 @@ MouseEvent.prototype.relatedTarget;
  */
 function MutationEvent() {}
 
-/** @type {Node} */
+/** @type {?Node} */
 MutationEvent.prototype.relatedNode;
 
 /** @type {string} */
@@ -392,7 +392,7 @@ MutationEvent.prototype.attrChange;
  * @param {string} typeArg
  * @param {boolean} canBubbleArg
  * @param {boolean} cancelableArg
- * @param {Node} relatedNodeArg
+ * @param {?Node} relatedNodeArg
  * @param {string} prevValueArg
  * @param {string} newValueArg
  * @param {string} attrNameArg
@@ -435,7 +435,7 @@ KeyboardEventInit.prototype.locale;
  * @constructor
  * @extends {UIEvent}
  * @param {string} type
- * @param {KeyboardEventInit=} opt_eventInitDict
+ * @param {?KeyboardEventInit=} opt_eventInitDict
  */
 function KeyboardEvent(type, opt_eventInitDict) {}
 
@@ -479,11 +479,11 @@ FocusEventInit.prototype.relatedTarget;
  * @constructor
  * @extends {UIEvent}
  * @param {string} type
- * @param {FocusEventInit=} opt_eventInitDict
+ * @param {?FocusEventInit=} opt_eventInitDict
  */
 function FocusEvent(type, opt_eventInitDict) {}
 
-/** @type {EventTarget} */
+/** @type {?EventTarget} */
 FocusEvent.prototype.relatedTarget;
 
 
@@ -537,7 +537,7 @@ InputEventInit.prototype.dataTransfer;
  * @constructor
  * @extends {UIEvent}
  * @param {string} type
- * @param {InputEventInit=} opt_eventInitDict
+ * @param {?InputEventInit=} opt_eventInitDict
  * @see https://www.w3.org/TR/uievents/#interface-inputevent
  * @see https://w3c.github.io/input-events/#interface-InputEvent
  */

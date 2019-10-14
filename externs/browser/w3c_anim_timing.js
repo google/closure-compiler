@@ -30,7 +30,7 @@ var FrameRequestCallback;
 
 /**
  * @param {!FrameRequestCallback} callback
- * @param {Element=} opt_element In early versions of this API, the callback
+ * @param {?Element=} opt_element In early versions of this API, the callback
  *     was invoked only if the element was visible.
  * @return {number}
  */

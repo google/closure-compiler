@@ -42,7 +42,7 @@ function HTMLSpanElement() {}
 Window.prototype.Components;
 
 /**
- * @type {Window}
+ * @type {?Window}
  * @see https://developer.mozilla.org/en/DOM/window.content
  */
 Window.prototype.content;
@@ -158,13 +158,13 @@ Document.prototype.alinkColor;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.anchors
- * @type {HTMLCollection<!HTMLAnchorElement>}
+ * @type {?HTMLCollection<!HTMLAnchorElement>}
  */
 Document.prototype.anchors;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.applets
- * @type {HTMLCollection<!HTMLAppletElement>}
+ * @type {?HTMLCollection<!HTMLAppletElement>}
  */
 Document.prototype.applets;
 /** @type {?string} */ Document.prototype.baseURI;
@@ -175,7 +175,7 @@ Document.prototype.applets;
  */
 Document.prototype.bgColor;
 
-/** @type {HTMLBodyElement} */ Document.prototype.body;
+/** @type {?HTMLBodyElement} */ Document.prototype.body;
 Document.prototype.characterSet;
 
 /**
@@ -209,7 +209,7 @@ Document.prototype.domain;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.embeds
- * @type {HTMLCollection<!HTMLEmbedElement>}
+ * @type {?HTMLCollection<!HTMLEmbedElement>}
  */
 Document.prototype.embeds;
 
@@ -219,15 +219,15 @@ Document.prototype.embeds;
  */
 Document.prototype.fgColor;
 
-/** @type {Element} */ Document.prototype.firstChild;
+/** @type {?Element} */ Document.prototype.firstChild;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.forms
- * @type {HTMLCollection<!HTMLFormElement>}
+ * @type {?HTMLCollection<!HTMLFormElement>}
  */
 Document.prototype.forms;
 
-/** @type {HTMLCollection<!HTMLImageElement>} */
+/** @type {?HTMLCollection<!HTMLImageElement>} */
 Document.prototype.images;
 
 /**
@@ -244,7 +244,7 @@ Document.prototype.linkColor;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.links
- * @type {HTMLCollection<(!HTMLAreaElement|!HTMLAnchorElement)>}
+ * @type {?HTMLCollection<(!HTMLAreaElement|!HTMLAnchorElement)>}
  */
 Document.prototype.links;
 
@@ -266,7 +266,7 @@ Document.prototype.popupNode;
 Document.prototype.referrer;
 
 /**
- * @type {StyleSheetList}
+ * @type {?StyleSheetList}
  * @see https://developer.mozilla.org/en/DOM/document.styleSheets
  */
 Document.prototype.styleSheets;
@@ -292,11 +292,11 @@ Document.prototype.clear = function() {};
 
 /**
  * @param {string} type
- * @return {Event}
+ * @return {?Event}
  */
 Document.prototype.createEvent = function(type) {};
 Document.prototype.createNSResolver;
-/** @return {Range} */ Document.prototype.createRange = function() {};
+/** @return {?Range} */ Document.prototype.createRange = function() {};
 Document.prototype.createTreeWalker;
 
 Document.prototype.evaluate;
@@ -349,7 +349,7 @@ Document.prototype.onoffline;
 // XUL
 /**
  * @see http://developer.mozilla.org/en/DOM/document.getBoxObjectFor
- * @return {BoxObject}
+ * @return {?BoxObject}
  * @nosideeffects
  */
 Document.prototype.getBoxObjectFor = function(element) {};
@@ -359,12 +359,12 @@ Document.prototype.getBoxObjectFor = function(element) {};
 
 /**
  * @param {!TrustedHTML|string} tag
- * @return {DocumentFragment}
+ * @return {?DocumentFragment}
  */
 Range.prototype.createContextualFragment;
 
 /**
- * @param {Node} parent
+ * @param {?Node} parent
  * @param {number} offset
  * @return {boolean}
  * @nosideeffects
@@ -372,7 +372,7 @@ Range.prototype.createContextualFragment;
 Range.prototype.isPointInRange;
 
 /**
- * @param {Node} parent
+ * @param {?Node} parent
  * @param {number} offset
  * @return {number}
  * @nosideeffects
@@ -380,14 +380,14 @@ Range.prototype.isPointInRange;
 Range.prototype.comparePoint;
 
 /**
- * @param {Node} n
+ * @param {?Node} n
  * @return {boolean}
  * @nosideeffects
  */
 Range.prototype.intersectsNode;
 
 /**
- * @param {Node} n
+ * @param {?Node} n
  * @return {number}
  * @nosideeffects
  */
@@ -479,7 +479,7 @@ Navigator.prototype.securityPolicy;
 
 /**
  * @param {string} url
- * @param {ArrayBufferView|Blob|string|FormData=} opt_data
+ * @param {?ArrayBufferView|?Blob|string|?FormData=} opt_data
  * @return {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/navigator.sendBeacon
  */
@@ -501,7 +501,7 @@ Navigator.prototype.vendorSub;
 /** @constructor */
 function BoxObject() {}
 
-/** @type {Element} */
+/** @type {?Element} */
 BoxObject.prototype.element;
 
 /** @type {number} */
@@ -521,7 +521,7 @@ BoxObject.prototype.width;
 
 
 /**
- * @param {Element} element
+ * @param {?Element} element
  * @param {?string=} pseudoElt
  * @return {?CSSStyleDeclaration}
  * @nosideeffects

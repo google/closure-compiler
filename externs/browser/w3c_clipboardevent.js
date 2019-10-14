@@ -38,7 +38,7 @@ ClipboardEventInit.prototype.clipboardData;
  * @constructor
  * @extends {Event}
  * @param {string} type
- * @param {ClipboardEventInit=} opt_eventInitDict
+ * @param {?ClipboardEventInit=} opt_eventInitDict
  */
 function ClipboardEvent(type, opt_eventInitDict) {}
 

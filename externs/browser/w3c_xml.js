@@ -326,7 +326,7 @@ XMLHttpRequest.prototype.open = function(method, url, opt_async, opt_user,
 XMLHttpRequest.prototype.setRequestHeader = function(header, value) {};
 
 /**
- * @param {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|string=} opt_data
+ * @param {?ArrayBuffer|ArrayBufferView|Blob|Document|FormData|string=} opt_data
  * @return {undefined}
  * @see https://xhr.spec.whatwg.org/#the-send()-method
  */
