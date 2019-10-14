@@ -1081,7 +1081,8 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "});"),
         lines(
             "/** @const */ var module$exports$mod_B = {};",
-            "/** @interface */ module$exports$mod_B.B = function(){};",
+            "/** @interface */ function module$contents$mod_B_B(){}",
+            "/** @const */ module$exports$mod_B.B = module$contents$mod_B_B;",
             "",
             "/** @const */ var module$exports$mod_A = {};",
             "/** @constructor @implements {module$exports$mod_B.B} */",
@@ -1431,26 +1432,28 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testAliasedGoogModuleGet3() {
     test(
         new String[] {
-            lines(
-                "goog.module('a.b.c');",
-                "/** @constructor */ function C() {}",
-                "exports = C"),
-            lines(
-                "/** @type {a.b.c} */ var c;",
-                "function f() {",
-                "  var C = goog.module.get('a.b.c');",
-                "  c = new C;",
-                "}"),
+          lines(
+              "goog.module('a.b.c');", //
+              "/** @constructor */ function C() {}",
+              "exports = C"),
+          lines(
+              "/** @type {a.b.c} */ var c;",
+              "function f() {",
+              "  var C = goog.module.get('a.b.c');",
+              "  c = new C;",
+              "}"),
         },
-
         new String[] {
-            "/** @constructor */ function module$exports$a$b$c() {}",
-            lines(
-                "/** @type {module$exports$a$b$c} */ var c;",
-                "function f() {",
-                "  var C = module$exports$a$b$c;",
-                "  c = new C;",
-                "}")});
+          lines(
+              "/** @constructor */ function module$contents$a$b$c_C() {}",
+              "/** @const */ var module$exports$a$b$c = module$contents$a$b$c_C;"),
+          lines(
+              "/** @type {module$exports$a$b$c} */ var c;",
+              "function f() {",
+              "  var C = module$exports$a$b$c;",
+              "  c = new C;",
+              "}")
+        });
   }
 
   @Test
@@ -1471,13 +1474,15 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "}")
         },
         new String[] {
-          "/** @constructor */ function module$exports$x$y$z() {}",
+          lines(
+              "/** @constructor */ function module$contents$x$y$z_Z() {}",
+              "/** @const */ var module$exports$x$y$z = module$contents$x$y$z_Z;"),
           lines(
               "/** @const */ var module$exports$a = {};",
               "/** @type {module$contents$a_x.y.z} */ var module$contents$a_c;",
               "function module$contents$a_f() {",
               "  module$contents$a_c = new module$exports$x$y$z;",
-              "}")
+              "}"),
         });
   }
 
@@ -1658,11 +1663,12 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testExtractableExport2() {
     test(
         lines(
-            "goog.module('xid');",
+            "goog.module('xid');", //
             "function xid() {}",
             "exports = xid;"),
-
-        "function module$exports$xid() {}");
+        lines(
+            "function module$contents$xid_xid() {}",
+            "/** @const */ var module$exports$xid = module$contents$xid_xid;"));
   }
 
   @Test
@@ -1871,34 +1877,32 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     // script.
     test(
         new String[] {
-            lines(
-                "goog.module('p.A');",
-                "/** @constructor */ function A() {}",
-                "exports = A;"),
-            lines(
-                "goog.provide('p.B');",
-                "/** @constructor */ p.B = function() {}"),
-            lines(
-                "goog.module('p.C');",
-                "var A = goog.require('p.A');",
-                "var B = goog.require('p.B');",
-                "function main() {",
-                "  /** @type {A} */ var a = new A;",
-                "  /** @type {B} */ var b = new B;",
-                "}")},
-
+          lines("goog.module('p.A');", "/** @constructor */ function A() {}", "exports = A;"),
+          lines("goog.provide('p.B');", "/** @constructor */ p.B = function() {}"),
+          lines(
+              "goog.module('p.C');",
+              "var A = goog.require('p.A');",
+              "var B = goog.require('p.B');",
+              "function main() {",
+              "  /** @type {A} */ var a = new A;",
+              "  /** @type {B} */ var b = new B;",
+              "}")
+        },
         new String[] {
-            "/** @constructor */ function module$exports$p$A() {}",
-            lines(
-                "goog.provide('p.B');",
-                "/** @constructor */ p.B = function() {}"),
-            lines(
-                "/** @const */ var module$exports$p$C = {};",
-                "goog.require('p.B');",
-                "function module$contents$p$C_main() {",
-                "  /** @type {module$exports$p$A} */ var a = new module$exports$p$A;",
-                "  /** @type {p.B} */ var b = new p.B;",
-                "}")});
+          lines(
+              "/** @constructor */ function module$contents$p$A_A() {}",
+              "/** @const */ var module$exports$p$A = module$contents$p$A_A;"),
+          lines(
+              "goog.provide('p.B');", //
+              "/** @constructor */ p.B = function() {}"),
+          lines(
+              "/** @const */ var module$exports$p$C = {};",
+              "goog.require('p.B');",
+              "function module$contents$p$C_main() {",
+              "  /** @type {module$exports$p$A} */ var a = new module$exports$p$A;",
+              "  /** @type {p.B} */ var b = new p.B;",
+              "}")
+        });
   }
 
   @Test
@@ -1931,8 +1935,12 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "}")
         },
         new String[] {
-          "/** @constructor */ function module$exports$p$A() {}",
-          "/** @constructor */ function module$exports$p$B() {}",
+          lines(
+              "/** @constructor */ function module$contents$p$A_A() {}",
+              "/** @const */ var module$exports$p$A = module$contents$p$A_A;"),
+          lines(
+              "/** @constructor */ function module$contents$p$B_B() {}",
+              "/** @const */ var module$exports$p$B = module$contents$p$B_B;"),
           lines(
               "/** @const */ var module$exports$p$C = {};",
               "function module$contents$p$C_main() {",
@@ -1986,8 +1994,14 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "}")
         },
         new String[] {
-          lines("/** @constructor */", "function module$exports$p$A() {}"),
-          lines("/** @constructor */", "function module$exports$p$B() {}"),
+          lines(
+              "/** @constructor */",
+              "function module$contents$p$A_A() {}",
+              "/** @const */ var module$exports$p$A = module$contents$p$A_A;"),
+          lines(
+              "/** @constructor */",
+              "function module$contents$p$B_B() {}",
+              "/** @const */ var module$exports$p$B = module$contents$p$B_B;"),
           lines(
               "/** @const */ var module$exports$p$C = {};",
               "function module$contents$p$C_main() {",
@@ -2016,17 +2030,19 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "/** @constructor @extends {A} */",
               "function B() {}",
               "B.prototype = new A;",
-              "exports = B;")
+              "exports = B;"),
         },
         new String[] {
           lines(
               "/** @constructor */",
-              "function module$exports$p$A() {}",
-              "module$exports$p$A.prototype.setB = function(/** module$exports$p$B */ x) {}"),
+              "function module$contents$p$A_A() {}",
+              "module$contents$p$A_A.prototype.setB = function(/** module$exports$p$B */ x) {}",
+              "/** @const */ var module$exports$p$A = module$contents$p$A_A;"),
           lines(
               "/** @constructor @extends {module$exports$p$A} */",
-              "function module$exports$p$B() {}",
-              "module$exports$p$B.prototype = new module$exports$p$A;")
+              "function module$contents$p$B_B() {}",
+              "module$contents$p$B_B.prototype = new module$exports$p$A;",
+              "/** @const */ var module$exports$p$B = module$contents$p$B_B;"),
         });
   }
 
@@ -2034,49 +2050,53 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testRewriteJsDocCircularReferenceWithoutRequireType() {
     test(
         new String[] {
-            lines(
-                "goog.module('p.A');",
-                "/** @constructor */",
-                "function A() {}",
-                "A.prototype.setB = function(/** p.B */ x) {}",
-                "exports = A;"),
-            lines(
-                "goog.module('p.B');",
-                "var A = goog.require('p.A');",
-                "/** @constructor @extends {A} */",
-                "function B() {}",
-                "B.prototype = new A;",
-                "exports = B;")},
-
+          lines(
+              "goog.module('p.A');",
+              "/** @constructor */",
+              "function A() {}",
+              "A.prototype.setB = function(/** p.B */ x) {}",
+              "exports = A;"),
+          lines(
+              "goog.module('p.B');",
+              "var A = goog.require('p.A');",
+              "/** @constructor @extends {A} */",
+              "function B() {}",
+              "B.prototype = new A;",
+              "exports = B;")
+        },
         new String[] {
-            lines(
-                "/** @constructor */",
-                "function module$exports$p$A() {}",
-                "module$exports$p$A.prototype.setB = function(/** module$exports$p$B */ x) {}"),
-            lines(
-                "/** @constructor @extends {module$exports$p$A} */",
-                "function module$exports$p$B() {}",
-                "module$exports$p$B.prototype = new module$exports$p$A;")});
+          lines(
+              "/** @constructor */",
+              "function module$contents$p$A_A() {}",
+              "module$contents$p$A_A.prototype.setB = function(/** module$exports$p$B */ x) {}",
+              "/** @const */ var module$exports$p$A = module$contents$p$A_A;"),
+          lines(
+              "/** @constructor @extends {module$exports$p$A} */",
+              "function module$contents$p$B_B() {}",
+              "module$contents$p$B_B.prototype = new module$exports$p$A;",
+              "/** @const */ var module$exports$p$B = module$contents$p$B_B;")
+        });
   }
 
   @Test
   public void testRewriteJsDocOwnTypeExported() {
     test(
-          lines(
-              "goog.module('p.A');",
-              "",
-              "/** @constructor */",
-              "function A() {}",
-              "",
-              "/** @type {!A} */",
-              "var x = new A;",
-              "",
-              "exports = A;"),
-          lines(
-              "/** @constructor */",
-              "function module$exports$p$A() {}",
-              "/** @type {!module$exports$p$A} */",
-              "var module$contents$p$A_x = new module$exports$p$A;"));
+        lines(
+            "goog.module('p.A');",
+            "",
+            "/** @constructor */",
+            "function A() {}",
+            "",
+            "/** @type {!A} */",
+            "var x = new A;",
+            "",
+            "exports = A;"),
+        lines(
+            "/** @constructor */",
+            "function module$contents$p$A_A() {}",
+            "/** @type {!module$contents$p$A_A} */",
+            "var module$contents$p$A_x = new module$contents$p$A_A;",
+            "/** @const */ var module$exports$p$A = module$contents$p$A_A;"));
   }
 
   @Test
@@ -2124,28 +2144,31 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testImportInliningShadowsVar() {
     testError(
         new String[] {
-            lines(
-                "goog.provide('a.b.c');",
-                "a.b.c = 5;"),
-            lines(
-                "goog.module('a.b.d');",
-                "var c = goog.require('a.b.c');",
-                "function foo() {",
-                "  var a = 10;",
-                "  var b = c;",
-                "}")},
+          lines(
+              "goog.provide('a.b.c');", //
+              "a.b.c = 5;"),
+          lines(
+              "goog.module('a.b.d');",
+              "var c = goog.require('a.b.c');",
+              "function foo() {",
+              "  var a = 10;",
+              "  var b = c;",
+              "}")
+        },
         IMPORT_INLINING_SHADOWS_VAR);
 
     testError(
         new String[] {
-          lines("goog.provide('a.b.c');", "a.b.c = 5;"),
+          lines(
+              "goog.provide('a.b.c');", //
+              "a.b.c = 5;"),
           lines(
               "goog.module('a.b.d');",
               "var c = goog.requireType('a.b.c');",
               "function foo() {",
               "  var a = 10;",
               "  var b = c;",
-              "}")
+              "}"),
         },
         IMPORT_INLINING_SHADOWS_VAR);
   }
@@ -2204,8 +2227,9 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "function f(test) { return test; }",
             "exports = test;"),
         lines(
-            "function module$exports$a$b$c() {}",
-            "function module$contents$a$b$c_f(test) { return test; }"));
+            "function module$contents$a$b$c_test() {}",
+            "function module$contents$a$b$c_f(test) { return test; }",
+            "/** @const */ var module$exports$a$b$c = module$contents$a$b$c_test;"));
 
     test(
         lines(
@@ -2215,8 +2239,9 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "exports.test = test;"),
         lines(
             "/** @const */ var module$exports$a$b$c = {};",
-            "module$exports$a$b$c.test = function() {};",
-            "function module$contents$a$b$c_f(test) { return test; }"));
+            "function module$contents$a$b$c_test() {}",
+            "function module$contents$a$b$c_f(test) { return test; }",
+            "/** @const */ module$exports$a$b$c.test = module$contents$a$b$c_test;"));
   }
 
   @Test
@@ -2293,7 +2318,9 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "  var l = new A.B();",
                 "}")),
         expected(
-            "/** @constructor */ function module$exports$A() {}",
+            lines(
+                "/** @constructor */ function module$contents$A_A() {}",
+                "/** @const */ var module$exports$A = module$contents$A_A;"),
             lines(
                 "goog.provide('A.B');",
                 "/** @constructor */",
@@ -2322,7 +2349,9 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "}")
         },
         new String[] {
-          "/** @constructor */ function module$exports$A() {}",
+          lines(
+              "/** @constructor */ function module$contents$A_A() {}",
+              "/** @const */ var module$exports$A = module$contents$A_A;"),
           lines(
               "goog.provide('A.b.c.D');",
               "/** @constructor */",
@@ -2785,28 +2814,29 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testRewriteGoogModuleAliasesWithPrototypeGets1() {
     test(
         new String[] {
-            lines(
-                "goog.module('mod_B');",
-                "",
-                "/** @interface */ function B(){}",
-                "B.prototype.f = function(){};",
-                "",
-                "exports = B;"),
-            lines(
-                "goog.module('mod_A');",
-                "",
-                "var B = goog.require('mod_B');",
-                "",
-                "/** @type {B} */",
-                "var b;")
+          lines(
+              "goog.module('mod_B');",
+              "",
+              "/** @interface */ function B(){}",
+              "B.prototype.f = function(){};",
+              "",
+              "exports = B;"),
+          lines(
+              "goog.module('mod_A');",
+              "",
+              "var B = goog.require('mod_B');",
+              "",
+              "/** @type {B} */",
+              "var b;"),
         },
         new String[] {
-            lines(
-                "/**@interface */ function module$exports$mod_B() {}",
-                "module$exports$mod_B.prototype.f = function() {};"),
-            lines(
-                "/** @const */ var module$exports$mod_A = {};",
-                "/**@type {module$exports$mod_B} */ var module$contents$mod_A_b;")
+          lines(
+              "/**@interface */ function module$contents$mod_B_B() {}",
+              "module$contents$mod_B_B.prototype.f = function() {};",
+              "/** @const */ var module$exports$mod_B = module$contents$mod_B_B;"),
+          lines(
+              "/** @const */ var module$exports$mod_A = {};",
+              "/**@type {module$exports$mod_B} */ var module$contents$mod_A_b;"),
         });
   }
 
@@ -2814,27 +2844,29 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testRewriteGoogModuleAliasesWithPrototypeGets2() {
     test(
         new String[] {
-            lines(
-                "goog.module('mod_B');",
-                "",
-                "/** @interface */ function B(){}",
-                "",
-                "exports = B;"),
-            lines(
-                "goog.module('mod_A');",
-                "",
-                "var B = goog.require('mod_B');",
-                "B.prototype;",
-                "",
-                "/** @type {B} */",
-                "var b;")
+          lines(
+              "goog.module('mod_B');", //
+              "",
+              "/** @interface */ function B(){}",
+              "",
+              "exports = B;"),
+          lines(
+              "goog.module('mod_A');",
+              "",
+              "var B = goog.require('mod_B');",
+              "B.prototype;",
+              "",
+              "/** @type {B} */",
+              "var b;"),
         },
         new String[] {
-            "/**@interface */ function module$exports$mod_B() {}",
-            lines(
-                "/** @const */ var module$exports$mod_A = {}",
-                "module$exports$mod_B.prototype;",
-                "/**@type {module$exports$mod_B} */ var module$contents$mod_A_b;")
+          lines(
+              "/**@interface */ function module$contents$mod_B_B() {}",
+              "/** @const */ var module$exports$mod_B = module$contents$mod_B_B;"),
+          lines(
+              "/** @const */ var module$exports$mod_A = {}",
+              "module$exports$mod_B.prototype;",
+              "/**@type {module$exports$mod_B} */ var module$contents$mod_A_b;"),
         });
   }
 

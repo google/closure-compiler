@@ -3259,20 +3259,23 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testEs6GoogModule() {
-    String code = ""
-        + "goog.module('foo.bar');\n"
-        + "const STR = '3';\n"
-        + "function fn() {\n"
-        + "  alert(STR);\n"
-        + "}\n"
-        + "exports.fn = fn;\n";
-    String expectedCode = ""
-        + "goog.module('foo.bar');\n"
-        + "var module$exports$foo$bar = {};\n"
-        + "const STR = '3';\n"
-        + "module$exports$foo$bar.fn = function fn() {\n"
-        + "  alert(STR);\n"
-        + "};\n";
+    String code =
+        lines(
+            "goog.module('foo.bar');",
+            "const STR = '3';",
+            "function fn() {",
+            "  alert(STR);",
+            "}",
+            "exports.fn = fn;");
+    String expectedCode =
+        lines(
+            "goog.module('foo.bar');",
+            "var module$exports$foo$bar = {};",
+            "const STR = '3';",
+            "function fn() {",
+            "  alert(STR);",
+            "}",
+            "exports.fn = fn;\n");
 
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setClosurePass(true);
