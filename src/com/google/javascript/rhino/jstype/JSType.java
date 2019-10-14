@@ -1683,7 +1683,7 @@ public abstract class JSType implements Serializable {
       }
     }
 
-    return subtype.isImplicitPrototype(supertype);
+    return supertype.isImplicitPrototypeOf(subtype);
   }
 
   /**

@@ -722,33 +722,25 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   /**
-   * Checks that the prototype is an implicit prototype of this object. Since each object has an
-   * implicit prototype, an implicit prototype's implicit prototype is also this implicit
-   * prototype's.
+   * Returns whether {@code this} is on the implicit prototype chain of {@code other}.
    *
-   * @param prototype any prototype based object
-   * @return {@code true} if {@code prototype} is {@code equal} to any object in this object's
-   *     implicit prototype chain.
+   * <p>{@code this} need not be the immediate prototype of {@code other}.
    */
-  @SuppressWarnings("ReferenceEquality")
-  final boolean isImplicitPrototype(ObjectType prototype) {
-    prototype = deeplyUnwrap(prototype);
+  final boolean isImplicitPrototypeOf(ObjectType other) {
+    ObjectType unwrappedThis = deeplyUnwrap(this);
 
-    for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
-      if (current.isTemplatizedType()) {
-        current = current.toMaybeTemplatizedType().getReferencedType();
-      }
-
-      current = deeplyUnwrap(current);
-
+    for (other = deeplyUnwrap(other);
+        other != null;
+        other = deeplyUnwrap(other.getImplicitPrototype())) {
       // The prototype should match exactly.
       // NOTE: the use of "==" here rather than isEquivalentTo is deliberate.  This method
       // is very hot in the type checker and relying on identity improves performance of both
       // type checking/type inferrence and property disambiguation.
-      if (current != null && current == prototype) {
+      if (JSType.areIdentical(unwrappedThis, other)) {
         return true;
       }
     }
+
     return false;
   }
 
