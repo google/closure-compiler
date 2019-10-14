@@ -747,6 +747,8 @@ public abstract class ObjectType extends JSType implements Serializable {
    */
   @SuppressWarnings("ReferenceEquality")
   final boolean isImplicitPrototype(ObjectType prototype) {
+    prototype = deeplyUnwrap(prototype);
+
     for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
       if (current.isTemplatizedType()) {
         current = current.toMaybeTemplatizedType().getReferencedType();
@@ -765,6 +767,12 @@ public abstract class ObjectType extends JSType implements Serializable {
     return false;
   }
 
+  /**
+   * Recursively unwraps all {@link ProxyObjectType}s, including unwrapping the raw type out of a
+   * templatized type.
+   *
+   * <p>Guaranteed to return a non-proxy type (exception: will return an unresolved NamedType).
+   */
   static ObjectType deeplyUnwrap(ObjectType original) {
     ObjectType current = original;
     while (current instanceof ProxyObjectType) {

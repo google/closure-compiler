@@ -1570,6 +1570,24 @@ public abstract class JSType implements Serializable {
       return true;
     }
 
+    /**
+     * Unwrap proxy types.
+     *
+     * <p>Only named types are unwrapped because other subclasses of `ProxyObjectType` should not be
+     * considered proxies; they have additional behaviour. We intentiaionlly call the instance
+     * `isSubtype` method to call into any class specific subtyping behaviour that isn't present in
+     * this method.
+     */
+    if (subtype.isNamedType()) {
+      return subtype
+          .toMaybeNamedType()
+          .getReferencedType()
+          .isSubtype(supertype, implicitImplCache, subtypingMode);
+    } else if (supertype.isNamedType()) {
+      return subtype.isSubtype(
+          supertype.toMaybeNamedType().getReferencedType(), implicitImplCache, subtypingMode);
+    }
+
     // Union decomposition.
     if (subtype.isUnionType()) {
       // All alternates must be subtypes.
@@ -1582,6 +1600,20 @@ public abstract class JSType implements Serializable {
           (sup) -> subtype.isSubtype(sup, implicitImplCache, subtypingMode),
           supertype.toMaybeUnionType());
     }
+
+    if (!subtype.isObjectType() || !supertype.isObjectType()) {
+      return false; // All cases for non object types have been covered by this point.
+    }
+
+    return isObjectSubtypeHelper(
+        subtype.assertObjectType(), supertype.assertObjectType(), implicitImplCache, subtypingMode);
+  }
+
+  private static boolean isObjectSubtypeHelper(
+      ObjectType subtype,
+      ObjectType supertype,
+      ImplCache implicitImplCache,
+      SubtypingMode subtypingMode) {
 
     // TemplateTypeMaps. This check only returns false if the TemplateTypeMaps
     // are not equivalent.
@@ -1618,30 +1650,37 @@ public abstract class JSType implements Serializable {
     // If the super type is a structural type, then we can't safely remove a templatized type
     // (since it might affect the types of the properties)
     if (implicitImplCache.shouldMatchStructurally(subtype, supertype)) {
-      return subtype
-          .toMaybeObjectType()
-          .isStructuralSubtype(supertype.toMaybeObjectType(), implicitImplCache, subtypingMode);
+      return subtype.isStructuralSubtype(supertype, implicitImplCache, subtypingMode);
     }
 
-    // Templatized types. For nominal types, the above check guarantees TemplateTypeMap
-    // equivalence; check if the base type is a subtype.
-    if (subtype.isTemplatizedType()) {
-      return subtype
-          .toMaybeTemplatizedType()
-          .getReferencedType()
-          .isSubtype(supertype, implicitImplCache, subtypingMode);
+    // record types
+    if (supertype.isRecordType()) {
+      return PrototypeObjectType.isSubtype(
+          subtype, supertype.toMaybeRecordType(), implicitImplCache, subtypingMode);
     }
 
-    // proxy types
-    if (supertype instanceof ProxyObjectType && !supertype.isTemplateType()) {
-      // `TemplateType` is only a proxy because sometimes it needs to mimic the behaviour of `?`. In
-      // every other respect it's a unique type.
-      return subtype.isSubtype(
-          ((ProxyObjectType) supertype).getReferencedTypeInternal(),
-          implicitImplCache,
-          subtypingMode);
+    // Interfaces
+    // Find all the interfaces implemented by this class and compare each one
+    // to the interface instance.
+    FunctionType subtypeCtor = subtype.getConstructor();
+    FunctionType supertypeCtor = supertype.getConstructor();
+    if (subtypeCtor != null && subtypeCtor.isInterface()) {
+      for (ObjectType subtypeInterface : subtype.getCtorExtendedInterfaces()) {
+        // TODO(b/142155372): When fixed, call `isObjectSubtypeHelper` here directly.
+        if (subtypeInterface.isSubtype(supertype, implicitImplCache, subtypingMode)) {
+          return true;
+        }
+      }
+    } else if (supertypeCtor != null && supertypeCtor.isInterface()) {
+      for (ObjectType subtypeInterface : subtype.getCtorImplementedInterfaces()) {
+        // TODO(b/142155372): When fixed, call `isObjectSubtypeHelper` here directly.
+        if (subtypeInterface.isSubtype(supertype, implicitImplCache, subtypingMode)) {
+          return true;
+        }
+      }
     }
-    return false;
+
+    return subtype.isImplicitPrototype(supertype);
   }
 
   /**

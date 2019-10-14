@@ -6316,12 +6316,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  return x;",
             "}",
             "",
-            // TODO(b/140267288): This should not cause a type mismatch.
-            "var /** function(!Foo) */ y = identity;"),
-        lines(
-            "initializing variable",
-            "found   : function(X extends Foo): X extends Foo",
-            "required: function(Foo): ?"));
+            "var /** function(!Foo): !Foo */ y = identity;"));
   }
 
   @Test

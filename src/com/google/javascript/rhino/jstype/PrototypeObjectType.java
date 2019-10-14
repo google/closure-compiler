@@ -396,57 +396,8 @@ public class PrototypeObjectType extends ObjectType {
     return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
   }
 
-  @Override
-  protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    if (JSType.isSubtypeHelper(this, that, implicitImplCache, subtypingMode)) {
-      return true;
-    }
-
-    // Union types
-    if (that.isUnionType()) {
-      // The static {@code JSType.isSubtype} check already decomposed
-      // union types, so we don't need to check those again.
-      return false;
-    }
-
-    // record types
-    if (that.isRecordType()) {
-      return PrototypeObjectType.isSubtype(
-          this, that.toMaybeRecordType(), implicitImplCache, subtypingMode);
-    }
-
-    // Interfaces
-    // Find all the interfaces implemented by this class and compare each one
-    // to the interface instance.
-    ObjectType thatObj = that.toObjectType();
-    FunctionType thatCtor = thatObj == null ? null : thatObj.getConstructor();
-
-    if (getConstructor() != null && getConstructor().isInterface()) {
-      for (ObjectType thisInterface : getCtorExtendedInterfaces()) {
-        if (thisInterface.isSubtype(that, implicitImplCache, subtypingMode)) {
-          return true;
-        }
-      }
-    } else if (thatCtor != null && thatCtor.isInterface()) {
-      Iterable<ObjectType> thisInterfaces = getCtorImplementedInterfaces();
-      for (ObjectType thisInterface : thisInterfaces) {
-        if (thisInterface.isSubtype(that, implicitImplCache, subtypingMode)) {
-          return true;
-        }
-      }
-    }
-
-    // other prototype based objects
-    if (isUnknownType()) {
-      // If unsure, say 'yes', to avoid spurious warnings.
-      return true;
-    }
-    return thatObj != null && isImplicitPrototype(thatObj);
-  }
-
   /** Determines if typeA is a subtype of typeB */
-  private static boolean isSubtype(
+  static boolean isSubtype(
       ObjectType typeA,
       RecordType typeB,
       ImplCache implicitImplCache,
