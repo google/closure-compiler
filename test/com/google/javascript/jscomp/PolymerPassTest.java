@@ -373,6 +373,78 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGeneratesCodeAfterGoogRequire_WithLegacyNamespace() {
+    test(
+        srcs(
+            lines(
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "/** @constructor */",
+                "a.UnpluggedCancelOfferRenderer = function() {",
+                "};"),
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace()",
+                "const CancelOfferRenderer =" + " goog.require('a.UnpluggedCancelOfferRenderer');",
+                "Polymer(",
+                " {is:'ytu-cancel-offer', properties:{",
+                "/** @type {CancelOfferRenderer} */",
+                "data:Object}});")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements",
+                " {PolymerYtuCancelOfferElementInterface0} */",
+                "var YtuCancelOfferElement = function() {};",
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {\n" + "};"),
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace()",
+                "const CancelOfferRenderer =" + " goog.require('a.UnpluggedCancelOfferRenderer');",
+                "/** @type {CancelOfferRenderer} */ YtuCancelOfferElement.prototype.data;",
+                "Polymer(/** @lends {YtuCancelOfferElement.prototype} */",
+                " {is:'ytu-cancel-offer', properties:{data:Object}});")));
+  }
+
+  @Test
+  public void testGeneratesCodeAfterGoogRequire_WithSetTestOnly() {
+    test(
+        srcs(
+            lines(
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "/** @constructor */",
+                "a.UnpluggedCancelOfferRenderer = function() {",
+                "};"),
+            lines(
+                "goog.module('mod');",
+                "goog.setTestOnly()",
+                "const CancelOfferRenderer =" + " goog.require('a.UnpluggedCancelOfferRenderer');",
+                "Polymer(",
+                " {is:'ytu-cancel-offer', properties:{",
+                "   /** @type {CancelOfferRenderer} */",
+                "   data:Object}});")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements",
+                " {PolymerYtuCancelOfferElementInterface0} */",
+                "var YtuCancelOfferElement = function() {};",
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};"),
+            lines(
+                "goog.module('mod');",
+                "goog.setTestOnly()",
+                "const CancelOfferRenderer =" + " goog.require('a.UnpluggedCancelOfferRenderer');",
+                "/** @type {CancelOfferRenderer} */",
+                "YtuCancelOfferElement.prototype.data;",
+                "Polymer(",
+                "/** @lends {YtuCancelOfferElement.prototype} */",
+                " {is:'ytu-cancel-offer', properties:{data:Object}});")));
+  }
+
+  @Test
   public void testPolymerRewriterGeneratesDeclaration_OutsideES6Module() {
     test(
         srcs(

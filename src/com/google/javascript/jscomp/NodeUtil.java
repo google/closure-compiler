@@ -76,6 +76,8 @@ public final class NodeUtil {
   private static final QualifiedName GOOG_MODULE_DECLARE_LEGACY_NAMESPACE =
       QualifiedName.of("goog.module.declareLegacyNamespace");
 
+  private static final QualifiedName GOOG_SET_TEST_ONLY = QualifiedName.of("goog.setTestOnly");
+
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
 
   // Utility class; do not instantiate.
@@ -5335,6 +5337,14 @@ public final class NodeUtil {
     if (isExprCall(n)) {
       Node target = n.getFirstFirstChild();
       return GOOG_MODULE_DECLARE_LEGACY_NAMESPACE.matches(target);
+    }
+    return false;
+  }
+
+  static boolean isGoogSetTestOnlyCall(Node n) {
+    if (isExprCall(n)) {
+      Node target = n.getFirstFirstChild();
+      return GOOG_SET_TEST_ONLY.matches(target);
     }
     return false;
   }

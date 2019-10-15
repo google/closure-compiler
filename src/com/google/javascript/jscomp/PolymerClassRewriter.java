@@ -1252,7 +1252,9 @@ final class PolymerClassRewriter {
             && next.hasOneChild()
             && ModuleImportResolver.isGoogModuleDependencyCall(next.getFirstFirstChild()))
         || (NodeUtil.isExprCall(next)
-            && ModuleImportResolver.isGoogModuleDependencyCall(next.getOnlyChild()))) {
+            && ModuleImportResolver.isGoogModuleDependencyCall(next.getOnlyChild()))
+        || NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(next)
+        || NodeUtil.isGoogSetTestOnlyCall(next)) {
       insertionPoint = next;
       next = next.getNext();
     }

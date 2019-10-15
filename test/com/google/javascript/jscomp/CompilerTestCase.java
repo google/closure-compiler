@@ -596,7 +596,8 @@ public abstract class CompilerTestCase {
           "goog.provide = function(ns) {};",
           "goog.require = function(ns) {};",
           "goog.loadModule = function(ns) {}",
-          "goog.forwardDeclare = function(ns) {};");
+          "goog.forwardDeclare = function(ns) {};",
+          "goog.setTestOnly = function() {}");
 
   /**
    * Constructs a test.
