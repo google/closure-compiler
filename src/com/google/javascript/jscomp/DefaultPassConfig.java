@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
@@ -1374,6 +1375,8 @@ public final class DefaultPassConfig extends PassConfig {
                 return ScopedAliases.builder(compiler)
                     .setPreprocessorSymbolTable(preprocessorSymbolTableFactory.getInstanceOrNull())
                     .setAliasTransformationHandler(options.getAliasTransformationHandler())
+                    .setModuleMetadataMap(compiler.getModuleMetadataMap())
+                    .setInvalidModuleGetHandling(InvalidModuleGetHandling.DELETE)
                     .build();
               })
           .setFeatureSet(ES_NEXT)
