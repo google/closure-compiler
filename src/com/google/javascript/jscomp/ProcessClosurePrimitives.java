@@ -304,7 +304,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * Verifies that a) the call is in the global scope and b) the return value is unused
+   * Verifies that a) the call is in the top level of a file and b) the return value is unused
    *
    * <p>This method is for primitives that never return a value.
    */
@@ -313,7 +313,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * @param methodName list of primitve types classed together with this one
+   * @param methodName list of primitive types classed together with this one
    * @param invalidAliasingError which DiagnosticType to emit if this call is aliased. this depends
    *     on whether the primitive is sometimes aliasiable in a module or never aliasable.
    */
@@ -327,7 +327,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     if (!t.inGlobalHoistScope() && !t.inModuleScope()) {
       compiler.report(JSError.make(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
-    } else if (!n.getParent().isExprResult() && !"goog.define".equals(methodName)) {
+    } else if (!n.getParent().isExprResult()
+        && !t.inModuleScope()
+        && !"goog.define".equals(methodName)) {
       // If the call is in the global hoist scope, but the result is used
       compiler.report(JSError.make(n, invalidAliasingError, GOOG + "." + methodName));
       return false;
