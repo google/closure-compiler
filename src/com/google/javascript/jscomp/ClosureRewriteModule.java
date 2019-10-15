@@ -1629,6 +1629,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       compiler.report(JSError.make(requireNode, MISSING_MODULE_OR_PROVIDE, legacyNamespace));
 
       // Remove the require node so this problem isn't reported again in ProcessClosurePrimitives.
+      // TODO(lharker): after fixing b/122549561, delete all the complicated logic below.
       if (preserveSugar) {
         continue;
       }
@@ -1640,11 +1641,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
       compiler.reportChangeToChangeScope(changeScope);
       Node enclosingStatement = NodeUtil.getEnclosingStatement(requireNode);
-      enclosingStatement.detach();
+
+      // To make compilation with partial source information work for Clutz, delete any name
+      // declarations in the enclosing statement completely. For non-declarations, simply replace
+      // the invalid require with null.
       if (!NodeUtil.isNameDeclaration(enclosingStatement)) {
+        requireNode.replaceWith(IR.nullNode().srcref(requireNode));
         continue;
       }
 
+      enclosingStatement.detach();
       for (Node lhs : NodeUtil.findLhsNodesInNode(enclosingStatement)) {
         syntheticExterns.putIfAbsent(lhs.getString(), lhs);
       }

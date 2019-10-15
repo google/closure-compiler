@@ -1256,23 +1256,53 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoogModuleGet_missing() {
+  public void testGoogModuleGet_missingInExpression() {
     allowExternsChanges();
     test(
-        srcs(lines(
-            "goog.module('x.y.z');",
-            "",
-            "function f() {",
-            "  return goog.module.get('a.b.c');",
-            "}",
-            "f();")),
-        expected(lines(
-            "/** @const */",
-            "var module$exports$x$y$z={};",
-            "",
-            "function module$contents$x$y$z_f() {}",
-            "",
-            "module$contents$x$y$z_f();")),
+        srcs(
+            lines(
+                "goog.module('x.y.z');",
+                "",
+                "function f() {",
+                "  return goog.module.get('a.b.c');",
+                "}",
+                "f();")),
+        expected(
+            lines(
+                "/** @const */",
+                "var module$exports$x$y$z={};",
+                "",
+                "function module$contents$x$y$z_f() {",
+                "  return null;",
+                "}",
+                "",
+                "module$contents$x$y$z_f();")),
+        warning(MISSING_MODULE_OR_PROVIDE));
+  }
+
+  @Test
+  public void testGoogModuleGet_missingAsRhs() {
+    allowExternsChanges();
+    test(
+        srcs(
+            lines(
+                "goog.module('x.y.z');",
+                "",
+                "function f() {",
+                "  const c = goog.module.get('a.b.c');",
+                "  return c;",
+                "}",
+                "f();")),
+        expected(
+            lines(
+                "/** @const */",
+                "var module$exports$x$y$z={};",
+                "",
+                "function module$contents$x$y$z_f() {",
+                "  return c;",
+                "}",
+                "",
+                "module$contents$x$y$z_f();")),
         warning(MISSING_MODULE_OR_PROVIDE));
   }
 
