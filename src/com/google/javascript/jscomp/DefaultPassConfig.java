@@ -350,12 +350,14 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
+    if (options.closurePass) {
+      checks.add(closureGoogScopeAliases);
+    }
+
     // TODO(b/141389184): Move this after the Polymer pass
     addModuleRewritingPasses(checks, options);
 
     if (options.closurePass) {
-      // TODO(b/137397799): move closureGoogScopeAliases before module rewriting
-      checks.add(closureGoogScopeAliases);
       checks.add(closurePrimitives);
       if (!options.isModuleRewritingDisabled()) {
         checks.add(closureProvidesRequires);
