@@ -595,9 +595,9 @@ public abstract class CompilerTestCase {
           "goog.module.declareLegacyNamespace = function() {};",
           "goog.provide = function(ns) {};",
           "goog.require = function(ns) {};",
-          "goog.loadModule = function(ns) {}",
+          "goog.loadModule = function(ns) {};",
           "goog.forwardDeclare = function(ns) {};",
-          "goog.setTestOnly = function() {}");
+          "goog.setTestOnly = function() {};");
 
   /**
    * Constructs a test.
