@@ -292,6 +292,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return n.getFirstChild();
     }
 
+    if (n.isComputedProp() && n.getLastChild().isFunction()) {
+      return n.getLastChild();
+    }
+
     return null;
   }
 
@@ -362,6 +366,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (!info.isConstructor()
         && !n.isMemberFunctionDef()
         && !n.isStringKey()
+        && !n.isComputedProp()
         && !n.isGetterDef()
         && !n.isSetterDef()
         && !NodeUtil.isPrototypeMethod(functionNode)) {

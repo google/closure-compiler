@@ -334,6 +334,11 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAbstract_class_withSymbolNamedMethod() {
+    testSame("/** @abstract */ class Foo { /** @abstract */ [Symbol.iterator]() {} }");
+  }
+
+  @Test
   public void testAbstract_defineClass() {
     testSame("/** @abstract */ goog.defineClass(null, { constructor: function() {} });");
     testSame("/** @abstract */ var Foo = goog.defineClass(null, { constructor: function() {} });");
