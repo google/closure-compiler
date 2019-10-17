@@ -4906,6 +4906,56 @@ public class PolymerPassTest extends CompilerTestCase {
             "export {PaperMenuButton};"));
   }
 
+  @Test
+  public void testCanAccessPropertyOnPolymerElement_fromEsModuleTypeSummary() {
+    test(
+        externs(
+            EXTERNS,
+            lines(
+                "/** @typeSummary */",
+                "Polymer({",
+                "  is: 'foo',",
+                "  properties: {",
+                "    opened: {type: Boolean, value: false}",
+                "  },",
+                "  toggle: function() {}",
+                "})",
+                "export {}")),
+        srcs(
+            lines(
+                "function fn(/** !FooElement */ elem) {", //
+                "  elem.toggle();",
+                "  return elem.opened;",
+                "}")));
+  }
+
+  @Test
+  public void testCanAccessPropertyOnPolymerElement_fromBundledGoogModuleTypeSummary() {
+    test(
+        externs(
+            EXTERNS,
+            lines(
+                "/** @typeSummary */",
+                "goog.loadModule(function(exports) {",
+                "goog.module('a.b.c');",
+                "Polymer({",
+                "  is: 'foo',",
+                "  properties: {",
+                "    opened: {type: Boolean, value: false}",
+                "  },",
+                "  toggle: function() {}",
+                "})",
+                "return exports;",
+                "});")),
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "function fn(/** !FooElement */ elem) {", //
+                "  elem.toggle();",
+                "  return elem.opened;",
+                "}")));
+  }
+
   @Override
   public void test(String js, String expected) {
     polymerVersion = 1;

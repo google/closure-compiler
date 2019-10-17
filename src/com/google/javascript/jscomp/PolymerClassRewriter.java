@@ -93,7 +93,7 @@ final class PolymerClassRewriter {
     switch (enclosingNode.getToken()) {
       case MODULE_BODY:
         {
-          Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+          Node insertionPoint = getNodeForInsertion(enclosingNode.getParent());
           insertionPoint.addChildToFront(declarationCode);
           compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
         }
@@ -116,7 +116,7 @@ final class PolymerClassRewriter {
             compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNodeForIIFE));
           } else {
             checkState(enclosingNodeForIIFE.isModuleBody());
-            Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+            Node insertionPoint = getNodeForInsertion(enclosingNodeForIIFE.getParent());
             insertionPoint.addChildToFront(declarationCode);
             compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
           }
@@ -127,13 +127,25 @@ final class PolymerClassRewriter {
           // This case represents only the Polymer calls that are inside a function which is an arg
           // to goog.loadModule
           checkState(isFunctionArgInGoogLoadModule(enclosingNode));
-          Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+          Node enclosingScript = NodeUtil.getEnclosingScript(enclosingNode);
+          Node insertionPoint = getNodeForInsertion(enclosingScript);
           insertionPoint.addChildToFront(declarationCode);
-          compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
+          compiler.reportChangeToChangeScope(insertionPoint);
         }
         break;
       default:
         throw new RuntimeException("Enclosing node for Polymer is incorrect");
+    }
+  }
+
+  /** Returns a SCRIPT node in which to insert new global declarations */
+  private Node getNodeForInsertion(Node enclosingScript) {
+    if (NodeUtil.isFromTypeSummary(enclosingScript)) {
+      return polymerElementExterns.isScript()
+          ? polymerElementExterns
+          : polymerElementExterns.getParent();
+    } else {
+      return compiler.getNodeForCodeInsertion(null);
     }
   }
 
