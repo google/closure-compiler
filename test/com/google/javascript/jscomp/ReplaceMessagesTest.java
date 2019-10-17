@@ -401,18 +401,38 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadFallbackSyntax3() {
-    testError("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('asdf');" +
-         "var x = goog.getMsgWithFallback(MSG_A, y);",
-         JsMessageVisitor.FALLBACK_ARG_ERROR);
+    testError(
+        "/** @desc d */\n"
+            + "var MSG_A = goog.getMsg('asdf');"
+            + "var x = goog.getMsgWithFallback(MSG_A, NOT_A_MESSAGE);",
+        JsMessageVisitor.BAD_FALLBACK_SYNTAX);
   }
 
   @Test
   public void testBadFallbackSyntax4() {
-    testError("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('asdf');" +
-         "var x = goog.getMsgWithFallback(y, MSG_A);",
-         JsMessageVisitor.FALLBACK_ARG_ERROR);
+    testError(
+        "/** @desc d */\n"
+            + "var MSG_A = goog.getMsg('asdf');"
+            + "var x = goog.getMsgWithFallback(NOT_A_MESSAGE, MSG_A);",
+        JsMessageVisitor.BAD_FALLBACK_SYNTAX);
+  }
+
+  @Test
+  public void testBadFallbackSyntax5() {
+    testError(
+        "/** @desc d */\n"
+            + "var MSG_A = goog.getMsg('asdf');"
+            + "var x = goog.getMsgWithFallback(MSG_A, MSG_DOES_NOT_EXIST);",
+        JsMessageVisitor.FALLBACK_ARG_ERROR);
+  }
+
+  @Test
+  public void testBadFallbackSyntax6() {
+    testError(
+        "/** @desc d */\n"
+            + "var MSG_A = goog.getMsg('asdf');"
+            + "var x = goog.getMsgWithFallback(MSG_DOES_NOT_EXIST, MSG_A);",
+        JsMessageVisitor.FALLBACK_ARG_ERROR);
   }
 
   @Test

@@ -947,6 +947,16 @@ public final class JsMessageVisitorTest {
         LINE_JOINER.join(
             "/** @desc Hello */ var MSG_A = goog.getMsg('hello');",
             "/** @desc Hello */ var MSG_B = goog.getMsg('hello!');",
+            "var x = goog.getMsgWithFallback(messages.MSG_A, MSG_B);"));
+    assertNoErrors();
+  }
+
+  @Test
+  public void testUsingMsgPrefixWithFallback_moduleRenamed() {
+    extractMessages(
+        LINE_JOINER.join(
+            "/** @desc Hello */ var MSG_A = goog.getMsg('hello');",
+            "/** @desc Hello */ var MSG_B = goog.getMsg('hello!');",
             "var x = goog.getMsgWithFallback(module$exports$messages$MSG_A, MSG_B);"));
     assertNoErrors();
   }
