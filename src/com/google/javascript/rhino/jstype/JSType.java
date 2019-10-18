@@ -1343,7 +1343,8 @@ public abstract class JSType implements Serializable {
    * for this type. The {@code ToBoolean} predicate is defined by the ECMA-262
    * standard, 3<sup>rd</sup> edition. Its behavior for simple types can be
    * summarized by the following table:
-   * <table summary="">
+   * <table>
+   * <caption>ToBoolean results by input type</caption>
    * <tr><th>type</th><th>result</th></tr>
    * <tr><td>{@code undefined}</td><td>{false}</td></tr>
    * <tr><td>{@code null}</td><td>{false}</td></tr>
