@@ -481,6 +481,22 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDuplicateModuleWarningsIncludeFileName() {
+    // duplicates in the same file
+    test(
+        srcs("goog.provide('duplicated'); goog.provide('duplicated')"),
+        error(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE).withMessageContaining("testcode"));
+    // duplicate of provide in earlier file
+    test(
+        srcs("goog.provide('duplicated');", "goog.module('duplicated')"),
+        error(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE).withMessageContaining("input0"));
+    // duplicate of module in earlier file
+    test(
+        srcs("goog.module('duplicated');", "goog.module('duplicated')"),
+        error(ClosurePrimitiveErrors.DUPLICATE_MODULE).withMessageContaining("input0"));
+  }
+
+  @Test
   public void testUsesGlobalClosure() {
     testSame("goog.isArray(foo);");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
