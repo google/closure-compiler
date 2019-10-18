@@ -3007,12 +3007,19 @@ ProgressEventInit.prototype.total;
 
 /**
  * @constructor
+ * @template TARGET
  * @param {string} type
  * @param {ProgressEventInit=} opt_progressEventInitDict
  * @extends {Event}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ProgressEvent
  */
 function ProgressEvent(type, opt_progressEventInitDict) {}
+
+/**
+ * @override
+ * @type {TARGET}
+ */
+ProgressEvent.prototype.target;
 
 /** @type {number} */
 ProgressEvent.prototype.total;
