@@ -55,6 +55,8 @@ import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
+import com.google.javascript.rhino.jstype.TemplateType;
+import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.HashMap;
@@ -3119,12 +3121,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private boolean isObjectTypeWithNonStringifiableKey(JSType type) {
     if (!type.isTemplatizedType()) {
+      // TODO(nickreid): Why don't we care about types like `Foo extends Object<Bar, Qux>`?
       return false;
     }
-    TemplatizedType templatizedType = type.toMaybeTemplatizedType();
-    if (templatizedType.getReferencedType().isNativeObjectType()
-        && templatizedType.getTemplateTypes().size() > 1) {
-      return !isReasonableObjectPropertyKey(templatizedType.getTemplateTypes().get(0));
+
+    TemplateTypeMap templateTypeMap = type.getTemplateTypeMap();
+    TemplateType objectIndexKey = typeRegistry.getObjectIndexKey();
+    if (templateTypeMap.hasTemplateKey(objectIndexKey)) {
+      return !isReasonableObjectPropertyKey(
+          templateTypeMap.getResolvedTemplateType(objectIndexKey));
     } else {
       return false;
     }
