@@ -4956,6 +4956,46 @@ public class PolymerPassTest extends CompilerTestCase {
                 "}")));
   }
 
+  @Test
+  public void testPolymerImplicitGlobalNamingConflict() {
+    testError(
+        lines(
+            "var FooElement;", //
+            "Polymer({is: 'foo'})"),
+        PolymerClassRewriter.IMPLICIT_GLOBAL_CONFLICT);
+
+    test(
+        srcs(
+            "var FooElement;",
+            lines(
+                "goog.module('m');", //
+                "Polymer({is: 'foo'})")),
+        error(PolymerClassRewriter.IMPLICIT_GLOBAL_CONFLICT));
+
+    test(
+        srcs(
+            // First file in compilation needs to be a script, not a module, as the compiler injects
+            // global declarations into the first file.
+            "",
+            lines(
+                "goog.module('m');", //
+                "var FooElement;",
+                "Polymer({is: 'foo'})")),
+        error(PolymerClassRewriter.IMPLICIT_GLOBAL_CONFLICT));
+
+    testNoWarning("var FooElement = Polymer({is: 'foo'});");
+  }
+
+  @Test
+  public void testShadowPolymerElement() {
+    testError(
+        lines(
+            "goog.module('m');", //
+            "const Foo = Polymer({is: 'foo'});",
+            "var PolymerElement;"),
+        PolymerClassRewriter.POLYMER_ELEMENT_CONFLICT);
+  }
+
   @Override
   public void test(String js, String expected) {
     polymerVersion = 1;
