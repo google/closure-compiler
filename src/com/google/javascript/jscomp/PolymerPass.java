@@ -138,6 +138,13 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
               compiler.getModuleMap(), compiler, script.getFirstChild())
           .metadata();
     }
+    // Check for bundled goog.loadModule calls
+    Node scopeRoot = traversal.getScopeRoot();
+    if (NodeUtil.isBundledGoogModuleScopeRoot(scopeRoot)) {
+      return ModuleImportResolver.getModuleFromScopeRoot(
+              compiler.getModuleMap(), compiler, scopeRoot)
+          .metadata();
+    }
     return null;
   }
 

@@ -1295,16 +1295,30 @@ final class PolymerClassRewriter {
   private static Node getInsertionPointForGoogModule(Node moduleBody) {
     Node insertionPoint = moduleBody.getFirstChild(); // goog.module('ns');
     Node next = insertionPoint.getNext();
-    while ((NodeUtil.isNameDeclaration(next)
-            && next.hasOneChild()
-            && ModuleImportResolver.isGoogModuleDependencyCall(next.getFirstFirstChild()))
-        || (NodeUtil.isExprCall(next)
-            && ModuleImportResolver.isGoogModuleDependencyCall(next.getOnlyChild()))
+    while (isGoogRequireExpr(next)
         || NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(next)
         || NodeUtil.isGoogSetTestOnlyCall(next)) {
       insertionPoint = next;
       next = next.getNext();
     }
     return insertionPoint;
+  }
+
+  private static boolean isGoogRequireExpr(Node statement) {
+    if (NodeUtil.isExprCall(statement)
+        && ModuleImportResolver.isGoogModuleDependencyCall(statement.getOnlyChild())) {
+      // `goog.require('a.b.c');`
+      return true;
+    }
+    if (!NodeUtil.isNameDeclaration(statement)) {
+      return false;
+    }
+    Node rhs =
+        statement.getFirstChild().isName()
+            // `const c = goog.require('a.b.c');`
+            ? statement.getFirstFirstChild()
+            // `const {D} = goog.require('a.b.c');`
+            : statement.getFirstChild().getSecondChild();
+    return ModuleImportResolver.isGoogModuleDependencyCall(rhs);
   }
 }
