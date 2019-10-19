@@ -305,7 +305,7 @@ public final class JsRunnerMain {
       if (typeof process === 'object' && process.version) {
         jsFiles.push({
           path: jsFilePaths[i],
-          src: require('fs').readFileSync(jsFilePaths[i], 'utf8')
+          src: require('fs')['readFileSync'](jsFilePaths[i], 'utf8')
         });
       }
     }
