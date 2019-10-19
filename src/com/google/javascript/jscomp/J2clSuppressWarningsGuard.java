@@ -36,6 +36,8 @@ public class J2clSuppressWarningsGuard extends DiagnosticGroupWarningsGuard {
           DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
           DiagnosticGroups.SUSPICIOUS_CODE,
           DiagnosticGroups.UNUSED_LOCAL_VARIABLE,
+          // TODO(b/78521031): J2CL targets are not strict missing property compatible.
+          DiagnosticGroups.STRICT_MISSING_PROPERTIES,
           DiagnosticGroups.forName("transitionalSuspiciousCodeWarnings"));
 
   public J2clSuppressWarningsGuard() {
