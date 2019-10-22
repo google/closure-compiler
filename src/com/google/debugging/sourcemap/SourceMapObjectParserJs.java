@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import jsinterop.annotations.JsPackage;
+import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 import jsinterop.base.Js;
 import jsinterop.base.JsPropertyMap;
@@ -33,7 +34,8 @@ import jsinterop.base.JsPropertyMap;
  */
 public class SourceMapObjectParserJs {
 
-  private static final JSONType JSON = Js.uncheckedCast(Js.global().get("JSON"));
+  @JsProperty(namespace = JsPackage.GLOBAL)
+  private static native JSONType getJSON();
 
   @JsType(
       isNative = true,
@@ -69,7 +71,7 @@ public class SourceMapObjectParserJs {
   }
 
   public static SourceMapObject parse(String contents) throws SourceMapParseException {
-    JsonMap sourceMap = Js.uncheckedCast(JSON.parse(contents));
+    JsonMap sourceMap = Js.uncheckedCast(getJSON().parse(contents));
     SourceMapObject.Builder builder = SourceMapObject.builder();
 
     builder.setVersion(sourceMap.version);
