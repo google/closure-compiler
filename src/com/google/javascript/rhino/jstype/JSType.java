@@ -1417,6 +1417,13 @@ public abstract class JSType implements Serializable {
 
       case FALSE:
       case UNKNOWN:
+        // This function is for the coercing inequality ({@code !=}), so checking either
+        // {@code != null} or {@code != undefined} should remove both types.
+        if (this.isNullType() || this.isVoidType()) {
+          return new TypePair(this, that.restrictByNotNullOrUndefined());
+        } else if (that.isNullType() || that.isVoidType()) {
+          return new TypePair(this.restrictByNotNullOrUndefined(), that);
+        }
         return new TypePair(this, that);
     }
 
@@ -1459,9 +1466,16 @@ public abstract class JSType implements Serializable {
     // true -- null and undefined. We can just enumerate them.
     if ((isNullType() && that.isNullType()) || (isVoidType() && that.isVoidType())) {
       return new TypePair(null, null);
-    } else {
-      return new TypePair(this, that);
+    } else if (this.isNullType()) {
+      return new TypePair(this, that.restrictByNotNull());
+    } else if (this.isVoidType()) {
+      return new TypePair(this, that.restrictByNotUndefined());
+    } else if (that.isNullType()) {
+      return new TypePair(this.restrictByNotNull(), that);
+    } else if (that.isVoidType()) {
+      return new TypePair(this.restrictByNotUndefined(), that);
     }
+    return new TypePair(this, that);
   }
 
   public Iterable<JSType> getUnionMembers() {
@@ -1478,6 +1492,11 @@ public abstract class JSType implements Serializable {
 
   /** If this is a union type, returns a union type that does not include the undefined type. */
   public JSType restrictByNotUndefined() {
+    return this;
+  }
+
+  /** If this is a union type, returns a union type that does not include the null type. */
+  public JSType restrictByNotNull() {
     return this;
   }
 

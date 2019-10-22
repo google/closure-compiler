@@ -96,7 +96,7 @@ public final class ClosureReverseAbstractInterpreter
                 "isDef",
                 p -> {
                   if (p.outcome) {
-                    return getRestrictedWithoutUndefined(p.type);
+                    return p.type != null ? p.type.restrictByNotUndefined() : null;
                   } else {
                     return p.type != null
                         ? getNativeType(VOID_TYPE).getGreatestSubtype(p.type)
@@ -111,14 +111,14 @@ public final class ClosureReverseAbstractInterpreter
                         ? getNativeType(NULL_TYPE).getGreatestSubtype(p.type)
                         : null;
                   } else {
-                    return getRestrictedWithoutNull(p.type);
+                    return p.type != null ? p.type.restrictByNotNull() : null;
                   }
                 })
             .put(
                 "isDefAndNotNull",
                 p -> {
                   if (p.outcome) {
-                    return getRestrictedWithoutUndefined(getRestrictedWithoutNull(p.type));
+                    return p.type != null ? p.type.restrictByNotNullOrUndefined() : null;
                   } else {
                     return p.type != null
                         ? getNativeType(NULL_VOID).getGreatestSubtype(p.type)
