@@ -228,9 +228,6 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addModuleRewritingPasses(List<PassFactory> checks, CompilerOptions options) {
-    if (options.isModuleRewritingDisabled()) {
-      return;
-    }
     if (options.closurePass) {
       checks.add(rewriteClosureImports);
     }
@@ -355,11 +352,13 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // TODO(b/141389184): Move this after the Polymer pass
-    addModuleRewritingPasses(checks, options);
+    if (options.shouldRewriteModulesBeforeTypechecking()) {
+      addModuleRewritingPasses(checks, options);
+    }
 
     if (options.closurePass) {
       checks.add(closurePrimitives);
-      if (!options.isModuleRewritingDisabled()) {
+      if (options.shouldRewriteModulesBeforeTypechecking()) {
         checks.add(closureProvidesRequires);
       }
     }
@@ -411,6 +410,11 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     addTypeCheckerPasses(checks, options);
+
+    if (!options.shouldRewriteModulesBeforeTypechecking() && !options.checksOnly) {
+      addModuleRewritingPasses(checks, options);
+      checks.add(closureProvidesRequires);
+    }
 
     // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
     if (!options.allowsHotswapReplaceScript()) {

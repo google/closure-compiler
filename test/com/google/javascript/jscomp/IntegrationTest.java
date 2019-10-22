@@ -1071,7 +1071,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
-    options.setRewriteModules(false);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setChecksOnly(true);
 
     String[] srcs =
         new String[] {
@@ -1601,7 +1602,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
-    options.setRewriteModules(false);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setChecksOnly(true);
     test(
         options,
         lines(
