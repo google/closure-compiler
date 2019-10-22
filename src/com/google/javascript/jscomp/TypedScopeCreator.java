@@ -313,7 +313,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     this.moduleMap = compiler.getModuleMap();
     this.moduleImportResolver =
         new ModuleImportResolver(this.moduleMap, getNodeToScopeMapper(), typeRegistry);
-    this.processClosurePrimitives = compiler.getOptions().closurePass;
+    this.processClosurePrimitives = !this.metadataMap.getModulesByGoogNamespace().isEmpty();
   }
 
   private void report(JSError error) {

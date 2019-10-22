@@ -94,7 +94,10 @@ final class ClosureRequireProcessor {
    */
   @Nullable
   private static CreatedBy getModuleDependencyTypeFromRhs(@Nullable Node value) {
-    if (value == null || !value.isCall()) {
+    if (value == null
+        || !value.isCall()
+        || !value.hasTwoChildren()
+        || !value.getSecondChild().isString()) {
       return null;
     }
     Node callee = value.getFirstChild();

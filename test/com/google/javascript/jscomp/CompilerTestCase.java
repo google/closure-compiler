@@ -593,11 +593,15 @@ public abstract class CompilerTestCase {
           "/** @const */ var goog = {};",
           "goog.module = function(ns) {};",
           "goog.module.declareLegacyNamespace = function() {};",
+          "goog.module.get = function(ns) {};",
           "goog.provide = function(ns) {};",
           "goog.require = function(ns) {};",
+          "goog.requireType = function(ns) {};",
           "goog.loadModule = function(ns) {};",
           "goog.forwardDeclare = function(ns) {};",
-          "goog.setTestOnly = function() {};");
+          "goog.setTestOnly = function() {};",
+          "goog.scope = function(fn) {};",
+          "goog.defineClass = function(superClass, clazz) {};");
 
   /**
    * Constructs a test.

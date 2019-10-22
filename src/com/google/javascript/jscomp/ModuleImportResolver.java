@@ -68,7 +68,10 @@ final class ModuleImportResolver {
    * caller.
    */
   static boolean isGoogModuleDependencyCall(Node value) {
-    if (value == null || !value.isCall()) {
+    if (value == null
+        || !value.isCall()
+        || !value.hasTwoChildren()
+        || !value.getSecondChild().isString()) {
       return false;
     }
     Node callee = value.getFirstChild();
