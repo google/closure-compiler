@@ -676,6 +676,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
     return LogFile.createOrReopen(file);
   }
 
+  /** Returns the InputId of the synthetic code input (even if it is not initialized yet). */
+  abstract InputId getSyntheticCodeInputId();
+
   /**
    * Adds a synthetic script to the front of the AST
    *

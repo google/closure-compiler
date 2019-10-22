@@ -2466,7 +2466,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Prefix of the generated file name for synthetic injected libraries */
   static final String SYNTHETIC_CODE_PREFIX = " [synthetic:";
 
-  static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(SYNTHETIC_CODE_PREFIX + "input]");
+  private static final InputId SYNTHETIC_CODE_INPUT_ID =
+      new InputId(SYNTHETIC_CODE_PREFIX + "input]");
 
   private CompilerInput synthesizedExternsInput = null;
   private CompilerInput synthesizedExternsInputAtEnd = null;
@@ -3140,6 +3141,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       synthesizedExternsInput = newExternInput(SYNTHETIC_EXTERNS, SyntheticExternsPosition.START);
     }
     return synthesizedExternsInput;
+  }
+
+  @Override
+  InputId getSyntheticCodeInputId() {
+    return SYNTHETIC_CODE_INPUT_ID;
   }
 
   @Override
