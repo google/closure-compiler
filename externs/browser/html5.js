@@ -1182,6 +1182,15 @@ function postMessage(message, opt_targetOriginOrTransfer,
     opt_targetOriginOrPortsOrTransfer) {}
 
 /**
+ * @param {*} message
+ * @param {string=} targetOrigin
+ * @param {(!Array<!Transferable>)=} transfer
+ * @return {void}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage
+ */
+Window.prototype.postMessage = function(message, targetOrigin, transfer) {};
+
+/**
  * The postMessage method (as implemented in Opera).
  * @param {string} message
  */
@@ -1625,6 +1634,14 @@ WorkerGlobalScope.prototype.performance;
 
 /** @type {!WorkerNavigator} */
 WorkerGlobalScope.prototype.navigator;
+
+/**
+ * Worker postMessage method.
+ * @param {*} message
+ * @param {(!Array<!Transferable>)=} transfer
+ * @return {void}
+ */
+WorkerGlobalScope.prototype.postMessage = function(message, transfer) {};
 
 /**
  * @see http://dev.w3.org/html5/workers/
