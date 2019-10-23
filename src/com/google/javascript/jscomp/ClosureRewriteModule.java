@@ -249,8 +249,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     boolean hasInlinableName(Set<Var> exportedNames) {
       if (nameDecl == null
           || exportedNames.contains(nameDecl)
-          || !INLINABLE_NAME_PARENTS.contains(nameDecl.getParentNode().getToken())
-          || NodeUtil.isFunctionDeclaration(nameDecl.getParentNode())) {
+          || !INLINABLE_NAME_PARENTS.contains(nameDecl.getParentNode().getToken())) {
         return false;
       }
       Node initialValue = nameDecl.getInitialValue();

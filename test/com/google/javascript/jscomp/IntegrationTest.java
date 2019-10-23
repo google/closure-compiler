@@ -5569,18 +5569,18 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         new String[] {
           // googModuleOuter
-          lines(
+          LINE_JOINER.join(
               "goog.module('foo.Outer');",
               "/** @constructor */ function Outer() {}",
               "exports = Outer;"),
           // legacyInner
-          lines(
+          LINE_JOINER.join(
               "goog.module('foo.Outer.Inner');",
               "goog.module.declareLegacyNamespace();",
               "/** @constructor */ function Inner() {}",
               "exports = Inner;"),
           // legacyUse
-          lines(
+          LINE_JOINER.join(
               "goog.provide('legacy.Use');",
               "goog.require('foo.Outer');",
               "goog.require('foo.Outer.Inner');",
@@ -5591,18 +5591,16 @@ public final class IntegrationTest extends IntegrationTestCase {
               "});")
         },
         new String[] {
-          lines(
-              "/** @constructor */ function module$contents$foo$Outer_Outer() {}",
-              "var module$exports$foo$Outer = module$contents$foo$Outer_Outer;"),
-          lines(
+          "/** @constructor */ function module$exports$foo$Outer() {}",
+          LINE_JOINER.join(
               "/** @const */ var foo={};",
               "/** @const */ foo.Outer={};",
               "/** @constructor */ function module$contents$foo$Outer$Inner_Inner(){}",
               "/** @const */ foo.Outer.Inner=module$contents$foo$Outer$Inner_Inner;"),
-          lines(
+          LINE_JOINER.join(
               "/** @const */ var legacy={};",
               "/** @const */ legacy.Use={};",
-              "new module$contents$foo$Outer_Outer;",
+              "new module$exports$foo$Outer;",
               "new module$contents$foo$Outer$Inner_Inner")
         });
   }
