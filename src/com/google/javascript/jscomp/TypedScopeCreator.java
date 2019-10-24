@@ -884,6 +884,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         typeRegistry.registerClosureModule(
             module.closureNamespace(), exportsVar.getNameNode(), exportsVar.getType());
       }
+      // Store the type of the namespace on the AST for the convenience of later passes that want
+      // to access it.
+      Node rootNode = module.metadata().rootNode();
+      if (rootNode.isScript()) {
+        Node moduleBody = rootNode.getFirstChild();
+        moduleBody.setJSType(exportsVar.getType());
+      } else {
+        // For goog.loadModule, give the `exports` parameter the correct type.
+        Node paramList = NodeUtil.getFunctionParameters(rootNode.getSecondChild());
+        paramList.getOnlyChild().setJSType(exportsVar.getType());
+      }
     }
 
     @Override

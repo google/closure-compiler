@@ -3266,13 +3266,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "  alert(STR);\n"
         + "}\n"
         + "exports.fn = fn;\n";
-    String expectedCode = ""
-        + "goog.module('foo.bar');\n"
-        + "var module$exports$foo$bar = {};\n"
-        + "const STR = '3';\n"
-        + "module$exports$foo$bar.fn = function fn() {\n"
-        + "  alert(STR);\n"
-        + "};\n";
+    String expectedCode =
+        ""
+            + "goog.module('foo.bar');\n"
+            + "var module$exports$foo$bar = {};\n"
+            + "const STR = '3';\n"
+            + "fn = function fn() {\n"
+            + "  alert(STR);\n"
+            + "};\n";
 
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setClosurePass(true);

@@ -3588,8 +3588,7 @@ public final class NodeUtil {
    *
    * @return a new qualified name declaration
    */
-  private static Node getDeclarationFromName(
-      Node nameNode, Node value, Token type, JSDocInfo info) {
+  static Node getDeclarationFromName(Node nameNode, Node value, Token type, JSDocInfo info) {
     Node result;
     if (nameNode.isName()) {
       result =
@@ -3628,18 +3627,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Creates a node representing a qualified name. For origNodes that are lhs of goog.define calls,
-   * this function also sets the defineName in the result node.
-   *
-   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @return A VAR node, or an EXPR_RESULT node containing an ASSIGN or NAME node.
-   */
-  public static Node newQNameDeclaration(
-      AbstractCompiler compiler, String name, Node origNode, Node value, JSDocInfo info) {
-    return newQNameDeclaration(compiler, name, origNode, value, info, Token.VAR);
-  }
-
-  /**
    * Creates a node representing a qualified name.
    *
    * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
@@ -3650,30 +3637,7 @@ public final class NodeUtil {
       AbstractCompiler compiler, String name, Node value, JSDocInfo info, Token type) {
     checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
     Node nameNode = newQName(compiler, name);
-    Node result = getDeclarationFromName(nameNode, value, type, info);
-    return result;
-  }
-
-  /**
-   * Creates a node representing a qualified name. For origNodes that are lhs of goog.define calls,
-   * this function also sets the defineName in the result node.
-   *
-   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @param type Must be VAR, CONST, or LET. Ignored if {@code name} is dotted.
-   * @return A VAR/CONST/LET node, or an EXPR_RESULT node containing an ASSIGN or NAME node.
-   */
-  private static Node newQNameDeclaration(
-      AbstractCompiler compiler,
-      String name,
-      Node origNode,
-      Node value,
-      JSDocInfo info,
-      Token type) {
-    checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
-    Node nameNode = newQName(compiler, name);
-    Node result = getDeclarationFromName(nameNode, value, type, info);
-    nameNode.setDefineName(origNode.getDefineName());
-    return result;
+    return getDeclarationFromName(nameNode, value, type, info);
   }
 
   /**
@@ -4284,6 +4248,27 @@ public final class NodeUtil {
     }
 
     return false;
+  }
+
+  /** Returns the first Node matching the given pred via a pre-order traversal. */
+  public static Node findPreorder(
+      Node node, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
+    if (pred.apply(node)) {
+      return node;
+    }
+
+    if (!traverseChildrenPred.apply(node)) {
+      return null;
+    }
+
+    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+      Node result = findPreorder(c, pred, traverseChildrenPred);
+      if (result != null) {
+        return result;
+      }
+    }
+
+    return null;
   }
 
   /**

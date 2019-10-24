@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
@@ -288,32 +287,9 @@ public final class IncrementalScopeCreatorTest {
   }
 
   private Node findDecl(Node n, String name) {
-    Node result = find(n, new NodeUtil.MatchNameNode(name), Predicates.<Node>alwaysTrue());
+    Node result =
+        NodeUtil.findPreorder(n, new NodeUtil.MatchNameNode(name), Predicates.<Node>alwaysTrue());
     return result.getParent();
-  }
-
-  /**
-   * @return Whether the predicate is true for the node or any of its descendants.
-   */
-  private static Node find(Node node,
-                     Predicate<Node> pred,
-                     Predicate<Node> traverseChildrenPred) {
-    if (pred.apply(node)) {
-      return node;
-    }
-
-    if (!traverseChildrenPred.apply(node)) {
-      return null;
-    }
-
-    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-      Node result = find(c, pred, traverseChildrenPred);
-      if (result != null) {
-        return result;
-      }
-    }
-
-    return null;
   }
 
   Compiler initCompiler(List<SourceFile> externs, List<SourceFile> srcs) {

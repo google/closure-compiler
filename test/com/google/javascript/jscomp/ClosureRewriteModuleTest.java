@@ -23,8 +23,11 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_C
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
+import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +61,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableCreateModuleMap();
     enableTypeCheck();
+    enableTypeInfoValidation();
   }
 
   @Override
@@ -3047,6 +3051,72 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "var module$exports$client = {};",
                 // don't mistake the Bar.NAME argument for the callee
                 "alert(module$exports$mod$Bar.NAME);")));
+  }
+
+  @Test
+  public void testTypeOfGoogRequireFromModule() {
+    test(
+        srcs(
+            lines(
+                "goog.module('mod.one');", //
+                "exports.Bar = class {};"),
+            lines(
+                "goog.module('mod.two');", //
+                "const {Bar} = goog.require('mod.one');",
+                "new Bar();")),
+        expected(
+            lines(
+                "/** @const */",
+                "var module$exports$mod$one = {};",
+                "/** @const */",
+                "module$exports$mod$one.Bar = class {};"),
+            lines(
+                "/** @const */", //
+                "var module$exports$mod$two = {};",
+                "new module$exports$mod$one.Bar();")));
+
+    // Verify the type of $module$exports$mod$one.Bar is correct
+    Node secondScript = getLastCompiler().getJsRoot().getSecondChild();
+    Node moduleExportsDotBar =
+        NodeUtil.findPreorder(
+            secondScript,
+            (node) -> node.matchesQualifiedName("module$exports$mod$one.Bar"),
+            Predicates.alwaysTrue());
+
+    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("exports.Bar");
+  }
+
+  @Test
+  public void testTypeOfGoogRequireFromLegacyModule() {
+    test(
+        srcs(
+            lines(
+                "goog.module('mod.one');", //
+                "goog.module.declareLegacyNamespace();",
+                "exports.Bar = class {};"),
+            lines(
+                "goog.module('mod.two');", //
+                "const {Bar} = goog.require('mod.one');",
+                "new Bar();")),
+        expected(
+            lines(
+                "goog.provide('mod.one');", //
+                "/** @const */",
+                "mod.one.Bar = class {};"),
+            lines(
+                "/** @const */", //
+                "var module$exports$mod$two = {};",
+                "new mod.one.Bar();")));
+
+    // Verify the type of mod.one.Bar is correct
+    Node secondScript = getLastCompiler().getJsRoot().getSecondChild();
+    Node moduleExportsDotBar =
+        NodeUtil.findPreorder(
+            secondScript,
+            (node) -> node.matchesQualifiedName("mod.one.Bar"),
+            Predicates.alwaysTrue());
+
+    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("exports.Bar");
   }
 
   @Test
