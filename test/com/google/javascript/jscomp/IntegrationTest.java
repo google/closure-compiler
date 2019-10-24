@@ -40,6 +40,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.Map;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1094,7 +1095,7 @@ public final class IntegrationTest extends IntegrationTestCase {
               "Polymer(/** @lends {X.prototype} */ {", //
               "  is: 'x',",
               "});",
-              "export {}"),
+              "var module$i1={}"),
         };
 
     test(options, srcs, compiledOut);
@@ -1597,6 +1598,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  @Ignore("We don't currently have a way to completely disable module rewriting")
   public void testDisableModuleRewriting() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);

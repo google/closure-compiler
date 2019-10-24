@@ -408,7 +408,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     addTypeCheckerPasses(checks, options);
 
-    if (!options.shouldRewriteModulesBeforeTypechecking() && !options.checksOnly) {
+    if (!options.shouldRewriteModulesBeforeTypechecking()) {
       addModuleRewritingPasses(checks, options);
       checks.add(closureProvidesRequires);
     }
