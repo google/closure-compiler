@@ -32,7 +32,7 @@ public final class ResourceLoader {
 
     // This is a generated file containing all the text resources we want to package
     // as a single JSON string mapping (relative) filename to file content strings.
-    @Source("com/google/javascript/jscomp/resources.json")
+    @Source("com/google/javascript/jscomp/resources/resources.json")
     TextResource resources();
   }
 
