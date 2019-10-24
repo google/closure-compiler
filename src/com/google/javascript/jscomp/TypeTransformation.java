@@ -36,6 +36,7 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Locale;
 
 /**
  * A class for processing type transformation expressions
@@ -129,7 +130,7 @@ class TypeTransformation {
   }
 
   private Keywords nameToKeyword(String s) {
-    return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
+    return TypeTransformationParser.Keywords.valueOf(s.toUpperCase(Locale.US));
   }
 
   private JSType getType(String typeName) {
