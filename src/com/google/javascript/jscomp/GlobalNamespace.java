@@ -908,19 +908,9 @@ class GlobalNamespace
               // The rhs of an assign or a name declaration is escaped if it's assigned to a name
               // directly ...
             case ARRAY_PATTERN:
-              // ... or referenced through numeric keys.
-              type = Ref.Type.ALIASING_GET;
-              break;
             case OBJECT_PATTERN:
-              type =
-                  // Nested patterns don't affect the type of the top-level reference. REST is
-                  // always the last child of a pattern.
-                  lhs.hasChildren() && lhs.getLastChild().isRest()
-                      // ... or through a rest.
-                      ? Ref.Type.ALIASING_GET
-                      // It's a 'direct get' if it's actually destructured, since we know what
-                      // properties are accessed.
-                      : Ref.Type.DIRECT_GET;
+              // ... or referenced through numeric/object keys.
+              type = Ref.Type.ALIASING_GET;
               break;
             default:
               throw new IllegalStateException(

@@ -74,6 +74,8 @@ class AggressiveInlineAliases implements CompilerPass {
   public void process(Node externs, Node root) {
     new StaticSuperPropReplacer(compiler).replaceAll(root);
 
+    NodeTraversal.traverse(compiler, root, new RewriteSimpleDestructuringAliases());
+
     // Building the `GlobalNamespace` dominates the cost of this pass, so it is built once and
     // updated as changes are made so it can be reused for the next iteration.
     this.namespace = new GlobalNamespace(compiler, root);
@@ -86,6 +88,69 @@ class AggressiveInlineAliases implements CompilerPass {
   private JSModule getRefModule(Reference ref) {
     CompilerInput input = compiler.getInput(ref.getInputId());
     return input == null ? null : input.getModule();
+  }
+
+  /**
+   * Rewrite "simple" destructuring aliases to a format that is more amenable to inlining.
+   *
+   * <p>To be specific, this rewrites aliases of the form: const {x} = qualified.name; to: const x =
+   * qualified.name.x;
+   */
+  private static class RewriteSimpleDestructuringAliases
+      extends NodeTraversal.AbstractPostOrderCallback {
+
+    public boolean isSimpleDestructuringAlias(Node n) {
+      if (!NodeUtil.isStatement(n) || !n.isConst()) {
+        return false;
+      }
+      checkState(n.hasOneChild());
+      Node destructuringLhs = n.getFirstChild();
+      if (!destructuringLhs.isDestructuringLhs()) {
+        return false;
+      }
+      Node objectPattern = destructuringLhs.getFirstChild();
+      if (!objectPattern.isObjectPattern()) {
+        return false;
+      }
+      Node rhs = destructuringLhs.getLastChild();
+      if (!rhs.isQualifiedName()) {
+        return false;
+      }
+      for (Node key : objectPattern.children()) {
+        if (!key.isStringKey()) {
+          return false;
+        }
+        checkState(key.hasOneChild());
+        Node identifier = key.getFirstChild();
+        if (!identifier.isName()) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (!isSimpleDestructuringAlias(n)) {
+        return;
+      }
+
+      Node insertionPoint = n;
+
+      Node destructuringLhs = n.getFirstChild();
+      Node objectPattern = destructuringLhs.getFirstChild();
+      Node rhs = destructuringLhs.getLastChild();
+      for (Node key : objectPattern.children()) {
+        Node identifier = key.getFirstChild();
+        Node newRhs =
+            IR.getprop(rhs.cloneTree(), IR.string(key.getString()).srcref(key)).srcref(identifier);
+        Node newConstNode = IR.constNode(identifier.detach(), newRhs).srcref(n);
+        insertionPoint.getParent().addChildAfter(newConstNode, insertionPoint);
+        insertionPoint = newConstNode;
+      }
+      n.detach();
+      t.reportCodeChange();
+    }
   }
 
   /**

@@ -589,7 +589,7 @@ public final class GlobalNamespaceTest {
 
     Name bar = namespace.getSlot("ns");
     assertThat(bar.getGlobalSets()).isEqualTo(1);
-    assertThat(bar.getAliasingGets()).isEqualTo(0);
+    assertThat(bar.getAliasingGets()).isEqualTo(1);
     assertThat(bar.getTotalGets()).isEqualTo(1);
 
     Name nsA = namespace.getSlot("ns.a");
@@ -607,7 +607,7 @@ public final class GlobalNamespaceTest {
 
     Name bar = namespace.getSlot("ns");
     assertThat(bar.getGlobalSets()).isEqualTo(1);
-    assertThat(bar.getAliasingGets()).isEqualTo(0);
+    assertThat(bar.getAliasingGets()).isEqualTo(1);
 
     // we treat ns.a as having an 'aliasing' get since we don't traverse into the nested pattern
     Name nsA = namespace.getSlot("ns.a");
@@ -630,7 +630,7 @@ public final class GlobalNamespaceTest {
 
     Name bar = namespace.getSlot("ns");
     assertThat(bar.getGlobalSets()).isEqualTo(1);
-    assertThat(bar.getAliasingGets()).isEqualTo(0);
+    assertThat(bar.getAliasingGets()).isEqualTo(1);
 
     Name nsA = namespace.getSlot("ns.a");
     assertThat(nsA.getGlobalSets()).isEqualTo(1);
@@ -667,8 +667,7 @@ public final class GlobalNamespaceTest {
     Name ns = namespace.getSlot("ns");
     assertThat(ns.getGlobalSets()).isEqualTo(1);
     assertThat(ns.getTotalGets()).isEqualTo(1);
-    // Nested patterns don't alias the top-level rhs.
-    assertThat(ns.getAliasingGets()).isEqualTo(0);
+    assertThat(ns.getAliasingGets()).isEqualTo(1);
 
     Name nsB = namespace.getSlot("ns.b");
     assertThat(nsB.getGlobalSets()).isEqualTo(1);
