@@ -923,6 +923,7 @@ public abstract class CompilerTestCase {
   protected final void enableRewriteClosureCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     rewriteClosureCode = true;
+    enableCreateModuleMap();
   }
 
   /**
@@ -1564,6 +1565,8 @@ public abstract class CompilerTestCase {
         }
 
         if (rewriteClosureCode && i == 0) {
+          new CheckClosureImports(compiler, compiler.getModuleMetadataMap())
+              .process(externsRoot, mainRoot);
           new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
           new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
           ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);

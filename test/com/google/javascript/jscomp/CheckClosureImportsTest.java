@@ -30,7 +30,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GO
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
@@ -86,16 +85,11 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   private ModuleType moduleType;
   private LanguageMode languageMode;
 
-  private static final ImmutableSet<ModuleType> NO_MODULES = ImmutableSet.of();
-  private static final ImmutableSet<ModuleType> ALL_MODULES =
-      ImmutableSet.copyOf(ModuleType.values());
-  private ImmutableSet<ModuleType> typesToRewriteIn = NO_MODULES;
 
   @Before
   public void reset() {
     moduleType = ModuleType.SCRIPT;
     languageMode = LanguageMode.ECMASCRIPT_2018;
-    typesToRewriteIn = ALL_MODULES;
   }
 
   @Override
@@ -134,8 +128,7 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                 "es.module",
                 ES_MODULE_METADATA,
                 "test",
-                testMetadata)),
-        typesToRewriteIn);
+                testMetadata)));
   }
 
   /** A test common to goog.require, goog.forwardDeclare, and goog.requireType. */
@@ -157,16 +150,6 @@ public class CheckClosureImportsTest extends CompilerTestCase {
     test(
         srcs(PROVIDES_SYMBOL_SRC, makeTestFile(source.replace("<import>", "goog.requireType"))),
         error(error));
-  }
-
-  @Test
-  public void launchSetGuardsChecks() {
-    typesToRewriteIn = NO_MODULES;
-
-    // referenceMissingSymbolIsError verifies these are errors when typesToRewriteIn is ALL_MODULES.
-    testSame("goog.require('dne');");
-    testSame("goog.requireType('dne');");
-    testSame("goog.module.get('dne');");
   }
 
   @Test
@@ -632,7 +615,7 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void googForwardDeclareForGlobalInGoogModuleIsOk() {
+  public void googForwardDeclareForGlobalNotAliasedInGoogModuleIsOk() {
     moduleType = ModuleType.GOOG_MODULE;
 
     test(
@@ -644,7 +627,20 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void googForwardDeclarForGlobalInEsModuleIsOk() {
+  public void googForwardDeclareForGlobalAliasedInGoogModuleIsError() {
+    moduleType = ModuleType.GOOG_MODULE;
+
+    test(
+        srcs(
+            makeTestFile(
+                lines(
+                    "goog.module('test');", //
+                    "const MyGlobal = goog.forwardDeclare('MyGlobal');"))),
+        error(MISSING_MODULE_OR_PROVIDE));
+  }
+
+  @Test
+  public void googForwardDeclareForGlobalNotAliasedInEsModuleIsOk() {
     moduleType = ModuleType.ES6_MODULE;
 
     test(
@@ -653,6 +649,19 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                 lines(
                     "export {};", //
                     "goog.forwardDeclare('MyGlobal');"))));
+  }
+
+  @Test
+  public void googForwardDeclareForGlobalAliasedInEsModuleIsError() {
+    moduleType = ModuleType.ES6_MODULE;
+
+    test(
+        srcs(
+            makeTestFile(
+                lines(
+                    "export {};", //
+                    "const MyGlobal = goog.forwardDeclare('MyGlobal');"))),
+        error(MISSING_MODULE_OR_PROVIDE));
   }
 
   @Test

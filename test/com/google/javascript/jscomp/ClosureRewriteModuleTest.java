@@ -18,11 +18,9 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
-import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
 
@@ -1267,8 +1265,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "  return null;",
                 "}",
                 "",
-                "module$contents$x$y$z_f();")),
-        warning(MISSING_MODULE_OR_PROVIDE));
+                "module$contents$x$y$z_f();")));
   }
 
   @Test
@@ -1293,8 +1290,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "  return c;",
                 "}",
                 "",
-                "module$contents$x$y$z_f();")),
-        warning(MISSING_MODULE_OR_PROVIDE));
+                "module$contents$x$y$z_f();")));
   }
 
   @Test
@@ -1348,29 +1344,31 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testGoogModuleGet_missing_noSyntheticExternForExistingGlobals() {
-    testWarning(
-        srcs(lines("var c;", "(function() {", "  const c = goog.module.get('a.b.c');", "})")),
-        warning(MISSING_MODULE_OR_PROVIDE));
+    testNoWarning(
+        srcs(
+            lines(
+                "var c;", //
+                "(function() {",
+                "  const c = goog.module.get('a.b.c');",
+                "})")));
 
-    testWarning(
+    testNoWarning(
         srcs(
             lines(
                 "goog.provide('c');",
                 "(function() {",
                 "  const c = goog.module.get('a.b.c');",
-                "})")),
-        warning(MISSING_MODULE_OR_PROVIDE));
+                "})")));
 
-    testWarning(
+    testNoWarning(
         srcs(
             lines(
                 "goog.provide('c.d');",
                 "(function() {",
                 "  const c = goog.module.get('a.b.c');",
-                "})")),
-        warning(MISSING_MODULE_OR_PROVIDE));
+                "})")));
 
-    testWarning(
+    testNoWarning(
         srcs(
             lines(
                 "goog.module('c.d');", //
@@ -1378,8 +1376,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             lines(
                 "(function() {", //
                 "  const c = goog.module.get('a.b.c');",
-                "})")),
-        warning(MISSING_MODULE_OR_PROVIDE));
+                "})")));
   }
 
   @Test
@@ -1390,19 +1387,20 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     disableCompareAsTree();
 
     test(
-        srcs(lines(
-            "goog.module('x.y.z');",
-            "",
-            "function f() {",
-            "  return goog.module.get('a.b.c');",
-            "}",
-            "f();")),
-        expected(""
-            + "goog.module(\"x.y.z\");"
-            + "/** @const */ var module$exports$x$y$z={};"
-            + "function module$contents$x$y$z_f(){return goog.module.get(\"a.b.c\")}"
-            + "module$contents$x$y$z_f()"),
-        warning(MISSING_MODULE_OR_PROVIDE));
+        srcs(
+            lines(
+                "goog.module('x.y.z');",
+                "",
+                "function f() {",
+                "  return goog.module.get('a.b.c');",
+                "}",
+                "f();")),
+        expected(
+            ""
+                + "goog.module(\"x.y.z\");"
+                + "/** @const */ var module$exports$x$y$z={};"
+                + "function module$contents$x$y$z_f(){return goog.module.get(\"a.b.c\")}"
+                + "module$contents$x$y$z_f()"));
   }
 
   @Test
@@ -2239,20 +2237,18 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testEarlyRequireModule() {
-    testError(
+    testNoWarning(
         new String[] {
           lines("goog.module('ns.a');", "goog.require('ns.b')"), "goog.module('ns.b');"
-        },
-        LATE_PROVIDE_ERROR);
+        });
   }
 
   @Test
   public void testEarlyRequireLegacyScript() {
-    testError(
+    testNoWarning(
         new String[] {
           lines("goog.module('ns.a');", "goog.require('ns.b')"), "goog.provide('ns.b');"
-        },
-        LATE_PROVIDE_ERROR);
+        });
   }
 
   @Test

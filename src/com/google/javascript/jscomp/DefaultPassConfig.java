@@ -61,7 +61,6 @@ import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -1491,13 +1490,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName("checkGoogRequires")
           .setInternalFactory(
-              (compiler) -> {
-                // TODO(johnplaisted): Expand the Set of modules to check.
-                return new CheckClosureImports(
-                    compiler,
-                    compiler.getModuleMetadataMap(),
-                    ImmutableSet.of(ModuleType.SCRIPT, ModuleType.GOOG_PROVIDE));
-              })
+              (compiler) -> new CheckClosureImports(compiler, compiler.getModuleMetadataMap()))
           .setFeatureSet(ES_NEXT)
           .build();
 

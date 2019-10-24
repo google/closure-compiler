@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWAR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
@@ -1614,15 +1613,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       if (targetGoogModuleExists || targetLegacyScriptExists) {
         // The required thing actually was available somewhere in the program but just wasn't
         // available as early as the require statement would have liked.
-        if (unrecognizedRequire.mustBeOrdered) {
-          compiler.report(JSError.make(requireNode, LATE_PROVIDE_ERROR, legacyNamespace));
-        }
         continue;
       }
-
-      // The required thing was free to be either a goog.module() or a legacy script but neither
-      // flavor of file provided the required namespace, so report a vague error.
-      compiler.report(JSError.make(requireNode, MISSING_MODULE_OR_PROVIDE, legacyNamespace));
 
       // Remove the require node so this problem isn't reported again in ProcessClosurePrimitives.
       // TODO(lharker): after fixing b/122549561, delete all the complicated logic below.

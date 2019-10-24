@@ -22,7 +22,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
@@ -130,7 +129,7 @@ public class ModuleMapCreator implements HotSwapCompilerPass {
     @Nullable
     public UnresolvedModule resolve(Import i) {
       if (i.modulePath() == null) {
-        return resolveForClosure(i.moduleRequest(), i.importNode());
+        return resolveForClosure(i.moduleRequest());
       }
       return resolve(i.moduleRequest(), i.modulePath(), i.importNode());
     }
@@ -142,10 +141,9 @@ public class ModuleMapCreator implements HotSwapCompilerPass {
     }
 
     @Nullable
-    private UnresolvedModule resolveForClosure(String namespace, Node forLineInfo) {
+    private UnresolvedModule resolveForClosure(String namespace) {
       UnresolvedModule module = unresolvedModulesByClosureNamespace.get(namespace);
       if (module == null) {
-        compiler.report(JSError.make(forLineInfo, MISSING_NAMESPACE_IMPORT, namespace));
         module = getFallbackForMissingClosureModule(namespace);
         unresolvedModulesByClosureNamespace.put(namespace, module);
       }
@@ -158,7 +156,7 @@ public class ModuleMapCreator implements HotSwapCompilerPass {
 
       if (GoogEsImports.isGoogImportSpecifier(moduleRequest)) {
         String namespace = GoogEsImports.getClosureIdFromGoogImportSpecifier(moduleRequest);
-        return resolveForClosure(namespace, forLineInfo);
+        return resolveForClosure(namespace);
       }
 
       ModuleLoader.ModulePath requestedPath =

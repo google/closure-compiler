@@ -28,12 +28,10 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
-import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
@@ -187,34 +185,18 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       IR.getprop(IR.name("goog"), IR.string("requireType"));
 
   private final AbstractCompiler compiler;
-  private final ImmutableSet<ModuleType> moduleTypesToCheck;
   private final Checker checker;
   private final Set<String> namespacesSeen;
   private boolean inHotSwap = false;
 
-  /**
-   * @param moduleTypesToCheck A temporary set of module types to check goog.requires in. As this
-   *     pass replaces the logic inside ES6RewriteModules, ClosureRewriteModules,
-   *     ProcessClosurePrimitives, and ClosureCheckModule this set should be expanded. Once it
-   *     covers all module types it should be removed. This is how we will slowly and safely
-   *     consolidate all logic to this pass. e.g. if the set is empty then this pass does nothing.
-   */
-  CheckClosureImports(
-      AbstractCompiler compiler,
-      ModuleMetadataMap moduleMetadataMap,
-      ImmutableSet<ModuleType> moduleTypesToCheck) {
+  CheckClosureImports(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
     this.compiler = compiler;
-    this.moduleTypesToCheck = moduleTypesToCheck;
     this.checker = new Checker(compiler, moduleMetadataMap);
     this.namespacesSeen = new HashSet<>();
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    if (moduleTypesToCheck.isEmpty()) {
-      return;
-    }
-
     inHotSwap = true;
     NodeTraversal.traverse(compiler, scriptRoot.getParent(), checker);
     inHotSwap = false;
@@ -222,10 +204,6 @@ final class CheckClosureImports implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    if (moduleTypesToCheck.isEmpty()) {
-      return;
-    }
-
     NodeTraversal.traverse(compiler, externs, checker);
     NodeTraversal.traverse(compiler, root, checker);
   }
@@ -250,7 +228,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         @Nullable ModuleMetadata currentModule,
         @Nullable Node moduleScopeRoot) {
       // currentModule is null on ROOT nodes.
-      if (currentModule == null || !moduleTypesToCheck.contains(currentModule.moduleType())) {
+      if (currentModule == null) {
         return;
       }
 
@@ -459,7 +437,8 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       ModuleMetadata requiredModule = moduleMetadataMap.getModulesByGoogNamespace().get(namespace);
 
       if (requiredModule == null) {
-        if (importType == ClosureImport.FORWARD_DECLARE) {
+        boolean isNonAliasedForwardDeclare = call.getParent().isExprResult();
+        if (importType == ClosureImport.FORWARD_DECLARE && isNonAliasedForwardDeclare) {
           // Ok to forwardDeclare any global, sadly. This is some bad legacy behavior and people
           // ought to use externs.
           return;
