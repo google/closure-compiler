@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -127,7 +128,7 @@ class TypeTransformation {
   }
 
   private Keywords nameToKeyword(String s) {
-    return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
+    return TypeTransformationParser.Keywords.valueOf(Ascii.toUpperCase(s));
   }
 
   private JSType getType(String typeName) {
