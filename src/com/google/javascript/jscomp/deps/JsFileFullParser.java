@@ -213,6 +213,7 @@ public class JsFileFullParser {
     for (CommentAnnotation annotation : CommentAnnotation.parse(comment.value)) {
       switch (annotation.name) {
         case "@fileoverview":
+        case "@author":
         case "@see":
         case "@link":
           break;
