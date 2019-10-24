@@ -38,8 +38,6 @@ import javax.annotation.Nullable;
  * @see CodeConsumer
  * @see CodeGenerator
  * @see CodePrinter
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMap {
   /**

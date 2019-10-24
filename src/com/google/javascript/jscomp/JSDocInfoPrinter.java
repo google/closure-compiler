@@ -32,7 +32,6 @@ import java.util.Set;
 
 /**
  * Prints a JSDocInfo, used for preserving type annotations in ES6 transpilation.
- *
  */
 public final class JSDocInfoPrinter {
 

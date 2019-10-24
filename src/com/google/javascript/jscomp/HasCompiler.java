@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 /**
  * An interface for objects that can provide a compiler instance.
- *
- * @author rluble@google.com (Roberto Lublinerman)
  */
 public interface HasCompiler {
   AbstractCompiler getCompiler();

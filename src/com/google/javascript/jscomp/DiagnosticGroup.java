@@ -25,8 +25,6 @@ import java.util.Map;
 /**
  * Group a set of related diagnostic types together, so that they can be toggled on and off as one
  * unit.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public final class DiagnosticGroup implements Serializable {
   private static final long serialVersionUID = 1;

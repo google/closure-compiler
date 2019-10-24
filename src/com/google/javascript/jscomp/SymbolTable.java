@@ -93,7 +93,6 @@ import javax.annotation.Nullable;
  * assume that most clients will not care about the distinction.
  *
  * @see #addSymbolsFrom For more information on how to write plugins for this symbol table.
- * @author nicksantos@google.com (Nick Santos)
  */
 public final class SymbolTable {
   private static final Logger logger = Logger.getLogger(SymbolTable.class.getName());

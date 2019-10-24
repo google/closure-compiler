@@ -29,8 +29,6 @@ import java.util.List;
  * message, as a string. If the message contains placeholders, the second
  * argument is an array of the values being used for the placeholders, sorted
  * by placeholder name.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 @GwtIncompatible("JsMessage")
 class ReplaceMessagesForChrome extends JsMessageVisitor {

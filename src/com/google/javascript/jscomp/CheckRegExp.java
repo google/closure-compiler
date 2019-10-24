@@ -25,8 +25,6 @@ import com.google.javascript.rhino.Token;
  * Look for references to the global RegExp object that would cause
  * regular expressions to be unoptimizable, and checks that regular expressions
  * are syntactically valid.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
 

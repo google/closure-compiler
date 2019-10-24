@@ -29,8 +29,6 @@ import javax.annotation.Nullable;
  * ECMAScript 6.
  *
  * <p>This implementation is not thread-safe.
- *
- * @author moz@google.com (Michael Zhou)
  */
 public class SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;

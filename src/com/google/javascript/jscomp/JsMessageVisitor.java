@@ -38,8 +38,6 @@ import javax.annotation.Nullable;
 /**
  * Traverses across parsed tree and finds I18N messages. Then it passes it to {@link
  * JsMessageVisitor#processJsMessage(JsMessage, JsMessageDefinition)}.
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 @GwtIncompatible("JsMessage, java.util.regex")
 public abstract class JsMessageVisitor extends AbstractPostOrderCallback implements CompilerPass {

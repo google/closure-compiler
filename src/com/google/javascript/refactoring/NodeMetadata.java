@@ -21,8 +21,6 @@ import com.google.javascript.jscomp.AbstractCompiler;
 /**
  * Class that holds metadata (or meta objects) for use by JsFlume that aren't
  * contained within the Node itself.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public final class NodeMetadata {
 

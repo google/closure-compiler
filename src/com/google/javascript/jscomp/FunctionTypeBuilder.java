@@ -66,8 +66,6 @@ import javax.annotation.Nullable;
  * NOTE(nicksantos): Organizationally, this feels like it should be in Rhino.
  * But it depends on some coding convention stuff that's really part
  * of JSCompiler.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 final class FunctionTypeBuilder {
 

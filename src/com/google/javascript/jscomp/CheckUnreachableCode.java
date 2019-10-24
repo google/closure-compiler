@@ -29,7 +29,6 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 /**
  * Use {@link ControlFlowGraph} and {@link GraphReachability} to inform user
  * about unreachable code.
- *
  */
 class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCallback {
 

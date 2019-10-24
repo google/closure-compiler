@@ -38,7 +38,6 @@ import java.util.logging.Logger;
  * }
  *
  * And there will be mapping from $qv to goog.string.htmlEscape
- *
  */
 class NameAnonymousFunctionsMapped implements CompilerPass {
 

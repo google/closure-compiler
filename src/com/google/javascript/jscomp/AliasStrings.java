@@ -44,7 +44,6 @@ import java.util.regex.Pattern;
  *     - However, projects that make heavy use of jslayout may need to enable
  *       this pass even for modern browsers, because jslayout generates so many
  *       duplicate strings.
- *
  */
 class AliasStrings implements CompilerPass, NodeTraversal.Callback {
 

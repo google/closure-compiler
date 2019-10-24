@@ -25,8 +25,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Class that contains common Matchers that are useful to everyone.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public final class Matchers {
   // TODO(mknichel): Make sure all this code works with goog.scope.

@@ -35,7 +35,6 @@ import javax.annotation.Nullable;
 /**
  * NodeTraversal allows an iteration through the nodes in the parse tree,
  * and facilitates the optimizations on the parse tree.
- *
  */
 public class NodeTraversal {
   private final AbstractCompiler compiler;

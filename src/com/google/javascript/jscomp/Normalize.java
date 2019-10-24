@@ -60,8 +60,6 @@ import java.util.Set;
  *   <li>Take var statements out from for-loop initializer.
  *       This: for(var a = 0;a<0;a++) {} becomes: var a = 0; for(var a;a<0;a++) {}
  * </ol>
- *
- * @author johnlenz@google.com (johnlenz)
  */
 class Normalize implements CompilerPass {
 

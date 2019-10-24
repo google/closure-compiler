@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 
 /**
  * Just to fold known methods when they are called with constants.
- *
  */
 class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 

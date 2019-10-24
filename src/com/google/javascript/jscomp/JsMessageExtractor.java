@@ -43,7 +43,6 @@ import java.util.List;
  *
  * <p>This class enforces the policy that message variable names must be unique
  * across all JS files.
- *
  */
 @GwtIncompatible("JsMessage.Builder")
 public final class JsMessageExtractor {

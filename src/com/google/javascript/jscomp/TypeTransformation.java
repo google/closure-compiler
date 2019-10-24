@@ -39,8 +39,6 @@ import java.util.Map;
 
 /**
  * A class for processing type transformation expressions
- *
- * @author lpino@google.com (Luis Fernando Pino Duque)
  */
 class TypeTransformation {
   private static final String VIRTUAL_FILE = "<TypeTransformation.java>";

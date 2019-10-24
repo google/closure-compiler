@@ -35,8 +35,6 @@ import java.util.regex.Pattern;
 /**
  * Base class for classes that parse JavaScript sources on a line-by-line basis. Strips comments
  * from files and records all parsing errors.
- *
- * @author agrieve@google.com (Andrew Grieve)
  */
 @GwtIncompatible("java.io")
 public abstract class JsFileLineParser {

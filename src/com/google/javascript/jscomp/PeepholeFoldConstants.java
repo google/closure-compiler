@@ -27,7 +27,6 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
- *
  */
 class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 

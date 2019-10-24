@@ -22,8 +22,6 @@
  * getters or setters, including in the runtime), so these helpers make no
  * attempt of fallback behaviour when methods like Object.getPrototypeOf or
  * Object.getOwnPropertyDescriptor are undefined (unlike helpers in es6/*.js).
- *
- * @author ochafik@google.com (Olivier Chafik)
  */
 'require base';
 

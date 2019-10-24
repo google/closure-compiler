@@ -112,8 +112,6 @@ import javax.annotation.Nullable;
  *   }
  * }
  * </pre>
- *
- * @author bolinfest@google.com (Michael Bolin)
  */
 public abstract class AbstractCommandLineRunner<A extends Compiler,
     B extends CompilerOptions> {

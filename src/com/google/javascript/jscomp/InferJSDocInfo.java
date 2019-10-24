@@ -93,8 +93,6 @@ import javax.annotation.Nullable;
  * the same structure will get different JSDocs despite possibly comparing equal. Additionally, when
  * assigning instances of these types as properties of nominal types (e.g. using `myFunction` as the
  * RHS of #2) the structural type JSDoc plays no part.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class InferJSDocInfo extends AbstractPostOrderCallback implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;

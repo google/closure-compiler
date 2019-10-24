@@ -25,7 +25,6 @@ import com.google.javascript.rhino.TokenStream;
  * a property node that can be used to describe the node or name
  * related nodes based on it (as done by the NameAnonymousFunctions
  * compiler pass).
- *
  */
 class NodeNameExtractor {
   private final char delimiter;

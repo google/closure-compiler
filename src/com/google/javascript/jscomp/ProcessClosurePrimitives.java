@@ -39,8 +39,6 @@ import javax.annotation.Nullable;
  * Performs some Closure-specific simplifications including rewriting goog.base, goog.addDependency.
  *
  * <p>Adds forwardDeclared and goog.defined names to the compiler.
- *
- * @author chrisn@google.com (Chris Nokleberg)
  */
 class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 

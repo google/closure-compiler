@@ -32,7 +32,6 @@ import java.util.List;
  * Utility methods for manipulation of UNIX-like paths.
  * TODO(tbreisacher): We can probably nuke this entire class and replace it with
  * https://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html
- *
  */
 public final class PathUtil {
 

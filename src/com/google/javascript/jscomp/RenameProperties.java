@@ -62,7 +62,6 @@ import javax.annotation.Nullable;
  * references. Here are two examples:
  *    JSCompiler_renameProperty('propertyName') -> 'jYq'
  *    JSCompiler_renameProperty('myProp.nestedProp.innerProp') -> 'e4.sW.C$'
- *
  */
 class RenameProperties implements CompilerPass {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');

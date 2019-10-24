@@ -20,8 +20,6 @@ package com.google.javascript.jscomp;
  * Guava code that will eventually be open-sourced properly. Package-private
  * until they're able to do that. A lot of these methods are discouraged
  * anyways.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class Strings {
   private Strings() {} // All static

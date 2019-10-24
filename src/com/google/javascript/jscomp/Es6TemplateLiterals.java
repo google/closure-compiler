@@ -28,8 +28,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 /**
  * Helper class for transpiling ES6 template literals.
- *
- * @author moz@google.com (Michael Zhou)
  */
 class Es6TemplateLiterals {
   private static final String TEMPLATELIT_VAR = "$jscomp$templatelit$";

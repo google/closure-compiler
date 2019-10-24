@@ -111,8 +111,6 @@ import javax.annotation.Nullable;
  *
  * <p>When building scope information, also declares relevant information about types in the type
  * registry.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
   /** A suffix for naming delegate proxies differently from their base. */

@@ -35,8 +35,6 @@ import java.util.Set;
  * where all the values are {@code true}.
  *
  * <p>Converts goog.reflect.objectProperty(propName, object) to JSCompiler_renameProperty
- *
- * @author agrieve@google.com (Andrew Grieve)
  */
 final class ClosureOptimizePrimitives implements CompilerPass {
   static final DiagnosticType DUPLICATE_SET_MEMBER =

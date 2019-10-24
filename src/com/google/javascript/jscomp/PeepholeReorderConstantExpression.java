@@ -24,7 +24,6 @@ import com.google.javascript.rhino.Token;
  * ex. x === 0 -> 0 === x
  * After reordering, expressions like 0 === x and 0 === y may have higher
  * compression together than their original counterparts.
- *
  */
 class PeepholeReorderConstantExpression extends AbstractPeepholeOptimization {
 

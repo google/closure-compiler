@@ -26,7 +26,6 @@ import com.google.javascript.rhino.Node;
  * abstract interpretation process by knowing the outcome of some computation
  * and calculating a preciser view of the world than the view without knowing
  * the outcome of the computation.</p>
- *
  */
 public interface ReverseAbstractInterpreter {
   /**

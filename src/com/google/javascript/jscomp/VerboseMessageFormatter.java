@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 /**
  * Verbose message formatter. This formatter generates very loud and long
  * messages with multi-line source excerpts.
- *
  */
 class VerboseMessageFormatter extends AbstractMessageFormatter {
   VerboseMessageFormatter(SourceExcerptProvider source) {

@@ -32,8 +32,6 @@ import com.google.javascript.rhino.Node;
  * ES6&rarr;ES5 lowering of super accessor expressions can be rolled out.
  *
  * <p>TODO(ochafik): Add support for `super.x++` (and --, pre/post variants).
- *
- * @author ochafik@google.com (Olivier Chafik)
  */
 public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
     HotSwapCompilerPass {

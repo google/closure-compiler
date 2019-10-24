@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Node;
  * and prevent renaming of system functions).</p>
  *
  * <p>Use this class to support testing with BaseCompilerTest</p>
- *
  */
 public interface CompilerPass {
 

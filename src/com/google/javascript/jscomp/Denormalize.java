@@ -41,8 +41,6 @@ import com.google.javascript.rhino.Token;
  *   if (y) { x = 0; }
  * </code> becomes <code>if (y) { var x = 0; }</code>, effectively undoing what {@link
  * HoistVarsOutOfBlocks} does.
- *
- * @author johnlenz@google.com (johnlenz)
  */
 class Denormalize implements CompilerPass, Callback, Behavior {
 

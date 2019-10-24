@@ -38,8 +38,6 @@ import java.util.Set;
 /**
  * A class to transform the body of a function into a generic block suitable
  * for inlining.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class FunctionToBlockMutator {
 

@@ -21,8 +21,6 @@ import com.google.javascript.rhino.Node;
 /**
  * Interface for a class that knows how to match a {@link Node} for a specific
  * pattern. For example of Matchers, see {@link Matchers}.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public interface Matcher {
   /**

@@ -31,8 +31,6 @@ import com.google.javascript.rhino.Token;
  * in a loop is never considered const.
  *
  * Note that criteria (1) is only used for normal code, not externs.
- *
- * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
 class InferConsts implements CompilerPass {
   private final AbstractCompiler compiler;

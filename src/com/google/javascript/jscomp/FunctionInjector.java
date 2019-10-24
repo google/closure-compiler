@@ -37,8 +37,6 @@ import java.util.Set;
  * A set of utility functions that replaces CALL with a specified
  * FUNCTION body, replacing and aliasing function parameters as
  * necessary.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class FunctionInjector {
 

@@ -57,8 +57,6 @@ import javax.annotation.Nullable;
  * let/const declarations at all.
  *
  * <p>TODO(moz): Try to use MakeDeclaredNamesUnique
- *
- * @author moz@google.com (Michael Zhou)
  */
 public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {

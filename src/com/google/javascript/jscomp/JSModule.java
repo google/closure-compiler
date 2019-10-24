@@ -37,7 +37,6 @@ import java.util.Set;
 /**
  * A JavaScript module has a unique name, consists of a list of compiler inputs, and can depend on
  * other modules.
- *
  */
 public final class JSModule extends DependencyInfo.Base implements Serializable {
   // The name of the artificial module containing all strong sources when there is no module spec.

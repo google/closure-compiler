@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 /**
  * Convert the warnings level to an Options object.
- *
  */
 public enum WarningLevel {
   QUIET,

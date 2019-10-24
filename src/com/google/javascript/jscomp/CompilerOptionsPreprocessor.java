@@ -29,8 +29,6 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
  * you want to change the warningsGuard, you can't do it here.
  *
  * <p>Also, turns off options if the provided options don't make sense together.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 final class CompilerOptionsPreprocessor {
 

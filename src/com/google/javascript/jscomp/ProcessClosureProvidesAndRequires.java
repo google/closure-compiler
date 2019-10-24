@@ -53,8 +53,6 @@ import javax.annotation.Nullable;
  *
  * <p>If modules have not been rewritten, this pass also includes legacy Closure module namespaces
  * in the list of {@link ProvidedName}s.
- *
- * @author chrisn@google.com (Chris Nokleberg)
  */
 class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 

@@ -57,8 +57,6 @@ import javax.annotation.Nullable;
 
 /**
  * Compiler options
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public class CompilerOptions implements Serializable {
   // The number of characters after which we insert a line break in the code
@@ -3349,8 +3347,6 @@ public class CompilerOptions implements Serializable {
    * Calls to the mutators are expected to resolve very quickly, so
    * implementations should not perform expensive operations in the mutator
    * methods.
-   *
-   * @author tylerg@google.com (Tyler Goodwin)
    */
   public interface AliasTransformationHandler {
 

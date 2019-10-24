@@ -70,9 +70,6 @@ import javax.annotation.Nullable;
  * instance of the call to {@link NodeUtil#evaluatesToLocalValue(Node)} and {@link
  * NodeUtil#allArgsUnescapedLocal(Node)} do not actually take into account local variables. They
  * only assume literals, primitives, and operations on primitives are local.
- *
- * @author johnlenz@google.com (John Lenz)
- * @author tdeegan@google.com (Thomas Deegan)
  */
 class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   // A prefix to differentiate property names from variable names.

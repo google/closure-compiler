@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
  * A peephole optimization that minimizes code by simplifying conditional
  * expressions, replacing IFs with HOOKs, replacing object constructors
  * with literals, and simplifying returns.
- *
  */
 class PeepholeSubstituteAlternateSyntax
   extends AbstractPeepholeOptimization {

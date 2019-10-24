@@ -33,7 +33,6 @@ import java.util.logging.Logger;
  * transitive dependencies from: a block of code (
  * {@link #getDependencies(String)}), or a list of symbols
  * {@link #getDependencies(Collection)}.
- *
  */
 public final class DefaultDependencyResolver implements DependencyResolver  {
 

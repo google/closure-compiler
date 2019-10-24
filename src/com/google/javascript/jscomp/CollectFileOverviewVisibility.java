@@ -27,8 +27,6 @@ import com.google.javascript.rhino.StaticSourceFile;
 /**
  * Compiler pass that collects visibility annotations in {@code @fileoverview}
  * blocks. Used by {@link CheckAccessControls}.
- *
- * @author brndn@google.com (Brendan Linn)
  */
 class CollectFileOverviewVisibility implements HotSwapCompilerPass {
 

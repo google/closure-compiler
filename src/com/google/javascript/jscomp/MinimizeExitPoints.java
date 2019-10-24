@@ -27,8 +27,6 @@ import javax.annotation.Nullable;
 /**
  * Transform the structure of the AST so that the number of explicit exits
  * are minimized and instead flows to implicit exits conditions.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class MinimizeExitPoints extends AbstractPeepholeOptimization {
   @Override

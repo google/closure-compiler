@@ -78,8 +78,6 @@ import javax.annotation.Nullable;
 /**
  * Pass factories and meta-data for native JSCompiler passes.
  *
- * @author nicksantos@google.com (Nick Santos)
- *
  * NOTE(dimvar): this needs some non-trivial refactoring. The pass config should
  * use as little state as possible. The recommended way for a pass to leave
  * behind some state for a subsequent pass is through the compiler object.

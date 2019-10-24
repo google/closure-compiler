@@ -35,8 +35,6 @@ import com.google.javascript.rhino.StaticSourceFile;
  * This pass does not check the content of the line numbers for things like "being monotonically
  * increasing" because we often insert generated code with out-of-order line numbers. (e.g. imagine
  * inlining a function from a.js into b.js, but having the source information point to a.js)
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class SourceInfoCheck implements Callback, CompilerPass {
 

@@ -49,7 +49,6 @@ import java.util.Set;
  *
  * <p>For lots of examples, see the unit test.
  *
- *
  */
 final class RescopeGlobalSymbols implements CompilerPass {
 
@@ -580,3 +579,4 @@ final class RescopeGlobalSymbols implements CompilerPass {
     }
   }
 }
+

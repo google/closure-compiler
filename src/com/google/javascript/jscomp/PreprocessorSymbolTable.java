@@ -34,8 +34,6 @@ import javax.annotation.Nullable;
 /**
  * A symbol table for references that are removed by preprocessor passes (like {@code
  * ProcessClosurePrimitives}).
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 final class PreprocessorSymbolTable
     implements StaticTypedScope, StaticSymbolTable<SimpleSlot, PreprocessorSymbolTable.Reference> {

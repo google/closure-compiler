@@ -77,8 +77,6 @@ import javax.annotation.Nullable;
  * <p>In theory, the compiler can't inline 'alias' unless it can prove that goog.getBar is called
  * only after 'alias' is defined. In practice, the compiler will inline 'alias' anyway, at the risk
  * of 'fixing' bad code.
- *
- * @author robbyw@google.com (Robby Walker)
  */
 class ScopedAliases implements HotSwapCompilerPass {
   /** Name used to denote an scoped function block used for aliasing. */

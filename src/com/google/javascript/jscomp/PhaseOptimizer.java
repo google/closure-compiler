@@ -33,9 +33,6 @@ import java.util.logging.Logger;
 
 /**
  * An object that optimizes the order of compiler passes.
- *
- * @author nicksantos@google.com (Nick Santos)
- * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 class PhaseOptimizer implements CompilerPass {
 

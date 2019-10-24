@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * A warnings guard that suppresses warnings for a particular diagnostic group for a file that
  * contains the specified substring.
- * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroupPathSuppressingWarningsGuard extends DiagnosticGroupWarningsGuard {
   private final String part;

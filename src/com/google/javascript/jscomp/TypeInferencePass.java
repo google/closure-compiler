@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Node;
 
 /**
  * A compiler pass to run the type inference analysis.
- *
  */
 class TypeInferencePass implements CompilerPass {
 

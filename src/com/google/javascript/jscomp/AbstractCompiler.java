@@ -49,8 +49,6 @@ import javax.annotation.Nullable;
  * An abstract compiler, to help remove the circular dependency of passes on JSCompiler.
  *
  * <p>This is an abstract class, so that we can make the methods package-private.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public abstract class AbstractCompiler implements SourceExcerptProvider, CompilerInputProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(

@@ -38,8 +38,6 @@ import java.util.regex.Pattern;
 /**
  * A parser that can extract dependency information from a .js file, including goog.require,
  * goog.provide, goog.module, import statements, and export statements.
- *
- * @author agrieve@google.com (Andrew Grieve)
  */
 @GwtIncompatible("java.util.regex")
 public final class JsFileRegexParser extends JsFileLineParser {

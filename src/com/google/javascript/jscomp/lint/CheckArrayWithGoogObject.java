@@ -30,7 +30,6 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
  * Lints against passing arrays to goog.object methods with the intention of
  * iterating over them as though with a for-in loop, which is discouraged with
  * arrays.
- *
  */
 public final class CheckArrayWithGoogObject extends NodeTraversal.AbstractPostOrderCallback
     implements HotSwapCompilerPass {

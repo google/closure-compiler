@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 /**
  * A change handler that throws an exception if any changes are made.
- * @author nicksantos@google.com (Nick Santos)
- * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 final class ForbiddenChange implements CodeChangeHandler {
   @Override

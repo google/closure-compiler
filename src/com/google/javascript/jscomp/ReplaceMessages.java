@@ -30,8 +30,6 @@ import javax.annotation.Nullable;
 /**
  * ReplaceMessages replaces user-visible messages with alternatives.
  * It uses Google specific JsMessageVisitor implementation.
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 @GwtIncompatible("JsMessage")
 final class ReplaceMessages extends JsMessageVisitor {

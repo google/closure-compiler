@@ -35,8 +35,6 @@ import java.util.Map.Entry;
  * update of reference map for a specific script.
  *
  * @see ReferenceCollectingCallback#exitScope(NodeTraversal)
- *
- * @author bashir@google.com (Bashir Sadjad)
  */
 class GlobalVarReferenceMap implements ReferenceMap {
 
@@ -231,8 +229,6 @@ class GlobalVarReferenceMap implements ReferenceMap {
    * A CleanupPass implementation that will replace references to old Syntactic
    * Global Scopes generated in previous compile runs with references to the
    * Global Typed Scope.
-   *
-   * @author tylerg@google.com (Tyler Goodwin)
    */
   static class GlobalVarRefCleanupPass implements HotSwapCompilerPass {
 

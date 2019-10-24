@@ -83,7 +83,6 @@ import javax.annotation.Nullable;
  * We have added many caches that help a lot, but it is probably worth it to
  * revisit this pass and rewrite it in a way that does not compute the same
  * thing over and over.
- *
  */
 class DisambiguateProperties implements CompilerPass {
   // To prevent the logs from filling up, we cap the number of warnings

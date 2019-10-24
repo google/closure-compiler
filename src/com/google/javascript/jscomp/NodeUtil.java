@@ -61,9 +61,6 @@ import javax.annotation.Nullable;
 
 /**
  * NodeUtil contains generally useful AST utilities.
- *
- * @author nicksantos@google.com (Nick Santos)
- * @author johnlenz@google.com (John Lenz)
  */
 public final class NodeUtil {
 

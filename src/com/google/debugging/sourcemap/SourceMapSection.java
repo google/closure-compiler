@@ -18,7 +18,6 @@ package com.google.debugging.sourcemap;
 
 /**
  * A class representing a partial source map.
- * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMapSection {
 

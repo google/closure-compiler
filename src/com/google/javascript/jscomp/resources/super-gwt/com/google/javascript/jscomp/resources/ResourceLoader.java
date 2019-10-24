@@ -25,7 +25,6 @@ import jsinterop.annotations.JsPackage;
 
 /**
  * GWT compatible replacement for {@code ResourceLoader}.
- *
  */
 public final class ResourceLoader {
   static interface Libraries extends ClientBundle {

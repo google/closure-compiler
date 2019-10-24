@@ -23,8 +23,6 @@ import com.google.javascript.rhino.Node;
  * statement in JavaScript code. It is appropriate to use this statement while
  * developing JavaScript; however, it is generally undesirable to include it in
  * production code.
- *
- * @author bolinfest@google.com (Michael Bolin)
  */
 class CheckDebuggerStatement extends AbstractPostOrderCallback
     implements CompilerPass {

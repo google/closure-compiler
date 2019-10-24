@@ -36,7 +36,6 @@ import java.util.List;
  *
  * This guard will convert any warning that came from a file that contains "foo"
  * in its path to an error.
- *
  */
 public final class ByPathWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;

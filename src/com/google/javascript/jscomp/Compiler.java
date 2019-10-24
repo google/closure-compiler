@@ -108,7 +108,6 @@ import javax.annotation.Nullable;
  * External variables are declared in 'externs' files. For instance, the file
  * may include definitions for global javascript/browser objects such as
  * window, document.
- *
  */
 // TODO(tbreisacher): Rename Compiler to JsCompiler and remove this suppression.
 @SuppressWarnings("JavaLangClash")

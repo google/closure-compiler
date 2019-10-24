@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 /**
  * A simple listener for code change events.
- * @author nicksantos@google.com (Nick Santos)
- * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 interface CodeChangeHandler {
   /** Report a change to some unspecified node of the AST. */

@@ -124,8 +124,6 @@ import org.kohsuke.args4j.spi.StringOptionHandler;
  * </pre>
  *
  * This class is totally not thread-safe.
- *
- * @author bolinfest@google.com (Michael Bolin)
  */
 @GwtIncompatible("Unnecessary")
 public class CommandLineRunner extends

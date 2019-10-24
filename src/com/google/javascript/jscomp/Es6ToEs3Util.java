@@ -26,8 +26,6 @@ import java.util.Locale;
 
 /**
  * Util functions for converting Es6 to Es5
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 public final class Es6ToEs3Util {
 

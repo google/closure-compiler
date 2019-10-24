@@ -33,7 +33,6 @@ import java.util.LinkedHashSet;
  *
  * <p>FOO = BAR = 5; and var FOO = BAR = 5; are not supported because the annotation is ambiguous to
  * whether it applies to all the variables or only the first one.
- *
  */
 class FindExportableNodes extends AbstractPostOrderCallback {
 

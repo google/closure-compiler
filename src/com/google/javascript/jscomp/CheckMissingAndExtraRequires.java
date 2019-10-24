@@ -52,7 +52,6 @@ import javax.annotation.Nullable;
  *   <li>Type is not referenced at all → goog.require is forbidden (extraRequires check fails if it
  *       is there)
  * </ul>
- *
  */
 public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;

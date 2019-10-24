@@ -27,7 +27,6 @@ import java.util.Set;
  * e.g. var XX = 5;
  * XX = 3;    // error!
  * XX++;      // error!
- *
  */
 // TODO(tbreisacher): Consider merging this with CheckAccessControls so that all
 // const-related checks are in the same place.

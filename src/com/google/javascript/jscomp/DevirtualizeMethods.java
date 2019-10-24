@@ -86,7 +86,6 @@ import javax.annotation.Nullable;
  *     }
  *     var total = a.accumulate(2)
  * </pre>
- *
  */
 class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;

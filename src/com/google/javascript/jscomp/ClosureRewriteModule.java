@@ -84,9 +84,6 @@ import javax.annotation.Nullable;
  * class module$contents$foo$Bar_Bar extends module$exports$foo$Baz {}
  * var module$exports$foo$Bar = module$contents$foo$Bar_Bar;
  * </pre>
- *
- * @author johnlenz@google.com (John Lenz)
- * @author stalcup@google.com (John Stalcup)
  */
 final class ClosureRewriteModule implements HotSwapCompilerPass {
 

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 /**
  * Records whether the code has changed since the last reset.
- * @author nicksantos@google.com (Nick Santos)
  */
 final class RecentChange implements CodeChangeHandler {
   private boolean hasChanged = false;

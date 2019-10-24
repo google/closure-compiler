@@ -45,7 +45,6 @@ import javax.annotation.Nullable;
  * which the compiler has a type.
  *
  * <p>The JavaScript code which implements the type assertions is in js/runtime_type_check.js.
- *
  */
 class RuntimeTypeCheck implements CompilerPass {
 

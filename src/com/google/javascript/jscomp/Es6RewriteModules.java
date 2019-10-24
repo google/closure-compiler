@@ -57,8 +57,6 @@ import javax.annotation.Nullable;
 /**
  * Rewrites a ES6 module into a form that can be safely concatenated. Note that we treat a file as
  * an ES6 module if it has at least one import or export statement.
- *
- * @author moz@google.com (Michael Zhou)
  */
 public final class Es6RewriteModules extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {

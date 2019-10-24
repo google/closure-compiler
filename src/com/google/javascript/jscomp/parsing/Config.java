@@ -25,8 +25,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 /**
  * Configuration for the AST factory. Should be shared across AST creation for all files of a
  * compilation process.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 @Immutable @AutoValue @AutoValue.CopyAnnotations
 public abstract class Config {

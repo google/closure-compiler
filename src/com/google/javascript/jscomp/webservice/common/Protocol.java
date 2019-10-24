@@ -21,7 +21,6 @@ import java.util.Set;
 
 /**
  * All the strings used by the webservice protocol.
- *
  */
 public class Protocol {
 

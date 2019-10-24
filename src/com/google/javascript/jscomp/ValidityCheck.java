@@ -22,8 +22,6 @@ import java.util.Set;
  * A compiler pass that verifies the structure of the AST conforms
  * to a number of invariants. Because this can add a lot of overhead,
  * we only run this in development mode.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class ValidityCheck implements CompilerPass {
 

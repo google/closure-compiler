@@ -28,8 +28,6 @@ import java.util.List;
 
 /**
  * Creates synthetic blocks to optimizations from moving code past markers in the source.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class CreateSyntheticBlocks extends AbstractPostOrderCallback implements CompilerPass {
   static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.error(

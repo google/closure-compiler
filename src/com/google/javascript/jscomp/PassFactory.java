@@ -28,8 +28,6 @@ import java.util.function.Function;
  *
  * <p>Contains all meta-data about compiler passes (like whether it can be run multiple times, a
  * human-readable name for logging, etc.).
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 @AutoValue
 public abstract class PassFactory {

@@ -37,7 +37,6 @@ import javax.annotation.Nullable;
  *   - Remove all assignments to 1) field names that are strip names and
  *     2) qualified names that begin with strip types.
  *   - Remove all statements containing calls to static methods of strip types.
- *
  */
 class StripCode implements CompilerPass {
 

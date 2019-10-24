@@ -33,8 +33,6 @@ import javax.annotation.Nullable;
 
 /**
  * This class walks the AST and validates that the structure is correct.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public final class AstValidator implements CompilerPass {
 

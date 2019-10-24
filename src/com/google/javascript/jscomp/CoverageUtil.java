@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * This class contains all general purpose static methods that are used by
  * coverage instrumentation related classes - not limited to them, though.
- * @author praveenk@google.com (Praveen Kumashi)
  */
 class CoverageUtil {
   /**

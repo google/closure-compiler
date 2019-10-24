@@ -34,7 +34,6 @@ import java.util.Map.Entry;
  * Replaces calls to id generators with ids.
  *
  * Use this to get unique and short ids.
- *
  */
 class ReplaceIdGenerators implements CompilerPass {
   static final DiagnosticType NON_GLOBAL_ID_GENERATOR_CALL =

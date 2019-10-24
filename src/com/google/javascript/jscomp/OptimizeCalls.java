@@ -43,8 +43,6 @@ import javax.annotation.Nullable;
  *   <li>{@link OptimizeReturns} (remove unused)
  *   <li>{@link DevirtualizeMethods}
  * </ul>
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class OptimizeCalls implements CompilerPass {
 

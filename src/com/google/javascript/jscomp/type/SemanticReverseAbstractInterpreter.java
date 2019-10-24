@@ -39,7 +39,6 @@ import javax.annotation.CheckReturnValue;
  * A reverse abstract interpreter using the semantics of the JavaScript
  * language as a means to reverse interpret computations. This interpreter
  * expects the parse tree inputs to be typed.
- *
  */
 public final class SemanticReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {

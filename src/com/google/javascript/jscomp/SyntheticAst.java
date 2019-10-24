@@ -26,8 +26,6 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 
 /**
  * An AST generated totally by the compiler.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public final class SyntheticAst implements SourceAst {
   private static final long serialVersionUID = 1L;

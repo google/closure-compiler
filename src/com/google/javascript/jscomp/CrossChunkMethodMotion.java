@@ -31,8 +31,6 @@ import java.util.Iterator;
 
 /**
  * Move prototype methods into later chunks.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class CrossChunkMethodMotion implements CompilerPass {
 

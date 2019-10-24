@@ -28,8 +28,6 @@ import com.google.javascript.rhino.Node;
  * It is assumed that {@code Node} argument of {@code hotSwapScript} is the root
  * of a sub-tree in AST that represents a JS file and so is of type {@code
  * Token.SCRIPT}.
- *
- * @author bashir@google.com (Bashir Sadjad)
  */
 public interface HotSwapCompilerPass extends CompilerPass {
 

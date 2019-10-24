@@ -26,8 +26,6 @@ import java.util.Map;
 
 /**
  * This class implements a traversal to instrument an AST for code coverage.
- * @author praveenk@google.com (Praveen Kumashi)
- *
  */
 @GwtIncompatible("FileInstrumentationData")
 class CoverageInstrumentationCallback extends

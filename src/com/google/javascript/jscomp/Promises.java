@@ -28,8 +28,6 @@ import com.google.javascript.rhino.jstype.UnionType;
 
 /**
  * Models different Javascript Promise-related operations
- *
- * @author lharker@google.com (Laura Harker)
  */
 final class Promises {
 

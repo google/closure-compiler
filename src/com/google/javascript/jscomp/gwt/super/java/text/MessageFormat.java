@@ -18,8 +18,6 @@ package java.text;
 
 /**
  * A simple MessageFormat that only supports string replacement.
- *
- * @author moz@google.com (Michael Zhou)
  */
 public class MessageFormat {
   private String pattern;

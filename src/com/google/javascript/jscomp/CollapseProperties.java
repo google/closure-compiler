@@ -68,7 +68,6 @@ import java.util.Set;
  * <p>This pass doesn't flatten property accesses of the form: a[b].
  *
  * <p>For lots of examples, see the unit test.
- *
  */
 class CollapseProperties implements CompilerPass {
   // Warnings

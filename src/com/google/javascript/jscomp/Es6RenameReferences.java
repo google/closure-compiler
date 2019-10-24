@@ -25,8 +25,6 @@ import java.util.List;
 
 /**
  * Renames references in code and JSDoc when necessary.
- *
- * @author moz@google.com (Michael Zhou)
  */
 final class Es6RenameReferences extends AbstractPostOrderCallback {
 

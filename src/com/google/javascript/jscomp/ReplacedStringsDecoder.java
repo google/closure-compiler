@@ -20,7 +20,6 @@ import com.google.errorprone.annotations.Immutable;
 
 /**
  * A decoder for strings encoded by the ReplaceStrings JS compiler pass. This class is immutable.
- *
  */
 @Immutable
 public final class ReplacedStringsDecoder {

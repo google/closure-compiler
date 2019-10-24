@@ -31,8 +31,6 @@ import javax.annotation.Nullable;
 
 /**
  * Checks for misplaced, misused or deprecated JSDoc annotations.
- *
- * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
 final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 

@@ -49,8 +49,6 @@ import javax.annotation.Nullable;
  *   <li>Exposing: `z()`
  *   <li>Sufficent decomposition: `var temp = alert() + alert(); return temp + z();`
  * </ul>
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class ExpressionDecomposer {
 

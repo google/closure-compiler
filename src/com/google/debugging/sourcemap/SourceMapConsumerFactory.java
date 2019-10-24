@@ -18,7 +18,6 @@ package com.google.debugging.sourcemap;
 
 /**
  * Detect and parse the provided source map.
- * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMapConsumerFactory {
 

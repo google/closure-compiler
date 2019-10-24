@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 /**
  * All warnings should be reported as errors.
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 public final class StrictWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;

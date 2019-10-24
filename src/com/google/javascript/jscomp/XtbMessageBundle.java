@@ -44,7 +44,6 @@ import org.xml.sax.XMLReader;
  * file.
  *
  * TODO(moz): Make this GWT compatible.
- *
  */
 @GwtIncompatible("Currently not used in GWT version")
 @SuppressWarnings("sunapi")

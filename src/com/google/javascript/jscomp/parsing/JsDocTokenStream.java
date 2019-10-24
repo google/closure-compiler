@@ -24,7 +24,6 @@ import com.google.javascript.rhino.TokenUtil;
  * This class implements the scanner for JsDoc strings.
  *
  * <p>It is heavily based on Rhino's TokenStream.
- *
  */
 public class JsDocTokenStream {
   /*

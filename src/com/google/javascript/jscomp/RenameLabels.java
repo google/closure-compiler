@@ -63,8 +63,6 @@ import java.util.Map;
  * as they are encountered during the "visit". This means that if the label is
  * unreferenced, it is known when the label node is visited, and, if so, can be
  * safely removed.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 final class RenameLabels implements CompilerPass {
   private final AbstractCompiler compiler;

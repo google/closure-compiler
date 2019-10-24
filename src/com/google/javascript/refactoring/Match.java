@@ -20,8 +20,6 @@ import com.google.javascript.rhino.Node;
 
 /**
  * Object that contains the information for a given match.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public final class Match {
 

@@ -53,7 +53,6 @@ import java.util.Set;
 
 /**
  * Named groups of DiagnosticTypes exposed by Compiler.
- * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroups {
   static final DiagnosticType UNUSED =

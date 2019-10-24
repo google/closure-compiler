@@ -24,7 +24,6 @@ import java.util.List;
  * An object which can be visualized as a graph should implement this interface.
  * The {@link com.google.javascript.jscomp.DotFormatter#toDot} function can be used to get a
  * visualization of the object for debugging purpose.
- *
  */
 public interface GraphvizGraph {
 

@@ -52,8 +52,6 @@ import javax.annotation.Nullable;
  * Process variables annotated as {@code @define}. A define is
  * a special constant that may be overridden by later files and
  * manipulated by the compiler, much like C preprocessor {@code #define}s.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class ProcessDefines implements CompilerPass {
   private static final Logger logger =

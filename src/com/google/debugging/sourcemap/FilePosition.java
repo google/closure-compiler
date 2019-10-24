@@ -22,7 +22,6 @@ import com.google.errorprone.annotations.DoNotCall;
 
 /**
  * Represents a position in a source file.
- *
  */
 public final class FilePosition {
   private final int line;

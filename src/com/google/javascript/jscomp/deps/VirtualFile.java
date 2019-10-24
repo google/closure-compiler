@@ -24,18 +24,18 @@ import java.util.Objects;
 public class VirtualFile implements SourceFile {
   private final String name;
   private final String code;
-
+  
   public VirtualFile(String name, String code) {
     this.name = name;
     this.code = code;
   }
-
+  
   @Override public String getName() {
     return name;
   }
-
+  
   @Override public String getContent() {
-    return code;
+    return code;  
   }
 
   @Override public boolean wasModified() {
@@ -45,7 +45,7 @@ public class VirtualFile implements SourceFile {
   @Override public int hashCode() {
     return Objects.hash(name, code);
   }
-
+  
   @Override public boolean equals(Object o) {
     if (o instanceof VirtualFile) {
       VirtualFile vf = (VirtualFile) o;

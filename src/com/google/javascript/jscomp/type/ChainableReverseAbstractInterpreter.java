@@ -51,7 +51,6 @@ import javax.annotation.CheckReturnValue;
 
 /**
  * Chainable reverse abstract interpreter providing basic functionality.
- *
  */
 public abstract class ChainableReverseAbstractInterpreter
     implements ReverseAbstractInterpreter {

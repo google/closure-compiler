@@ -73,8 +73,6 @@ import javax.annotation.Nullable;
 /**
  * <p>Checks the types of JS expressions against any declared type
  * information.</p>
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 

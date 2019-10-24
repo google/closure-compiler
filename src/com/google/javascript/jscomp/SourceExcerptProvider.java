@@ -21,7 +21,6 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
  * A source excerpt provider is responsible for building source code excerpt
  * of specific locations, such as a specific line or a region around a
  * given line number.
- *
  */
 public interface SourceExcerptProvider {
   /**
