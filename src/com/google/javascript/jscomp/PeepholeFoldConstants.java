@@ -37,11 +37,6 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           "JSC_INVALID_GETELEM_INDEX_ERROR",
           "Array index not integer: {0}");
 
-  static final DiagnosticType INDEX_OUT_OF_BOUNDS_ERROR =
-      DiagnosticType.warning(
-          "JSC_INDEX_OUT_OF_BOUNDS_ERROR",
-          "Array index out of bounds: {0}");
-
   static final DiagnosticType FRACTIONAL_BITWISE_OPERAND =
       DiagnosticType.warning(
           "JSC_FRACTIONAL_BITWISE_OPERAND",
@@ -1379,12 +1374,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (intIndex < 0) {
-      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
-      return n;
-    }
-
-    Node current = left.getFirstChild();
+    Node current = intIndex >= 0 ? left.getFirstChild() : null;
     Node elem = null;
     for (int i = 0; current != null; i++) {
       if (current.isSpread()) {
@@ -1403,12 +1393,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       current = current.getNext();
     }
 
-    if (elem == null) {
-      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
-      return n;
-    }
-
-    if (elem.isEmpty()) {
+    if (elem == null) { // If the index was out of bounds
+      elem = NodeUtil.newUndefinedNode(left);
+    } else if (elem.isEmpty()) {
       elem = NodeUtil.newUndefinedNode(elem);
     } else {
       left.removeChild(elem);
@@ -1471,16 +1458,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (intIndex < 0) {
-      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
-      return n;
-    }
-
     checkState(left.isString());
     String value = left.getString();
-    if (intIndex >= value.length()) {
-      report(INDEX_OUT_OF_BOUNDS_ERROR, right);
-      return n;
+    if (intIndex < 0 || intIndex >= value.length()) {
+      Node undefined = NodeUtil.newUndefinedNode(left);
+      n.replaceWith(undefined);
+      reportChangeToEnclosingScope(undefined);
+      return undefined;
     }
 
     char c = 0;

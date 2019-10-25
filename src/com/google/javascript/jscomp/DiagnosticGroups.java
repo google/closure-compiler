@@ -693,7 +693,6 @@ public class DiagnosticGroups {
   // be moved to the suspiciousCode group.
   static {
     DiagnosticGroups.registerGroup("transitionalSuspiciousCodeWarnings",
-        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR,
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
