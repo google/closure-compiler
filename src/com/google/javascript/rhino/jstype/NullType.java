@@ -85,11 +85,6 @@ public final class NullType extends ValueType {
   }
 
   @Override
-  public JSType restrictByNotNull() {
-    return registry.getNativeType(JSTypeNative.NO_TYPE);
-  }
-
-  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = super.testForEquality(that);
     if (result != null) {

@@ -52,7 +52,11 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
 
   @Test
   public void testGoogIsDef3() {
-    testClosureFunction("goog.isDef", getNativeAllType(), getNativeAllType(), getNativeVoidType());
+    testClosureFunction(
+        "goog.isDef",
+        getNativeAllType(),
+        createUnionType(getNativeObjectNumberStringBooleanSymbolType(), getNativeNullType()),
+        getNativeVoidType());
   }
 
   @Test
@@ -84,7 +88,11 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
 
   @Test
   public void testGoogIsNull3() {
-    testClosureFunction("goog.isNull", getNativeAllType(), getNativeNullType(), getNativeAllType());
+    testClosureFunction(
+        "goog.isNull",
+        getNativeAllType(),
+        getNativeNullType(),
+        createUnionType(getNativeObjectNumberStringBooleanSymbolType(), getNativeVoidType()));
   }
 
   @Test
@@ -126,7 +134,10 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
   @Test
   public void testGoogIsDefAndNotNull4() {
     testClosureFunction(
-        "goog.isDefAndNotNull", getNativeAllType(), getNativeAllType(), getNativeNullVoidType());
+        "goog.isDefAndNotNull",
+        getNativeAllType(),
+        getNativeObjectNumberStringBooleanSymbolType(),
+        getNativeNullVoidType());
   }
 
   @Test

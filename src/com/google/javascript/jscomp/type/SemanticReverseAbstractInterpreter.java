@@ -83,9 +83,7 @@ public final class SemanticReverseAbstractInterpreter
   private final Function<TypePair, TypePair> ineq =
       p ->
           new TypePair(
-              p.typeA != null ? p.typeA.restrictByNotUndefined() : null,
-              p.typeB != null ? p.typeB.restrictByNotUndefined() : null);
-
+              getRestrictedWithoutUndefined(p.typeA), getRestrictedWithoutUndefined(p.typeB));
   /**
    * Creates a semantic reverse abstract interpreter.
    */
@@ -487,7 +485,8 @@ public final class SemanticReverseAbstractInterpreter
   @CheckReturnValue
   private FlowScope caseIn(Node object, String propertyName, FlowScope blindScope) {
     JSType jsType = object.getJSType();
-    jsType = jsType != null ? jsType.restrictByNotNullOrUndefined() : null;
+    jsType = this.getRestrictedWithoutNull(jsType);
+    jsType = this.getRestrictedWithoutUndefined(jsType);
 
     boolean hasProperty = false;
     ObjectType objectType = ObjectType.cast(jsType);

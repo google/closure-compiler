@@ -415,25 +415,4 @@ public class ProxyObjectType extends ObjectType {
   JSType simplifyForOptimizations() {
     return referencedType.simplifyForOptimizations();
   }
-
-  @Override
-  @SuppressWarnings("ReferenceEquality")
-  public JSType restrictByNotNullOrUndefined() {
-    JSType restricted = referencedType.restrictByNotNullOrUndefined();
-    return restricted == referencedType ? this : restricted;
-  }
-
-  @Override
-  @SuppressWarnings("ReferenceEquality")
-  public JSType restrictByNotUndefined() {
-    JSType restricted = referencedType.restrictByNotUndefined();
-    return restricted == referencedType ? this : restricted;
-  }
-
-  @Override
-  @SuppressWarnings("ReferenceEquality")
-  public JSType restrictByNotNull() {
-    JSType restricted = referencedType.restrictByNotNull();
-    return restricted == referencedType ? this : restricted;
-  }
 }

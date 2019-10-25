@@ -257,11 +257,6 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public JSType restrictByNotNull() {
-    return mapTypes(JSType::restrictByNotNull, this);
-  }
-
-  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = null;
     for (int i = 0; i < alternates.size(); i++) {
