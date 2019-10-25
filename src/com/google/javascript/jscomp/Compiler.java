@@ -1181,7 +1181,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   @Nullable
-  final Node getScriptNode(String filename) {
+  public final Node getScriptNode(String filename) {
     return scriptNodeByFilename.get(checkNotNull(filename));
   }
 
