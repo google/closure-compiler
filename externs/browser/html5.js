@@ -1939,32 +1939,113 @@ HTMLInputElement.prototype.stepUp = function(opt_n) {};
  */
 function HTMLMediaElement() {}
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_empty
+ * @const {number}
+ */
 HTMLMediaElement.NETWORK_EMPTY;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_empty
+ * @const {number}
+ */
+HTMLMediaElement.prototype.NETWORK_EMPTY;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_idle
+ * @const {number}
+ */
 HTMLMediaElement.NETWORK_IDLE;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_idle
+ * @const {number}
+ */
+HTMLMediaElement.prototype.NETWORK_IDLE;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_loading
+ * @const {number}
+ */
 HTMLMediaElement.NETWORK_LOADING;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_loading
+ * @const {number}
+ */
+HTMLMediaElement.prototype.NETWORK_LOADING;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_no_source
+ * @const {number}
+ */
 HTMLMediaElement.NETWORK_NO_SOURCE;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-network_no_source
+ * @const {number}
+ */
+HTMLMediaElement.prototype.NETWORK_NO_SOURCE;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_nothing
+ * @const {number}
+ */
 HTMLMediaElement.HAVE_NOTHING;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_nothing
+ * @const {number}
+ */
+HTMLMediaElement.prototype.HAVE_NOTHING;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_metadata
+ * @const {number}
+ */
 HTMLMediaElement.HAVE_METADATA;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_metadata
+ * @const {number}
+ */
+HTMLMediaElement.prototype.HAVE_METADATA;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_current_data
+ * @const {number}
+ */
 HTMLMediaElement.HAVE_CURRENT_DATA;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_current_data
+ * @const {number}
+ */
+HTMLMediaElement.prototype.HAVE_CURRENT_DATA;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_future_data
+ * @const {number}
+ */
 HTMLMediaElement.HAVE_FUTURE_DATA;
 
-/** @const {number} */
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_future_data
+ * @const {number}
+ */
+HTMLMediaElement.prototype.HAVE_FUTURE_DATA;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_enough_data
+ * @const {number}
+ */
 HTMLMediaElement.HAVE_ENOUGH_DATA;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-have_enough_data
+ * @const {number}
+ */
+HTMLMediaElement.prototype.HAVE_ENOUGH_DATA;
 
 /** @type {MediaError} */
 HTMLMediaElement.prototype.error;
