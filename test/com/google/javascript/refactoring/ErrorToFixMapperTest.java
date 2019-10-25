@@ -92,6 +92,31 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testMissingSuperCall() {
+    assertExpectedFixes(
+        lines(
+            "class C {",
+            "}",
+            "class D extends C {",
+            "  constructor() {", // Must have a super call here.
+            "  }",
+            "}",
+            ""),
+        ExpectedFix.builder()
+            .fixedCode(
+                lines(
+                    "class C {",
+                    "}",
+                    "class D extends C {",
+                    "  constructor() {",
+                    "super();",
+                    "  }",
+                    "}",
+                    ""))
+            .build());
+  }
+
+  @Test
   public void testInvalidSuperCall() {
     assertExpectedFixes(
         lines(
