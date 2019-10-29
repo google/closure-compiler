@@ -5382,7 +5382,8 @@ HTMLSlotElement.prototype.assignedElements = function(options) {};
 Event.prototype.composed;
 
 /**
- * @return {!Array<!(Element|ShadowRoot|Document|Window)>}
+ * @return {!Array<!EventTarget>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/composedPath
  */
 Event.prototype.composedPath = function() {};
 
