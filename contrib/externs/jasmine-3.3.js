@@ -112,6 +112,12 @@ jasmine.AsyncMatchers.prototype.toBeResolved = function() {};
  */
 jasmine.AsyncMatchers.prototype.toBeResolvedTo = function(value = undefined) {};
 
+/**
+ * @param {string} message
+ * @return {!jasmine.AsyncMatchers}
+ */
+jasmine.AsyncMatchers.prototype.withContext = function(message) {};
+
 
 
 /** @constructor @template T */
@@ -204,6 +210,12 @@ jasmine.Matchers.prototype.toThrow = function(opt_expected) {};
  */
 jasmine.Matchers.prototype.toThrowError = function(
     errorTypeOrMessageOrPattern, opt_messageOrPattern) {};
+
+/**
+ * @param {string} message
+ * @return {!jasmine.Matchers}
+ */
+jasmine.Matchers.prototype.withContext = function(message) {};
 
 
 /**
