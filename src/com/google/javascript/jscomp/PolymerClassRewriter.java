@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -854,7 +855,8 @@ final class PolymerClassRewriter {
    */
   private Node makeReadOnlySetter(MemberDefinition prop, String qualifiedPath) {
     String propName = prop.name.getString();
-    String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+    String setterName =
+        "_set" + propName.substring(0, 1).toUpperCase(Locale.ROOT) + propName.substring(1);
     Node fnNode = IR.function(IR.name(""), IR.paramList(IR.name(propName)), IR.block());
     compiler.reportChangeToChangeScope(fnNode);
     Node exprResNode =
@@ -968,7 +970,8 @@ final class PolymerClassRewriter {
     for (MemberDefinition prop : readOnlyProps) {
       // Add all _set* functions to avoid renaming.
       String propName = prop.name.getString();
-      String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+      String setterName =
+          "_set" + propName.substring(0, 1).toUpperCase(Locale.ROOT) + propName.substring(1);
       Node setterExprNode =
           IR.exprResult(NodeUtil.newQName(compiler, interfaceBasePath + setterName));
 

@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -630,15 +631,15 @@ class StripCode implements CompilerPass {
         return false;
       }
 
-      String lcName = name.toLowerCase();
+      String lcName = name.toLowerCase(Locale.ROOT);
       for (String stripName : stripNamePrefixes) {
-        if (lcName.startsWith(stripName.toLowerCase())) {
+        if (lcName.startsWith(stripName.toLowerCase(Locale.ROOT))) {
           return true;
         }
       }
 
       for (String stripName : stripNameSuffixes) {
-        if (lcName.endsWith(stripName.toLowerCase())) {
+        if (lcName.endsWith(stripName.toLowerCase(Locale.ROOT))) {
           return true;
         }
       }

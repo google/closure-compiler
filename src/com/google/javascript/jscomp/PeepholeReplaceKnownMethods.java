@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -316,7 +317,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringToUpperCase(Node subtree, Node stringNode) {
     // From Rhino, NativeString.java. See ECMA 15.5.4.12
-    String upped = stringNode.getString().toUpperCase(Locale.ROOT);
+    String upped = Ascii.toUpperCase(stringNode.getString());
     Node replacement = IR.string(upped);
     subtree.replaceWith(replacement);
     reportChangeToEnclosingScope(replacement);

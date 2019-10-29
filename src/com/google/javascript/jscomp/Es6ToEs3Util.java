@@ -73,7 +73,7 @@ public final class Es6ToEs3Util {
   }
 
   static void preloadEs6RuntimeFunction(AbstractCompiler compiler, String function) {
-    compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.US), false);
+    compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.ROOT), false);
   }
 
   static Node callEs6RuntimeFunction(

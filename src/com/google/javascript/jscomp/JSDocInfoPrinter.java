@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
@@ -68,7 +69,7 @@ public final class JSDocInfoPrinter {
       parts.add("@export");
     } else if (info.getVisibility() != null
         && info.getVisibility() != Visibility.INHERITED) {
-      parts.add("@" + info.getVisibility().toString().toLowerCase());
+      parts.add("@" + Ascii.toLowerCase(info.getVisibility().toString()));
     }
 
     if (info.isAbstract()) {
