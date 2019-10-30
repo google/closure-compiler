@@ -23,6 +23,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
@@ -40,6 +43,11 @@ import java.util.Set;
  */
 class FunctionInjector {
 
+  /** Sentinel value indicating that the key contains no functions. */
+  private static final Node NO_FUNCTIONS = new Node(Token.FUNCTION);
+  /** Sentinel value indicating that the key contains multiple distinct functions. */
+  private static final Node MULTIPLE_FUNCTIONS = new Node(Token.FUNCTION);
+
   private final AbstractCompiler compiler;
   private final boolean allowDecomposition;
   private Set<String> knownConstants = new HashSet<>();
@@ -56,6 +64,68 @@ class FunctionInjector {
     }
   };
   private final FunctionArgumentInjector functionArgumentInjector;
+
+  /** Cache of function node to whether it deeply contains an {@code eval} call. */
+  private final LoadingCache<Node, Boolean> containsEval =
+      CacheBuilder.newBuilder()
+          .build(
+              CacheLoader.from(
+                  node -> {
+                    checkNotNull(node);
+                    if (node.isName() && node.getString().equals("eval")) {
+                      return true;
+                    }
+
+                    if (node.isFunction()) {
+                      return false;
+                    }
+
+                    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+                      if (FunctionInjector.this.containsEval.getUnchecked(c)) {
+                        return true;
+                      }
+                    }
+
+                    return false;
+                  }));
+
+  /**
+   * Cache of function node to any inner functions. This cache is used to determine whether a
+   * function contains only the function to be inlined. Because of this very specific case, the
+   * values in the cache are either {@link #NO_FUNCTIONS}, {@link #MULTIPLE_FUNCTIONS} or an actual
+   * function node.
+   */
+  private final LoadingCache<Node, Node> containedFns =
+      CacheBuilder.newBuilder()
+          .build(
+              CacheLoader.from(
+                  node -> {
+                    checkNotNull(node);
+                    if (node.isFunction()) {
+                      return node;
+                    }
+
+                    Node result = NO_FUNCTIONS;
+                    for (Node c = node.getFirstChild();
+                        c != null && result != MULTIPLE_FUNCTIONS;
+                        c = c.getNext()) {
+                      Node childResult = FunctionInjector.this.containedFns.getUnchecked(c);
+                      if (childResult == NO_FUNCTIONS) {
+                        continue;
+                      }
+                      // result must be NO_FUNCTIONS or a function node
+                      // childResult must be a function node or MULTIPLE_FUNCTIONS
+                      if (result == NO_FUNCTIONS) {
+                        result = childResult;
+                        continue;
+                      }
+                      // result must be a function node
+                      if (!result.equals(childResult)) {
+                        result = MULTIPLE_FUNCTIONS;
+                      }
+                    }
+                    return result;
+                  }));
 
   private FunctionInjector(Builder builder) {
     this.compiler = checkNotNull(builder.compiler);
@@ -750,9 +820,23 @@ class FunctionInjector {
   }
 
   /**
-   * Determines whether a function can be inlined at a particular call site.
-   * - Don't inline if the calling function contains an inner function and
-   * inlining would introduce new globals.
+   * Returns whether or not {@code node} deeply contains an {@code eval} call. Results are cached to
+   * make subsequent calls faster.
+   */
+  private boolean containsEval(Node node) {
+    return containsEval.getUnchecked(node);
+  }
+
+  /** Returns {@code true} iff {@code caller} defines at most {@code candidate}. */
+  private boolean containsAtMostFn(Node caller, Node candidate) {
+    checkNotNull(candidate);
+    Node node = containedFns.getUnchecked(caller);
+    return node == NO_FUNCTIONS || candidate.equals(node);
+  }
+
+  /**
+   * Determines whether a function can be inlined at a particular call site. - Don't inline if the
+   * calling function contains an inner function and inlining would introduce new globals.
    */
   private boolean callMeetsBlockInliningRequirements(
       Reference ref, final Node fnNode, ImmutableSet<String> namesToAlias) {
@@ -762,33 +846,27 @@ class FunctionInjector {
     // TODO(johnlenz): Determining if the called function contains VARs
     // or if the caller contains inner functions accounts for 20% of the
     // run-time cost of this pass.
+    //
+    // Note that as of 2019-10-11, "eval" and function checking are optimized, so this may be less
+    // of an issue.
 
     // Don't inline functions with var declarations into a scope with inner
     // functions as the new vars would leak into the inner function and
     // cause memory leaks.
-    boolean fnContainsVars = NodeUtil.has(
-        NodeUtil.getFunctionBody(fnNode),
-        new NodeUtil.MatchDeclaration(),
-        new NodeUtil.MatchShallowStatement());
+    boolean fnContainsVars =
+        NodeUtil.has(
+            NodeUtil.getFunctionBody(fnNode),
+            new NodeUtil.MatchDeclaration(),
+            new NodeUtil.MatchShallowStatement());
     boolean forbidTemps = false;
     if (!ref.scope.getClosestHoistScope().isGlobal()) {
       Node fnCallerBody = ref.scope.getClosestHoistScope().getRootNode();
 
       // Don't allow any new vars into a scope that contains eval or one
       // that contains functions (excluding the function being inlined).
-      Predicate<Node> match = new Predicate<Node>(){
-        @Override
-        public boolean apply(Node n) {
-          if (n.isName()) {
-            return n.getString().equals("eval");
-          }
-          if (!assumeMinimumCapture && n.isFunction()) {
-            return n != fnNode;
-          }
-          return false;
-        }
-      };
-      forbidTemps = NodeUtil.has(fnCallerBody, match, NodeUtil.MATCH_NOT_FUNCTION);
+      forbidTemps =
+          containsEval(fnCallerBody)
+              || (!assumeMinimumCapture && !containsAtMostFn(fnCallerBody, fnNode));
     }
 
     if (fnContainsVars && forbidTemps) {
