@@ -7011,6 +7011,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "other_externs.js",
             lines(
                 "Array.prototype.join;",
+                "Function.prototype.name;",
+                "Object.prototype.toString;",
                 "var RegExp;",
                 "RegExp.prototype.exec;",
                 "Window.prototype.frames",
