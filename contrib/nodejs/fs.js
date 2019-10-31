@@ -15,13 +15,14 @@
  */
 
 /**
- * @fileoverview Definitions for node's fs module. Depends on the stream and events module.
+ * @fileoverview Definitions for node's fs module. Depends on the stream and
+ * events module.
+ * @externs
+ * @suppress {duplicate,checkTypes}
+ *
  * @see http://nodejs.org/api/fs.html
  * @see https://github.com/joyent/node/blob/master/lib/fs.js
  */
-
-var events = require('events');
-var stream = require('stream');
 
 /** @const */
 var fs = {};
