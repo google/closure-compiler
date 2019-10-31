@@ -46,7 +46,6 @@ import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -92,10 +91,6 @@ public abstract class JSType implements Serializable {
 
   private static final ImmutableSet<String> BIVARIANT_TYPES =
       ImmutableSet.of("Object", "IArrayLike", "Array");
-
-  // NB: IThenable and all subtypes are also covariant; however, they are handled differently.
-  private static final ImmutableSet<String> COVARIANT_TYPES =
-      ImmutableSet.of("Iterable", "Iterator", "Generator", "AsyncIterator", "AsyncIterable");
 
   final JSTypeRegistry registry;
 
@@ -1730,13 +1725,30 @@ public abstract class JSType implements Serializable {
       }
     }
     ObjectType unwrapped = getObjectTypeIfNative(type);
-    if (unwrapped != null && COVARIANT_TYPES.contains(unwrapped.getReferenceName())) {
-      // Note: this code only works because the currently covariant types only have a single
-      // @template. A different solution would be needed to generalize variance for arbitrary types.
-      return Iterables.getOnlyElement(
-          unwrapped.getConstructor().getTemplateTypeMap().getTemplateKeys());
+    String unwrappedTypeName = unwrapped == null ? null : unwrapped.getReferenceName();
+    if (unwrappedTypeName == null) {
+      return null;
     }
-    return null;
+    switch (unwrappedTypeName) {
+      case "Iterator":
+        return unwrapped.registry.getIteratorValueTemplate();
+
+      case "Generator":
+        return unwrapped.registry.getGeneratorValueTemplate();
+
+      case "AsyncIterator":
+        return unwrapped.registry.getAsyncIteratorValueTemplate();
+
+      case "Iterable":
+        return unwrapped.registry.getIterableTemplate();
+
+      case "AsyncIterable":
+        return unwrapped.registry.getAsyncIterableTemplate();
+
+      default:
+        // All other types are either invariant or bivariant
+        return null;
+    }
   }
 
   @Nullable
@@ -2188,19 +2200,6 @@ public abstract class JSType implements Serializable {
      * use in cases where a single reference type is expected (e.g. 'extends' and 'implements').
      */
     IMPLICIT,
-  }
-
-  /**
-   * Returns the template type argument in this type's map corresponding to the supertype's template
-   * parameter, or the UNKNOWN_TYPE if the supertype template key is not present.
-   *
-   * <p>Note: this only supports arguments that have a singleton list of template keys, and will
-   * throw an exception for arguments with zero or multiple or template keys.
-   */
-  public JSType getInstantiatedTypeArgument(JSType supertype) {
-    TemplateType templateType =
-        Iterables.getOnlyElement(supertype.getTemplateTypeMap().getTemplateKeys());
-    return getTemplateTypeMap().getResolvedTemplateType(templateType);
   }
 
   /**

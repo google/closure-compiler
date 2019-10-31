@@ -1606,7 +1606,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     Node jscompArrayFromIterator =
         getNodeMatchingQName(lastCompiler.getJsRoot(), "$jscomp.arrayFromIterator");
     assertType(jscompArrayFromIterator.getJSType())
-        .toStringIsEqualTo("function(Iterator<number>): Array<number>");
+        .toStringIsEqualTo("function(Iterator<number,?,?>): Array<number>");
 
     JSType arrayOfNumber =
         registry.createTemplatizedType(

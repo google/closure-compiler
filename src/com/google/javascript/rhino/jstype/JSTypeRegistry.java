@@ -110,8 +110,11 @@ public class JSTypeRegistry implements Serializable {
   /** The template variable corresponding to the VALUE type in {@code Iterable<VALUE>} */
   private TemplateType iterableTemplate;
 
-  /** The template variable corresponding to the VALUE type in {@code Iterator<VALUE>} */
-  private TemplateType iteratorTemplate;
+  /**
+   * The template variable corresponding to the VALUE type in {@code Iterator<VALUE,
+   * UNUSED_RETURN_T, UNUSED_NEXT_T>}
+   */
+  private TemplateType iteratorValueTemplate;
 
   /** The template variable corresponding to the VALUE type in {@code IIterableResult<VALUE>} */
   private TemplateType iiterableResultTemplate;
@@ -120,10 +123,13 @@ public class JSTypeRegistry implements Serializable {
   private TemplateType asyncIterableTemplate;
 
   /** The template variable corresponding to the VALUE type in {@code AsyncIterator<VALUE>} */
-  private TemplateType asyncIteratorTemplate;
+  private TemplateType asyncIteratorValueTemplate;
 
-  /** The template variable corresponding to the VALUE type in {@code Generator<VALUE>} */
-  private TemplateType generatorTemplate;
+  /**
+   * The template variable corresponding to the VALUE type in {@code Generator<VALUE,
+   * UNUSED_RETURN_T, UNUSED_NEXT_T>}
+   */
+  private TemplateType generatorValueTemplate;
 
   /** The template variable corresponding to the VALUE type in {@code AsyncGenerator<VALUE>} */
   private TemplateType asyncGeneratorTemplate;
@@ -272,9 +278,14 @@ public class JSTypeRegistry implements Serializable {
     return checkNotNull(iterableTemplate);
   }
 
-  /** @return The template variable for the Iterator interface. */
-  public TemplateType getIteratorTemplate() {
-    return checkNotNull(iteratorTemplate);
+  /** Return the value template variable for the Iterator interface. */
+  public TemplateType getIteratorValueTemplate() {
+    return checkNotNull(iteratorValueTemplate);
+  }
+
+  /** Return the value template variable for the Generator interface. */
+  public TemplateType getGeneratorValueTemplate() {
+    return checkNotNull(generatorValueTemplate);
   }
 
   /** Returns the template variable for the AsyncIterable interface. */
@@ -283,8 +294,8 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /** Returns the template variable for the AsyncIterator interface. */
-  public TemplateType getAsyncIteratorTemplate() {
-    return checkNotNull(asyncIteratorTemplate);
+  public TemplateType getAsyncIteratorValueTemplate() {
+    return checkNotNull(asyncIteratorValueTemplate);
   }
 
   /** @return The template variable for the IThenable interface. */
@@ -351,10 +362,18 @@ public class JSTypeRegistry implements Serializable {
     // These should match the template type name in externs files.
     TemplateType iArrayLikeTemplate = new TemplateType(this, "VALUE2");
     arrayElementTemplateKey = new TemplateType(this, "T");
-    iteratorTemplate = new TemplateType(this, "VALUE");
+    iteratorValueTemplate = new TemplateType(this, "VALUE");
+    // TODO(b/142881197): start using these unused iterator (and related type) template params
+    // https://github.com/google/closure-compiler/issues/3489
+    TemplateType iteratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
+    TemplateType iteratorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
     iiterableResultTemplate = new TemplateType(this, "VALUE");
-    asyncIteratorTemplate = new TemplateType(this, "VALUE");
-    generatorTemplate = new TemplateType(this, "VALUE");
+    asyncIteratorValueTemplate = new TemplateType(this, "VALUE");
+    TemplateType asyncIteratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
+    TemplateType asyncIteratorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
+    generatorValueTemplate = new TemplateType(this, "VALUE");
+    TemplateType generatorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
+    TemplateType generatorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
     asyncGeneratorTemplate = new TemplateType(this, "VALUE");
     iterableTemplate = new TemplateType(this, "VALUE");
     asyncIterableTemplate = new TemplateType(this, "VALUE");
@@ -417,7 +436,9 @@ public class JSTypeRegistry implements Serializable {
     ObjectType iterableType = iterableFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERABLE_TYPE, iterableType);
 
-    FunctionType iteratorFunctionType = nativeInterface("Iterator", iteratorTemplate);
+    FunctionType iteratorFunctionType =
+        nativeInterface(
+            "Iterator", iteratorValueTemplate, iteratorReturnTemplate, iteratorNextTemplate);
     registerNativeType(JSTypeNative.ITERATOR_FUNCTION_TYPE, iteratorFunctionType);
     ObjectType iteratorType = iteratorFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.ITERATOR_TYPE, iteratorType);
@@ -461,17 +482,23 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(
         JSTypeNative.I_TEMPLATE_ARRAY_TYPE, iTemplateArrayFunctionType.getInstanceType());
 
-    FunctionType generatorFunctionType = nativeInterface("Generator", generatorTemplate);
+    FunctionType generatorFunctionType =
+        nativeInterface(
+            "Generator", generatorValueTemplate, generatorReturnTemplate, generatorNextTemplate);
     // TODO(nickreid): Model this using `IteratorIterable<T>` as in the externs.
     generatorFunctionType.setExtendedInterfaces(
         ImmutableList.of(
-            createTemplatizedType(iterableType, generatorTemplate),
-            createTemplatizedType(iteratorType, generatorTemplate)));
+            createTemplatizedType(iterableType, generatorValueTemplate),
+            createTemplatizedType(iteratorType, generatorValueTemplate)));
     registerNativeType(JSTypeNative.GENERATOR_FUNCTION_TYPE, generatorFunctionType);
     registerNativeType(JSTypeNative.GENERATOR_TYPE, generatorFunctionType.getInstanceType());
 
     FunctionType asyncIteratorFunctionType =
-        nativeInterface("AsyncIterator", asyncIteratorTemplate);
+        nativeInterface(
+            "AsyncIterator",
+            asyncIteratorValueTemplate,
+            asyncIteratorReturnTemplate,
+            asyncIteratorNextTemplate);
     registerNativeType(JSTypeNative.ASYNC_ITERATOR_FUNCTION_TYPE, asyncIteratorFunctionType);
     registerNativeType(
         JSTypeNative.ASYNC_ITERATOR_TYPE, asyncIteratorFunctionType.getInstanceType());

@@ -6369,7 +6369,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "async function* asyncGen() { yield* gen; }"),
         lines(
             "Expression yield* expects an iterable or async iterable",
-            "found   : (AsyncGenerator<number>|Generator<string>|number)",
+            "found   : (AsyncGenerator<number>|Generator<string,?,?>|number)",
             "required: (AsyncIterator|Iterator)"));
   }
 
