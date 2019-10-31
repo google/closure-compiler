@@ -17,21 +17,14 @@
 package com.google.javascript.rhino;
 
 import com.google.javascript.rhino.jstype.TernaryValue;
-import jsinterop.annotations.JsPackage;
-import jsinterop.annotations.JsType;
+import elemental2.core.JsRegExp;
+import jsinterop.base.Js;
 
 /**
  * Helper methods for parsing JavaScript.
  */
 public class TokenUtil {
-  @JsType(isNative = true, namespace = JsPackage.GLOBAL, name = "RegExp")
-  private static class RegExp {
-    RegExp(String string) {}
-    native boolean test(String string);
-    native boolean test(int charcode);
-  }
-
-  private static final RegExp WHITE_SPACE_REGEX = new RegExp("\\s");
+  private static final JsRegExp WHITE_SPACE_REGEX = new JsRegExp("\\s");
 
   public static boolean isJSSpace(int c) {
     if (c <= 127) {
@@ -46,7 +39,7 @@ public class TokenUtil {
   }
 
   public static boolean isWhitespace(int c) {
-    return WHITE_SPACE_REGEX.test(c);
+    return WHITE_SPACE_REGEX.test(Js.uncheckedCast(c));
   };
 
   public static TernaryValue isStrWhiteSpaceChar(int c) {

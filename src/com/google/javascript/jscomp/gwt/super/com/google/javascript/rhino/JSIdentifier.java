@@ -16,20 +16,12 @@
 
 package com.google.javascript.rhino;
 
-import jsinterop.annotations.JsPackage;
-import jsinterop.annotations.JsType;
+import elemental2.core.JsRegExp;
 
 /** Determines whether a string is a valid JS identifier. */
 public class JSIdentifier {
-  @JsType(isNative = true, namespace = JsPackage.GLOBAL, name = "RegExp")
-  private static class RegExp {
-    RegExp(String string) {}
-    native boolean test(String string);
-    native boolean test(int charcode);
-  }
-
   // TODO(moz): Support full range of valid characters.
-  private static final RegExp JS_IDENTIFIER_REGEX = new RegExp("^[a-zA-Z_$][\\w$]*$");
+  private static final JsRegExp JS_IDENTIFIER_REGEX = new JsRegExp("^[a-zA-Z_$][\\w$]*$");
 
   /** Determines whether a string is a valid JS identifier. */
   public static boolean isJSIdentifier(String s) {
