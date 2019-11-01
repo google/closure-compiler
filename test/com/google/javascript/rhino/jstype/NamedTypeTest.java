@@ -43,6 +43,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.MapBasedScope.emptyScope;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.EqualsTester;
 import com.google.javascript.rhino.ErrorReporter;
@@ -235,6 +236,23 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(CHECKED_UNKNOWN_TYPE, a.getLeastSupertype(CHECKED_UNKNOWN_TYPE));
     assertTypeEquals(UNKNOWN_TYPE, UNKNOWN_TYPE.getLeastSupertype(a));
     assertTypeEquals(CHECKED_UNKNOWN_TYPE, CHECKED_UNKNOWN_TYPE.getLeastSupertype(a));
+  }
+
+  @Test
+  public void testTemplateParametersResolved() {
+    FunctionType fooCtorType =
+        FunctionType.builder(registry).setName("Foo").forConstructor().build();
+    StaticTypedScope fooToFooScope = new MapBasedScope(ImmutableMap.of("Foo", fooCtorType));
+    ObjectType barType = createNominalType("Bar", /* resolve= */ false);
+
+    NamedType fooType =
+        new NamedType(fooToFooScope, registry, "Foo", "a.js", 0, 0, ImmutableList.of(barType));
+
+    assertThat(barType.isResolved()).isFalse();
+
+    fooType.resolve(registry.getErrorReporter());
+
+    assertThat(barType.isResolved()).isTrue();
   }
 
   @Test

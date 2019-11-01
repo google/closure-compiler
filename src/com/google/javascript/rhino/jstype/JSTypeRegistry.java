@@ -2054,8 +2054,10 @@ public class JSTypeRegistry implements Serializable {
                   sourceName,
                   templateNode.getLineno(),
                   templateNode.getCharno());
-              // The rest of the types aren't needed even if they're unresolved.
-              break;
+              // The rest of the types aren't needed even if they're unresolved, /but/ we should
+              // still report an error if they are unrecognized types.
+              createFromTypeNodesInternal(templateNode, sourceName, scope, recordUnresolvedTypes);
+              continue;
             }
             templateArgs.add(
                 createFromTypeNodesInternal(

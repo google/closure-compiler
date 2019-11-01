@@ -6372,6 +6372,36 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReportBadTypeAnnotationInTemplateParameter() {
+    testWarning("var /** !Array<!MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testReportBadTypeAnnotationInExtraTemplateParameter() {
+    testWarning(
+        "class C {} var /** !Array<!MissingType> */ x;",
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+    testWarning(
+        "var /** !Array<string, !MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testReportBadTypeAnnotationInForwardReferenceTemplateParameter() {
+    testWarning(
+        "var /** !C<!MissingType> */ x; /** @template T */ class C {}",
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testReportBadTypeAnnotationInExtraForwardReferenceTemplateParameter() {
+    testWarning(
+        "var /** !C<!MissingType> */ x; class C {}", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+    testWarning(
+        "var /** !C<string, !MissingType> */ x; /** @template T */ class C {}",
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
   public void testMemoization() {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();
