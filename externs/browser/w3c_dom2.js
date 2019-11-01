@@ -87,9 +87,9 @@ Document.prototype.createTreeWalker = function(
 Document.prototype.getElementsByTagNameNS = function(namespace, name) {};
 
 /**
- * @param {Node} externalNode
- * @param {boolean} deep
- * @return {Node}
+ * @param {!Node} externalNode
+ * @param {boolean=} deep
+ * @return {!Node}
  * @see https://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/core.html#Core-Document-importNode
  */
 Document.prototype.importNode = function(externalNode, deep) {};
