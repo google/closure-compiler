@@ -35,8 +35,6 @@ import com.google.javascript.rhino.Node;
  * /** @desc The leopard operating system * /
  * var MSG_LEOPARD = goog.getMsg('Leopard');
  * </code>
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 public final class JsMessageDefinition {
 

@@ -39,8 +39,6 @@ import javax.annotation.Nullable;
  *
  * Source Map Revision 3 Proposal:
  * https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit?usp=sharing
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 

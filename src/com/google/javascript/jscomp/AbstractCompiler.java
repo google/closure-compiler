@@ -49,8 +49,6 @@ import javax.annotation.Nullable;
  * An abstract compiler, to help remove the circular dependency of passes on JSCompiler.
  *
  * <p>This is an abstract class, so that we can make the methods package-private.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public abstract class AbstractCompiler implements SourceExcerptProvider, CompilerInputProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
@@ -675,6 +673,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
     Path file = Paths.get(dir.toString(), owner.getSimpleName(), name);
     return LogFile.createOrReopen(file);
   }
+
+  /** Returns the InputId of the synthetic code input (even if it is not initialized yet). */
+  abstract InputId getSyntheticCodeInputId();
 
   /**
    * Adds a synthetic script to the front of the AST

@@ -53,7 +53,6 @@ import java.util.Set;
 
 /**
  * Named groups of DiagnosticTypes exposed by Compiler.
- * @author nicksantos@google.com (Nick Santos)
  */
 public class DiagnosticGroups {
   static final DiagnosticType UNUSED =
@@ -694,7 +693,6 @@ public class DiagnosticGroups {
   // be moved to the suspiciousCode group.
   static {
     DiagnosticGroups.registerGroup("transitionalSuspiciousCodeWarnings",
-        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR,
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 

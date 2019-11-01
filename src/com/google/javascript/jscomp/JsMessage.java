@@ -43,8 +43,6 @@ import javax.annotation.Nullable;
  *     .setDesc("A welcome message")
  *     .build();
  * </pre>
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 public final class JsMessage {
 

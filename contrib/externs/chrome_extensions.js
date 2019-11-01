@@ -7714,6 +7714,10 @@ ChromeKeyboardEvent.prototype.altKey;
 
 
 /** @type {boolean|undefined} */
+ChromeKeyboardEvent.prototype.altgrKey;
+
+
+/** @type {boolean|undefined} */
 ChromeKeyboardEvent.prototype.ctrlKey;
 
 

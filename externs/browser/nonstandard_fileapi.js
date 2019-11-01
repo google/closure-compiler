@@ -453,37 +453,37 @@ FileSaver.prototype.error;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onwritestart
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileSaver>)}
  */
 FileSaver.prototype.onwritestart;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onprogress
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileSaver>)}
  */
 FileSaver.prototype.onprogress;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onwrite
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileSaver>)}
  */
 FileSaver.prototype.onwrite;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onabort
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileSaver>)}
  */
 FileSaver.prototype.onabort;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onerror
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileSaver>)}
  */
 FileSaver.prototype.onerror;
 
 /**
  * @see http://www.w3.org/TR/file-writer-api/#widl-FileSaver-onwriteend
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileSaver>)}
  */
 FileSaver.prototype.onwriteend;
 

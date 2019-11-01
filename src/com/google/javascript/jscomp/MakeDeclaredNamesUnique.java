@@ -41,7 +41,6 @@ import javax.annotation.Nullable;
 /**
  *  Find all Functions, VARs, and Exception names and make them
  *  unique.  Specifically, it will not modify object properties.
- *  @author johnlenz@google.com (John Lenz)
  */
 class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 

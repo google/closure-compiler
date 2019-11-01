@@ -33,7 +33,6 @@ import java.util.Map;
 /**
  * CodeGenerator generates codes from a parse tree, sending it to the specified
  * CodeConsumer.
- *
  */
 public class CodeGenerator {
   private static final String LT_ESCAPED = "\\x3c";

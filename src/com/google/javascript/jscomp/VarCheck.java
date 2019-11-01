@@ -35,7 +35,6 @@ import java.util.Set;
  * Checks that all variables are declared, that file-private variables are accessed only in the file
  * that declares them, and that any var references that cross module boundaries respect declared
  * module dependencies.
- *
  */
 class VarCheck implements ScopedCallback, HotSwapCompilerPass {
 

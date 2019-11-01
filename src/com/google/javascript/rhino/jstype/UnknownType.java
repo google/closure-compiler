@@ -109,17 +109,6 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, null, SubtypingMode.NORMAL);
-  }
-
-  @Override
-  protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    return true;
-  }
-
-  @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseUnknownType();
   }

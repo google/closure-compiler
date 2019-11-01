@@ -72,24 +72,6 @@ public abstract class JSError implements Serializable {
   }
 
   /**
-   * Creates a JSError with no source information and a non-default level.
-   *
-   * @param level
-   * @param type The DiagnosticType
-   * @param arguments Arguments to be incorporated into the message
-   */
-  public static JSError make(CheckLevel level, DiagnosticType type, String... arguments) {
-    return new AutoValue_JSError(
-        type,
-        type.format.format(arguments),
-        DEFAULT_SOURCENAME,
-        DEFAULT_LINENO,
-        DEFAULT_CHARNO,
-        DEFAULT_NODE,
-        level);
-  }
-
-  /**
    * Creates a JSError at a given source location
    *
    * @param sourceName The source file name

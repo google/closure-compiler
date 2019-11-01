@@ -33,8 +33,6 @@ import com.google.javascript.rhino.jstype.UnionType;
 
 /**
  * Converts ES6 "for of" loops to ES5.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCallback
     implements HotSwapCompilerPass {

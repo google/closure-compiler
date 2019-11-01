@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.webservice.common;
 
 /**
  * Enum of all the possible error described in the Web Service protocol.
- *
  */
 public enum ErrorCode {
   UNKNOWN_OUTPUT_MODE(2),

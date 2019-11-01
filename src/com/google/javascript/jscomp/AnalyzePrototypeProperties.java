@@ -40,8 +40,6 @@ import java.util.Map;
  * GETPROP access of a property B on some object inside of a method named A.
  *
  * <p>Global functions are also represented by nodes in this graph, with similar semantics.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class AnalyzePrototypeProperties implements CompilerPass {
 

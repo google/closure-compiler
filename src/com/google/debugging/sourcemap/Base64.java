@@ -20,7 +20,6 @@ import java.util.Arrays;
 
 /**
  * A utility class for working with Base64 values.
- * @author johnlenz@google.com (John Lenz)
  */
 public final class Base64 {
 

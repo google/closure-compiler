@@ -412,12 +412,15 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     private void addNamespace(
         ModuleMetadataBuilder module, String namespace, NodeTraversal t, Node n) {
       ModuleType existingType = null;
+      String existingFileSource = null;
       if (module.googNamespaces.contains(namespace)) {
         existingType = module.metadataBuilder.moduleType();
+        existingFileSource = t.getSourceName();
       } else {
         ModuleMetadata existingModule = modulesByGoogNamespace.get(namespace);
         if (existingModule != null) {
           existingType = existingModule.moduleType();
+          existingFileSource = existingModule.rootNode().getSourceFileName();
         }
       }
       currentModule.googNamespaces.add(namespace);
@@ -426,10 +429,10 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
           case ES6_MODULE:
           case GOOG_MODULE:
           case LEGACY_GOOG_MODULE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_MODULE, namespace);
+            t.report(n, ClosurePrimitiveErrors.DUPLICATE_MODULE, namespace, existingFileSource);
             return;
           case GOOG_PROVIDE:
-            t.report(n, ClosureRewriteModule.DUPLICATE_NAMESPACE, namespace);
+            t.report(n, ClosurePrimitiveErrors.DUPLICATE_NAMESPACE, namespace, existingFileSource);
             return;
           case COMMON_JS:
           case SCRIPT:

@@ -31,7 +31,6 @@ import java.util.List;
 
 /**
  * Warn about types in JSDoc that are implicitly nullable.
- * @author blickly@google.com (Ben Lickly)
  */
 public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     implements CompilerPass {

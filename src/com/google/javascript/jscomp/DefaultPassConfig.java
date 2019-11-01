@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
 import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
@@ -60,7 +61,6 @@ import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -76,8 +76,6 @@ import javax.annotation.Nullable;
 
 /**
  * Pass factories and meta-data for native JSCompiler passes.
- *
- * @author nicksantos@google.com (Nick Santos)
  *
  * NOTE(dimvar): this needs some non-trivial refactoring. The pass config should
  * use as little state as possible. The recommended way for a pass to leave
@@ -227,9 +225,6 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addModuleRewritingPasses(List<PassFactory> checks, CompilerOptions options) {
-    if (options.isModuleRewritingDisabled()) {
-      return;
-    }
     if (options.closurePass) {
       checks.add(rewriteClosureImports);
     }
@@ -251,7 +246,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.shouldGenerateTypedExterns()) {
       checks.add(addSyntheticScript);
-      checks.add(closureGoogScopeAliases);
+      checks.add(closureGoogScopeAliasesForIjs);
       checks.add(closureRewriteClass);
       checks.add(generateIjs);
       checks.add(whitespaceWrapGoogModules);
@@ -349,14 +344,18 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
+    if (options.closurePass) {
+      checks.add(closureGoogScopeAliases);
+    }
+
     // TODO(b/141389184): Move this after the Polymer pass
-    addModuleRewritingPasses(checks, options);
+    if (options.shouldRewriteModulesBeforeTypechecking()) {
+      addModuleRewritingPasses(checks, options);
+    }
 
     if (options.closurePass) {
-      // TODO(b/137397799): move closureGoogScopeAliases before module rewriting
-      checks.add(closureGoogScopeAliases);
       checks.add(closurePrimitives);
-      if (!options.isModuleRewritingDisabled()) {
+      if (options.shouldRewriteModulesBeforeTypechecking()) {
         checks.add(closureProvidesRequires);
       }
     }
@@ -408,6 +407,11 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
     addTypeCheckerPasses(checks, options);
+
+    if (!options.shouldRewriteModulesBeforeTypechecking()) {
+      addModuleRewritingPasses(checks, options);
+      checks.add(closureProvidesRequires);
+    }
 
     // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
     if (!options.allowsHotswapReplaceScript()) {
@@ -1354,16 +1358,29 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Applies aliases and inlines goog.scope. */
+  private final PassFactory closureGoogScopeAliasesForIjs =
+      PassFactory.builderForHotSwap()
+          .setName("closureGoogScopeAliasesForIjs")
+          .setInternalFactory((compiler) -> ScopedAliases.builder(compiler).build())
+          .setFeatureSet(ES_NEXT)
+          .build();
+
+  /**
+   * Applies aliases and inlines goog.scope, storing information about the transformations
+   * performed.
+   */
   private final PassFactory closureGoogScopeAliases =
       PassFactory.builderForHotSwap()
           .setName("closureGoogScopeAliases")
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
-                return new ScopedAliases(
-                    compiler,
-                    preprocessorSymbolTableFactory.getInstanceOrNull(),
-                    options.getAliasTransformationHandler());
+                return ScopedAliases.builder(compiler)
+                    .setPreprocessorSymbolTable(preprocessorSymbolTableFactory.getInstanceOrNull())
+                    .setAliasTransformationHandler(options.getAliasTransformationHandler())
+                    .setModuleMetadataMap(compiler.getModuleMetadataMap())
+                    .setInvalidModuleGetHandling(InvalidModuleGetHandling.DELETE)
+                    .build();
               })
           .setFeatureSet(ES_NEXT)
           .build();
@@ -1473,13 +1490,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName("checkGoogRequires")
           .setInternalFactory(
-              (compiler) -> {
-                // TODO(johnplaisted): Expand the Set of modules to check.
-                return new CheckClosureImports(
-                    compiler,
-                    compiler.getModuleMetadataMap(),
-                    ImmutableSet.of(ModuleType.SCRIPT, ModuleType.GOOG_PROVIDE));
-              })
+              (compiler) -> new CheckClosureImports(compiler, compiler.getModuleMetadataMap()))
           .setFeatureSet(ES_NEXT)
           .build();
 

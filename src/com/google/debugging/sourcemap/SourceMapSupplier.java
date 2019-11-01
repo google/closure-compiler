@@ -22,8 +22,6 @@ import java.io.IOException;
 /**
  * A class for mapping source map names to the actual contents. Used
  * when parsing index maps.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public interface SourceMapSupplier {
 

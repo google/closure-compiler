@@ -29,8 +29,6 @@ import com.google.javascript.rhino.Node;
  * created by this refactoring.
  *
  * TODO(tbreisacher): Handle (function(){}).bind(this); as well.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 public final class GoogBindToArrow extends Scanner {
   private static boolean isGoogBind(Node n) {

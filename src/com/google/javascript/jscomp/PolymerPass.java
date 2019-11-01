@@ -42,8 +42,6 @@ import java.util.Set;
  * <p>Only works with Polymer version 0.8 and above.
  *
  * <p>Design and examples: https://github.com/google/closure-compiler/wiki/Polymer-Pass
- *
- * @author jlklein@google.com (Jeremy Klein)
  */
 final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompilerPass {
   private static final String VIRTUAL_FILE = "<PolymerPass.java>";
@@ -136,6 +134,13 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
     if (script != null && script.getFirstChild().isModuleBody()) {
       return ModuleImportResolver.getModuleFromScopeRoot(
               compiler.getModuleMap(), compiler, script.getFirstChild())
+          .metadata();
+    }
+    // Check for bundled goog.loadModule calls
+    Node scopeRoot = traversal.getScopeRoot();
+    if (NodeUtil.isBundledGoogModuleScopeRoot(scopeRoot)) {
+      return ModuleImportResolver.getModuleFromScopeRoot(
+              compiler.getModuleMap(), compiler, scopeRoot)
           .metadata();
     }
     return null;

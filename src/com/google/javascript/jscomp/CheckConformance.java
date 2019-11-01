@@ -37,7 +37,6 @@ import java.util.Set;
  *
  * <p>Conformance violations are both reported as compiler errors, and are also reported separately
  * to the {cI gue@link ErrorManager}
- *
  */
 @GwtIncompatible("com.google.protobuf")
 public final class CheckConformance implements Callback, CompilerPass {

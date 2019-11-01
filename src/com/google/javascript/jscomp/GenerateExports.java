@@ -29,7 +29,6 @@ import java.util.Set;
 
 /**
  * Generates goog.exportSymbol/goog.exportProperty for the @export annotation.
- *
  */
 class GenerateExports implements CompilerPass {
 

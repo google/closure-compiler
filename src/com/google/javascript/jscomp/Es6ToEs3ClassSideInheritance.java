@@ -100,9 +100,6 @@ import java.util.Set;
  * <p>
  * TODO(tdeegan): In the future the type information for getter/setter properties could be stored
  * in the defineProperties functions.  It would reduce the complexity of this pass significantly.
- *
- * @author mattloring@google.com (Matthew Loring)
- * @author tdeegan@google.com (Thomas Deegan)
  */
 public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 

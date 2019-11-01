@@ -31,7 +31,6 @@ import javax.annotation.Nullable;
  * A simple class for generating unique JavaScript variable/property names.
  *
  * <p>This class is not thread safe.
- *
  */
 final class DefaultNameGenerator implements NameGenerator {
 

@@ -33,9 +33,6 @@ import java.util.logging.Logger;
 
 /**
  * An object that optimizes the order of compiler passes.
- *
- * @author nicksantos@google.com (Nick Santos)
- * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 class PhaseOptimizer implements CompilerPass {
 
@@ -287,23 +284,17 @@ class PhaseOptimizer implements CompilerPass {
       if (!featuresSupportedByPass.contains(featuresInAst)) {
         FeatureSet unsupportedFeatures = featuresInAst.without(featuresSupportedByPass);
 
+        compiler.report(
+            JSError.make(
+                FEATURES_NOT_SUPPORTED_BY_PASS,
+                name,
+                compiler.getOptions().shouldSkipUnsupportedPasses()
+                    ? "Skipping pass."
+                    : "Running pass anyway.",
+                unsupportedFeatures.toString()));
+
         if (compiler.getOptions().shouldSkipUnsupportedPasses()) {
-          compiler.report(
-              JSError.make(
-                  CheckLevel.WARNING,
-                  FEATURES_NOT_SUPPORTED_BY_PASS,
-                  name,
-                  "Skipping pass.",
-                  unsupportedFeatures.toString()));
           return;
-        } else {
-          compiler.report(
-              JSError.make(
-                  CheckLevel.ERROR,
-                  FEATURES_NOT_SUPPORTED_BY_PASS,
-                  name,
-                  "Running pass anyway.",
-                  unsupportedFeatures.toString()));
         }
       }
 

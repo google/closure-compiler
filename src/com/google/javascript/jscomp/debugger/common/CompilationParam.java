@@ -36,8 +36,6 @@ import java.util.Map;
 
 /**
  * An enum of boolean CGI parameters to the compilation.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public enum CompilationParam {
   ENABLE_ALL_DIAGNOSTIC_GROUPS(ParamGroup.ERROR_CHECKING) {

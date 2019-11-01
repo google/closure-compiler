@@ -37,8 +37,6 @@ import java.io.Serializable;
  *     fail if JS has errors.
  *   WhitelistGuard (if !whitelistErrors.contains(error) return ERROR) return
  *     error if it does not present in the whitelist.
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 public abstract class WarningsGuard implements Serializable {
 

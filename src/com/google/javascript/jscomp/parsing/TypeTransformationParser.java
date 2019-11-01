@@ -27,7 +27,6 @@ import com.google.javascript.rhino.StaticSourceFile;
 /**
  * A parser for the type transformation expressions (TTL-Exp) as in
  * {@code @template T := TTL-Exp =:}
- *
  */
 public final class TypeTransformationParser {
 

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.webservice.common;
 
 /**
  * All the exceptions that can be returned as error to the client of the API.
- *
  */
 public abstract class AbstractWebServiceException extends Exception {
   public abstract ErrorCode getErrorCode();

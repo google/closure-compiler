@@ -22,8 +22,6 @@ import java.util.Arrays;
  * An immutable sparse bitset that deals well where the data is chunky:
  * where P(bit[x+1] == bit[x]).  E.g. [101,102,103,104,105,1001,1002,1003,1004]
  * is chunky.
- *
- * @author mikesamuel@gmail.com (Mike Samuel)
  */
 final class CharRanges {
   /**

@@ -81,7 +81,6 @@ import javax.annotation.Nullable;
  * ...
  * </pre>
  * Such logic is highly unlikely and we will assume that it never occurs.
- *
  */
 class ExtractPrototypeMemberDeclarations implements CompilerPass {
 

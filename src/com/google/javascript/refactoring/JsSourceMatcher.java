@@ -25,8 +25,6 @@ import java.util.Map;
 /**
  * A {@link Matcher} that can take arbitrary JS source code and use it as a
  * template to find matches in other source code.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public final class JsSourceMatcher implements Matcher {
 

@@ -78,8 +78,6 @@ import javax.annotation.Nullable;
  *
  * Also doubles as a central repository for all type violations, so that
  * type-based optimizations (like AmbiguateProperties) can be fault-tolerant.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class TypeValidator implements Serializable {
   private final transient AbstractCompiler compiler;

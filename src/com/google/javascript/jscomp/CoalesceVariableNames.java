@@ -61,7 +61,6 @@ import javax.annotation.Nullable;
  * {@link LiveVariablesAnalysis} and a variable interference graph. Then it uses
  * graph coloring in {@link GraphColoring} to determine which two variables can
  * be merge together safely.
- *
  */
 class CoalesceVariableNames extends AbstractPostOrderCallback implements
     CompilerPass, ScopedCallback {

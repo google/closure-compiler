@@ -609,9 +609,12 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   @Test
   public void testDestructuringUndefinedProperty() {
-    testWarning(
-        lines("var ns = {};", "/** @enum */", "ns.Modes = {A, B};", "const {C} = ns.Modes;"),
-        UNDEFINED_NAME_WARNING);
+    testSame(
+        lines(
+            "var ns = {};", //
+            "/** @enum */",
+            "ns.Modes = {A, B};",
+            "const {C} = ns.Modes;"));
   }
 
   @Test

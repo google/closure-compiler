@@ -32,8 +32,6 @@ import java.util.List;
  * A package for common iteration patterns.
  *
  * All iterators are forward, post-order traversals unless otherwise noted.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class NodeIterators {
 

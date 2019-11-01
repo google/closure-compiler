@@ -25,8 +25,6 @@ import javax.annotation.Nullable;
 /**
  * Collects information mapping the generated (compiled) source back to
  * its original source for debugging purposes
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public interface SourceMapGenerator {
 

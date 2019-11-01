@@ -43,8 +43,6 @@ import java.util.regex.Pattern;
  * A parser that can extract dependency information from existing deps.js files.
  *
  * <p>See //javascript/closure/deps.js for an example file.
- *
- * @author agrieve@google.com (Andrew Grieve)
  */
 @GwtIncompatible("java.util.regex")
 public final class DepsFileRegexParser extends JsFileLineParser {

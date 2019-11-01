@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -61,9 +62,9 @@ import javax.annotation.Nullable;
  * goog.dom.createElement(goog.dom.TagName.DIV);
  * </pre>
  *
- * The advantage of using goog.scope is that the compiler will *guarantee*
- * the anonymous function will be inlined, even if it can't prove
- * that it's semantically correct to do so. For example, consider this case:
+ * The advantage of using goog.scope is that the compiler will *guarantee* the anonymous function
+ * will be inlined, even if it can't prove that it's semantically correct to do so. For example,
+ * consider this case:
  *
  * <pre>
  * goog.scope(function() {
@@ -73,11 +74,9 @@ import javax.annotation.Nullable;
  * })
  * </pre>
  *
- * <p>In theory, the compiler can't inline 'alias' unless it can prove that
- * goog.getBar is called only after 'alias' is defined. In practice, the
- * compiler will inline 'alias' anyway, at the risk of 'fixing' bad code.
- *
- * @author robbyw@google.com (Robby Walker)
+ * <p>In theory, the compiler can't inline 'alias' unless it can prove that goog.getBar is called
+ * only after 'alias' is defined. In practice, the compiler will inline 'alias' anyway, at the risk
+ * of 'fixing' bad code.
  */
 class ScopedAliases implements HotSwapCompilerPass {
   /** Name used to denote an scoped function block used for aliasing. */
@@ -126,18 +125,102 @@ class ScopedAliases implements HotSwapCompilerPass {
       "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
       "The local variable {0} is in a goog.scope and is not an alias.");
 
-  static final DiagnosticType GOOG_SCOPE_INVALID_VARIABLE = DiagnosticType.error(
-      "JSC_GOOG_SCOPE_INVALID_VARIABLE",
-      "The variable {0} cannot be declared in this scope");
+  static final DiagnosticType GOOG_SCOPE_INVALID_VARIABLE =
+      DiagnosticType.error(
+          "JSC_GOOG_SCOPE_INVALID_VARIABLE", "The variable {0} cannot be declared in this scope");
 
   private final Multiset<String> scopedAliasNames = HashMultiset.create();
+  private final Set<String> closureNamespaces;
+  private final InvalidModuleGetHandling invalidModuleGetHandling;
 
-  ScopedAliases(AbstractCompiler compiler,
+  /** What to do with goog.module.get calls importing an inexistent Closure namespace */
+  enum InvalidModuleGetHandling {
+    PRESERVE,
+    DELETE;
+
+    boolean shouldDelete() {
+      return this.equals(DELETE);
+    }
+  }
+
+  /** @deprecated use the builder instead of this constructor */
+  @Deprecated
+  ScopedAliases(
+      AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       AliasTransformationHandler transformationHandler) {
+    this(
+        compiler,
+        preprocessorSymbolTable,
+        transformationHandler,
+        ImmutableSet.of(),
+        InvalidModuleGetHandling.PRESERVE);
+  }
+
+  private ScopedAliases(
+      AbstractCompiler compiler,
+      @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
+      AliasTransformationHandler transformationHandler,
+      Set<String> closureNamespaces,
+      InvalidModuleGetHandling invalidModuleGetHandling) {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.transformationHandler = transformationHandler;
+    this.closureNamespaces = closureNamespaces;
+    this.invalidModuleGetHandling = invalidModuleGetHandling;
+  }
+
+  static Builder builder(AbstractCompiler compiler) {
+    return new Builder(compiler);
+  }
+
+  static class Builder {
+
+    private final AbstractCompiler compiler;
+    @Nullable private PreprocessorSymbolTable preprocessorSymbolTable = null;
+    private AliasTransformationHandler transformationHandler =
+        CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER;
+    private ModuleMetadataMap moduleMetadataMap = null;
+    private InvalidModuleGetHandling invalidModuleGetHandling = InvalidModuleGetHandling.PRESERVE;
+
+    private Builder(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    Builder setPreprocessorSymbolTable(@Nullable PreprocessorSymbolTable preprocessorSymbolTable) {
+      this.preprocessorSymbolTable = preprocessorSymbolTable;
+      return this;
+    }
+
+    Builder setModuleMetadataMap(ModuleMetadataMap moduleMetadataMap) {
+      this.moduleMetadataMap = moduleMetadataMap;
+      return this;
+    }
+
+    /**
+     * Configures whether to delete or preserve invalid goog.module get calls that are top-level
+     * aliases in a goog.scope.
+     */
+    Builder setInvalidModuleGetHandling(InvalidModuleGetHandling invalidModuleGetHandling) {
+      this.invalidModuleGetHandling = invalidModuleGetHandling;
+      return this;
+    }
+
+    Builder setAliasTransformationHandler(AliasTransformationHandler aliasTransformationHandler) {
+      this.transformationHandler = aliasTransformationHandler;
+      return this;
+    }
+
+    ScopedAliases build() {
+      return new ScopedAliases(
+          compiler,
+          preprocessorSymbolTable,
+          transformationHandler,
+          moduleMetadataMap == null
+              ? ImmutableSet.of()
+              : moduleMetadataMap.getModulesByGoogNamespace().keySet(),
+          invalidModuleGetHandling);
+    }
   }
 
   @Override
@@ -157,7 +240,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       while (!aliasWorkQueue.isEmpty()) {
         List<AliasUsage> newQueue = new ArrayList<>();
         for (AliasUsage aliasUsage : aliasWorkQueue) {
-          if (aliasUsage.referencesOtherAlias()) {
+          if (aliasUsage.referencesOtherAlias(traversal.deletedAliasVars)) {
             newQueue.add(aliasUsage);
           } else {
             aliasUsage.applyAlias(compiler);
@@ -176,7 +259,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
 
       // Remove the alias definitions.
-      for (Node aliasDefinition : traversal.getAliasDefinitionsInOrder()) {
+      for (Node aliasDefinition : traversal.getAliasDefinitionsToDelete()) {
         compiler.reportChangeToEnclosingScope(aliasDefinition);
         if (NodeUtil.isNameDeclaration(aliasDefinition.getParent())
             && aliasDefinition.getParent().hasOneChild()) {
@@ -209,13 +292,13 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     /** Checks to see if this references another alias. */
-    public boolean referencesOtherAlias() {
+    public boolean referencesOtherAlias(Set<Var> deletedAliasVars) {
       Node aliasDefinition = aliasVar.getInitialValue();
       String qname = getAliasedNamespace(aliasDefinition);
       int dotIndex = qname.indexOf('.');
       String rootName = dotIndex == -1 ? qname : qname.substring(0, dotIndex);
       Var otherAliasVar = aliasVar.getScope().getOwnSlot(rootName);
-      return otherAliasVar != null;
+      return otherAliasVar != null && !deletedAliasVars.contains(otherAliasVar);
     }
 
     public abstract void applyAlias(AbstractCompiler compiler);
@@ -313,8 +396,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       implements NodeTraversal.ScopedCallback {
     // The job of this class is to collect these three data sets.
 
-    // The order of this list determines the order that aliases are applied.
-    private final List<Node> aliasDefinitionsInOrder = new ArrayList<>();
+    private final List<Node> aliasDefinitionsToDelete = new ArrayList<>();
 
     private final List<Node> scopeCalls = new ArrayList<>();
 
@@ -325,6 +407,9 @@ class ScopedAliases implements HotSwapCompilerPass {
 
     // Also temporary and cleared for each scope.
     private final Set<Node> injectedDecls = new HashSet<>();
+
+    // Persists across scopes.
+    private final Set<Var> deletedAliasVars = new HashSet<>();
 
     // Suppose you create an alias.
     // var x = goog.x;
@@ -349,8 +434,8 @@ class ScopedAliases implements HotSwapCompilerPass {
     // Set when the traversal enters the body, and set back to null when it exits.
     private Node scopeFunctionBody = null;
 
-    Collection<Node> getAliasDefinitionsInOrder() {
-      return aliasDefinitionsInOrder;
+    Collection<Node> getAliasDefinitionsToDelete() {
+      return aliasDefinitionsToDelete;
     }
 
     private List<AliasUsage> getAliasUsages() {
@@ -401,12 +486,6 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (t.inGlobalHoistScope()) {
         return;
       }
-      if (inGoogScopeBody()) {
-        Scope hoistedScope = t.getClosestHoistScope().untyped();
-        if (isGoogScopeFunctionBody(hoistedScope.getRootNode())) {
-          findAliases(hoistedScope);
-        }
-      }
       Node scopeMethodCall = findScopeMethodCall(t.getScopeRoot());
       if (scopeMethodCall != null) {
         transformation = transformationHandler.logAliasTransformation(
@@ -427,6 +506,8 @@ class ScopedAliases implements HotSwapCompilerPass {
         transformation = null;
         hasNamespaceShadows = false;
       } else if (inGoogScopeBody()) {
+        // Called on inner scopes within a goog.scope, including both block scopes and
+        // function scopes.
         findNamespaceShadows(t);
         reportInvalidVariables(t);
       }
@@ -587,10 +668,18 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     private void recordAlias(Var aliasVar) {
+      Node initialValue = aliasVar.getInitialValue();
+      aliasDefinitionsToDelete.add(aliasVar.getNameNode());
+
+      if (invalidModuleGetHandling.shouldDelete() && containsInvalidGoogModuleGet(initialValue)) {
+        deletedAliasVars.add(aliasVar);
+        return;
+      }
+
       String name = aliasVar.getName();
       aliases.put(name, aliasVar);
 
-      String qualifiedName = getAliasedNamespace(aliasVar.getInitialValue());
+      String qualifiedName = getAliasedNamespace(initialValue);
       transformation.addAlias(name, qualifiedName);
 
       int rootIndex = qualifiedName.indexOf('.');
@@ -599,6 +688,21 @@ class ScopedAliases implements HotSwapCompilerPass {
         if (!aliases.containsKey(qNameRoot)) {
           forbiddenLocals.add(qNameRoot);
         }
+      }
+    }
+
+    /** Returns whether the rhs contains any goog.module.get calls to inexistent namespaces */
+    private boolean containsInvalidGoogModuleGet(Node expression) {
+      switch (expression.getToken()) {
+        case NAME:
+          return false;
+        case GETPROP:
+          return containsInvalidGoogModuleGet(expression.getFirstChild());
+        case CALL:
+          String namespace = expression.getSecondChild().getString();
+          return !closureNamespaces.contains(namespace);
+        default:
+          throw new IllegalStateException("Unrecognized alias rhs " + expression);
       }
     }
 
@@ -699,7 +803,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (type == Token.NAME) {
         String name = n.getString();
         Var lexicalVar = t.getScope().getVar(name);
-        if (lexicalVar != null && lexicalVar == aliases.get(name)) {
+        if (lexicalVar != null && lexicalVar.equals(aliases.get(name))) {
           aliasVar = lexicalVar;
           // For nodes that are referencing the aliased type, set the original name so it
           // can be accessed later in tools such as the CodePrinter or refactoring tools.
@@ -712,10 +816,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (isGoogScopeFunctionBody(t.getEnclosingFunction().getLastChild())) {
         if (aliasVar != null && NodeUtil.isLValue(n)) {
           if (aliasVar.getNode() == n) {
-            aliasDefinitionsInOrder.add(n);
-
-            // Return early, to ensure that we don't record a definition
-            // twice.
+            // Return early, to ensure that we don't record this as an alias usage.
             return;
           } else {
             report(n, GOOG_SCOPE_ALIAS_REDEFINED, n.getString());

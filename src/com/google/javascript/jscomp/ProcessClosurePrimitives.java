@@ -39,8 +39,6 @@ import javax.annotation.Nullable;
  * Performs some Closure-specific simplifications including rewriting goog.base, goog.addDependency.
  *
  * <p>Adds forwardDeclared and goog.defined names to the compiler.
- *
- * @author chrisn@google.com (Chris Nokleberg)
  */
 class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 
@@ -67,12 +65,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   static final DiagnosticType TOO_MANY_ARGUMENTS_ERROR = DiagnosticType.error(
       "JSC_TOO_MANY_ARGUMENTS_ERROR",
       "method \"{0}\" called with more than one argument");
-
-  static final DiagnosticType DUPLICATE_NAMESPACE_ERROR =
-      DiagnosticType.error(
-          "JSC_DUPLICATE_NAMESPACE_ERROR",
-          "namespace \"{0}\" cannot be provided twice\n" //
-              + "Originally provided at {1}");
 
   static final DiagnosticType WEAK_NAMESPACE_TYPE = DiagnosticType.warning(
       "JSC_WEAK_NAMESPACE_TYPE",
@@ -200,7 +192,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   private void replaceGoogDefines(Node n) {
     Node parent = n.getParent();
     String name = n.getSecondChild().getString();
-    JSDocInfo jsdoc = n.getJSDocInfo();
     Node value = n.getChildAtIndex(2).detach();
 
     switch (parent.getToken()) {
@@ -311,7 +302,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * Verifies that a) the call is in the global scope and b) the return value is unused
+   * Verifies that a) the call is in the top level of a file and b) the return value is unused
    *
    * <p>This method is for primitives that never return a value.
    */
@@ -320,7 +311,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /**
-   * @param methodName list of primitve types classed together with this one
+   * @param methodName list of primitive types classed together with this one
    * @param invalidAliasingError which DiagnosticType to emit if this call is aliased. this depends
    *     on whether the primitive is sometimes aliasiable in a module or never aliasable.
    */
@@ -334,7 +325,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     if (!t.inGlobalHoistScope() && !t.inModuleScope()) {
       compiler.report(JSError.make(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
       return false;
-    } else if (!n.getParent().isExprResult() && !"goog.define".equals(methodName)) {
+    } else if (!n.getParent().isExprResult()
+        && !t.inModuleScope()
+        && !"goog.define".equals(methodName)) {
       // If the call is in the global hoist scope, but the result is used
       compiler.report(JSError.make(n, invalidAliasingError, GOOG + "." + methodName));
       return false;

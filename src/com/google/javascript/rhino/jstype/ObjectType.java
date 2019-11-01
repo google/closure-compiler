@@ -39,12 +39,10 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.javascript.rhino.jstype.ObjectType.PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -642,42 +640,51 @@ public abstract class ObjectType extends JSType implements Serializable {
     return true;
   }
 
-  protected static boolean isStructuralSubtypeHelper(
-      ObjectType typeA,
-      ObjectType typeB,
+  static boolean isStructuralSubtypeHelper(
+      ObjectType subtype,
+      ObjectType supertype,
       ImplCache implicitImplCache,
       SubtypingMode subtypingMode,
       PropertyOptionality optionality) {
 
-    // typeA is a subtype of record type typeB iff:
-    // 1) typeA has all the non-optional properties declared in typeB.
-    // 2) And for each property of typeB, its type must be
-    //    a super type of the corresponding property of typeA.
+    MatchStatus cachedResult = implicitImplCache.checkCache(subtype, supertype);
+    if (cachedResult != null) {
+      return cachedResult.subtypeValue();
+    }
+
+    // subtype is a subtype of record type supertype iff:
+    // 1) subtype has all the non-optional properties declared in supertype.
+    // 2) And for each property of supertype, its type must be
+    //    a super type of the corresponding property of subtype.
 
     Iterable<String> props =
         // NOTE: Inline record literal types always have Object as a supertype. In these cases, we
         // really only care about the properties explicitly declared in the record literal, and not
         // about any properties inherited from Object.prototype. On the other hand, @record types
         // allow inheritance and we need to match against inherited properties as well.
-        typeB.isRecordType() ? typeB.getOwnPropertyNames() : typeB.getPropertyNames();
+        supertype.isRecordType() ? supertype.getOwnPropertyNames() : supertype.getPropertyNames();
 
+    boolean result = true;
     for (String property : props) {
-      JSType propB = typeB.getPropertyType(property);
-      if (typeA.hasProperty(property)) {
-        JSType propA = typeA.getPropertyType(property);
-        if (!propA.isSubtype(propB, implicitImplCache, subtypingMode)) {
-          return false;
+      JSType supertypeProp = supertype.getPropertyType(property);
+      if (subtype.hasProperty(property)) {
+        JSType subtypeProp = subtype.getPropertyType(property);
+        if (!subtypeProp.isSubtype(supertypeProp, implicitImplCache, subtypingMode)) {
+          result = false;
+          break;
         }
-      } else if (!optionality.isOptional(propB)) {
+      } else if (!optionality.isOptional(supertypeProp)) {
         // Currently, any type that explicitly includes undefined (eg, `?|undefined`) is optional.
-        return false;
+        result = false;
+        break;
       }
     }
-    return true;
+
+    return implicitImplCache.updateCache(subtype, supertype, MatchStatus.valueOf(result));
   }
 
   /** How to treat explicitly voidable properties for structural subtype checking. */
-  protected enum PropertyOptionality {
+  enum PropertyOptionality {
     /** Explicitly voidable properties are treated as optional. */
     VOIDABLE_PROPS_ARE_OPTIONAL,
     /** All properties are always required, even if explicitly voidable. */
@@ -686,28 +693,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     boolean isOptional(JSType propType) {
       return this == VOIDABLE_PROPS_ARE_OPTIONAL && propType.isExplicitlyVoidable();
     }
-  };
-
-  /**
-   * Determine if {@code this} is a an implicit subtype of {@code superType}.
-   */
-  final boolean isStructuralSubtype(ObjectType superType,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    // Union types should be handled by isSubtype already
-    checkArgument(!this.isUnionType());
-    checkArgument(!superType.isUnionType());
-    Preconditions.checkArgument(superType.isStructuralType(),
-        "isStructuralSubtype should be called with structural supertype. Found %s", superType);
-
-    MatchStatus cachedResult = implicitImplCache.checkCache(this, superType);
-    if (cachedResult != null) {
-      return cachedResult.subtypeValue();
-    }
-
-    boolean result =
-        isStructuralSubtypeHelper(
-            this, superType, implicitImplCache, subtypingMode, VOIDABLE_PROPS_ARE_OPTIONAL);
-    return implicitImplCache.updateCache(this, superType, MatchStatus.valueOf(result));
   }
 
   /**
@@ -737,34 +722,34 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   /**
-   * Checks that the prototype is an implicit prototype of this object. Since each object has an
-   * implicit prototype, an implicit prototype's implicit prototype is also this implicit
-   * prototype's.
+   * Returns whether {@code this} is on the implicit prototype chain of {@code other}.
    *
-   * @param prototype any prototype based object
-   * @return {@code true} if {@code prototype} is {@code equal} to any object in this object's
-   *     implicit prototype chain.
+   * <p>{@code this} need not be the immediate prototype of {@code other}.
    */
-  @SuppressWarnings("ReferenceEquality")
-  final boolean isImplicitPrototype(ObjectType prototype) {
-    for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
-      if (current.isTemplatizedType()) {
-        current = current.toMaybeTemplatizedType().getReferencedType();
-      }
+  final boolean isImplicitPrototypeOf(ObjectType other) {
+    ObjectType unwrappedThis = deeplyUnwrap(this);
 
-      current = deeplyUnwrap(current);
-
+    for (other = deeplyUnwrap(other);
+        other != null;
+        other = deeplyUnwrap(other.getImplicitPrototype())) {
       // The prototype should match exactly.
       // NOTE: the use of "==" here rather than isEquivalentTo is deliberate.  This method
       // is very hot in the type checker and relying on identity improves performance of both
       // type checking/type inferrence and property disambiguation.
-      if (current != null && current == prototype) {
+      if (JSType.areIdentical(unwrappedThis, other)) {
         return true;
       }
     }
+
     return false;
   }
 
+  /**
+   * Recursively unwraps all {@link ProxyObjectType}s, including unwrapping the raw type out of a
+   * templatized type.
+   *
+   * <p>Guaranteed to return a non-proxy type (exception: will return an unresolved NamedType).
+   */
   static ObjectType deeplyUnwrap(ObjectType original) {
     ObjectType current = original;
     while (current instanceof ProxyObjectType) {

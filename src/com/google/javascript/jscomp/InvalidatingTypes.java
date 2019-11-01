@@ -156,7 +156,12 @@ final class InvalidatingTypes {
             recordInvalidation(proto, mismatch);
           }
           if (objType.isConstructor()) {
-            types.add(objType.toMaybeFunctionType().getInstanceType());
+            ObjectType instanceType = objType.toMaybeFunctionType().getInstanceType();
+            if (instanceType != null) {
+              // TODO(b/142431852): This shouldn't be possible.
+              // Case: `function(new:T)`, `T = number`.
+              types.add(instanceType);
+            }
           } else if (objType.isInstanceType()) {
             types.add(objType.getConstructor());
           }

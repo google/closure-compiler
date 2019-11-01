@@ -36,7 +36,6 @@ import java.util.Map;
  * LiveVariablesAnalysis}. If there is an assignment to variable {@code x} and {@code x} is dead
  * after this assignment, we know that the current content of {@code x} will not be read and this
  * assignment is useless.
- *
  */
 class DeadAssignmentsElimination extends AbstractScopedCallback implements CompilerPass {
 

@@ -1057,12 +1057,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = [10, 20][0]", "x = 10");
     fold("x = [10, 20][1]", "x = 20");
 
-    testSame("x = [10, 20][0.5]",
-        PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
-    testSame("x = [10, 20][-1]",
-        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
-    testSame("x = [10, 20][2]",
-        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
+    testSame("x = [10, 20][0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    test("x = [10, 20][-1]", "x = void 0;");
+    test("x = [10, 20][2]", "x = void 0;");
 
     foldSame("x = [foo(), 0][1]");
     fold("x = [0, foo()][1]", "x = foo()");
@@ -1081,12 +1078,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = 's'[0]", "x = 's'");
     foldSame("x = '\uD83D\uDCA9'[0]");
 
-    testSame("x = 'string'[0.5]",
-        PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
-    testSame("x = 'string'[-1]",
-        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
-    testSame("x = 'string'[6]",
-        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR);
+    testSame("x = 'string'[0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    test("x = 'string'[-1]", "x = void 0;");
+    test("x = 'string'[6]", "x = void 0;");
   }
 
   @Test
@@ -1097,14 +1091,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = [...[0, 1], 2, ...[3, 4]][3]", "x = 3;");
     fold("x = [...[...[0, 1], 2, 3], 4][0]", "x = 0");
     fold("x = [...[...[0, 1], 2, 3], 4][3]", "x = 3");
-    test(
-        srcs("x = [...[]][100]"),
-        expected("x = [][100]"),
-        warning(PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR));
-    test(
-        srcs("x = [...[0]][100]"),
-        expected("x = [0][100]"),
-        warning(PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR));
+    test(srcs("x = [...[]][100]"), expected("x = void 0;"));
+    test(srcs("x = [...[0]][100]"), expected("x = void 0;"));
   }
 
   @Test

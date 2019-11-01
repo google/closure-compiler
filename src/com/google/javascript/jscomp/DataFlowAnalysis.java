@@ -82,7 +82,6 @@ import java.util.TreeSet;
  * represents maximum fixed point solution. Any previous annotations at the
  * nodes of the control flow graph will be lost.
  *
- *
  * @param <N> The control flow graph's node value type.
  * @param <L> Lattice element type.
  */

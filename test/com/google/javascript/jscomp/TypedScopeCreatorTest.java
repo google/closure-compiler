@@ -23,7 +23,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.TypedScopeCreator.CTOR_INITIALIZER;
 import static com.google.javascript.jscomp.TypedScopeCreator.IFACE_INITIALIZER;
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
-import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.testing.TypedVarSubject.assertThat;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -4558,7 +4557,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testGoogModule_requiringMissingNamespace() {
-    testError("goog.module('a'); const b = goog.require('b'); B: b;", MISSING_NAMESPACE_IMPORT);
+    testSame("goog.module('a'); const b = goog.require('b'); B: b;");
 
     assertNode(getLabeledStatement("B").statementNode.getOnlyChild()).hasJSTypeThat().isUnknown();
   }

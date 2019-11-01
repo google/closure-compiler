@@ -39,8 +39,6 @@ import java.util.regex.Pattern;
 /**
  * Primary driver of a refactoring. This class collects the inputs, runs the refactoring over
  * the compiled input, and then collects the suggested fixes based on the refactoring.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public final class RefactoringDriver {
 

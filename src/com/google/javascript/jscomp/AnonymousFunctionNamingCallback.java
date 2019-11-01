@@ -32,7 +32,6 @@ import com.google.javascript.rhino.Token;
  * This pass does not try to name FUNCTIONs with empty NAME nodes if doing so would violate AST
  * validity. Currently, we can never name arrow functions, which must stay anonymous, or getters,
  * setters, and member function definitions, which have a name elsewhere in the AST.
- *
  */
 class AnonymousFunctionNamingCallback
     extends AbstractPostOrderCallback {

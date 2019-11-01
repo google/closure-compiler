@@ -38,8 +38,6 @@ import java.util.Map;
  *
  * <p>The current implementation only inlines immutable values (as defined by
  * NodeUtil.isImmutableValue).
- *
- * @author johnlenz@google.com (John Lenz)
  */
 final class InlineProperties implements CompilerPass {
 

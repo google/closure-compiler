@@ -52,8 +52,6 @@ import java.util.stream.Collectors;
 /**
  * Generates deps.js files by scanning JavaScript files for
  * calls to goog.provide(), goog.require() and goog.addDependency().
- *
- * @author agrieve@google.com (Andrew Grieve)
  */
 public class DepsGenerator {
 

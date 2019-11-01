@@ -57,8 +57,6 @@ import javax.annotation.Nullable;
 
 /**
  * Compiler options
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public class CompilerOptions implements Serializable {
   // The number of characters after which we insert a line break in the code
@@ -1279,15 +1277,15 @@ public class CompilerOptions implements Serializable {
    */
   private Optional<Boolean> isStrictModeInput = Optional.absent();
 
-  private boolean rewriteModules = true;
+  private boolean rewriteModulesBeforeTypechecking = true;
 
-  /** Enable module rewriting */
-  public void setRewriteModules(boolean b) {
-    this.rewriteModules = b;
+  /** Whether to enable the bad module rewriting before typechecking that we want to get rid of */
+  public void setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(boolean b) {
+    this.rewriteModulesBeforeTypechecking = b;
   }
 
-  public boolean isModuleRewritingDisabled() {
-    return !this.rewriteModules;
+  public boolean shouldRewriteModulesBeforeTypechecking() {
+    return this.rewriteModulesBeforeTypechecking;
   }
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */
@@ -1332,7 +1330,7 @@ public class CompilerOptions implements Serializable {
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
-    rewriteModules = true;
+    rewriteModulesBeforeTypechecking = true;
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -3349,8 +3347,6 @@ public class CompilerOptions implements Serializable {
    * Calls to the mutators are expected to resolve very quickly, so
    * implementations should not perform expensive operations in the mutator
    * methods.
-   *
-   * @author tylerg@google.com (Tyler Goodwin)
    */
   public interface AliasTransformationHandler {
 

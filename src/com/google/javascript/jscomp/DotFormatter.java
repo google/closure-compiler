@@ -37,7 +37,6 @@ import java.util.List;
  * <code>System.out.println(new DotFormatter().toDot(<i>node</i>));</code>
  * <p>This class is <b>not</b> thread safe and should not be used without proper
  * external synchronization.</p>
- *
  */
 public final class DotFormatter {
   private static final String INDENT = "  ";

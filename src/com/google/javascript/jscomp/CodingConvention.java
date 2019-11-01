@@ -39,7 +39,6 @@ import javax.annotation.Nullable;
 /**
  * CodingConvention defines a set of hooks to customize the behavior of the
  * Compiler for a specific team/company.
- *
  */
 @Immutable
 public interface CodingConvention extends Serializable {

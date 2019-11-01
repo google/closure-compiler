@@ -22,8 +22,6 @@ import jsinterop.annotations.JsType;
 
 /**
  * Helper methods for parsing JavaScript.
- *
- * @author moz@google.com (Michael Zhou)
  */
 public class TokenUtil {
   @JsType(isNative = true, namespace = JsPackage.GLOBAL, name = "RegExp")

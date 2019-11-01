@@ -52,6 +52,20 @@ final class PolymerClassRewriter {
   private final boolean propertyRenamingEnabled;
   @VisibleForTesting static final String POLYMER_ELEMENT_PROP_CONFIG = "PolymerElementProperties";
 
+  static final DiagnosticType IMPLICIT_GLOBAL_CONFLICT =
+      DiagnosticType.error(
+          "JSC_POLYMER_IMPLICIT_GLOBAL_CONFLICT",
+          "Implicit global name for Polymer element conflicts with existing var {0}. Either"
+              + " give the element a lhs or rename {0}. (Or move to class-based Polymer 2"
+              + " elements)");
+
+  static final DiagnosticType POLYMER_ELEMENT_CONFLICT =
+      DiagnosticType.error(
+          "JSC_POLYMER_ELEMENT_CONFLICT",
+          "Cannot generate correct types for Polymer call due to PolymerElement definition at"
+              + " {0}:{2}:{1}.\n"
+              + "Rename the local PolymerElement to avoid shadowing the PolymerElement externs.");
+
   private final Node polymerElementExterns;
   boolean propertySinkExternInjected = false;
 
@@ -93,7 +107,7 @@ final class PolymerClassRewriter {
     switch (enclosingNode.getToken()) {
       case MODULE_BODY:
         {
-          Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+          Node insertionPoint = getNodeForInsertion(enclosingNode.getParent());
           insertionPoint.addChildToFront(declarationCode);
           compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
         }
@@ -116,7 +130,7 @@ final class PolymerClassRewriter {
             compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(enclosingNodeForIIFE));
           } else {
             checkState(enclosingNodeForIIFE.isModuleBody());
-            Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+            Node insertionPoint = getNodeForInsertion(enclosingNodeForIIFE.getParent());
             insertionPoint.addChildToFront(declarationCode);
             compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
           }
@@ -127,13 +141,25 @@ final class PolymerClassRewriter {
           // This case represents only the Polymer calls that are inside a function which is an arg
           // to goog.loadModule
           checkState(isFunctionArgInGoogLoadModule(enclosingNode));
-          Node insertionPoint = compiler.getNodeForCodeInsertion(null);
+          Node enclosingScript = NodeUtil.getEnclosingScript(enclosingNode);
+          Node insertionPoint = getNodeForInsertion(enclosingScript);
           insertionPoint.addChildToFront(declarationCode);
-          compiler.reportChangeToChangeScope(NodeUtil.getEnclosingScript(insertionPoint));
+          compiler.reportChangeToChangeScope(insertionPoint);
         }
         break;
       default:
         throw new RuntimeException("Enclosing node for Polymer is incorrect");
+    }
+  }
+
+  /** Returns a SCRIPT node in which to insert new global declarations */
+  private Node getNodeForInsertion(Node enclosingScript) {
+    if (NodeUtil.isFromTypeSummary(enclosingScript)) {
+      return polymerElementExterns.isScript()
+          ? polymerElementExterns
+          : polymerElementExterns.getParent();
+    } else {
+      return compiler.getNodeForCodeInsertion(null);
     }
   }
 
@@ -232,8 +258,21 @@ final class PolymerClassRewriter {
     if (ctorKey != null) {
       ctorKey.removeProp(Node.JSDOC_INFO_PROP);
     }
-
-    Node declarationCode = generateDeclarationCode(exprRoot, cls, constructorDoc);
+    // Check for a conflicting definition of PolymerElement
+    if (!traversal.inGlobalScope()) {
+      Var polymerElement = traversal.getScope().getVar("PolymerElement");
+      if (polymerElement != null && !polymerElement.getScope().isGlobal()) {
+        Node nameNode = polymerElement.getNameNode();
+        compiler.report(
+            JSError.make(
+                cls.constructor.value,
+                POLYMER_ELEMENT_CONFLICT,
+                nameNode.getSourceFileName(),
+                Integer.toString(nameNode.getLineno()),
+                Integer.toString(nameNode.getCharno())));
+      }
+    }
+    Node declarationCode = generateDeclarationCode(exprRoot, cls, constructorDoc, traversal);
     appendPropertiesToBlock(
         cls.props,
         propsAndBehaviorBlock,
@@ -578,7 +617,10 @@ final class PolymerClassRewriter {
 
   /* Appends var declaration code created from the Polymer call to the given block */
   private Node generateDeclarationCode(
-      Node exprRoot, final PolymerClassDefinition cls, JSDocInfoBuilder constructorDoc) {
+      Node exprRoot,
+      final PolymerClassDefinition cls,
+      JSDocInfoBuilder constructorDoc,
+      NodeTraversal traversal) {
     if (cls.target.isGetProp()) {
       // foo.bar = Polymer({...});
       Node assign = IR.assign(cls.target.cloneTree(), cls.constructor.value.cloneTree());
@@ -593,6 +635,11 @@ final class PolymerClassRewriter {
       NodeUtil.markNewScopesChanged(var, compiler);
       var.useSourceInfoIfMissingFromForTree(exprRoot);
       var.setJSDocInfo(constructorDoc.build());
+      String name = cls.target.getString();
+      Var existingVar = traversal.getScope().getSlot(name);
+      if (existingVar != null && cls.hasGeneratedLhs) {
+        compiler.report(JSError.make(cls.constructor.value, IMPLICIT_GLOBAL_CONFLICT, name));
+      }
       return var;
     }
   }
@@ -1248,14 +1295,30 @@ final class PolymerClassRewriter {
   private static Node getInsertionPointForGoogModule(Node moduleBody) {
     Node insertionPoint = moduleBody.getFirstChild(); // goog.module('ns');
     Node next = insertionPoint.getNext();
-    while ((NodeUtil.isNameDeclaration(next)
-            && next.hasOneChild()
-            && ModuleImportResolver.isGoogModuleDependencyCall(next.getFirstFirstChild()))
-        || (NodeUtil.isExprCall(next)
-            && ModuleImportResolver.isGoogModuleDependencyCall(next.getOnlyChild()))) {
+    while (isGoogRequireExpr(next)
+        || NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(next)
+        || NodeUtil.isGoogSetTestOnlyCall(next)) {
       insertionPoint = next;
       next = next.getNext();
     }
     return insertionPoint;
+  }
+
+  private static boolean isGoogRequireExpr(Node statement) {
+    if (NodeUtil.isExprCall(statement)
+        && ModuleImportResolver.isGoogModuleDependencyCall(statement.getOnlyChild())) {
+      // `goog.require('a.b.c');`
+      return true;
+    }
+    if (!NodeUtil.isNameDeclaration(statement)) {
+      return false;
+    }
+    Node rhs =
+        statement.getFirstChild().isName()
+            // `const c = goog.require('a.b.c');`
+            ? statement.getFirstFirstChild()
+            // `const {D} = goog.require('a.b.c');`
+            : statement.getFirstChild().getSecondChild();
+    return ModuleImportResolver.isGoogModuleDependencyCall(rhs);
   }
 }

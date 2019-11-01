@@ -28,8 +28,6 @@ import javax.annotation.Nullable;
 /**
  * A compiler node traversal callback that invokes matchers against every node and
  * keeps track of any suggested fixes from the refactoring.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 final class JsFlumeCallback implements Callback {
 

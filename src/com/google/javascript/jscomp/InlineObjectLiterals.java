@@ -41,7 +41,6 @@ import java.util.Set;
  * individual variables.
  *
  * Based on the InlineVariables pass
- *
  */
 class InlineObjectLiterals implements CompilerPass {
 

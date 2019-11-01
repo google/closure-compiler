@@ -52,8 +52,6 @@ import java.util.stream.Stream;
  * Class that drives the RefasterJs refactoring by matching against a provided
  * template JS file and then applying a transformation based off the template
  * JS.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public final class RefasterJsScanner extends Scanner {
   /** The JS code that contains the RefasterJs templates. */

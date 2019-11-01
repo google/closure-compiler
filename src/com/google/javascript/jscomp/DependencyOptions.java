@@ -37,8 +37,6 @@ import javax.annotation.Nullable;
  * <p>Also see {@link CodingConvention#extractClassNameIfProvide(Node, Node)} and {@link
  * CodingConvention#extractClassNameIfRequire(Node, Node)}, which affect what the compiler considers
  * to be goog.provide and goog.require statements.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 @AutoValue
 @Immutable

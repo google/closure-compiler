@@ -287,7 +287,8 @@ public final class ErrorToFixMapper {
   }
 
   private static SuggestedFix getFixForMissingSuper(JSError error, AbstractCompiler compiler) {
-    Node body = NodeUtil.getFunctionBody(error.getNode());
+    Node constructorFunction = error.getNode().getFirstChild();
+    Node body = NodeUtil.getFunctionBody(constructorFunction);
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.getNode(), compiler)
         .addChildToFront(body, "super();")

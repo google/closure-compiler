@@ -226,7 +226,8 @@ public final class PhaseOptimizerTest {
 
     assertPasses();
 
-    assertThat(compiler.getWarnings())
+    // Error will be converted to warning by a `WarningsGuard`.
+    assertThat(compiler.getErrors())
         .comparingElementsUsing(DIAGNOSTIC_CORRESPONDENCE)
         .containsExactly(FEATURES_NOT_SUPPORTED_BY_PASS);
   }

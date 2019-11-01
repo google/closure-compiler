@@ -373,6 +373,90 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGeneratesCodeAfterGoogRequire_WithLegacyNamespace() {
+    test(
+        srcs(
+            lines(
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "goog.provide('a.b');",
+                "/** @constructor */",
+                "a.UnpluggedCancelOfferRenderer = function() {",
+                "};"),
+            lines(
+                "goog.module('a.mod');", //
+                "exports.Property = 'a property';"),
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace()",
+                "const CancelOfferRenderer = goog.require('a.UnpluggedCancelOfferRenderer');",
+                "const {Property} = goog.require('a.mod');",
+                "Polymer(",
+                " {is:'ytu-cancel-offer', properties:{",
+                "/** @type {CancelOfferRenderer} */",
+                "data:Object}});")),
+        expected(
+            lines(
+                "/**",
+                " * @constructor @extends {PolymerElement}",
+                " * @implements {PolymerYtuCancelOfferElementInterface0} ",
+                " */",
+                "var YtuCancelOfferElement = function() {};",
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "goog.provide('a.b');",
+                "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};"),
+            lines(
+                "goog.module('a.mod');", //
+                "exports.Property = 'a property';"),
+            lines(
+                "goog.module('mod');",
+                "goog.module.declareLegacyNamespace()",
+                "const CancelOfferRenderer = goog.require('a.UnpluggedCancelOfferRenderer');",
+                "const {Property} = goog.require('a.mod');",
+                "/** @type {CancelOfferRenderer} */ YtuCancelOfferElement.prototype.data;",
+                "Polymer(/** @lends {YtuCancelOfferElement.prototype} */",
+                " {is:'ytu-cancel-offer', properties:{data:Object}});")));
+  }
+
+  @Test
+  public void testGeneratesCodeAfterGoogRequire_WithSetTestOnly() {
+    test(
+        srcs(
+            lines(
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "/** @constructor */",
+                "a.UnpluggedCancelOfferRenderer = function() {",
+                "};"),
+            lines(
+                "goog.module('mod');",
+                "goog.setTestOnly()",
+                "const CancelOfferRenderer =" + " goog.require('a.UnpluggedCancelOfferRenderer');",
+                "Polymer(",
+                " {is:'ytu-cancel-offer', properties:{",
+                "   /** @type {CancelOfferRenderer} */",
+                "   data:Object}});")),
+        expected(
+            lines(
+                "/** @constructor @extends {PolymerElement} @implements",
+                " {PolymerYtuCancelOfferElementInterface0} */",
+                "var YtuCancelOfferElement = function() {};",
+                CLOSURE_DEFS,
+                "goog.provide('a.UnpluggedCancelOfferRenderer');",
+                "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};"),
+            lines(
+                "goog.module('mod');",
+                "goog.setTestOnly()",
+                "const CancelOfferRenderer =" + " goog.require('a.UnpluggedCancelOfferRenderer');",
+                "/** @type {CancelOfferRenderer} */",
+                "YtuCancelOfferElement.prototype.data;",
+                "Polymer(",
+                "/** @lends {YtuCancelOfferElement.prototype} */",
+                " {is:'ytu-cancel-offer', properties:{data:Object}});")));
+  }
+
+  @Test
   public void testPolymerRewriterGeneratesDeclaration_OutsideES6Module() {
     test(
         srcs(
@@ -4832,6 +4916,138 @@ public class PolymerPassTest extends CompilerTestCase {
             "  }",
             "});",
             "export {PaperMenuButton};"));
+  }
+
+  @Test
+  public void testCanAccessPropertyOnPolymerElement_fromEsModuleTypeSummary() {
+    test(
+        externs(
+            EXTERNS,
+            lines(
+                "/** @typeSummary */",
+                "Polymer({",
+                "  is: 'foo',",
+                "  properties: {",
+                "    opened: {type: Boolean, value: false}",
+                "  },",
+                "  toggle: function() {}",
+                "})",
+                "export {}")),
+        srcs(
+            lines(
+                "function fn(/** !FooElement */ elem) {", //
+                "  elem.toggle();",
+                "  return elem.opened;",
+                "}")));
+  }
+
+  @Test
+  public void testCanAccessPropertyOnPolymerElement_fromBundledGoogModuleTypeSummary() {
+    test(
+        externs(
+            EXTERNS,
+            lines(
+                "/** @typeSummary */",
+                "goog.loadModule(function(exports) {",
+                "goog.module('a.b.c');",
+                "Polymer({",
+                "  is: 'foo',",
+                "  properties: {",
+                "    opened: {type: Boolean, value: false}",
+                "  },",
+                "  toggle: function() {}",
+                "})",
+                "return exports;",
+                "});")),
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "function fn(/** !FooElement */ elem) {", //
+                "  elem.toggle();",
+                "  return elem.opened;",
+                "}")));
+  }
+
+  @Test
+  public void testCanAccessPropertyOnPolymerElement_fromBundledGoogModuleTypeSummaryBehavior() {
+    test(
+        externs(
+            EXTERNS,
+            lines(
+                "/** @typeSummary */",
+                "goog.loadModule(function(exports) {",
+                "goog.module('SomeBehavior');",
+                "/** @polymerBehavior */",
+                "exports = {",
+                "  properties: {",
+                "    opened: {type: Boolean, value: false}",
+                "  },",
+                "  toggle: function() {}",
+                "};",
+                "return exports;",
+                "});"),
+            lines(
+                "/** @typeSummary */",
+                "goog.loadModule(function(exports) {",
+                "goog.module('a.b.c');",
+                "const SomeBehavior = goog.require('SomeBehavior');",
+                "Polymer({",
+                "  is: 'foo',",
+                "  behaviors: [SomeBehavior],",
+                "  properties: {",
+                "    opened: {type: Boolean, value: false}",
+                "  },",
+                "  toggle: function() {}",
+                "})",
+                "return exports;",
+                "});")),
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "function fn(/** !FooElement */ elem) {", //
+                "  elem.toggle();",
+                "  return elem.opened;",
+                "}")));
+  }
+
+  @Test
+  public void testPolymerImplicitGlobalNamingConflict() {
+    testError(
+        lines(
+            "var FooElement;", //
+            "Polymer({is: 'foo'})"),
+        PolymerClassRewriter.IMPLICIT_GLOBAL_CONFLICT);
+
+    test(
+        srcs(
+            "var FooElement;",
+            lines(
+                "goog.module('m');", //
+                "Polymer({is: 'foo'})")),
+        error(PolymerClassRewriter.IMPLICIT_GLOBAL_CONFLICT));
+
+    test(
+        srcs(
+            // First file in compilation needs to be a script, not a module, as the compiler injects
+            // global declarations into the first file.
+            "",
+            lines(
+                "goog.module('m');", //
+                "var FooElement;",
+                "Polymer({is: 'foo'})")),
+        error(PolymerClassRewriter.IMPLICIT_GLOBAL_CONFLICT));
+
+    testNoWarning("var FooElement = Polymer({is: 'foo'});");
+  }
+
+  @Test
+  public void testShadowPolymerElement() {
+    testError(
+        lines(
+            "goog.module('m');", //
+            "const Foo = Polymer({is: 'foo'});",
+            "var PolymerElement;"),
+        PolymerClassRewriter.POLYMER_ELEMENT_CONFLICT);
   }
 
   @Override

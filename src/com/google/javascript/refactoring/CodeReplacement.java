@@ -22,8 +22,6 @@ import com.google.errorprone.annotations.Immutable;
 
 /**
  * Class that represents a set of changes to make to the code.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 @AutoValue @CopyAnnotations @Immutable
 public abstract class CodeReplacement {

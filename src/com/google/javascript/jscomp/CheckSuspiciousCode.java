@@ -37,8 +37,6 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  * </pre>
  *
  * and generates warnings.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 

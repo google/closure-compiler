@@ -17,7 +17,6 @@ package com.google.debugging.sourcemap;
 
 /**
  * A list of currently support SourceMap format revisions.
- * @author johnlenz@google.com (John Lenz)
  */
 public enum SourceMapFormat {
    /** The latest "stable" format */

@@ -34,7 +34,6 @@ import java.util.Map.Entry;
  * Future work: expanded this to look for use context to avoid unneeded type coercion:
  *   - "return x.toString()" --> "return x"
  *   - "return !!x" --> "return x"
- * @author johnlenz@google.com (John Lenz)
  */
 class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
 

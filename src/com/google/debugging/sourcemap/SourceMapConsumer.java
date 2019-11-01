@@ -19,8 +19,6 @@ package com.google.debugging.sourcemap;
 /**
  * A SourceMapConsumer is a SourceMapping provide that can parse from a raw
  * string.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 public interface SourceMapConsumer extends SourceMapping {
 

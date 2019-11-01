@@ -52,7 +52,6 @@ import java.util.logging.Logger;
  * If the prototype method is mutated and we don't detect that, inlining it is
  * unsafe.
  * We enable it whenever function inlining is enabled.
- *
  */
 class InlineSimpleMethods extends MethodCompilerPass {
 

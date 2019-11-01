@@ -43,8 +43,6 @@ import javax.annotation.Nullable;
  * <li>Removes arguments at call site to function that ignores the parameter.</li>
  * <li>Inline a parameter if the function is always called with that constant.</li>
  * </ul>
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
   private final AbstractCompiler compiler;

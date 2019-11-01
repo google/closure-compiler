@@ -27,7 +27,6 @@ import com.google.javascript.rhino.TokenUtil;
 /**
  * Lightweight message formatter. The format of messages this formatter
  * produces is very compact and to the point.
- *
  */
 public final class LightweightMessageFormatter extends AbstractMessageFormatter {
   private final SourceExcerpt excerpt;

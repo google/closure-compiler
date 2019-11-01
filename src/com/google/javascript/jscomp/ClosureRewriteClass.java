@@ -37,8 +37,6 @@ import java.util.Set;
 /**
  * Rewrites "goog.defineClass" into a form that is suitable for
  * type checking and dead code elimination.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class ClosureRewriteClass extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {

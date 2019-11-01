@@ -42,7 +42,6 @@ import java.util.Set;
  * the definition of {@code A} at {@code A = foo()} if at least one path from
  * the use node reaches that definition and it is the last definition before
  * the use on that path.
- *
  */
 class MaybeReachingVariableUse extends
     DataFlowAnalysis<Node, MaybeReachingVariableUse.ReachingUses> {

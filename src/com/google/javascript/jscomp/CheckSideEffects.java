@@ -35,7 +35,6 @@ import java.util.Set;
  * foo();;  // probably just a stray-semicolon. Doesn't hurt to check though
  * </pre>
  * and generates warnings.
- *
  */
 final class CheckSideEffects extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {

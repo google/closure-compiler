@@ -28,8 +28,6 @@ import java.util.Set;
 /**
  * Renames declarations and references in function bodies to avoid shadowing
  * names referenced in the parameter list, in default values or computed properties.
- *
- * @author moz@google.com (Michael Zhou)
  */
 public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {

@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 /**
  * This describes the Google-specific JavaScript coding conventions. Within Google, variable names
  * are semantically significant.
- *
  */
 @Immutable
 public class GoogleCodingConvention extends CodingConventions.Proxy {

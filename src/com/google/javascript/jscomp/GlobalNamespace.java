@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Streams.stream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -39,11 +38,11 @@ import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +70,8 @@ class GlobalNamespace
   private final boolean enableImplicityAliasedValues;
   private final Node root;
   private final Node externsRoot;
+  private final Node globalRoot = IR.root();
+  private final LinkedHashMap<Node, Boolean> spreadSiblingCache = new LinkedHashMap<>();
   private SourceKind sourceKind;
   private Scope externsScope;
   private boolean generated = false;
@@ -314,14 +315,50 @@ class GlobalNamespace
     return firstDotIndex == -1 ? name : name.substring(0, firstDotIndex);
   }
 
-  private final Node globalRoot = IR.root();
-
   @Nullable
   Name getNameFromModule(ModuleMetadata moduleMetadata, String name) {
     checkNotNull(moduleMetadata);
     checkNotNull(name);
     ensureGenerated();
     return nameMapByModule.get(moduleMetadata, name);
+  }
+
+  /**
+   * Returns whether a declaration node, inside an object-literal, has a following OBJECT_SPREAD
+   * sibling.
+   *
+   * <p>This check is implemented using a cache because otherwise it has aggregate {@code O(n^2)}
+   * performance in terms of the size of an OBJECTLIT. If each declaration checked each sibling
+   * independently, each sibling would be checked up-to once for each of it's preceeding siblings.
+   */
+  private boolean declarationHasFollowingObjectSpreadSibling(Node declaration) {
+    checkState(declaration.getParent().isObjectLit(), declaration);
+
+    @Nullable Boolean cached = this.spreadSiblingCache.get(declaration);
+    if (cached != null) {
+      return cached;
+    }
+
+    /**
+     * Iterate backward over all children of the object-literal, filling in the cache.
+     *
+     * <p>We iterate the entire literal because we expect to eventually need the result for each of
+     * them. Additionally, it makes the loop conditions simpler.
+     *
+     * <p>We use a loop rather than recursion to minimize stack depth. Large object-literals were
+     * the reason caching was added.
+     */
+    boolean toCache = false;
+    for (Node sibling = declaration.getParent().getLastChild();
+        sibling != null;
+        sibling = sibling.getPrevious()) {
+      if (sibling.isSpread()) {
+        toCache = true;
+      }
+      this.spreadSiblingCache.put(sibling, toCache);
+    }
+
+    return this.spreadSiblingCache.get(declaration);
   }
 
   // -------------------------------------------------------------------------
@@ -871,19 +908,9 @@ class GlobalNamespace
               // The rhs of an assign or a name declaration is escaped if it's assigned to a name
               // directly ...
             case ARRAY_PATTERN:
-              // ... or referenced through numeric keys.
-              type = Ref.Type.ALIASING_GET;
-              break;
             case OBJECT_PATTERN:
-              type =
-                  // Nested patterns don't affect the type of the top-level reference. REST is
-                  // always the last child of a pattern.
-                  lhs.hasChildren() && lhs.getLastChild().isRest()
-                      // ... or through a rest.
-                      ? Ref.Type.ALIASING_GET
-                      // It's a 'direct get' if it's actually destructured, since we know what
-                      // properties are accessed.
-                      : Ref.Type.DIRECT_GET;
+              // ... or referenced through numeric/object keys.
+              type = Ref.Type.ALIASING_GET;
               break;
             default:
               throw new IllegalStateException(
@@ -1794,13 +1821,13 @@ class GlobalNamespace
       if (getDeclaration() != null) {
         Node declaration = getDeclaration().getNode();
         if (declaration.getParent().isObjectLit()) {
-          if (stream(declaration.siblings()).anyMatch(Node::isSpread)) {
+          if (declarationHasFollowingObjectSpreadSibling(declaration)) {
             // Case: `var x = {a: 0, ...b, c: 2}` where declaration is `a` but not `c`.
             // Following spreads may overwrite the declaration.
             return Inlinability.DO_NOT_INLINE;
           }
-          Token gp = declaration.getGrandparent().getToken();
-          if (gp == Token.OR || gp == Token.HOOK) {
+          Node grandparent = declaration.getGrandparent();
+          if (grandparent.isOr() || grandparent.isHook()) {
             // Case: `var x = y || {a: b}` or `var x = cond ? y : {a: b}`.
             return Inlinability.DO_NOT_INLINE;
           }

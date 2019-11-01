@@ -52,7 +52,6 @@ import com.google.javascript.rhino.Token;
  * }
  * </pre>
  * which would get flagged.
- *
  */
 final class CheckGlobalThis implements Callback {
 

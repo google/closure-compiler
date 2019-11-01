@@ -1057,6 +1057,7 @@ public final class ConformanceRules {
     }
 
     @Override
+    @SuppressWarnings("ReferenceEquality") // take advantage of string interning.
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (n.isGetProp() && NodeUtil.isLhsOfAssign(n)) {
         JSType rhsType = n.getNext().getJSType();
@@ -1587,7 +1588,8 @@ public final class ConformanceRules {
         Node enclosingScript = NodeUtil.getEnclosingScript(n);
         if (enclosingScript != null
             && (enclosingScript.getBooleanProp(Node.GOOG_MODULE)
-                || enclosingScript.getBooleanProp(Node.ES6_MODULE))) {
+                || enclosingScript.getBooleanProp(Node.ES6_MODULE)
+                || enclosingScript.getInputId().equals(compiler.getSyntheticCodeInputId()))) {
           return ConformanceResult.CONFORMANCE;
         }
         return ConformanceResult.VIOLATION;

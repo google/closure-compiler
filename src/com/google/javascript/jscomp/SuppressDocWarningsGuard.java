@@ -28,8 +28,6 @@ import java.util.Map;
  * node until it finds a node declaring a symbol (class, function, variable, property, assignment,
  * object literal key) or a script. For this reason, it doesn't work for warnings without an
  * associated AST node, eg, the ones in parsing/IRFactory. They can be turned off with jscomp_off.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
   private static final long serialVersionUID = 1L;

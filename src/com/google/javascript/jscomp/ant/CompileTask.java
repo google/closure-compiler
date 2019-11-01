@@ -67,7 +67,6 @@ import org.apache.tools.ant.types.resources.FileResource;
  *
  * Most of the public methods of this class are entry points for the
  * Ant code to hook into.
- *
  */
 public final class CompileTask
     extends Task {
@@ -310,7 +309,7 @@ public final class CompileTask
   public void setForceRecompile(boolean forceRecompile) {
     this.forceRecompile = forceRecompile;
   }
-
+  
   public void setAngularPass(boolean angularPass) {
     this.angularPass = angularPass;
   }

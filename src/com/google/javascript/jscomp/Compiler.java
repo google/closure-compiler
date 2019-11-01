@@ -108,7 +108,6 @@ import javax.annotation.Nullable;
  * External variables are declared in 'externs' files. For instance, the file
  * may include definitions for global javascript/browser objects such as
  * window, document.
- *
  */
 // TODO(tbreisacher): Rename Compiler to JsCompiler and remove this suppression.
 @SuppressWarnings("JavaLangClash")
@@ -413,11 +412,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void initWarningsGuard(WarningsGuard warningsGuard) {
-    this.warningsGuard =
-        new ComposeWarningsGuard(
-            new J2clSuppressWarningsGuard(),
-            new SuppressDocWarningsGuard(this, DiagnosticGroups.getRegisteredGroups()),
-            warningsGuard);
+    ImmutableList.Builder<WarningsGuard> guards = ImmutableList.builder();
+    guards
+        .add(new J2clSuppressWarningsGuard())
+        .add(new SuppressDocWarningsGuard(this, DiagnosticGroups.getRegisteredGroups()))
+        .add(warningsGuard);
+    if (this.options != null && this.options.shouldSkipUnsupportedPasses()) {
+      guards.add(
+          new DiagnosticGroupWarningsGuard(
+              DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.WARNING));
+    }
+
+    this.warningsGuard = new ComposeWarningsGuard(guards.build());
   }
 
   /** When the CompilerOptions and its WarningsGuard overlap, reconcile any discrepancies. */
@@ -1175,7 +1181,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   @Nullable
-  final Node getScriptNode(String filename) {
+  public final Node getScriptNode(String filename) {
     return scriptNodeByFilename.get(checkNotNull(filename));
   }
 
@@ -2459,7 +2465,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Prefix of the generated file name for synthetic injected libraries */
   static final String SYNTHETIC_CODE_PREFIX = " [synthetic:";
 
-  static final InputId SYNTHETIC_CODE_INPUT_ID = new InputId(SYNTHETIC_CODE_PREFIX + "input]");
+  private static final InputId SYNTHETIC_CODE_INPUT_ID =
+      new InputId(SYNTHETIC_CODE_PREFIX + "input]");
 
   private CompilerInput synthesizedExternsInput = null;
   private CompilerInput synthesizedExternsInputAtEnd = null;
@@ -3133,6 +3140,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       synthesizedExternsInput = newExternInput(SYNTHETIC_EXTERNS, SyntheticExternsPosition.START);
     }
     return synthesizedExternsInput;
+  }
+
+  @Override
+  InputId getSyntheticCodeInputId() {
+    return SYNTHETIC_CODE_INPUT_ID;
   }
 
   @Override

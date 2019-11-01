@@ -47,7 +47,6 @@ import java.util.TreeMap;
  * <li>calls to goog.tweak.overrideDefaultValue occur before the call to the
  *     corresponding goog.tweak.register* function.
  * </ul>
- * @author agrieve@google.com (Andrew Grieve)
  */
 class ProcessTweaks implements CompilerPass {
 

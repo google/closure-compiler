@@ -36,7 +36,6 @@ import java.util.Map;
  * Class for parsing version 3 of the SourceMap format, as produced by the
  * Closure Compiler, etc.
  * http://code.google.com/p/closure-compiler/wiki/SourceMaps
- * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMapConsumerV3 implements SourceMapConsumer,
     SourceMappingReversable {

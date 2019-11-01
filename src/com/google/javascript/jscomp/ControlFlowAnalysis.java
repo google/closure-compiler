@@ -40,7 +40,6 @@ import java.util.PriorityQueue;
 /**
  * This is a compiler pass that computes a control flow graph. Note that this is only a CompilerPass
  * because the Compiler invokes it via Compiler#process. It is never included in a PassConfig.
- *
  */
 public final class ControlFlowAnalysis implements Callback, CompilerPass {
 

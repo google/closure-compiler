@@ -39,8 +39,6 @@ import java.util.List;
  * <p>In most cases, the output is valid as ES3 (hence the class name) but in some cases, if
  * the output language is set to ES5, we rely on ES5 features such as getters, setters,
  * and Object.defineProperties.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 // TODO(tbreisacher): This class does too many things. Break it into smaller passes.
 public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {

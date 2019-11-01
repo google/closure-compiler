@@ -26,7 +26,6 @@ import java.io.InputStreamReader;
 
 /**
  * Utility class that handles resource loading.
- *
  */
 @GwtIncompatible("getResource, java.io.InputStreamReader")
 public final class ResourceLoader {

@@ -22,8 +22,6 @@ import com.google.javascript.jscomp.CompilerOptions.Reach;
 /**
  * A CompilationLevel represents the level of optimization that should be
  * applied when compiling JavaScript code.
- *
- * @author bolinfest@google.com (Michael Bolin)
  */
 public enum CompilationLevel {
   /** BUNDLE Simply orders and concatenates files to the output. */

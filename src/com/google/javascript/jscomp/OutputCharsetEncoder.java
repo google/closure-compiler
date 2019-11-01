@@ -27,7 +27,6 @@ import java.nio.charset.CharsetEncoder;
  * Output charset encoder for {@code CodeGenerator} that delegates to a CharsetEncoder.
  *
  * TODO(moz): Add GWT compatible super-source replacement
- *
  */
 @GwtIncompatible("java.nio.charset")
 final class OutputCharsetEncoder {

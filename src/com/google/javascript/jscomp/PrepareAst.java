@@ -28,8 +28,6 @@ import com.google.javascript.rhino.Node;
  * and add annotations where necessary. It should not make any transformations
  * on the tree that would lose source information, since we need that source
  * information for checks.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class PrepareAst implements CompilerPass {
 

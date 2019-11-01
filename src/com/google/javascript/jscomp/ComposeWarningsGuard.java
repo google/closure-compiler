@@ -35,8 +35,6 @@ import java.util.TreeSet;
  * 3) the rest should be reported as error
  *
  * This class is designed for such behavior.
- *
- * @author anatol@google.com (Anatol Pomazau)
  */
 public class ComposeWarningsGuard extends WarningsGuard {
 

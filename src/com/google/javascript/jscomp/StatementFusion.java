@@ -30,7 +30,6 @@ import com.google.javascript.rhino.Token;
  * eliminate a pair of {}'s. Further more, we can also fold a single
  * statement IF into && or create further opportunities for all the other
  * goodies in {@link PeepholeMinimizeConditions}.
- *
  */
 class StatementFusion extends AbstractPeepholeOptimization {
   // TODO(user): We probably need to test this more. The current compiler

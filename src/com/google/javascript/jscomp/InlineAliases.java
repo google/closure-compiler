@@ -40,8 +40,6 @@ import java.util.Set;
  * the start of optimization.
  *
  * <p>TODO(b/124915436): Delete this pass.
- *
- * @author blickly@gmail.com (Ben Lickly)
  */
 final class InlineAliases implements CompilerPass {
 

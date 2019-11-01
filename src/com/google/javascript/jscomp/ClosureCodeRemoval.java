@@ -39,8 +39,6 @@ import java.util.List;
  *        this is not provably safe, much like the equivalent assert
  *        statement in Java.</li>
  * </ul>
- *
- * @author robbyw@google.com (Robby Walker)
  */
 final class ClosureCodeRemoval implements CompilerPass {
 

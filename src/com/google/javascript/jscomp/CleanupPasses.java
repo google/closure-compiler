@@ -28,8 +28,6 @@ import java.util.List;
 
 /**
  * Provides passes that should be run before hot-swap/incremental builds.
- *
- * @author tylerg@google.com (Tyler Goodwin)
  */
 class CleanupPasses extends PassConfig {
 

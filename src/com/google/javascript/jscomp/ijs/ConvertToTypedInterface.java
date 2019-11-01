@@ -46,8 +46,6 @@ import javax.annotation.Nullable;
  * versions that can be used equivalently for compilation of downstream dependencies.
 
  * [1] https://github.com/bazelbuild/bazel/blob/master/third_party/ijar/README.txt
- *
- * @author blickly@google.com (Ben Lickly)
  */
 public class ConvertToTypedInterface implements CompilerPass {
   static final DiagnosticType CONSTANT_WITH_SUGGESTED_TYPE =

@@ -2012,6 +2012,11 @@ angular.NgModelController.prototype.$formatters;
 angular.NgModelController.prototype.$invalid;
 
 /**
+ * @type {!angular.NgModelOptions}
+ */
+angular.NgModelController.prototype.$options;
+
+/**
  * @param {!Object} options
  */
 angular.NgModelController.prototype.$overrideModelOptions = function(options) {};
@@ -2118,6 +2123,28 @@ angular.NgModelController.prototype.$commitViewValue = function() {};
  * @type {!Object<string, boolean>|undefined}
  */
 angular.NgModelController.prototype.$pending;
+
+/******************************************************************************
+ * NgModelOptions
+ *****************************************************************************/
+
+/**
+ * @interface
+ */
+angular.NgModelOptions = function() {};
+
+
+/**
+ * @param {string} optionName
+ * @return {*}
+ */
+angular.NgModelOptions.prototype.getOption = function(optionName) {};
+
+/**
+ * @param {!Object} options
+ * @return {!angular.NgModelOptions}
+ */
+angular.NgModelOptions.prototype.createChild = function(options) {};
 
 /******************************************************************************
  * FormController

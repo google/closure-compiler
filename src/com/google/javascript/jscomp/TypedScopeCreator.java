@@ -111,8 +111,6 @@ import javax.annotation.Nullable;
  *
  * <p>When building scope information, also declares relevant information about types in the type
  * registry.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
   /** A suffix for naming delegate proxies differently from their base. */
@@ -313,7 +311,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     this.moduleMap = compiler.getModuleMap();
     this.moduleImportResolver =
         new ModuleImportResolver(this.moduleMap, getNodeToScopeMapper(), typeRegistry);
-    this.processClosurePrimitives = compiler.getOptions().closurePass;
+    this.processClosurePrimitives = !this.metadataMap.getModulesByGoogNamespace().isEmpty();
   }
 
   private void report(JSError error) {
@@ -885,6 +883,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       } else {
         typeRegistry.registerClosureModule(
             module.closureNamespace(), exportsVar.getNameNode(), exportsVar.getType());
+      }
+      // Store the type of the namespace on the AST for the convenience of later passes that want
+      // to access it.
+      Node rootNode = module.metadata().rootNode();
+      if (rootNode.isScript()) {
+        Node moduleBody = rootNode.getFirstChild();
+        moduleBody.setJSType(exportsVar.getType());
+      } else {
+        // For goog.loadModule, give the `exports` parameter the correct type.
+        Node paramList = NodeUtil.getFunctionParameters(rootNode.getSecondChild());
+        paramList.getOnlyChild().setJSType(exportsVar.getType());
       }
     }
 

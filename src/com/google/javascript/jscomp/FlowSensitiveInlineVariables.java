@@ -52,7 +52,6 @@ import java.util.Set;
  *
  * <p>Other requirements can be found in {@link Candidate#canInline}. Currently
  * this pass does not operate on the global scope due to compilation time.
- *
  */
 class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 

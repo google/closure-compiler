@@ -33,7 +33,6 @@ import com.google.javascript.rhino.jstype.JSType;
 /**
  * Checks when a function is annotated as returning {SomeType} (nullable)
  * but actually always returns {!SomeType}, i.e. never returns null.
- *
  */
 public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.Callback {
   final AbstractCompiler compiler;

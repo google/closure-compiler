@@ -1439,32 +1439,21 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "const {ctor} = ns;",
             "let c = new ctor;"),
         lines(
-            "var ns = {};",
             "/** @constructor */",
             "var ns$ctor = function() {}",
-            "const {} = ns;",
-            "const ctor = ns$ctor;",
-            "let c = new ctor;"));
+            "const ctor = null;",
+            "let c = new ns$ctor;"));
   }
 
   @Test
   public void namespaceInDestructuringPattern() {
-    test(
+    testSame(
         lines(
             "const ns = {};",
             "ns.x = 1;",
             "ns.y = 2;",
             "let {x, y} = ns;",
             "x = 4;", // enforce that we can't inline x -> ns.x because it's set multiple times
-            "use(x + y);"),
-        lines(
-            "const ns = {};",
-            "var ns$x = 1;",
-            "var ns$y = 2;",
-            "let x = ns$x;",
-            "let {} = ns;",
-            "let y = ns$y;",
-            "x = 4;",
             "use(x + y);"));
   }
 
@@ -1476,17 +1465,25 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "/** @constructor */",
             "ns.Y = function() {};",
             "ns.Y.prop = 3;",
-            "let {Y} = ns;",
+            "const {Y} = ns;",
             "use(Y.prop);"),
         lines(
-            "const ns = {};",
             "/** @constructor */",
             "var ns$Y = function() {};",
             "var ns$Y$prop = 3;",
-            "let {} = ns;",
-            "let Y = ns$Y;",
-            // TODO(b/117673791): replace Y.prop -> ns$Y$prop; right now this is broken.
-            "use(Y.prop);")); // assignment
+            "const Y = null;",
+            "use(ns$Y$prop);"));
+
+    // Only `const` destructuring aliases have special handling by AggressiveInlineAliases
+    testSame(
+        lines(
+            "const ns = {};",
+            "/** @constructor */",
+            "ns.Y = function() {};",
+            "ns.Y.prop = 3;",
+            "let {Y} = ns;",
+            "use(Y.prop);"),
+        PARTIAL_NAMESPACE_WARNING);
   }
 
   @Test

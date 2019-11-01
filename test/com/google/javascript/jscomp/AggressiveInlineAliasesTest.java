@@ -1372,14 +1372,19 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   @Test
   public void testDestructuringAlias2() {
-    testSame("var a = {x: 5}; var {b} = {b: a}; use(b.x);");
+    testSame("var a = {x: 5}; const {b} = {b: a}; use(b.x);");
+  }
+
+  @Test
+  public void testDestructuringArrayAlias() {
+    testSame("var a = [5, 6]; const [b, c] = a; use(b);");
   }
 
   @Test
   public void testObjectRest_restingFromANamespace_isNotInlinable() {
     // TODO(nickreid): These might actually be inlinable.
-    testSame("var a = {x: 5, y: 6}; var {...b} = a; use(b.y);");
-    testSame("var a = {x: 5, y: 6}; var {x, ...b} = a; use(b.y);");
+    testSame("var a = {x: 5, y: 6}; const {...b} = a; use(b.y);");
+    testSame("var a = {x: 5, y: 6}; const {x, ...b} = a; use(b.y);");
   }
 
   @Test
@@ -1977,35 +1982,35 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testInlineDestructuredAliasProp() {
     test(
-        "var a = {x: 2}; var b = {}; b.y = a.x; var {y} = b; use(y);",
-        "var a = {x: 2}; var b = {}; b.y = null; var {} = b; var y = null; use(a.x);");
+        "var a = {x: 2}; var b = {}; b.y = a.x; const {y} = b; use(y);",
+        "var a = {x: 2}; var b = {}; b.y = null; const y = null; use(a.x);");
   }
 
   @Test
   public void testInlineDestructuredAliasPropWithKeyBefore() {
     test(
-        "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {z, y} = b; use(y + z);",
+        "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; const {z, y} = b; use(y + z);",
         lines(
             "var a = {x: 2};",
             "var b = {z: 3};",
             "b.y = null;",
             "b.z = 4;",
-            "var {z} = b;",
-            "var y = null;",
+            "const z = b.z;",
+            "const y = null;",
             "use(a.x + z);"));
   }
 
   @Test
   public void testInlineDestructuredAliasPropWithKeyAfter() {
     test(
-        "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; var {y, z} = b; use(y + z);",
+        "var a = {x: 2}; var b = {z: 3}; b.y = a.x; b.z = 4; const {y, z} = b; use(y + z);",
         lines(
             "var a = {x: 2};",
             "var b = {z: 3};",
             "b.y = null;",
             "b.z = 4;",
-            "var y = null;",
-            "var {z} = b;",
+            "const y = null;",
+            "const z = b.z;",
             "use(a.x + z);"));
   }
 
@@ -2017,89 +2022,73 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var b = {z: 3};",
             "b.y = a.x;",
             "b.z = 4;", // add second assign so that this won't get inlined
-            "var {x, y, z} = b;",
+            "const {x, y, z} = b;",
             "use(y + z);"),
         lines(
             "var a = {x: 2};",
             "var b = {z: 3};",
             "b.y = null;",
             "b.z = 4;",
-            "var {x} = b;",
-            "var y = null;",
-            "var {z} = b;",
+            "const x = b.x;",
+            "const y = null;",
+            "const z = b.z;",
             "use(a.x + z);"));
   }
 
   @Test
   public void testDestructuredPropAccessInAssignWithKeyBefore() {
-    test(
+    testSame(
         lines(
             "var a = {x: 2};",
             "var b = {};",
             "b.y = a.x;",
             "var obj = {};",
             "({missing: obj.foo, y: obj.foo} = b);",
-            "use(obj.foo);"),
-        lines(
-            "var a = {x: 2};",
-            "var b = {};",
-            "b.y = null;",
-            "var obj = {};",
-            "({missing: obj.foo} = b, obj.foo = a.x);",
             "use(obj.foo);"));
   }
 
   @Test
   public void testDestructuredPropAccessInAssignWithKeyAfter() {
-    test(
+    testSame(
         lines(
             "var a = {x: 2};",
             "var b = {};",
             "b.y = a.x;",
             "var obj = {};",
             "({y: obj.foo, missing: obj.foo} = b);",
-            "use(obj.foo);"),
-        lines(
-            "var a = {x: 2};",
-            "var b = {};",
-            "b.y = null;",
-            "var obj = {};",
-            "(obj.foo = a.x, {missing: obj.foo} = b);",
             "use(obj.foo);"));
   }
 
   @Test
   public void testDestructuredPropAccessInDeclarationWithDefault() {
-    test(
-        lines("var a = {x: {}};", "var b = {};", "b.y = a.x;", "var {y = 0} = b;", "use(y);"),
+    testSame(
         lines(
-            "var a = {x: {}};",
+            "var a = {x: {}};", //
             "var b = {};",
-            "b.y = null;",
-            "var {} = b;",
-            "var y = void 0 === a.x ? 0 : a.x;",
+            "b.y = a.x;",
+            "const {y = 0} = b;",
             "use(y);"));
   }
 
   @Test
   public void testDestructuringPropertyOnAliasedNamespace() {
     // We can inline a part of a getprop chain on the rhs of a destructuring pattern:
-    //   replace 'alias -> a.b' in 'const {A} = alias.Enum;'
+    //   replace 'alias -> a.b' in 'const {c} = alias.Enum;'
     test(
         lines(
             "const a = {};",
             "/** @const */ a.b = {};",
-            "/** @enum {string} */ a.b.Enum = {A: 'a'};",
+            "/** @enum {string} */ a.b.Enum = {c: 'c'};",
             "",
             "const alias = a.b;",
-            "function f() { const {A} = alias.Enum; }"),
+            "function f() { const {c} = alias.Enum; use(c); }"),
         lines(
             "const a = {}; ",
             "/** @const */ a.b = {};",
-            "/** @enum {string} */ a.b.Enum = {A: 'a'};",
+            "/** @enum {string} */ a.b.Enum = {c: 'c'};",
             "",
             "const alias = null;",
-            "function f() { const {A} = a.b.Enum; }"));
+            "function f() { const c = null; use(a.b.Enum.c); }"));
   }
 
   @Test
@@ -2147,6 +2136,25 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "class Foo { static m() {} }",
             // `super.n` refers to a different object than `Foo.n`
             "class Bar extends Foo { static m() { return {m() { super.n(); }}; } }"));
+  }
+
+  @Test
+  public void testDestructuredClassAlias() {
+    test(
+        lines(
+            "const ns = {};",
+            "ns.Foo = class {};",
+            "ns.Foo.STR = '';",
+            "const {Foo} = ns;",
+            "foo(Foo.STR);",
+            ""),
+        lines(
+            "const ns = {};",
+            "ns.Foo = class {};",
+            "ns.Foo.STR = '';",
+            "const Foo = null;",
+            "foo(ns.Foo.STR);",
+            ""));
   }
 
   @Test

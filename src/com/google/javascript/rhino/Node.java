@@ -1224,7 +1224,7 @@ public class Node implements Serializable {
     return keys;
   }
 
-  /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
+  /** Can only be called when <code>getType() == TokenStream.NUMBER</code> */
   public double getDouble() {
     if (this.token == Token.NUMBER) {
       throw new IllegalStateException(
@@ -1235,7 +1235,7 @@ public class Node implements Serializable {
   }
 
   /**
-   * Can only be called when <tt>getType() == Token.NUMBER</tt>
+   * Can only be called when <code>getType() == Token.NUMBER</code>
    *
    * @param value value to set.
    */
@@ -1272,7 +1272,7 @@ public class Node implements Serializable {
     }
   }
 
-  /** Can only be called when <tt>getType() == Token.TEMPLATELIT_STRING</tt> */
+  /** Can only be called when <code>getType() == Token.TEMPLATELIT_STRING</code> */
   public String getRawString() {
     if (this.token == Token.TEMPLATELIT_STRING) {
       throw new IllegalStateException(
@@ -1282,7 +1282,7 @@ public class Node implements Serializable {
     }
   }
 
-  /** Can only be called when <tt>getType() == Token.TEMPLATELIT_STRING</tt> */
+  /** Can only be called when <code>getType() == Token.TEMPLATELIT_STRING</code> */
   @Nullable
   public String getCookedString() {
     if (this.token == Token.TEMPLATELIT_STRING) {

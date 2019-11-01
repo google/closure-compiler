@@ -32,7 +32,6 @@ import java.util.List;
 
 /**
  * This describes the Closure-specific JavaScript coding conventions.
- *
  */
 @Immutable
 public final class ClosureCodingConvention extends CodingConventions.Proxy {

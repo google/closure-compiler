@@ -34,10 +34,13 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
+import java.util.Map;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1069,7 +1072,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
-    options.setRewriteModules(false);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setChecksOnly(true);
 
     String[] srcs =
         new String[] {
@@ -1091,7 +1095,7 @@ public final class IntegrationTest extends IntegrationTestCase {
               "Polymer(/** @lends {X.prototype} */ {", //
               "  is: 'x',",
               "});",
-              "export {}"),
+              "var module$i1={}"),
         };
 
     test(options, srcs, compiledOut);
@@ -1594,12 +1598,14 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  @Ignore("We don't currently have a way to completely disable module rewriting")
   public void testDisableModuleRewriting() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
-    options.setRewriteModules(false);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setChecksOnly(true);
     test(
         options,
         lines(
@@ -5565,18 +5571,18 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         new String[] {
           // googModuleOuter
-          LINE_JOINER.join(
+          lines(
               "goog.module('foo.Outer');",
               "/** @constructor */ function Outer() {}",
               "exports = Outer;"),
           // legacyInner
-          LINE_JOINER.join(
+          lines(
               "goog.module('foo.Outer.Inner');",
               "goog.module.declareLegacyNamespace();",
               "/** @constructor */ function Inner() {}",
               "exports = Inner;"),
           // legacyUse
-          LINE_JOINER.join(
+          lines(
               "goog.provide('legacy.Use');",
               "goog.require('foo.Outer');",
               "goog.require('foo.Outer.Inner');",
@@ -5587,16 +5593,18 @@ public final class IntegrationTest extends IntegrationTestCase {
               "});")
         },
         new String[] {
-          "/** @constructor */ function module$exports$foo$Outer() {}",
-          LINE_JOINER.join(
+          lines(
+              "/** @constructor */ function module$contents$foo$Outer_Outer() {}",
+              "var module$exports$foo$Outer = module$contents$foo$Outer_Outer;"),
+          lines(
               "/** @const */ var foo={};",
               "/** @const */ foo.Outer={};",
               "/** @constructor */ function module$contents$foo$Outer$Inner_Inner(){}",
               "/** @const */ foo.Outer.Inner=module$contents$foo$Outer$Inner_Inner;"),
-          LINE_JOINER.join(
+          lines(
               "/** @const */ var legacy={};",
               "/** @const */ legacy.Use={};",
-              "new module$exports$foo$Outer;",
+              "new module$contents$foo$Outer_Outer;",
               "new module$contents$foo$Outer$Inner_Inner")
         });
   }
@@ -7610,5 +7618,37 @@ public final class IntegrationTest extends IntegrationTestCase {
         ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
 
     test(options, "var x; goog.module('m');", ClosureCheckModule.GOOG_MODULE_MISPLACED);
+  }
+
+  @Test
+  public void testDuplicateClosureNamespacesError() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+
+    externs =
+        ImmutableList.<SourceFile>builder()
+            .addAll(externs)
+            .add(SourceFile.fromCode("closure_externs.js", CLOSURE_DEFS))
+            .build();
+
+    ImmutableMap<String, ModuleType> namespaces =
+        ImmutableMap.of(
+            "goog.provide('a.b.c');", ModuleType.GOOG_PROVIDE,
+            "goog.module('a.b.c');", ModuleType.GOOG_MODULE,
+            "goog.declareModuleId('a.b.c'); export {};", ModuleType.ES6_MODULE,
+            "goog.module('a.b.c'); goog.module.declareLegacyNamespace();",
+                ModuleType.LEGACY_GOOG_MODULE);
+
+    for (Map.Entry<String, ModuleType> firstNs : namespaces.entrySet()) {
+      for (Map.Entry<String, ModuleType> secondNs : namespaces.entrySet()) {
+        // Error is based on whether the namespace originally came from a module or a provide.
+        DiagnosticType expectedError =
+            firstNs.getValue().equals(ModuleType.GOOG_PROVIDE)
+                ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
+                : ClosurePrimitiveErrors.DUPLICATE_MODULE;
+
+        test(options, new String[] {firstNs.getKey(), secondNs.getKey()}, expectedError);
+      }
+    }
   }
 }

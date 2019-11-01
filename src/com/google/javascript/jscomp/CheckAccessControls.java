@@ -44,8 +44,6 @@ import javax.annotation.Nullable;
  *
  * <p>Because access control restrictions are attached to type information, this pass must run after
  * TypeInference, and InferJSDocInfo.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class CheckAccessControls implements Callback, HotSwapCompilerPass {
 

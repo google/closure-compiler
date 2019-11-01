@@ -39,7 +39,6 @@ import java.util.logging.Logger;
  *    That first kind of statement sometimes appears intentionally, so that
  *    prototype properties can be annotated using JSDoc without actually
  *    being initialized.
- *
  */
 
 // TODO(dimvar): Besides dead code after returns, this pass removes useless live

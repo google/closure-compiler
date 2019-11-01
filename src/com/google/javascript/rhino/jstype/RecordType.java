@@ -217,6 +217,11 @@ public class RecordType extends PrototypeObjectType {
       return false;
     }
 
-    return this.isStructuralSubtype(that.toMaybeRecordType(), implicitImplCache, subtypingMode);
+    return ObjectType.isStructuralSubtypeHelper(
+        this,
+        that.toMaybeRecordType(),
+        implicitImplCache,
+        subtypingMode,
+        PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
   }
 }

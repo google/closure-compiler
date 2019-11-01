@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.DUPLICATE_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.LATE_PROVIDE_ERROR;
@@ -394,11 +393,17 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testProvideErrorCases() {
-    testError("goog.provide('foo'); goog.provide('foo');", DUPLICATE_NAMESPACE_ERROR);
-    testError(
+  public void testDuplicateProvideDoesntCrash() {
+    // The compiler emits a warning elsewhere for this code.
+    test(
+        "goog.provide('foo'); goog.provide('foo');",
+        "/** @const */ var foo = {}; goog.provide('foo');");
+    test(
         "goog.provide('foo.bar'); goog.provide('foo'); goog.provide('foo');",
-        DUPLICATE_NAMESPACE_ERROR);
+        lines(
+            "/** @const */ var foo={};", //
+            "/** @const */ foo.bar = {};",
+            "goog.provide('foo');"));
   }
 
   @Test

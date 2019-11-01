@@ -45,7 +45,6 @@ import java.util.TreeMap;
  * A class for the internal representation of an input to the compiler. Wraps a {@link SourceAst}
  * and maintain state such as module for the input and whether the input is an extern. Also
  * calculates provided and required types.
- *
  */
 public class CompilerInput extends DependencyInfo.Base implements SourceAst {
 

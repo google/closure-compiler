@@ -35,8 +35,6 @@ import java.util.Set;
  * "Object.keys".
  *
  * This class is based on RemoveUnusedCode, some effort should be made to extract the common pieces.
- *
- * @author johnlenz@google.com (John Lenz)
  */
 class CheckUnusedPrivateProperties
     implements HotSwapCompilerPass, NodeTraversal.Callback {

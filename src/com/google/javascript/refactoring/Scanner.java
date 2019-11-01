@@ -25,8 +25,6 @@ import java.util.List;
 
 /**
  * Class that developers should implement to perform a JsFlume refactoring.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public abstract class Scanner implements Serializable {
 

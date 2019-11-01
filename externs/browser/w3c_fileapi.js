@@ -210,37 +210,37 @@ FileReader.prototype.error;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-onloadstart
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileReader>)}
  */
 FileReader.prototype.onloadstart;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-onprogress
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileReader>)}
  */
 FileReader.prototype.onprogress;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-onload
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileReader>)}
  */
 FileReader.prototype.onload;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-onabort
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileReader>)}
  */
 FileReader.prototype.onabort;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-onerror
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileReader>)}
  */
 FileReader.prototype.onerror;
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-onloadend
- * @type {?function(!ProgressEvent)}
+ * @type {?function(!ProgressEvent<!FileReader>)}
  */
 FileReader.prototype.onloadend;
 

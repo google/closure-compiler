@@ -89,8 +89,6 @@ import javax.annotation.Nullable;
  * updating datastructures on the fly a pre-check is performed to skip
  * already-removed nodes right before the moment an attempt to remove them
  * would otherwise be made.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 class RemoveUnusedCode implements CompilerPass {
 

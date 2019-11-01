@@ -33,7 +33,6 @@ import java.util.Set;
  * <li> Class: Always under strict mode
  * <li>   In addition, no duplicate class method names
  * </ol>
- *
  */
 class StrictModeCheck extends AbstractPostOrderCallback
     implements CompilerPass {

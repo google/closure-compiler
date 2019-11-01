@@ -111,7 +111,8 @@ Document.prototype.caretRangeFromPoint = function(x, y) {};
 Document.prototype.hasStorageAccess = function() {};
 
 /**
- * @return {!Promise<boolean>}
+ * @return {!Promise<void>}
  * @see https://webkit.org/blog/8124/introducing-storage-access-api
+ * @see https://developer.mozilla.org/docs/Web/API/Document/requestStorageAccess#Syntax
  */
 Document.prototype.requestStorageAccess = function() {};

@@ -30,8 +30,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
  * This pass is expected to clear out declarations contributed to any JSType,
  * even if the constructor declaration is not provided in the file being
  * updated.
- *
- * @author tylerg@google.com (Tyler Goodwin)
  */
 public final class FieldCleanupPass implements HotSwapCompilerPass {
 

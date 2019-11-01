@@ -39,8 +39,6 @@ import com.google.javascript.rhino.Token;
  *
  * <p>The order of dependency references is preserved so that a deterministic depth-first ordering
  * can be achieved.
- *
- * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
 public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
   private final AbstractCompiler compiler;

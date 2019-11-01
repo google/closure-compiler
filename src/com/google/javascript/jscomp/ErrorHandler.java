@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 /**
  * The error handler is any generic sink for warnings and errors,
  * after they've passed through any filtering {@code WarningsGuard}s.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public interface ErrorHandler {
   /**

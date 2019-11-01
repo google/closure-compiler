@@ -24,7 +24,6 @@ import com.google.javascript.rhino.Node;
 
 /**
  * An optimization that does peephole optimizations of ES6 code.
- *
  */
 class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 

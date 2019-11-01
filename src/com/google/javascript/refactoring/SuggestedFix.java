@@ -50,8 +50,6 @@ import javax.annotation.Nullable;
  * Object representing the fixes to apply to the source code to create the
  * refactoring CL. To create a class, use the {@link Builder} class and helper
  * functions.
- *
- * @author mknichel@google.com (Mark Knichel)
  */
 public final class SuggestedFix {
 

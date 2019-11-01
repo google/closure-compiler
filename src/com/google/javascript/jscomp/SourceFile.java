@@ -49,8 +49,6 @@ import java.util.zip.ZipInputStream;
  * An abstract representation of a source file that provides access to language-neutral features.
  * The source file can be loaded from various locations, such as from disk or from a preloaded
  * string.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 public class SourceFile implements StaticSourceFile, Serializable {
 

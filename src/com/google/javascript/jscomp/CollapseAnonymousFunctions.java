@@ -36,7 +36,6 @@ import com.google.javascript.rhino.Node;
  * will be defined before its definition is reached.
  * Also, in ES6+, "var f" is visible in the entire function scope, whereas
  * "function f" is block scoped, which may cause issues.
- *
  */
 class CollapseAnonymousFunctions extends AbstractPostOrderCallback implements CompilerPass {
   private final AbstractCompiler compiler;

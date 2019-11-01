@@ -324,7 +324,11 @@ public final class MissingProvideTest extends CompilerTestCase {
             "new legacy.script.A;");
 
     String msg = "required \"legacy.script.A\" namespace never provided";
-    testError(legacyScript, MISSING_PROVIDE_ERROR, msg);
+    // TODO(lharker): remove the duplicate error after fixing b/128034196
+    test(
+        srcs(legacyScript),
+        error(MISSING_PROVIDE_ERROR).withMessage(msg),
+        error(MISSING_MODULE_OR_PROVIDE));
   }
 
   @Test
