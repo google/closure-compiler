@@ -27,6 +27,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
+import com.google.common.collect.Tables;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.graph.StandardUnionFind;
@@ -97,9 +99,6 @@ class DisambiguateProperties implements CompilerPass {
 
   private final InvalidatingTypes invalidatingTypes;
   private final JSTypeRegistry registry;
-  // Used as a substitute for null in gtwpCache. The method gtwpCacheGet returns
-  // null to indicate that an element wasn't present.
-  private final ObjectType bottomObjectType;
 
   /**
    * Map of a type to all the related errors that invalidated the type
@@ -121,31 +120,28 @@ class DisambiguateProperties implements CompilerPass {
   // or FunctionType#getExtendedInterfaces only once per constructor.
   private Map<FunctionType, Iterable<ObjectType>> ancestorInterfaces;
 
-  // Cache calls to getTypeWithProperty.
-  private Map<String, IdentityHashMap<JSType, ObjectType>> gtwpCache;
+  // Cache calls to getRepresentativeType.
+  private final Table<String, JSType, ObjectType> representativeTypeCache =
+      Tables.newCustomTable(new LinkedHashMap<>(), IdentityHashMap::new);
 
-  private ObjectType gtwpCacheGet(String field, JSType type) {
-    IdentityHashMap<JSType, ObjectType> m = gtwpCache.get(field);
-    return m == null ? null : m.get(type);
-  }
-
-  private void gtwpCachePut(String field, JSType type, ObjectType top) {
-    IdentityHashMap<JSType, ObjectType> m = gtwpCache.get(field);
-    if (m == null) {
-      m = new IdentityHashMap<>();
-      gtwpCache.put(field, m);
-    }
-    checkState(null == m.put(type, top));
-  }
+  /**
+   * A sentinel value for cached computations of {@link #getRepresentativeType} which returned
+   * {@code null}.
+   *
+   * <p>Use of a sentinel allows the value in {@link #representativeTypeCache} to encode that there
+   * is no useful result, obviating the need to first check {@code Table#contains}. That is, it
+   * ensures that within the cache, {@code null} always means "not yet computed".
+   */
+  private final ObjectType representativeTypeSentinel;
 
   private class Property {
     /** The name of the property. */
     final String name;
 
     /**
-     * All top types on which the field exists, grouped together if related.
-     * See getTypeWithProperty. If a property exists on a parent class and a
-     * subclass, only the parent class is recorded here.
+     * All top types on which the field exists, grouped together if related. See
+     * getRepresentativeType. If a property exists on a parent class and a subclass, only the parent
+     * class is recorded here.
      */
     private UnionFind<JSType> types;
 
@@ -191,7 +187,7 @@ class DisambiguateProperties implements CompilerPass {
      */
     void addType(JSType type, JSType relatedType) {
       checkState(this.isValidForRenaming, "Attempt to record an invalidated property: %s", name);
-      JSType top = getTypeWithProperty(this.name, type);
+      JSType top = getRepresentativeType(this.name, type);
       if (invalidatingTypes.isInvalidating(top)) {
         invalidate();
         return;
@@ -332,7 +328,7 @@ class DisambiguateProperties implements CompilerPass {
         }
         return firstType;
       } else {
-        JSType topType = getTypeWithProperty(this.name, type);
+        JSType topType = getRepresentativeType(this.name, type);
         if (invalidatingTypes.isInvalidating(topType)) {
           return null;
         }
@@ -346,7 +342,7 @@ class DisambiguateProperties implements CompilerPass {
      * from.
      *
      * <p>If the property p is defined only on a subtype of constructor, then this method has no
-     * effect. But we tried modifying getTypeWithProperty to tell us when the returned type is a
+     * effect. But we tried modifying getRepresentativeType to tell us when the returned type is a
      * subtype, and then skip those calls to recordInterface, and there was no speed-up. And it made
      * the code harder to understand, so we don't do it.
      */
@@ -362,7 +358,7 @@ class DisambiguateProperties implements CompilerPass {
         ancestorInterfaces.put(constructor, interfaces);
       }
       for (ObjectType itype : interfaces) {
-        JSType top = getTypeWithProperty(name, itype);
+        JSType top = getRepresentativeType(name, itype);
         if (top != null) {
           addType(itype, relatedType);
         }
@@ -380,7 +376,7 @@ class DisambiguateProperties implements CompilerPass {
       AbstractCompiler compiler, Map<String, CheckLevel> propertiesToErrorFor) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
-    this.bottomObjectType =
+    this.representativeTypeSentinel =
         this.registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE).toMaybeObjectType();
 
     this.propertiesToErrorFor = propertiesToErrorFor;
@@ -399,7 +395,6 @@ class DisambiguateProperties implements CompilerPass {
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     this.ancestorInterfaces = new HashMap<>();
-    this.gtwpCache = new HashMap<>();
     // Gather names of properties in externs; these properties can't be renamed.
     NodeTraversal.traverse(compiler, externs, new FindExternProperties());
     // Look at each unquoted property access and decide if that property will
@@ -997,40 +992,49 @@ class DisambiguateProperties implements CompilerPass {
   }
 
   /**
-   * Returns the type in the chain from the given type that contains the given
-   * field or null if it is not found anywhere.
-   * Can return a subtype of the input type.
+   * Returns the type representing an innate disambiguation cluster of types as defined by the
+   * declarations of properties named {@code field} against the type lattice.
+   *
+   * <p>The representative type is the top-most type that declares {@code field} and which is above
+   * {@code type}. Therefore, for any type, its representative is always the same, and it is
+   * possible to compute disambiguations by only considering representatives.
+   *
+   * <p>Interface edges in the lattice, because they form a DAG and not a tree, are not walked when
+   * finding the representative. Interfaces must therefore be considered as being in distinct innate
+   * clusters.
    */
-  private ObjectType getTypeWithProperty(String field, JSType type) {
+  private ObjectType getRepresentativeType(String field, JSType type) {
     if (type == null) {
       return null;
     }
 
-    ObjectType foundType = gtwpCacheGet(field, type);
+    ObjectType foundType = representativeTypeCache.get(field, type);
     if (foundType != null) {
-      return foundType.equals(bottomObjectType) ? null : foundType;
+      return foundType.equals(representativeTypeSentinel) ? null : foundType;
     }
 
     if (type.isEnumElementType()) {
-      foundType = getTypeWithProperty(field, type.getEnumeratedTypeOfEnumElement());
-      gtwpCachePut(field, type, foundType == null ? bottomObjectType : foundType);
+      foundType = getRepresentativeType(field, type.getEnumeratedTypeOfEnumElement());
+      representativeTypeCache.put(
+          field, type, foundType == null ? representativeTypeSentinel : foundType);
       return foundType;
     }
 
     if (!type.isObjectType()) {
       if (type.isBoxableScalar()) {
-        foundType = getTypeWithProperty(field, type.autobox());
-        gtwpCachePut(field, type, foundType == null ? bottomObjectType : foundType);
+        foundType = getRepresentativeType(field, type.autobox());
+        representativeTypeCache.put(
+            field, type, foundType == null ? representativeTypeSentinel : foundType);
         return foundType;
       } else {
-        gtwpCachePut(field, type, bottomObjectType);
+        representativeTypeCache.put(field, type, representativeTypeSentinel);
         return null;
       }
     }
 
     // Ignore the prototype itself at all times.
     if ("prototype".equals(field)) {
-      gtwpCachePut(field, type, bottomObjectType);
+      representativeTypeCache.put(field, type, representativeTypeSentinel);
       return null;
     }
 
@@ -1067,7 +1071,8 @@ class DisambiguateProperties implements CompilerPass {
       foundType = foundType.toMaybeNamedType().getReferencedType().toMaybeObjectType();
     }
 
-    gtwpCachePut(field, type, foundType == null ? bottomObjectType : foundType);
+    representativeTypeCache.put(
+        field, type, foundType == null ? representativeTypeSentinel : foundType);
     return foundType;
   }
 
