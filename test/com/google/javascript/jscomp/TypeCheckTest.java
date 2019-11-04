@@ -56,6 +56,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class TypeCheckTest extends TypeCheckTestCase {
 
+  private static final String BOUNDED_GENERICS_USE_MSG =
+      "Bounded generic semantics are currently still in development";
+
   private static final String SUGGESTION_CLASS =
       "/** @constructor\n */\n"
       + "function Suggest() {}\n"
@@ -5871,6 +5874,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testGenericBoundExplicitUnknown() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
+
     testTypes(
         lines(
             "/**", //
@@ -5892,10 +5897,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function f(x) {}",
             "var a = f('a');"),
-        lines(
-            "actual parameter 1 of f does not match formal parameter",
-            "found   : string",
-            "required: number"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "actual parameter 1 of f does not match formal parameter",
+              "found   : string",
+              "required: number"),
+        });
   }
 
   @Test
@@ -5907,7 +5915,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number} T",
             " */",
             "function f(x) {}",
-            "var a = f(3);"));
+            "var a = f(3);"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -5921,10 +5930,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function f(x) { return 'a'; }",
             "var a = f(0);"),
-        lines(
-            "inconsistent return type", //
-            "found   : string", //
-            "required: T extends number"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "inconsistent return type", //
+              "found   : string", //
+              "required: T extends number"),
+        });
   }
 
   @Test
@@ -5937,10 +5949,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function f(x) { return x; }",
             "var a = f(null);"),
-        lines(
-            "actual parameter 1 of f does not match formal parameter",
-            "found   : null",
-            "required: number"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "actual parameter 1 of f does not match formal parameter",
+              "found   : null",
+              "required: number"),
+        });
   }
 
   @Test
@@ -5952,7 +5967,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {?number} T",
             " */",
             "function f(x) { return x; }",
-            "var a = f(null);"));
+            "var a = f(null);"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -5968,10 +5984,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number|boolean} T",
             " */",
             "function foo(x) { return stringID(x); }"),
-        lines(
-            "actual parameter 1 of stringID does not match formal parameter",
-            "found   : T extends (boolean|number)",
-            "required: string"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "actual parameter 1 of stringID does not match formal parameter",
+              "found   : T extends (boolean|number)",
+              "required: string"),
+        });
   }
 
   @Test
@@ -5986,7 +6005,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} x",
             " * @template {number} T",
             " */",
-            "function foo(x) { return numID(x); }"));
+            "function foo(x) { return numID(x); }"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -6002,10 +6022,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number|boolean|string} T",
             " */",
             "function foo(x) { return numID(x); }"),
-        lines(
-            "actual parameter 1 of numID does not match formal parameter",
-            "found   : T extends (boolean|number|string)",
-            "required: number"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "actual parameter 1 of numID does not match formal parameter",
+              "found   : T extends (boolean|number|string)",
+              "required: number"),
+        });
   }
 
   @Test
@@ -6017,7 +6040,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {number|string|boolean} y",
             " * @template {number|string} T",
             " */",
-            "function foo(x,y) { y=x; }"));
+            "function foo(x,y) { y=x; }"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -6030,10 +6054,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number|string} T",
             " */",
             "function foo(x,y) { y=x; }"),
-        lines(
-            "assignment", //
-            "found   : number", //
-            "required: T extends (number|string)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "assignment", //
+              "found   : number", //
+              "required: T extends (number|string)"),
+        });
   }
 
   @Test
@@ -6046,10 +6073,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number|string} T",
             " */",
             "function foo(x,y) { x=y; }"),
-        lines(
-            "assignment", //
-            "found   : T extends (number|string)", //
-            "required: number"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "assignment", //
+              "found   : T extends (number|string)", //
+              "required: number"),
+        });
   }
 
   @Test
@@ -6061,7 +6091,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} y",
             " * @template {number|string} T",
             " */",
-            "function foo(x,y) { x=y; }"));
+            "function foo(x,y) { x=y; }"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -6075,8 +6106,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var /** !Foo<Str> */ a;",
             "/** @typedef {string} */",
             "let Str;"),
-        "Bounded generic type error. string assigned to template type T is not a subtype of bound"
-            + " number");
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          "Bounded generic type error. string assigned to template type T is not a subtype of bound"
+              + " number",
+        });
   }
 
   @Test
@@ -6089,8 +6123,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function F() {}",
             "var /** F<string> */ a;"),
-        "Bounded generic type error. string assigned to template type T is not a subtype of bound"
-            + " (boolean|number)");
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          "Bounded generic type error. string assigned to template type T is not a subtype of bound"
+              + " (boolean|number)",
+        });
   }
 
   @Test
@@ -6103,7 +6140,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number|boolean} T",
             " */",
             "function F(x) {}",
-            "var /** F<number> */ a;"));
+            "var /** F<number> */ a;"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -6117,10 +6155,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {number|string} U",
             " */",
             "function foo(x,y) { x=y; }"),
-        lines(
-            "assignment", //
-            "found   : U extends (number|string)", //
-            "required: T extends (number|string)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "assignment", //
+              "found   : U extends (number|string)", //
+              "required: T extends (number|string)"),
+        });
   }
 
   @Test
@@ -6135,7 +6177,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function foo(x,y) {",
             "  var /** !Array<T> */ z = y;",
             "  y = x;",
-            "}"));
+            "}"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -6148,7 +6191,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {boolean|string} T",
             " * @template {T} U",
             " */",
-            "function foo(x,y) { x=y; }"));
+            "function foo(x,y) { x=y; }"),
+        ImmutableList.of(BOUNDED_GENERICS_USE_MSG, BOUNDED_GENERICS_USE_MSG));
   }
 
   @Test
@@ -6165,10 +6209,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  var /** U */ z = x;",
             "  x = y;",
             "}"),
-        lines(
-            "initializing variable", //
-            "found   : T extends (boolean|string)", //
-            "required: U extends T extends (boolean|string)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "initializing variable", //
+              "found   : T extends (boolean|string)", //
+              "required: U extends T extends (boolean|string)"),
+        });
   }
 
   @Test
@@ -6186,7 +6234,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function bar(x) { return x; }",
             "foo(true);",
-            "bar('Hi');"));
+            "bar('Hi');"),
+        ImmutableList.of(BOUNDED_GENERICS_USE_MSG, BOUNDED_GENERICS_USE_MSG));
   }
 
   @Test
@@ -6206,6 +6255,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "foo('Hi');",
             "bar(true);"),
         new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          BOUNDED_GENERICS_USE_MSG,
           lines(
               "actual parameter 1 of foo does not match formal parameter",
               "found   : string",
@@ -6213,7 +6264,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           lines(
               "actual parameter 1 of bar does not match formal parameter",
               "found   : boolean",
-              "required: string")
+              "required: string"),
         });
   }
 
@@ -6235,7 +6286,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}",
             "var F = new Foo();",
             "F.foo('Hi');",
-            "foo(true);"));
+            "foo(true);"),
+        ImmutableList.of(BOUNDED_GENERICS_USE_MSG, BOUNDED_GENERICS_USE_MSG));
   }
 
   @Test
@@ -6258,6 +6310,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "F.foo(true);",
             "foo('Hi');"),
         new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          BOUNDED_GENERICS_USE_MSG,
           lines(
               "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
               "found   : boolean",
@@ -6265,7 +6319,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           lines(
               "actual parameter 1 of foo does not match formal parameter",
               "found   : string",
-              "required: boolean")
+              "required: boolean"),
         });
   }
 
@@ -6294,7 +6348,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function cloneInternal(x) {",
             "  return x;",
-            "}"));
+            "}"),
+        ImmutableList.of(BOUNDED_GENERICS_USE_MSG, BOUNDED_GENERICS_USE_MSG));
   }
 
   @Test
@@ -6313,7 +6368,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  return x;",
             "}",
             "",
-            "var /** function(!Foo): !Foo */ y = identity;"));
+            "var /** function(!Foo): !Foo */ y = identity;"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -6356,14 +6412,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "}",
             "const /** !Foo<string> */ f = new Foo();",
             "f.foo(3);"),
-        lines(
-            "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
-            "found   : number",
-            "required: string"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "actual parameter 1 of Foo.prototype.foo does not match formal parameter",
+              "found   : number",
+              "required: string"),
+        });
   }
 
   @Test
   public void testCyclicGenericBoundGenericError() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
+
     testTypes(
         lines(
             "/**",
@@ -6373,6 +6435,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "class Foo { }"),
         Arrays.asList(
+
             "Parse error. Cycle detected in inheritance chain of type S",
             "Parse error. Cycle detected in inheritance chain of type T",
             "Parse error. Cycle detected in inheritance chain of type U"),
@@ -6381,6 +6444,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testUnitCyclicGenericBoundGenericError() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
+
     testTypes(
         lines(
             "/**", //
@@ -6393,6 +6458,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testSecondUnitCyclicGenericBoundGenericError() {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
+
     testTypes(
         lines(
             "/**", //
@@ -6422,7 +6489,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template {Vertex<V, E>} V",
             " * @template {Edge<V, E>} E",
             " */",
-            "class Graph {}"));
+            "class Graph {}"),
+        ImmutableList.of(BOUNDED_GENERICS_USE_MSG, BOUNDED_GENERICS_USE_MSG));
   }
 
   @Test
@@ -6440,10 +6508,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @return {C<U>}",
             " */",
             "function f(x) { return x; }"),
-        lines(
-            "inconsistent return type", //
-            "found   : (C<boolean>|null)", //
-            "required: (C<U extends (number|string)>|null)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "inconsistent return type", //
+              "found   : (C<boolean>|null)", //
+              "required: (C<U extends (number|string)>|null)"),
+        });
   }
 
   @Test
@@ -6463,10 +6534,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function f(x) {}",
             "var /** C<boolean> */ c;",
             "f(c);"),
-        lines(
-            "actual parameter 1 of f does not match formal parameter",
-            "found   : (C<boolean>|null)",
-            "required: (C<(number|string)>|null)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "actual parameter 1 of f does not match formal parameter",
+              "found   : (C<boolean>|null)",
+              "required: (C<(number|string)>|null)"),
+        });
   }
 
   @Test
@@ -6488,6 +6562,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var /** C<string> */ c;",
             "f(c,false);"),
         new String[] {
+          BOUNDED_GENERICS_USE_MSG,
           lines(
               "actual parameter 1 of f does not match formal parameter",
               "found   : (C<string>|null)",
@@ -6516,7 +6591,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " */",
             "function f(x,y) {}",
             "var /** C<number|string> */ c;",
-            "f(c,0);"));
+            "f(c,0);"),
+        BOUNDED_GENERICS_USE_MSG);
   }
 
   @Test
@@ -6541,10 +6617,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "foo.baz(3);",
             "foo.baz(null);",
             "foo.baz('3');"),
-        lines(
-            "actual parameter 1 of Foo.prototype.baz does not match formal parameter",
-            "found   : string",
-            "required: S extends (null|number)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "actual parameter 1 of Foo.prototype.baz does not match formal parameter",
+              "found   : string",
+              "required: S extends (null|number)"),
+        });
   }
 
   @Test
@@ -6557,10 +6637,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {T} t",
             " */",
             "function f(t) { t = new C(); }"),
-        lines(
-            "assignment", //
-            "found   : C", //
-            "required: T extends (C|null)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "assignment", //
+              "found   : C", //
+              "required: T extends (C|null)"),
+        });
   }
 
   @Test
@@ -6580,10 +6663,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  }",
             "}",
             "function f(t) { t = new C(); }"),
-        lines(
-            "assignment to property x of Foo",
-            "found   : number",
-            "required: T extends (number|string)"));
+        new String[] {
+          BOUNDED_GENERICS_USE_MSG,
+          lines(
+              "assignment to property x of Foo",
+              "found   : number",
+              "required: T extends (number|string)"),
+        });
   }
 
   @Test

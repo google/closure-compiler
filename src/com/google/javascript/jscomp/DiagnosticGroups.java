@@ -722,13 +722,11 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup POLYMER =
       DiagnosticGroups.registerGroup("polymer", PolymerPassErrors.POLYMER_DESCRIPTOR_NOT_VALID);
 
-  static final DiagnosticGroup UNSUPPORTED_BOUNDED_GENERIC_TYPES =
+  static final DiagnosticGroup BOUNDED_GENERICS =
       DiagnosticGroups.registerGroup(
-          "unsupportedBoundedGenericTypes", RhinoErrorReporter.UNSUPPORTED_BOUNDED_GENERIC_TYPES);
-
-  static final DiagnosticGroup BOUNDED_GENERIC_TYPE_ERROR =
-      DiagnosticGroups.registerGroup(
-          "boundedGenericTypeError", RhinoErrorReporter.BOUNDED_GENERIC_TYPE_ERROR);
+          "boundedGenerics",
+          RhinoErrorReporter.UNSUPPORTED_BOUNDED_GENERIC_TYPES,
+          RhinoErrorReporter.BOUNDED_GENERIC_TYPE_ERROR);
 
   // For internal use only, so there are no constants for these groups.
   static {

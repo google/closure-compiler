@@ -96,6 +96,8 @@ abstract class CompilerTypeTestCase {
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
+    options.setCodingConvention(getCodingConvention());
+
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
@@ -104,7 +106,7 @@ abstract class CompilerTypeTestCase {
         DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.JSDOC_MISSING_TYPE, CheckLevel.WARNING);
-    options.setCodingConvention(getCodingConvention());
+    options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.WARNING);
     return options;
   }
 
@@ -141,7 +143,6 @@ abstract class CompilerTypeTestCase {
   protected void initializeNewCompiler(CompilerOptions options) {
     compiler = new Compiler();
     compiler.initOptions(options);
-    compiler.getOptions().setWarnUnsupportedBoundedGenerics(false);
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
     registry = compiler.getTypeRegistry();
   }

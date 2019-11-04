@@ -750,20 +750,6 @@ public class CompilerOptions implements Serializable {
   // --------------------------------
 
   /**
-   * Enable usage of bounded generic template types. Currently, bounded generic type semantics are
-   * in development and undefined.
-   */
-  private boolean warnUnsupportedBoundedGenerics = true;
-
-  void setWarnUnsupportedBoundedGenerics(boolean on) {
-    this.warnUnsupportedBoundedGenerics = on;
-  }
-
-  boolean isWarnUnsupportedBoundedGenerics() {
-    return this.warnUnsupportedBoundedGenerics;
-  }
-
-  /**
    * Replace UI strings with chrome.i18n.getMessage calls.
    * Used by Chrome extensions/apps.
    */
