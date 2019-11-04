@@ -64,10 +64,6 @@ final class SubtypeChecker {
   private static final ImmutableSet<String> BIVARIANT_TYPES =
       ImmutableSet.of("Object", "IArrayLike", "Array");
 
-  // NB: IThenable and all subtypes are also covariant; however, they are handled differently.
-  private static final ImmutableSet<String> COVARIANT_TYPES =
-      ImmutableSet.of("Iterable", "Iterator", "Generator", "AsyncIterator", "AsyncIterable");
-
   private JSType initialSupertype;
   private JSType initialSubtype;
 
