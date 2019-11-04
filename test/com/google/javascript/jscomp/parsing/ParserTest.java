@@ -3073,12 +3073,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("function * f() { yield , yield; }");
   }
 
+  private static final String STRING_CONTINUATIONS_WARNING =
+      "String continuations are not recommended. See https://google.github.io/"
+          + "styleguide/jsguide.html#features-strings-no-line-continuations";
+
   @Test
   public void testStringLineContinuationWarningsByMode() {
-    String unrecommendedWarning =
-        "String continuations are not recommended. See"
-            + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
-
     expectFeatures(Feature.STRING_CONTINUATION);
     strictMode = SLOPPY;
 
@@ -3086,39 +3086,50 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning(
         "'one\\\ntwo';",
         requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.STRING_CONTINUATION),
-        unrecommendedWarning);
+        STRING_CONTINUATIONS_WARNING);
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("'one\\\ntwo';", unrecommendedWarning);
+    parseWarning("'one\\\ntwo';", STRING_CONTINUATIONS_WARNING);
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseWarning("'one\\\ntwo';", unrecommendedWarning);
+    parseWarning("'one\\\ntwo';", STRING_CONTINUATIONS_WARNING);
   }
 
   @Test
   public void testStringLineContinuationNormalization() {
-    String unrecommendedWarning =
-        "String continuations are not recommended. See"
-            + " https://google.github.io/styleguide/jsguide.html#features-strings-no-line-continuations";
-
     expectFeatures(Feature.STRING_CONTINUATION);
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    Node n = parseWarning("'one\\\ntwo';", unrecommendedWarning);
+    Node n = parseWarning("'one\\\ntwo';", STRING_CONTINUATIONS_WARNING);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
-    n = parseWarning("'one\\\rtwo';", unrecommendedWarning);
+    n = parseWarning("'one\\\rtwo';", STRING_CONTINUATIONS_WARNING);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
-    n = parseWarning("'one\\\r\ntwo';", unrecommendedWarning);
+    n = parseWarning("'one\\\r\ntwo';", STRING_CONTINUATIONS_WARNING);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
-    n = parseWarning("'one \\\ntwo';", unrecommendedWarning);
+    n = parseWarning("'one \\\ntwo';", STRING_CONTINUATIONS_WARNING);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
 
-    n = parseWarning("'one\\\n two';", unrecommendedWarning);
+    n = parseWarning("'one\\\n two';", STRING_CONTINUATIONS_WARNING);
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("one two");
+  }
+
+  /** See https://github.com/google/closure-compiler/issues/3492 */
+  @Test
+  public void testStringContinuationIssue3492() {
+    expectFeatures(Feature.STRING_CONTINUATION);
+    mode = LanguageMode.ECMASCRIPT6;
+    strictMode = SLOPPY;
+
+    parseWarning(
+        Joiner.on('\n')
+            .join("function x() {", "        a = \"\\", "        \\ \\", "        \";", "};"),
+        "Unnecessary escape: '\\ ' is equivalent to just ' '",
+        STRING_CONTINUATIONS_WARNING,
+        STRING_CONTINUATIONS_WARNING);
   }
 
   @Test

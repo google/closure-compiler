@@ -104,6 +104,12 @@ public class Scanner {
     return lineNumberScanner.getSourceRange(startOffset, index);
   }
 
+  /** Prefer this to {@link #getTokenRange(int)} when the token might span multiple lines. */
+  private SourceRange getTokenRange(SourcePosition position) {
+    lineNumberScanner.rewindTo(position);
+    return lineNumberScanner.getSourceRange(position.offset, index);
+  }
+
   public Token nextToken() {
     peekToken();
     return currentTokens.remove(0);
@@ -844,6 +850,9 @@ public class Scanner {
   }
 
   private Token scanStringLiteral(int beginIndex, char terminator) {
+    // String literals might span multiple lines.
+    SourcePosition startingPosition = getPosition(beginIndex);
+
     boolean hasUnescapedUnicodeLineOrParagraphSeparator = false;
     while (peekStringLiteralChar(terminator)) {
       char c = peekChar();
@@ -852,7 +861,7 @@ public class Scanner {
       if (!skipStringLiteralChar()) {
         return new StringLiteralToken(
             getTokenString(beginIndex),
-            getTokenRange(beginIndex),
+            getTokenRange(startingPosition),
             hasUnescapedUnicodeLineOrParagraphSeparator);
       }
     }
@@ -863,7 +872,7 @@ public class Scanner {
     }
     return new StringLiteralToken(
         getTokenString(beginIndex),
-        getTokenRange(beginIndex),
+        getTokenRange(startingPosition),
         hasUnescapedUnicodeLineOrParagraphSeparator);
   }
 
