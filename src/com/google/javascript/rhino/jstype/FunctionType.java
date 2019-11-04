@@ -1011,64 +1011,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     paramType.appendAsNonNull(sb, forAnnotations).append("=");
   }
 
-  /**
-   * A function is a subtype of another if their call methods are related via subtyping and {@code
-   * this} is a subtype of {@code that} with regard to the prototype chain.
-   */
-  @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  @Override
-  protected boolean isSubtype(
-      JSType that, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    if (JSType.isSubtypeHelper(this, that, implicitImplCache, subtypingMode)) {
-      return true;
-    }
-
-    if (that.isFunctionType()) {
-      FunctionType other = that.toMaybeFunctionType();
-      if (other.isInterface()) {
-        // Any function can be assigned to an interface function.
-        return true;
-      }
-      if (isInterface()) {
-        // An interface function cannot be assigned to anything.
-        return false;
-      }
-
-      return shouldTreatThisTypesAsCovariant(other, implicitImplCache)
-          && this.call.isSubtype(other.call, implicitImplCache, subtypingMode);
-    }
-
-    return getNativeType(JSTypeNative.FUNCTION_PROTOTYPE)
-        .isSubtype(that, implicitImplCache, subtypingMode);
-  }
-
-  private boolean shouldTreatThisTypesAsCovariant(FunctionType other, ImplCache implicitImplCache) {
-    // If functionA is a subtype of functionB, then their "this" types
-    // should be contravariant. However, this causes problems because
-    // of the way we enforce overrides. Because function(this:SubFoo)
-    // is not a subtype of function(this:Foo), our override check treats
-    // this as an error. Let's punt on all this for now.
-    // TODO(nicksantos): fix this.
-    boolean shouldTreatThisTypesAsCovariant =
-        // An interface 'this'-type is non-restrictive.
-        // In practical terms, if C implements I, and I has a method m,
-        // then any m doesn't necessarily have to C#m's 'this'
-        // type doesn't need to match I.
-        (other.typeOfThis.toObjectType() != null
-                && other.typeOfThis.toObjectType().getConstructor() != null
-                && other.typeOfThis.toObjectType().getConstructor().isInterface())
-
-            // If one of the 'this' types is covariant of the other,
-            // then we'll treat them as covariant (see comment above).
-            || other.typeOfThis.isSubtype(this.typeOfThis, implicitImplCache, SubtypingMode.NORMAL)
-            || this.typeOfThis.isSubtype(other.typeOfThis, implicitImplCache, SubtypingMode.NORMAL);
-    return shouldTreatThisTypesAsCovariant;
-  }
-
   @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseFunctionType(this);

@@ -2275,8 +2275,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (oType != null) {
         JSType thisPropType = interfaceType.getPropertyType(name);
         JSType oPropType = oType.getPropertyType(name);
-        if (thisPropType.isSubtype(oPropType, this.subtypingMode)
-            || oPropType.isSubtype(thisPropType, this.subtypingMode)
+        if (thisPropType.isSubtypeOf(oPropType, this.subtypingMode)
+            || oPropType.isSubtypeOf(thisPropType, this.subtypingMode)
             || (thisPropType.isFunctionType()
                 && oPropType.isFunctionType()
                 && thisPropType

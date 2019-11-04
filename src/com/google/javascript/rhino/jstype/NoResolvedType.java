@@ -98,21 +98,6 @@ public final class NoResolvedType extends NoType {
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  @Override
-  protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    if (JSType.isSubtypeHelper(this, that, implicitImplCache, subtypingMode)) {
-      return true;
-    } else {
-      return !that.isNoType();
-    }
-  }
-
-  @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     return sb.append(forAnnotations ? "?" : "NoResolvedType");
   }

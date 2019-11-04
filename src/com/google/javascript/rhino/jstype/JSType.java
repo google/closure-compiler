@@ -40,16 +40,13 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.javascript.rhino.jstype.JSTypeIterations.allTypesMatch;
-import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.jstype.ObjectType.PropertyOptionality;
+import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Objects;
@@ -88,9 +85,6 @@ public abstract class JSType implements Serializable {
   private boolean inTemplatedCheckVisit = false;
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
       new CanCastToVisitor();
-
-  private static final ImmutableSet<String> BIVARIANT_TYPES =
-      ImmutableSet.of("Object", "IArrayLike", "Array");
 
   final JSTypeRegistry registry;
 
@@ -1502,13 +1496,16 @@ public abstract class JSType implements Serializable {
    * <p>This function is added for disambiguate properties, and is deprecated for the other use
    * cases.
    */
-  public boolean isSubtypeWithoutStructuralTyping(JSType supertype) {
-    return isSubtype(supertype, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
+  public final boolean isSubtypeWithoutStructuralTyping(JSType supertype) {
+    return new SubtypeChecker(this.registry)
+        .setSubtype(this)
+        .setSupertype(supertype)
+        .setUsingStructuralSubtyping(false)
+        .setSubtypingMode(SubtypingMode.NORMAL)
+        .check();
   }
 
-  /**
-   * In files translated from Java, we typecheck null and undefined loosely.
-   */
+  /** In files translated from Java, we typecheck null and undefined loosely. */
   public static enum SubtypingMode {
     NORMAL,
     IGNORE_NULL_UNDEFINED
@@ -1543,219 +1540,33 @@ public abstract class JSType implements Serializable {
    *
    * @return <code>this &lt;: that</code>
    */
-  public boolean isSubtype(JSType supertype) {
-    return isSubtypeHelper(this, supertype, ImplCache.create(), SubtypingMode.NORMAL);
+  public final boolean isSubtype(JSType supertype) {
+    return this.isSubtypeOf(supertype);
   }
 
-  public boolean isSubtype(JSType supertype, SubtypingMode mode) {
-    return isSubtype(supertype, ImplCache.create(), mode);
+  /** @deprecated Prefer {@link #isSubtype(JSType)} instead. */
+  @Deprecated
+  public final boolean isSubtype(JSType supertype, SubtypingMode mode) {
+    return this.isSubtypeOf(supertype, mode);
   }
 
-  /**
-   * checking isSubtype with structural interface matching
-   *
-   * @param implicitImplCache a cache that records the checked or currently checking type pairs, for
-   *     example, if previous checking found that constructor C is a subtype of interface I, then in
-   *     the cache, table key {@code <I,C>} maps to IMPLEMENT status.
-   */
-  protected boolean isSubtype(
-      JSType supertype, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    return isSubtypeHelper(this, supertype, implicitImplCache, subtypingMode);
+  public final boolean isSubtypeOf(JSType supertype) {
+    return new SubtypeChecker(this.registry)
+        .setSubtype(this)
+        .setSupertype(supertype)
+        .setUsingStructuralSubtyping(true)
+        .setSubtypingMode(SubtypingMode.NORMAL)
+        .check();
   }
 
-  /** if implicitImplCache is null, there is no structural interface matching */
-  static boolean isSubtypeHelper(
-      JSType subtype, JSType supertype, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    checkNotNull(subtype);
-    // Axiomatic cases.
-    if (supertype.isUnknownType()
-        || supertype.isAllType()
-        || subtype.isUnknownType()
-        || subtype.isNoType()) {
-      return true;
-    }
 
-    // Special consideration for `null` and `undefined` in J2CL.
-    if (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
-        && (subtype.isNullType() || subtype.isVoidType())) {
-      return true;
-    }
-
-    // Reflexive case.
-    if (subtype.isEquivalentTo(supertype, implicitImplCache.isStructuralTyping())) {
-      return true;
-    }
-
-    /**
-     * Unwrap proxy types.
-     *
-     * <p>Only named types are unwrapped because other subclasses of `ProxyObjectType` should not be
-     * considered proxies; they have additional behaviour. We intentiaionlly call the instance
-     * `isSubtype` method to call into any class specific subtyping behaviour that isn't present in
-     * this method.
-     */
-    if (subtype.isNamedType()) {
-      return subtype
-          .toMaybeNamedType()
-          .getReferencedType()
-          .isSubtype(supertype, implicitImplCache, subtypingMode);
-    } else if (supertype.isNamedType()) {
-      return subtype.isSubtype(
-          supertype.toMaybeNamedType().getReferencedType(), implicitImplCache, subtypingMode);
-    }
-
-    // Union decomposition.
-    if (subtype.isUnionType()) {
-      // All alternates must be subtypes.
-      return allTypesMatch(
-          (sub) -> sub.isSubtype(supertype, implicitImplCache, subtypingMode),
-          subtype.toMaybeUnionType());
-    } else if (supertype.isUnionType()) {
-      // Some alternate must be a supertype.
-      return anyTypeMatches(
-          (sup) -> subtype.isSubtype(sup, implicitImplCache, subtypingMode),
-          supertype.toMaybeUnionType());
-    }
-
-    if (!subtype.isObjectType() || !supertype.isObjectType()) {
-      return false; // All cases for non object types have been covered by this point.
-    }
-
-    return isObjectSubtypeHelper(
-        subtype.assertObjectType(), supertype.assertObjectType(), implicitImplCache, subtypingMode);
-  }
-
-  private static boolean isObjectSubtypeHelper(
-      ObjectType subtype,
-      ObjectType supertype,
-      ImplCache implicitImplCache,
-      SubtypingMode subtypingMode) {
-
-    // TemplateTypeMaps. This check only returns false if the TemplateTypeMaps
-    // are not equivalent.
-    TemplateTypeMap subtypeParams = subtype.getTemplateTypeMap();
-    TemplateTypeMap supertypeParams = supertype.getTemplateTypeMap();
-    boolean templateMatch = true;
-    if (isBivariantType(supertype)) {
-      // Array and Object are exempt from template type invariance; their
-      // template types maps are bivariant.  That is they are considered
-      // a match if either ObjectElementKey values are subtypes of the
-      // other.
-      TemplateType key = subtype.registry.getObjectElementKey();
-      JSType thisElement = subtypeParams.getResolvedTemplateType(key);
-      JSType thatElement = supertypeParams.getResolvedTemplateType(key);
-
-      templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode)
-          || thatElement.isSubtype(thisElement, implicitImplCache, subtypingMode);
-    } else {
-      TemplateType covariantKey = getTemplateKeyIfCovariantType(supertype);
-      if (covariantKey != null) {
-        JSType thisElement = subtypeParams.getResolvedTemplateType(covariantKey);
-        JSType thatElement = supertypeParams.getResolvedTemplateType(covariantKey);
-        templateMatch = thisElement.isSubtype(thatElement, implicitImplCache, subtypingMode);
-      } else {
-        templateMatch =
-            subtypeParams.checkEquivalenceHelper(
-                supertypeParams, EquivalenceMethod.INVARIANT, subtypingMode);
-      }
-    }
-    if (!templateMatch) {
-      return false;
-    }
-
-    // If the super type is a structural type, then we can't safely remove a templatized type
-    // (since it might affect the types of the properties)
-    PropertyOptionality propOptionality = null;
-    if (implicitImplCache.shouldMatchStructurally(subtype, supertype)) {
-      propOptionality = PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL;
-    } else if (supertype.isRecordType()) {
-      propOptionality = PropertyOptionality.ALL_PROPS_ARE_REQUIRED;
-    }
-
-    if (propOptionality != null) {
-      return ObjectType.isStructuralSubtypeHelper(
-          subtype, supertype, implicitImplCache, subtypingMode, propOptionality);
-    }
-
-    // Interfaces
-    // Find all the interfaces implemented by this class and compare each one
-    // to the interface instance.
-    FunctionType subtypeCtor = subtype.getConstructor();
-    FunctionType supertypeCtor = supertype.getConstructor();
-    if (subtypeCtor != null && subtypeCtor.isInterface()) {
-      for (ObjectType subtypeInterface : subtype.getCtorExtendedInterfaces()) {
-        // TODO(b/142155372): When fixed, call `isObjectSubtypeHelper` here directly.
-        if (subtypeInterface.isSubtype(supertype, implicitImplCache, subtypingMode)) {
-          return true;
-        }
-      }
-    } else if (supertypeCtor != null && supertypeCtor.isInterface()) {
-      for (ObjectType subtypeInterface : subtype.getCtorImplementedInterfaces()) {
-        // TODO(b/142155372): When fixed, call `isObjectSubtypeHelper` here directly.
-        if (subtypeInterface.isSubtype(supertype, implicitImplCache, subtypingMode)) {
-          return true;
-        }
-      }
-    }
-
-    return supertype.isImplicitPrototypeOf(subtype);
-  }
-
-  /**
-   * Determines if the supplied type should be checked as a bivariant templatized type rather the
-   * standard invariant templatized type rules.
-   */
-  static boolean isBivariantType(JSType type) {
-    ObjectType unwrapped = getObjectTypeIfNative(type);
-    return unwrapped != null && BIVARIANT_TYPES.contains(unwrapped.getReferenceName());
-  }
-
-  /**
-   * Determines if the specified type should be checked as covariant rather than the standard
-   * invariant type. If so, returns the template type to check covariantly.
-   */
-  @Nullable
-  static TemplateType getTemplateKeyIfCovariantType(JSType type) {
-    if (type.isTemplatizedType()) {
-      // Unlike other covariant/bivariant types, even non-native subtypes of IThenable are
-      // covariant, so IThenable is special-cased here.
-      TemplatizedType ttype = type.toMaybeTemplatizedType();
-      if (ttype.getTemplateTypeMap().hasTemplateKey(ttype.registry.getIThenableTemplate())) {
-        return ttype.registry.getIThenableTemplate();
-      }
-    }
-    ObjectType unwrapped = getObjectTypeIfNative(type);
-    String unwrappedTypeName = unwrapped == null ? null : unwrapped.getReferenceName();
-    if (unwrappedTypeName == null) {
-      return null;
-    }
-    switch (unwrappedTypeName) {
-      case "Iterator":
-        return unwrapped.registry.getIteratorValueTemplate();
-
-      case "Generator":
-        return unwrapped.registry.getGeneratorValueTemplate();
-
-      case "AsyncIterator":
-        return unwrapped.registry.getAsyncIteratorValueTemplate();
-
-      case "Iterable":
-        return unwrapped.registry.getIterableTemplate();
-
-      case "AsyncIterable":
-        return unwrapped.registry.getAsyncIterableTemplate();
-
-      default:
-        // All other types are either invariant or bivariant
-        return null;
-    }
-  }
-
-  @Nullable
-  private static ObjectType getObjectTypeIfNative(JSType type) {
-    ObjectType objType = type.toObjectType();
-    ObjectType unwrapped = ObjectType.deeplyUnwrap(objType);
-    return unwrapped != null && unwrapped.isNativeObjectType() ? unwrapped : null;
+  public final boolean isSubtypeOf(JSType supertype, SubtypingMode mode) {
+    return new SubtypeChecker(this.registry)
+        .setSubtype(this)
+        .setSupertype(supertype)
+        .setUsingStructuralSubtyping(true)
+        .setSubtypingMode(mode)
+        .check();
   }
 
   /**
@@ -1912,10 +1723,6 @@ public abstract class JSType implements Serializable {
    */
   public void matchConstraint(JSType constraint) {}
 
-  public boolean isSubtypeOf(JSType other) {
-    return isSubtype(other);
-  }
-
   public ObjectType toMaybeObjectType() {
     return toObjectType();
   }
@@ -1974,25 +1781,9 @@ public abstract class JSType implements Serializable {
     }
   }
 
-  /**
-   * base cache data structure
-   */
-  private abstract static class MatchCache {
+  /** cache used by equivalence check logic */
+  static final class EqCache {
     private final boolean isStructuralTyping;
-
-    MatchCache(boolean isStructuralTyping) {
-      this.isStructuralTyping = isStructuralTyping;
-    }
-
-    boolean isStructuralTyping() {
-      return isStructuralTyping;
-    }
-  }
-
-  /**
-   * cache used by equivalence check logic
-   */
-  static class EqCache extends MatchCache {
     private HashMap<Key, MatchStatus> matchCache;
 
     static EqCache create() {
@@ -2004,7 +1795,11 @@ public abstract class JSType implements Serializable {
     }
 
     private EqCache(boolean isStructuralTyping) {
-      super(isStructuralTyping);
+      this.isStructuralTyping = isStructuralTyping;
+    }
+
+    boolean isStructuralTyping() {
+      return this.isStructuralTyping;
     }
 
     void updateCache(JSType left, JSType right, MatchStatus isMatch) {
@@ -2099,87 +1894,6 @@ public abstract class JSType implements Serializable {
         //     - `left` and `right` should never be identical.
         // Recall that `Key` implements identity equality on `left` and `right`.
         this.hashCode = System.identityHashCode(left) ^ System.identityHashCode(right);
-      }
-    }
-  }
-
-  /**
-   * cache used by check sub-type logic
-   */
-  static class ImplCache extends MatchCache {
-    private HashMap<Key, MatchStatus> matchCache;
-    private EqCache eqCache;
-
-    static ImplCache create() {
-      return new ImplCache(true);
-    }
-
-    static ImplCache createWithoutStructuralTyping() {
-      return new ImplCache(false);
-    }
-
-    private ImplCache(boolean isStructuralTyping) {
-      super(isStructuralTyping);
-    }
-
-    boolean updateCache(JSType subType, JSType superType, MatchStatus isMatch) {
-      matchCache.put(new Key(subType, superType), isMatch);
-      return isMatch.subtypeValue();
-    }
-
-    MatchStatus checkCache(JSType subType, JSType superType) {
-      if (matchCache == null) {
-        this.matchCache = new HashMap<>();
-      }
-      // check the cache
-      return matchCache.putIfAbsent(new Key(subType, superType), MatchStatus.PROCESSING);
-    }
-
-    boolean shouldMatchStructurally(JSType subType, JSType superType) {
-      return isStructuralTyping() && subType.isObject() && superType.isStructuralType();
-    }
-
-    private boolean equal(JSType left, JSType right) {
-      if (eqCache == null) {
-        this.eqCache = new EqCache(isStructuralTyping());
-      }
-      return left.checkEquivalenceHelper(right, EquivalenceMethod.IDENTITY, eqCache);
-    }
-
-    private final class Key {
-      final JSType left;
-      final JSType right;
-      final int hashCode; // Cache this calculation because it is made often.
-
-      @Override
-      public int hashCode() {
-        return hashCode;
-      }
-
-      @Override
-      @SuppressWarnings({"ReferenceEquality", "EqualsBrokenForNull", "EqualsUnsafeCast"})
-      public boolean equals(Object other) {
-        // Calling this with `null` or not a `Key` should never happen, so it's fine to crash.
-        Key that = (Key) other;
-        if (this.left == that.left && this.right == that.right) {
-          return true;
-        }
-
-        // The vast majority of cases will have already returned by now, since equality isn't even
-        // checked unless the hash code matches, and in most cases there's only one instance of any
-        // equivalent JSType floating around. The remainder only occurs for cyclic (or otherwise
-        // complicated) data structures where equivalent types are being synthesized by recursive
-        // application of type parameters, or (even more rarely) for hash collisions. Identity is
-        // insufficient in the case of recursive parameterized types because new equivalent copies
-        // of the type are generated on-the-fly to compute the types of various properties.
-        return equal(this.left, that.left) && equal(this.right, that.right);
-      }
-
-      Key(JSType left, JSType right) {
-        this.left = left;
-        this.right = right;
-        // NOTE: order matters here, since we're expressing an asymmetric relationship.
-        this.hashCode = 31 * left.hashCode() + right.hashCode();
       }
     }
   }

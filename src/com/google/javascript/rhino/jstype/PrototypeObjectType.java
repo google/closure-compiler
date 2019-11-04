@@ -390,11 +390,6 @@ public class PrototypeObjectType extends ObjectType {
     return anonymousType;
   }
 
-  @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
   /** Whether this is a built-in object. */
   @Override
   public boolean isNativeObjectType() {

@@ -44,6 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
@@ -156,17 +157,6 @@ public final class TemplatizedType extends ProxyObjectType {
   public JSType getPropertyType(String propertyName) {
     JSType result = super.getPropertyType(propertyName);
     return result == null ? null : result.visit(replacer);
-  }
-
-  @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  @Override
-  protected boolean isSubtype(JSType that,
-      ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    return isSubtypeHelper(this, that, implicitImplCache, subtypingMode);
   }
 
   boolean wrapsSameRawType(JSType that) {

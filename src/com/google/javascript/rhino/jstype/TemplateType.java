@@ -129,24 +129,6 @@ public final class TemplateType extends ProxyObjectType {
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  @Override
-  protected boolean isSubtype(
-      JSType that, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    if (!this.getBound().isUnknownType()
-        && that.isTemplateType()
-        && !that.toMaybeTemplateType().getBound().isUnknownType()) {
-      return this.visit(new ContainsUpperBoundSuperTypeVisitor(that))
-          == ContainsUpperBoundSuperTypeVisitor.Result.PRESENT;
-    } else {
-      return super.isSubtype(that, implicitImplCache, subtypingMode);
-    }
-  }
-
-  @Override
   public boolean equals(Object jsType) {
     return (jsType instanceof TemplateType) && JSType.areIdentical(this, (JSType) jsType);
   }

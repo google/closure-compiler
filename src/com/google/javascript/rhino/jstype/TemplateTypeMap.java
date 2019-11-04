@@ -333,8 +333,8 @@ public class TemplateTypeMap implements Serializable {
           EquivalenceMatch newMatchType = EquivalenceMatch.VALUE_MISMATCH;
           if (thisType.checkEquivalenceHelper(thatType, eqMethod, eqCache)
               || (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
-                  && thisType.isSubtype(thatType, subtypingMode)
-                  && thatType.isSubtype(thatType, subtypingMode))) {
+                  && thisType.isSubtypeOf(thatType, subtypingMode)
+                  && thatType.isSubtypeOf(thatType, subtypingMode))) {
             newMatchType = EquivalenceMatch.VALUE_MATCH;
           }
 

@@ -991,7 +991,7 @@ class TypeValidator implements Serializable {
       required = required.visit(TemplateTypeReplacer.forPartialReplacement(typeRegistry, typeMap));
     }
 
-    if (found.isSubtype(required, this.subtypingMode)) {
+    if (found.isSubtypeOf(required, this.subtypingMode)) {
       return;
     }
 
@@ -1062,7 +1062,7 @@ class TypeValidator implements Serializable {
   }
 
   private void mismatch(Node n, String msg, JSType found, JSType required) {
-    if (!found.isSubtype(required, this.subtypingMode)) {
+    if (!found.isSubtypeOf(required, this.subtypingMode)) {
       Set<String> missing = null;
       Set<String> mismatch = null;
       if (required.isStructuralType()) {
@@ -1078,7 +1078,7 @@ class TypeValidator implements Serializable {
               if (hasProperty) {
                 if (!foundObject
                     .getPropertyType(property)
-                    .isSubtype(propRequired, subtypingMode)) {
+                    .isSubtypeOf(propRequired, subtypingMode)) {
                   mismatch.add(property);
                 }
               } else {

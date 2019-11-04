@@ -39,7 +39,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.ObjectType.PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
@@ -638,61 +637,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     }
     eqCache.updateCache(this, otherObject, MatchStatus.MATCH);
     return true;
-  }
-
-  static boolean isStructuralSubtypeHelper(
-      ObjectType subtype,
-      ObjectType supertype,
-      ImplCache implicitImplCache,
-      SubtypingMode subtypingMode,
-      PropertyOptionality optionality) {
-
-    MatchStatus cachedResult = implicitImplCache.checkCache(subtype, supertype);
-    if (cachedResult != null) {
-      return cachedResult.subtypeValue();
-    }
-
-    // subtype is a subtype of record type supertype iff:
-    // 1) subtype has all the non-optional properties declared in supertype.
-    // 2) And for each property of supertype, its type must be
-    //    a super type of the corresponding property of subtype.
-
-    Iterable<String> props =
-        // NOTE: Inline record literal types always have Object as a supertype. In these cases, we
-        // really only care about the properties explicitly declared in the record literal, and not
-        // about any properties inherited from Object.prototype. On the other hand, @record types
-        // allow inheritance and we need to match against inherited properties as well.
-        supertype.isRecordType() ? supertype.getOwnPropertyNames() : supertype.getPropertyNames();
-
-    boolean result = true;
-    for (String property : props) {
-      JSType supertypeProp = supertype.getPropertyType(property);
-      if (subtype.hasProperty(property)) {
-        JSType subtypeProp = subtype.getPropertyType(property);
-        if (!subtypeProp.isSubtype(supertypeProp, implicitImplCache, subtypingMode)) {
-          result = false;
-          break;
-        }
-      } else if (!optionality.isOptional(supertypeProp)) {
-        // Currently, any type that explicitly includes undefined (eg, `?|undefined`) is optional.
-        result = false;
-        break;
-      }
-    }
-
-    return implicitImplCache.updateCache(subtype, supertype, MatchStatus.valueOf(result));
-  }
-
-  /** How to treat explicitly voidable properties for structural subtype checking. */
-  enum PropertyOptionality {
-    /** Explicitly voidable properties are treated as optional. */
-    VOIDABLE_PROPS_ARE_OPTIONAL,
-    /** All properties are always required, even if explicitly voidable. */
-    ALL_PROPS_ARE_REQUIRED;
-
-    boolean isOptional(JSType propType) {
-      return this == VOIDABLE_PROPS_ARE_OPTIONAL && propType.isExplicitlyVoidable();
-    }
   }
 
   /**

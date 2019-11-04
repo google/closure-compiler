@@ -160,33 +160,6 @@ public class EnumElementType extends ObjectType {
   }
 
   @Override
-  public boolean isSubtype(JSType that) {
-    return isSubtype(that, ImplCache.create(), SubtypingMode.NORMAL);
-  }
-
-  @Override
-  protected boolean isSubtype(
-      JSType that, ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-
-    // TODO(b/136298690): stop creating such a 'meet' and remove this logic.
-    // ** start hack **
-    if (that.isEnumElementType()
-        && JSType.areIdentical(getEnumType(), that.toMaybeEnumElementType().getEnumType())) {
-      // This can happen if, e.g., we have the 'meet' of enum elements Foo<number> and Bar<number>,
-      // which is Foo<Bar<number>>; and are comparing it to Foo<number>.
-      return primitiveType.isSubtype(
-          that.toMaybeEnumElementType().getPrimitiveType(), implicitImplCache, subtypingMode);
-    }
-    // ** end hack **
-
-    if (JSType.isSubtypeHelper(this, that, implicitImplCache, subtypingMode)) {
-      return true;
-    } else {
-      return primitiveType.isSubtype(that, implicitImplCache, subtypingMode);
-    }
-  }
-
-  @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseEnumElementType(this);
   }
