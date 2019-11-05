@@ -576,6 +576,22 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         warning(GOOG_CLASS_NG_INJECT_ON_CLASS));
   }
 
+  @Test
+  public void testNgInject_onClass_inAssign() {
+    testRewriteWarning(
+        lines(
+            "var x = {};", //
+            "/** @ngInject */",
+            "x.y = goog.defineClass(Object, {",
+            "  constructor: function(x, y) {}",
+            "});"),
+        lines(
+            "var x = {};", //
+            "/** @ngInject @constructor @struct */",
+            "x.y = function(x, y) {};"),
+        warning(GOOG_CLASS_NG_INJECT_ON_CLASS));
+  }
+
   // The two following tests are just to make sure that these functionalities in
   // Es6 does not break the compiler during this pass
 

@@ -431,7 +431,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
               .srcref(exprRoot)
               .setJSDocInfo(cls.constructor.info);
 
-      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, assign, /* includeConstructorExport= */ true);
+      JSDocInfo mergedClassInfo =
+          mergeJsDocFor(cls, exprRoot.getOnlyChild(), /* includeConstructorExport= */ true);
       assign.setJSDocInfo(mergedClassInfo);
 
       Node expr = IR.exprResult(assign).srcref(exprRoot);
