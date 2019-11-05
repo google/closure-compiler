@@ -119,7 +119,6 @@ public class DiagnosticGroups {
   // to parsing/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, "
-          + "ambiguousFunctionDecl, "
           + "checkPrototypalTypes, "
           + "checkRegExp, "
           + "checkTypes, "
@@ -254,9 +253,9 @@ public class DiagnosticGroups {
           VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
           VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
+  @Deprecated
   public static final DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
-      DiagnosticGroups.registerGroup("ambiguousFunctionDecl",
-          StrictModeCheck.BAD_FUNCTION_DECLARATION);
+      DiagnosticGroups.registerDeprecatedGroup("ambiguousFunctionDecl");
 
   public static final DiagnosticGroup UNKNOWN_DEFINES =
       DiagnosticGroups.registerGroup("unknownDefines",

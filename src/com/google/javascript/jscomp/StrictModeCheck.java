@@ -73,11 +73,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_FUNCTION_ARGUMENTS_PROP_FORBIDDEN",
       "A function''s \"arguments\" property cannot be used in strict mode");
 
-  static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.warning(
-      "JSC_BAD_FUNCTION_DECLARATION",
-      "functions can only be declared at top level or immediately within"
-          + " another function in ES5 strict mode");
-
   static final DiagnosticType DELETE_VARIABLE = DiagnosticType.warning(
       "JSC_DELETE_VARIABLE",
       "variables, functions, and arguments cannot be deleted in strict mode");
