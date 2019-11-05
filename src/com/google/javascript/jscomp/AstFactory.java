@@ -813,7 +813,8 @@ final class AstFactory {
       JSType iterableType =
           iterable
               .getJSType()
-              .getInstantiatedTypeArgument(getNativeType(JSTypeNative.ITERABLE_TYPE));
+              .getTemplateTypeMap()
+              .getResolvedTemplateType(registry.getIterableTemplate());
       JSType makeIteratorType = makeIteratorName.getJSType();
       // e.g. replace
       //   function(Iterable<T>): Iterator<T>
@@ -833,11 +834,11 @@ final class AstFactory {
       // if makeIteratorName has the unknown type, we must have not injected the required runtime
       // libraries - hopefully because this is in a test using NonInjectingCompiler.
 
-      // e.g get `number` from `Iterator<number>`
       JSType iterableType =
           iterator
               .getJSType()
-              .getInstantiatedTypeArgument(getNativeType(JSTypeNative.ITERATOR_TYPE));
+              .getTemplateTypeMap()
+              .getResolvedTemplateType(registry.getIteratorValueTemplate());
       JSType makeIteratorType = makeIteratorName.getJSType();
       // e.g. replace
       //   function(Iterator<T>): Array<T>
@@ -911,7 +912,8 @@ final class AstFactory {
           originalFunctionType
               .toMaybeFunctionType()
               .getReturnType()
-              .getInstantiatedTypeArgument(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
+              .getTemplateTypeMap()
+              .getResolvedTemplateType(registry.getAsyncIterableTemplate());
 
       // e.g. replace
       //  AsyncGeneratorWrapper<T>

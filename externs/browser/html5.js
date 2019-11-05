@@ -2166,6 +2166,12 @@ HTMLMediaElement.prototype.readyState;
 HTMLMediaElement.prototype.seeking;
 
 /**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/media.html#dom-media-crossorigin
+ */
+HTMLMediaElement.prototype.crossOrigin;
+
+/**
  * The current time, in seconds.
  * @type {number}
  */
@@ -5377,7 +5383,8 @@ HTMLSlotElement.prototype.assignedElements = function(options) {};
 Event.prototype.composed;
 
 /**
- * @return {!Array<!(?Element|?ShadowRoot|?Document|?Window)>}
+ * @return {!Array<!EventTarget>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/composedPath
  */
 Event.prototype.composedPath = function() {};
 

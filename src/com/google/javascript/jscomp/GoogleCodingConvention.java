@@ -20,6 +20,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -98,7 +99,7 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
     }
 
     // hack way of checking that there aren't any lower-case letters
-    return name.toUpperCase().equals(name);
+    return name.toUpperCase(Locale.ROOT).equals(name);
   }
 
   /**

@@ -173,8 +173,10 @@ Iterable.prototype[Symbol.iterator] = function() {};
 
 
 /**
+ * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
+ * anything. https://github.com/google/closure-compiler/issues/3489
  * @interface
- * @template VALUE
+ * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
  */
 function Iterator() {}
@@ -188,10 +190,12 @@ Iterator.prototype.next = function(opt_value) {};
 
 /**
  * Use this to indicate a type is both an Iterator and an Iterable.
+ * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
+ * anything. https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @extends {Iterator<T>}
  * @extends {Iterable<T>}
- * @template T
+ * @template T, UNUSED_RETURN_T, UNUSED_NEXT_T
  */
 function IteratorIterable() {}
 

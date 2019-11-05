@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.google.debugging.sourcemap.Util;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -1434,7 +1435,7 @@ public class CodeGenerator {
   private void maybeAddAccessibilityModifier(Node n) {
     Visibility access = (Visibility) n.getProp(Node.ACCESS_MODIFIER);
     if (access != null) {
-      add(access.toString().toLowerCase() + " ");
+      add(Ascii.toLowerCase(access.toString()) + " ");
     }
   }
 

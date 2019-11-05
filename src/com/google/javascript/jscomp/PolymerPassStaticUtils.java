@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -246,7 +247,7 @@ final class PolymerPassStaticUtils {
       case "Boolean":
       case "String":
       case "Number":
-        typeNode = IR.string(typeString.toLowerCase()).srcref(typeValue);
+        typeNode = IR.string(Ascii.toLowerCase(typeString)).srcref(typeValue);
         break;
       case "Array":
       case "Function":

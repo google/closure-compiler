@@ -93,10 +93,10 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       // to consider some way of unifying rather than simply looking at the nominal type.
       ObjectType iterableType = iterable.getJSType().autobox().toMaybeObjectType();
       if (iterableType != null) {
-        // This will be the unknown type if iterableType is not actually a subtype of Iterable
         typeParam =
-            iterableType.getInstantiatedTypeArgument(
-                registry.getNativeType(JSTypeNative.ITERABLE_TYPE));
+            iterableType
+                .getTemplateTypeMap()
+                .getResolvedTemplateType(registry.getIterableTemplate());
       }
     }
     JSType iteratorType = createGenericType(JSTypeNative.ITERATOR_TYPE, typeParam);

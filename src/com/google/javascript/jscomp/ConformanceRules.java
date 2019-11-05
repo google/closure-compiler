@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -1741,7 +1742,7 @@ public final class ConformanceRules {
         if (tagAttr.length != 2 || tagAttr[0].isEmpty() || tagAttr[1].isEmpty()) {
           throw new InvalidRequirementSpec("Values must be in the format tagname.attribute.");
         }
-        tagAttr[0] = tagAttr[0].toLowerCase();
+        tagAttr[0] = tagAttr[0].toLowerCase(Locale.ROOT);
         bannedTagAttrs.add(tagAttr);
       }
       if (bannedTagAttrs.isEmpty()) {
@@ -1835,9 +1836,9 @@ public final class ConformanceRules {
 
     private ImmutableCollection<String> getTagNames(Node tag) {
       if (tag.isString()) {
-        return ImmutableSet.of(tag.getString().toLowerCase());
+        return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
-        return ImmutableSet.of(tag.getLastChild().getString().toLowerCase());
+        return ImmutableSet.of(tag.getLastChild().getString().toLowerCase(Locale.ROOT));
       }
       // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
       JSType type = tag.getJSType();

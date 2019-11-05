@@ -4237,13 +4237,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForOf4() {
     testTypesWithCommonExterns(
-        lines(
-            "function f(/** !Iterator<number> */ it) {",
-            "  for (let x of it) {}",
-            "}"),
+        lines("function f(/** !Iterator<number> */ it) {", "  for (let x of it) {}", "}"),
         lines(
             "Can only iterate over a (non-null) Iterable type",
-            "found   : Iterator<number>",
+            "found   : Iterator<number,?,?>",
             "required: Iterable"));
   }
 

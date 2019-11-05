@@ -810,7 +810,7 @@ public final class JsRunnerMain {
       throw new RuntimeException("Unhandled flag: " + unhandled.getAt(0));
     }
 
-    List<SourceFile> jsCode = null;
+    List<SourceFile> jsCode = new ArrayList<>();
     ImmutableMap<String, SourceMapInput> sourceMaps = null;
     if (flags.jsCode != null) {
       jsCode = fromFileArray(flags.jsCode, "Input_");
@@ -821,11 +821,8 @@ public final class JsRunnerMain {
     if (inputs != null) {
       List<SourceFile> sourceFiles = fromFileArray(inputs, "Input_");
       ImmutableMap<String, SourceMapInput> inputSourceMaps = buildSourceMaps(inputs, "Input_");
-      if (jsCode == null) {
-        jsCode = sourceFiles;
-      } else {
-        jsCode.addAll(sourceFiles);
-      }
+
+      jsCode.addAll(sourceFiles);
 
       if (sourceMaps == null) {
         sourceMaps = inputSourceMaps;

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Ascii;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -125,7 +126,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
           } else if (isSimpleOp) {
             msg =
                 "The result of the '"
-                    + n.getToken().toString().toLowerCase()
+                    + Ascii.toLowerCase(n.getToken().toString())
                     + "' operator is not being used.";
           }
 

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PropertyRenamingDiagnostics.INVALIDATION;
-import static com.google.javascript.jscomp.PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE;
 
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -2602,31 +2601,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnionTypeInvalidationError() {
-    String externs = lines(
-        "/** @constructor */ function Baz() {}",
-        "Baz.prototype.foobar");
-    String js = lines(
-        "/** @constructor */ function Ind() {this.foobar=0}",
-        "/** @constructor */ function Foo() {}",
-        "Foo.prototype.foobar = 0;",
-        "/** @constructor */ function Bar() {}",
-        "Bar.prototype.foobar = 0;",
-        "/** @type {Foo|Bar} */",
-        "var F = new Foo;",
-        "F.foobar = 1;",
-        "F = new Bar;",
-        "/** @type {Baz} */",
-        "var Z = new Baz;",
-        "Z.foobar = 1;\n");
-
-    test(
-        externs(DEFAULT_EXTERNS + externs),
-        srcs(js),
-        error(INVALIDATION_ON_TYPE).withMessageContaining("foobar"));
-  }
-
-  @Test
   public void testDontCrashOnNonConstructorsWithPrototype() {
     String externs = lines(
         "function f(x) { return x; }",
@@ -2639,20 +2613,23 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDontRenameStaticPropertiesOnBuiltins() {
+  public void testDontRenameStaticPropertiesOnExterns() {
     String externs = "Array.foobar = function() {};";
-
-    String js = lines(
-        "/** @constructor */",
-        "function Foo() {}",
-        "Foo.prototype.foobar = function() {};",
-        "var x = Array.foobar;");
 
     test(
         externs(DEFAULT_EXTERNS + externs),
-        srcs(js),
-        error(INVALIDATION_ON_TYPE)
-            .withMessageContaining("foobar"));
+        srcs(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.prototype.foobar = function() {};",
+                "var x = Array.foobar;")),
+        expected(
+            lines(
+                "/** @constructor */",
+                "function Foo() {}",
+                "Foo.prototype.Foo_prototype$foobar = function() {};",
+                "var x = Array.foobar;")));
   }
 
   @Test

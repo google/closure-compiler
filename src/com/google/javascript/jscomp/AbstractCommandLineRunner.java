@@ -137,12 +137,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           "When using --module flags, the --create_source_map flag must contain "
               + "%outname% in the value.");
 
-  static final DiagnosticType CONFLICTING_DUPLICATE_ZIP_CONTENTS = DiagnosticType.error(
-      "JSC_CONFLICTING_DUPLICATE_ZIP_CONTENTS",
-      "Two zip entries containing conflicting contents with the same relative path.\n"
-      + "Entry 1: {0}\n"
-      + "Entry 2: {1}");
-
   static final String WAITING_FOR_INPUT_WARNING =
       "The compiler is waiting for input via stdin.";
 
@@ -699,9 +693,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         inputs.add(SourceFile.fromCode(jsonFile.getPath(), jsonFile.getSrc()));
       }
     }
-    for (JSError error : removeDuplicateZipEntries(inputs, jsModuleSpecs)) {
-      compiler.report(error);
-    }
+
     return inputs;
   }
 
@@ -769,57 +761,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
     return filename;
-  }
-
-  /**
-   * Check that relative paths inside zip files are unique, since multiple files with the same path
-   * inside different zips are considered duplicate inputs. Parameter {@code sourceFiles} may be
-   * modified if duplicates are removed.
-   */
-  @GwtIncompatible("Unnecessary")
-  public static ImmutableList<JSError> removeDuplicateZipEntries(
-      List<SourceFile> sourceFiles, List<JsModuleSpec> jsModuleSpecs) throws IOException {
-    ImmutableList.Builder<JSError> errors = ImmutableList.builder();
-    Map<String, SourceFile> sourceFilesByName = new HashMap<>();
-    Iterator<SourceFile> fileIterator = sourceFiles.iterator();
-    int currentFileIndex = 0;
-    Iterator<JsModuleSpec> moduleIterator = jsModuleSpecs.iterator();
-    // Tracks the total number of js files for current module and all the previous modules.
-    int cumulatedJsFileNum = 0;
-    JsModuleSpec currentModule = null;
-    while (fileIterator.hasNext()) {
-      SourceFile sourceFile = fileIterator.next();
-      currentFileIndex++;
-      // Check whether we reached the next module.
-      if (moduleIterator.hasNext() && currentFileIndex > cumulatedJsFileNum) {
-        currentModule = moduleIterator.next();
-        cumulatedJsFileNum += currentModule.numJsFiles;
-      }
-      String fullPath = sourceFile.getName();
-      if (!fullPath.contains("!/")) {
-        // Not a zip file
-        continue;
-      }
-      String relativePath = fullPath.split("!")[1];
-      if (!sourceFilesByName.containsKey(relativePath)) {
-        sourceFilesByName.put(relativePath, sourceFile);
-      } else {
-        SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
-        if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
-          fileIterator.remove();
-          if (currentModule != null) {
-            currentModule.numJsFiles--;
-          }
-        } else {
-          errors.add(
-              JSError.make(
-                  CONFLICTING_DUPLICATE_ZIP_CONTENTS,
-                  firstSourceFile.getName(),
-                  sourceFile.getName()));
-        }
-      }
-    }
-    return errors.build();
   }
 
   /** Creates JS source code inputs from a list of files. */

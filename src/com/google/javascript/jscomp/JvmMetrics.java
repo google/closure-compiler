@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
-
 import java.io.PrintStream;
 import java.lang.management.CompilationMXBean;
 import java.lang.management.GarbageCollectorMXBean;
@@ -26,6 +25,7 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 /**
@@ -251,7 +251,7 @@ class JvmMetrics {
   }
 
   private static String normalizeName(String name) {
-    return name.replace(' ', '_').toLowerCase();
+    return name.replace(' ', '_').toLowerCase(Locale.ROOT);
   }
 
   private static String normalizeTabularColonPos(String string) {

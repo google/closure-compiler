@@ -1535,7 +1535,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     assertThat(createGenerator.getJSType().isFunctionType())
         .isTrue(); // $jscomp.generator.createGenerator
     assertThat(createGenerator.getJSType().toMaybeFunctionType().getReturnType().toString())
-        .isEqualTo("Generator<number>");
+        .isEqualTo("Generator<number,?,?>");
 
     Node program = createGenerator.getNext().getNext();
 

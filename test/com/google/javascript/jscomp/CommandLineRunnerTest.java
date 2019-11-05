@@ -30,7 +30,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -1295,30 +1294,6 @@ public final class CommandLineRunnerTest {
 
     compileFiles(
         "console.log(\"Hello World\");window.alert(\"Hi Browser\");", zipFile1, zipFile2);
-  }
-
-  @Test
-  public void testInputMultipleDuplicateZips() throws IOException {
-    args.add("--jscomp_error=duplicateZipContents");
-    FlagEntry<JsSourceType> zipFile1 =
-        createZipFile(ImmutableMap.of("run.js", "console.log(\"Hello World\");"));
-
-    FlagEntry<JsSourceType> zipFile2 =
-        createZipFile(ImmutableMap.of("run.js", "console.log(\"Hello World\");"));
-
-    compileFiles("console.log(\"Hello World\");", zipFile1, zipFile2);
-  }
-
-  @Test
-  public void testInputMultipleConflictingZips() throws IOException {
-    FlagEntry<JsSourceType> zipFile1 =
-        createZipFile(ImmutableMap.of("run.js", "console.log(\"Hello World\");"));
-
-    FlagEntry<JsSourceType> zipFile2 =
-        createZipFile(ImmutableMap.of("run.js", "window.alert(\"Hi Browser\");"));
-
-    compileFilesError(
-        AbstractCommandLineRunner.CONFLICTING_DUPLICATE_ZIP_CONTENTS, zipFile1, zipFile2);
   }
 
   @Test
@@ -2845,13 +2820,6 @@ public final class CommandLineRunnerTest {
   private final void compileFiles(String expectedOutput, FlagEntry<JsSourceType>... entries) {
     setupFlags(entries);
     compileArgs(expectedOutput, null);
-  }
-
-  @SafeVarargs
-  private final void compileFilesError(
-      DiagnosticType expectedError, FlagEntry<JsSourceType>... entries) {
-    setupFlags(entries);
-    compileArgs("", expectedError);
   }
 
   @SafeVarargs

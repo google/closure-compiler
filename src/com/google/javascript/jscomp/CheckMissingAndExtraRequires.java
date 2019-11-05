@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -130,7 +131,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   // Return true if the name is a class name (starts with an uppercase
   // character, but is not in all-caps).
   private static boolean isClassName(String name) {
-    return isClassOrConstantName(name) && !name.equals(name.toUpperCase());
+    return isClassOrConstantName(name) && !name.equals(name.toUpperCase(Locale.ROOT));
   }
 
   // Return true if the name looks like a class name or a constant name.

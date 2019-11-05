@@ -1070,7 +1070,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         lines(
             "/**",
             " * @param {number} a",
-            " * @return {!Iterator<number>}",
+            " * @return {!Iterator<number,?,?>}",
             " */",
             "var externalName = function(a) {",
             "};",

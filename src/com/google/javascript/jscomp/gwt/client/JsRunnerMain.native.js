@@ -33,6 +33,9 @@ JsRunnerMain.filesFromPaths = function(jsFilePaths) {
     return null;
   }
 
-  return jsFilePaths.map(
-      (path) => ({path, src: require('fs').readFileSync(path, 'utf8')}));
+  const /** !(typeof fs) */ _fs = require('fs');
+  return jsFilePaths.map((path) => ({
+                           path,  //
+                           src: _fs.readFileSync(path, 'utf8'),
+                         }));
 };

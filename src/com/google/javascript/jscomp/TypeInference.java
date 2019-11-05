@@ -22,7 +22,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
@@ -443,7 +442,8 @@ class TypeInference
               // for/of. The type of `item` is the type parameter of the Iterable type.
               JSType objType = getJSType(obj).autobox();
               // NOTE: this returns the UNKNOWN_TYPE if objType does not implement Iterable
-              JSType newType = objType.getInstantiatedTypeArgument(getNativeType(ITERABLE_TYPE));
+              TemplateType templateType = registry.getIterableTemplate();
+              JSType newType = objType.getTemplateTypeMap().getResolvedTemplateType(templateType);
 
               // Note that `item` can be an arbitrary LHS expression we need to check.
               if (item.isDestructuringPattern()) {

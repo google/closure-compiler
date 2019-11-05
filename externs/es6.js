@@ -30,10 +30,12 @@
  */
 
 /**
+ * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
+ * anything. https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
  * @extends {IteratorIterable<VALUE>}
- * @template VALUE
+ * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
  */
 function Generator() {}
 
@@ -1738,7 +1740,7 @@ var Atomics = {};
  * @param {number} value
  * @return {number}
  */
-Atomics.add = function(typedArray, index, value) {}
+Atomics.add = function(typedArray, index, value) {};
 
 /**
  * @param {!TypedArray} typedArray
@@ -1746,7 +1748,7 @@ Atomics.add = function(typedArray, index, value) {}
  * @param {number} value
  * @return {number}
  */
-Atomics.and = function(typedArray, index, value) {}
+Atomics.and = function(typedArray, index, value) {};
 
 /**
  * @param {!TypedArray} typedArray
@@ -1755,8 +1757,8 @@ Atomics.and = function(typedArray, index, value) {}
  * @param {number} replacementValue
  * @return {number}
  */
-Atomics.compareExchange = function(typedArray, index, expectedValue,
-    replacementValue) {}
+Atomics.compareExchange = function(
+    typedArray, index, expectedValue, replacementValue) {};
 
 /**
  * @param {!TypedArray} typedArray
@@ -1764,28 +1766,20 @@ Atomics.compareExchange = function(typedArray, index, expectedValue,
  * @param {number} value
  * @return {number}
  */
-Atomics.exchange = function(typedArray, index, value) {}
+Atomics.exchange = function(typedArray, index, value) {};
 
 /**
  * @param {number} size
  * @return {boolean}
  */
-Atomics.isLockFree = function(size) {}
+Atomics.isLockFree = function(size) {};
 
 /**
  * @param {!TypedArray} typedArray
  * @param {number} index
  * @return {number}
  */
-Atomics.load = function(typedArray, index) {}
-
-/**
- * @param {!TypedArray} typedArray
- * @param {number} index
- * @param {number} value
- * @return {number}
- */
-Atomics.or = function(typedArray, index, value) {}
+Atomics.load = function(typedArray, index) {};
 
 /**
  * @param {!TypedArray} typedArray
@@ -1793,7 +1787,7 @@ Atomics.or = function(typedArray, index, value) {}
  * @param {number} value
  * @return {number}
  */
-Atomics.store = function(typedArray, index, value) {}
+Atomics.or = function(typedArray, index, value) {};
 
 /**
  * @param {!TypedArray} typedArray
@@ -1801,7 +1795,15 @@ Atomics.store = function(typedArray, index, value) {}
  * @param {number} value
  * @return {number}
  */
-Atomics.sub = function(typedArray, index, value) {}
+Atomics.store = function(typedArray, index, value) {};
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.sub = function(typedArray, index, value) {};
 
 /**
  * @param {!Int32Array} typedArray
@@ -1810,7 +1812,7 @@ Atomics.sub = function(typedArray, index, value) {}
  * @param {number=} timeout
  * @return {String}
  */
-Atomics.wait = function(typedArray, index, value, timeout) {}
+Atomics.wait = function(typedArray, index, value, timeout) {};
 
 /**
  * @param {!Int32Array} typedArray
@@ -1818,7 +1820,7 @@ Atomics.wait = function(typedArray, index, value, timeout) {}
  * @param {number} count
  * @return {number}
  */
-Atomics.wake = function(typedArray, index, count) {}
+Atomics.wake = function(typedArray, index, count) {};
 
 /**
  * @param {!TypedArray} typedArray
@@ -1826,12 +1828,15 @@ Atomics.wake = function(typedArray, index, count) {}
  * @param {number} value
  * @return {number}
  */
-Atomics.xor = function(typedArray, index, value) {}
+Atomics.xor = function(typedArray, index, value) {};
 
 
 /**
+ * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
+ * anything.
+ * https://github.com/google/closure-compiler/issues/3489
  * @interface
- * @template VALUE
+ * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
  * @see https://tc39.github.io/proposal-async-iteration/
  */
 function AsyncIterator() {}

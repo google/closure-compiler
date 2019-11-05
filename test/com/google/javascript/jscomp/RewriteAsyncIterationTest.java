@@ -187,11 +187,12 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<?>");
     assertType(wrapper.getJSType())
         .toStringIsEqualTo(
-            "function(new:$jscomp.AsyncGeneratorWrapper, "
-                + "Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<?>|null)>): undefined");
+            "function(new:$jscomp.AsyncGeneratorWrapper,"
+                + " Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<?>|null),?,?>):"
+                + " undefined");
     assertType(newExpr.getJSType()).toStringIsEqualTo("$jscomp.AsyncGeneratorWrapper");
     assertType(innerGeneratorCall.getJSType())
-        .toStringIsEqualTo("Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<?>|null)>");
+        .toStringIsEqualTo("Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<?>|null),?,?>");
   }
 
   @Test
@@ -221,12 +222,12 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     assertType(wrapper.getJSType())
         .toStringIsEqualTo(
             "function(new:$jscomp.AsyncGeneratorWrapper, "
-                + "Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<undefined>|null)>): "
+                + "Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<undefined>|null),?,?>): "
                 + "undefined");
     assertType(newExpr.getJSType()).toStringIsEqualTo("$jscomp.AsyncGeneratorWrapper");
     assertType(innerGeneratorCall.getJSType())
         .toStringIsEqualTo(
-            "Generator" + "<($jscomp.AsyncGeneratorWrapper$ActionRecord<undefined>|null)>");
+            "Generator" + "<($jscomp.AsyncGeneratorWrapper$ActionRecord<undefined>|null),?,?>");
 
     test(
         lines(
@@ -271,12 +272,12 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     assertType(wrapper.getJSType())
         .toStringIsEqualTo(
             "function(new:$jscomp.AsyncGeneratorWrapper, "
-                + "Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<number>|null)>): "
+                + "Generator<($jscomp.AsyncGeneratorWrapper$ActionRecord<number>|null),?,?>): "
                 + "undefined");
     assertType(newExpr.getJSType()).toStringIsEqualTo("$jscomp.AsyncGeneratorWrapper");
     assertType(innerGeneratorCall.getJSType())
         .toStringIsEqualTo(
-            "Generator" + "<($jscomp.AsyncGeneratorWrapper$ActionRecord<number>|null)>");
+            "Generator" + "<($jscomp.AsyncGeneratorWrapper$ActionRecord<number>|null),?,?>");
 
     test(
         lines(

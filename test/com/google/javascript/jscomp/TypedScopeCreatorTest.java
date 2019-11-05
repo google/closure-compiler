@@ -2916,7 +2916,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertScope(methodScope).declares("arg").directly().withTypeThat().isString();
 
     FunctionType method = (FunctionType) methodScope.getRootNode().getJSType();
-    assertType(method).toStringIsEqualTo("function(this:Foo, string): Generator<?>");
+    assertType(method).toStringIsEqualTo("function(this:Foo, string): Generator<?,?,?>");
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
     assertType(foo.getInstanceType()).withTypeOfProp("method").isEqualTo(method);
   }
@@ -4282,15 +4282,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testGenerator1() {
     testSame("function *gen() { yield 1; } var g = gen();");
-    assertThat(findNameType("gen", globalScope).toString()).isEqualTo("function(): Generator<?>");
-    assertThat(findNameType("g", globalScope).toString()).isEqualTo("Generator<?>");
+    assertThat(findNameType("gen", globalScope).toString())
+        .isEqualTo("function(): Generator<?,?,?>");
+    assertThat(findNameType("g", globalScope).toString()).isEqualTo("Generator<?,?,?>");
   }
 
   @Test
   public void testGenerator2() {
     testSame("var gen = function *() { yield 1; }; var g = gen();");
-    assertThat(findNameType("gen", globalScope).toString()).isEqualTo("function(): Generator<?>");
-    assertThat(findNameType("g", globalScope).toString()).isEqualTo("Generator<?>");
+    assertThat(findNameType("gen", globalScope).toString())
+        .isEqualTo("function(): Generator<?,?,?>");
+    assertThat(findNameType("g", globalScope).toString()).isEqualTo("Generator<?,?,?>");
   }
 
   // Just check that this doesn't cause a StackOverflowError.

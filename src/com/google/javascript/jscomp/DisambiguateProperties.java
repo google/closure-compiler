@@ -156,10 +156,10 @@ class DisambiguateProperties implements CompilerPass {
     Set<JSType> typesToSkip = new HashSet<>();
 
     /**
-     * If true, do not rename any instance of this field, as it has been
-     * referenced from an unknown type.
+     * If false, do not rename any instance of this field, as it has been referenced in an
+     * untracable way.
      */
-    boolean skipRenaming;
+    boolean isValidForRenaming = true;
 
     /**
      * A map from nodes that need renaming to the highest type in the prototype
@@ -190,7 +190,7 @@ class DisambiguateProperties implements CompilerPass {
      * Record that this property is referenced from this type.
      */
     void addType(JSType type, JSType relatedType) {
-      checkState(!skipRenaming, "Attempt to record skipped property: %s", name);
+      checkState(this.isValidForRenaming, "Attempt to record an invalidated property: %s", name);
       JSType top = getTypeWithProperty(this.name, type);
       if (invalidatingTypes.isInvalidating(top)) {
         invalidate();
@@ -220,55 +220,52 @@ class DisambiguateProperties implements CompilerPass {
     void expandTypesToSkip() {
       // If we are not going to rename any properties, then we do not need to
       // update the list of invalid types, as they are all invalid.
-      if (shouldRename()) {
-        int count = 0;
-        while (true) {
-          // It should usually only take one time through this do-while.
-          checkState(++count < 10, "Stuck in loop expanding types to skip.");
+      if (!this.wouldBeDisambiguatedByRenaming()) {
+        return;
+      }
 
-          // Make sure that the representative type for each type to skip is
-          // marked as being skipped.
-          Set<JSType> rootTypesToSkip = new HashSet<>();
-          for (JSType subType : typesToSkip) {
-            rootTypesToSkip.add(types.find(subType));
-          }
-          typesToSkip.addAll(rootTypesToSkip);
+      for (int count = 0; count < 10; count++) {
+        // Make sure that the representative type for each type to skip is
+        // marked as being skipped.
+        Set<JSType> rootTypesToSkip = new HashSet<>();
+        for (JSType subType : typesToSkip) {
+          rootTypesToSkip.add(types.find(subType));
+        }
+        typesToSkip.addAll(rootTypesToSkip);
 
-          Set<JSType> newTypesToSkip = new HashSet<>();
-          Set<JSType> allTypes = types.elements();
-          int originalTypesSize = allTypes.size();
-          for (JSType subType : allTypes) {
-            if (!typesToSkip.contains(subType)
-                && typesToSkip.contains(types.find(subType))) {
-              newTypesToSkip.add(subType);
-            }
-          }
-
-          for (JSType newType : newTypesToSkip) {
-            addTypeToSkip(newType);
-          }
-
-          // If there were not any new types added, we are done here.
-          if (types.elements().size() == originalTypesSize) {
-            break;
+        Set<JSType> newTypesToSkip = new HashSet<>();
+        Set<JSType> allTypes = types.elements();
+        int originalTypesSize = allTypes.size();
+        for (JSType subType : allTypes) {
+          if (!typesToSkip.contains(subType) && typesToSkip.contains(types.find(subType))) {
+            newTypesToSkip.add(subType);
           }
         }
+
+        for (JSType newType : newTypesToSkip) {
+          addTypeToSkip(newType);
+        }
+
+        // If there were not any new types added, we are done here.
+        if (types.elements().size() == originalTypesSize) {
+          return;
+        }
       }
+
+      throw new IllegalStateException("Stuck in loop expanding types to skip.");
     }
 
     /** Returns true if any instance of this property should be renamed. */
-    boolean shouldRename() {
-      return !skipRenaming && types != null
-          && types.allEquivalenceClasses().size() > 1;
+    boolean wouldBeDisambiguatedByRenaming() {
+      return this.isValidForRenaming && types != null && types.allEquivalenceClasses().size() > 1;
     }
 
     /**
-     * Returns true if this property should be renamed on this type.
-     * expandTypesToSkip() should be called before this, if anything has been
-     * added to the typesToSkip list.
+     * Returns true if this property should be renamed on this type. expandTypesToSkip() should be
+     * called before this, if anything has been added to the typesToSkip list.
      */
-    boolean shouldRename(JSType type) {
-      return !skipRenaming && !typesToSkip.contains(type);
+    boolean shouldRenameOnType(JSType type) {
+      return this.isValidForRenaming && !typesToSkip.contains(type);
     }
 
     /**
@@ -276,8 +273,8 @@ class DisambiguateProperties implements CompilerPass {
      * object with unknown type.
      */
     boolean invalidate() {
-      boolean changed = !skipRenaming;
-      skipRenaming = true;
+      boolean changed = this.isValidForRenaming;
+      this.isValidForRenaming = false;
       types = null;
       typesToSkip = null;
       rootTypesByNode = null;
@@ -293,7 +290,7 @@ class DisambiguateProperties implements CompilerPass {
      */
     boolean scheduleRenaming(Node node, JSType targetType) {
       JSType type = processProperty(targetType);
-      if (!skipRenaming) {
+      if (this.isValidForRenaming) {
         if (invalidatingTypes.isInvalidating(type)) {
           invalidate();
           return false;
@@ -321,7 +318,7 @@ class DisambiguateProperties implements CompilerPass {
     @Nullable
     private JSType processProperty(JSType type, @Nullable JSType relatedType) {
       type = type.restrictByNotNullOrUndefined();
-      if (this.skipRenaming || invalidatingTypes.isInvalidating(type)) {
+      if (!this.isValidForRenaming || invalidatingTypes.isInvalidating(type)) {
         return null;
       }
       Iterable<? extends JSType> alternatives = getTypeAlternatives(type);
@@ -370,7 +367,7 @@ class DisambiguateProperties implements CompilerPass {
           addType(itype, relatedType);
         }
         // If this interface invalidated this property, return now.
-        if (skipRenaming) {
+        if (!this.isValidForRenaming) {
           return;
         }
       }
@@ -474,7 +471,7 @@ class DisambiguateProperties implements CompilerPass {
           // kind of arbitrary. We should only do it when the @record is implicitly implemented.
           || isStructuralInterfacePrototype(ownerType)) {
         prop.invalidate();
-      } else if (!prop.skipRenaming) {
+      } else if (prop.isValidForRenaming) {
         prop.addTypeToSkip(ownerType);
         // If this is a prototype property, then we want to skip assignments
         // to the instance type as well.  These assignments are not usually
@@ -823,50 +820,54 @@ class DisambiguateProperties implements CompilerPass {
 
     Set<String> reported = new HashSet<>();
     for (Property prop : properties.values()) {
-      if (prop.shouldRename()) {
-        UnionFind<JSType> pTypes = prop.getTypes();
-        Map<JSType, String> propNames = buildPropNames(prop);
-
-        ++propsRenamed;
-        prop.expandTypesToSkip();
-        // This loop has poor locality, because instead of walking the AST,
-        // we iterate over all accesses of a property, which can be in very
-        // different places in the code.
-        for (Map.Entry<Node, JSType> entry : prop.rootTypesByNode.entrySet()) {
-          Node node = entry.getKey();
-          JSType rootType = entry.getValue();
-          if (prop.shouldRename(rootType)) {
-            String newName = propNames.get(pTypes.find(rootType));
-            node.setString(newName);
-            compiler.reportChangeToEnclosingScope(node);
-            ++instancesRenamed;
-          } else {
-            ++instancesSkipped;
-
-            CheckLevel checkLevelForProp = propertiesToErrorFor.get(prop.name);
-            if (checkLevelForProp != null
-                && checkLevelForProp != CheckLevel.OFF
-                && !reported.contains(prop.name)) {
-              reported.add(prop.name);
-              compiler.report(
-                  JSError.make(
-                      node,
-                      checkLevelForProp,
-                      PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE,
-                      prop.name,
-                      rootType.toString(),
-                      ""));
-            }
-          }
-        }
-      } else {
-        if (prop.skipRenaming) {
+      if (!prop.wouldBeDisambiguatedByRenaming()) {
+        if (!prop.isValidForRenaming) {
           ++propsSkipped;
         } else {
           ++singleTypeProps;
         }
+        continue;
+      }
+
+      UnionFind<JSType> pTypes = prop.getTypes();
+      Map<JSType, String> propNames = buildPropNames(prop);
+
+      ++propsRenamed;
+      prop.expandTypesToSkip();
+      // This loop has poor locality, because instead of walking the AST,
+      // we iterate over all accesses of a property, which can be in very
+      // different places in the code.
+      for (Map.Entry<Node, JSType> entry : prop.rootTypesByNode.entrySet()) {
+        Node node = entry.getKey();
+        JSType rootType = entry.getValue();
+
+        if (prop.shouldRenameOnType(rootType)) {
+          String newName = propNames.get(pTypes.find(rootType));
+          node.setString(newName);
+          compiler.reportChangeToEnclosingScope(node);
+          ++instancesRenamed;
+          continue;
+        }
+
+        ++instancesSkipped;
+
+        CheckLevel checkLevelForProp = propertiesToErrorFor.getOrDefault(prop.name, CheckLevel.OFF);
+        if (!prop.isValidForRenaming
+            && checkLevelForProp != CheckLevel.OFF
+            && !reported.contains(prop.name)) {
+          reported.add(prop.name);
+          compiler.report(
+              JSError.make(
+                  node,
+                  checkLevelForProp,
+                  PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE,
+                  prop.name,
+                  rootType.toString(),
+                  ""));
+        }
       }
     }
+
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Renamed " + instancesRenamed + " instances of "
                   + propsRenamed + " properties.");
@@ -912,7 +913,7 @@ class DisambiguateProperties implements CompilerPass {
     Multimap<String, Collection<JSType>> ret = HashMultimap.create();
     for (Map.Entry<String, Property> entry : properties.entrySet()) {
       Property prop = entry.getValue();
-      if (!prop.skipRenaming) {
+      if (prop.isValidForRenaming) {
         for (Collection<JSType> c : prop.getTypes().allEquivalenceClasses()) {
           if (!c.isEmpty() && !prop.typesToSkip.contains(c.iterator().next())) {
             ret.put(entry.getKey(), c);
