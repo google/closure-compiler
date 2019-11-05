@@ -354,10 +354,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("tooManyTypeParams",
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
 
-  @Deprecated
-  public static final DiagnosticGroup CHECK_EVENTFUL_OBJECT_DISPOSAL =
-      DiagnosticGroups.registerDeprecatedGroup("checkEventfulObjectDisposal");
-
   public static final DiagnosticGroup OLD_REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("oldReportUnknownTypes", // undocumented
           TypeCheck.UNKNOWN_EXPR_TYPE);
