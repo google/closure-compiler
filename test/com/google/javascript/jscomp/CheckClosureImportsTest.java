@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAM
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 
@@ -636,7 +637,7 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                 lines(
                     "goog.module('test');", //
                     "const MyGlobal = goog.forwardDeclare('MyGlobal');"))),
-        error(MISSING_MODULE_OR_PROVIDE));
+        error(MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE));
   }
 
   @Test
@@ -661,7 +662,7 @@ public class CheckClosureImportsTest extends CompilerTestCase {
                 lines(
                     "export {};", //
                     "const MyGlobal = goog.forwardDeclare('MyGlobal');"))),
-        error(MISSING_MODULE_OR_PROVIDE));
+        error(MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE));
   }
 
   @Test

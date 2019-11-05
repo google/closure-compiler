@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
 
@@ -457,7 +456,8 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "missingProvide",
           CheckProvides.MISSING_PROVIDE_WARNING,
-          MISSING_MODULE_OR_PROVIDE,
+          ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE,
+          ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE,
           ModuleMapCreator.MISSING_NAMESPACE_IMPORT);
 
   public static final DiagnosticGroup UNRECOGNIZED_TYPE_ERROR =
