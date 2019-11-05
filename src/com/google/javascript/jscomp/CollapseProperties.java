@@ -162,33 +162,34 @@ class CollapseProperties implements CompilerPass {
   private Set<Name> checkNamespaces() {
     ImmutableSet.Builder<Name> escaped = ImmutableSet.builder();
     for (Name name : nameMap.values()) {
-      if (name.isNamespaceObjectLit()
-          && (name.getAliasingGets() > 0
-              || name.getLocalSets() + name.getGlobalSets() > 1
-              || name.getDeleteProps() > 0)) {
-        boolean initialized = name.getDeclaration() != null;
-        for (Ref ref : name.getRefs()) {
-          if (ref == name.getDeclaration()) {
-            continue;
+      if (!name.isNamespaceObjectLit()) {
+        continue;
+      }
+      if (name.getAliasingGets() == 0
+          && name.getLocalSets() + name.getGlobalSets() <= 1
+          && name.getDeleteProps() == 0) {
+        continue;
+      }
+      boolean initialized = name.getDeclaration() != null;
+      for (Ref ref : name.getRefs()) {
+        if (ref == name.getDeclaration()) {
+          continue;
+        }
+
+        if (ref.type == Ref.Type.DELETE_PROP) {
+          if (initialized) {
+            warnAboutNamespaceRedefinition(name, ref);
+          }
+        } else if (ref.type == Ref.Type.SET_FROM_GLOBAL || ref.type == Ref.Type.SET_FROM_LOCAL) {
+          if (initialized && !isSafeNamespaceReinit(ref)) {
+            warnAboutNamespaceRedefinition(name, ref);
           }
 
-          if (ref.type == Ref.Type.DELETE_PROP) {
-            if (initialized) {
-              warnAboutNamespaceRedefinition(name, ref);
-            }
-          } else if (
-              ref.type == Ref.Type.SET_FROM_GLOBAL
-              || ref.type == Ref.Type.SET_FROM_LOCAL) {
-            if (initialized && !isSafeNamespaceReinit(ref)) {
-              warnAboutNamespaceRedefinition(name, ref);
-            }
-
-            initialized = true;
-          } else if (ref.type == Ref.Type.ALIASING_GET) {
-            warnAboutNamespaceAliasing(name, ref);
-            escaped.add(name);
-            break;
-          }
+          initialized = true;
+        } else if (ref.type == Ref.Type.ALIASING_GET) {
+          warnAboutNamespaceAliasing(name, ref);
+          escaped.add(name);
+          break;
         }
       }
     }
