@@ -2028,6 +2028,41 @@ public class ErrorToFixMapperTest {
             "alert(goog.dom.createElement('div'));"));
   }
 
+  @Test
+  public void testMissingTrailingComma_array() {
+    assertExpectedFixes("use([a\n]);", ExpectedFix.builder().fixedCode("use([a,\n]);").build());
+  }
+
+  @Test
+  public void testMissingTrailingComma_extraWhitespace() {
+    assertExpectedFixes(
+        "use([a  \n  ]);", ExpectedFix.builder().fixedCode("use([a,  \n  ]);").build());
+  }
+
+  @Test
+  public void testMissingTrailingComma_arraySpread() {
+    assertExpectedFixes(
+        "use([...a\n]);", ExpectedFix.builder().fixedCode("use([...a,\n]);").build());
+  }
+
+  @Test
+  public void testMissingTrailingComma_object() {
+    assertExpectedFixes(
+        "use({a: b\n});", ExpectedFix.builder().fixedCode("use({a: b,\n});").build());
+  }
+
+  @Test
+  public void testMissingTrailingComma_objectMethod() {
+    assertExpectedFixes(
+        "use({a() {}\n});", ExpectedFix.builder().fixedCode("use({a() {},\n});").build());
+  }
+
+  @Test
+  public void testMissingTrailingComma_objectSpread() {
+    assertExpectedFixes(
+        "use({...a\n});", ExpectedFix.builder().fixedCode("use({...a,\n});").build());
+  }
+
   // TODO(tjgq): Make this not crash on ClosureRewriteModule#updateGoogRequire.
   @Ignore
   @Test

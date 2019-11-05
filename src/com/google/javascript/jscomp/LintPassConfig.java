@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
+import com.google.javascript.jscomp.lint.CheckMissingTrailingComma;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckPrimitiveAsObject;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
@@ -85,6 +86,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                           new CheckJSDocStyle(compiler),
                           new CheckJSDoc(compiler),
                           new CheckMissingSemicolon(compiler),
+                          new CheckMissingTrailingComma(compiler),
                           new CheckSuper(compiler),
                           new CheckPrimitiveAsObject(compiler),
                           new ClosureCheckModule(compiler, compiler.getModuleMetadataMap()),
