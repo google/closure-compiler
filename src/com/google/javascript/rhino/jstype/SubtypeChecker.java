@@ -69,8 +69,10 @@ final class SubtypeChecker {
 
   private final JSTypeRegistry registry;
   private Boolean isUsingStructuralTyping;
-  private ImplCache implicitImplCache;
   private SubtypingMode subtypingMode;
+
+  private HashMap<CacheKey, MatchStatus> structuralSubtypeCache;
+  private EqCache eqCache;
 
   private boolean hasRun = false;
 
@@ -113,7 +115,6 @@ final class SubtypeChecker {
   boolean check() {
     checkHasNotRun();
     this.hasRun = true;
-    this.implicitImplCache = new ImplCache();
     return this.isSubtypeOuter(this.initialSubtype, this.initialSupertype);
   }
 
@@ -153,7 +154,6 @@ final class SubtypeChecker {
     }
   }
 
-  /** if implicitImplCache is null, there is no structural interface matching */
   private boolean isSubtypeHelper(JSType subtype, JSType supertype) {
     checkNotNull(subtype);
     checkNotNull(supertype);
@@ -173,7 +173,7 @@ final class SubtypeChecker {
     }
 
     // Reflexive case.
-    if (subtype.isEquivalentTo(supertype, implicitImplCache.isStructuralTyping())) {
+    if (subtype.isEquivalentTo(supertype, this.isUsingStructuralTyping)) {
       return true;
     }
 
@@ -181,9 +181,7 @@ final class SubtypeChecker {
      * Unwrap proxy types.
      *
      * <p>Only named types are unwrapped because other subclasses of `ProxyObjectType` should not be
-     * considered proxies; they have additional behaviour. We intentiaionlly call the instance
-     * `isSubtype` method to call into any class specific subtyping behaviour that isn't present in
-     * this method.
+     * considered proxies; they have additional behaviour.
      */
     if (subtype.isNamedType()) {
       return this.isSubtypeOuter(subtype.toMaybeNamedType().getReferencedType(), supertype);
@@ -245,15 +243,15 @@ final class SubtypeChecker {
 
     // If the super type is a structural type, then we can't safely remove a templatized type
     // (since it might affect the types of the properties)
-    PropertyOptionality propOptionality = null;
-    if (implicitImplCache.shouldMatchStructurally(subtype, supertype)) {
-      propOptionality = PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL;
+    if (this.isUsingStructuralTyping && supertype.isStructuralType()) {
+      return this.isStructuralSubtypeHelper(
+          subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
     } else if (supertype.isRecordType()) {
-      propOptionality = PropertyOptionality.ALL_PROPS_ARE_REQUIRED;
-    }
-
-    if (propOptionality != null) {
-      return this.isStructuralSubtypeHelper(subtype, supertype, propOptionality);
+      // Anonymous record types are always considered for structural typing because that's the only
+      // kind of typing they support. However, we limit to the case where the supertype is the
+      // record, because records shouldn't be subtypes of nominal types.
+      return this.isStructuralSubtypeHelper(
+          subtype, supertype, PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
     }
 
     // Interfaces
@@ -283,7 +281,7 @@ final class SubtypeChecker {
   private boolean isStructuralSubtypeHelper(
       ObjectType subtype, ObjectType supertype, PropertyOptionality optionality) {
 
-    MatchStatus cachedResult = this.implicitImplCache.checkCache(subtype, supertype);
+    MatchStatus cachedResult = this.checkStructuralSubtypeCache(subtype, supertype);
     if (cachedResult != null) {
       return cachedResult.subtypeValue();
     }
@@ -316,7 +314,7 @@ final class SubtypeChecker {
       }
     }
 
-    return this.implicitImplCache.updateCache(subtype, supertype, MatchStatus.valueOf(result));
+    return this.updateStructuralSubtypeCache(subtype, supertype, MatchStatus.valueOf(result));
   }
 
   private boolean isFunctionSubtype(FunctionType subtype, JSType nonFunctionSupertype) {
@@ -614,75 +612,65 @@ final class SubtypeChecker {
     }
   }
 
-  /** cache used by check sub-type logic */
-  final class ImplCache {
-    private HashMap<Key, MatchStatus> matchCache;
-    private EqCache eqCache;
+  private boolean updateStructuralSubtypeCache(
+      JSType subType, JSType superType, MatchStatus isMatch) {
+    this.structuralSubtypeCache.put(new CacheKey(subType, superType), isMatch);
+    return isMatch.subtypeValue();
+  }
 
-    boolean isStructuralTyping() {
-      return SubtypeChecker.this.isUsingStructuralTyping;
+  private MatchStatus checkStructuralSubtypeCache(JSType subType, JSType superType) {
+    if (this.structuralSubtypeCache == null) {
+      this.structuralSubtypeCache = new HashMap<>();
     }
 
-    boolean updateCache(JSType subType, JSType superType, MatchStatus isMatch) {
-      matchCache.put(new Key(subType, superType), isMatch);
-      return isMatch.subtypeValue();
+    // check the cache
+    return this.structuralSubtypeCache.putIfAbsent(
+        new CacheKey(subType, superType), MatchStatus.PROCESSING);
+  }
+
+  private boolean cachingEquals(JSType left, JSType right) {
+    if (this.eqCache == null) {
+      this.eqCache =
+          this.isUsingStructuralTyping ? EqCache.create() : EqCache.createWithoutStructuralTyping();
     }
 
-    MatchStatus checkCache(JSType subType, JSType superType) {
-      if (matchCache == null) {
-        this.matchCache = new HashMap<>();
-      }
-      // check the cache
-      return matchCache.putIfAbsent(new Key(subType, superType), MatchStatus.PROCESSING);
+    return left.checkEquivalenceHelper(right, EquivalenceMethod.IDENTITY, eqCache);
+  }
+
+  private final class CacheKey {
+    final JSType left;
+    final JSType right;
+    final int hashCode; // Cache this calculation because it is made often.
+
+    @Override
+    public int hashCode() {
+      return hashCode;
     }
 
-    boolean shouldMatchStructurally(JSType subType, JSType superType) {
-      return isStructuralTyping() && subType.isObject() && superType.isStructuralType();
+    @Override
+    @SuppressWarnings({"ReferenceEquality", "EqualsBrokenForNull", "EqualsUnsafeCast"})
+    public boolean equals(Object other) {
+      // Calling this with `null` or not a `Key` should never happen, so it's fine to crash.
+      CacheKey that = (CacheKey) other;
+      if (this.left == that.left && this.right == that.right) {
+        return true;
+      }
+
+      // The vast majority of cases will have already returned by now, since equality isn't even
+      // checked unless the hash code matches, and in most cases there's only one instance of any
+      // equivalent JSType floating around. The remainder only occurs for cyclic (or otherwise
+      // complicated) data structures where equivalent types are being synthesized by recursive
+      // application of type parameters, or (even more rarely) for hash collisions. Identity is
+      // insufficient in the case of recursive parameterized types because new equivalent copies
+      // of the type are generated on-the-fly to compute the types of various properties.
+      return cachingEquals(this.left, that.left) && cachingEquals(this.right, that.right);
     }
 
-    private boolean equal(JSType left, JSType right) {
-      if (eqCache == null) {
-        this.eqCache =
-            this.isStructuralTyping() ? EqCache.create() : EqCache.createWithoutStructuralTyping();
-      }
-      return left.checkEquivalenceHelper(right, EquivalenceMethod.IDENTITY, eqCache);
-    }
-
-    private final class Key {
-      final JSType left;
-      final JSType right;
-      final int hashCode; // Cache this calculation because it is made often.
-
-      @Override
-      public int hashCode() {
-        return hashCode;
-      }
-
-      @Override
-      @SuppressWarnings({"ReferenceEquality", "EqualsBrokenForNull", "EqualsUnsafeCast"})
-      public boolean equals(Object other) {
-        // Calling this with `null` or not a `Key` should never happen, so it's fine to crash.
-        Key that = (Key) other;
-        if (this.left == that.left && this.right == that.right) {
-          return true;
-        }
-
-        // The vast majority of cases will have already returned by now, since equality isn't even
-        // checked unless the hash code matches, and in most cases there's only one instance of any
-        // equivalent JSType floating around. The remainder only occurs for cyclic (or otherwise
-        // complicated) data structures where equivalent types are being synthesized by recursive
-        // application of type parameters, or (even more rarely) for hash collisions. Identity is
-        // insufficient in the case of recursive parameterized types because new equivalent copies
-        // of the type are generated on-the-fly to compute the types of various properties.
-        return equal(this.left, that.left) && equal(this.right, that.right);
-      }
-
-      Key(JSType left, JSType right) {
-        this.left = left;
-        this.right = right;
-        // NOTE: order matters here, since we're expressing an asymmetric relationship.
-        this.hashCode = 31 * left.hashCode() + right.hashCode();
-      }
+    CacheKey(JSType left, JSType right) {
+      this.left = left;
+      this.right = right;
+      // NOTE: order matters here, since we're expressing an asymmetric relationship.
+      this.hashCode = 31 * left.hashCode() + right.hashCode();
     }
   }
 }
