@@ -572,9 +572,16 @@ function pending(description) {}
 /**
  * @param {Object} spiedOnObject
  * @param {string} methodName
- * @return {!jasmine.Spy} spy
+ * @return {!jasmine.Spy}
  */
 function spyOn(spiedOnObject, methodName) {}
+
+
+/**
+ * @param {Object} spiedOnObject
+ * @return {!jasmine.Spy}
+ */
+function spyOnAllFunctions(spiedOnObject) {}
 
 
 /**
