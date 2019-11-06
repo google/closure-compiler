@@ -703,7 +703,6 @@ function HTMLFormControlsCollection() {}
  * @see https://html.spec.whatwg.org/multipage/infrastructure.html#dom-htmlformcontrolscollection-nameditem
  * @nosideeffects
  * @override
- * @suppress {newCheckTypes}
  */
 HTMLFormControlsCollection.prototype.namedItem = function(name) {};
 
