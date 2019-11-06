@@ -1185,6 +1185,107 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectLiteralDefinePropertiesComputed() {
+    String externs = "Object.defineProperties = function(typeRef, definitions) {}";
+
+    String js =
+        lines(
+            "/** @struct @constructor */ var Foo = function() {};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  ['bar']: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() {},",
+            "    /** @this {Foo} */ set: function(value) {}",
+            "  }",
+            "});");
+
+    String result =
+        lines(
+            "/** @struct @constructor */ var Foo = function() {};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  ['bar']: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() {},",
+            "    /** @this {Foo} */ set: function(value) {}",
+            "  }",
+            "});");
+    testSets(externs, js, result, "{}");
+  }
+
+  @Test
+  public void testObjectLiteralDefinePropertiesMemberFn() {
+    // NOTE: this is probably not code someone would write, but we don't want to crash on it.
+    String externs =
+        lines(
+            "Object.defineProperties = function(typeRef, definitions) {}",
+            "/** @constructor */ function FooBar() {}",
+            "/** @type {string} */ FooBar.prototype.bar;");
+
+    String js =
+        lines(
+            "/** @struct @constructor */ var Foo = function() {};",
+            "/** @type {?} */ Foo.prototype.bar;",
+            "Object.defineProperties(Foo.prototype, {",
+            "  bar() {}",
+            "});");
+
+    String result =
+        lines(
+            "/** @struct @constructor */ var Foo = function() {};",
+            "/** @type {?} */ Foo.prototype.Foo_prototype$bar;",
+            "Object.defineProperties(Foo.prototype, {",
+            "  Foo_prototype$bar() {}",
+            "});");
+    testSets(externs, js, result, "{bar=[[Foo.prototype]]}");
+  }
+
+  @Test
+  public void testObjectLiteralDefinePropertiesGetter() {
+    // NOTE: this is probably not code someone would write, but we don't want to crash on it.
+    String externs =
+        lines(
+            "Object.defineProperties = function(typeRef, definitions) {}",
+            "/** @constructor */ function FooBar() {}",
+            "/** @type {string} */ FooBar.prototype.bar;");
+
+    String js =
+        lines(
+            "/** @struct @constructor */ var Foo = function() {};",
+            "/** @type {?} */ Foo.prototype.bar;",
+            "Object.defineProperties(Foo.prototype, {",
+            "  get bar() {}",
+            "});");
+
+    String result =
+        lines(
+            "/** @struct @constructor */ var Foo = function() {};",
+            "/** @type {?} */ Foo.prototype.Foo_prototype$bar;",
+            "Object.defineProperties(Foo.prototype, {",
+            "  get Foo_prototype$bar() {}",
+            "});");
+    testSets(externs, js, result, "{bar=[[Foo.prototype]]}");
+  }
+
+  @Test
+  public void testObjectLiteralDefinePropertiesSpread() {
+    String externs =
+        lines("Object.defineProperties = function(typeRef, definitions) {}", "var props;");
+
+    String js =
+        lines(
+            "/** @struct @constructor */ var Foo = function() {};",
+            "Object.defineProperties(Foo.prototype, {",
+            "  ...props",
+            "});");
+
+    testSets(externs, js, js, "{}");
+  }
+
+  @Test
   public void testObjectLiteralLends() {
     String js = ""
         + "var mixin = function(x) { return x; };"

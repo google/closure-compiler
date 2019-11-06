@@ -523,17 +523,51 @@ class AmbiguateProperties implements CompilerPass {
         }
 
         for (Node key : objectLiteral.children()) {
-          if (key.isQuotedString()) {
-            quotedNames.add(key.getString());
-          } else {
-            maybeMarkCandidate(key, type);
-          }
+          processObjectProperty(objectLiteral, key, type);
         }
       }
     }
 
+    private void processObjectProperty(Node objectLit, Node key, JSType type) {
+      checkArgument(objectLit.isObjectLit() || objectLit.isObjectPattern(), objectLit);
+      switch (key.getToken()) {
+        case COMPUTED_PROP:
+          if (key.getFirstChild().isString()) {
+            // If this quoted prop name is statically determinable, ensure we don't rename some
+            // other property in a way that could conflict with it.
+            //
+            // This is largely because we store quoted member functions as computed properties and
+            // want to be consistent with how other quoted properties invalidate property names.
+            quotedNames.add(key.getFirstChild().getString());
+          }
+          break;
+
+        case MEMBER_FUNCTION_DEF:
+        case GETTER_DEF:
+        case SETTER_DEF:
+        case STRING_KEY:
+          if (key.isQuotedString()) {
+            // If this quoted prop name is statically determinable, ensure we don't rename some
+            // other property in a way that could conflict with it
+            quotedNames.add(key.getString());
+          } else {
+            maybeMarkCandidate(key, type);
+          }
+          break;
+
+        case OBJECT_REST:
+        case OBJECT_SPREAD:
+          break; // Nothing to do.
+
+        default:
+          throw new IllegalStateException(
+              "Unexpected child of " + objectLit.getToken() + ": " + key.toStringTree());
+      }
+    }
+
     private void processObjectLitOrPattern(Node objectLit) {
-      // Object.defineProperties literals are handled at the CALL node.
+      // Object.defineProperties literals are handled at the CALL node, as we determine the type
+      // differently than for regular object literals.
       if (objectLit.getParent().isCall()
           && NodeUtil.isObjectDefinePropertiesDefinition(objectLit.getParent())) {
         return;
@@ -543,41 +577,7 @@ class AmbiguateProperties implements CompilerPass {
       // are the children of the keys.
       JSType type = getJSType(objectLit);
       for (Node key = objectLit.getFirstChild(); key != null; key = key.getNext()) {
-        switch (key.getToken()) {
-          case COMPUTED_PROP:
-            if (key.getFirstChild().isString()) {
-              // If this quoted prop name is statically determinable, ensure we don't rename some
-              // other property in a way that could conflict with it.
-              //
-              // This is largely because we store quoted member functions as computed properties and
-              // want to be consistent with how other quoted properties invalidate property names.
-              quotedNames.add(key.getFirstChild().getString());
-            }
-            break;
-
-          case MEMBER_FUNCTION_DEF:
-          case GETTER_DEF:
-          case SETTER_DEF:
-          case STRING_KEY:
-            if (key.isQuotedString()) {
-              // If this quoted prop name is statically determinable, ensure we don't rename some
-              // other property in a way that could conflict with it
-              quotedNames.add(key.getString());
-            } else {
-              maybeMarkCandidate(key, type);
-            }
-            break;
-
-          case ITER_REST:
-          case OBJECT_REST:
-          case ITER_SPREAD:
-          case OBJECT_SPREAD:
-            break; // Nothing to do.
-
-          default:
-            throw new IllegalStateException(
-                "Unexpected child of " + objectLit.getToken() + ": " + key.toStringTree());
-        }
+        processObjectProperty(objectLit, key, type);
       }
     }
 

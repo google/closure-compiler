@@ -451,6 +451,76 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testObjectDefinePropertiesComputed() {
+    String js =
+        lines(
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.bar = 0;",
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.bar_ = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  ['a']: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() { return this.bar_;},",
+            "    /** @this {Foo} */ set: function(value) { this.bar_ = value; }",
+            "  }",
+            "});");
+
+    String result =
+        lines(
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.b = 0;",
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.b = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  ['a']: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {Foo} */ get: function() { return this.b;},",
+            "    /** @this {Foo} */ set: function(value) { this.b = value; }",
+            "  }",
+            "});");
+
+    test(js, result);
+  }
+
+  @Test
+  public void testObjectDefinePropertiesMemberFn() {
+    // NOTE: this is very odd code, and people should not be writing it anyway. We really just
+    // don't want a crash.
+    String js =
+        lines(
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.bar = 0;",
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.bar_ = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  a() {}",
+            "});");
+
+    String result =
+        lines(
+            "/** @constructor */ var Bar = function(){};",
+            "Bar.prototype.a = 0;",
+            "/** @struct @constructor */ var Foo = function() {",
+            "  this.b = 'bar';",
+            "};",
+            "/** @type {?} */ Foo.prototype['bar'];",
+            "Object.defineProperties(Foo.prototype, {",
+            "  a() {}",
+            "});");
+
+    test(js, result);
+  }
+
+  @Test
   public void testOverlappingOriginalAndGeneratedNames() {
     test(
         lines(

@@ -773,13 +773,24 @@ class DisambiguateProperties implements CompilerPass {
       }
 
       for (Node key : objectLiteral.children()) {
-        if (key.isQuotedString()) {
-          continue;
-        }
+        switch (key.getToken()) {
+          case COMPUTED_PROP:
+          case OBJECT_SPREAD:
+            break;
 
-        String propName = key.getString();
-        Property prop = getProperty(propName);
-        prop.scheduleRenaming(key, type);
+          case STRING_KEY:
+          case MEMBER_FUNCTION_DEF:
+          case GETTER_DEF:
+          case SETTER_DEF:
+            if (!key.isQuotedString()) {
+              Property prop = getProperty(key.getString());
+              prop.scheduleRenaming(key, type);
+            }
+            break;
+
+          default:
+            throw new IllegalStateException("Unrecognized child of object lit " + key);
+        }
       }
     }
 
