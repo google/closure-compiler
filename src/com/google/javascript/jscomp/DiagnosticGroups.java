@@ -63,7 +63,6 @@ public class DiagnosticGroups {
           "reportUnknownTypes",
           "analyzerChecks",
           "analyzerChecksInternal",
-          "oldReportUnknownTypes",
           "newCheckTypes",
           "newCheckTypesCompatibility",
           "newCheckTypesExtraChecks",
@@ -353,10 +352,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup TOO_MANY_TYPE_PARAMS =
       DiagnosticGroups.registerGroup("tooManyTypeParams",
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
-
-  public static final DiagnosticGroup OLD_REPORT_UNKNOWN_TYPES =
-      DiagnosticGroups.registerGroup("oldReportUnknownTypes", // undocumented
-          TypeCheck.UNKNOWN_EXPR_TYPE);
 
   public static final DiagnosticGroup STRICT_MISSING_PROPERTIES =
       DiagnosticGroups.registerGroup("strictMissingProperties",
