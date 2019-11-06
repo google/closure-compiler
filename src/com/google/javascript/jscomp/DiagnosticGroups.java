@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
 
@@ -452,9 +453,8 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "missingProvide",
           CheckProvides.MISSING_PROVIDE_WARNING,
-          ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE,
-          ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE,
-          ModuleMapCreator.MISSING_NAMESPACE_IMPORT);
+          // TODO(b/143887932): Move this into a better DiagnosticGroup
+          ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE_FOR_FORWARD_DECLARE);
 
   public static final DiagnosticGroup UNRECOGNIZED_TYPE_ERROR =
       DiagnosticGroups.registerGroup("unrecognizedTypeError", // undocumented
@@ -477,6 +477,8 @@ public class DiagnosticGroups {
           MISSING_PROVIDE,
           DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY),
           DiagnosticGroup.forType(ProcessClosurePrimitives.MISSING_PROVIDE_ERROR),
+          DiagnosticGroup.forType(MISSING_MODULE_OR_PROVIDE),
+          DiagnosticGroup.forType(ModuleMapCreator.MISSING_NAMESPACE_IMPORT),
           MISSING_PROPERTIES,
           // triggered by typedefs with missing types
           DUPLICATE_VARS,
