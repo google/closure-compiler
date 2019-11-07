@@ -372,7 +372,6 @@ names are valid warning class names:
 * ``duplicateMessage``
 * ``es5Strict``
 * ``externsValidation``
-* ``fileoverviewTags``
 * ``globalThis``
 * ``internetExplorerChecks``
 * ``invalidCasts``
