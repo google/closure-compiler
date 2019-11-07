@@ -81,8 +81,6 @@ public final class ErrorToFixMapper {
         return getFixForEarlyReference(error, compiler);
       case "JSC_MISSING_SEMICOLON":
         return getFixForMissingSemicolon(error, compiler);
-      case "JSC_MISSING_TRAILING_COMMA":
-        return getFixForMissingTrailingComma(error, compiler);
       case "JSC_REQUIRES_NOT_SORTED":
         return getFixForUnsortedRequires(error, compiler);
       case "JSC_PROVIDES_NOT_SORTED":
@@ -285,33 +283,6 @@ public final class ErrorToFixMapper {
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.getNode(), compiler)
         .insertAfter(error.getNode(), ";")
-        .build();
-  }
-
-  private static SuggestedFix getFixForMissingTrailingComma(
-      JSError error, AbstractCompiler compiler) {
-    // Follow same logic as CheckMissingTrailingComma to determine where to put comma.
-    Node arrayOrObjectLiteral = error.getNode();
-    Node lastElement = arrayOrObjectLiteral.getLastChild();
-    if (arrayOrObjectLiteral.isObjectLit()) {
-      switch (lastElement.getToken()) {
-        case STRING_KEY:
-        case MEMBER_FUNCTION_DEF:
-        case GETTER_DEF:
-        case SETTER_DEF:
-          lastElement = lastElement.getOnlyChild();
-          break;
-        case COMPUTED_PROP:
-        case OBJECT_SPREAD:
-          break;
-        default:
-          throw new IllegalArgumentException(
-              "Unexpected child of OBJECTLIT: " + lastElement.toStringTree());
-      }
-    }
-    return new SuggestedFix.Builder()
-        .attachMatchedNodeInfo(arrayOrObjectLiteral, compiler)
-        .insertAfter(lastElement, ",")
         .build();
   }
 
