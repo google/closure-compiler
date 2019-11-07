@@ -404,22 +404,4 @@ public class ProxyObjectType extends ObjectType {
   JSType simplifyForOptimizations() {
     return referencedType.simplifyForOptimizations();
   }
-
-  @Override
-  public JSType restrictByNotNullOrUndefined() {
-    JSType restricted = referencedType.restrictByNotNullOrUndefined();
-    return areIdentical(restricted, referencedType) ? this : restricted;
-  }
-
-  @Override
-  public JSType restrictByNotUndefined() {
-    JSType restricted = referencedType.restrictByNotUndefined();
-    return areIdentical(restricted, referencedType) ? this : restricted;
-  }
-
-  @Override
-  public JSType restrictByNotNull() {
-    JSType restricted = referencedType.restrictByNotNull();
-    return areIdentical(restricted, referencedType) ? this : restricted;
-  }
 }
