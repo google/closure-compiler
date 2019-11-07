@@ -1296,6 +1296,16 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoCrash() {
+    testSame(
+        lines(
+            "goog.module('example');",
+            "",
+            "const {getElement: {getEl}} = goog.require('goog.dom');",
+            ""));
+  }
+
+  @Test
   public void testReferenceInDefaultParam() {
     testWarning(lines(
         "function func( a = new Bar() ){}",

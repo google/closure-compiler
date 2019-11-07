@@ -444,11 +444,12 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     } else if (parent.isDestructuringLhs() && parent.getFirstChild().isObjectPattern()) {
       if (parent.getFirstChild().hasChildren()) {
         for (Node stringKey : parent.getFirstChild().children()) {
-          if (stringKey.hasChildren()) {
-            visitRequire(stringKey.getFirstChild().getString(), stringKey.getFirstChild());
-          } else {
-            visitRequire(stringKey.getString(), stringKey);
+          Node importName = stringKey.getFirstChild();
+          if (!importName.isName()) {
+            // invalid reported elsewhere
+            continue;
           }
+          visitRequire(importName.getString(), importName);
         }
       } else {
         visitRequire(namespace, googRequireCall);
