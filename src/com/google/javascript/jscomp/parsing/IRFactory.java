@@ -164,6 +164,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -528,20 +529,20 @@ class IRFactory {
 
   private void validateParameters(Node n) {
     if (n.isParamList()) {
-      Node c = n.getFirstChild();
-      for (; c != null; c = c.getNext()) {
-        if (!c.isName()) {
-          continue;
-        }
-        Node sibling = c.getNext();
-        for (; sibling != null; sibling = sibling.getNext()) {
-          if (sibling.isName() && c.getString().equals(sibling.getString())) {
-            errorReporter.warning(
-                SimpleFormat.format(DUPLICATE_PARAMETER, c.getString()),
-                sourceName,
-                n.getLineno(), n.getCharno());
-          }
-        }
+      Set<String> seenNames = new LinkedHashSet<>();
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        ParsingUtil.getParamOrPatternNames(
+            c,
+            (Node param) -> {
+              String paramName = param.getString();
+              if (!seenNames.add(paramName)) {
+                errorReporter.warning(
+                    SimpleFormat.format(DUPLICATE_PARAMETER, paramName),
+                    sourceName,
+                    param.getLineno(),
+                    param.getCharno());
+              }
+            });
       }
     }
   }

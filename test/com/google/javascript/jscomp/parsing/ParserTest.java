@@ -2395,7 +2395,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function f([x, [y, z]]) {}");
     parse("function f([x, {y, foo: z}]) {}");
     parse("function f([x, y] = [1, 2]) { use(x); use(y); }");
-    parse("function f([x, x]) {}");
+    parse("function f([x1, x2]) {}");
   }
 
   @Test
@@ -2490,7 +2490,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function f({x, y}) { use(x); use(y); }");
     parse("function f({w, x: {y, z}}) {}");
     parse("function f({x, y} = {x:1, y:2}) {}");
-    parse("function f({x, x}) {}");
+    parse("function f({x1, x2}) {}");
   }
 
   @Test
@@ -2954,6 +2954,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testDuplicatedParam() {
     parseWarning("function foo(x, x) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x, n, x) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(n, x, x) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x, {x}) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x, {n: {x}}) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x, [x]) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x, ...x) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(...[x, x]) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(...[x,,x]) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x, x = 1) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo([x, x] = [1, 2]) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo({x, x} = {x: 1}) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x, {[n()]: x}) {}", "Duplicate parameter name \"x\"");
+    parseWarning("function foo(x = x) {}");
+    parseWarning("function foo({x: x}) {}");
+    parseWarning("function foo(foo) {}");
   }
 
   @Test
