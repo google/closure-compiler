@@ -3822,6 +3822,82 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         error(INVALIDATION).withMessageContaining("someRandomName"));
   }
 
+  @Test
+  public void testInvalidedTypes_withoutPropAccesses_invalidateTheirSupertypes() {
+    testSets(
+        lines(
+            "class SuperLeft { method() { } }",
+            "",
+            "class SubLeft extends SuperLeft { }",
+            "",
+            "",
+            "class SuperRight { method() { } }",
+            "",
+            "class SubRight extends SuperRight { }",
+            "",
+            "/**",
+            " * @suppress {checkTypes}",
+            " * @param {!SubLeft} x",
+            " * @return {!SubRight}",
+            " */",
+            "function f(x) {",
+            " return x;",
+            "}",
+            "",
+            "const /** !SuperRight */ y = f(new SubLeft())",
+            "y.method()"),
+        lines(
+            "class SuperLeft { SuperLeft_prototype$method() { } }",
+            "",
+            "class SubLeft extends SuperLeft { }",
+            "",
+            "",
+            "class SuperRight { SuperRight_prototype$method() { } }",
+            "",
+            "class SubRight extends SuperRight { }",
+            "",
+            "/**",
+            " * @suppress {checkTypes}",
+            " * @param {!SubLeft} x",
+            " * @return {!SubRight}",
+            " */",
+            "function f(x) {",
+            " return x;",
+            "}",
+            "",
+            "const /** !SuperRight */ y = f(new SubLeft())",
+            "y.SuperRight_prototype$method()"),
+        // TODO(b/135045845): Expect invalidation or
+        // "{method=[[SuperLeft.prototype, SuperRight.prototype]]}".
+        "{method=[[SuperLeft.prototype], [SuperRight.prototype]]}");
+  }
+
+  @Test
+  public void testStructuralMatches_againstSupertypesWithoutAProperty_invalidates() {
+    String js =
+        lines(
+            "class Super { }",
+            "",
+            "class Sub extends Super { method() { } }",
+            "",
+            // Notice how `Opt` is a structural supertype of `Super` (and `Sub`) but won't be used
+            // as the representative type of (`Sub`, "method").
+            "/** @record */",
+            "class Opt {",
+            "  constructor() {",
+            "    /** @type {!Function|undefined} */ this.method;",
+            "  }",
+            "}",
+            "",
+            "const /** !Super */ x = new Sub();",
+            "const /** !Opt */ y = x;",
+            "",
+            "y.method()");
+
+    // TODO(b/144063288): Expect "{method=[[Opt, Sub.prototype, Super]]}".
+    testSets(js, js, "{}");
+  }
+
   private void testSets(String js, String expected, final String fieldTypes) {
     test(srcs(js), expected(expected));
     assertThat(mapToString(lastPass.getRenamedTypesForTesting())).isEqualTo(fieldTypes);
