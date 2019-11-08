@@ -120,11 +120,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_USELESS_USE_STRICT_DIRECTIVE",
           "'use strict' is unnecessary in goog.module files.");
 
-  static final DiagnosticType LATE_PROVIDE_ERROR =
-      DiagnosticType.error(
-          "JSC_LATE_PROVIDE_ERROR",
-          "Required namespace \"{0}\" not provided yet.");
-
   static final DiagnosticType IMPORT_INLINING_SHADOWS_VAR =
       DiagnosticType.error(
           "JSC_IMPORT_INLINING_SHADOWS_VAR",

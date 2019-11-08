@@ -927,26 +927,28 @@ public final class CommandLineRunnerTest {
   public void testSourceSortingCircularDeps1() {
     args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--language_in=ECMASCRIPT5");
-    test(new String[] {
+    test(
+        new String[] {
           "goog.provide('gin'); goog.require('tonic'); var gin = {};",
           "goog.provide('tonic'); goog.require('gin'); var tonic = {};",
           "goog.require('gin'); goog.require('tonic');"
-         },
-         ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+        },
+        CheckClosureImports.LATE_PROVIDE_ERROR);
   }
 
   @Test
   public void testSourceSortingCircularDeps2() {
     args.add("--dependency_mode=PRUNE_LEGACY");
     args.add("--language_in=ECMASCRIPT5");
-    test(new String[] {
+    test(
+        new String[] {
           "goog.provide('roses.lime.juice');",
           "goog.provide('gin'); goog.require('tonic'); var gin = {};",
           "goog.provide('tonic'); goog.require('gin'); var tonic = {};",
           "goog.require('gin'); goog.require('tonic');",
           "goog.provide('gimlet'); goog.require('gin'); goog.require('roses.lime.juice');"
-         },
-         ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+        },
+        CheckClosureImports.LATE_PROVIDE_ERROR);
   }
 
   @Test

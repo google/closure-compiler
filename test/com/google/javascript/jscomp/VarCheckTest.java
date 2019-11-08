@@ -856,9 +856,10 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testNoUndeclaredVarWhenUsingClosurePass() {
     enableClosurePass();
+    enableRewriteClosureCode();
     // We don't want to get goog as an undeclared var here.
-    testError("goog.require('namespace.Class1');\n",
-        ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
+    testError(
+        "goog.require('namespace.Class1');\n", ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE);
   }
 
   // ES6 Module Tests

@@ -5530,12 +5530,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
-    test(options,
-         new String[] {
-           "goog.require('goog.beer');",
-           "goog.provide('goog.beer');"
-         },
-         ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+    test(
+        options,
+        new String[] {"goog.require('goog.beer');", "goog.provide('goog.beer');"},
+        CheckClosureImports.LATE_PROVIDE_ERROR);
   }
 
   @Test

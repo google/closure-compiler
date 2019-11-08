@@ -80,14 +80,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       "JSC_FUNCTION_NAMESPACE_ERROR",
       "\"{0}\" cannot be both provided and declared as a function");
 
-  static final DiagnosticType MISSING_PROVIDE_ERROR = DiagnosticType.error(
-      "JSC_MISSING_PROVIDE_ERROR",
-      "required \"{0}\" namespace never provided");
-
-  static final DiagnosticType LATE_PROVIDE_ERROR = DiagnosticType.error(
-      "JSC_LATE_PROVIDE_ERROR",
-      "required \"{0}\" namespace not provided yet");
-
   static final DiagnosticType INVALID_PROVIDE_ERROR = DiagnosticType.error(
       "JSC_INVALID_PROVIDE_ERROR",
       "\"{0}\" is not a valid {1} qualified name");

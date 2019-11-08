@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
@@ -65,7 +64,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   // Use a LinkedHashMap because the goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames = new LinkedHashMap<>();
 
-  private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
   private final CheckLevel requiresLevel;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   // If this is true, rewriting will not remove any goog.provide or goog.require calls
@@ -127,12 +125,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     }
     deleteNamespaceInitializationsFromPreviousProvides();
 
-    if (requiresLevel.isOn()) {
-      for (UnrecognizedRequire r : unrecognizedRequires) {
-        checkForLateOrMissingProvide(r);
-      }
-    }
-
     for (Node closureRequire : requiresToBeRemoved) {
       compiler.reportChangeToEnclosingScope(closureRequire);
       closureRequire.detach();
@@ -140,23 +132,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     for (Node forwardDeclare : forwardDeclaresToRemove) {
       NodeUtil.deleteNode(forwardDeclare, compiler);
     }
-  }
-
-  private void checkForLateOrMissingProvide(UnrecognizedRequire r) {
-    // Both goog.require and goog.requireType must have a matching goog.provide.
-    // However, goog.require must match an earlier goog.provide, while goog.requireType is allowed
-    // to match a later goog.provide.
-    DiagnosticType error;
-    ProvidedName expectedName = providedNames.get(r.namespace);
-    if (expectedName != null && expectedName.firstNode != null) {
-      if (r.isRequireType) {
-        return;
-      }
-      error = ProcessClosurePrimitives.LATE_PROVIDE_ERROR;
-    } else {
-      error = ProcessClosurePrimitives.MISSING_PROVIDE_ERROR;
-    }
-    compiler.report(JSError.make(r.requireNode, requiresLevel, error, r.namespace));
   }
 
   private class CollectDefinitions implements NodeTraversal.Callback {
@@ -194,17 +169,17 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
               switch (methodName) {
                 case "require":
                 case "requireType":
-                  if (validateAliasiablePrimitiveCall(t, n, methodName)) {
+                  if (isValidPrimitiveCall(t, n)) {
                     processRequireCall(t, n, parent);
                   }
                   break;
                 case "provide":
-                  if (validateUnaliasablePrimitiveCall(t, n, methodName)) {
+                  if (isValidPrimitiveCall(t, n)) {
                     processProvideCall(t, n, parent);
                   }
                   break;
                 case "forwardDeclare":
-                  if (validateAliasiablePrimitiveCall(t, n, methodName)) {
+                  if (isValidPrimitiveCall(t, n)) {
                     processForwardDeclare(n, parent);
                   }
                   break;
@@ -253,51 +228,13 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     }
   }
 
-  /**
-   * Verifies that a) the call is in the global scope and b) the return value is unused
-   *
-   * <p>This method is for primitives that never return a value.
-   */
-  private boolean validateUnaliasablePrimitiveCall(NodeTraversal t, Node n, String methodName) {
-    return validatePrimitiveCallWithMessage(
-        t, n, methodName, ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR);
-  }
-
-  /**
-   * Verifies that a) the call is in the global scope and b) the return value is unused
-   *
-   * <p>This method is for primitives that do return a value in modules, but not in scripts/
-   * goog.provide files
-   */
-  private boolean validateAliasiablePrimitiveCall(NodeTraversal t, Node n, String methodName) {
-    return validatePrimitiveCallWithMessage(
-        t,
-        n,
-        methodName,
-        ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
-  }
-
-  /**
-   * @param methodName list of primitve types classed together with this one
-   * @param invalidAliasingError which DiagnosticType to emit if this call is aliased. this depends
-   *     on whether the primitive is sometimes aliasiable in a module or never aliasable.
-   */
-  private boolean validatePrimitiveCallWithMessage(
-      NodeTraversal t, Node n, String methodName, DiagnosticType invalidAliasingError) {
+  private boolean isValidPrimitiveCall(NodeTraversal t, Node n) {
     // Ignore invalid primitives if we didn't strip module sugar.
     if (compiler.getOptions().shouldPreserveGoogModule()) {
       return true;
     }
 
-    if (!t.inGlobalHoistScope()) {
-      compiler.report(JSError.make(n, INVALID_CLOSURE_CALL_SCOPE_ERROR));
-      return false;
-    } else if (!n.getParent().isExprResult()) {
-      // If the call is in the global hoist scope, but the result is used
-      compiler.report(JSError.make(n, invalidAliasingError, GOOG + "." + methodName));
-      return false;
-    }
-    return true;
+    return t.inGlobalHoistScope() && n.getParent().isExprResult();
   }
 
   /** Handles a goog.require or goog.requireType call. */
@@ -309,7 +246,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       String ns = arg.getString();
       ProvidedName provided = providedNames.get(ns);
       if (provided == null || !provided.isExplicitlyProvided()) {
-        unrecognizedRequires.add(new UnrecognizedRequire(n, ns, method.equals("requireType")));
       } else {
         JSModule providedModule = provided.explicitModule;
 
@@ -319,6 +255,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
           JSModule module = t.getModule();
           // A cross-chunk goog.require must match a goog.provide in an earlier chunk. However, a
           // cross-chunk goog.requireType is allowed to match a goog.provide in a later chunk.
+          // TODO(b/142571318): move this into CheckClosureImports
           if (module != providedModule
               && !moduleGraph.dependsOn(module, providedModule)
               && !method.equals("requireType")) {
@@ -1057,24 +994,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private void maybeAddNameToSymbolTable(Node name) {
     if (preprocessorSymbolTable != null) {
       preprocessorSymbolTable.addReference(name);
-    }
-  }
-
-  // -------------------------------------------------------------------------
-
-  /**
-   * Information required to create a {@link ProcessClosurePrimitives#MISSING_PROVIDE_ERROR}
-   * warning.
-   */
-  private static class UnrecognizedRequire {
-    final Node requireNode;
-    final String namespace;
-    final boolean isRequireType;
-
-    UnrecognizedRequire(Node requireNode, String namespace, boolean isRequireType) {
-      this.requireNode = requireNode;
-      this.namespace = namespace;
-      this.isRequireType = isRequireType;
     }
   }
 }

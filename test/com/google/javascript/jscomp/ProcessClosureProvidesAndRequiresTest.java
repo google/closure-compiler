@@ -16,13 +16,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_PROVIDE_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.LATE_PROVIDE_ERROR;
-import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_PROVIDE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -507,39 +503,23 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
 
   @Test
   public void testLateProvideForRequire() {
-    testError("goog.require('foo'); goog.provide('foo');", LATE_PROVIDE_ERROR);
-    testError("goog.require('foo.bar'); goog.provide('foo.bar');", LATE_PROVIDE_ERROR);
-    testError(
-        "goog.provide('foo.bar'); goog.require('foo'); goog.provide('foo');", LATE_PROVIDE_ERROR);
+    // Error reported elsewhere
+    test("goog.require('foo'); goog.provide('foo');", "/** @const */ var foo = {};");
   }
 
   @Test
   public void testLateProvideForRequireType() {
     testNoWarning("goog.requireType('foo'); goog.provide('foo');");
-    testNoWarning("goog.requireType('foo.bar'); goog.provide('foo.bar');");
-    testNoWarning("goog.provide('foo.bar'); goog.requireType('foo'); goog.provide('foo');");
   }
 
   @Test
   public void testMissingProvideForRequire() {
-    testError("goog.require('foo');", MISSING_PROVIDE_ERROR);
-    testError("goog.provide('foo'); goog.require('Foo');", MISSING_PROVIDE_ERROR);
-    testError("goog.provide('foo'); goog.require('foo.bar');", MISSING_PROVIDE_ERROR);
-    testError(
-        "goog.provide('foo'); var EXPERIMENT_FOO = true; "
-            + "if (EXPERIMENT_FOO) {goog.require('foo.bar');}",
-        MISSING_PROVIDE_ERROR);
+    test("goog.require('foo');", "");
   }
 
   @Test
   public void testMissingProvideForRequireType() {
-    testError("goog.requireType('foo');", MISSING_PROVIDE_ERROR);
-    testError("goog.provide('foo'); goog.requireType('Foo');", MISSING_PROVIDE_ERROR);
-    testError("goog.provide('foo'); goog.requireType('foo.bar');", MISSING_PROVIDE_ERROR);
-    testError(
-        "goog.provide('foo'); var EXPERIMENT_FOO = true; "
-            + "if (EXPERIMENT_FOO) {goog.requireType('foo.bar');}",
-        MISSING_PROVIDE_ERROR);
+    test("goog.requireType('foo');", "");
   }
 
   @Test
@@ -816,18 +796,22 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
         "/** @const */ var b={};b.B={}; /** @const */ var a={};a.A={};");
   }
 
-  // Tests that a require not in additional code generates (only) one error.
+  // Tests that a require not in additional code generates no errors (it's reported elsewhere)
   @Test
   public void testMissingRequireWithAdditionalProvide() {
     additionalCode = "goog.provide('b.B'); b.B = {};";
-    testError("goog.require('b.C'); goog.provide('a.A'); a.A = {};", MISSING_PROVIDE_ERROR);
+    test(
+        "goog.require('b.C'); goog.provide('a.A'); a.A = {};",
+        "/** @const */ var b={};b.B={};/** @const */ var a={};a.A={}");
   }
 
-  // Tests that a requireType not in additional code generates (only) one error.
+  // Tests that a requireType not in additional code generates no errors (it's reported elsewhere)
   @Test
   public void testMissingRequireTypeWithAdditionalProvide() {
     additionalCode = "goog.provide('b.B'); b.B = {};";
-    testError("goog.requireType('b.C'); goog.provide('a.A'); a.A = {};", MISSING_PROVIDE_ERROR);
+    test(
+        "goog.requireType('b.C'); goog.provide('a.A'); a.A = {};",
+        "/** @const */ var b={};b.B={};/** @const */ var a={};a.A={};");
   }
 
   // Tests that a require in additional code generates no error.
@@ -982,42 +966,16 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInvalidRequire() {
-    testError(
+  public void testInvalidRequireScope() {
+    test(
         "goog.provide('a.b'); var x = x || goog.require('a.b');",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
-    testError(
+        "/** @const */ var a={};/** @const */ a.b={};var x=x||goog.require(\"a.b\")");
+    test(
         "goog.provide('a.b'); x = goog.require('a.b');",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
-    testError(
+        "/** @const */ var a={};/** @const */ a.b={}; x= goog.require(\"a.b\")");
+    test(
         "goog.provide('a.b'); function f() { goog.require('a.b'); }",
-        INVALID_CLOSURE_CALL_SCOPE_ERROR);
-  }
-
-  @Test
-  public void testInvalidRequireType() {
-    testError(
-        "goog.provide('a.b'); var x = x || goog.requireType('a.b');",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
-    testError(
-        "goog.provide('a.b'); x = goog.requireType('a.b');",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
-    testError(
-        "goog.provide('a.b'); function f() { goog.requireType('a.b'); }",
-        INVALID_CLOSURE_CALL_SCOPE_ERROR);
-  }
-
-  @Test
-  public void testInvalidForwardDeclare() {
-    testError(
-        "goog.provide('a.b'); var x = x || goog.forwardDeclare('a.b');",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
-    testError(
-        "goog.provide('a.b'); x = goog.forwardDeclare('a.b');",
-        CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
-    testError(
-        "goog.provide('a.b'); function f() { goog.forwardDeclare('a.b'); }",
-        INVALID_CLOSURE_CALL_SCOPE_ERROR);
+        "/** @const */ var a={};/** @const */ a.b={};function f(){goog.require('a.b')}");
   }
 
   @Test
@@ -1158,12 +1116,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
           "/** @const */ apps.foo.bar.B = {};",
           "/** @const */ apps.foo.bar.C = {};",
         });
-  }
-
-  @Test
-  public void testRequireOfBaseGoog() {
-    testError("goog.require('goog');", MISSING_PROVIDE_ERROR);
-    testError("goog.requireType('goog');", MISSING_PROVIDE_ERROR);
   }
 
   @Test

@@ -475,7 +475,6 @@ public class DiagnosticGroups {
           UNDEFINED_VARIABLES,
           MISSING_PROVIDE,
           DiagnosticGroup.forType(FunctionTypeBuilder.RESOLVED_TAG_EMPTY),
-          DiagnosticGroup.forType(ProcessClosurePrimitives.MISSING_PROVIDE_ERROR),
           DiagnosticGroup.forType(MISSING_MODULE_OR_PROVIDE),
           DiagnosticGroup.forType(ModuleMapCreator.MISSING_NAMESPACE_IMPORT),
           MISSING_PROPERTIES,
@@ -705,7 +704,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LATE_PROVIDE =
       DiagnosticGroups.registerGroup(
           "lateProvide", // undocumented
-          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+          CheckClosureImports.LATE_PROVIDE_ERROR);
 
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
