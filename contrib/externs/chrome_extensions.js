@@ -2501,6 +2501,10 @@ chrome.runtime.Manifest.prototype.name;
 chrome.runtime.Manifest.prototype.version;
 
 
+/** @type {string|undefined} */
+chrome.runtime.Manifest.prototype.version_name;
+
+
 /** @type {number|undefined} */
 chrome.runtime.Manifest.prototype.manifest_version;
 
