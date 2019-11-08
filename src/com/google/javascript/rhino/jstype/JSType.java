@@ -1398,26 +1398,13 @@ public abstract class JSType implements Serializable {
       return new TypePair(p.typeB, p.typeA);
     }
 
-    // other types
-    switch (testForEquality(that)) {
-      case TRUE:
-        JSType noType = getNativeType(JSTypeNative.NO_TYPE);
-        return new TypePair(noType, noType);
-
-      case FALSE:
-      case UNKNOWN:
-        // This function is for the coercing inequality ({@code !=}), so checking either
-        // {@code != null} or {@code != undefined} should remove both types.
-        if (this.isNullType() || this.isVoidType()) {
-          return new TypePair(this, that.restrictByNotNullOrUndefined());
-        } else if (that.isNullType() || that.isVoidType()) {
-          return new TypePair(this.restrictByNotNullOrUndefined(), that);
-        }
-        return new TypePair(this, that);
+    // For the remaining types, the only way to restrict anything is if both
+    // types are null or void, in which case we're left with nothing.
+    if (this.isNullTypeOrVoidType() && that.isNullTypeOrVoidType()) {
+      JSType noType = registry.getNativeType(JSTypeNative.NO_TYPE);
+      return new TypePair(noType, noType);
     }
-
-    // switch case is exhaustive
-    throw new IllegalStateException();
+    return new TypePair(this, that);
   }
 
   /**
@@ -1453,18 +1440,17 @@ public abstract class JSType implements Serializable {
     // Other types.
     // There are only two types whose shallow inequality is deterministically
     // true -- null and undefined. We can just enumerate them.
-    if ((isNullType() && that.isNullType()) || (isVoidType() && that.isVoidType())) {
+    if (areIdentical(this, that) && this.isNullTypeOrVoidType()) {
       return new TypePair(null, null);
-    } else if (this.isNullType()) {
-      return new TypePair(this, that.restrictByNotNull());
-    } else if (this.isVoidType()) {
-      return new TypePair(this, that.restrictByNotUndefined());
-    } else if (that.isNullType()) {
-      return new TypePair(this.restrictByNotNull(), that);
-    } else if (that.isVoidType()) {
-      return new TypePair(this.restrictByNotUndefined(), that);
     }
+    // Since unions have already been removed, if this and that don't have the same
+    // unit type then there is no further narrowing that can be done on them.
     return new TypePair(this, that);
+  }
+
+  // TODO(sdh): Should this be exposed more publicly?
+  private boolean isNullTypeOrVoidType() {
+    return this.isNullType() || this.isVoidType();
   }
 
   public Iterable<JSType> getUnionMembers() {
