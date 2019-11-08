@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.common.annotations.GwtIncompatible;
 import java.io.Serializable;
 import java.text.MessageFormat;
@@ -106,12 +104,18 @@ public final class DiagnosticType
   }
 
   @Override
+  public boolean equals(Object type) {
+    return type instanceof DiagnosticType && ((DiagnosticType) type).key.equals(key);
+  }
+
+  @Override
+  public int hashCode() {
+    return key.hashCode();
+  }
+
+  @Override
   public int compareTo(DiagnosticType diagnosticType) {
-    int result = key.compareTo(diagnosticType.key);
-    if (result == 0) {
-      checkState(this.equals(diagnosticType));
-    }
-    return result;
+    return key.compareTo(diagnosticType.key);
   }
 
   @Override
