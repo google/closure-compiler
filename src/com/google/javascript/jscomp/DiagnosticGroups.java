@@ -66,11 +66,7 @@ public class DiagnosticGroups {
           "newCheckTypes",
           "newCheckTypesCompatibility",
           "newCheckTypesExtraChecks",
-          "missingSourcesWarnings",
-          // TODO(johnlenz): "strictMissingProperties" is here until it has a shake down cruise.
-          "strictMissingProperties",
-          "strictPrimitiveOperators",
-          "strictCheckTypes");
+          "missingSourcesWarnings");
 
   public DiagnosticGroups() {}
 
