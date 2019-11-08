@@ -22,7 +22,7 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LOAD_MODULE_FN_MISSING_RETURN;
-import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Predicates;
@@ -617,7 +617,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "exports = {Foo, Bar: [1,2,3]};"),
           lines("goog.module('modB');", "", "var {Foo} = goog.require('modA');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
     testError(
         new String[] {
@@ -629,7 +629,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "exports = {Foo, Bar: [1,2,3]};"),
           lines("goog.module('modB');", "", "var {Foo} = goog.requireType('modA');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
   }
 
   @Test
@@ -716,7 +716,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "exports = A"),
           lines("goog.module('p.C');", "var {method} = goog.require('p.A');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
     testError(
         new String[] {
@@ -727,7 +727,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "exports = A"),
           lines("goog.module('p.C');", "var {method} = goog.requireType('p.A');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
     testError(
         new String[] {
@@ -735,7 +735,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "goog.module('p.A');", "/** @constructor */ exports = class { static method() {} }"),
           lines("goog.module('p.C');", "var {method} = goog.require('p.A');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
     testError(
         new String[] {
@@ -743,7 +743,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "goog.module('p.A');", "/** @constructor */ exports = class { static method() {} }"),
           lines("goog.module('p.C');", "var {method} = goog.requireType('p.A');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
     testError(
         new String[] {
@@ -754,7 +754,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "/** @constructor */ exports.Bar = class {};"),
           lines("goog.module('p.C');", "", "var {Baz} = goog.require('p.A');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
     testError(
         new String[] {
@@ -765,7 +765,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "/** @constructor */ exports.Bar = class {};"),
           lines("goog.module('p.C');", "", "var {Baz} = goog.requireType('p.A');")
         },
-        DOES_NOT_HAVE_EXPORT);
+        DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
     // TODO(blickly): We should warn for the next two as well, but it's harder to detect.
 

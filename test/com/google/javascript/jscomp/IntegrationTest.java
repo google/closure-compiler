@@ -5320,10 +5320,10 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     normalizeResults = true;
 
-    test(options,
+    test(
+        options,
         "function f() { var xyz = /** @type {string} */ (0); }",
-        DiagnosticType.warning(
-            "JSC_INVALID_CAST", "invalid cast"));
+        TypeValidator.INVALID_CAST);
 
     testSame(options,
         "/** @suppress {invalidCasts} */\n" +

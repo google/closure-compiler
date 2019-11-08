@@ -22,7 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.TypedScopeCreator.CTOR_INITIALIZER;
 import static com.google.javascript.jscomp.TypedScopeCreator.IFACE_INITIALIZER;
-import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT;
+import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.testing.TypedVarSubject.assertThat;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -4862,7 +4862,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "goog.module('a.Foo');", //
                 "const {Bar} = goog.requireType('b.Bar');"),
             "goog.module('b.Bar');"),
-        error(DOES_NOT_HAVE_EXPORT));
+        error(DOES_NOT_HAVE_EXPORT_WITH_DETAILS));
   }
 
   @Test
@@ -5140,7 +5140,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testGoogRequire_destructuringMissingExportDoesntCrash() {
     testError(
         srcs("goog.module('a');", "goog.module('b'); const {x} = goog.require('a'); X: x;"),
-        error(DOES_NOT_HAVE_EXPORT));
+        error(DOES_NOT_HAVE_EXPORT_WITH_DETAILS));
 
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
     assertNode(xNode).hasJSTypeThat().isUnknown(); // Note: we warn for this case elsewhere.
@@ -6481,4 +6481,3 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
           "goog.require = function(id) {};",
           "goog.provide = function(id) {};");
 }
-
