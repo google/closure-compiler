@@ -77,6 +77,7 @@ abstract class CompilerTypeTestCase {
           "goog.asserts = {};",
           "/** @return {*} */ goog.asserts.assert = function(x) { return x; };",
           "goog.module = function(ns) {};",
+          "/** @return {?} */",
           "goog.module.get = function(ns) {};",
           "/** @return {?} */",
           "goog.require = function(ns) {};",

@@ -546,7 +546,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                   .withSourceNode(iife)
                   .withParamsNode(compiler.getTypeRegistry().createParameters(objectTypes))
                   .withReturnType(function.getJSType())
-                  .build();
+                  .buildAndResolve();
           iife.setJSType(iifeType);
         }
         compiler.reportChangeToChangeScope(iife);

@@ -204,6 +204,7 @@ public final class TypeInferenceTest {
     for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
       assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
     }
+    scopeCreator.resolveTypes();
     // Create the control graph.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, cfgRoot);
@@ -2813,7 +2814,7 @@ public final class TypeInferenceTest {
     FunctionType fnType =
         FunctionType.builder(registry)
             .withReturnType(returnType)
-            .withParamsNode(IR.paramList(IR.name("p")))
+            .withParamsNode(IR.paramList(IR.name("p").setJSType(getNativeType(UNKNOWN_TYPE))))
             .withName(fullName)
             .build();
     assuming(fullName, fnType);
@@ -2841,7 +2842,7 @@ public final class TypeInferenceTest {
     FunctionType fnType =
         FunctionType.builder(registry)
             .withReturnType(returnType)
-            .withParamsNode(IR.paramList(IR.name("p")))
+            .withParamsNode(IR.paramList(IR.name("p").setJSType(getNativeType(UNKNOWN_TYPE))))
             .withName(fullName)
             .withClosurePrimitiveId(ClosurePrimitive.ASSERTS_MATCHES_RETURN)
             .build();

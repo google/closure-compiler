@@ -1410,6 +1410,10 @@ public class JSTypeRegistry implements Serializable {
 
   /** Resolve all the unresolved types in the given scope. */
   public void resolveTypes() {
+    for (JSType nativeType : nativeTypes) {
+      nativeType.resolve(reporter);
+    }
+
     for (NamedType type : unresolvedNamedTypes) {
       type.resolve(reporter);
     }

@@ -102,7 +102,9 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       booleanType = registry.getNativeType(JSTypeNative.BOOLEAN_TYPE);
       nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
       nullableStringType =
-          registry.createNullableType(registry.getNativeType(JSTypeNative.STRING_TYPE));
+          registry
+              .createNullableType(registry.getNativeType(JSTypeNative.STRING_TYPE))
+              .resolveOrThrow();
       voidType = registry.getNativeType(JSTypeNative.VOID_TYPE);
     } else {
       shouldAddTypes = false;
@@ -323,14 +325,16 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       //   function ($jscomp$generator$context) {
       //   }
       final Node program;
-      JSType programType = shouldAddTypes
-          // function(!Context<YIELD_TYPE>): (void|{value: YIELD_TYPE})
-          ? registry.createFunctionType(
-              registry.createUnionType(
-                  voidType,
-                  registry.createRecordType(ImmutableMap.of("value", yieldType))),
-              context.contextType)
-          : null;
+      JSType programType =
+          shouldAddTypes
+              // function(!Context<YIELD_TYPE>): (void|{value: YIELD_TYPE})
+              ? registry
+                  .createFunctionType(
+                      registry.createUnionType(
+                          voidType, registry.createRecordType(ImmutableMap.of("value", yieldType))),
+                      context.contextType)
+                  .resolveOrThrow()
+              : null;
       Node generatorBody = IR.block();
 
       final Node changeScopeNode;
@@ -352,8 +356,10 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         callTarget.getSecondChild().setString("asyncExecutePromiseGeneratorProgram");
         JSType oldType = callTarget.getJSType();
         if (oldType != null && oldType.isFunctionType()) {
-          callTarget.setJSType(registry.createFunctionType(
-              oldType.toMaybeFunctionType().getReturnType(), programType));
+          callTarget.setJSType(
+              registry
+                  .createFunctionType(oldType.toMaybeFunctionType().getReturnType(), programType)
+                  .resolveOrThrow());
         }
 
         program = originalGeneratorBody.getParent();
@@ -388,7 +394,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                 "createGenerator");
         if (shouldAddTypes) {
           createGenerator.setJSType(
-              registry.createFunctionType(originalGenReturnType, programType));
+              registry.createFunctionType(originalGenReturnType, programType).resolveOrThrow());
         }
         // Replace original generator function body with:
         // return $jscomp.generator.createGenerator(<origGenerator>, <program function>);
@@ -899,7 +905,9 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           withType(
                   IR.getprop(
                       forIn.cloneNode(), IR.string("getNext").useSourceInfoFrom(detachedExpr)),
-                  shouldAddTypes ? propertyIteratorType.getPropertyType("getNext") : null)
+                  shouldAddTypes
+                      ? propertyIteratorType.getPropertyType("getNext").resolveOrThrow()
+                      : null)
               .useSourceInfoFrom(detachedExpr);
 
       // "(i = $for$in.getNext()) != null"
@@ -1494,7 +1502,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
                 IR.getprop(
                     getJsContextNameNode(sourceNode),
                     IR.string(fieldName).useSourceInfoFrom(sourceNode)),
-                shouldAddTypes ? contextType.getPropertyType(fieldName) : null)
+                shouldAddTypes ? contextType.getPropertyType(fieldName).resolveOrThrow() : null)
             .useSourceInfoFrom(sourceNode);
       }
 
@@ -1505,7 +1513,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         if (shouldAddTypes) {
           callNode.setJSType(
               contextField.getJSType().isFunctionType()
-                  ? contextField.getJSType().toMaybeFunctionType().getReturnType()
+                  ? contextField.getJSType().toMaybeFunctionType().getReturnType().resolveOrThrow()
                   : unknownType);
         }
         return callNode;

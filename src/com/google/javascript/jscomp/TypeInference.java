@@ -209,14 +209,17 @@ class TypeInference
         astParameter = astParameter.getOnlyChild();
         // convert 'number' into 'Array<number>' for rest parameters
         inferredType =
-            registry.createTemplatizedType(registry.getNativeObjectType(ARRAY_TYPE), inferredType);
+            registry
+                .createTemplatizedType(registry.getNativeObjectType(ARRAY_TYPE), inferredType)
+                .resolveOrThrow();
       }
 
       if (defaultValue != null) {
         // The param could possibly be the default type, and `undefined` args won't propagate in.
         inferredType =
-            registry.createUnionType(
-                inferredType.restrictByNotUndefined(), getJSType(defaultValue));
+            registry
+                .createUnionType(inferredType.restrictByNotUndefined(), getJSType(defaultValue))
+                .resolveOrThrow();
       }
 
       if (astParameter.isDestructuringPattern()) {
@@ -427,7 +430,8 @@ class TypeInference
                       .getTemplateTypeMap()
                       .getResolvedTemplateType(registry.getObjectIndexKey());
               if (objIndexType != null && !objIndexType.isUnknownType()) {
-                JSType narrowedKeyType = iterKeyType.getGreatestSubtype(objIndexType);
+                JSType narrowedKeyType =
+                    iterKeyType.getGreatestSubtype(objIndexType).resolveOrThrow();
                 if (!narrowedKeyType.isEmptyType()) {
                   iterKeyType = narrowedKeyType;
                 }
@@ -666,8 +670,11 @@ class TypeInference
         scope = traverseChildren(n, scope);
         if (n.getFirstChild().isGetProp()) {
           Node getprop = n.getFirstChild();
-          ObjectType ownerType = ObjectType.cast(
-              getJSType(getprop.getFirstChild()).restrictByNotNullOrUndefined());
+          ObjectType ownerType =
+              ObjectType.cast(
+                  getJSType(getprop.getFirstChild())
+                      .restrictByNotNullOrUndefined()
+                      .resolveOrThrow());
           if (ownerType != null) {
             ensurePropertyDeclaredHelper(getprop, ownerType, scope);
           }
@@ -870,9 +877,11 @@ class TypeInference
     } else {
       // Other functions also include undefined, in case they are not called with 'new'.
       newTargetNode.setJSType(
-          registry.createUnionType(
-              registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
-              registry.getNativeType(VOID_TYPE)));
+          registry
+              .createUnionType(
+                  registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+                  registry.getNativeType(VOID_TYPE))
+              .resolveOrThrow());
     }
   }
 
@@ -1099,7 +1108,10 @@ class TypeInference
             // TODO(sdh): remove this condition after cleaning up code depending on it.
             && !(target.getParent().isLet() && !target.hasChildren())) {
           JSType oldType = var.getType();
-          var.setType(oldType == null ? resultType : oldType.getLeastSupertype(resultType));
+          var.setType(
+              oldType == null
+                  ? resultType
+                  : oldType.getLeastSupertype(resultType).resolveOrThrow());
         } else if (isTypelessConstDecl) {
           // /** @const */ var x = y;
           // should be redeclared, so that the type of y
@@ -1113,8 +1125,8 @@ class TypeInference
           boolean declaredSlotType = false;
           JSType rawObjType = target.getFirstChild().getJSType();
           if (rawObjType != null) {
-            ObjectType objType = ObjectType.cast(
-                rawObjType.restrictByNotNullOrUndefined());
+            ObjectType objType =
+                ObjectType.cast(rawObjType.restrictByNotNullOrUndefined().resolveOrThrow());
             if (objType != null) {
               String propName = target.getLastChild().getString();
               declaredSlotType = objType.isPropertyTypeDeclared(propName);
@@ -1142,8 +1154,8 @@ class TypeInference
     String propName = getprop.getLastChild().getString();
     Node obj = getprop.getFirstChild();
     JSType nodeType = getJSType(obj);
-    ObjectType objectType = ObjectType.cast(
-        nodeType.restrictByNotNullOrUndefined());
+    ObjectType objectType =
+        ObjectType.cast(nodeType.restrictByNotNullOrUndefined().resolveOrThrow());
     boolean propCreationInConstructor =
         obj.isThis() && getJSType(containerScope.getRootNode()).isConstructor();
 
@@ -1292,7 +1304,7 @@ class TypeInference
         }
 
         // traverse into nested patterns
-        JSType targetType = target.inferType();
+        JSType targetType = target.inferType().resolveOrThrow();
         targetType = targetType != null ? targetType : getNativeType(UNKNOWN_TYPE);
         scope = traverseDestructuringPatternHelper(targetNode, scope, targetType, declarer);
       } else {
@@ -1305,7 +1317,9 @@ class TypeInference
         }
 
         // declare in the scope
-        scope = declarer.declareTypeInScope(scope, targetNode, target.inferType());
+        scope =
+            declarer.declareTypeInScope(
+                scope, targetNode, JSType.nullSafeResolveOrThrow(target.inferType()));
       }
     }
     // put the `inferred type` of a pattern on it, to make it easier to do typechecking
@@ -1393,8 +1407,10 @@ class TypeInference
   private FlowScope traverseArrayLiteral(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope);
     n.setJSType(
-        registry.createTemplatizedType(
-            registry.getNativeObjectType(ARRAY_TYPE), getNativeType(UNKNOWN_TYPE)));
+        registry
+            .createTemplatizedType(
+                registry.getNativeObjectType(ARRAY_TYPE), getNativeType(UNKNOWN_TYPE))
+            .resolveOrThrow());
     return scope;
   }
 
@@ -1445,7 +1461,8 @@ class TypeInference
           TypedVar var = getDeclaredVar(scope, qKeyName);
           JSType oldType = var == null ? null : var.getType();
           if (var != null && var.isTypeInferred()) {
-            var.setType(oldType == null ? valueType : oldType.getLeastSupertype(oldType));
+            var.setType(
+                oldType == null ? valueType : oldType.getLeastSupertype(oldType).resolveOrThrow());
           }
 
           scope =
@@ -1481,7 +1498,7 @@ class TypeInference
       } else if (isAddedAsNumber(leftType) && isAddedAsNumber(rightType)) {
         type = getNativeType(NUMBER_TYPE);
       } else {
-        type = registry.createUnionType(STRING_TYPE, NUMBER_TYPE);
+        type = registry.createUnionType(STRING_TYPE, NUMBER_TYPE).resolveOrThrow();
       }
     }
     n.setJSType(type);
@@ -1498,13 +1515,15 @@ class TypeInference
 
   private boolean isAddedAsNumber(JSType type) {
     return type.isSubtypeOf(
-        registry.createUnionType(
-            VOID_TYPE,
-            NULL_TYPE,
-            NUMBER_TYPE,
-            NUMBER_OBJECT_TYPE,
-            BOOLEAN_TYPE,
-            BOOLEAN_OBJECT_TYPE));
+        registry
+            .createUnionType(
+                VOID_TYPE,
+                NULL_TYPE,
+                NUMBER_TYPE,
+                NUMBER_OBJECT_TYPE,
+                BOOLEAN_TYPE,
+                BOOLEAN_OBJECT_TYPE)
+            .resolveOrThrow());
   }
 
   private FlowScope traverseHook(Node n, FlowScope scope) {
@@ -1533,7 +1552,7 @@ class TypeInference
     JSType trueType = trueNode.getJSType();
     JSType falseType = falseNode.getJSType();
     if (trueType != null && falseType != null) {
-      n.setJSType(trueType.getLeastSupertype(falseType));
+      n.setJSType(trueType.getLeastSupertype(falseType).resolveOrThrow());
     } else {
       n.setJSType(null);
     }
@@ -1565,7 +1584,7 @@ class TypeInference
     }
 
     Node left = n.getFirstChild();
-    JSType functionType = getJSType(left).restrictByNotNullOrUndefined();
+    JSType functionType = getJSType(left).restrictByNotNullOrUndefined().resolveOrThrow();
     if (left.isSuper()) {
       // TODO(sdh): This will probably return the super type; might want to return 'this' instead?
       return traverseInstantiation(n, functionType, scope);
@@ -1610,7 +1629,7 @@ class TypeInference
         scope =
             reverseInterpreter.getPreciserScopeKnowingConditionOutcome(assertedNode, scope, true);
         // Build the result of the assertExpression
-        JSType truthyType = getJSType(assertedNode).restrictByNotNullOrUndefined();
+        JSType truthyType = getJSType(assertedNode).restrictByNotNullOrUndefined().resolveOrThrow();
         callNode.setJSType(truthyType);
         break;
 
@@ -1623,7 +1642,7 @@ class TypeInference
         if (assertedType.isUnknownType() || type.isUnknownType()) {
           narrowed = assertedType;
         } else {
-          narrowed = type.getGreatestSubtype(assertedType);
+          narrowed = type.getGreatestSubtype(assertedType).resolveOrThrow();
         }
         callNode.setJSType(narrowed);
         if (assertedNodeName != null && type.differsFrom(narrowed)) {
@@ -1694,8 +1713,8 @@ class TypeInference
     }
 
     Node target = bind.target;
-    FunctionType callTargetFn = getJSType(target)
-        .restrictByNotNullOrUndefined().toMaybeFunctionType();
+    FunctionType callTargetFn =
+        getJSType(target).restrictByNotNullOrUndefined().resolveOrThrow().toMaybeFunctionType();
     if (callTargetFn == null) {
       return;
     }
@@ -1708,15 +1727,27 @@ class TypeInference
             FunctionType.builder(registry)
                 .copyFromOtherFunction(callTargetFn)
                 .withTypeOfThis(thisType.toObjectType())
-                .build();
+                .buildAndResolve();
         target.setJSType(callTargetFn);
       }
     }
 
-    n.setJSType(
+    JSType returnType =
         callTargetFn.getBindReturnType(
             // getBindReturnType expects the 'this' argument to be included.
-            bind.getBoundParameterCount() + 1));
+            bind.getBoundParameterCount() + 1);
+    FunctionType bindType = getJSType(n.getFirstChild()).toMaybeFunctionType();
+    if (bindType != null && n.getFirstChild() != target) {
+      // Update the type of the
+      bindType =
+          FunctionType.builder(registry)
+              .copyFromOtherFunction(bindType)
+              .withReturnType(returnType)
+              .buildAndResolve();
+      n.getFirstChild().setJSType(bindType);
+    }
+
+    n.setJSType(returnType);
   }
 
   /**
@@ -1809,7 +1840,7 @@ class TypeInference
             FunctionType.builder(registry)
                 .copyFromOtherFunction(currentType)
                 .withTypeOfThis(expectedType.getTypeOfThis())
-                .build();
+                .buildAndResolve();
          return replacement;
       }
     } else {
@@ -1848,7 +1879,8 @@ class TypeInference
       // We're looking at a call made as `obj['method']()` or `obj.method()` (see enclosing if),
       // so if the call is successfully made, then the object through which it is made isn't null
       // or undefined.
-      typeOfThisProvidedByTheCall = typeOfThisProvidedByTheCall.restrictByNotNullOrUndefined();
+      typeOfThisProvidedByTheCall =
+          typeOfThisProvidedByTheCall.restrictByNotNullOrUndefined().resolveOrThrow();
       maybeResolveTemplatedType(
           typeOfThisRequiredByTheFunction, typeOfThisProvidedByTheCall, resolvedTypes, seenTypes);
     }
@@ -2016,7 +2048,7 @@ class TypeInference
     }
 
     // Don't worry about checking bounds here. We'll validate them once they're all collected.
-    map.merge(template, resolved, (a, b) -> a.getLeastSupertype(b));
+    map.merge(template, resolved, (a, b) -> a.getLeastSupertype(b).resolveOrThrow());
   }
 
   /**
@@ -2101,7 +2133,7 @@ class TypeInference
     TemplateTypeReplacer replacer = TemplateTypeReplacer.forInference(registry, inferred);
     Node callTarget = n.getFirstChild();
 
-    FunctionType replacementFnType = fnType.visit(replacer).toMaybeFunctionType();
+    FunctionType replacementFnType = fnType.visit(replacer).resolveOrThrow().toMaybeFunctionType();
     checkNotNull(replacementFnType);
     callTarget.setJSType(replacementFnType);
     n.setJSType(replacementFnType.getReturnType());
@@ -2154,7 +2186,11 @@ class TypeInference
       // If necessary, templatized the instance type based on the the constructor parameters.
       Map<TemplateType, JSType> inferredTypes =
           inferTemplateTypesFromParameters(ctorFnType, n, scope);
-      instantiatedType = registry.createTemplatizedType(instantiatedType, inferredTypes);
+      instantiatedType =
+          registry
+              .createTemplatizedType(instantiatedType, inferredTypes)
+              .resolveOrThrow()
+              .toMaybeObjectType();
     }
 
     n.setJSType(instantiatedType);
@@ -2233,7 +2269,7 @@ class TypeInference
   private FlowScope tightenTypeAfterDereference(Node n, FlowScope scope) {
     if (n.isQualifiedName()) {
       JSType type = getJSType(n);
-      JSType narrowed = type.restrictByNotNullOrUndefined();
+      JSType narrowed = type.restrictByNotNullOrUndefined().resolveOrThrow();
       if (!type.equals(narrowed)) {
         scope = narrowScope(scope, n, narrowed);
       }
@@ -2269,7 +2305,7 @@ class TypeInference
     if (propertyType == null && objType != null) {
       JSType foundType = objType.findPropertyType(propName);
       if (foundType != null) {
-        propertyType = foundType;
+        propertyType = foundType.resolveOrThrow();
       }
     }
 
@@ -2322,7 +2358,7 @@ class TypeInference
     JSType type;
     BooleanOutcomePair outcome;
     if (leftType != null && rightType != null) {
-      leftType = leftType.getRestrictedTypeGivenToBooleanOutcome(!nIsAnd);
+      leftType = leftType.getRestrictedTypeGivenToBooleanOutcome(!nIsAnd).resolveOrThrow();
       if (leftOutcome.toBooleanOutcomes == BooleanLiteralSet.get(!nIsAnd)) {
         // Either n is && and lhs is false, or n is || and lhs is true.
         // Use the restricted left type; the right side never gets evaluated.
@@ -2331,7 +2367,7 @@ class TypeInference
       } else {
         // Use the join of the restricted left type knowing the outcome of the
         // ToBoolean predicate and of the right type.
-        type = leftType.getLeastSupertype(rightType);
+        type = leftType.getLeastSupertype(rightType).resolveOrThrow();
         outcome = new BooleanOutcomePair(
             joinBooleanOutcomes(nIsAnd,
                 leftOutcome.toBooleanOutcomes, rightOutcome.toBooleanOutcomes),
@@ -2381,7 +2417,7 @@ class TypeInference
 
     Node expr = await.getFirstChild();
     JSType exprType = getJSType(expr);
-    await.setJSType(Promises.getResolvedType(registry, exprType));
+    await.setJSType(Promises.getResolvedType(registry, exprType).resolveOrThrow());
 
     return scope;
   }

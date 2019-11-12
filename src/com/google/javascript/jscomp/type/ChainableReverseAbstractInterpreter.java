@@ -32,6 +32,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -159,6 +160,7 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   @CheckReturnValue
   protected FlowScope declareNameInScope(FlowScope scope, Node node, JSType type) {
+    Preconditions.checkState(type == null || type.isResolved(), type);
     switch (node.getToken()) {
       case NAME:
         return scope.inferSlotType(node.getString(), type);
@@ -217,7 +219,7 @@ public abstract class ChainableReverseAbstractInterpreter
           if (restricted == null) {
             restricted = restrictedAlternate;
           } else {
-            restricted = restrictedAlternate.getLeastSupertype(restricted);
+            restricted = restrictedAlternate.getLeastSupertype(restricted).resolveOrThrow();
           }
         }
       }
@@ -240,7 +242,7 @@ public abstract class ChainableReverseAbstractInterpreter
       // need is a notion of "enum subtyping", so that we could dynamically
       // create a subtype of MyEnum restricted by string. In any case,
       // this should catch the common case.
-      JSType type = enumElementType.getPrimitiveType().visit(this);
+      JSType type = JSType.nullSafeResolveOrThrow(enumElementType.getPrimitiveType().visit(this));
       if (type != null &&
           enumElementType.getPrimitiveType().isEquivalentTo(type)) {
         return enumElementType;
@@ -457,7 +459,7 @@ public abstract class ChainableReverseAbstractInterpreter
         JSType ctorType = getNativeType(U2U_CONSTRUCTOR_TYPE);
         if (resultEqualsValue) {
           // Objects are restricted to "Function", subtypes are left
-          return ctorType.getGreatestSubtype(type);
+          return ctorType.getGreatestSubtype(type).resolveOrThrow();
         } else {
           // Only filter out subtypes of "function"
           return type.isSubtypeOf(ctorType) ? null : type;
@@ -519,8 +521,8 @@ public abstract class ChainableReverseAbstractInterpreter
         return null;
       }
     }
-    return type.visit(
-        new RestrictByOneTypeOfResultVisitor(value, resultEqualsValue));
+    return JSType.nullSafeResolveOrThrow(
+        type.visit(new RestrictByOneTypeOfResultVisitor(value, resultEqualsValue)));
   }
 
   JSType getNativeType(JSTypeNative typeId) {

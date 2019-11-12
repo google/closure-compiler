@@ -179,7 +179,7 @@ public final class ClosureReverseAbstractInterpreter
       Function<TypeRestriction, JSType> restriction,
       boolean outcome) {
     // restricting
-    type = restriction.apply(new TypeRestriction(type, outcome));
+    type = JSType.nullSafeResolveOrThrow(restriction.apply(new TypeRestriction(type, outcome)));
 
     // changing the scope
     if (type != null) {

@@ -469,6 +469,11 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateExpressionType(Node n) {
+    JSType type = n.getJSType();
+
+    if (type != null && !type.isResolved()) { // null types are checked in the switch statement
+      violation("Found unresolved type " + type, n);
+    }
     switch (n.getToken()) {
       case NAME:
         validateNameType(n);
@@ -539,7 +544,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private String getTypeAnnotationString(@Nullable JSType typeI) {
+  private static String getTypeAnnotationString(@Nullable JSType typeI) {
     if (typeI == null) {
       return "NO TYPE INFORMATION";
     } else {

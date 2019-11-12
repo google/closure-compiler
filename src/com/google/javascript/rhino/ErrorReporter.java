@@ -89,4 +89,17 @@ public interface ErrorReporter {
         @Override
         public void error(String message, String sourceName, int line, int lineOffset) {}
       };
+
+  static final ErrorReporter ALWAYS_THROWS_INSTANCE =
+      new ErrorReporter() {
+        @Override
+        public void warning(String message, String sourceName, int line, int lineOffset) {
+          throw new IllegalStateException(message);
+        }
+
+        @Override
+        public void error(String message, String sourceName, int line, int lineOffset) {
+          throw new IllegalStateException(message);
+        }
+      };
 }

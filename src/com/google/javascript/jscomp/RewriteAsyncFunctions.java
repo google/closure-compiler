@@ -148,7 +148,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         // type checking hasn't run, so we don't need type information.
         wrapperFunctionType = null;
       } else {
-        wrapperFunctionType = FunctionType.builder(registry).withReturnType(propertyType).build();
+        wrapperFunctionType =
+            FunctionType.builder(registry).withReturnType(propertyType).buildAndResolve();
       }
       return new SuperPropertyWrapperInfo(
           firstSuperDotPropertyNode, wrapperFunctionName, wrapperFunctionType);

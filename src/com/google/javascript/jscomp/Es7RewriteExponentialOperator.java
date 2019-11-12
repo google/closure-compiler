@@ -47,7 +47,8 @@ public final class Es7RewriteExponentialOperator
       this.stringType = registry.getNativeType(JSTypeNative.STRING_TYPE);
       // TODO(nickreid): Get the actual type of the `Math` object here in case optimizations care.
       this.mathType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-      this.mathPowType = registry.createFunctionType(numberType, numberType, numberType);
+      this.mathPowType =
+          registry.createFunctionType(numberType, numberType, numberType).resolveOrThrow();
     } else {
       this.numberType = null;
       this.stringType = null;

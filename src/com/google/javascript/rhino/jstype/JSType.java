@@ -1598,10 +1598,28 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * @see #resolve
+   * Finishes resolution and throws an Exception if there are any warnings or errors.
+   *
+   * <p>Call this when creating new types after the main type resolution step, where any failures in
+   * resolution are not the fault of the user.
    */
+  public final JSType resolveOrThrow() {
+    return resolve(ErrorReporter.ALWAYS_THROWS_INSTANCE);
+  }
+
+  /** Null-safe version of {@link #resolveOrThrow()} */
+  public static JSType nullSafeResolveOrThrow(JSType type) {
+    return type == null ? null : type.resolveOrThrow();
+  }
+
+  /** @see #resolve */
+  @ForOverride
   abstract JSType resolveInternal(ErrorReporter reporter);
 
+  /**
+   * Bypasses the normal call to {@link #resolve(ErrorReporter)}. Useful if you are aware that no
+   * resolution work needs to be done.
+   */
   void setResolvedTypeInternal(JSType type) {
     resolveResult = type;
     resolved = true;

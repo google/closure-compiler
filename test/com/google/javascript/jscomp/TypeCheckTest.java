@@ -8504,8 +8504,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
       lines(
           "/**",
           " * @param {T} p",
-          " * @return {T}",
+          " * @return {U}",
           " * @template T",
+          " * @template U :=",
+          "       mapunion(T, (E) => cond(sub(E, union('null', 'undefined')), none(), E)) =:",
           " * @closurePrimitive {asserts.truthy}",
           " */",
           "function assertTruthy(p) { return p; }",

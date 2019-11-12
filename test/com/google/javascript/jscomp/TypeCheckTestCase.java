@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
@@ -262,7 +261,7 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
-    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
+    compiler.setFeatureSet(compiler.getFeatureSet());
     compiler.getOptions().setClosurePass(runClosurePass);
 
     Node jsNode = IR.root(compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
@@ -277,6 +276,9 @@ abstract class TypeCheckTestCase extends CompilerTypeTestCase {
     assertWithMessage("Regarding errors:").that(compiler.getErrors()).isEmpty();
 
     TypedScope s = makeTypeCheck().processForTesting(externsNode, jsNode);
+
+    new AstValidator(compiler).setTypeValidationEnabled(true).process(externsNode, jsNode);
+
     return new TypeCheckResult(jsNode.getFirstChild(), s);
   }
 

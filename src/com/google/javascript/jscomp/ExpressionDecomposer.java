@@ -616,7 +616,7 @@ class ExpressionDecomposer {
     if (fnType != null) {
       fnCallType =
           fnType.isFunctionType()
-              ? fnType.toMaybeFunctionType().getPropertyType("call")
+              ? fnType.toMaybeFunctionType().getPropertyType("call").resolveOrThrow()
               : unknownType;
     }
 

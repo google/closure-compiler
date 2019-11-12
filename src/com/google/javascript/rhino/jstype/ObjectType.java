@@ -401,9 +401,11 @@ public abstract class ObjectType extends JSType implements Serializable {
       JSType originalType = getPropertyType(propertyName);
       type = originalType == null ? type : originalType.getLeastSupertype(type);
     }
+    // TODO(b/140764208): verify that if isResolved() then type.isResolved().
+    // Defining unresolved properties on resolved types is dangerous because the property type
+    // may never be resolved.
 
-    boolean result = defineProperty(propertyName, type, true,
-        propertyNode);
+    boolean result = defineProperty(propertyName, type, true, propertyNode);
 
     // All property definitions go through this method
     // or defineDeclaredProperty. Because the properties defined an an

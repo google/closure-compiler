@@ -521,7 +521,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       getpropType = ((FunctionType) receiverType).getPropertyType(propName);
     }
 
-    return getprop.setJSType(getpropType);
+    return getprop.setJSType(JSType.nullSafeResolveOrThrow(getpropType));
   }
 
   private Node callInferringJSType(Node callee, Node... args) {
@@ -533,6 +533,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     }
 
     JSType returnType = ((FunctionType) calleeType).getReturnType();
-    return call.setJSType(returnType);
+    return call.setJSType(JSType.nullSafeResolveOrThrow(returnType));
   }
 }

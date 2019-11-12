@@ -102,9 +102,14 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     JSType iteratorType = createGenericType(JSTypeNative.ITERATOR_TYPE, typeParam);
     FunctionType iteratorNextType =
         addTypes
-            ? iteratorType.toMaybeObjectType().getPropertyType("next").toMaybeFunctionType()
+            ? iteratorType
+                .toMaybeObjectType()
+                .getPropertyType("next")
+                .resolveOrThrow()
+                .toMaybeFunctionType()
             : null;
-    JSType iIterableResultType = addTypes ? iteratorNextType.getReturnType() : null;
+    JSType iIterableResultType =
+        addTypes ? iteratorNextType.getReturnType().resolveOrThrow() : null;
 
     JSDocInfo varJSDocInfo = variable.getJSDocInfo();
     Node iterName =
@@ -129,7 +134,8 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     if (addTypes) {
       // Put types on the $jscomp.makeIterator getprop
       Node getProp = call.getFirstChild();
-      getProp.setJSType(registry.createFunctionType(iteratorType, makeIteratorTypeArg));
+      getProp.setJSType(
+          registry.createFunctionType(iteratorType, makeIteratorTypeArg).resolveOrThrow());
       // typing $jscomp as unknown since the $jscomp polyfill may not be injected before
       // typechecking. (See https://github.com/google/closure-compiler/issues/2908)
       getProp.getFirstChild().setJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
@@ -196,6 +202,6 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
       builder.addAlternate(argumentsType);
     }
 
-    return builder.build();
+    return builder.build().resolveOrThrow();
   }
 }
