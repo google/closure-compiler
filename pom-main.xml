@@ -295,9 +295,6 @@
           <source>${jdk.version}</source>
           <target>${jdk.version}</target>
           <encoding>${project.build.sourceEncoding}</encoding>
-          <links>
-            <link>http://docs.oracle.com/javase/7/docs/api/</link>
-          </links>
           <detectLinks>true</detectLinks>
           <excludePackageNames>*.resources.*:*.gwt.*:*.testing.*:*.debugger.*:*.webservice.*:*.debugging.*:*.ant.*</excludePackageNames>
         </configuration>
