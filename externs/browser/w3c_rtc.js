@@ -697,11 +697,23 @@ RTCRtpReceiver.prototype.getContributingSources = function() {};
 RTCRtpReceiver.prototype.getSynchronizationSources = function() {};
 
 /**
- * Chrome extension to control jitter buffer delay.
+ * Deprecated, the remnant from Chrome Origin Trial experiment:
+ * https://developers.chrome.com/origintrials/#/view_trial/1463669878895411201
+ * It was embedded into Chrome M79 permamently under name
+ * |playoutDelayHint|. We keep it for now for consistency with Chrome
+ * clients below M79. Once Origin Trial expires on 4th December 2019, it can
+ * be safely removed. TODO(b/144272224) clean it up.
  * @see https://github.com/henbos/webrtc-timing/issues/1
  * @type {?number|undefined}
  */
 RTCRtpReceiver.prototype.jitterBufferDelayHint;
+
+/**
+ * Chrome exclusive hint to control jitter buffer delay. Measured in seconds.
+ * @see https://henbos.github.io/webrtc-extensions/#dfn-playoutdelayhint
+ * @type {?number|undefined}
+ */
+RTCRtpReceiver.prototype.playoutDelayHint;
 
 /**
  * @see https://www.w3.org/TR/webrtc/#dom-rtcrtptransceiverinit
