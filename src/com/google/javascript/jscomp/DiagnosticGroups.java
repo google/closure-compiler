@@ -63,9 +63,6 @@ public class DiagnosticGroups {
           "reportUnknownTypes",
           "analyzerChecks",
           "analyzerChecksInternal",
-          "newCheckTypes",
-          "newCheckTypesCompatibility",
-          "newCheckTypesExtraChecks",
           "missingSourcesWarnings");
 
   public DiagnosticGroups() {}
@@ -143,7 +140,6 @@ public class DiagnosticGroups {
           + "missingSourcesWarnings, "
           + "moduleLoad, "
           + "msgDescriptions, "
-          + "newCheckTypes, "
           + "nonStandardJsDocs, "
           + "partialAlias, "
           + "polymer, "
@@ -327,22 +323,6 @@ public class DiagnosticGroups {
   // This group exists for the J2CL team to suppress the associated diagnostics using Java code
   // rather than `@suppress` annotations.
   public static final DiagnosticGroup CHECK_STATIC_OVERRIDES = CHECK_PROTOTYPAL_TYPES;
-
-  // Run the new type inference, but omit many warnings that are not
-  // found by the old type checker. This makes migration to NTI more manageable.
-  public static final DiagnosticGroup NEW_CHECK_TYPES_COMPATIBILITY_MODE =
-      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesCompatibility");
-
-  // no op
-  public static final DiagnosticGroup NEW_CHECK_TYPES_EXTRA_CHECKS =
-      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesExtraChecks");
-
-  // Part of the new type inference
-  public static final DiagnosticGroup NEW_CHECK_TYPES =
-      DiagnosticGroups.registerDeprecatedGroup("newCheckTypes");
-
-  public static final DiagnosticGroup NEW_CHECK_TYPES_ALL_CHECKS =
-      DiagnosticGroups.registerDeprecatedGroup("newCheckTypesAllChecks");
 
   public static final DiagnosticGroup TOO_MANY_TYPE_PARAMS =
       DiagnosticGroups.registerGroup("tooManyTypeParams",
