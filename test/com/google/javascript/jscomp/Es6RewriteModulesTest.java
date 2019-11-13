@@ -1168,4 +1168,13 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "let /** !a$$module$other.Type */ t$$module$testcode = new a$$module$other.Type();",
             "/** @const */ var module$testcode = {};"));
   }
+
+  @Test
+  public void testExportsNotImplicitlyLocallyDeclared() {
+    test(
+        externs("var exports;"),
+        srcs("typeof exports; export {};"),
+        // Regression test; compiler used to rewrite `exports` to `exports$$module$testcode`.
+        expected("typeof exports; /** @const */ var module$testcode = {};"));
+  }
 }

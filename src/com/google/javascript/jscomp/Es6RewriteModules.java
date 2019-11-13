@@ -563,23 +563,24 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private Node createExportsObject(String moduleName, NodeTraversal t, Node script) {
     Node objLit = IR.objectlit();
-    // Going to get renamed by RenameGlobalVars, so the name we choose here doesn't matter (i.e. we
-    // can't use "moduleName" since it will get renamed to something else). We'll fix the name in
-    // visitScript after the global renaming to ensure it has a name that is deterministic from the
-    // path.
+    // Going to get renamed by RenameGlobalVars, so the name we choose here doesn't matter as long
+    // as it doesn't collide with an existing variable. (We can't use `moduleName` since then
+    // RenameGlobalVars will rename all references to `moduleName` incorrectly). We'll fix the name
+    // in visitScript after the global renaming to ensure it has a name that is deterministic from
+    // the path.
     //
     // So after this method we'll have:
-    // var exports = {};
+    // var $jscomp$tmp$exports$module$name = {};
     // module$name.exportName = localName;
     //
     // After RenameGlobalVars:
-    // var exports$globalized = {};
+    // var $jscomp$tmp$exports$module$nameglobalized = {};
     // module$name.exportName = localName$globalized;
     //
     // After visitScript:
     // var module$name = {};
     // module$name.exportName = localName$globalized;
-    Node moduleVar = IR.var(IR.name("exports"), objLit);
+    Node moduleVar = IR.var(IR.name("$jscomp$tmp$exports$module$name"), objLit);
     moduleVar.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
     JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
     infoBuilder.recordConstancy();
