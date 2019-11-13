@@ -124,7 +124,6 @@ public class DiagnosticGroups {
           + "deprecated, "
           + "deprecatedAnnotations, "
           + "duplicateMessage, "
-          + "es3, "
           + "es5Strict, "
           + "externsValidation, "
           // + "featuresNotSupportedByPass, " Don't show this to users
@@ -410,11 +409,6 @@ public class DiagnosticGroups {
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
           TypeCheck.FUNCTION_MASKS_VARIABLE,
           VariableReferenceCheck.REDECLARED_VARIABLE);
-
-  public static final DiagnosticGroup ES3 =
-      DiagnosticGroups.registerGroup("es3",
-          RhinoErrorReporter.INVALID_ES3_PROP_NAME,
-          RhinoErrorReporter.TRAILING_COMMA);
 
   // In the conversion from ES5 to ES6, we remove the strict check that asserts functions
   // must be declared at the top of a new scope or immediately within the declaration of another

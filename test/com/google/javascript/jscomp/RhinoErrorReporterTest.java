@@ -36,13 +36,10 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class RhinoErrorReporterTest {
-
-  private boolean reportEs3Props;
   private boolean reportLintWarnings;
 
   @Before
   public void setUp() throws Exception {
-    reportEs3Props = true;
     reportLintWarnings = true;
   }
 
@@ -70,12 +67,6 @@ public final class RhinoErrorReporterTest {
 
   @Test
   public void testInvalidEs3Prop() {
-    reportEs3Props = false;
-
-    assertNoWarningOrError("var x = y.function;");
-
-    reportEs3Props = true;
-
     String message =
         "Keywords and reserved words are not allowed as unquoted property " +
         "names in older versions of JavaScript. " +
@@ -162,12 +153,6 @@ public final class RhinoErrorReporterTest {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-
-    if (!reportEs3Props) {
-      options.setWarningLevel(
-          DiagnosticGroups.ES3,
-          CheckLevel.OFF);
-    }
 
     if (!reportLintWarnings) {
       options.setWarningLevel(
