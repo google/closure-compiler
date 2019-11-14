@@ -65,7 +65,10 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
+    enableCreateModuleMap();
+    enableTypeCheck();
     enableRunTypeCheckAfterProcessing();
+    enableTypeInfoValidation();
     disableScriptFeatureValidation();
   }
 
@@ -174,13 +177,37 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Test
   public void testTypeNodeRewriting() {
-    testModules(
-        lines(
-            "import * as name from './other.js';", //
-            "/** @type {name.a} */ var x;"),
-        lines(
-            "/** @type {a$$module$other} */ var x$$module$testcode;",
-            "/** @const */ var module$testcode = {};"));
+    //
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "other.js",
+                lines(
+                    "export default 0;", //
+                    "export let name = 'George';",
+                    "export let a = class {};")),
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "import * as name from './other.js';", //
+                    "/** @type {name.a} */ var x;"))),
+        expected(
+            SourceFile.fromCode(
+                "other.js",
+                lines(
+                    "var $jscompDefaultExport$$module$other = 0;", //
+                    "let name$$module$other = 'George';",
+                    "let a$$module$other = class {};",
+                    "/** @const */ var module$other = {};",
+                    "/** @const */ module$other.a = a$$module$other;",
+                    "/** @const */ module$other.default = $jscompDefaultExport$$module$other;",
+                    "/** @const */ module$other.name = name$$module$other;",
+                    "")),
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "/** @type {a$$module$other} */ var x$$module$testcode;",
+                    "/** @const */ var module$testcode = {};"))));
   }
 
   @Test
@@ -401,16 +428,17 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
 
     testModules(
-        lines("export var ARRAY, OBJ, UNCHANGED;",
+        lines(
+            "export var ARRAY, OBJ, UNCHANGED;",
             "function f() {",
-            "  ({OBJ} = {});",
+            "  ({OBJ} = {OBJ: {}});",
             "  [ARRAY] = [];",
             "  var x = {UNCHANGED: 0};",
             "}"),
         lines(
             "var ARRAY$$module$testcode, OBJ$$module$testcode, UNCHANGED$$module$testcode;",
             "function f$$module$testcode() {",
-            "  ({OBJ:OBJ$$module$testcode} = {});",
+            "  ({OBJ:OBJ$$module$testcode} = {OBJ: {}});",
             "  [ARRAY$$module$testcode] = [];",
             "  var x = {UNCHANGED: 0};",
             "}",
@@ -753,12 +781,22 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "export class Child {",
             "  /** @param {Child.Foo.Bar.Baz} baz */",
             "  useBaz(baz) {}",
-            "}"),
+            "}",
+            "",
+            "Child.Foo = class {};",
+            "",
+            "Child.Foo.Bar = class {};",
+            "",
+            "Child.Foo.Bar.Baz = class {};",
+            ""),
         lines(
             "class Child$$module$testcode {",
             "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
             "  useBaz(baz) {}",
             "}",
+            "Child$$module$testcode.Foo=class{};",
+            "Child$$module$testcode.Foo.Bar=class{};",
+            "Child$$module$testcode.Foo.Bar.Baz=class{};",
             "/** @const */ var module$testcode = {};",
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
@@ -1066,7 +1104,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testMutableTransitiveImport() {
     test(
         srcs(
-            SourceFile.fromCode("a.js", "export class A {}; () => A++;"),
+            SourceFile.fromCode("a.js", "export let A = class {}; () => (A = class {});"),
             SourceFile.fromCode("b.js", "export {A} from './a.js';"),
             SourceFile.fromCode(
                 "c.js",
@@ -1077,8 +1115,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             SourceFile.fromCode(
                 "a.js",
                 lines(
-                    "class A$$module$a {}",
-                    "()=>A$$module$a++;",
+                    "let A$$module$a = class {};",
+                    "()=>A$$module$a = class {};",
                     "/** @const */ var module$a = {",
                     "  /** @return {?} */ get A() { return A$$module$a; },",
                     "};")),
@@ -1095,7 +1133,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
                     "/** @const */ var module$c = {};"))));
     test(
         srcs(
-            SourceFile.fromCode("a.js", "export class A {}; () => A++;"),
+            SourceFile.fromCode("a.js", "export let A = class {}; () => (A = class {});"),
             SourceFile.fromCode("b.js", "export {A as B} from './a.js';"),
             SourceFile.fromCode(
                 "c.js",
@@ -1106,8 +1144,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             SourceFile.fromCode(
                 "a.js",
                 lines(
-                    "class A$$module$a {}",
-                    "()=>A$$module$a++;",
+                    "let A$$module$a = class {};",
+                    "()=>A$$module$a = class {};",
                     "/** @const */ var module$a = {",
                     "  /** @return {?} */ get A() { return A$$module$a; },",
                     "};")),
@@ -1160,13 +1198,29 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Test
   public void testRewritePropsWhenNotModuleReference() {
-    testModules(
-        lines(
-            "import * as name from './other.js';", //
-            "let /** !name.a.Type */ t = new name.a.Type();"),
-        lines(
-            "let /** !a$$module$other.Type */ t$$module$testcode = new a$$module$other.Type();",
-            "/** @const */ var module$testcode = {};"));
+    //
+    test(
+        srcs(
+            SourceFile.fromCode("other.js", lines("export let name = {}, a = { Type: class {} };")),
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "import * as name from './other.js';", //
+                    "let /** !name.a.Type */ t = new name.a.Type();"))),
+        expected(
+            SourceFile.fromCode(
+                "other.js",
+                lines(
+                    "let name$$module$other = {}, a$$module$other = { Type: class {} };",
+                    "/** @const */ var module$other = {};",
+                    "/** @const */ module$other.a = a$$module$other;",
+                    "/** @const */ module$other.name = name$$module$other;")),
+            SourceFile.fromCode(
+                "testcode",
+                lines(
+                    "let /** !a$$module$other.Type */ t$$module$testcode =",
+                    "   new a$$module$other.Type();",
+                    "/** @const */ var module$testcode = {};"))));
   }
 
   @Test

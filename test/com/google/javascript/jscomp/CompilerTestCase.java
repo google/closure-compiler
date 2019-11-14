@@ -1682,6 +1682,11 @@ public abstract class CompilerTestCase {
 
         verifyGetterAndSetterCollection(compiler, mainRoot);
 
+        if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
+          TypeCheck check = createTypeCheck(compiler);
+          check.processForTesting(externsRoot, mainRoot);
+        }
+
         if (astValidationEnabled) {
           new AstValidator(compiler, scriptFeatureValidationEnabled)
               .setTypeValidationEnabled(typeInfoValidationEnabled)
@@ -1689,11 +1694,6 @@ public abstract class CompilerTestCase {
         }
         if (checkLineNumbers) {
           new SourceInfoCheck(compiler).process(externsRoot, mainRoot);
-        }
-
-        if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
-          TypeCheck check = createTypeCheck(compiler);
-          check.processForTesting(externsRoot, mainRoot);
         }
 
         if (checkAccessControls) {
