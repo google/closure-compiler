@@ -744,12 +744,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   /** Adds all enums and typedefs to the registry's list of non-nullable types. */
   private static class IdentifyEnumsAndTypedefsAsNonNullable extends AbstractPostOrderCallback {
     private final JSTypeRegistry registry;
-    private final CodingConvention codingConvention;
 
     IdentifyEnumsAndTypedefsAsNonNullable(
         JSTypeRegistry registry, CodingConvention codingConvention) {
       this.registry = registry;
-      this.codingConvention = codingConvention;
     }
 
     @Override
@@ -793,7 +791,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       } else if (rvalue != null
           && rvalue.isQualifiedName()
           && registry.isNonNullableName(t.getScope(), rvalue.getQualifiedName())
-          && NodeUtil.isConstantDeclaration(codingConvention, info, nameNode)) {
+          && NodeUtil.isConstantDeclaration(info, nameNode)) {
         registry.identifyNonNullableName(t.getScope(), nameNode.getQualifiedName());
       }
     }
@@ -2258,8 +2256,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       // Check if this is constant, and if it has a known type.
-      if (NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, lValue)
-          || isGoogModuleExports(lValue)) {
+      if (NodeUtil.isConstantDeclaration(info, lValue) || isGoogModuleExports(lValue)) {
         if (rValue != null) {
           JSType rValueType = getDeclaredRValueType(lValue, rValue);
           declareAliasTypeIfRvalueIsAliasable(
@@ -2828,7 +2825,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     private boolean isConstantDeclarationWithKnownType(JSDocInfo info, Node n, JSType valueType) {
-      return NodeUtil.isConstantDeclaration(compiler.getCodingConvention(), info, n)
+      return NodeUtil.isConstantDeclaration(info, n)
           && valueType != null
           && !valueType.isUnknownType();
     }

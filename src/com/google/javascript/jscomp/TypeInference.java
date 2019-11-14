@@ -1053,8 +1053,7 @@ class TypeInference
         // TypedScopeCreator and this code.
         boolean isTypelessConstDecl =
             isVarDeclaration
-                && NodeUtil.isConstantDeclaration(
-                    compiler.getCodingConvention(), var.getJSDocInfo(), var.getNameNode())
+                && NodeUtil.isConstantDeclaration(var.getJSDocInfo(), var.getNameNode())
                 && !(var.getJSDocInfo() != null
                     && var.getJSDocInfo().containsDeclarationExcludingTypelessConst());
 

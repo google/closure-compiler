@@ -2234,15 +2234,49 @@ public final class NodeUtilTest {
       assertIsConstantDeclaration(true, getNameNodeFrom("const {[3]: a} = {};", "a"));
       assertIsConstantDeclaration(true, getNameNodeFrom("const {a: [a]} = {};", "a"));
 
-      // TODO(bradfordcsmith): Add test cases for other coding conventions.
+      assertIsConstantDeclaration(false, getNameNodeFrom("var FOO = 1;", "FOO"));
+
+      assertIsConstantDeclaration(true, constructInferredConstantDeclaration());
+    }
+
+    @Test
+    public void testIsConstantDeclaration_excludesNonDeclarationReferences() {
+      assertIsConstantDeclaration(false, getNameNodeFrom("const x = y;", "y"));
+
+      Node nameInExpr = IR.name("x");
+      IR.exprResult(nameInExpr);
+      nameInExpr.setInferredConstantVar(true);
+      assertIsConstantDeclaration(false, nameInExpr);
+    }
+
+    @Test
+    public void testIsConstantDeclaration_qnames() {
+      Node constAssignment = parse("/** @const */ x.y = a.b;");
+
+      Node assign = constAssignment.getFirstFirstChild();
+      assertIsConstantDeclaration(false, assign);
+      assertIsConstantDeclaration(true, assign.getFirstChild());
+      assertIsConstantDeclaration(false, assign.getSecondChild());
+
+      Node nonConstAssignment = parse("x.y = a.b;");
+
+      assign = nonConstAssignment.getFirstFirstChild();
+      assertIsConstantDeclaration(false, assign.getFirstChild());
     }
 
     private void assertIsConstantDeclaration(boolean isConstantDeclaration, Node node) {
-      CodingConvention codingConvention = new ClosureCodingConvention();
       JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(node);
       assertWithMessage("Is %s a constant declaration?", node)
-          .that(NodeUtil.isConstantDeclaration(codingConvention, jsDocInfo, node))
+          .that(NodeUtil.isConstantDeclaration(jsDocInfo, node))
           .isEqualTo(isConstantDeclaration);
+    }
+
+    /** Returns a NAME node from 'let foo = 1;` */
+    private static Node constructInferredConstantDeclaration() {
+      Node nameNode = IR.name("foo");
+      nameNode.setInferredConstantVar(true);
+      IR.script(IR.let(nameNode, IR.number(1))); // attach the expected context to the name.
+      return nameNode;
     }
 
     @Test
