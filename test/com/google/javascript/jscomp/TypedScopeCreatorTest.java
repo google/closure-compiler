@@ -4588,6 +4588,32 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModule_moduleObjectTypeMatchesImportExportAndModuleBody() {
+    testSame(
+        srcs(
+            lines(
+                "goog.module('mod.a');", //
+                "exports = class {};",
+                "EXPORTED_A: exports;",
+                ""),
+            lines(
+                "goog.module('mod.b');", //
+                "const imported_a = goog.require('mod.a');",
+                "IMPORTED_A: imported_a;",
+                "")));
+
+    final Node aExportsNode = getLabeledStatement("EXPORTED_A").statementNode.getOnlyChild();
+    final JSType exportedAJSType = aExportsNode.getJSType();
+    assertThat(exportedAJSType).isNotNull();
+
+    final Node aModuleNode = NodeUtil.getEnclosingType(aExportsNode, Token.MODULE_BODY);
+    assertNode(aModuleNode).hasJSTypeThat().isEqualTo(exportedAJSType);
+
+    final Node importedANode = getLabeledStatement("IMPORTED_A").statementNode.getOnlyChild();
+    assertNode(importedANode).hasJSTypeThat().isEqualTo(exportedAJSType);
+  }
+
+  @Test
   public void testGoogModule_namedExportDeclaresTypeInModuleScope() {
     testSame("goog.module('mod.a'); exports.B = class {}; MOD_A: 0;");
 
