@@ -16627,26 +16627,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTemplateType5() {
+    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
     testTypes(
-        lines(
-            "const CGI_PARAM_RETRY_COUNT = 'rc';",
-            "",
-            "/**",
-            " * @param {...T} p",
-            " * @return {T} ",
-            " * @template T",
-            " */",
-            "function fn(p) { return p; }",
-            "/** @type {!Object} */ var x;",
-            "",
-            "/** @return {void} */",
-            "function aScope() {",
-            "  x = fn(CGI_PARAM_RETRY_COUNT, 1);",
-            "}"),
-        lines(
-            "assignment", //
-            "found   : (number|string)",
-            "required: Object"));
+        "var CGI_PARAM_RETRY_COUNT = 'rc';" +
+        "" +
+        "/**" +
+        " * @param {...T} p\n" +
+        " * @return {T} \n" +
+        " * @template T\n" +
+        " */\n" +
+        "function fn(p) { return p; }\n" +
+        "/** @type {!Object} */ var x;" +
+        "" +
+        "/** @return {void} */\n" +
+        "function aScope() {\n" +
+        "  x = fn(CGI_PARAM_RETRY_COUNT, 1);\n" +
+        "}",
+        "assignment\n" +
+        "found   : (number|string)\n" +
+        "required: Object");
   }
 
   @Test
