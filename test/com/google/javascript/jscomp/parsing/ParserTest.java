@@ -1918,6 +1918,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("++delete a.b", "Invalid prefix increment operand.");
   }
 
+  // Automatic Semicolon Insertion
+  // http://www.ecma-international.org/ecma-262/10.0/index.html#sec-rules-of-automatic-semicolon-insertion
+
   @Test
   public void testAutomaticSemicolonInsertion() {
     // var statements
@@ -1934,8 +1937,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
         parse("x = 1; y = 2;"));
 
     assertNodeEquality(
-        parse("x = 1\n;y = 2"),
-        parse("x = 1;; y = 2;"));
+        parse("x = 1\n;y = 2"), //
+        parse("x = 1; y = 2;"));
+    assertNodeEquality(
+        parse("if (true) 1\n; else {}"), //
+        parse("if (true) 1; else {}"));
 
     // if/else statements
     assertNodeEquality(
@@ -1943,9 +1949,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
         parse("if (x) {} else {}"));
   }
 
+  @Test
+  public void testAutomaticSemicolonInsertion_curly() {
+    assertNodeEquality(
+        parse("while (true) { 1 }"), //
+        parse("while (true) { 1; }"));
+  }
+
+  @Test
+  public void testAutomaticSemicolonInsertion_doWhile() {
+    assertNodeEquality(
+        parse("do {} while (true) 1;"), //
+        parse("do {} while (true); 1;"));
+  }
+
   /** Test all the ASI examples from http://www.ecma-international.org/ecma-262/5.1/#sec-7.9.2 */
   @Test
-  public void testAutomaticSemicolonInsertionExamplesFromSpec() {
+  public void testAutomaticSemicolonInsertion_examplesFromSpec() {
     parseError("{ 1 2 } 3", SEMICOLON_EXPECTED);
 
     assertNodeEquality(
@@ -1967,6 +1987,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(
         parse("a = b + c\n(d + e).print()"),
         parse("a = b + c(d + e).print()"));
+  }
+
+  @Test
+  public void testAutomaticSemicolonInsertion_restrictedRules() {
+    parseError("x\n++;", "primary expression expected");
+    assertNodeEquality(
+        parse("function f() { return\n1; }"), //
+        parse("function f() { return;1; }"));
+    assertNodeEquality(
+        parse("while (true) { continue\nlabel; }"), //
+        parse("while (true) { continue; label; }"));
+    assertNodeEquality(
+        parse("while (true) { break\nlabel; }"), //
+        parse("while (true) { break; label; }"));
+    parseError("throw\n1;", "semicolon/newline not allowed after 'throw'");
+    parseError("yield\nvalue;", "primary expression expected");
+    parseError("()\n=> 1;", "No newline allowed before '=>'");
   }
 
   private static Node createScript(Node n) {
@@ -5613,6 +5650,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   /**
    * Verify that the given code has no parse warnings or errors.
+   *
    * @return The parse tree.
    */
   private Node parse(String string) {

@@ -409,7 +409,7 @@ public class Parser {
     // import ModuleSpecifier ;
     if (peek(TokenType.STRING)) {
       LiteralToken moduleSpecifier = eat(TokenType.STRING).asLiteral();
-      eatPossibleImplicitSemiColon();
+      eatPossiblyImplicitSemiColon();
 
       return new ImportDeclarationTree(
           getTreeLocation(start), null, null, null, moduleSpecifier);
@@ -451,7 +451,7 @@ public class Parser {
     Token moduleStr = eat(TokenType.STRING);
     LiteralToken moduleSpecifier = (moduleStr == null)
         ? null : moduleStr.asLiteral();
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
 
     return new ImportDeclarationTree(
         getTreeLocation(start),
@@ -596,7 +596,7 @@ public class Parser {
     }
 
     if (needsSemiColon || peekImplicitSemiColon()) {
-      eatPossibleImplicitSemiColon();
+      eatPossiblyImplicitSemiColon();
     }
 
     return new ExportDeclarationTree(
@@ -691,7 +691,7 @@ public class Parser {
       if (!peek(TokenType.CLOSE_CURLY)) {
         // The standard delimiter is semicolon, but we also accept comma
         if (peekImplicitSemiColon()) {
-          eatPossibleImplicitSemiColon();
+          eatPossiblyImplicitSemiColon();
         } else {
           eat(TokenType.COMMA);
         }
@@ -922,7 +922,7 @@ public class Parser {
     } else {
       if (config.parseTypeSyntax && peekIndexSignature()) {
         ParseTree indexSignature = parseIndexSignature();
-        eatPossibleImplicitSemiColon();
+        eatPossiblyImplicitSemiColon();
         return indexSignature;
       }
       nameExpr = parseComputedPropertyName();
@@ -945,7 +945,7 @@ public class Parser {
       ParseTree function;
       if (partial.isAmbient) {
         function = parseMethodSignature(partial, name, isGenerator, /* isOptional */ false);
-        eatPossibleImplicitSemiColon();
+        eatPossiblyImplicitSemiColon();
       } else {
         FunctionDeclarationTree.Builder builder =
             FunctionDeclarationTree.builder(kind)
@@ -971,7 +971,7 @@ public class Parser {
       if (peek(TokenType.EQUAL)) {
         reportError("Member variable initializers ('=') are not supported");
       }
-      eatPossibleImplicitSemiColon();
+      eatPossiblyImplicitSemiColon();
       if (nameExpr == null) {
         return new MemberVariableTree(
             getTreeLocation(partial.start),
@@ -1017,7 +1017,7 @@ public class Parser {
               .setFormalParameterList(parseFormalParameterList(ParamContext.SIGNATURE))
               .setReturnType(maybeParseColonType())
               .setFunctionBody(new EmptyStatementTree(getTreeLocation(partial.start)));
-          eatPossibleImplicitSemiColon();
+          eatPossiblyImplicitSemiColon();
         } else {
           parseFunctionTail(
               builder,
@@ -1045,7 +1045,7 @@ public class Parser {
       }
     } else if (config.parseTypeSyntax && peekIndexSignature()) {
       ParseTree indexSignature = parseIndexSignature();
-      eatPossibleImplicitSemiColon();
+      eatPossiblyImplicitSemiColon();
       return indexSignature;
     } else { // expect '[' to start computed property name
       ParseTree nameExpr = parseComputedPropertyName();
@@ -1766,7 +1766,7 @@ public class Parser {
   private VariableStatementTree parseVariableStatement() {
     SourcePosition start = getTreeStartLocation();
     VariableDeclarationListTree declarations = parseVariableDeclarationList();
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
     return new VariableStatementTree(getTreeLocation(start), declarations);
   }
 
@@ -1860,7 +1860,7 @@ public class Parser {
   private ExpressionStatementTree parseExpressionStatement() {
     SourcePosition start = getTreeStartLocation();
     ParseTree expression = parseExpression();
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
     return new ExpressionStatementTree(getTreeLocation(start), expression);
   }
 
@@ -2099,7 +2099,7 @@ public class Parser {
     if (!peekImplicitSemiColon()) {
       name = eatIdOpt();
     }
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
     return new ContinueStatementTree(getTreeLocation(start), name);
   }
 
@@ -2111,7 +2111,7 @@ public class Parser {
     if (!peekImplicitSemiColon()) {
       name = eatIdOpt();
     }
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
     return new BreakStatementTree(getTreeLocation(start), name);
   }
 
@@ -2123,7 +2123,7 @@ public class Parser {
     if (!peekImplicitSemiColon()) {
       expression = parseExpression();
     }
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
     return new ReturnStatementTree(getTreeLocation(start), expression);
   }
 
@@ -2208,7 +2208,7 @@ public class Parser {
     } else {
       value = parseExpression();
     }
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
     return new ThrowStatementTree(getTreeLocation(start), value);
   }
 
@@ -2267,7 +2267,7 @@ public class Parser {
   private ParseTree parseDebuggerStatement() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.DEBUGGER);
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
 
     return new DebuggerStatementTree(getTreeLocation(start));
   }
@@ -3908,7 +3908,7 @@ public class Parser {
     IdentifierToken alias = eatId();
     eat(TokenType.EQUAL);
     ParseTree original = parseType();
-    eatPossibleImplicitSemiColon();
+    eatPossiblyImplicitSemiColon();
     return new TypeAliasTree(getTreeLocation(start), alias, original);
   }
 
@@ -3924,7 +3924,7 @@ public class Parser {
     switch (peekType()) {
       case FUNCTION:
         declare = parseAmbientFunctionDeclaration();
-        eatPossibleImplicitSemiColon();
+        eatPossiblyImplicitSemiColon();
         break;
       case CLASS:
         declare = parseClassDeclaration(true);
@@ -3941,18 +3941,16 @@ public class Parser {
       case CONST:
       default: // unreachable, parse as a var decl to get a parse error.
         declare = parseAmbientVariableDeclarationList();
-        eatPossibleImplicitSemiColon();
+        eatPossiblyImplicitSemiColon();
         break;
     }
 
     return declare;
   }
 
-  /**
-   * Consume a (possibly implicit) semi-colon. Reports an error if a semi-colon is not present.
-   */
-  private void eatPossibleImplicitSemiColon() {
-    if (peek(TokenType.SEMI_COLON) && peekToken().location.start.line == getLastLine()) {
+  /** Consume a (possibly implicit) semi-colon. Reports an error if a semi-colon is not present. */
+  private void eatPossiblyImplicitSemiColon() {
+    if (peek(TokenType.SEMI_COLON)) {
       eat(TokenType.SEMI_COLON);
       return;
     }
