@@ -123,8 +123,6 @@ public class DiagnosticGroups {
           + "duplicateMessage, "
           + "es5Strict, "
           + "externsValidation, "
-          // + "featuresNotSupportedByPass, " Don't show this to users
-          + "fileoverviewTags, "
           + "functionParams, "
           + "globalThis, "
           + "invalidCasts, "
@@ -223,10 +221,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",
           TypeValidator.INVALID_CAST);
-
-  @Deprecated
-  public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
-      DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
   public static final DiagnosticGroup STRICT_MODULE_DEP_CHECK =
       DiagnosticGroups.registerGroup("strictModuleDepCheck",
