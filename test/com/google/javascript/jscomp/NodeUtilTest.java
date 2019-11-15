@@ -2231,18 +2231,76 @@ public final class NodeUtilTest {
 
       assertIsConstantDeclaration(true, getNameNodeFrom("const {a} = {};", "a"));
       assertIsConstantDeclaration(true, getNameNodeFrom("const {a = 1} = {};", "a"));
+      assertIsConstantDeclaration(true, getNameNodeFrom("const {b: a} = {};", "a"));
       assertIsConstantDeclaration(true, getNameNodeFrom("const {[3]: a} = {};", "a"));
       assertIsConstantDeclaration(true, getNameNodeFrom("const {a: [a]} = {};", "a"));
 
-      // TODO(bradfordcsmith): Add test cases for other coding conventions.
+      // TODO(b/135755127): this should be false
+      assertIsConstantDeclaration(true, getNameNodeFrom("var FOO = 1;", "FOO"));
+
+      assertIsConstantDeclaration(true, constructInferredConstantDeclaration());
+    }
+
+    @Test
+    public void testIsConstantDeclarations_FunctionClassLiterals() {
+      assertIsConstantDeclaration(false, getNameNodeFrom("function Foo() {}", "Foo"));
+      assertIsConstantDeclaration(false, getNameNodeFrom("class Foo {}", "Foo"));
+    }
+
+    @Test
+    public void testIsConstantDeclaration_throwsOnNonDeclarationReferences() {
+      assertIsConstantDeclaration(false, getNameNodeFrom("const x = y;", "y"));
+      assertIsConstantDeclaration(false, getNameNodeFrom("x;", "x"));
+      assertIsConstantDeclaration(false, getNameNodeFrom("const ns = {y: x};", "x"));
+
+      Node constAssignment = parse("/** @const */ x.y = a.b;");
+      Node rhs = constAssignment.getFirstFirstChild().getSecondChild();
+      // TODO(lharker): this should be false
+      assertIsConstantDeclaration(true, rhs);
+    }
+
+    @Test
+    public void testIsConstantDeclaration_qnames() {
+      Node constAssignment = parse("/** @const */ x.y = a.b;");
+      Node assign = constAssignment.getFirstFirstChild();
+      assertIsConstantDeclaration(true, assign.getFirstChild());
+
+      Node constByConventionAssignment = parse("x.Y = a.b;");
+      assign = constByConventionAssignment.getFirstFirstChild();
+      // TODO(b/135755127): this should be false
+      assertIsConstantDeclaration(true, assign.getFirstChild());
+
+      Node nonConstAssignment = parse("x.y = a.b;");
+      assign = nonConstAssignment.getFirstFirstChild();
+      assertIsConstantDeclaration(false, assign.getFirstChild());
+
+      Node expression = parse("/** @const */ x.y;"); // valid in externs
+      assertIsConstantDeclaration(true, expression.getFirstFirstChild());
+    }
+
+    @Test
+    public void testIsConstantDeclaration_keys() {
+      assertIsConstantDeclaration(
+          true, getStringKeyNodeFrom("const ns = {/** @const */ x: y};", "x"));
+      assertIsConstantDeclaration(
+          false, getStringKeyNodeFrom("/** @const */ const ns = {x: y};", "x"));
+      assertIsConstantDeclaration(false, getStringKeyNodeFrom("const ns = {x: y};", "x"));
     }
 
     private void assertIsConstantDeclaration(boolean isConstantDeclaration, Node node) {
-      CodingConvention codingConvention = new ClosureCodingConvention();
+      CodingConvention codingConvention = new GoogleCodingConvention();
       JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(node);
       assertWithMessage("Is %s a constant declaration?", node)
           .that(NodeUtil.isConstantDeclaration(codingConvention, jsDocInfo, node))
           .isEqualTo(isConstantDeclaration);
+    }
+
+    /** Returns a NAME node from 'let foo = 1;` */
+    private static Node constructInferredConstantDeclaration() {
+      Node nameNode = IR.name("foo");
+      nameNode.setInferredConstantVar(true);
+      IR.script(IR.let(nameNode, IR.number(1))); // attach the expected context to the name.
+      return nameNode;
     }
 
     @Test
@@ -3934,6 +3992,12 @@ public final class NodeUtilTest {
     return nameNode;
   }
 
+  private static Node getStringKeyNodeFrom(String code, String name) {
+    Node ast = parse(code);
+    Node stringKeyNode = getStringNode(ast, name, Token.STRING_KEY);
+    return stringKeyNode;
+  }
+
   private static boolean executedOnceTestCase(String code) {
     Node nameNode = getNameNodeFrom(code, "x");
     return NodeUtil.isExecutedExactlyOnce(nameNode);
@@ -3974,11 +4038,15 @@ public final class NodeUtilTest {
   }
 
   private static Node getNameNode(Node n, String name) {
-    if (n.isName() && n.getString().equals(name)) {
+    return getStringNode(n, name, Token.NAME);
+  }
+
+  private static Node getStringNode(Node n, String name, Token nodeType) {
+    if (nodeType.equals(n.getToken()) && n.getString().equals(name)) {
       return n;
     }
     for (Node c : n.children()) {
-      Node result = getNameNode(c, name);
+      Node result = getStringNode(c, name, nodeType);
       if (result != null) {
         return result;
       }

@@ -4924,8 +4924,46 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         lines(
             "/** @enum */ var YourEnum = {FOO: 3};",
+            "const MyEnum = YourEnum;",
+            "/** @param {MyEnum} x */ function f(x) {} f(MyEnum.FOO);"));
+  }
+
+  @Test
+  public void testConstAliasedEnum_constJSDoc() {
+    testTypes(
+        lines(
+            "/** @enum */ var YourEnum = {FOO: 3};",
             "/** @const */ var MyEnum = YourEnum;",
             "/** @param {MyEnum} x */ function f(x) {} f(MyEnum.FOO);"));
+  }
+
+  @Test
+  public void testConstAliasedEnum_qnameConstJSDoc() {
+    testTypes(
+        lines(
+            "/** @enum */ var YourEnum = {FOO: 3};",
+            "const ns = {};",
+            "/** @const */",
+            "ns.MyEnum = YourEnum;",
+            "/** @param {ns.MyEnum} x */ function f(x) {} f(ns.MyEnum.FOO);"));
+  }
+
+  @Test
+  public void testConstAliasedEnum_inObjectLit() {
+    testTypes(
+        lines(
+            "/** @enum */ var YourEnum = {FOO: 3};",
+            "const ns = {/** @const */ MyEnum: YourEnum}",
+            "/** @param {ns.MyEnum} x */ function f(x) {} f(ns.MyEnum.FOO);"));
+  }
+
+  @Test
+  public void testConstAliasedEnum_nestedInObjectLit() {
+    testTypes(
+        lines(
+            "/** @enum */ var YourEnum = {FOO: 3};",
+            "const ns = {/** @const */ x: {/** @const */ MyEnum: YourEnum}}",
+            "/** @param {ns.x.MyEnum} x */ function f(x) {} f(ns.x.MyEnum.FOO);"));
   }
 
   @Test
@@ -16627,25 +16665,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testTemplateType5() {
-    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
     testTypes(
-        "var CGI_PARAM_RETRY_COUNT = 'rc';" +
-        "" +
-        "/**" +
-        " * @param {...T} p\n" +
-        " * @return {T} \n" +
-        " * @template T\n" +
-        " */\n" +
-        "function fn(p) { return p; }\n" +
-        "/** @type {!Object} */ var x;" +
-        "" +
-        "/** @return {void} */\n" +
-        "function aScope() {\n" +
-        "  x = fn(CGI_PARAM_RETRY_COUNT, 1);\n" +
-        "}",
-        "assignment\n" +
-        "found   : (number|string)\n" +
-        "required: Object");
+        lines(
+            "const CGI_PARAM_RETRY_COUNT = 'rc';",
+            "",
+            "/**",
+            " * @param {...T} p",
+            " * @return {T} ",
+            " * @template T",
+            " */",
+            "function fn(p) { return p; }",
+            "/** @type {!Object} */ var x;",
+            "",
+            "/** @return {void} */",
+            "function aScope() {",
+            "  x = fn(CGI_PARAM_RETRY_COUNT, 1);",
+            "}"),
+        lines(
+            "assignment", //
+            "found   : (number|string)",
+            "required: Object"));
   }
 
   @Test
