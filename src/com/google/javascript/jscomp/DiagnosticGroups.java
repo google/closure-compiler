@@ -243,10 +243,6 @@ public class DiagnosticGroups {
           VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR,
           VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
-  @Deprecated
-  public static final DiagnosticGroup AMBIGUOUS_FUNCTION_DECL =
-      DiagnosticGroups.registerDeprecatedGroup("ambiguousFunctionDecl");
-
   public static final DiagnosticGroup UNKNOWN_DEFINES =
       DiagnosticGroups.registerGroup("unknownDefines",
           ProcessDefines.UNKNOWN_DEFINE_WARNING);
