@@ -6021,6 +6021,32 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testEsModule_moduleObjectTypeMatchesImportExportAndModuleBody() {
+    testSame(
+        srcs(
+            SourceFile.fromCode(
+                "a.js",
+                lines(
+                    "export class A {};", //
+                    "MOD_A: 0;", // there's no way to reference the module object within the module
+                    "")),
+            SourceFile.fromCode(
+                "b.js",
+                lines(
+                    "import * as a from './a.js';", //
+                    "IMPORTED_A: a;",
+                    ""))));
+
+    final Node aModuleBody =
+        NodeUtil.getEnclosingType(getLabeledStatement("MOD_A").statementNode, Token.MODULE_BODY);
+    final JSType moduleAObjectType = aModuleBody.getJSType();
+    assertThat(moduleAObjectType).isNotNull();
+
+    final Node importedANode = getLabeledStatement("IMPORTED_A").statementNode.getOnlyChild();
+    assertNode(importedANode).hasJSTypeThat().isEqualTo(moduleAObjectType);
+  }
+
+  @Test
   public void testEsModule_exportDefault() {
     testSame(srcs("export default 0;", "import x from './input0'; X: x;"));
 

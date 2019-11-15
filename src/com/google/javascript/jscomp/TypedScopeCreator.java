@@ -458,15 +458,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     if (module != null && module.metadata().isEs6Module()) {
       // Declare an implicit variable representing the namespace of this module, then add a property
       // for each exported name to that variable's type.
-      ObjectType namespace = typeRegistry.createAnonymousObjectType(null);
+      ObjectType namespaceType = typeRegistry.createAnonymousObjectType(null);
       newScope.declare(
           Export.NAMESPACE,
           root, // Use the given MODULE_BODY as the 'declaration node' for lack of a better option.
-          namespace,
+          namespaceType,
           compiler.getInput(NodeUtil.getInputId(root)),
           /* inferred= */ false);
 
-      moduleImportResolver.updateEsModuleNamespaceType(namespace, module, newScope);
+      // Store the module object type on the MODULE_BODY.
+      // The Es6RewriteModules will retrieve it from there for use when it creates a global for
+      // the module object.
+      root.setJSType(namespaceType);
+      moduleImportResolver.updateEsModuleNamespaceType(namespaceType, module, newScope);
     }
 
     return newScope;
