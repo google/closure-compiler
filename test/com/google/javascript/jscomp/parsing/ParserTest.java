@@ -1853,7 +1853,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(found).isEqualTo(expected);
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testParse() {
     mode = LanguageMode.ECMASCRIPT5;
