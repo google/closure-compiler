@@ -37,13 +37,12 @@ import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SUPER;
 import static com.google.javascript.rhino.Token.YIELD;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
 import static org.mockito.Mockito.verify;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -3718,82 +3717,118 @@ public final class NodeUtilTest {
   }
 
   @RunWith(Parameterized.class)
-  public static final class ReferencesThisTest {
-    @Parameters(name = "{0} node in \"{1}\" referencesThis() should be {2}")
+  public static final class ReferencesReceiverTest {
+    @Parameters(name = "\"{0}\"")
     public static Iterable<Object[]> cases() {
-      ImmutableList.Builder<Object[]> builder = ImmutableList.builder();
+      ImmutableMap<String, Boolean> templateToDefinesOwnReceiver =
+          ImmutableMap.<String, Boolean>builder()
+              //
+              .put("      (x = (%s)) => {}", false)
+              .put("      (      ) => (%s)", false)
+              .put("async (x = (%s)) => {}", false)
+              .put("async (      ) => (%s)", false)
+              .put("      function   f(        ) { (%s); }", true)
+              .put("async function   f(        ) { (%s); }", true)
+              .put("async function  *f(        ) { (%s); }", true)
+              .put("      function  *f(        ) { (%s); }", true)
+              .put("      function   f(x = (%s)) {       }", true)
+              .put("      function  *f(x = (%s)) {       }", true)
+              .put("async function   f(x = (%s)) {       }", true)
+              .put("async function  *f(x = (%s)) {       }", true)
+              .put("class F {        f(        ) { (%s); } }", true)
+              .put("class F {       *f(        ) { (%s); } }", true)
+              .put("class F { async  f(        ) { (%s); } }", true)
+              .put("class F { async *f(        ) { (%s); } }", true)
+              .put("class F {        f(x = (%s)) {       } }", true)
+              .put("class F {       *f(x = (%s)) {       } }", true)
+              .put("class F { async  f(x = (%s)) {       } }", true)
+              .put("class F { async *f(x = (%s)) {       } }", true)
+              .put("({               f(        ) { (%s); } })", true)
+              .put("({              *f(        ) { (%s); } })", true)
+              .put("({        async  f(        ) { (%s); } })", true)
+              .put("({        async *f(        ) { (%s); } })", true)
+              .put("({               f(x = (%s)) {       } })", true)
+              .put("({              *f(x = (%s)) {       } })", true)
+              .put("({        async  f(x = (%s)) {       } })", true)
+              .put("({        async *f(x = (%s)) {       } })", true)
+              //
+              .build();
 
-      builder.add(
-          new Object[][] {
-            {SCRIPT, "this", TRUE},
-            {SCRIPT, "b?this:null", TRUE},
-            {SCRIPT, "a", FALSE},
-            {SCRIPT, "(b?foo():null)", FALSE},
-            {SCRIPT, "() => { () => alert(this); }", TRUE},
+      ImmutableMap<String, Boolean> exprToUsesReceiver =
+          ImmutableMap.<String, Boolean>builder()
+              //
+              .put("this", true)
+              .put("1 || this", true)
+              .put("{ x: this, }", true)
+              .put("1", false)
+              //
+              .build();
+
+      ImmutableList.Builder<Object[]> cases = ImmutableList.builder();
+      templateToDefinesOwnReceiver.forEach(
+          (outerTemplate, outerReceiver) -> {
+            templateToDefinesOwnReceiver.forEach(
+                (innerTemplate, innerReceiver) -> {
+                  exprToUsesReceiver.forEach(
+                      (expr, usesReceiver) -> {
+                        String caseSrc =
+                            SimpleFormat.format(
+                                outerTemplate, SimpleFormat.format(innerTemplate, expr));
+                        cases.add(
+                            new Object[] {
+                              caseSrc,
+                              // refToEnclosing
+                              !outerReceiver && !innerReceiver && usesReceiver,
+                              // refToOuterFnOwn
+                              outerReceiver && !innerReceiver && usesReceiver,
+                            });
+                      });
+                });
           });
 
-      // %s represents the location to fill with an expression that may or may not refer to `this`
-      ImmutableList<String> arrowFunctionTemplates =
-          ImmutableList.of(
-              "      (x = %s) => {}", //
-              "      (      ) => %s", //
-              "async (x = %s) => {}",
-              "async (      ) => %s");
+      /**
+       * Add a few cases using `super` to check it behaves the same.
+       *
+       * <p>These aren't exhaustive becuase it's hard to construct valid strings that use `super`.
+       */
+      cases.add(
+          new Object[][] {
+            {"class F { f() { super.a() } }", false, true},
+            {"class F { f() { () => super.a(); } }", false, true},
+            {"() => class F { f() { super.a(); } }", false, false},
+            {"({ f() { super.a() } })", false, true},
+            {"({ f() { () => super.a(); } })", false, true},
+            {"() => ({ f() { super.a(); } })", false, false},
+          });
 
-      for (String arrowTemplate : arrowFunctionTemplates) {
-        String arrowReferencingThis = SimpleFormat.format(arrowTemplate, "this");
-        String arrowWithoutThis = SimpleFormat.format(arrowTemplate, "1");
-        builder.add(
-            new Object[][] {
-              // 'this' in a non-arrow function IS a reference to
-              // the 'this' of its enclosing scope
-              {SCRIPT, arrowReferencingThis, TRUE},
-              {FUNCTION, arrowReferencingThis, TRUE},
-              {SCRIPT, arrowWithoutThis, FALSE},
-              {FUNCTION, arrowWithoutThis, FALSE},
-            });
-      }
-
-      // %s represents the location to fill with an expression that may or may not refer to `this`
-      ImmutableList<String> nonArrowFunctionTemplates =
-          ImmutableList.of(
-              "      function  f(x = %s) {     }",
-              "      function *f(x = %s) {     }",
-              "async function  f(x = %s) {     }",
-              "async function *f(x = %s) {     }",
-              "      function  f(      ) { %s; }",
-              "      function *f(      ) { %s; }",
-              "async function  f(      ) { %s; }",
-              "async function *f(      ) { %s; }");
-
-      for (String nonArrowTemplate : nonArrowFunctionTemplates) {
-        String nonArrowReferencingThis = SimpleFormat.format(nonArrowTemplate, "this");
-        String nonArrowWithoutThis = SimpleFormat.format(nonArrowTemplate, "1");
-        builder.add(
-            new Object[][] {
-              // 'this' in a non-arrow function IS NOT a reference to
-              // the 'this' of its enclosing scope
-              {SCRIPT, nonArrowReferencingThis, FALSE},
-              {FUNCTION, nonArrowReferencingThis, TRUE},
-              {SCRIPT, nonArrowWithoutThis, FALSE},
-              {FUNCTION, nonArrowWithoutThis, FALSE},
-            });
-      }
-      return builder.build();
+      return cases.build();
     }
 
     @Parameter(0)
-    public Token token;
-
-    @Parameter(1)
     public String js;
 
+    @Parameter(1)
+    public boolean refToEnclosing;
+
     @Parameter(2)
-    public Boolean expectedResult;
+    public boolean refToOuterFnOwn;
 
     @Test
-    public void test() {
-      assertThat(NodeUtil.referencesThis(parseFirst(token, js))).isEqualTo(expectedResult);
+    public void testReferencesEnclosingReceiver_ofScript() {
+      Node node = parseFirst(SCRIPT, js);
+      assertThat(NodeUtil.referencesEnclosingReceiver(node)).isEqualTo(this.refToEnclosing);
+    }
+
+    @Test
+    public void testReferencesEnclosingReceiver_ofFn() {
+      Node node = parseFirst(FUNCTION, js);
+      assertThat(NodeUtil.referencesEnclosingReceiver(node)).isEqualTo(this.refToEnclosing);
+    }
+
+    @Test
+    public void testReferencesOwnReceiver_ofFn() {
+      Node node = parseFirst(FUNCTION, js);
+      assertThat(NodeUtil.referencesOwnReceiver(node)).isEqualTo(this.refToOuterFnOwn);
     }
   }
 

@@ -1863,15 +1863,36 @@ public final class NodeUtil {
   }
 
   /**
-   * Returns true if the shallow scope contains references to 'this' keyword
+   * Returns {@code true} if this function references its receiver object.
+   *
+   * <p>We define this function in terms of "receiver" rather than specific syntax, however
+   * internally we search for `this` and `super`.
+   *
+   * <p>Arrow functions return {@code false}. They do not have their own receiver, but rather
+   * capture the receiver of the enclosing scope.
    */
-  static boolean referencesThis(Node n) {
-    if (n.isFunction()) {
-      return referencesThis(NodeUtil.getFunctionParameters(n))
-          || referencesThis(NodeUtil.getFunctionBody(n));
-    } else {
-      return has(n, Node::isThis, MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
+  static boolean referencesOwnReceiver(Node fn) {
+    checkState(fn.isFunction());
+    if (fn.isArrowFunction()) {
+      return false;
     }
+
+    return referencesEnclosingReceiver(NodeUtil.getFunctionParameters(fn))
+        || referencesEnclosingReceiver(NodeUtil.getFunctionBody(fn));
+  }
+
+  /**
+   * Returns {@code true} if this subtree references the receiver object from its enclosing function
+   * scope.
+   *
+   * <p>We define this function in terms of "receiver" rather than specific syntax, however
+   * internally we search for `this` and `super`.
+   *
+   * <p>Arrow functions may return {@code true}. They capture the receiver of the enclosing scope,
+   * rather than having their own.
+   */
+  static boolean referencesEnclosingReceiver(Node n) {
+    return has(n, (c) -> c.isThis() || c.isSuper(), MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
   }
 
   /**

@@ -331,7 +331,7 @@ class FunctionToBlockMutator {
         String name = entry.getKey();
         if (namesToAlias.contains(name)) {
           if (name.equals(THIS_MARKER)) {
-            boolean referencesThis = NodeUtil.referencesThis(fnTemplateRoot);
+            boolean referencesThis = NodeUtil.referencesEnclosingReceiver(fnTemplateRoot);
             // Update "this", this is only necessary if "this" is referenced
             // and the value of "this" is not Token.THIS, or the value of "this"
             // has side effects.

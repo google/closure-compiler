@@ -285,9 +285,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         // a function referencing this is being assigned. Otherwise we
         // check whether the function assigned is a) an arrow function, which has a
         // lexically-scoped this, or b) a non-arrow function that does not reference this.
-        if (value == null
-            || !value.isFunction()
-            || (!value.isArrowFunction() && NodeUtil.referencesThis(value))) {
+        if (value == null || !value.isFunction() || NodeUtil.referencesOwnReceiver(value)) {
           maybeReferencesThis.add(name);
         }
       }

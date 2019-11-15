@@ -507,7 +507,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         astFactory.createAssign(qualifiedMemberAccess, method).useSourceInfoIfMissingFrom(method);
 
     JSDocInfo info = member.getJSDocInfo();
-    if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
+    if (member.isStaticMember() && NodeUtil.referencesOwnReceiver(assign.getLastChild())) {
       JSDocInfoBuilder memberDoc = JSDocInfoBuilder.maybeCopyFrom(info);
       memberDoc.recordThisType(
           new JSTypeExpression(

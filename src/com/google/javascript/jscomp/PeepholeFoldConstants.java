@@ -1571,7 +1571,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // it's not safe, in general, to convert that to just a function call, because the 'this'
       // value will be wrong. Except, if the function is a function literal and does not reference
       // 'this' then it is safe:
-      if (value.isFunction() && !NodeUtil.referencesThis(value)) {
+      if (value.isFunction() && !NodeUtil.referencesOwnReceiver(value)) {
         if (n.getParent().isCall()) {
           n.getParent().putBooleanProp(Node.FREE_CALL, true);
         }

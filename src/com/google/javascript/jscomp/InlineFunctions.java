@@ -318,7 +318,7 @@ class InlineFunctions implements CompilerPass {
         }
 
         Node block = NodeUtil.getFunctionBody(fnNode);
-        if (NodeUtil.referencesThis(block)) {
+        if (NodeUtil.referencesEnclosingReceiver(block)) {
           functionState.setReferencesThis(true);
         }
 

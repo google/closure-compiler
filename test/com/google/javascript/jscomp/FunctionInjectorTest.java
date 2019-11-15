@@ -1896,7 +1896,7 @@ public final class FunctionInjectorTest {
                     ref,
                     fnNode,
                     unsafe,
-                    NodeUtil.referencesThis(fnNode),
+                    NodeUtil.referencesOwnReceiver(fnNode),
                     NodeUtil.has(fnBody, Node::isFunction, alwaysTrue()));
             assertThat(result).isEqualTo(expectedResult);
             return true;
@@ -1977,7 +1977,7 @@ public final class FunctionInjectorTest {
                     ref,
                     fnNode,
                     unsafe,
-                    NodeUtil.referencesThis(fnNode),
+                    NodeUtil.referencesOwnReceiver(fnNode),
                     NodeUtil.has(fnBody, Node::isFunction, alwaysTrue()));
             assertWithMessage("canInlineReferenceToFunction should not be CAN_NOT_INLINE")
                 .that(canInline)
