@@ -373,7 +373,6 @@ names are valid warning class names:
 * ``es5Strict``
 * ``externsValidation``
 * ``globalThis``
-* ``internetExplorerChecks``
 * ``invalidCasts``
 * ``misplacedTypeAnnotation``
 * ``missingProperties``

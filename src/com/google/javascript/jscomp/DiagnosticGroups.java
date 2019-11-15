@@ -127,7 +127,6 @@ public class DiagnosticGroups {
           + "fileoverviewTags, "
           + "functionParams, "
           + "globalThis, "
-          + "internetExplorerChecks, "
           + "invalidCasts, "
           + "misplacedTypeAnnotation, "
           + "missingGetCssName, "
@@ -278,9 +277,9 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingReturn",
           CheckMissingReturn.MISSING_RETURN_STATEMENT);
 
+  @Deprecated
   public static final DiagnosticGroup INTERNET_EXPLORER_CHECKS =
-      DiagnosticGroups.registerGroup("internetExplorerChecks",
-          RhinoErrorReporter.TRAILING_COMMA);
+      DiagnosticGroups.registerDeprecatedGroup("internetExplorerChecks");
 
   public static final DiagnosticGroup UNDEFINED_VARIABLES =
       DiagnosticGroups.registerGroup("undefinedVars",
