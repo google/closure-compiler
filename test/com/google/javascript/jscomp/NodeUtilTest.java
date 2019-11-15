@@ -560,15 +560,6 @@ public final class NodeUtilTest {
     }
 
     @Test
-    public void testContainsFunctionDeclaration() {
-      assertThat(NodeUtil.containsFunction(parseExpr("function foo(){}"))).isTrue();
-      assertThat(NodeUtil.containsFunction(parseExpr("(b?function(){}:null)"))).isTrue();
-
-      assertThat(NodeUtil.containsFunction(parseExpr("(b?foo():null)"))).isFalse();
-      assertThat(NodeUtil.containsFunction(parseExpr("foo()"))).isFalse();
-    }
-
-    @Test
     public void testIsFunctionDeclaration() {
       assertThat(NodeUtil.isFunctionDeclaration(parseFirst(FUNCTION, "function foo(){}"))).isTrue();
       assertThat(
@@ -724,17 +715,6 @@ public final class NodeUtilTest {
         }
       }
       return null;
-    }
-
-    @Test
-    public void testContainsType() {
-      assertThat(NodeUtil.containsType(parse("this"), Token.THIS)).isTrue();
-      assertThat(NodeUtil.containsType(parse("function foo(){}(this)"), Token.THIS)).isTrue();
-      assertThat(NodeUtil.containsType(parse("b?this:null"), Token.THIS)).isTrue();
-
-      assertThat(NodeUtil.containsType(parse("a"), Token.THIS)).isFalse();
-      assertThat(NodeUtil.containsType(parse("function foo(){}"), Token.THIS)).isFalse();
-      assertThat(NodeUtil.containsType(parse("(b?foo():null)"), Token.THIS)).isFalse();
     }
 
     @Test

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Predicates.alwaysTrue;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
@@ -1889,13 +1890,14 @@ public final class FunctionInjectorTest {
           @Override
           public boolean call(NodeTraversal t, Node n, Node parent) {
             Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
+            Node fnBody = NodeUtil.getFunctionBody(fnNode);
             CanInlineResult result =
                 injector.canInlineReferenceToFunction(
                     ref,
                     fnNode,
                     unsafe,
                     NodeUtil.referencesThis(fnNode),
-                    NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
+                    NodeUtil.has(fnBody, Node::isFunction, alwaysTrue()));
             assertThat(result).isEqualTo(expectedResult);
             return true;
           }
@@ -1969,13 +1971,14 @@ public final class FunctionInjectorTest {
           @Override
           public boolean call(NodeTraversal t, Node n, Node parent) {
             Reference ref = new Reference(n, t.getScope(), t.getModule(), mode);
+            Node fnBody = NodeUtil.getFunctionBody(fnNode);
             CanInlineResult canInline =
                 injector.canInlineReferenceToFunction(
                     ref,
                     fnNode,
                     unsafe,
                     NodeUtil.referencesThis(fnNode),
-                    NodeUtil.containsFunction(NodeUtil.getFunctionBody(fnNode)));
+                    NodeUtil.has(fnBody, Node::isFunction, alwaysTrue()));
             assertWithMessage("canInlineReferenceToFunction should not be CAN_NOT_INLINE")
                 .that(canInline)
                 .isNotEqualTo(CanInlineResult.NO);

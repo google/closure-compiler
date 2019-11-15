@@ -1750,14 +1750,6 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * Determines if the given node contains a function statement or function
-   * expression.
-   */
-  static boolean containsFunction(Node n) {
-    return containsType(n, Token.FUNCTION);
-  }
-
   /** Gets the closest ancestor to the given node of the provided type. */
   public static Node getEnclosingType(Node n, final Token type) {
     return getEnclosingNode(
@@ -1890,7 +1882,7 @@ public final class NodeUtil {
   static boolean referencesSuper(Node n) {
     Node curr = n.getFirstChild();
     while (curr != null) {
-      if (containsType(curr, Token.SUPER, node -> !node.isClass())) {
+      if (has(curr, Node::isSuper, node -> !node.isClass())) {
         return true;
       }
       curr = curr.getNext();
@@ -3438,19 +3430,6 @@ public final class NodeUtil {
     }
     return res;
   }
-
-  /** @return true if n or any of its descendants are of the specified type. */
-  static boolean containsType(Node node, Token type, Predicate<Node> traverseChildrenPred) {
-    return has(node, new MatchNodeType(type), traverseChildrenPred);
-  }
-
-  /**
-   * @return true if n or any of its descendants are of the specified type.
-   */
-  public static boolean containsType(Node node, Token type) {
-    return containsType(node, type, Predicates.alwaysTrue());
-  }
-
 
   /**
    * Given a node tree, finds all the VAR declarations in that tree that are

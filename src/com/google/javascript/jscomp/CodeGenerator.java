@@ -997,7 +997,7 @@ public class CodeGenerator {
         // If the first child contains a CALL, then claim higher precedence
         // to force parentheses. Otherwise, when parsed, NEW will bind to the
         // first viable parentheses (don't traverse into functions).
-        if (NodeUtil.containsType(first, Token.CALL, NodeUtil.MATCH_NOT_FUNCTION)) {
+        if (NodeUtil.has(first, Node::isCall, NodeUtil.MATCH_NOT_FUNCTION)) {
           precedence = NodeUtil.precedence(first.getToken()) + 1;
         }
         addExpr(first, precedence, Context.OTHER);

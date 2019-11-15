@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.alwaysTrue;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
@@ -304,7 +305,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
       }
     }
 
-    if (NodeUtil.containsType(definitionFunction, Token.SUPER)) {
+    if (NodeUtil.has(definitionFunction, Node::isSuper, alwaysTrue())) {
       // TODO(b/120452418): Remove this when we have a rewrite for `super`. We punted initially due
       // to complexity.
       return false;

@@ -18,10 +18,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.alwaysTrue;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -323,7 +322,7 @@ class InlineFunctions implements CompilerPass {
           functionState.setReferencesThis(true);
         }
 
-        if (NodeUtil.containsFunction(block)) {
+        if (NodeUtil.has(block, Node::isFunction, alwaysTrue())) {
           functionState.setHasInnerFunctions(true);
           // If there are inner functions, we can inline into global scope
           // if there are no local vars or named functions.
@@ -341,8 +340,7 @@ class InlineFunctions implements CompilerPass {
         Node block = functionState.getFn().getDeclaringBlock();
         if (block.isBlock()
             && !block.getParent().isFunction()
-            && (NodeUtil.containsType(block, Token.LET)
-                || NodeUtil.containsType(block, Token.CONST))) {
+            && NodeUtil.has(block, (n) -> n.isLet() || n.isConst(), alwaysTrue())) {
           // The function might capture a variable that's not in scope at the call site,
           // so don't inline.
           functionState.disallowInlining();
@@ -732,7 +730,7 @@ class InlineFunctions implements CompilerPass {
         }
       };
 
-    return NodeUtil.has(node, pred, Predicates.alwaysTrue());
+    return NodeUtil.has(node, pred, alwaysTrue());
   }
 
   /** @see #resolveInlineConflicts */

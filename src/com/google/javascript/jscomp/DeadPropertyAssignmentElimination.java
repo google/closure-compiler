@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.alwaysTrue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterators;
@@ -101,7 +102,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       }
 
       Node body = NodeUtil.getFunctionBody(root);
-      if (!body.hasChildren() || NodeUtil.containsFunction(body)) {
+      if (!body.hasChildren() || NodeUtil.has(body, Node::isFunction, alwaysTrue())) {
         return;
       }
 
