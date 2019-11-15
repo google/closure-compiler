@@ -1390,10 +1390,8 @@ public class CommandLineRunner extends
     }
   }
 
-  /**
-   * Set of options that can be used with the --formatting flag.
-   */
-  private static enum FormattingOption {
+  /** Set of options that can be used with the --formatting flag. */
+  public static enum FormattingOption {
     PRETTY_PRINT,
     PRINT_INPUT_DELIMITER,
     SINGLE_QUOTES
