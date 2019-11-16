@@ -320,7 +320,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testMutableExport() {
     testModules(
         lines(
-            "export var a = 1, b = 2;",
+            "export var a = 1, b = 2;", //
             "function f() {",
             "  a++;",
             "  b++",
@@ -355,7 +355,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
 
     testModules(
-        lines("export function f() {};",
+        lines(
+            "export function f() {};", //
             "function g() {",
             "  f = function() {};",
             "}"),
@@ -369,7 +370,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
 
     testModules(
-        lines("export default function f() {};",
+        lines(
+            "export default function f() {};", //
             "function g() {",
             "  f = function() {};",
             "}"),
@@ -383,7 +385,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
 
     testModules(
-        lines("export class C {};",
+        lines(
+            "export class C {};", //
             "function g() {",
             "  C = class {};",
             "}"),
@@ -397,7 +400,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
 
     testModules(
-        lines("export default class C {};",
+        lines(
+            "export default class C {};", //
             "function g() {",
             "  C = class {};",
             "}"),
@@ -411,7 +415,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "};"));
 
     testModules(
-        lines("export var IN, OF;",
+        lines(
+            "export var IN, OF;", //
             "function f() {",
             "  for (IN in {});",
             "  for (OF of []);",
@@ -462,7 +467,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   @Test
   public void testTopLevelMutationIsNotMutable() {
     testModules(
-        lines("export var a = 1, b = 2;",
+        lines(
+            "export var a = 1, b = 2;", //
             "a++;",
             "b++"),
         lines(
@@ -474,7 +480,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.b = b$$module$testcode;"));
 
     testModules(
-        lines("var a = 1, b = 2; export {a as A, b as B};",
+        lines(
+            "var a = 1, b = 2; export {a as A, b as B};", //
             "if (change) {",
             "  a++;",
             "  b++",
@@ -490,7 +497,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.B = b$$module$testcode;"));
 
     testModules(
-        lines("export function f() {};",
+        lines(
+            "export function f() {};", //
             "if (change) {",
             "  f = function() {};",
             "}"),
@@ -503,7 +511,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.f = f$$module$testcode;"));
 
     testModules(
-        lines("export default function f() {};",
+        lines(
+            "export default function f() {};",
             "try { f = function() {}; } catch (e) { f = function() {}; }"),
         lines(
             "function f$$module$testcode() {}",
@@ -513,7 +522,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.default = f$$module$testcode;"));
 
     testModules(
-        lines("export class C {};",
+        lines(
+            "export class C {};", //
             "if (change) {",
             "  C = class {};",
             "}"),
@@ -526,7 +536,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.C = C$$module$testcode;"));
 
     testModules(
-        lines("export default class C {};",
+        lines(
+            "export default class C {};", //
             "{",
             "  C = class {};",
             "}"),
@@ -767,7 +778,10 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testFixTypeNode() {
     testModules(
         lines(
-            "export class Child {", "  /** @param {Child} child */", "  useChild(child) {}", "}"),
+            "export class Child {", //
+            "  /** @param {Child} child */",
+            "  useChild(child) {}",
+            "}"),
         lines(
             "class Child$$module$testcode {",
             "  /** @param {Child$$module$testcode} child */",
@@ -805,7 +819,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testRenameTypedef() {
     testModules(
         lines(
-            "import './other.js';", "/** @typedef {string|!Object} */", "export var UnionType;"),
+            "import './other.js';", //
+            "/** @typedef {string|!Object} */",
+            "export var UnionType;"),
         lines(
             "/** @typedef {string|!Object} */",
             "var UnionType$$module$testcode;",
@@ -900,20 +916,27 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportWithoutReferences() {
-    testModules("import './other.js';", "/** @const */ var module$testcode = {};");
+    testModules(
+        "import './other.js';", //
+        "/** @const */ var module$testcode = {};");
   }
 
   @Test
   public void testUselessUseStrict() {
-    ModulesTestUtils.testModulesError(this, "'use strict';\nexport default undefined;",
+    ModulesTestUtils.testModulesError(
+        this,
+        lines(
+            "'use strict';", //
+            "export default undefined;"),
         ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
   }
 
   @Test
   public void testUseStrict_noWarning() {
-    testSame(lines(
-        "'use strict';",
-        "var x;"));
+    testSame(
+        lines(
+            "'use strict';", //
+            "var x;"));
   }
 
   @Test
