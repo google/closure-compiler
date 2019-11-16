@@ -1504,13 +1504,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node value = null;
     for (Node c = left.getFirstChild(); c != null; c = c.getNext()) {
       switch (c.getToken()) {
+        case SETTER_DEF:
+          break;
+
         case OBJECT_SPREAD:
           // Reset the search because spread could overwrite any previous result.
           key = null;
           value = null;
           break;
-        case SETTER_DEF:
-          continue;
+
         case COMPUTED_PROP:
           // don't handle computed properties unless the input is a simple string
           Node prop = c.getFirstChild();
@@ -1518,35 +1520,22 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             return n;
           }
           if (prop.getString().equals(right.getString())) {
-            if (value != null && mayHaveSideEffects(value)) {
-              // The previously found value had side-effects
-              return n;
-            }
             key = c;
-            value = key.getSecondChild();
-            continue;
+            value = c.getSecondChild();
           }
           break;
+
         case GETTER_DEF:
         case STRING_KEY:
         case MEMBER_FUNCTION_DEF:
           if (c.getString().equals(right.getString())) {
-            if (value != null && mayHaveSideEffects(value)) {
-              // The previously found value had side-effects
-              return n;
-            }
             key = c;
             value = key.getFirstChild();
-            continue;
           }
           break;
+
         default:
           throw new IllegalStateException();
-      }
-      if (mayHaveSideEffects(c.getFirstChild())) {
-        // We don't handle the side-effects here as they might need a temporary
-        // or need to be reordered.
-        return n;
       }
     }
 
@@ -1556,38 +1545,55 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    // Don't try to fold member functions, since they are unlike function expressions (they have an
-    // undefined prototype and can't be used with new) and are unlike arrow functions (they can
-    // reference new.target, this, super, or arguments).
-    if (key.isMemberFunctionDef()) {
+    /** `super` captures a hidden reference to the declaring objectlit, so we can't fold it away. */
+    if (NodeUtil.referencesSuper(value)) {
       return n;
     }
 
-    if (n.getParent().isCall() || key.isGetterDef()) {
+    /**
+     * Check to see if there are any side-effects to this object-literal.
+     *
+     * <p>We remove the value we're going to use because its side-effects will be preserved.
+     */
+    Node tempValue = IR.nullNode();
+    value.replaceWith(tempValue);
+    boolean hasSideEffectBesidesValue = mayHaveSideEffects(left);
+    tempValue.replaceWith(value);
+    if (hasSideEffectBesidesValue) {
+      return n;
+    }
+
+    boolean keyIsGetter = NodeUtil.isGetOrSetKey(key);
+    boolean nIsInvoked = NodeUtil.isInvocationTarget(n);
+
+    if (keyIsGetter || nIsInvoked) {
       // When the code looks like:
       //   {x: f}.x();
-      // or
       //   {get x() {...}}.x;
-      // it's not safe, in general, to convert that to just a function call, because the 'this'
-      // value will be wrong. Except, if the function is a function literal and does not reference
-      // 'this' then it is safe:
-      if (value.isFunction() && !NodeUtil.referencesOwnReceiver(value)) {
-        if (n.getParent().isCall()) {
-          n.getParent().putBooleanProp(Node.FREE_CALL, true);
-        }
-      } else {
+      //   {get ['x']() {...}}.x;
+
+      /**
+       * It's not safe, in general, to convert that to just a function call, because the receiver
+       * value will be wrong.
+       *
+       * <p>However, there are some cases where it's ok which we check here.
+       */
+      if (!value.isFunction() || NodeUtil.referencesOwnReceiver(value)) {
         return n;
       }
     }
 
-    Node replacement = value.detach();
-    if (key.isGetterDef()){
-      replacement = IR.call(replacement);
-      replacement.putBooleanProp(Node.FREE_CALL, true);
+    value.detach();
+
+    if (keyIsGetter) {
+      value = IR.call(value);
+      value.putBooleanProp(Node.FREE_CALL, true);
+    } else if (nIsInvoked) {
+      n.getParent().putBooleanProp(Node.FREE_CALL, true);
     }
 
-    n.replaceWith(replacement);
-    reportChangeToEnclosingScope(replacement);
+    n.replaceWith(value);
+    reportChangeToEnclosingScope(value);
     markFunctionsDeleted(n);
     return n;
   }

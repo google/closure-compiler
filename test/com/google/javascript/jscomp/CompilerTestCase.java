@@ -1911,16 +1911,7 @@ public abstract class CompilerTestCase {
   }
 
   private void verifyGetterAndSetterCollection(Compiler compiler, Node mainRoot) {
-    if (compiler.getOptions().getAssumeGettersArePure()) {
-      assertWithMessage("Should not be validated when getter / setters are side-effect free")
-          .that(verifyGetterAndSetterUpdates)
-          .isFalse();
-      assertWithMessage("Should not be validated when getter / setters are side-effect free")
-          .that(verifyNoNewGettersOrSetters)
-          .isFalse();
-
-      assertThat(compiler.getAccessorSummary().getAccessors()).isEmpty();
-    } else if (verifyGetterAndSetterUpdates) {
+    if (verifyGetterAndSetterUpdates) {
       assertWithMessage("Pass did not update getters / setters")
           .that(compiler.getAccessorSummary().getAccessors())
           .containsExactlyEntriesIn(

@@ -46,6 +46,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   private boolean late;
   private boolean useTypes = true;
   private int numRepetitions;
+  private boolean assumeGettersPure = false;
 
   @Override
   @Before
@@ -78,6 +79,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    options.setAssumeGettersArePure(assumeGettersPure);
     return options;
   }
 
@@ -1124,7 +1126,18 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testDontFoldNonLiteralObjectSpreadGetProp() {
+  public void testDontFoldNonLiteralObjectSpreadGetProp_gettersImpure() {
+    this.assumeGettersPure = false;
+
+    foldSame("x = {...obj}.a;");
+    foldSame("x = {a, ...obj, c}.a;");
+    foldSame("x = {a, ...obj, c}.c;");
+  }
+
+  @Test
+  public void testDontFoldNonLiteralObjectSpreadGetProp_assumeGettersPure() {
+    this.assumeGettersPure = true;
+
     foldSame("x = {...obj}.a;");
     foldSame("x = {a, ...obj, c}.a;");
     fold("x = {a, ...obj, c}.c;", "x = c;"); // We assume object spread has no side-effects.
@@ -1523,6 +1536,11 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("({set a(b) {return this}}).a");
     testSame("({set a(b) {this._a = b}}).a");
 
+    // Don't inline if there are side-effects.
+    testSame("({[foo()]: 1,   a: 0}).a");
+    testSame("({['x']: foo(), a: 0}).a");
+    testSame("({x: foo(),     a: 0}).a");
+
     // Leave unknown props alone, the might be on the prototype
     testSame("({}).a");
 
@@ -1554,16 +1572,24 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // try folding string computed properties
     test("var a = {['a']:x}['a']", "var a = x");
+    test("var a = { get ['a']() { return 1; }}['a']", "var a = function() { return 1; }();");
     test("var a = {'a': x, ['a']: y}['a']", "var a = y;");
     testSame("var a = {['foo']: x}.a;");
     // Note: it may be useful to fold symbols in the future.
     testSame("var y = Symbol(); var a = {[y]: 3}[y];");
 
-    // don't fold member functions since they are different from fn expressions and arrow fns
-    testSame("var x = {a() {}}.a;");
-    testSame("var x = {a() { return this; }}.a;");
+    /**
+     * We can fold member functions sometimes.
+     *
+     * <p>Even though they're different from fn expressions and arrow fns, extracting them only
+     * causes programs that would have thrown errors to change behaviour.
+     */
+    test("var x = {a() { 1; }}.a;", "var x = function() { 1; };");
+    // Notice `a` isn't invoked, so beahviour didn't change.
+    test("var x = {a() { return this; }}.a;", "var x = function() { return this; };");
+    // `super` is invisibly captures the object that declared the method so we can't fold.
     testSame("var x = {a() { return super.a; }}.a;");
-    testSame("var x = {a: 1, a() {}}.a;");
+    test("var x = {a: 1, a() { 2; }}.a;", "var x = function() { 2; };");
     test("var x = {a() {}, a: 1}.a;", "var x = 1;");
     testSame("var x = {a() {}}.b");
   }
@@ -1580,8 +1606,33 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   // It would be incorrect to fold this to "x();" because the 'this' value inside the function
   // will be the global object, instead of the object {a:x} as it should be.
   @Test
-  public void testFoldObjectLiteralRefCall() {
+  public void testFoldObjectLiteral_methodCall_nonLiteralFn() {
     testSame("({a:x}).a()");
+  }
+
+  @Test
+  public void testFoldObjectLiteral_freeMethodCall() {
+    test("({a() { return 1; }}).a()", "(function() { return 1; })()");
+  }
+
+  @Test
+  public void testFoldObjectLiteral_freeArrowCall_usingEnclosingThis() {
+    test("({a: () => this }).a()", "(() => this)()");
+  }
+
+  @Test
+  public void testFoldObjectLiteral_unfreeMethodCall_dueToThis() {
+    testSame("({a() { return this; }}).a()");
+  }
+
+  @Test
+  public void testFoldObjectLiteral_unfreeMethodCall_dueToSuper() {
+    testSame("({a() { return super.toString(); }}).a()");
+  }
+
+  @Test
+  public void testFoldObjectLiteral_paramToInvocation() {
+    test("console.log({a: 1}.a)", "console.log(1)");
   }
 
   @Test
