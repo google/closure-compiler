@@ -23,18 +23,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * A set of utility functions that replaces CALL with a specified
@@ -66,66 +66,10 @@ class FunctionInjector {
   private final FunctionArgumentInjector functionArgumentInjector;
 
   /** Cache of function node to whether it deeply contains an {@code eval} call. */
-  private final LoadingCache<Node, Boolean> containsEval =
-      CacheBuilder.newBuilder()
-          .build(
-              CacheLoader.from(
-                  node -> {
-                    checkNotNull(node);
-                    if (node.isName() && node.getString().equals("eval")) {
-                      return true;
-                    }
+  private final LinkedHashMap<Node, Boolean> referencesEvalCache = new LinkedHashMap<>();
 
-                    if (node.isFunction()) {
-                      return false;
-                    }
-
-                    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-                      if (FunctionInjector.this.containsEval.getUnchecked(c)) {
-                        return true;
-                      }
-                    }
-
-                    return false;
-                  }));
-
-  /**
-   * Cache of function node to any inner functions. This cache is used to determine whether a
-   * function contains only the function to be inlined. Because of this very specific case, the
-   * values in the cache are either {@link #NO_FUNCTIONS}, {@link #MULTIPLE_FUNCTIONS} or an actual
-   * function node.
-   */
-  private final LoadingCache<Node, Node> containedFns =
-      CacheBuilder.newBuilder()
-          .build(
-              CacheLoader.from(
-                  node -> {
-                    checkNotNull(node);
-                    if (node.isFunction()) {
-                      return node;
-                    }
-
-                    Node result = NO_FUNCTIONS;
-                    for (Node c = node.getFirstChild();
-                        c != null && result != MULTIPLE_FUNCTIONS;
-                        c = c.getNext()) {
-                      Node childResult = FunctionInjector.this.containedFns.getUnchecked(c);
-                      if (childResult == NO_FUNCTIONS) {
-                        continue;
-                      }
-                      // result must be NO_FUNCTIONS or a function node
-                      // childResult must be a function node or MULTIPLE_FUNCTIONS
-                      if (result == NO_FUNCTIONS) {
-                        result = childResult;
-                        continue;
-                      }
-                      // result must be a function node
-                      if (!result.equals(childResult)) {
-                        result = MULTIPLE_FUNCTIONS;
-                      }
-                    }
-                    return result;
-                  }));
+  /** Cache of function node to any inner function. */
+  private final LinkedHashMap<Node, Node> innerFunctionCache = new LinkedHashMap<>();
 
   private FunctionInjector(Builder builder) {
     this.compiler = checkNotNull(builder.compiler);
@@ -820,18 +764,68 @@ class FunctionInjector {
   }
 
   /**
-   * Returns whether or not {@code node} deeply contains an {@code eval} call. Results are cached to
-   * make subsequent calls faster.
+   * Returns whether or not {@code fn} includes a call to `eval` in its scope.
+   *
+   * <p>Results are cached to make subsequent calls faster.
    */
-  private boolean containsEval(Node node) {
-    return containsEval.getUnchecked(node);
+  private boolean referencesEval(Node fn) {
+    checkState(fn.isFunction());
+
+    @Nullable Boolean cached = this.referencesEvalCache.get(fn);
+    if (cached != null) {
+      return cached;
+    }
+
+    boolean result =
+        NodeUtil.has(
+            fn, //
+            (n) -> n.isName() && n.getString().equals("eval"), // Match predicate
+            (n) -> !n.isFunction() || n.equals(fn)); // Explore node predicate
+    this.referencesEvalCache.put(fn, result);
+    return result;
   }
 
-  /** Returns {@code true} iff {@code caller} defines at most {@code candidate}. */
-  private boolean containsAtMostFn(Node caller, Node candidate) {
-    checkNotNull(candidate);
-    Node node = containedFns.getUnchecked(caller);
-    return node == NO_FUNCTIONS || candidate.equals(node);
+  /**
+   * Returns any inner function of {@code containerFn}.
+   *
+   * <p>If there are no inner functions, or multilple inner functions, the sentinel values {@link
+   * #NO_FUNCTIONS}, {@link #MULTIPLE_FUNCTIONS} are returned respectively.
+   */
+  private Node innerFunctionOf(Node containerFn) {
+    checkState(containerFn.isFunction());
+
+    @Nullable Node cached = this.innerFunctionCache.get(containerFn);
+    if (cached != null) {
+      return cached;
+    }
+
+    ArrayList<Node> innerFns = new ArrayList<>();
+    NodeUtil.visitPreOrder(
+        containerFn,
+        (n) -> {
+          if (n.equals(containerFn)) {
+            return;
+          }
+
+          if (n.isFunction()) {
+            innerFns.add(n);
+          }
+        });
+
+    switch (innerFns.size()) {
+      case 0:
+        cached = NO_FUNCTIONS;
+        break;
+      case 1:
+        cached = innerFns.get(0);
+        break;
+      default:
+        cached = MULTIPLE_FUNCTIONS;
+        break;
+    }
+
+    this.innerFunctionCache.put(containerFn, cached);
+    return cached;
   }
 
   /**
@@ -839,7 +833,7 @@ class FunctionInjector {
    * calling function contains an inner function and inlining would introduce new globals.
    */
   private boolean callMeetsBlockInliningRequirements(
-      Reference ref, final Node fnNode, ImmutableSet<String> namesToAlias) {
+      Reference callRef, final Node calleeFn, ImmutableSet<String> namesToAlias) {
     // Note: functions that contain function definitions are filtered out
     // in isCandidateFunction.
 
@@ -847,29 +841,34 @@ class FunctionInjector {
     // or if the caller contains inner functions accounts for 20% of the
     // run-time cost of this pass.
     //
-    // Note that as of 2019-10-11, "eval" and function checking are optimized, so this may be less
+    // Note that as of 2019-10-11, "eval" and function checking are cached so this may be less
     // of an issue.
 
     // Don't inline functions with var declarations into a scope with inner
     // functions as the new vars would leak into the inner function and
     // cause memory leaks.
-    boolean fnContainsVars =
+    boolean calleeContainsVars =
         NodeUtil.has(
-            NodeUtil.getFunctionBody(fnNode),
+            NodeUtil.getFunctionBody(calleeFn),
             new NodeUtil.MatchDeclaration(),
             new NodeUtil.MatchShallowStatement());
+
     boolean forbidTemps = false;
-    if (!ref.scope.getClosestHoistScope().isGlobal()) {
-      Node fnCallerBody = ref.scope.getClosestHoistScope().getRootNode();
+    if (!callRef.scope.getClosestHoistScope().isGlobal()) {
+      Node callerFn = callRef.scope.getClosestHoistScope().getRootNode().getParent();
 
       // Don't allow any new vars into a scope that contains eval or one
       // that contains functions (excluding the function being inlined).
-      forbidTemps =
-          containsEval(fnCallerBody)
-              || (!assumeMinimumCapture && !containsAtMostFn(fnCallerBody, fnNode));
+      if (this.referencesEval(callerFn)) {
+        forbidTemps = true;
+      } else if (!this.assumeMinimumCapture) {
+        Node innerFn = this.innerFunctionOf(callerFn);
+        boolean calleeIsOnlyInnerFn = innerFn.equals(NO_FUNCTIONS) || innerFn.equals(calleeFn);
+        forbidTemps = !calleeIsOnlyInnerFn;
+      }
     }
 
-    if (fnContainsVars && forbidTemps) {
+    if (calleeContainsVars && forbidTemps) {
       return false;
     }
 
@@ -878,13 +877,13 @@ class FunctionInjector {
     if (forbidTemps) {
       ImmutableMap<String, Node> args =
           functionArgumentInjector.getFunctionCallParameterMap(
-              fnNode, ref.callNode, this.safeNameIdSupplier);
+              calleeFn, callRef.callNode, this.safeNameIdSupplier);
       boolean hasArgs = !args.isEmpty();
       if (hasArgs) {
         // Limit the inlining
         Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
         functionArgumentInjector.maybeAddTempsForCallArguments(
-            compiler, fnNode, args, allNamesToAlias, compiler.getCodingConvention());
+            compiler, calleeFn, args, allNamesToAlias, compiler.getCodingConvention());
         if (!allNamesToAlias.isEmpty()) {
           return false;
         }
@@ -951,7 +950,6 @@ class FunctionInjector {
 
   /**
    * Determine if inlining the function is likely to reduce the code size.
-   * @param namesToAlias
    */
   boolean inliningLowersCost(
       JSModule fnModule, Node fnNode, Collection<? extends Reference> refs,
