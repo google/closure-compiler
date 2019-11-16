@@ -30,6 +30,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -827,6 +830,24 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     n.putProp(Node.FEATURE_SET, FeatureSet.BARE_MINIMUM.with(Feature.LET_DECLARATIONS));
     expectValid(n, Check.SCRIPT);
+  }
+
+  @Test
+  public void testUnresolvedTypesAreBanned() {
+    Compiler compiler = createCompiler();
+    JSTypeRegistry registry = compiler.getTypeRegistry();
+    JSType unresolvedFunction =
+        registry.createFunctionType(registry.getNativeType(JSTypeNative.VOID_TYPE));
+    assertThat(unresolvedFunction.isResolved()).isFalse();
+
+    Node foo = IR.name("foo").setJSType(unresolvedFunction);
+    Node expr = IR.exprResult(foo);
+
+    expectInvalid(expr, Check.STATEMENT);
+
+    unresolvedFunction.resolveOrThrow();
+
+    expectValid(expr, Check.STATEMENT);
   }
 
   private void valid(String code) {
