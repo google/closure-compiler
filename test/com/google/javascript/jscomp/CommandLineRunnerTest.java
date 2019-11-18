@@ -1907,6 +1907,23 @@ public final class CommandLineRunnerTest {
     assertThat(outReader.toString()).isEmpty();
   }
 
+  @Test
+  public void testSimpleJsonFileInclusionCompiles() {
+    args.add("--module_resolution=NODE");
+    args.add("--compilation_level=ADVANCED");
+    setFilename(0, "index.js");
+    setFilename(1, "package.json");
+    test(
+        new String[] {
+          lines("const /** string */ typeError = 0;"),
+          lines(
+              "{", //
+              "  \"name\": \"test\"",
+              "}")
+        },
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
   /**
    * closure requires mixed with cjs, raised in https://github.com/google/closure-compiler/pull/630
    * https://gist.github.com/sayrer/c4c4ce0c1748573f863e

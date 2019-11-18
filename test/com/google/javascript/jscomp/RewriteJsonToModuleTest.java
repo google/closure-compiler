@@ -54,7 +54,10 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
   public void testJsonFile() {
     test(
         srcs(SourceFile.fromCode("/test.json", "{ 'foo': 'bar'}")),
-        expected("goog.provide('module$test_json'); var module$test_json = { 'foo': 'bar'};"));
+        expected(
+            lines(
+                "/** @fileoverview @suppress {undefinedVars} */",
+                "goog.provide('module$test_json'); var module$test_json = { 'foo': 'bar'};")));
 
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries()).isEmpty();
   }
@@ -63,15 +66,15 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
   public void testPackageJsonFile() {
     test(
         srcs(SourceFile.fromCode("/package.json", "{ 'main': 'foo/bar/baz.js'}")),
-        expected(lines(
-            "goog.provide('module$package_json')",
-            "var module$package_json = {'main': 'foo/bar/baz.js'};")));
+        expected(
+            lines(
+                "/** @fileoverview @suppress {undefinedVars} */",
+                "goog.provide('module$package_json')",
+                "var module$package_json = {'main': 'foo/bar/baz.js'};")));
 
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries()).hasSize(1);
-    assert (getLastCompiler()
-        .getModuleLoader()
-        .getPackageJsonMainEntries()
-        .containsKey("/package.json"));
+    assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries())
+        .containsKey("/package.json");
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries())
         .containsEntry("/package.json", "/foo/bar/baz.js");
   }
@@ -80,9 +83,11 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
   public void testPackageJsonWithoutMain() {
     test(
         srcs(SourceFile.fromCode("/package.json", "{'other': { 'main': 'foo/bar/baz.js'}}")),
-        expected(lines(
-            "goog.provide('module$package_json')",
-            "var module$package_json = {'other': { 'main': 'foo/bar/baz.js'}};")));
+        expected(
+            lines(
+                "/** @fileoverview @suppress {undefinedVars} */",
+                "goog.provide('module$package_json')",
+                "var module$package_json = {'other': { 'main': 'foo/bar/baz.js'}};")));
 
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries()).isEmpty();
   }
@@ -92,10 +97,10 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     test(
         srcs(
             SourceFile.fromCode(
-                "/package.json",
-                "{ 'main': 'foo/bar/baz.js', 'browser': 'browser/foo.js' }")),
+                "/package.json", "{ 'main': 'foo/bar/baz.js', 'browser': 'browser/foo.js' }")),
         expected(
             lines(
+                "/** @fileoverview @suppress {undefinedVars} */",
                 "goog.provide('module$package_json')",
                 "var module$package_json = {",
                 "  'main': 'foo/bar/baz.js',",
@@ -121,6 +126,7 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
                     "               'override/explicitly.js': 'with/other.js'} }"))),
         expected(
             lines(
+                "/** @fileoverview @suppress {undefinedVars} */",
                 "goog.provide('module$package_json')",
                 "var module$package_json = {",
                 "  'main': 'foo/bar/baz.js',",
@@ -156,6 +162,7 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
                     "               './server.js': 'client.js'} }"))),
         expected(
             lines(
+                "/** @fileoverview @suppress {undefinedVars} */",
                 "goog.provide('module$package_json')",
                 "var module$package_json = {",
                 "  'main': 'foo/bar/baz.js',",
