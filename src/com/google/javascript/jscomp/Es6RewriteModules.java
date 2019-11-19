@@ -620,7 +620,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         // However it does understand aliases. So if an export isn't mutated use an alias to make it
         // actually type checkable.
         // exports.foo = foo;
-        Node assign = IR.assign(getProp, NodeUtil.newQName(compiler, boundVariableName));
+        Node assign = IR.assign(getProp, IR.name(boundVariableName));
         JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
         builder.recordConstancy();
         JSDocInfo info = builder.build();
