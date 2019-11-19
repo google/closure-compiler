@@ -2616,8 +2616,44 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     FunctionType bar = (FunctionType) (findNameType("Bar", globalScope));
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
     assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertType(foo.getImplicitPrototype()).isEqualTo(bar);
     assertScope(globalScope).declares("Bar").withTypeThat().isEqualTo(bar);
     assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+  }
+
+  @Test
+  public void testClassDeclarationWithExtendsFromNamespace() {
+    testSame(
+        lines(
+            "const ns = {};", //
+            "ns.Bar = class {};",
+            "const nsAliased = ns;",
+            "class Foo extends nsAliased.Bar {}"));
+    FunctionType bar = (FunctionType) findNameType("ns.Bar", globalScope);
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertType(foo.getImplicitPrototype()).isEqualTo(bar);
+  }
+
+  @Test
+  public void testClassDeclarationWithExtendsFromNamespaceAndJSDoc() {
+    testSame(
+        lines(
+            "const ns = {};", //
+            "/** @template T */",
+            "ns.Bar = class {};",
+            "const nsAliased = ns;",
+            "",
+            "/** @extends {nsAliased.Bar<number>} */",
+            "class Foo extends nsAliased.Bar {}"));
+    FunctionType bar = (FunctionType) findNameType("ns.Bar", globalScope);
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    // TODO(b/144327372): this should be equal to bar
+    assertType(foo.getImplicitPrototype()).isNotEqualTo(bar);
+    assertType(foo.getImplicitPrototype()).toStringIsEqualTo("Function");
   }
 
   @Test
@@ -5362,6 +5398,26 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar fooVar = globalScope.getVar("foo");
     assertThat(fooVar).hasJSTypeThat().toStringIsEqualTo("Bar");
     assertThat(fooVar).isNotInferred();
+  }
+
+  @Test
+  public void testGoogRequire_ofProvide_usedInEs6ExtendsClause() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.provide('a.b')", //
+                "a.b.Foo = class {};"),
+            lines(
+                "goog.module('c');", //
+                "const b = goog.require('a.b');",
+                "class C extends b.Foo {}")));
+
+    FunctionType cType = (FunctionType) findNameType("C", lastLocalScope);
+    FunctionType aFooType = (FunctionType) findNameType("a.b.Foo", globalScope);
+
+    assertType(cType.getInstanceType()).isSubtypeOf(aFooType.getInstanceType());
+    assertType(cType.getImplicitPrototype()).isEqualTo(aFooType);
   }
 
   @Test

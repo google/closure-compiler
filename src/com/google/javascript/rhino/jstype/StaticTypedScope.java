@@ -83,7 +83,7 @@ public interface StaticTypedScope extends StaticScope {
     StaticTypedSlot slot = getSlot(qname.join());
     if (slot != null && !slot.isTypeInferred()) {
       JSType type = slot.getType();
-      if (type != null && !type.isUnknownType()) {
+      if (type != null) {
         return type;
       }
     } else if (!qname.isSimple()) {

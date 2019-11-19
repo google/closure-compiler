@@ -1572,17 +1572,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       JSType ctorType = extendsNode.getJSType();
       if (ctorType == null) {
         if (extendsNode.isQualifiedName()) {
+          String superclass = extendsNode.getQualifiedName();
           // Look up qualified names in the scope (types won't be set on the AST until inference).
-          TypedVar var = currentScope.getVar(extendsNode.getQualifiedName());
-          if (var != null) {
-            ctorType = var.getType();
+          ctorType = currentScope.lookupQualifiedName(QualifiedName.of(superclass));
+          if (ctorType == null) {
+            TypedVar var = currentScope.getVar(superclass);
+            ctorType = var != null ? var.getType() : null;
           }
           // If that doesn't work, then fall back on the registry
           if (ctorType == null) {
             return ObjectType.cast(
                 typeRegistry.getType(
                     currentScope,
-                    extendsNode.getQualifiedName(),
+                    superclass,
                     extendsNode.getSourceFileName(),
                     extendsNode.getLineno(),
                     extendsNode.getCharno()));
