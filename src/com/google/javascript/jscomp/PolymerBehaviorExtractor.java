@@ -74,7 +74,8 @@ final class PolymerBehaviorExtractor {
   /**
    * Extracts all Behaviors from an array literal, recursively. Entries in the array can be object
    * literals or array literals (of other behaviors). Behavior names must be global, fully qualified
-   * names.
+   * names. TODO(rishipal): Make this function better handle case where the same behavior
+   * transitively gets included in the same Polymer element more than once.
    *
    * @see https://github.com/Polymer/polymer/blob/0.8-preview/PRIMER.md#behaviors
    * @param moduleMetadata The module in which these behaviors are being resolved, or null if not in
@@ -101,6 +102,7 @@ final class PolymerBehaviorExtractor {
         if (NodeUtil.getFirstPropMatchingKey(behaviorName, "is") != null) {
           compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_INVALID_BEHAVIOR));
         }
+        Node behaviorModule = NodeUtil.getEnclosingModuleIfPresent(behaviorName);
         behaviors.add(
             new BehaviorDefinition(
                 PolymerPassStaticUtils.extractProperties(
@@ -111,7 +113,8 @@ final class PolymerBehaviorExtractor {
                 getBehaviorFunctionsToCopy(behaviorName),
                 getNonPropertyMembersToCopy(behaviorName),
                 /* isGlobalDeclaration= */ NodeUtil.getEnclosingScopeRoot(behaviorName).isRoot(),
-                (FeatureSet) NodeUtil.getEnclosingScript(behaviorName).getProp(Node.FEATURE_SET)));
+                (FeatureSet) NodeUtil.getEnclosingScript(behaviorName).getProp(Node.FEATURE_SET),
+                behaviorModule));
         continue;
       }
 
@@ -137,6 +140,7 @@ final class PolymerBehaviorExtractor {
         if (NodeUtil.getFirstPropMatchingKey(behaviorValue, "is") != null) {
           compiler.report(JSError.make(behaviorValue, PolymerPassErrors.POLYMER_INVALID_BEHAVIOR));
         }
+        Node behaviorModule = NodeUtil.getEnclosingModuleIfPresent(behaviorValue);
         behaviors.add(
             new BehaviorDefinition(
                 PolymerPassStaticUtils.extractProperties(
@@ -147,12 +151,12 @@ final class PolymerBehaviorExtractor {
                 getBehaviorFunctionsToCopy(behaviorValue),
                 getNonPropertyMembersToCopy(behaviorValue),
                 resolveResult.isGlobalDeclaration,
-                (FeatureSet) NodeUtil.getEnclosingScript(behaviorValue).getProp(Node.FEATURE_SET)));
+                (FeatureSet) NodeUtil.getEnclosingScript(behaviorValue).getProp(Node.FEATURE_SET),
+                behaviorModule));
       } else {
         compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_UNQUALIFIED_BEHAVIOR));
       }
     }
-
     return behaviors.build();
   }
 
@@ -499,15 +503,22 @@ final class PolymerBehaviorExtractor {
      */
     final FeatureSet features;
 
+    /** Containing MODULE_BODY if this behavior is defined inside a module, otherwise null */
+    final Node behaviorModule;
+
     BehaviorDefinition(
-        List<MemberDefinition> props, List<MemberDefinition> functionsToCopy,
-        List<MemberDefinition> nonPropertyMembersToCopy, boolean isGlobalDeclaration,
-        FeatureSet features) {
+        List<MemberDefinition> props,
+        List<MemberDefinition> functionsToCopy,
+        List<MemberDefinition> nonPropertyMembersToCopy,
+        boolean isGlobalDeclaration,
+        FeatureSet features,
+        Node behaviorModule) {
       this.props = props;
       this.functionsToCopy = functionsToCopy;
       this.nonPropertyMembersToCopy = nonPropertyMembersToCopy;
       this.isGlobalDeclaration = isGlobalDeclaration;
       this.features = features;
+      this.behaviorModule = behaviorModule;
     }
   }
 }

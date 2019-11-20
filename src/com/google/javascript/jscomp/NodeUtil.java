@@ -1772,6 +1772,10 @@ public final class NodeUtil {
     return getEnclosingType(n, Token.CLASS);
   }
 
+  public static Node getEnclosingModuleIfPresent(Node n) {
+    return getEnclosingType(n, Token.MODULE_BODY);
+  }
+
   /** Finds the function containing the given node. */
   public static Node getEnclosingFunction(Node n) {
     return getEnclosingType(n, Token.FUNCTION);
@@ -5532,6 +5536,56 @@ public final class NodeUtil {
         }
       };
     }
+  }
+
+  /**
+   * Records a mapping of names to vars of everything reachable in a module. Should only be called
+   * with a module scope.
+   *
+   * @param nameVarMap an empty map that gets populated with the keys being variable names and
+   *     values being variable objects
+   * @param orderedVars an empty list that gets populated with variable objects in the order that
+   *     they appear in the module
+   */
+  static void getAllVarsDeclaredInModule(
+      final Node moduleNode,
+      final Map<String, Var> nameVarMap,
+      final List<Var> orderedVars,
+      AbstractCompiler compiler,
+      ScopeCreator scopeCreator,
+      final Scope globalScope) {
+
+    checkState(moduleNode.isModuleBody(), "getAllVarsDeclaredInModule expects a module body node");
+    checkState(nameVarMap.isEmpty());
+    checkState(orderedVars.isEmpty());
+    checkState(globalScope.isGlobal(), globalScope);
+
+    ScopedCallback finder =
+        new ScopedCallback() {
+          @Override
+          public void enterScope(NodeTraversal t) {
+            Scope currentScope = t.getScope();
+            if (currentScope.isModuleScope()) {
+              for (Var v : currentScope.getVarIterable()) {
+                nameVarMap.put(v.getName(), v);
+                orderedVars.add(v);
+              }
+            }
+          }
+
+          @Override
+          public void exitScope(NodeTraversal t) {}
+
+          @Override
+          public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            return n.isModuleBody();
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {}
+        };
+    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
+    t.traverseWithScope(moduleNode, globalScope);
   }
 
   /**

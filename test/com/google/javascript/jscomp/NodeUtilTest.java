@@ -32,6 +32,7 @@ import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
+import static com.google.javascript.rhino.Token.MODULE_BODY;
 import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SUPER;
@@ -61,6 +62,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -3389,6 +3391,47 @@ public final class NodeUtilTest {
               NodeUtil.isObjectDefinePropertyDefinition(
                   parseFirst(CALL, "Object.defineProperty();")))
           .isFalse();
+    }
+
+    @Test
+    public void testGetAllModuleVars() {
+      String js =
+          "goog.module('m'); var h =2; function g(x, y) {var z; {let a; const b = 1} let c}";
+      Compiler compiler = new Compiler();
+
+      compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+      SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
+      Node ast = parse(js);
+      Node moduleNode = parseFirst(MODULE_BODY, js);
+      Scope globalScope = Scope.createGlobalScope(ast);
+      Map<String, Var> allVariables = new LinkedHashMap<>();
+      List<Var> orderedVars = new ArrayList<>();
+      NodeUtil.getAllVarsDeclaredInModule(
+          moduleNode, allVariables, orderedVars, compiler, scopeCreator, globalScope);
+      assertThat(allVariables.keySet()).containsExactly("g", "h");
+    }
+
+    @Test
+    public void testGetAllModuleVars2() {
+      String js = "var glob = 3;";
+      Compiler compiler = new Compiler();
+
+      compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+      SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
+      Node ast = parse(js);
+      Scope globalScope = Scope.createGlobalScope(ast);
+      Map<String, Var> allVariables = new LinkedHashMap<>();
+      List<Var> orderedVars = new ArrayList<>();
+      try {
+        NodeUtil.getAllVarsDeclaredInModule(
+            ast, allVariables, orderedVars, compiler, scopeCreator, globalScope);
+        throw new RuntimeException("getAllVarsDeclaredInModule should throw an exception");
+      } catch (IllegalStateException e) {
+        assertThat(e.getMessage())
+            .isEqualTo("getAllVarsDeclaredInModule expects a module body node");
+      }
+      assertThat(allVariables).isEmpty();
+      assertThat(orderedVars).isEmpty();
     }
 
     @Test
