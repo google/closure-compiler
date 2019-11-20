@@ -1824,6 +1824,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public TemplatizedType createTemplatizedType(
       ObjectType baseType, ImmutableList<JSType> templatizedTypes) {
+    checkNotNull(baseType);
     // Only ObjectTypes can currently be templatized; extend this logic when
     // more types can be templatized.
     return new TemplatizedType(this, baseType, templatizedTypes);

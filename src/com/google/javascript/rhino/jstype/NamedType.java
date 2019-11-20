@@ -275,11 +275,16 @@ public final class NamedType extends ProxyObjectType {
     if (isSuccessfullyResolved()) {
       this.resolutionScope = null;
 
-      int numKeys = result.getTemplateParamCount();
       if (!result.isObjectType() || templateTypes == null || templateTypes.isEmpty()) {
         return result;
       }
 
+      ObjectType asObject = result.toMaybeObjectType();
+      if (asObject == null) {
+        return result;
+      }
+
+      int numKeys = result.getTemplateParamCount();
       ImmutableList<JSType> resolvedTypeArgs =
           JSTypeIterations.mapTypes((t) -> t.resolve(reporter), this.templateTypes);
       // Ignore any extraneous type args (but only after resolving them!)
@@ -288,7 +293,7 @@ public final class NamedType extends ProxyObjectType {
         resolvedTypeArgs = resolvedTypeArgs.subList(0, numKeys);
       }
 
-      result = registry.createTemplatizedType(result.toMaybeObjectType(), resolvedTypeArgs);
+      result = registry.createTemplatizedType(asObject, resolvedTypeArgs);
       setReferencedType(result.resolve(reporter));
     }
     return result;
@@ -547,6 +552,7 @@ public final class NamedType extends ProxyObjectType {
   private boolean localVariableShadowsGlobalNamespace(String root) {
     StaticSlot rootVar = resolutionScope.getSlot(root);
     if (rootVar != null) {
+      checkNotNull(rootVar.getScope(), rootVar);
       StaticScope parent = rootVar.getScope().getParentScope();
       if (parent != null) {
         StaticSlot globalVar = parent.getSlot(root);

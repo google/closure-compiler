@@ -1619,6 +1619,34 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testTypecheckNativeModulesDoesntCrash() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setCodingConvention(new ClosureCodingConvention());
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setCheckTypes(true);
+    test(
+        options,
+        new String[] {
+          lines(
+              "goog.module('a');",
+              "/** @interface */ class Foo {}",
+              "/** @interface */ class Bar {}",
+              "/** @typedef {(!Foo<?>|!Bar<?>)} */",
+              "exports.TypeDef;",
+              ""),
+          lines(
+              "goog.module('b');",
+              "const a = goog.requireType('a');",
+              "const /** null */ n = /** @type {!a.TypeDef<?>} */ (0);",
+              "")
+        },
+        // Just making sure that typechecking ran and didn't crash.  It would be reasonable
+        // for there also to be other type errors in this code before the final null assignment.
+        TYPE_MISMATCH_WARNING);
+  }
+
+  @Test
   public void testPreservedForwardDeclare() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
