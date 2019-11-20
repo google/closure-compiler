@@ -26,7 +26,8 @@
  * @suppress {undefinedVars|reportUnknownTypes}
  */
 $jscomp.getGlobal = function(maybeGlobal) {
-  // This logic can be simplified to be made more optimizable.
+  // TODO(b/144860612): This logic could be improved to work in more
+  // environments https://mathiasbynens.be/notes/globalthis
   return (typeof window != 'undefined' && window === maybeGlobal) ?
       maybeGlobal :
       (typeof global != 'undefined' && global != null) ?
@@ -35,8 +36,8 @@ $jscomp.getGlobal = function(maybeGlobal) {
 };
 
 
-// TODO(sdh): This should be typed as "the global object" now that the type
-// of "Global" has landed in the type system.
+// TODO(b/144860236): This should be typed as "the global object" now that the
+// type of "Global" has landed in the type system.
 /**
  * The global object. For browsers we could just use `this` but in Node that
  * doesn't work.
