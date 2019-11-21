@@ -36,7 +36,7 @@ import javax.annotation.CheckReturnValue;
 
 /**
  * A reverse abstract interpreter (RAI) for specific closure patterns such as
- * {@code goog.isDef}.
+ * {@code goog.isObject}.
  */
 public final class ClosureReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {

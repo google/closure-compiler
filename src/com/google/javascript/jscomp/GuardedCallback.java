@@ -59,7 +59,7 @@ import java.util.Deque;
  *   !x;
  *   x == y; x != y; x === y; x !== y;
  *   x instanceof Foo;
- *   goog.isString(x);
+ *   typeof x === 'string';
  *
  *   // Coerced to string:
  *   String(x);
