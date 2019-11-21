@@ -6436,6 +6436,24 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogModuleGetInBlockScopeDoesntCrash() {
+    testSame(
+        srcs(
+            lines(
+                "goog.module('a');", //
+                "exports = 5;"),
+            lines(
+                "goog.require('a');",
+                "function f() {",
+                "  if (true) {",
+                "    D: var a = goog.module.get('a');",
+                "  }",
+                "}")));
+
+    assertType(getLabeledStatement("D").statementNode.getOnlyChild().getJSType()).isNumber();
+  }
+
+  @Test
   public void testLegacyGoogModule_withExportedTypedefOnProperty() {
     processClosurePrimitives = true;
     testSame(

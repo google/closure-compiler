@@ -1218,7 +1218,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // have one level and require some special handling.
           ScopedName defaultImport = moduleImportResolver.getClosureNamespaceTypeFromCall(value);
           for (Node key : pattern.children()) {
-            defineModuleImport(key.getFirstChild(), defaultImport, key.getString());
+            defineModuleImport(key.getFirstChild(), defaultImport, key.getString(), scope);
           }
           return;
         }
@@ -1382,7 +1382,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      */
     private void defineName(Node name, Node value, TypedScope scope, JSDocInfo info) {
       if (ModuleImportResolver.isGoogModuleDependencyCall(value)) {
-        defineModuleImport(name, moduleImportResolver.getClosureNamespaceTypeFromCall(value), null);
+        defineModuleImport(
+            name, moduleImportResolver.getClosureNamespaceTypeFromCall(value), null, scope);
         return;
       }
       JSType type = getDeclaredType(info, name, value, /* declaredRValueTypeSupplier= */ null);
@@ -1400,13 +1401,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     private void defineModuleImport(
-        Node localNameNode, @Nullable ScopedName exportedName, String optionalProperty) {
+        Node localNameNode,
+        @Nullable ScopedName exportedName,
+        String optionalProperty,
+        TypedScope scopeToDeclareIn) {
       if (exportedName == null) {
         // We could not find the module defining this import. Just declare the name as unknown.
         new SlotDefiner()
             .forDeclarationNode(localNameNode)
             .forVariableName(localNameNode.getString())
-            .inScope(currentScope)
+            .inScope(scopeToDeclareIn)
             .withType(unknownType)
             .allowLaterTypeInference(true)
             .defineSlot();
@@ -1437,7 +1441,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           new SlotDefiner()
               .forDeclarationNode(localNameNode)
               .forVariableName(localNameNode.getString())
-              .inScope(currentScope)
+              .inScope(scopeToDeclareIn)
               .withType(type)
               .allowLaterTypeInference(type == null)
               .defineSlot();
@@ -1445,7 +1449,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         }
       }
       // Defer defining this name until after we have visited the entire AST.
-      weakImports.add(new WeakModuleImport(localNameNode, exportedName, currentScope));
+      weakImports.add(new WeakModuleImport(localNameNode, exportedName, scopeToDeclareIn));
     }
 
     /**
