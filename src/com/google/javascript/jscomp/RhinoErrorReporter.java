@@ -37,6 +37,9 @@ class RhinoErrorReporter {
   static final DiagnosticType UNRECOGNIZED_TYPE_ERROR =
       DiagnosticType.warning("JSC_UNRECOGNIZED_TYPE_ERROR", "{0}");
 
+  static final DiagnosticType UNRECOGNIZED_TYPEOF_ERROR =
+      DiagnosticType.warning("JSC_UNRECOGNIZED_TYPEOF_ERROR", "{0}");
+
   // This is separate from TYPE_PARSE_ERROR because there are many instances of this warning
   // and it is unfeasible to fix them all right away.
   static final DiagnosticType JSDOC_MISSING_BRACES_WARNING =
@@ -147,6 +150,8 @@ class RhinoErrorReporter {
           // Unresolved types that aren't forward declared.
           .put(Pattern.compile(".*Unknown type.*"), UNRECOGNIZED_TYPE_ERROR)
           .put(Pattern.compile(".*Unknown type.*\n.*"), UNRECOGNIZED_TYPE_ERROR)
+          // Unrecognized `typeof some.prop` errors
+          .put(Pattern.compile("^Missing type for `typeof` value.*"), UNRECOGNIZED_TYPEOF_ERROR)
           // Import annotation errors.
           .put(
               Pattern.compile("^Bad type annotation. Import in typedef.*"),

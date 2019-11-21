@@ -23934,7 +23934,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeofType_notInScope() {
     testTypes(
         "var /** typeof ns */ x;",
-        "Parse error. Missing type for `typeof` value. The value must be declared and const.");
+        "Missing type for `typeof` value. The value must be declared and const.");
   }
 
   @Test
@@ -24103,7 +24103,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testTypeofType_unknownType() {
     testTypes(
         lines("var /** ? */ x;", "/** @type {typeof x} */ var y;"),
-        "Parse error. Missing type for `typeof` value. The value must be declared and const.");
+        "Missing type for `typeof` value. The value must be declared and const.");
   }
 
   @Test
@@ -24128,7 +24128,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "/** @const */ var ns = {};",
             "/** @const {typeof ns.Foo} */ var Foo = /** @type {?} */ (x);"),
-        "Parse error. Missing type for `typeof` value. The value must be declared and const.");
+        "Missing type for `typeof` value. The value must be declared and const.");
   }
 
   @Test
@@ -24187,8 +24187,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var g = function (/** typeof x */ a) {}",
             "x = 'str';",
             "g(null);"),
-        lines(
-            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
+        lines("Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -24201,8 +24200,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = 'str';",
             "  g(null);",
             "}"),
-        lines(
-            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
+        lines("Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -24232,8 +24230,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  x = 'str';",
             "  g(null);",
             "}"),
-        lines(
-            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
+        lines("Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
@@ -24263,8 +24260,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  var g = null",
             "  x = 'str';",
             "}"),
-        lines(
-            "Parse error. Missing type for `typeof` value. The value must be declared and const."));
+        lines("Missing type for `typeof` value. The value must be declared and const."));
   }
 
   @Test
