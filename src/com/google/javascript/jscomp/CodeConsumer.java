@@ -249,6 +249,7 @@ public abstract class CodeConsumer {
   final void beginTemplateLit() {
     checkState(templateLitDepth == templateLitSubDepth);
 
+    maybeEndStatement();
     append("`");
     templateLitDepth++;
   }

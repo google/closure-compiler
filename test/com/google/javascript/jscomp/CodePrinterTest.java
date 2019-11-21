@@ -3139,6 +3139,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     // Substitution without padding.
     assertPrintSame("`Unbroken${x}string`");
+
+    // Template strings terminate statements if needed.
+    assertPrintSame("let a;`a`");
   }
 
   @Test
