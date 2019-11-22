@@ -2105,7 +2105,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  /** @param {number} v */",
             "  set value(v) { }",
             "}"),
-        TypedScopeCreator.CONFLICTING_GETTER_SETTER_TYPE);
+        TypeCheck.CONFLICTING_GETTER_SETTER_TYPE);
 
     // Also verify what the actual output is
     disableTypeCheck();

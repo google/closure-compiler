@@ -4424,8 +4424,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "new C().x = null;"),
         new String[] {
           lines(
-              // TODO(sdh): Having different getter and setter types should be allowed and not
-              // produce the following error.
+              // TODO(b/116797078): Having different getter and setter types should be allowed and
+              // not produce the following error.
               "The types of the getter and setter for property 'x' do not match.",
               "getter type is: number",
               "setter type is: string"),
@@ -4436,7 +4436,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
           lines(
               "assignment to property x of C",
               "found   : null",
-              // TODO(sdh): This should report that it requires a string.
+              // TODO(b/116797078): This should report that it requires a string.
               "required: number")
         });
   }
@@ -4483,6 +4483,43 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "The types of the getter and setter for property 'x' do not match.",
             "getter type is: xRecord",
             "setter type is: {x: number}"));
+  }
+
+  @Test
+  public void testClassGetterWithShadowingDeclarationOnInstanceType() {
+    testTypes(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    /** @type {string|undefined} */",
+            "    this.x;",
+            "  }",
+            "  /** @return {number} */",
+            "  get x() { return 0; }",
+            "}",
+            "new C().x = null;"),
+        new String[] {
+          // TODO(b/144954613): we could really throw a clearer error here at the point where we
+          // redeclare 'this.x', and also should forbid writing to 'new C().x'.
+          lines("assignment to property x of C", "found   : null", "required: number")
+        });
+  }
+
+  @Test
+  public void testClassGetterWithDuplicateDeclarationLater() {
+    testTypes(
+        lines(
+            "class C {",
+            "  /** @return {number} */",
+            "  get x() {}",
+            "}",
+            "/** @type {string} */",
+            "C.prototype.x;",
+            "new C().x = null;"),
+        new String[] {
+          // TODO(b/144954613): this should report an error related to the redeclaration of 'x'
+          lines("assignment to property x of C", "found   : null", "required: number")
+        });
   }
 
   @Test

@@ -2820,6 +2820,46 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithConflictingGetterSetter() {
+    // Given
+    testSame(
+        lines(
+            "class Foo {",
+            // This is not valid, but will be warned about in TypeCheck later
+            "  /** @return {string} */",
+            "  get field() { }",
+            "  /** @param {number} arg */",
+            "  set field(arg) {}",
+            "}",
+            ""));
+
+    // Then
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    assertType(foo.getPrototype()).withTypeOfProp("field").isString();
+  }
+
+  @Test
+  public void testClassDeclarationWithGetterWithDuplicateAfterward() {
+    // Given
+    testSame(
+        lines(
+            "class Foo {",
+            "  /** @return {string} */",
+            "  get field() { }",
+            "}",
+            "",
+            // This declaration should be ignored in preference of the one in the CLASS body.
+            // Constructs like this are sometimes valid (e.g. in mod files) and have error reporting
+            // separate from `TypedScopeCreator`.
+            "/** @type {string} arg */",
+            "Foo.method = function(arg) { }"));
+
+    // Then
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    assertType(foo.getPrototype()).withTypeOfProp("field").isString();
+  }
+
+  @Test
   public void testClassDeclarationWithMethodAndInlineParamDocs() {
     testSame(
         lines(

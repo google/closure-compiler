@@ -307,6 +307,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Abstract methods can only appear in abstract classes. Please declare the class as "
               + "@abstract");
 
+  static final DiagnosticType CONFLICTING_GETTER_SETTER_TYPE =
+      DiagnosticType.warning(
+          "JSC_CONFLICTING_GETTER_SETTER_TYPE",
+          "The types of the getter and setter for property ''{0}'' do not match.\n"
+              + "getter type is: {1}\n"
+              + "setter type is: {2}");
+
   // If a diagnostic is disabled by default, do not add it in this list
   // TODO(dimvar): Either INEXISTENT_PROPERTY shouldn't be here, or we should
   // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
@@ -953,12 +960,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = false;
         break;
 
-      case CLASS_MEMBERS: {
-        JSType typ = parent.getJSType().toMaybeFunctionType().getInstanceType();
-        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      case CLASS_MEMBERS:
+        {
+          JSType typ = parent.getJSType().toMaybeFunctionType().getInstanceType();
+          for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
             visitObjectOrClassLiteralKey(child, n.getParent(), typ);
-        }
-        typeable = false;
+            if (child.isSetterDef() || child.isGetterDef()) {
+              checkGetterOrSetterType(child, parent.getJSType().toMaybeFunctionType());
+            }
+          }
+          typeable = false;
         break;
       }
 
@@ -1090,6 +1101,42 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     } else {
       typedCount++;
     }
+  }
+
+  /**
+   * Verifies that a user did not give a getter and setter different types, as the type system will
+   * arbitrarily take the first of the types if different.
+   */
+  private void checkGetterOrSetterType(Node child, FunctionType classType) {
+    String propertyName = child.getString();
+
+    FunctionType methodType = child.getLastChild().getJSType().toMaybeFunctionType();
+    JSType propertyType =
+        child.isGetterDef()
+            ? determineGetterType(methodType)
+            : Iterables.getFirst(methodType.getParameterTypes(), null);
+    JSType officialPropertyType =
+        child.isStaticMember()
+            ? classType.getPropertyType(propertyName)
+            : classType.getPrototype().getPropertyType(propertyName);
+    if (!propertyType.equals(officialPropertyType)) {
+      // TODO(b/116797078): make this not an error - instead, store the getter and setter types
+      // separately
+      report(
+          child,
+          CONFLICTING_GETTER_SETTER_TYPE,
+          propertyName,
+          child.isGetterDef() ? propertyType.toString() : officialPropertyType.toString(),
+          child.isGetterDef() ? officialPropertyType.toString() : propertyType.toString());
+    }
+  }
+
+  private JSType determineGetterType(FunctionType methodType) {
+    // TODO(sdh): consider only falling back on unknown if the function body is empty?  But we
+    // need to not report a conflicting type error if there's different unknowns.
+    return !methodType.isReturnTypeInferred()
+        ? methodType.getReturnType()
+        : typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
   }
 
   /**
