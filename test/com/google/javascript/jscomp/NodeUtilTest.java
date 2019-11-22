@@ -37,6 +37,7 @@ import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SUPER;
 import static com.google.javascript.rhino.Token.YIELD;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static org.mockito.Mockito.verify;
 
@@ -2216,8 +2217,7 @@ public final class NodeUtilTest {
       assertIsConstantDeclaration(true, getNameNodeFrom("const {[3]: a} = {};", "a"));
       assertIsConstantDeclaration(true, getNameNodeFrom("const {a: [a]} = {};", "a"));
 
-      // TODO(b/135755127): this should be false
-      assertIsConstantDeclaration(true, getNameNodeFrom("var FOO = 1;", "FOO"));
+      assertIsConstantDeclaration(false, getNameNodeFrom("var FOO = 1;", "FOO"));
 
       assertIsConstantDeclaration(true, constructInferredConstantDeclaration());
     }
@@ -2230,14 +2230,24 @@ public final class NodeUtilTest {
 
     @Test
     public void testIsConstantDeclaration_throwsOnNonDeclarationReferences() {
-      assertIsConstantDeclaration(false, getNameNodeFrom("const x = y;", "y"));
-      assertIsConstantDeclaration(false, getNameNodeFrom("x;", "x"));
-      assertIsConstantDeclaration(false, getNameNodeFrom("const ns = {y: x};", "x"));
+      assertThrows(
+          IllegalStateException.class,
+          () -> NodeUtil.isConstantDeclaration(null, getNameNodeFrom("const x = y;", "y")));
+
+      assertThrows(
+          IllegalStateException.class,
+          () -> NodeUtil.isConstantDeclaration(null, getNameNodeFrom("x;", "x")));
+
+      assertThrows(
+          IllegalStateException.class,
+          () -> NodeUtil.isConstantDeclaration(null, getNameNodeFrom("const ns = {y: x};", "x")));
 
       Node constAssignment = parse("/** @const */ x.y = a.b;");
       Node rhs = constAssignment.getFirstFirstChild().getSecondChild();
-      // TODO(lharker): this should be false
-      assertIsConstantDeclaration(true, rhs);
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> NodeUtil.isConstantDeclaration(NodeUtil.getBestJSDocInfo(rhs), rhs));
     }
 
     @Test
@@ -2248,8 +2258,7 @@ public final class NodeUtilTest {
 
       Node constByConventionAssignment = parse("x.Y = a.b;");
       assign = constByConventionAssignment.getFirstFirstChild();
-      // TODO(b/135755127): this should be false
-      assertIsConstantDeclaration(true, assign.getFirstChild());
+      assertIsConstantDeclaration(false, assign.getFirstChild());
 
       Node nonConstAssignment = parse("x.y = a.b;");
       assign = nonConstAssignment.getFirstFirstChild();
@@ -2269,10 +2278,10 @@ public final class NodeUtilTest {
     }
 
     private void assertIsConstantDeclaration(boolean isConstantDeclaration, Node node) {
-      CodingConvention codingConvention = new GoogleCodingConvention();
+
       JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(node);
       assertWithMessage("Is %s a constant declaration?", node)
-          .that(NodeUtil.isConstantDeclaration(codingConvention, jsDocInfo, node))
+          .that(NodeUtil.isConstantDeclaration(jsDocInfo, node))
           .isEqualTo(isConstantDeclaration);
     }
 

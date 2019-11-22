@@ -4507,9 +4507,13 @@ public final class NodeUtil {
     return node.getBooleanProp(Node.IS_CONSTANT_NAME);
   }
 
-  /** Whether the given name is constant by coding convention. */
-  static boolean isConstantByConvention(
-      CodingConvention convention, Node node) {
+  /**
+   * Returns whether the given name is constant by coding convention.
+   *
+   * @deprecated we want to delete the constant by convention logic - see http://b/135755127
+   */
+  @Deprecated
+  static boolean isConstantByConvention(CodingConvention convention, Node node) {
     Node parent = node.getParent();
     if (parent.isGetProp() && node == parent.getLastChild()) {
       return convention.isConstantKey(node.getString());
@@ -4522,41 +4526,28 @@ public final class NodeUtil {
   }
 
   /**
-   * Temporary function to determine if a node is constant
-   * in the old or new world. This does not check its inputs
-   * carefully because it will go away once we switch to the new
-   * world.
+   * Determines whether the given lvalue is declared constant or is a name assigned exactly once.
+   *
+   * <p>Note that this intentionally excludes variables that are constant according to the coding
+   * convention.
+   *
+   * @param node some lvalue node.
+   * @throws IllegalStateException if the given node is not an lvalue
    */
-  static boolean isConstantDeclaration(
-      CodingConvention convention, JSDocInfo info, Node node) {
-    // TODO(b/77597706): Update this method to handle destructured declarations.
-    if (node.isName() && node.getParent().isConst()) {
-      return true;
-    } else if (node.isName()
-        && isLhsByDestructuring(node)
-        && getRootTarget(node).getGrandparent().isConst()) {
-      return true;
+  static boolean isConstantDeclaration(JSDocInfo info, Node node) {
+    if (isObjectLitKey(node)
+        || (node.getParent().isAssign() && node.isFirstChildOf(node.getParent()))
+        || (node.getParent().isExprResult() && isGet(node))) {
+      return info != null && info.isConstant();
     }
-
-    if (info != null && info.isConstant()) {
+    checkArgument(node.isName(), node);
+    Node declaringParent = getDeclaringParent(node); // throws an error if `node` is not an lvalue
+    if (declaringParent.isConst()) {
       return true;
-    }
-
-    // TODO(lukes): does this actually care about things inferred to be constants?
-    if (node.isName() && (node.isDeclaredConstantVar() || node.isInferredConstantVar())) {
+    } else if (info != null && info.isConstant()) {
       return true;
     }
-
-    switch (node.getToken()) {
-      case NAME:
-        return NodeUtil.isConstantByConvention(convention, node);
-      case GETPROP:
-        return node.isQualifiedName()
-            && NodeUtil.isConstantByConvention(convention, node.getLastChild());
-      default:
-        break;
-    }
-    return false;
+    return node.isInferredConstantVar();
   }
 
   static boolean functionHasInlineJsdocs(Node fn) {
