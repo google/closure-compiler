@@ -345,6 +345,16 @@ String.prototype.trimEnd = function() {};
 
 
 /**
+ * @this {String|string}
+ * @param {!RegExp|string} regexp
+ * @return {!IteratorIterable<!RegExpResult>}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/matchAll
+ */
+String.prototype.matchAll = function(regexp) {};
+
+
+/**
  * @see http://dev.w3.org/html5/postmsg/
  * @interface
  */
