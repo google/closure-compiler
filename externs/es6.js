@@ -572,7 +572,8 @@ TypedArray.prototype.length;
 TypedArray.prototype.map = function(callback, opt_thisArg) {};
 
 /**
- * @param {function((number|INIT|RET), number, number, !TypedArray) : RET} callback
+ * @param {function((number|INIT|RET), number, number, !TypedArray) : RET}
+ *     callback
  * @param {INIT=} opt_initialValue
  * @return {RET}
  * @template INIT,RET
@@ -582,7 +583,8 @@ TypedArray.prototype.map = function(callback, opt_thisArg) {};
 TypedArray.prototype.reduce = function(callback, opt_initialValue) {};
 
 /**
- * @param {function((number|INIT|RET), number, number, !TypedArray) : RET} callback
+ * @param {function((number|INIT|RET), number, number, !TypedArray) : RET}
+ *     callback
  * @param {INIT=} opt_initialValue
  * @return {RET}
  * @template INIT,RET
@@ -1641,7 +1643,8 @@ Reflect.apply = function(targetFn, thisArg, argList) {};
  * @template TARGET
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
  */
-Reflect.construct = function(targetConstructorFn, argList, opt_newTargetConstructorFn) {};
+Reflect.construct = function(
+    targetConstructorFn, argList, opt_newTargetConstructorFn) {};
 
 /**
  * @param {!Object} target
@@ -1906,3 +1909,8 @@ AsyncGenerator.prototype.return = function(value) {};
  * @return {!Promise<!IIterableResult<VALUE>>}
  */
 AsyncGenerator.prototype.throw = function(exception) {};
+
+/**
+ * @type {!Global}
+ */
+var globalThis;
