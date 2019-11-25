@@ -603,15 +603,6 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public String toDebugHashCodeString() {
-    List<String> hashCodes = new ArrayList<>();
-    for (JSType a : alternates) {
-      hashCodes.add(a.toDebugHashCodeString());
-    }
-    return "{(" + Joiner.on(",").join(hashCodes) + ")}";
-  }
-
-  @Override
   public boolean setValidator(Predicate<JSType> validator) {
     for (int i = 0; i < alternates.size(); i++) {
       JSType a = alternates.get(i);

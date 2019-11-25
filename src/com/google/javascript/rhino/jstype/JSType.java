@@ -1686,14 +1686,6 @@ public abstract class JSType implements Serializable {
     return appendTo(new StringBuilder(), false).toString();
   }
 
-  /**
-   * A hash code function for diagnosing complicated issues
-   * around type-identity.
-   */
-  public String toDebugHashCodeString() {
-    return "{" + hashCode() + "}";
-  }
-
   // Don't call from this package; use appendAsNonNull instead.
   public final String toAnnotationString(Nullability nullability) {
     return nullability == Nullability.EXPLICIT

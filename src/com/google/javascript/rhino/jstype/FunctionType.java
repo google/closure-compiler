@@ -1207,47 +1207,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   @Override
-  public final String toDebugHashCodeString() {
-    if (this == registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE)) {
-      return super.toDebugHashCodeString();
-    }
-
-    StringBuilder b = new StringBuilder(32);
-    b.append("function (");
-    int paramNum = call.parameters.getChildCount();
-    boolean hasKnownTypeOfThis = !typeOfThis.isUnknownType();
-    if (hasKnownTypeOfThis) {
-      b.append("this:");
-      b.append(getDebugHashCodeStringOf(typeOfThis));
-    }
-    if (paramNum > 0) {
-      if (hasKnownTypeOfThis) {
-        b.append(", ");
-      }
-      Node p = call.parameters.getFirstChild();
-      b.append(getDebugHashCodeStringOf(p.getJSType()));
-      p = p.getNext();
-      while (p != null) {
-        b.append(", ");
-        b.append(getDebugHashCodeStringOf(p.getJSType()));
-        p = p.getNext();
-      }
-    }
-    b.append(")");
-    b.append(": ");
-    b.append(getDebugHashCodeStringOf(call.returnType));
-    return b.toString();
-  }
-
-  private String getDebugHashCodeStringOf(JSType type) {
-    if (type == this) {
-      return "me";
-    } else {
-      return type.toDebugHashCodeString();
-    }
-  }
-
-  @Override
   final boolean hasAnyTemplateTypesInternal() {
     return this.getTemplateParamCount() > 0
         || typeOfThis.hasAnyTemplateTypes()
