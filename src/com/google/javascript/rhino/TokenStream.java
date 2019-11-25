@@ -48,15 +48,23 @@ package com.google.javascript.rhino;
 /**
  * This class implements the JavaScript scanner.
  *
- * It is based on the C source files jsscan.c and jsscan.h
- * in the jsref package.
+ * <p>It is based on the C source files jsscan.c and jsscan.h in the jsref package.
  *
- *
- * IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file
- * due to limitations on some internal Google projects that depend on it.
+ * <p>IMPORTANT: As of 2018-03-09 it is still not possible to use Java 8 features in this file due
+ * to limitations on some internal Google projects that depend on it.
  */
 public class TokenStream {
-   public static boolean isKeyword(String name) {
+  /**
+   * Is the string an ES3 keyword?
+   *
+   * <p>Keywords for versions of JavaScript after ES3 are not included, because the parser would
+   * reject valid ES3 code that happened to newer keywords if we did that.
+   *
+   * <p>Since isKeyword() is used repeatedly in scanning, for performance reasons, it is implemented
+   * to do the minimum number of character comparisons to ascertain whether the given name is a
+   * keyword, instead of doing string search of the name against JS keywords.
+   */
+  public static boolean isKeyword(String name) {
         boolean id = false;
         String s = name;
         complete: {

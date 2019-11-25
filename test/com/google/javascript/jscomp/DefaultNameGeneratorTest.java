@@ -106,6 +106,21 @@ public final class DefaultNameGeneratorTest {
   }
 
   @Test
+  public void testES6KeywordsNotGenerated() throws Exception {
+    DefaultNameGenerator ng = new DefaultNameGenerator(RESERVED_NAMES, "le", new char[] {'$'});
+    String[] result = generate(ng, "le", 106);
+    assertThat(result[19]).isEqualTo("les");
+    assertThat(result[20]).isEqualTo("leu"); // "let" keyword skipped
+    assertThat(result[45]).isEqualTo("leT"); // "leT" not skipped
+
+    ng = new DefaultNameGenerator(RESERVED_NAMES, "awai", new char[] {'$'});
+    result = generate(ng, "awai", 106);
+    assertThat(result[19]).isEqualTo("awais");
+    assertThat(result[20]).isEqualTo("awaiu"); // "await" keyword skipped
+    assertThat(result[45]).isEqualTo("awaiT"); // "awaiT" not skipped
+  }
+
+  @Test
   public void testGenerateWithPriority1() throws Exception {
     DefaultNameGenerator ng = new DefaultNameGenerator(
         RESERVED_NAMES, "", null);
