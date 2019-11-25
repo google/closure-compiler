@@ -2237,8 +2237,16 @@ public final class JsDocInfoParser {
 
   /** TypeofType := 'typeof' NameExpression | 'typeof' '(' NameExpression ')' */
   private Node parseTypeofType(JsDocToken token) {
+    if (token == JsDocToken.LEFT_CURLY) {
+      return reportTypeSyntaxWarning("msg.jsdoc.unnecessary.braces");
+    }
+
     Node typeofType = newNode(Token.TYPEOF);
     Node name = parseNameExpression(token);
+    if (name == null) {
+      return null;
+    }
+
     skipEOLs();
     typeofType.addChildToFront(name);
     return typeofType;

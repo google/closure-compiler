@@ -59,6 +59,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String MISSING_GT_MESSAGE =
       "Bad type annotation. missing closing >" + BAD_TYPE_WIKI_LINK;
 
+  private static final String UNNECESSARY_BRACES_MESSAGE =
+      "Bad type annotation. braces are not required here" + BAD_TYPE_WIKI_LINK;
+
+  private static final String NAME_NOT_RECOGNIZED_MESSAGE =
+      "name not recognized due to syntax error.";
 
   private static final String UNLABELED_BREAK = "unlabelled break must be inside loop or switch";
 
@@ -4187,6 +4192,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     expectFeatures(Feature.MODULES);
     parse("/** @type {number} */ export var x = 3;");
+  }
+
+  @Test
+  public void testTypeofJsdoc() {
+    assertNodeEquality(parse("var b = 0;"), parse("var /** typeof a */ b = 0;"));
+
+    assertNodeEquality(
+        parse("var b = 0;"),
+        parseWarning("var /** typeof {a} */ b = 0;", UNNECESSARY_BRACES_MESSAGE));
+
+    assertNodeEquality(
+        parse("var b = 0;"),
+        parseWarning("var /** typeof <a> */ b = 0;", NAME_NOT_RECOGNIZED_MESSAGE));
   }
 
   @Test
