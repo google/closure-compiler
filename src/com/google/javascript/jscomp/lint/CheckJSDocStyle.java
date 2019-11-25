@@ -61,7 +61,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           "Function with non-trivial return must have JSDoc indicating the return type.");
 
   public static final DiagnosticType MUST_BE_PRIVATE =
-      DiagnosticType.disabled("JSC_MUST_BE_PRIVATE", "Property {0} must be marked @private");
+      DiagnosticType.disabled(
+          "JSC_MUST_BE_PRIVATE", "Properties ending with \"_\" must be marked @private");
 
   public static final DiagnosticType MUST_HAVE_TRAILING_UNDERSCORE =
       DiagnosticType.disabled(
@@ -190,7 +191,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       if (compiler.getCodingConvention().isPrivate(name)
           && !jsDoc.getVisibility().equals(Visibility.PRIVATE)
           && jsDoc.containsDeclaration()) {
-        t.report(n, MUST_BE_PRIVATE, name);
+        t.report(n, MUST_BE_PRIVATE);
       } else if (compiler.getCodingConvention().hasPrivacyConvention()
           && !compiler.getCodingConvention().isPrivate(name)
           && jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
