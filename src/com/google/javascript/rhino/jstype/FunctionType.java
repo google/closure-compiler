@@ -218,7 +218,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   public final boolean isInstanceType() {
     // The universal constructor is its own instance, bizarrely. It overrides
     // getConstructor() appropriately when it's declared.
-    return this == registry.getNativeType(U2U_CONSTRUCTOR_TYPE);
+    return JSType.areIdentical(this, registry.getNativeType(U2U_CONSTRUCTOR_TYPE));
   }
 
   @Override
@@ -501,7 +501,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       return false;
     }
     // getInstanceType fails if the function is not a constructor
-    if (isConstructor() && prototype == getInstanceType()) {
+    if (isConstructor() && JSType.areIdentical(prototype, getInstanceType())) {
       return false;
     }
     return setPrototypeNoCheck(prototype, propertyNode);
@@ -888,7 +888,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    */
   final boolean checkFunctionEquivalenceHelper(
       FunctionType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (this == that) {
+    if (JSType.areIdentical(this, that)) {
       return true;
     }
     if (kind != that.kind) {
@@ -935,7 +935,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    */
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    if (!isPrettyPrint() || this == registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE)) {
+    if (!isPrettyPrint()
+        || JSType.areIdentical(this, registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE))) {
       return sb.append(forAnnotations ? "!Function" : "Function");
     }
 
@@ -1093,7 +1094,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * case where interfaces have the {@code Object} constructor added as its "superclass".
    */
   final void addSubClassAfterResolution(FunctionType subClass) {
-    checkArgument(this == subClass.getSuperClassConstructor());
+    checkArgument(JSType.areIdentical(this, subClass.getSuperClassConstructor()));
     if (!subClass.wasAddedToExtendedConstructorSubtypes) {
       addSubType(subClass);
     }
@@ -1201,7 +1202,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       }
       ObjectType resolved = rt.toObjectType();
       resolvedList.add(resolved);
-      changed |= (resolved != type);
+      changed |= !JSType.areIdentical(resolved, type);
     }
     return changed ? resolvedList.build() : null;
   }
@@ -1303,7 +1304,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
           // A -> B -> C -> D -> C, will be pruned into:
           // c -> D -> C
           path.add(superConstructor);
-          while (path.get(0) != superConstructor) {
+          while (!JSType.areIdentical(path.get(0), superConstructor)) {
             path.remove(0);
           }
           return path;

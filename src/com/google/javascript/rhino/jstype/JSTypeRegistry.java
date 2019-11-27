@@ -1917,7 +1917,9 @@ public class JSTypeRegistry implements Serializable {
           if (child instanceof NamedType
               && isNonNullableName(scope, child.toMaybeNamedType().getReferenceName())) {
             JSType type = ((NamedType) child).getBangType();
-            if (type instanceof NamedType && recordUnresolvedTypes && type != child) {
+            if (type instanceof NamedType
+                && recordUnresolvedTypes
+                && !JSType.areIdentical(type, child)) {
               unresolvedNamedTypes.add((NamedType) type);
             }
             return type;

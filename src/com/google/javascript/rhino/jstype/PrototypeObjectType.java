@@ -265,7 +265,7 @@ public class PrototypeObjectType extends ObjectType {
             ? registry.getNativeObjectType(JSTypeNative.FUNCTION_PROTOTYPE)
             : registry.getNativeObjectType(JSTypeNative.OBJECT_PROTOTYPE);
     JSType nativePropertyType = nativeType.getPropertyType(propertyName);
-    return propertyType != nativePropertyType;
+    return !JSType.areIdentical(propertyType, nativePropertyType);
   }
 
   @Override

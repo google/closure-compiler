@@ -151,6 +151,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public JSType caseFunctionType(FunctionType type) {
     if (isNativeFunctionType(type)) {
       return type;
@@ -212,6 +213,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public JSType caseObjectType(ObjectType objType) {
     if (!visitProperties
         || objType.isNominalType()
@@ -247,6 +249,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public JSType caseTemplatizedType(TemplatizedType type) {
     boolean changed = false;
     ObjectType beforeBaseType = type.getReferencedType();
@@ -301,6 +304,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public JSType caseUnionType(UnionType type) {
     boolean changed = false;
     List<JSType> results = new ArrayList<>();
@@ -368,6 +372,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public JSType caseProxyObjectType(ProxyObjectType type) {
     // Be careful not to unwrap a type unless it has changed.
     JSType beforeType = type.getReferencedTypeInternal();
