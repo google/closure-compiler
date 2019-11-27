@@ -254,6 +254,9 @@ final class ModuleImportResolver {
 
       TypedVar originalName = originalScope.getSlot(export.getName());
       JSType exportType = originalName.getType();
+      if (exportType == null) {
+        exportType = registry.getNativeType(JSTypeNative.NO_TYPE);
+      }
       if (originalName.isTypeInferred()) {
         // NB: this method may be either adding a new inferred property or updating the type of an
         // existing inferred property.

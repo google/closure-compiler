@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
@@ -398,8 +399,8 @@ public abstract class ObjectType extends JSType implements Serializable {
         // We never want to hide a declared property with an inferred property.
         return true;
       }
-      JSType originalType = getPropertyType(propertyName);
-      type = originalType == null ? type : originalType.getLeastSupertype(type);
+      JSType originalType = checkNotNull(getPropertyType(propertyName));
+      type = originalType.getLeastSupertype(type);
     }
     // TODO(b/140764208): verify that if isResolved() then type.isResolved().
     // Defining unresolved properties on resolved types is dangerous because the property type

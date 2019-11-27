@@ -5934,8 +5934,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(null, registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(null, sup);
 
-    sup.defineProperty("base", null, false, null);
-    sub.defineProperty("sub", null, false, null);
+    sup.defineProperty("base", getBottomType(), false, null);
+    sub.defineProperty("sub", getBottomType(), false, null);
 
     assertThat(sup.hasProperty("base")).isTrue();
     assertThat(sup.hasProperty("sub")).isFalse();
@@ -5952,9 +5952,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testNamedTypeHasOwnProperty() {
-    namedGoogBar.getImplicitPrototype().defineProperty("base", null, false,
-        null);
-    namedGoogBar.defineProperty("sub", null, false, null);
+    namedGoogBar.getImplicitPrototype().defineProperty("base", getBottomType(), false, null);
+    namedGoogBar.defineProperty("sub", getBottomType(), false, null);
 
     assertThat(namedGoogBar.hasOwnProperty("base")).isFalse();
     assertThat(namedGoogBar.hasProperty("base")).isTrue();
@@ -5964,8 +5963,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInterfaceHasOwnProperty() {
-    interfaceInstType.defineProperty("base", null, false, null);
-    subInterfaceInstType.defineProperty("sub", null, false, null);
+    interfaceInstType.defineProperty("base", getBottomType(), false, null);
+    subInterfaceInstType.defineProperty("sub", getBottomType(), false, null);
 
     assertThat(interfaceInstType.hasProperty("base")).isTrue();
     assertThat(interfaceInstType.hasProperty("sub")).isFalse();
@@ -5985,9 +5984,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType sup =
         registry.createObjectType(null, registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(null, sup);
+    final ObjectType bottomType = getBottomType();
 
-    sup.defineProperty("base", null, false, null);
-    sub.defineProperty("sub", null, false, null);
+    sup.defineProperty("base", bottomType, false, null);
+    sub.defineProperty("sub", bottomType, false, null);
 
     assertThat(sub.getPropertyNames())
         .isEqualTo(
@@ -6014,6 +6014,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
                 "base"));
 
     assertThat(NO_OBJECT_TYPE.getPropertyNames()).isEmpty();
+  }
+
+  private ObjectType getBottomType() {
+    return registry.getNativeObjectType(JSTypeNative.NO_TYPE);
   }
 
   @Test
