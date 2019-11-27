@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.type;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
@@ -41,15 +40,12 @@ import javax.annotation.CheckReturnValue;
 public final class ClosureReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {
 
-  /**
-   * For when {@code goog.isObject} returns true. This includes functions, but
-   * not {@code null}.
-   */
+  /** For when {@code goog.isObject} returns true. This includes functions, but not {@code null}. */
   private final Visitor<JSType> restrictToObjectVisitor =
       new RestrictByTrueTypeOfResultVisitor() {
         @Override
         protected JSType caseTopType(JSType topType) {
-          return getNativeType(NO_OBJECT_TYPE);
+          return getNativeType(OBJECT_TYPE);
         }
 
         @Override
