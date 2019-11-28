@@ -360,14 +360,16 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   /**
-   * This should only be reset on the FunctionPrototypeType, only to fix an
-   * incorrectly established prototype chain due to the user having a mismatch
-   * in super class declaration, and only before properties on that type are
-   * processed.
+   * This should only be reset on the FunctionPrototypeType, only to fix an incorrectly established
+   * prototype chain due to the user having a mismatch in super class declaration, and only before
+   * properties on that type are processed.
    */
   final void setImplicitPrototype(ObjectType implicitPrototype) {
     checkState(!hasCachedValues());
     this.implicitPrototypeFallback = implicitPrototype;
+    if (implicitPrototype != null) {
+      maybeLoosenTypecheckingDueToForwardReferencedSupertype(implicitPrototype);
+    }
   }
 
   @Override

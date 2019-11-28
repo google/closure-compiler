@@ -51,6 +51,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -2619,6 +2620,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(foo.getImplicitPrototype()).isEqualTo(bar);
     assertScope(globalScope).declares("Bar").withTypeThat().isEqualTo(bar);
     assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
   }
 
   @Test
@@ -2634,6 +2638,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
     assertType(foo.getImplicitPrototype()).isEqualTo(bar);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
   }
 
   @Test
@@ -2654,6 +2661,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     // TODO(b/144327372): this should be equal to bar
     assertType(foo.getImplicitPrototype()).isNotEqualTo(bar);
     assertType(foo.getImplicitPrototype()).toStringIsEqualTo("Function");
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
   }
 
   @Test
@@ -6565,6 +6575,171 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testWarning(
         "var /** !C<string, !MissingType> */ x; /** @template T */ class C {}",
         RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testClassExtendsForwardReference_markedForLooserTypechecking() {
+    testSame(
+        lines(
+            "/** @return {function(new: Object): ?} */",
+            "function mixin() {}",
+            "/** @extends {Parent} */",
+            "class Middle extends mixin() {}",
+            "class Child extends Middle {}",
+            "class Parent {}"));
+
+    FunctionType parentCtor = (FunctionType) globalScope.getVar("Parent").getType();
+    FunctionType middleCtor = (FunctionType) globalScope.getVar("Middle").getType();
+    FunctionType childCtor = (FunctionType) globalScope.getVar("Child").getType();
+
+    assertThat(parentCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(middleCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+    assertThat(childCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+
+    assertThat(parentCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(middleCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+    assertThat(childCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+
+    assertThat(parentCtor.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(middleCtor.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+    assertThat(childCtor.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+  }
+
+  @Test
+  public void testClassExtendsForwardReference_forwardReferenceMarkedForLooserTypechecking() {
+    testSame(
+        lines(
+            "/** @return {function(new: Object): ?} */",
+            "function mixin() {}",
+            "/** @extends {Parent} */",
+            "class Middle extends mixin() {}",
+            "class Parent {}"));
+
+    NamedType namedMiddleType = registry.createNamedType(globalScope, "Middle", null, -1, -1);
+
+    assertThat(namedMiddleType.isResolved()).isFalse();
+    assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+
+    namedMiddleType.resolveOrThrow();
+
+    assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+  }
+
+  @Test
+  public void testClassImplementsForwardReference_markedForLooserTypechecking() {
+    testSame(
+        lines(
+            "/** @implements {Parent} */",
+            "class Middle {}",
+            "",
+            "/** @interface @extends {Middle} */",
+            "class ExtendingChild {}",
+            "/** @implements {Middle} */",
+            "class ImplementingChild {}",
+            "",
+            "/** @interface */",
+            "class Parent {}"));
+
+    FunctionType parentCtor = (FunctionType) globalScope.getVar("Parent").getType();
+    FunctionType middleCtor = (FunctionType) globalScope.getVar("Middle").getType();
+    FunctionType implementingChildCtor =
+        (FunctionType) globalScope.getVar("ImplementingChild").getType();
+    FunctionType extendingChildCtor = (FunctionType) globalScope.getVar("ExtendingChild").getType();
+
+    assertThat(parentCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    // Static inheritance is not modeled for @implements so no need to loosen typechecking
+    assertThat(middleCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(implementingChildCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(extendingChildCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+
+    assertThat(parentCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(middleCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(
+            implementingChildCtor
+                .getPrototype()
+                .loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(
+            extendingChildCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+
+    assertThat(parentCtor.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(middleCtor.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+    assertThat(
+            implementingChildCtor
+                .getInstanceType()
+                .loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+    assertThat(
+            extendingChildCtor
+                .getInstanceType()
+                .loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+  }
+
+  @Test
+  public void testInterfaceExtendsForwardReference_markedForLooserTypechecking() {
+    testSame(
+        lines(
+            "/** @interface @extends {Parent} */",
+            "class Middle {}",
+            "",
+            "/** @interface @extends {Middle} */",
+            "class ExtendingChild {}",
+            "/** @implements {Middle} */",
+            "class ImplementingChild {}",
+            "",
+            "/** @interface */",
+            "class Parent {}"));
+
+    FunctionType parentCtor = (FunctionType) globalScope.getVar("Parent").getType();
+    FunctionType middleCtor = (FunctionType) globalScope.getVar("Middle").getType();
+    FunctionType implementingChildCtor =
+        (FunctionType) globalScope.getVar("ImplementingChild").getType();
+    FunctionType extendingChildCtor = (FunctionType) globalScope.getVar("ExtendingChild").getType();
+
+    assertThat(parentCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(middleCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(implementingChildCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(extendingChildCtor.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+
+    assertThat(parentCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(middleCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(
+            implementingChildCtor
+                .getPrototype()
+                .loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(
+            extendingChildCtor.getPrototype().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+
+    assertThat(parentCtor.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isFalse();
+    assertThat(middleCtor.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+    assertThat(
+            implementingChildCtor
+                .getInstanceType()
+                .loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
+    assertThat(
+            extendingChildCtor
+                .getInstanceType()
+                .loosenTypecheckingDueToForwardReferencedSupertype())
+        .isTrue();
   }
 
   @Test

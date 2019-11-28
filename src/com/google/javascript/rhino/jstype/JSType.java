@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Objects;
@@ -79,6 +78,7 @@ public abstract class JSType implements Serializable {
   private boolean resolved = false;
   private JSType resolveResult = null;
   protected TemplateTypeMap templateTypeMap;
+  private boolean loosenTypecheckingDueToForwardReferencedSupertype;
 
   private boolean hashCodeInProgress = false;
 
@@ -552,6 +552,7 @@ public abstract class JSType implements Serializable {
    * specified map.
    */
   public void mergeSupertypeTemplateTypes(ObjectType other) {
+    maybeLoosenTypecheckingDueToForwardReferencedSupertype(other);
     if (other.isRawTypeOfTemplatizedType()) {
       // Before a type can be prepended it needs to be fully specialized. This can happen, for
       // example, when type arguments are not specified in an `@extends` annotation.
@@ -619,6 +620,30 @@ public abstract class JSType implements Serializable {
 
   public boolean isNativeObjectType() {
     return false;
+  }
+
+  /**
+   * During type definition, was one of the supertypes of this type a forward reference?
+   *
+   * <p>This is a hack to work around the fact that inheritance chains and template types aren't
+   * wired up correctly when this happens, which causes various false positives in checks. The known
+   * bugs associated are b/145145406, b/144327372, and b/132980305.
+   *
+   * <p>This method should only be used to suppress potential false positives caused by one of the
+   * above bugs, in the case where we think suppressing typechecking is preferable to emitting a
+   * false positive.
+   */
+  public boolean loosenTypecheckingDueToForwardReferencedSupertype() {
+    return this.loosenTypecheckingDueToForwardReferencedSupertype;
+  }
+
+  final void maybeLoosenTypecheckingDueToForwardReferencedSupertype(JSType supertype) {
+    // In the common case this method is never called with a resolved NamedType, but in some edge
+    // cases it could be, and typechecking should not be loosened.
+    if ((supertype.isNamedType() && !supertype.isResolved())
+        || supertype.loosenTypecheckingDueToForwardReferencedSupertype()) {
+      this.loosenTypecheckingDueToForwardReferencedSupertype = true;
+    }
   }
 
   /**

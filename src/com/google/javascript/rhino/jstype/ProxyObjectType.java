@@ -100,6 +100,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public final boolean loosenTypecheckingDueToForwardReferencedSupertype() {
+    return referencedType.loosenTypecheckingDueToForwardReferencedSupertype();
+  }
+
+  @Override
   public boolean setValidator(Predicate<JSType> validator) {
     // The referenced type might have specialized behavior for validation, e.g. {@link NamedType}
     // defers validation until after named type resolution.

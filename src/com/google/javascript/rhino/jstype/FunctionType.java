@@ -452,13 +452,14 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     setPrototypeBasedOn(baseType, null);
   }
 
-  final void setPrototypeBasedOn(ObjectType baseType, Node propertyNode) {
+  private void setPrototypeBasedOn(ObjectType baseType, Node propertyNode) {
     // First handle class-side inheritance for ES6 classes, before reassigning baseType.
     if (source != null && source.isClass()) {
       FunctionType superCtor = baseType.getConstructor();
       if (superCtor != null) {
-        setImplicitPrototype(superCtor);
+        this.setImplicitPrototype(superCtor);
       }
+      maybeLoosenTypecheckingDueToForwardReferencedSupertype(baseType);
     }
     // This is a bit weird. We need to successfully handle these
     // two cases:
