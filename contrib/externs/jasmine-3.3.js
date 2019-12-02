@@ -153,6 +153,14 @@ jasmine.Matchers.prototype.toBeLessThan = function(value) {};
 
 
 /** @param {*} value */
+jasmine.Matchers.prototype.toBeGreaterThanOrEqual = function(value) {};
+
+
+/** @param {*} value */
+jasmine.Matchers.prototype.toBeLessThanOrEqual = function(value) {};
+
+
+/** @param {*} value */
 jasmine.Matchers.prototype.toBeCloseTo = function(value, precision) {};
 
 
