@@ -77,18 +77,18 @@ public interface StaticTypedScope extends StaticScope {
    *
    * <p>This is always more or equally expensive as calling getSlot(String name), so should only be
    * used when necessary.
+   *
+   * <p>This only returns declared qualified names and known properties. It returns null given an
+   * inferred name.
    */
   @Nullable
   default JSType lookupQualifiedName(QualifiedName qname) {
     StaticTypedSlot slot = getSlot(qname.join());
     if (slot != null && !slot.isTypeInferred()) {
-      JSType type = slot.getType();
-      if (type != null) {
-        return type;
-      }
+      return slot.getType();
     } else if (!qname.isSimple()) {
       JSType type = lookupQualifiedName(qname.getOwner());
-      if (type != null) {
+      if (type != null && !type.isUnknownType()) {
         return type.findPropertyType(qname.getComponent());
       }
     }

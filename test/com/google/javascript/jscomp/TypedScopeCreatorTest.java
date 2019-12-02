@@ -6548,6 +6548,90 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstantAliasOfForwardReferencedType_name() {
+    testSame(
+        lines(
+            "/** @const {!Type} */ let declaredVar;", //
+            "const constantAlias = declaredVar;",
+            "class Type {}"));
+
+    TypedVar declaredVar = globalScope.getVar("declaredVar");
+    TypedVar constantAlias = globalScope.getVar("constantAlias");
+
+    assertThat(declaredVar).isNotInferred();
+    assertThat(constantAlias).isNotInferred();
+  }
+
+  @Test
+  public void testConstantAliasOfForwardReferencedType_qname() {
+    testSame(
+        lines(
+            "/** @const {!Type} */ let declaredVar;", //
+            "const a = {};",
+            "/** @const */",
+            "a.constantAlias = declaredVar;",
+            "class Type {}"));
+
+    TypedVar declaredVar = globalScope.getVar("declaredVar");
+    TypedVar aObject = globalScope.getVar("a");
+    TypedVar constantAlias = globalScope.getVar("a.constantAlias");
+
+    assertThat(declaredVar).isNotInferred();
+    assertThat(aObject).hasJSTypeThat().hasDeclaredProperty("constantAlias");
+    assertThat(constantAlias).isNotInferred();
+  }
+
+  @Test
+  public void testConstantAliasOfProperty() {
+    testSame(
+        lines(
+            "/** @typedef {{name: string}} */",
+            "let Type;",
+            "class C {",
+            "  /** @param {!Type} obj */",
+            "  constructor(obj) {",
+            "    /** @private @const */",
+            "    this.name_ = obj.name;",
+            "  }",
+            "  method() {",
+            "    NAME: this.name_;",
+            "  }",
+            "}"));
+
+    Node thisDotName = getLabeledStatement("NAME").statementNode.getOnlyChild();
+    assertNode(thisDotName).hasJSTypeThat().isString();
+
+    ObjectType cType = thisDotName.getFirstChild().getJSType().toObjectType();
+    assertType(cType).hasDeclaredProperty("name_");
+    assertType(cType).withTypeOfProp("name_").isString();
+  }
+
+  @Test
+  public void testConstantAliasOfForwardReferencedTypeProperty() {
+    testSame(
+        lines(
+            "class C {",
+            "  /** @param {!Type} obj */",
+            "  constructor(obj) {",
+            "    /** @private @const */",
+            "    this.name_ = obj.name;",
+            "  }",
+            "  method() {",
+            "    NAME: this.name_;",
+            "  }",
+            "}",
+            "/** @typedef {{name: string}} */",
+            "let Type;"));
+
+    Node thisDotName = getLabeledStatement("NAME").statementNode.getOnlyChild();
+    assertNode(thisDotName).hasJSTypeThat().isString();
+
+    ObjectType cType = thisDotName.getFirstChild().getJSType().toObjectType();
+    assertType(cType).hasInferredProperty("name_");
+    assertType(cType).withTypeOfProp("name_").isString();
+  }
+
+  @Test
   public void testReportBadTypeAnnotationInTemplateParameter() {
     testWarning("var /** !Array<!MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }
@@ -6555,8 +6639,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   @Test
   public void testReportBadTypeAnnotationInExtraTemplateParameter() {
     testWarning(
-        "class C {} var /** !Array<!MissingType> */ x;",
-        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+        "class C {} var /** !C<!MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
     testWarning(
         "var /** !Array<string, !MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
   }

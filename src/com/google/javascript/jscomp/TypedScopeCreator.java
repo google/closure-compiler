@@ -2742,18 +2742,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       // If the jsdoc or RHS specifies a concrete type, it's not inferred.
-      if (info != null
-          && (info.hasType()
-              || info.hasEnumParameterType()
-              || isValidTypedefDeclaration(n, info)
-              || isConstantDeclarationWithKnownType(info, n, valueType)
-              || FunctionTypeBuilder.isFunctionTypeDeclaration(info)
-              || (rhsValue != null && rhsValue.isFunction()))) {
-        return false;
-      }
-
-      // If this is a typed goog.module export, it's not inferred.
-      if (valueType != null && !valueType.isUnknownType() && isGoogModuleExports(n)) {
+      if ((info != null
+              && (info.hasType()
+                  || info.hasEnumParameterType()
+                  || isValidTypedefDeclaration(n, info)
+                  || FunctionTypeBuilder.isFunctionTypeDeclaration(info)
+                  || (rhsValue != null && rhsValue.isFunction())))
+          || isTypedConstantDeclaration(info, n, valueType)) {
         return false;
       }
 
@@ -2825,10 +2820,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    private boolean isConstantDeclarationWithKnownType(JSDocInfo info, Node n, JSType valueType) {
-      return NodeUtil.isConstantDeclaration(info, n)
-          && valueType != null
-          && !valueType.isUnknownType();
+    private boolean isTypedConstantDeclaration(JSDocInfo info, Node n, JSType valueType) {
+      return (NodeUtil.isConstantDeclaration(info, n) || isGoogModuleExports(n))
+          && valueType != null;
     }
 
     private boolean hasControlStructureAncestor(Node n) {
