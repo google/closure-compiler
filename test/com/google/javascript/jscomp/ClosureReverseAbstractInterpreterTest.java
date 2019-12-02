@@ -286,7 +286,10 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
   @Test
   public void testGoogIsObject1() {
     testClosureFunction(
-        "goog.isObject", getNativeAllType(), getNativeObjectType(), getNativeAllType());
+        "goog.isObject",
+        getNativeAllType(),
+        getNativeNoObjectType(),
+        getNativeAllType());
   }
 
   @Test
@@ -336,7 +339,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     testClosureFunction(
         "goog.isObject",
         getNativeUnknownType(),
-        getNativeObjectType(),
+        getNativeNoObjectType(), // ? Should this be CHECKED_UNKNOWN?
         getNativeCheckedUnknownType());
   }
 
