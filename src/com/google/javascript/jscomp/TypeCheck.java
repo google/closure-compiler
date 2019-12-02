@@ -1681,7 +1681,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             .orElse(null);
 
     if (supertypeWithProperty == null) {
-      if (declaredOverride) {
+      // TODO(b/144327372): stop loosening typechecking for forward supertype references once
+      // the type system correctly models this case.
+      if (declaredOverride && !receiverType.loosenTypecheckingDueToForwardReferencedSupertype()) {
         compiler.report(
             JSError.make(
                 n, //

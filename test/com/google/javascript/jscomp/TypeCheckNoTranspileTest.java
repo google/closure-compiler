@@ -3846,20 +3846,25 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testStaticMethod_onNamespacedType_thatIsNotAnOverride_atOverride_isBad() {
+  public void testClassExtendsForwardReference_staticMethodThatIsAnOverride_atOverride_isOk() {
     testTypes(
         lines(
-            "const ns = {};",
+            "/** @return {function(new: Parent): ?} */",
+            "function mixin() {}",
+            "/** @extends {Parent} */",
+            "class Middle extends mixin() {",
+            "  /** @override */",
+            "  static method() {}",
+            "}",
             "",
-            "ns.Base = class {};",
+            "class Child extends Middle {",
+            "  /** @override */",
+            "  static method() {}",
+            "}",
             "",
-            "/**",
-            " * @override",
-            " * @param {string} arg",
-            " */",
-            // We specifically want to check that q-name lookups are checked.
-            "ns.Base.method = function(arg) {};"),
-        lines("property method not defined on any supertype of (typeof ns.Base)"));
+            "class Parent {",
+            "  method() {}",
+            "}"));
   }
 
   @Test
