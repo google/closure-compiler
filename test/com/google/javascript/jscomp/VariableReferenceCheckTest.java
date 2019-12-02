@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.VariableReferenceCheck.DECLARATION_NOT_DIRECTLY_IN_BLOCK;
+import static com.google.javascript.jscomp.VariableReferenceCheck.EARLY_EXPORTS_REFERENCE;
 import static com.google.javascript.jscomp.VariableReferenceCheck.EARLY_REFERENCE;
 import static com.google.javascript.jscomp.VariableReferenceCheck.EARLY_REFERENCE_ERROR;
 import static com.google.javascript.jscomp.VariableReferenceCheck.REASSIGNED_CONSTANT;
@@ -1429,9 +1430,20 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Test
   public void testOkExportsRefInGoogModule() {
     testSame("goog.module('m');");
-    testSame("goog.module('m'); exports.Foo = 0;");
+    testSame("goog.module('m'); exports.Foo = 0; exports.Bar = 0;");
     testSame("goog.module('m'); exports = 0;");
+    testSame("goog.module('m'); exports = class {}; exports.Foo = class {};");
     testSame("goog.module('m'); function f() { exports = 0; }"); // Bad style but warn elsewhere
+    testSame("goog.module('m'); function f() { return exports; } exports = 1;");
+  }
+
+  @Test
+  public void testBadEarlyExportsRefInGoogModule() {
+    testError("goog.module('m'); exports.x = 0; exports = {};", EARLY_EXPORTS_REFERENCE);
+    testError("goog.module('m'); exports.x = 0; exports = class Bar {};", EARLY_EXPORTS_REFERENCE);
+    testError(
+        "goog.module('m'); /** @typedef {string} */ exports.x; exports = {};",
+        EARLY_EXPORTS_REFERENCE);
   }
 
   /**

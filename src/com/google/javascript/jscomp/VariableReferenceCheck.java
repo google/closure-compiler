@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.AbstractScope.ImplicitVar;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -39,6 +40,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   static final DiagnosticType EARLY_REFERENCE =
       DiagnosticType.warning(
           "JSC_REFERENCE_BEFORE_DECLARE", "Variable referenced before declaration: {0}");
+
+  static final DiagnosticType EARLY_EXPORTS_REFERENCE =
+      DiagnosticType.error(
+          "JSC_EXPORTS_REFERENCE_BEFORE_ASSIGN",
+          "Illegal reference to `exports` before assignment `exports = ...`");
 
   static final DiagnosticType REDECLARED_VARIABLE =
       DiagnosticType.warning("JSC_REDECLARED_VARIABLE", "Redeclared variable: {0}");
@@ -128,8 +134,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   }
 
   /**
-   * Behavior that checks variables for redeclaration or early references
-   * just after they go out of scope.
+   * Behavior that checks variables for redeclaration or early references just after they go out of
+   * scope.
    */
   private class ReferenceCheckingBehavior implements Behavior {
 
@@ -175,6 +181,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           checkVar(v, referenceCollection.references);
         }
       }
+      if (scope.hasOwnImplicitSlot(ImplicitVar.EXPORTS)) {
+        checkGoogModuleExports(scope.makeImplicitVar(ImplicitVar.EXPORTS), referenceMap);
+      }
     }
 
     private void checkDefaultParam(
@@ -212,6 +221,20 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             compiler.report(JSError.make(r.getNode(), REDECLARED_VARIABLE, v.name));
           }
         }
+      }
+    }
+
+    private void checkGoogModuleExports(Var exportsVar, ReferenceMap referenceMap) {
+      ReferenceCollection references = referenceMap.getReferences(exportsVar);
+      if (references == null || references.isNeverAssigned()) {
+        return;
+      }
+
+      for (Reference reference : references.references) {
+        if (reference.isLvalue()) {
+          break;
+        }
+        checkEarlyReference(exportsVar, reference, reference.getNode());
       }
     }
 
@@ -420,9 +443,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         compiler.report(
             JSError.make(
                 reference.getNode(),
-                (v.isLet() || v.isConst() || v.isClass() || v.isParam())
-                    ? EARLY_REFERENCE_ERROR
-                    : EARLY_REFERENCE,
+                v.isGoogModuleExports()
+                    ? EARLY_EXPORTS_REFERENCE
+                    : (v.isLet() || v.isConst() || v.isClass() || v.isParam())
+                        ? EARLY_REFERENCE_ERROR
+                        : EARLY_REFERENCE,
                 v.name));
         return true;
       }
