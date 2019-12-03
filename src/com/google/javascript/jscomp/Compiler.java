@@ -1820,9 +1820,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>Causes a regex parse of every file, and a full parse of every file reachable from the entry
    * points (which would be required by later compilation passes regardless).
    *
-   * <p>If the dependency mode is set to LOOSE, inputs which the regex parse does not identify as ES
-   * modules and which do not contain any provide statements are considered to be additional entry
-   * points.
+   * <p>If the dependency mode is set to PRUNE_LEGACY, inputs which the regex parse does not
+   * identify as ES modules and which do not contain any provide statements are considered to be
+   * additional entry points.
    */
   private void findModulesFromEntryPoints(
       boolean supportEs6Modules, boolean supportCommonJSModules) {

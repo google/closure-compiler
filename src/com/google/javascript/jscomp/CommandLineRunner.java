@@ -138,36 +138,6 @@ public class CommandLineRunner extends
   // Allowable chunk name characters that aren't valid in a JS identifier
   private static final Pattern extraChunkNameChars = Pattern.compile("[-.]+");
 
-  // The set of allowed values for the --dependency_mode flag.
-  // TODO(tjgq): Remove this once we no longer support STRICT and LOOSE.
-  private enum DependencyModeFlag {
-    NONE,
-    SORT_ONLY,
-    PRUNE_LEGACY,
-    PRUNE,
-    LOOSE,
-    STRICT;
-
-    private static DependencyMode toDependencyMode(DependencyModeFlag flag) {
-      if (flag == null) {
-        return null;
-      }
-      switch (flag) {
-        case NONE:
-          return DependencyMode.NONE;
-        case SORT_ONLY:
-          return DependencyMode.SORT_ONLY;
-        case PRUNE_LEGACY:
-        case LOOSE:
-          return DependencyMode.PRUNE_LEGACY;
-        case PRUNE:
-        case STRICT:
-          return DependencyMode.PRUNE;
-      }
-      throw new AssertionError("Bad DependencyModeFlag");
-    }
-  }
-
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
   private static class Flags {
@@ -810,8 +780,7 @@ public class CommandLineRunner extends
                 + "are not modules will be automatically added as --entry_point entries. Defaults "
                 + "to PRUNE_LEGACY if entry points are defined, otherwise to NONE.")
     @Nullable
-    private DependencyModeFlag dependencyMode =
-        null; // so we can tell whether it was explicitly set
+    private DependencyMode dependencyMode = null; // so we can tell whether it was explicitly set
 
     @Option(
         name = "--entry_point",
@@ -1674,7 +1643,7 @@ public class CommandLineRunner extends
     try {
       dependencyOptions =
           DependencyOptions.fromFlags(
-              DependencyModeFlag.toDependencyMode(flags.dependencyMode),
+              flags.dependencyMode,
               flags.entryPoint,
               flags.closureEntryPoint,
               flags.commonJsEntryModule,
