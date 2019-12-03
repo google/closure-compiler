@@ -208,16 +208,16 @@ jasmine.Matchers.prototype.toHaveBeenCalledTimes = function(num) {};
 jasmine.Matchers.prototype.toMatch = function(pattern) {};
 
 
-/** @param {Error=} opt_expected */
+/** @param {!Object=} opt_expected */
 jasmine.Matchers.prototype.toThrow = function(opt_expected) {};
 
 
 /**
- * @param {(!Function|string|!RegExp)} errorTypeOrMessageOrPattern
+ * @param {(!Function|string|!RegExp)=} opt_errorTypeOrMessageOrPattern
  * @param {(string|RegExp)=} opt_messageOrPattern
  */
 jasmine.Matchers.prototype.toThrowError = function(
-    errorTypeOrMessageOrPattern, opt_messageOrPattern) {};
+    opt_errorTypeOrMessageOrPattern, opt_messageOrPattern) {};
 
 /**
  * @param {string} message
