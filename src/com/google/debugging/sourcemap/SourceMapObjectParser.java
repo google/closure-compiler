@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import java.util.Collections;
@@ -98,7 +99,7 @@ public class SourceMapObjectParser {
   }
 
   private static String[] getJavaStringArray(JsonElement element) {
-    if (element == null) {
+    if (element == null || element instanceof JsonNull) {
       return null;
     }
     JsonArray array = element.getAsJsonArray();
