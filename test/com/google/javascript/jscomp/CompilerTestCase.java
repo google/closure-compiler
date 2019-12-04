@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import org.junit.Before;
 
 /**
@@ -1764,7 +1765,9 @@ public abstract class CompilerTestCase {
 
       // Generally, externs should not be changed by the compiler passes.
       if (externsChange && !allowExternsChanges) {
-        assertNode(externsRootClone).usingSerializer(compiler::toSource).isEqualTo(externsRoot);
+        assertNode(externsRootClone)
+            .usingSerializer(createPrettyPrinter(compiler))
+            .isEqualTo(externsRoot);
       }
 
       if (!codeChange && !externsChange) {
@@ -1799,10 +1802,12 @@ public abstract class CompilerTestCase {
         if (compareAsTree) {
           if (compareJsDoc) {
             assertNode(mainRoot)
-                .usingSerializer(compiler::toSource)
+                .usingSerializer(createPrettyPrinter(compiler))
                 .isEqualIncludingJsDocTo(expectedRoot);
           } else {
-            assertNode(mainRoot).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
+            assertNode(mainRoot)
+                .usingSerializer(createPrettyPrinter(compiler))
+                .isEqualTo(expectedRoot);
           }
         } else {
           String[] expectedSources = new String[expected.size()];
@@ -1824,7 +1829,7 @@ public abstract class CompilerTestCase {
       new PrepareAst(compiler).process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
 
       assertNode(normalizeCheckMainRootClone)
-          .usingSerializer(compiler::toSource)
+          .usingSerializer(createPrettyPrinter(compiler))
           .isEqualTo(mainRoot);
 
       // TODO(johnlenz): enable this for most test cases.
@@ -1837,7 +1842,7 @@ public abstract class CompilerTestCase {
             .process(normalizeCheckExternsRootClone, normalizeCheckMainRootClone);
 
         assertNode(normalizeCheckMainRootClone)
-            .usingSerializer(compiler::toSource)
+            .usingSerializer(createPrettyPrinter(compiler))
             .isEqualTo(mainRoot);
       }
     } else {
@@ -2032,7 +2037,9 @@ public abstract class CompilerTestCase {
       expectedRoot.detach();
       expectedRoot = expectedRoot.getFirstChild();
 
-      assertNode(externs).usingSerializer(compiler::toSource).isEqualIncludingJsDocTo(expectedRoot);
+      assertNode(externs)
+          .usingSerializer(createPrettyPrinter(compiler))
+          .isEqualIncludingJsDocTo(expectedRoot);
     } else {
       String externsCode = compiler.toSource(externs);
       String expectedCode = compiler.toSource(expected);
@@ -2542,5 +2549,14 @@ public abstract class CompilerTestCase {
     return (compiler) -> {
       assertThat(((NoninjectingCompiler) compiler).injected).containsExactlyElementsIn(expected);
     };
+  }
+
+  private static Function<Node, String> createPrettyPrinter(Compiler compiler) {
+    return (n) ->
+        new CodePrinter.Builder(n)
+            .setTypeRegistry(compiler.getTypeRegistry())
+            .setCompilerOptions(compiler.getOptions())
+            .setPrettyPrint(true)
+            .build();
   }
 }
