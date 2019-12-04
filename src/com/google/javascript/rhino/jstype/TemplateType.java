@@ -129,11 +129,6 @@ public final class TemplateType extends ProxyObjectType {
   }
 
   @Override
-  public boolean equals(Object jsType) {
-    return (jsType instanceof TemplateType) && JSType.areIdentical(this, (JSType) jsType);
-  }
-
-  @Override
   public boolean setValidator(Predicate<JSType> validator) {
     // ProxyObjectType will delegate to the unknown type's setValidator, which we don't want.
     // Some validator functions special-case template types.

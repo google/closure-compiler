@@ -216,15 +216,25 @@ public class TemplateTypeMap implements Serializable {
    * Returns true if this map contains the specified template key, false
    * otherwise.
    */
-  @SuppressWarnings("ReferenceEquality")
   public boolean hasTemplateKey(TemplateType templateKey) {
     // Note: match by identity, not equality
     for (TemplateType entry : templateKeys) {
-      if (entry == templateKey) {
+      if (JSType.areIdentical(templateKey, entry)) {
         return true;
       }
     }
     return false;
+  }
+
+  // TODO(b/139230800): This method should be deleted. It checks what should be an impossible case.
+  int getTemplateKeyCountThisShouldAlwaysBeOneOrZeroButIsnt(TemplateType templateKey) {
+    int count = 0;
+    for (TemplateType entry : templateKeys) {
+      if (JSType.areIdentical(templateKey, entry)) {
+        count++;
+      }
+    }
+    return count;
   }
 
   private int numUnfilledTemplateKeys() {

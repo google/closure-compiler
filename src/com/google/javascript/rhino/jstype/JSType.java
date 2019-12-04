@@ -553,6 +553,7 @@ public abstract class JSType implements Serializable {
    */
   public void mergeSupertypeTemplateTypes(ObjectType other) {
     maybeLoosenTypecheckingDueToForwardReferencedSupertype(other);
+
     if (other.isRawTypeOfTemplatizedType()) {
       // Before a type can be prepended it needs to be fully specialized. This can happen, for
       // example, when type arguments are not specified in an `@extends` annotation.
@@ -701,12 +702,20 @@ public abstract class JSType implements Serializable {
     return !checkEquivalenceHelper(that, EquivalenceMethod.DATA_FLOW, EqCache.create());
   }
 
+
   boolean checkEquivalenceHelper(
       final @Nullable JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
     if (that == null) {
       return false;
-    } else if (areIdentical(this, that)) {
+    }
+
+    if (areIdentical(this, that)) {
       return true;
+    }
+
+    if (this.isTemplateType() || that.isTemplateType()) {
+      /// Template types have identity equality. Make sure we unwrap any proxies to them.
+      return areIdentical(this.toMaybeTemplateType(), that.toMaybeTemplateType());
     }
 
     if (this.isNoResolvedType() && that.isNoResolvedType()) {

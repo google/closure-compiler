@@ -142,6 +142,14 @@ public class EnumElementType extends ObjectType {
 
   @Override
   int recursionUnsafeHashCode() {
+    if (!this.hasReferenceName()) {
+      /**
+       * TODO(nickreid): Apparently this can happen if the l-value the enum is assinged to is not a
+       * qname. Fortunatly, this whole thing should become redundant once equality cannot be checked
+       * before resolution.
+       */
+      return 2;
+    }
     return NamedType.nominalHashCode(this);
   }
 

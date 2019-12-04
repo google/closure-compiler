@@ -4240,7 +4240,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForOf4() {
     testTypesWithCommonExterns(
-        lines("function f(/** !Iterator<number> */ it) {", "  for (let x of it) {}", "}"),
+        lines(
+            "function f(/** !Iterator<number> */ it) {", //
+            "  for (let x of it) {}",
+            "}"),
         lines(
             "Can only iterate over a (non-null) Iterable type",
             "found   : Iterator<number,?,?>",
@@ -7600,7 +7603,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function g(/** !Generator<string> */ x) {",
             "  var /** null */ y = f(x);",
             "}"),
-        "initializing variable\n" + "found   : string\n" + "required: null");
+        lines(
+            "initializing variable", //
+            "found   : string",
+            "required: null"));
   }
 
   @Test
@@ -11166,6 +11172,45 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "/** @type {?} */ var C;" +
         "C.bar + 1;",
         TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+  }
+
+  @Test
+  public void testTemplateSubtyping_0() {
+    // TODO(b/145145406): This is testing that things work despite this bug.
+    testTypes(
+        lines(
+            // IFoo is a NamedType here.
+            "/** @implements {IFoo<number>} */",
+            "class Foo { }",
+            "",
+            "/**",
+            " * @template T",
+            " * @interface",
+            " */",
+            "class IFoo { }",
+            "",
+            "const /** !IFoo<number> */ x = new Foo();"));
+  }
+
+  @Test
+  public void testTemplateSubtyping_1() {
+    // TOOD(b/139230800): This is testing things work despite this bug.
+    testTypes(
+        lines(
+            "/**",
+            " * @template T",
+            " * @interface",
+            " */",
+            "class IFoo { }",
+            "",
+            "/** @implements {IFoo<number>} */",
+            "class FooA { }",
+            "",
+            "/** @implements {IFoo<string>} */",
+            "class FooB extends FooA { }",
+            "",
+            "const /** !IFoo<number> */ x = new FooB();",
+            "const /** !IFoo<string> */ y = new FooB();"));
   }
 
   @Test
