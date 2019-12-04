@@ -307,6 +307,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     newParam.setJSDocInfo(patternParam.getJSDocInfo());
     patternParam.replaceWith(newParam);
     Node newDecl = IR.var(patternParam, astFactory.createName(tempVarName, paramType));
+    newDecl.useSourceInfoIfMissingFromForTree(patternParam);
     function.getLastChild().addChildAfter(newDecl, insertSpot);
     return newDecl;
   }
