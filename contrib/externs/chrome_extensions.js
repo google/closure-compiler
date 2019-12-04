@@ -10557,6 +10557,18 @@ chrome.inputMethodPrivate.InputContext.prototype.hasBeenPassword;
 
 
 /**
+ * Commits the text currently being composed without moving the selected text
+ * range. This is a no-op if the context is incorrect.
+ * @param {{
+ *  contextID: number
+ * }} parameters Parameters for the finishComposingText API call.
+ * @param {function(): void=} callback Called when the operation completes.
+ */
+chrome.inputMethodPrivate.finishComposingText = function(
+    parameters, callback) {};
+
+
+/**
  * @const
  * @see https://goo.gl/7dvJFW
  */
