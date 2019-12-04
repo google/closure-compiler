@@ -39,13 +39,13 @@
 package com.google.javascript.rhino;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Table;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.javascript.rhino.PMap.Reconciler;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.TreeSet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -140,15 +140,17 @@ public class HamtPMapTest {
     PMap<Integer, String> right =
         empty.plus(3, "C").plus(4, "D").plus(5, "5").plus(6, "F").plus(7, "G");
 
-    JoinExpectations<String, String> expectations =
-        new JoinExpectations<String, String>()
-            .expect("1", null, "1")
-            .expect("3", "C", "c")
-            .expect(null, "D", "D")
-            .expect(null, "F", "F")
-            .expect("7", "G", "g")
-            .expect("9", null, "9");
+    JoinExpectations<Integer, String> expectations =
+        new JoinExpectations<Integer, String>()
+            .expect(1, "1", null, "1")
+            .expect(3, "3", "C", "c")
+            .expect(4, null, "D", "D")
+            .expect(6, null, "F", "F")
+            .expect(7, "7", "G", "g")
+            .expect(9, "9", null, "9");
+
     PMap<Integer, String> joined = left.reconcile(right, expectations);
+
     assertThat(joined.values()).containsExactly("1", "c", "D", "5", "F", "g", "9");
     expectations.verify();
   }
@@ -162,7 +164,7 @@ public class HamtPMapTest {
     PMap<Integer, String> joined =
         map.reconcile(
             empty,
-            (a, b) -> {
+            (k, a, b) -> {
               assertThat(b).isNull();
               return a;
             });
@@ -171,7 +173,7 @@ public class HamtPMapTest {
     joined =
         empty.reconcile(
             map,
-            (a, b) -> {
+            (k, a, b) -> {
               assertThat(a).isNull();
               return b;
             });
@@ -187,18 +189,16 @@ public class HamtPMapTest {
         left.plus(3, 1).plus(4, 5).plus(8, 9).plus(19, 20).plus(25, 1).plus(42, 43);
 
     PMap<Integer, Integer> joined =
-        left.reconcile(right, (a, b) -> a == null ? b : b == null ? a : a + b);
+        left.reconcile(right, (k, a, b) -> a == null ? b : b == null ? a : a + b);
     assertThat(joined.equivalent(expected, Objects::equals)).isTrue();
   }
 
   @Test
-  public void testReconcile_delete() {
+  public void testReconcile_rejectsNullResult() {
     PMap<Integer, Integer> left = build(1, 3, 5, 7);
     PMap<Integer, Integer> right = build(2, 4, 6, 8);
 
-    PMap<Integer, Integer> joined = left.reconcile(right, (a, b) -> null);
-    assertThat(joined.equivalent(build(), Objects::equals)).isTrue();
-    assertThat(joined.isEmpty()).isTrue();
+    assertThrows(Exception.class, () -> left.reconcile(right, (k, a, b) -> null));
   }
 
   @Test
@@ -255,16 +255,7 @@ public class HamtPMapTest {
     PMap<String, String> left = empty.plus("abc", "AAa").plus("def", "Ddd").plus("ghi", "ggG");
     PMap<String, String> right = empty.plus("abc", "aAA").plus("def", "ddD").plus("ghi", "GGG");
 
-    assertThat(
-            left.equivalent(
-                right,
-                new PMap.BiPredicate<String, String>() {
-                  @Override
-                  public boolean test(String left, String right) {
-                    return left.toLowerCase().equals(right.toLowerCase());
-                  }
-                }))
-        .isTrue();
+    assertThat(left.equivalent(right, (l, r) -> l.toLowerCase().equals(r.toLowerCase()))).isTrue();
   }
 
   @Test
@@ -277,39 +268,54 @@ public class HamtPMapTest {
     assertThat(
             left.equivalent(
                 right,
-                new PMap.BiPredicate<String, String>() {
-                  @Override
-                  public boolean test(String left, String right) {
-                    calls[0]++;
-                    return false;
-                  }
+                (l, r) -> {
+                  calls[0]++;
+                  return false;
                 }))
         .isFalse();
     assertThat(calls[0]).isEqualTo(1);
   }
 
-  private static class JoinExpectations<T, V> implements PMap.BiFunction<T, T, V> {
-    private final Table<Optional<T>, Optional<T>, Optional<V>> table = HashBasedTable.create();
+  @Test
+  public void testKeys_containsExactlyKeys() {
+    PMap<Integer, String> empty = HamtPMap.empty();
+    PMap<Integer, String> actual =
+        empty.plus(1, "a").plus(2, "b").plus(100, "x").plus(-847, "h").minus(2);
+
+    assertThat(actual.keys()).containsExactly(1, 100, -847);
+  }
+
+  @Test
+  public void testValues_containsExactlyValues() {
+    PMap<Integer, String> empty = HamtPMap.empty();
+    PMap<Integer, String> actual =
+        empty.plus(1, "a").plus(2, "b").plus(3, "kkdmw").plus(4, ":::").minus(1);
+
+    assertThat(actual.values()).containsExactly("b", "kkdmw", ":::");
+  }
+
+  private static class JoinExpectations<K, V> implements Reconciler<K, V> {
+    private final ListMultimap<K, V> expectations =
+        MultimapBuilder.linkedHashKeys().arrayListValues().build();
 
     @Override
-    public V apply(T left, T right) {
-      if (!table.contains(Optional.ofNullable(left), Optional.ofNullable(right))) {
-        assertWithMessage(
-                "Unexpected invocation of JoinExpectation for (" + left + ", " + right + ")")
-            .fail();
-      }
-      return table.remove(Optional.ofNullable(left), Optional.ofNullable(right)).orElse(null);
+    public V merge(K key, V left, V right) {
+      assertThat(this.expectations).containsKey(key);
+      assertThat(this.expectations.get(key).get(0)).isEqualTo(left);
+      assertThat(this.expectations.get(key).get(1)).isEqualTo(right);
+      return this.expectations.removeAll(key).get(2);
     }
 
-    JoinExpectations<T, V> expect(T left, T right, V result) {
-      table.put(Optional.ofNullable(left), Optional.ofNullable(right), Optional.ofNullable(result));
+    JoinExpectations<K, V> expect(K key, V left, V right, V result) {
+      assertThat(this.expectations).doesNotContainKey(key);
+      this.expectations.put(key, left);
+      this.expectations.put(key, right);
+      this.expectations.put(key, result);
       return this;
     }
 
     void verify() {
-      if (!table.isEmpty()) {
-        assertWithMessage("Missing invocations of JoinExpectation: " + table).fail();
-      }
+      assertThat(this.expectations).isEmpty();
     }
   }
 

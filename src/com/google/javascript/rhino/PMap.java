@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino;
 
+import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
 /** A minimal interface for null-hostile, persistent immutable maps. */
@@ -48,6 +49,9 @@ public interface PMap<K, V> {
 
   /** Returns an iterable for the values in this map. */
   Iterable<V> values();
+
+  /** Returns an iterable for the keys in this map. */
+  Iterable<K> keys();
 
   /** Retrieves the given key from the map, or returns null if it is not present. */
   @Nullable V get(K key);
@@ -65,14 +69,21 @@ public interface PMap<K, V> {
   PMap<K, V> minus(K key);
 
   /**
-   * Performs a reconcile operation. The joiner is called for all conflicting (based on
-   * Object#equals) values between the two maps, or if a key is missing from one map. If both maps
-   * have equal values then that value will be added directly to the result without calling the
-   * joiner. If the joiner returns null, then the entry is removed.  The first argument to the
-   * joined always comes from 'this' map, and the second is always from 'that'.  Note that {@code
-   * that} map must be the same implementation.
+   * Performs a reconcile operation to merge {@code this} and {@code that}.
+   *
+   * <p>{@code joiner} is called for each pair of entries, one from each map, which share the same
+   * key and whose values are not {@link Object#equals}. This includes entries that are absent from
+   * one of the maps, for which {@code null} is passed as the absent value.
+   *
+   * <p>The return of calling {@code joiner} will appear in the merged map at the key of the
+   * original entry pair. The return may not be null. If the values in a pair of entries are {@link
+   * Object#equals}, that value will be used directly in the result without calling {@code joiner}.
+   *
+   * <p>The first value passed to {@code joiner} comes from {@code this}, and the second value comes
+   * from {@code that}. There are no guarantees on the source of {@code key}. Note that {@code that}
+   * map must be the same implementation.
    */
-  PMap<K, V> reconcile(PMap<K, V> that, BiFunction<V, V, V> joiner);
+  PMap<K, V> reconcile(PMap<K, V> that, Reconciler<K, V> joiner);
 
   /**
    * Checks equality recursively based on the given equivalence. Short-circuits as soon as a 'false'
@@ -82,15 +93,9 @@ public interface PMap<K, V> {
    */
   boolean equivalent(PMap<K, V> that, BiPredicate<V, V> equivalence);
 
-  // TODO(sdh): replace this with the Java 8 version once we're able to.
-  /** See java.util.function.BiFunction. */
-  interface BiFunction<A, B, C> {
-    C apply(A a, B b);
-  }
-
-  // TODO(sdh): replace this with the Java 8 version once we're able to.
-  /** See java.util.function.BiPredicate. */
-  interface BiPredicate<A, B> {
-    boolean test(A a, B b);
+  /** See {@link #reconcile}. */
+  @FunctionalInterface
+  public interface Reconciler<K, V> {
+    V merge(K key, @Nullable V thisVal, @Nullable V thatVal);
   }
 }

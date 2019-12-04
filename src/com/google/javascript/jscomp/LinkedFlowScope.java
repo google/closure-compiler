@@ -349,7 +349,7 @@ class LinkedFlowScope implements FlowScope {
         .trimScopes(commonParent)
         .reconcile(
             linkedB.trimScopes(commonParent),
-            (scopeA, scopeB) -> {
+            (scopeKey, scopeA, scopeB) -> {
               PMap<String, OverlaySlot> slotsA = scopeA != null ? scopeA.slots : EMPTY_SLOTS;
               PMap<String, OverlaySlot> slotsB = scopeB != null ? scopeB.slots : EMPTY_SLOTS;
               // TODO(sdh): Simplify this logic: we want the best non-bottom scope we can get,
@@ -366,7 +366,7 @@ class LinkedFlowScope implements FlowScope {
                   bestScope,
                   slotsA.reconcile(
                       slotsB,
-                      (slotA, slotB) -> {
+                      (slotKey, slotA, slotB) -> {
                         // There are 5 different join cases:
                         // 1) The type is present in joinedScopeA, not in joinedScopeB,
                         //    and not in functionScope. Just use the one in A.

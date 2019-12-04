@@ -39,9 +39,11 @@
 package com.google.javascript.rhino;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.javascript.rhino.PMap.Reconciler;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -49,6 +51,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
 /**
@@ -109,6 +112,15 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
     this.value = value;
     this.mask = mask;
     this.children = children;
+
+    this.checkInvariants();
+  }
+
+  private void checkInvariants() {
+    checkState(Integer.bitCount(this.mask) == this.children.length);
+    for (HamtPMap<?, ?> child : this.children) {
+      checkNotNull(child);
+    }
   }
 
   /** Returns an empty map. */
@@ -158,6 +170,15 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
     return () -> new Iter<>(this, map -> map.value);
   }
 
+  /** Returns an iterable for a (possibly null) tree. */
+  @Override
+  public Iterable<K> keys() {
+    if (isEmpty()) {
+      return Collections.emptyList();
+    }
+    return () -> new Iter<>(this, map -> map.key);
+  }
+
   /**
    * Retrieves the value associated with the given key from the map, or returns null if it is not
    * present.
@@ -183,8 +204,10 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
    */
   @Override
   public HamtPMap<K, V> plus(K key, V value) {
+    checkNotNull(value);
+
     return !isEmpty()
-        ? plus(key, hash(key), checkNotNull(value))
+        ? plus(key, hash(key), value)
         : new HamtPMap<>(key, hash(key), value, 0, emptyChildren());
   }
 
@@ -271,24 +294,22 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
   }
 
   @Override
-  public HamtPMap<K, V> reconcile(PMap<K, V> that, BiFunction<V, V, V> joiner) {
+  public HamtPMap<K, V> reconcile(PMap<K, V> that, Reconciler<K, V> joiner) {
     HamtPMap<K, V> result =
         reconcile(
             !this.isEmpty() ? this : null,
             !that.isEmpty() ? (HamtPMap<K, V>) that : null,
-            joiner);
+            (k, v1, v2) -> checkNotNull(joiner.merge(k, v1, v2)));
     return result != null ? result : empty();
   }
 
   /** Internal recursive implementation of reconcile(HamtPMap, BiFunction), factoring out empies. */
   private static <K, V> HamtPMap<K, V> reconcile(
-      @Nullable HamtPMap<K, V> t1,
-      @Nullable HamtPMap<K, V> t2,
-      BiFunction<V, V, V> joiner) {
+      @Nullable HamtPMap<K, V> t1, @Nullable HamtPMap<K, V> t2, Reconciler<K, V> joiner) {
     if (t1 == t2) {
       return t1;
     } else if (t1 == null) {
-      V newValue = joiner.apply(null, t2.value);
+      V newValue = joiner.merge(t2.key, null, t2.value);
       HamtPMap<K, V>[] newChildren = Arrays.copyOf(t2.children, t2.children.length);
       for (int i = 0; i < newChildren.length; i++) {
         newChildren[i] = reconcile(null, newChildren[i], joiner);
@@ -297,7 +318,7 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
           ? new HamtPMap<>(t2.key, t2.hash, newValue, t2.mask, newChildren)
           : deleteRoot(t2.mask, newChildren);
     } else if (t2 == null) {
-      V newValue = joiner.apply(t1.value, null);
+      V newValue = joiner.merge(t1.key, t1.value, null);
       HamtPMap<K, V>[] newChildren = Arrays.copyOf(t1.children, t1.children.length);
       for (int i = 0; i < newChildren.length; i++) {
         newChildren[i] = reconcile(newChildren[i], null, joiner);
@@ -332,7 +353,10 @@ public final class HamtPMap<K, V> implements PMap<K, V>, Serializable {
     }
     // Note: one or the other (but not both) tree may have a null key at root.
 
-    V newValue = Objects.equals(t1.value, t2.value) ? t1.value : joiner.apply(t1.value, t2.value);
+    V newValue =
+        Objects.equals(t1.value, t2.value)
+            ? t1.value
+            : joiner.merge(t1.key != null ? t1.key : t2.key, t1.value, t2.value);
     int newMask = t1.mask | t2.mask;
     sameChildrenAs1 &= (newMask == t1.mask);
     sameChildrenAs2 &= (newMask == t2.mask);
