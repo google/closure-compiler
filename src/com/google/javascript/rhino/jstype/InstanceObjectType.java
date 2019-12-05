@@ -87,6 +87,11 @@ final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.INSTANCE_OBJECT;
+  }
+
+  @Override
   public String getReferenceName() {
     return getConstructor().getReferenceName();
   }

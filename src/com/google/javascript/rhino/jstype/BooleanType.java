@@ -54,6 +54,11 @@ public class BooleanType extends ValueType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.BOOLEAN;
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = super.testForEquality(that);
     if (result != null) {

@@ -67,6 +67,11 @@ public class NoType extends NoObjectType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.NO;
+  }
+
+  @Override
   public final boolean isNoObjectType() {
     return false;
   }

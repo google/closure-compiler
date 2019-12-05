@@ -72,6 +72,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.PROXY_OBJECT;
+  }
+
+  @Override
   public final HasPropertyKind getPropertyKind(String propertyName, boolean autobox) {
     return referencedType.getPropertyKind(propertyName, autobox);
   }

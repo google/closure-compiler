@@ -54,6 +54,11 @@ public final class StringType extends ValueType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.STRING;
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = super.testForEquality(that);
     if (result != null) {

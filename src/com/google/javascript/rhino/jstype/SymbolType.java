@@ -57,6 +57,11 @@ public final class SymbolType extends ValueType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.SYMBOL;
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = super.testForEquality(that);
     if (result != null) {

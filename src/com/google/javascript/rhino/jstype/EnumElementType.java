@@ -73,6 +73,11 @@ public class EnumElementType extends ObjectType {
     this.enumType = enumType;
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.ENUM_ELEMENT;
+  }
+
   public EnumType getEnumType() {
     return enumType;
   }

@@ -59,6 +59,11 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.UNKNOWN;
+  }
+
+  @Override
   public boolean isUnknownType() {
     return true;
   }

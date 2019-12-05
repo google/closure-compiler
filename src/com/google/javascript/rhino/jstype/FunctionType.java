@@ -215,6 +215,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.FUNCTION;
+  }
+
+  @Override
   public final boolean isInstanceType() {
     // The universal constructor is its own instance, bizarrely. It overrides
     // getConstructor() appropriately when it's declared.

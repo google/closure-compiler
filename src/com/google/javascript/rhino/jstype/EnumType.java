@@ -76,6 +76,11 @@ public class EnumType extends PrototypeObjectType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.ENUM;
+  }
+
+  @Override
   public EnumType toMaybeEnumType() {
     return this;
   }

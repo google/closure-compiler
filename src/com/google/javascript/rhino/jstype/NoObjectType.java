@@ -68,6 +68,11 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.NO_OBJECT;
+  }
+
+  @Override
   public final FunctionType toMaybeFunctionType() {
     return null;
   }

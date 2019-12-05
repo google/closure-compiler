@@ -75,6 +75,11 @@ final class ArrowType extends JSType {
     this.returnTypeInferred = returnTypeInferred;
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.ARROW;
+  }
+
   /**
    * @return True if our parameter spec is equal to {@code that}'s parameter
    *     spec.

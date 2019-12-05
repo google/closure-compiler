@@ -68,6 +68,11 @@ public final class TemplateType extends ProxyObjectType {
     this(registry, name, null, typeTransformation);
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.TEMPLATE;
+  }
+
   private TemplateType(
       JSTypeRegistry registry, String name, JSType bound, Node typeTransformation) {
     super(

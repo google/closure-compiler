@@ -54,6 +54,11 @@ public class NumberType extends ValueType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.NUMBER;
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     TernaryValue result = super.testForEquality(that);
     if (result != null) {

@@ -55,6 +55,11 @@ public class VoidType extends ValueType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.VOID;
+  }
+
+  @Override
   public JSType restrictByNotNullOrUndefined() {
     return registry.getNativeType(JSTypeNative.NO_TYPE);
   }

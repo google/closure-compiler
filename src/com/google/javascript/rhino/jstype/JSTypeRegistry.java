@@ -691,6 +691,11 @@ public class JSTypeRegistry implements Serializable {
           private static final long serialVersionUID = 1L;
 
           @Override
+          JSTypeClass getTypeClass() {
+            return JSTypeClass.U2U_FUNCTION;
+          }
+
+          @Override
           public FunctionType getConstructor() {
             return registry.getNativeFunctionType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
           }

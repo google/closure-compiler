@@ -120,6 +120,11 @@ public class PrototypeObjectType extends ObjectType {
     checkState(this.templateTypeMap.size() >= this.templateParamCount);
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.PROTOTYPE_OBJECT;
+  }
+
   static class Builder<T extends Builder<T>> {
     final JSTypeRegistry registry;
 

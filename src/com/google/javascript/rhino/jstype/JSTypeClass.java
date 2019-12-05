@@ -39,93 +39,50 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
-
-import com.google.javascript.rhino.ErrorReporter;
-
 /**
- * All type, representing all values.
+ * The set of Java classes that are subtypes of {@link JSType}.
+ *
+ * <p>Each class reports the corresponding element as its instance {@link JSType#getTypeClass}
+ * method.
+ *
+ * <p>These values are not intended to be compatible with Liskov substitution; {@link JSType}s have
+ * exactly one associated {@link JSTypeClass} and it must not affect the outcome of operations such
+ * as {@link Object#equals}. Use of this enum is tantamount to reflection (e.g. {@link
+ * Object#getClass} or {@code instanceof}) and should only be used where such a comparison is
+ * appropriate and desirable.
+ *
+ * <p>Use of this enum is preferred to true reflection, when possible, for simplicity. This is safe
+ * because this package controls all {@link JSType} subclasses; they can all be known a priori.
+ *
+ * <p>Abstract classes are not listed here because there would be no way to use those elements.
  */
-public final class AllType extends JSType {
-  private static final long serialVersionUID = 1L;
+enum JSTypeClass {
+  ALL,
+  ARROW,
+  BOOLEAN,
+  ENUM,
+  ENUM_ELEMENT,
+  FUNCTION,
+  INSTANCE_OBJECT,
+  NAMED,
+  NO,
+  NO_OBJECT,
+  NO_RESOLVED,
+  NULL,
+  NUMBER,
+  PROTOTYPE_OBJECT,
+  PROXY_OBJECT,
+  RECORD,
+  STRING,
+  SYMBOL,
+  TEMPLATE,
+  TEMPLATIZED,
+  U2U_FUNCTION,
+  UNION,
+  UNKNOWN,
+  VOID;
 
-  AllType(JSTypeRegistry registry) {
-    super(registry);
-  }
-
-  @Override
-  JSTypeClass getTypeClass() {
-    return JSTypeClass.ALL;
-  }
-
-  @Override
-  public boolean isAllType() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesStringContext() {
-    // Be lenient.
-    return true;
-  }
-
-  @Override
-  public boolean matchesObjectContext() {
-    // Be lenient.
-    return true;
-  }
-
-  @Override
-  public TernaryValue testForEquality(JSType that) {
-    return UNKNOWN;
-  }
-
-  @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append("*");
-  }
-
-  @Override
-  public String getDisplayName() {
-    return "<Any Type>";
-  }
-
-  @Override
-  public boolean hasDisplayName() {
-    return true;
-  }
-
-  @Override
-  public <T> T visit(Visitor<T> visitor) {
-    return visitor.caseAllType();
-  }
-
-  @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
-    return visitor.caseAllType(that);
-  }
-
-  @Override
-  public BooleanLiteralSet getPossibleToBooleanOutcomes() {
-    return BooleanLiteralSet.BOTH;
-  }
-
-  @Override
-  JSType resolveInternal(ErrorReporter reporter) {
-    return this;
-  }
-
-  @Override
-  int recursionUnsafeHashCode() {
-    return System.identityHashCode(this);
-  }
-
-  @Override
-  public boolean isNullable() {
-    return true;
-  }
-
-  @Override
-  public boolean isVoidable() {
-    return true;
+  boolean isTypeOf(JSType t) {
+    return this.equals(t.getTypeClass());
   }
 }

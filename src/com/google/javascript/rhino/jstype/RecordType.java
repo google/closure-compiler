@@ -98,6 +98,11 @@ public class RecordType extends PrototypeObjectType {
     isFrozen = true;
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.RECORD;
+  }
+
   /** @return Is this synthesized for internal bookkeeping? */
   boolean isSynthetic() {
     return !declared;

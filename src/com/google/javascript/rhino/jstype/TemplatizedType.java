@@ -84,6 +84,11 @@ public final class TemplatizedType extends ProxyObjectType {
     this.replacer = TemplateTypeReplacer.forPartialReplacement(registry, getTemplateTypeMap());
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.TEMPLATIZED;
+  }
+
   // NOTE(dimvar): If getCtorImplementedInterfaces is implemented here, this is the
   // correct implementation. The one inherited from ProxyObjectType is not correct
   // because it doesn't instantiate the generic types. However, our unit tests don't

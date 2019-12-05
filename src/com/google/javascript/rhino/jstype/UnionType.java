@@ -111,6 +111,11 @@ public class UnionType extends JSType {
     super(registry);
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.UNION;
+  }
+
   /** Creates a {@link Builder} for a new {@link UnionType}. */
   public static Builder builder(JSTypeRegistry registry) {
     return new Builder(registry, DEFAULT_MAX_UNION_SIZE);

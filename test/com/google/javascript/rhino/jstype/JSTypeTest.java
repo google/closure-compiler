@@ -6372,6 +6372,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     }
 
     @Override
+    JSTypeClass getTypeClass() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     int recursionUnsafeHashCode() {
       throw new UnsupportedOperationException();
     }

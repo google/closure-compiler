@@ -55,6 +55,11 @@ public final class NullType extends ValueType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.NULL;
+  }
+
+  @Override
   public boolean isNullType() {
     return true;
   }

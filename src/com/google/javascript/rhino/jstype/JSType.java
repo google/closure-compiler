@@ -99,6 +99,8 @@ public abstract class JSType implements Serializable {
         (templateTypeMap == null) ? registry.getEmptyTemplateTypeMap() : templateTypeMap;
   }
 
+  abstract JSTypeClass getTypeClass();
+
   /**
    * Utility method for less verbose code.
    */

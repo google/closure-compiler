@@ -148,6 +148,11 @@ public final class NamedType extends ProxyObjectType {
     this.templateTypes = templateTypes;
   }
 
+  @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.NAMED;
+  }
+
   /** Returns a new non-null version of this type. */
   JSType getBangType() {
     if (nonNull) {

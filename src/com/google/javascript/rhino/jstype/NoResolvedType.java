@@ -76,6 +76,11 @@ public final class NoResolvedType extends NoType {
   }
 
   @Override
+  JSTypeClass getTypeClass() {
+    return JSTypeClass.NO_RESOLVED;
+  }
+
+  @Override
   @Nullable
   public String getReferenceName() {
     return referenceName;
