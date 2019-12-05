@@ -42,6 +42,15 @@ public final class JSCompCorrespondences {
           (actual, expected) -> parseExpr(expected).isEquivalentTo(actual),
           "matches nodes parsed from");
 
+  @SuppressWarnings("unchecked")
+  public static <A, B> Correspondence<A, B> referenceEquality() {
+    return (Correspondence<A, B>) REFERENCE_EQUALITY;
+  }
+
+  @SuppressWarnings("ReferenceEquality")
+  private static final Correspondence<?, ?> REFERENCE_EQUALITY =
+      Correspondence.from((a, b) -> a == b, "is same instance as");
+
   /** A compiler for parsing snippets of code into AST as leniently as possible. */
   private static final Compiler COMPILER_FOR_PARSING = new Compiler();
 
