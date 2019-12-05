@@ -271,10 +271,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingReturn",
           CheckMissingReturn.MISSING_RETURN_STATEMENT);
 
-  @Deprecated
-  public static final DiagnosticGroup INTERNET_EXPLORER_CHECKS =
-      DiagnosticGroups.registerDeprecatedGroup("internetExplorerChecks");
-
   public static final DiagnosticGroup UNDEFINED_VARIABLES =
       DiagnosticGroups.registerGroup("undefinedVars",
           VarCheck.UNDEFINED_VAR_ERROR);
