@@ -62,10 +62,10 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testSimple() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c");
-    g.createDirectedGraphNode("d");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
 
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
@@ -90,11 +90,11 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testSomeValidPaths() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c");
-    g.createDirectedGraphNode("d");
-    g.createDirectedGraphNode("e");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+    g.createNode("e");
 
     g.connect("a", "1", "b");
     g.connect("b", "2", "c");
@@ -110,12 +110,12 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testManyValidPaths() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c1");
-    g.createDirectedGraphNode("c2");
-    g.createDirectedGraphNode("c3");
-    g.createDirectedGraphNode("d");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c1");
+    g.createNode("c2");
+    g.createNode("c3");
+    g.createNode("d");
 
     g.connect("a",  "-", "b");
     g.connect("b",  "-", "c1");
@@ -132,12 +132,12 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testCycles1() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c");
-    g.createDirectedGraphNode("d");
-    g.createDirectedGraphNode("e");
-    g.createDirectedGraphNode("f");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
+    g.createNode("e");
+    g.createNode("f");
 
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
@@ -160,10 +160,10 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testCycles2() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c");
-    g.createDirectedGraphNode("d");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
 
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
@@ -181,10 +181,10 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testCycles3() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c");
-    g.createDirectedGraphNode("d");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
 
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
@@ -203,10 +203,10 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testSomePath1() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c");
-    g.createDirectedGraphNode("d");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
+    g.createNode("d");
 
     g.connect("a", "-", "b");
     g.connect("a", "-", "c");
@@ -235,8 +235,8 @@ public final class CheckPathsBetweenNodesTest {
   public void testSomePath2() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
+    g.createNode("a");
+    g.createNode("b");
 
     assertThat(
             createTest(g, "a", "b", Predicates.equalTo("b"), ALL_EDGE).somePathsSatisfyPredicate())
@@ -252,13 +252,13 @@ public final class CheckPathsBetweenNodesTest {
   @Test
   public void testSomePathRevisiting() {
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("1");
-    g.createDirectedGraphNode("2a");
-    g.createDirectedGraphNode("2b");
-    g.createDirectedGraphNode("3");
-    g.createDirectedGraphNode("4a");
-    g.createDirectedGraphNode("4b");
-    g.createDirectedGraphNode("5");
+    g.createNode("1");
+    g.createNode("2a");
+    g.createNode("2b");
+    g.createNode("3");
+    g.createNode("4a");
+    g.createNode("4b");
+    g.createNode("5");
     g.connect("1", "-", "2a");
     g.connect("1", "-", "2b");
     g.connect("2a", "-", "3");
@@ -281,9 +281,9 @@ public final class CheckPathsBetweenNodesTest {
   public void testNonInclusive() {
     // No Paths between nodes, by definition, always false.
     DiGraph<String, String> g = LinkedDirectedGraph.create();
-    g.createDirectedGraphNode("a");
-    g.createDirectedGraphNode("b");
-    g.createDirectedGraphNode("c");
+    g.createNode("a");
+    g.createNode("b");
+    g.createNode("c");
     g.connect("a", "-", "b");
     g.connect("b", "-", "c");
     assertThat(
@@ -314,9 +314,8 @@ public final class CheckPathsBetweenNodesTest {
       String exit,
       Predicate<String> nodePredicate,
       Predicate<DiGraphEdge<String, String>> edgePredicate) {
-    return new CheckPathsBetweenNodes<>(graph,
-        graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
-        nodePredicate, edgePredicate);
+    return new CheckPathsBetweenNodes<>(
+        graph, graph.getNode(entry), graph.getNode(exit), nodePredicate, edgePredicate);
   }
 
   private static CheckPathsBetweenNodes<String, String>
@@ -326,9 +325,8 @@ public final class CheckPathsBetweenNodesTest {
         String exit,
         Predicate<String> nodePredicate,
         Predicate<DiGraphEdge<String, String>> edgePredicate) {
-    return new CheckPathsBetweenNodes<>(graph,
-        graph.getDirectedGraphNode(entry), graph.getDirectedGraphNode(exit),
-        nodePredicate, edgePredicate, false);
+    return new CheckPathsBetweenNodes<>(
+        graph, graph.getNode(entry), graph.getNode(exit), nodePredicate, edgePredicate, false);
   }
 
   private static Predicate<DiGraphEdge<String, String>> edgeIs(final Object val) {

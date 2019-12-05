@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.graph;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -27,38 +28,36 @@ import java.util.List;
  */
 public abstract class DiGraph<N, E> extends Graph<N, E> {
 
-  /**
-   * Gets an immutable iterable over all the nodes in the graph.
-   */
-  public abstract Iterable<DiGraphNode<N, E>> getDirectedGraphNodes();
+  @Override
+  public abstract DiGraphNode<N, E> createNode(N nodeValue);
 
-  /**
-   * Gets an immutable list of out edges of the given node.
-   */
-  public abstract List<DiGraphEdge<N, E>> getOutEdges(N nodeValue);
+  @Override
+  public abstract Collection<? extends DiGraphNode<N, E>> getNodes();
 
-  /**
-   * Gets an immutable list of in edges of the given node.
-   */
-  public abstract List<DiGraphEdge<N, E>> getInEdges(N nodeValue);
+  @Override
+  public abstract DiGraphNode<N, E> getNode(N nodeValue);
 
-  public abstract List<DiGraphNode<N, E>> getDirectedPredNodes(
-      DiGraphNode<N, E> n);
+  @Override
+  public abstract List<? extends DiGraphEdge<N, E>> getEdges();
 
-  public abstract List<DiGraphNode<N, E>> getDirectedPredNodes(N nodeValue);
+  @Override
+  public abstract List<? extends DiGraphEdge<N, E>> getEdges(N n1, N n2);
 
-  public abstract List<DiGraphNode<N, E>> getDirectedSuccNodes(
-      DiGraphNode<N, E> n);
+  public abstract List<? extends DiGraphEdge<N, E>> getEdgesInDirection(N n1, N n2);
 
-  public abstract List<DiGraphNode<N, E>>
-      getDirectedSuccNodes(N nodeValue);
+  /** Gets an immutable list of out edges of the given node. */
+  public abstract List<? extends DiGraphEdge<N, E>> getOutEdges(N nodeValue);
 
-  public abstract DiGraphNode<N, E> createDirectedGraphNode(N nodeValue);
+  /** Gets an immutable list of in edges of the given node. */
+  public abstract List<? extends DiGraphEdge<N, E>> getInEdges(N nodeValue);
 
-  public abstract DiGraphNode<N, E> getDirectedGraphNode(N nodeValue);
+  public abstract List<? extends DiGraphNode<N, E>> getDirectedPredNodes(DiGraphNode<N, E> n);
 
-  public abstract List<DiGraphEdge<N, E>>
-      getDirectedGraphEdges(N n1, N n2);
+  public abstract List<? extends DiGraphNode<N, E>> getDirectedPredNodes(N nodeValue);
+
+  public abstract List<? extends DiGraphNode<N, E>> getDirectedSuccNodes(DiGraphNode<N, E> n);
+
+  public abstract List<? extends DiGraphNode<N, E>> getDirectedSuccNodes(N nodeValue);
 
   /**
    * Disconnects all edges from n1 to n2.
@@ -107,9 +106,9 @@ public abstract class DiGraph<N, E> extends Graph<N, E> {
    */
   public static interface DiGraphNode<N, E> extends GraphNode<N, E> {
 
-    public List<DiGraphEdge<N, E>> getOutEdges();
+    public List<? extends DiGraphEdge<N, E>> getOutEdges();
 
-    public List<DiGraphEdge<N, E>> getInEdges();
+    public List<? extends DiGraphEdge<N, E>> getInEdges();
   }
 
   /**
@@ -124,8 +123,5 @@ public abstract class DiGraph<N, E> extends Graph<N, E> {
 
     public DiGraphNode<N, E> getDestination();
 
-    public void setSource(DiGraphNode<N, E> node);
-
-    public void setDestination(DiGraphNode<N, E> node);
   }
 }

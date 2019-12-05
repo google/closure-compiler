@@ -110,7 +110,7 @@ class UnreachableCodeElimination implements CompilerPass {
       if (parent == null || n.isFunction() || n.isScript()) {
         return;
       }
-      DiGraphNode<Node, Branch> gNode = cfg.getDirectedGraphNode(n);
+      DiGraphNode<Node, Branch> gNode = cfg.getNode(n);
       if (gNode == null) { // Not in CFG.
         return;
       }
@@ -154,7 +154,7 @@ class UnreachableCodeElimination implements CompilerPass {
          return;
       }
 
-      DiGraphNode<Node, Branch> gNode = cfg.getDirectedGraphNode(n);
+      DiGraphNode<Node, Branch> gNode = cfg.getNode(n);
 
       if (gNode == null) {
         return;
@@ -170,7 +170,7 @@ class UnreachableCodeElimination implements CompilerPass {
           // We are looking for a control flow changing statement that always
           // branches to the same node. If after removing it control still
           // branches to the same node, it is safe to remove.
-          List<DiGraphEdge<Node, Branch>> outEdges = gNode.getOutEdges();
+          List<? extends DiGraphEdge<Node, Branch>> outEdges = gNode.getOutEdges();
           if (outEdges.size() == 1
               &&
               // If there is a next node, this jump is not useless.

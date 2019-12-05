@@ -327,7 +327,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      DiGraphNode<Node, Branch> graphNode = cfg.getDirectedGraphNode(n);
+      DiGraphNode<Node, Branch> graphNode = cfg.getNode(n);
       if (graphNode == null) {
         // Not a CFG node.
         return;
@@ -455,8 +455,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> pathCheck =
             new CheckPathsBetweenNodes<>(
                 cfg,
-                cfg.getDirectedGraphNode(getDefCfgNode()),
-                cfg.getDirectedGraphNode(useCfgNode),
+                cfg.getNode(getDefCfgNode()),
+                cfg.getNode(useCfgNode),
                 sideEffectPredicate,
                 Predicates.<DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue(),
                 false);

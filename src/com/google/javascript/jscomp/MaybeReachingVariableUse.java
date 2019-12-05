@@ -166,7 +166,7 @@ class MaybeReachingVariableUse extends
   }
 
   private boolean hasExceptionHandler(Node cfgNode) {
-    List<DiGraphEdge<Node, Branch>> branchEdges = getCfg().getOutEdges(cfgNode);
+    List<? extends DiGraphEdge<Node, Branch>> branchEdges = getCfg().getOutEdges(cfgNode);
     for (DiGraphEdge<Node, Branch> edge : branchEdges) {
       if (edge.getValue() == Branch.ON_EX) {
         return true;

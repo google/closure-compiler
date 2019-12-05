@@ -148,7 +148,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
   private void tryRemoveDeadAssignments(NodeTraversal t,
       ControlFlowGraph<Node> cfg,
       Map<String, Var> allVarsInFn) {
-    Iterable<DiGraphNode<Node, Branch>> nodes = cfg.getDirectedGraphNodes();
+    Iterable<? extends DiGraphNode<Node, Branch>> nodes = cfg.getNodes();
 
     for (DiGraphNode<Node, Branch> cfgNode : nodes) {
       FlowState<LiveVariableLattice> state =

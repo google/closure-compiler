@@ -81,7 +81,7 @@ public final class ControlFlowAnalysisTest {
   private static List<DiGraphEdge<Node, Branch>> getAllEdges(
       ControlFlowGraph<Node> cfg) {
     List<DiGraphEdge<Node, Branch>> edges = new ArrayList<>();
-    for (DiGraphNode<Node, Branch> n : cfg.getDirectedGraphNodes()) {
+    for (DiGraphNode<Node, Branch> n : cfg.getNodes()) {
       edges.addAll(cfg.getOutEdges(n.getValue()));
     }
     return edges;
@@ -1725,8 +1725,8 @@ public final class ControlFlowAnalysisTest {
    */
   private void assertNodeOrder(ControlFlowGraph<Node> cfg,
       List<Token> nodeTypes) {
-    List<DiGraphNode<Node, Branch>> cfgNodes =
-        Ordering.from(cfg.getOptionalNodeComparator(true)).sortedCopy(cfg.getDirectedGraphNodes());
+    List<? extends DiGraphNode<Node, Branch>> cfgNodes =
+        Ordering.from(cfg.getOptionalNodeComparator(true)).sortedCopy(cfg.getNodes());
 
     // IMPLICIT RETURN must always be last.
     Node implicitReturn = cfgNodes.remove(cfgNodes.size() - 1).getValue();

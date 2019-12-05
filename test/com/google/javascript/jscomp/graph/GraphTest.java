@@ -16,14 +16,13 @@
 
 package com.google.javascript.jscomp.graph;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -379,13 +378,8 @@ public final class GraphTest {
   }
 
   private static <T extends GraphNode<String, String>> void assertSetEquals(
-      List<T> list, String... targets) {
-    Set<String> set = new HashSet<>();
-    for (GraphNode<String, String> node : list) {
-      set.add(node.getValue());
-    }
-    Set<String> otherSet = new HashSet<>();
-    Collections.addAll(otherSet, targets);
-    assertThat(otherSet).isEqualTo(set);
+      List<T> actual, String... expected) {
+    assertThat(actual.stream().map(GraphNode::getValue).collect(toImmutableSet()))
+        .containsExactlyElementsIn(ImmutableSet.copyOf(expected));
   }
 }

@@ -209,7 +209,7 @@ class LiveVariablesAnalysis
 
     // Make kills conditional if the node can end abruptly by an exception.
     boolean conditional = false;
-    List<DiGraphEdge<Node, Branch>> edgeList = getCfg().getOutEdges(node);
+    List<? extends DiGraphEdge<Node, Branch>> edgeList = getCfg().getOutEdges(node);
     for (DiGraphEdge<Node, Branch> edge : edgeList) {
       if (Branch.ON_EX.equals(edge.getValue())) {
         conditional = true;

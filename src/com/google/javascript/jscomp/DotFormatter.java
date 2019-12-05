@@ -197,8 +197,7 @@ public final class DotFormatter {
 
     // Flow Edges
     if (cfg != null && cfg.hasNode(parent)) {
-      List<DiGraphEdge<Node, Branch>> outEdges =
-        cfg.getOutEdges(parent);
+      List<? extends DiGraphEdge<Node, Branch>> outEdges = cfg.getOutEdges(parent);
       String[] edgeList = new String[outEdges.size()];
       for (int i = 0; i < edgeList.length; i++) {
         DiGraphEdge<Node, ControlFlowGraph.Branch> edge = outEdges.get(i);

@@ -1227,7 +1227,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     private AmbiguatedFunctionSummary(
         DiGraph<AmbiguatedFunctionSummary, SideEffectPropagation> graph, String name) {
       this.name = checkNotNull(name);
-      this.graphNode = graph.createDirectedGraphNode(this);
+      this.graphNode = graph.createNode(this);
     }
 
     private AmbiguatedFunctionSummary setMask(int mask) {

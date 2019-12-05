@@ -331,7 +331,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         // this variable pair. If they are both live at the same
         // time, add an edge between them and continue to the next pair.
         NEXT_CROSS_CFG_NODE:
-        for (DiGraphNode<Node, Branch> cfgNode : cfg.getDirectedGraphNodes()) {
+        for (DiGraphNode<Node, Branch> cfgNode : cfg.getNodes()) {
           if (cfg.isImplicitReturn(cfgNode)) {
             continue NEXT_CROSS_CFG_NODE;
           }
@@ -351,7 +351,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         // one last sanity check that we have to do: we have to check
         // if there's a collision *within* the cfg node.
         NEXT_INTRA_CFG_NODE:
-        for (DiGraphNode<Node, Branch> cfgNode : cfg.getDirectedGraphNodes()) {
+        for (DiGraphNode<Node, Branch> cfgNode : cfg.getNodes()) {
           if (cfg.isImplicitReturn(cfgNode)) {
             continue NEXT_INTRA_CFG_NODE;
           }

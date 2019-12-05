@@ -80,11 +80,11 @@ public final class FixedPointGraphTraversalTest {
     E = new Counter();
 
     graph = LinkedDirectedGraph.create();
-    graph.createDirectedGraphNode(A);
-    graph.createDirectedGraphNode(B);
-    graph.createDirectedGraphNode(C);
-    graph.createDirectedGraphNode(D);
-    graph.createDirectedGraphNode(E);
+    graph.createNode(A);
+    graph.createNode(B);
+    graph.createNode(C);
+    graph.createNode(D);
+    graph.createNode(E);
 
     graph.connect(A, "->", B);
     graph.connect(A, "->", C);
@@ -212,8 +212,8 @@ public final class FixedPointGraphTraversalTest {
     B = new Counter();
 
     graph = LinkedDirectedGraph.create();
-    graph.createDirectedGraphNode(A);
-    graph.createDirectedGraphNode(B);
+    graph.createNode(A);
+    graph.createNode(B);
 
     graph.connect(A, "->", A);
     graph.connect(A, "->", B);

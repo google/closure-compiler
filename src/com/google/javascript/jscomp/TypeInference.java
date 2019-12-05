@@ -397,7 +397,7 @@ class TypeInference
     FlowScope conditionFlowScope = null;
     BooleanOutcomePair conditionOutcomes = null;
 
-    List<DiGraphEdge<Node, Branch>> branchEdges = getCfg().getOutEdges(source);
+    List<? extends DiGraphEdge<Node, Branch>> branchEdges = getCfg().getOutEdges(source);
     List<FlowScope> result = new ArrayList<>(branchEdges.size());
     for (DiGraphEdge<Node, Branch> branchEdge : branchEdges) {
       Branch branch = branchEdge.getValue();
