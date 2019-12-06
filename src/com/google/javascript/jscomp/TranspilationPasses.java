@@ -122,12 +122,12 @@ public class TranspilationPasses {
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
       passes.add(es6RewriteRestAndSpread);
+      passes.add(es6ConvertSuperConstructorCalls);
       passes.add(lateConvertEs6ToEs3);
       passes.add(es6ForOf);
       passes.add(rewriteBlockScopedFunctionDeclaration);
       passes.add(rewriteBlockScopedDeclaration);
       passes.add(rewriteGenerators);
-      passes.add(es6ConvertSuperConstructorCalls);
     } else if (options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(es6RenameVariablesInParamLists);
       passes.add(es6SplitVariableDeclarations);
