@@ -177,3 +177,16 @@ exports.assertFails = function(expectedError, func) {
 exports.noCheck = function(input) {
   return input;
 };
+
+
+/**
+ * Asserts that fields in RegExpResult are the same
+ * @param {!RegExpResult} expected
+ * @param {!RegExpResult} actual
+ */
+exports.assertRegExpResultEquals = function(expected, actual) {
+  assertArrayEquals("RegExp matches: ", expected, actual);
+  assertEquals("RegExpResult index", expected.index, actual.index);
+  assertEquals("RegExpResult input", expected.input, actual.input);
+  assertObjectEquals("RegExpResult groups: ", expected.groups, actual.groups);
+};

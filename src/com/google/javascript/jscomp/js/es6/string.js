@@ -22,6 +22,7 @@
 'require es6/string/endswith';
 'require es6/string/fromcodepoint';
 'require es6/string/includes';
+'require es6/string/matchall';
 'require es6/string/padend';
 'require es6/string/padstart';
 'require es6/string/repeat';

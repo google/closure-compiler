@@ -74,6 +74,7 @@ delete String.fromCodePoint;
 delete String.prototype.codePointAt;
 delete String.prototype.endsWith;
 delete String.prototype.includes;
+delete String.prototype.matchAll;
 delete String.prototype.padEnd;
 delete String.prototype.padStart;
 delete String.prototype.repeat;

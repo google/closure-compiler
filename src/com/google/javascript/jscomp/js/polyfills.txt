@@ -67,6 +67,7 @@ String.fromCodePoint es6 es3 es6/string/fromcodepoint
 String.prototype.codePointAt es6 es3 es6/string/codepointat
 String.prototype.endsWith es6 es3 es6/string/endswith
 String.prototype.includes es6 es3 es6/string/includes
+String.prototype.matchAll es_next es3 es6/string/matchall
 String.prototype.normalize es6 es6
 String.prototype.padEnd es8 es3 es6/string/padend
 String.prototype.padStart es8 es3 es6/string/padstart
