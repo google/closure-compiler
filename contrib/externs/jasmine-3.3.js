@@ -124,7 +124,7 @@ jasmine.AsyncMatchers.prototype.withContext = function(message) {};
 jasmine.Matchers = function() {};
 
 
-/** @type {jasmine.Matchers} */
+/** @type {!jasmine.Matchers} */
 jasmine.Matchers.prototype.not;
 
 
