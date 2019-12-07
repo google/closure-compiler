@@ -402,6 +402,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           "TypeError",
           "WeakMap",
           "global",
+          "globalThis",
           "isNaN",
           "parseFloat",
           "parseInt",

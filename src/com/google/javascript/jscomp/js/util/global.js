@@ -16,28 +16,30 @@
 
 /**
  * @fileoverview Runtime code to store the global object.
+ * @suppress {uselessCode}
  */
 'require base';
 
-
 /**
+ * This function wrapper is required to suppress the unknown expression type
+ * error as it doesn't seem to work at fileoverview level
  * @param {!Object} maybeGlobal
  * @return {!Global} The global object.
  * @suppress {undefinedVars|reportUnknownTypes}
  */
 $jscomp.getGlobal = function(maybeGlobal) {
-  // TODO(b/144860612): This logic could be improved to work in more
-  // environments https://mathiasbynens.be/notes/globalthis
-  return (typeof window != 'undefined' && window === maybeGlobal) ?
-      /** @type {!Global} */ (maybeGlobal) :
-      (typeof global != 'undefined' && global != null) ?
-      /** @type {!Global} */ (global) :
-      /** @type {!Global} */ (maybeGlobal);
+  return /** @type {!Global} */ (
+      (typeof globalThis == 'object') ? globalThis :  // use if exists
+          (typeof window == 'object') ? window :      // normal browser window
+              (typeof self == 'object') ? self :      // WebWorker
+                  (typeof global != 'undefined' && global != null) ?
+                                          global :  // NodeJS
+                      maybeGlobal);                 // app scripts and others
 };
-
 
 /**
  * The global object.
  * @const {!Global}
  */
 $jscomp.global = $jscomp.getGlobal(this);
+

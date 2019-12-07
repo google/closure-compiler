@@ -3341,7 +3341,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "goog.exportSymbol = function(path, symbol) {};",
             "",
@@ -3350,10 +3350,12 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  /** @export @param {number} x */ static set exportedName(x) {}",
             "};",
             "C.exportedName = 0;"),
-        EMPTY_JOINER.join(
+        lines(
             // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
-            "var a = 'undefined' != typeof window&& window === this ? this",
-            "           : 'undefined' != typeof global && null != global ? global : this;",
+            "var a = 'object' == typeof globalThis ? globalThis",
+            ": 'object' == typeof window ? window",
+            ":'object' == typeof self ? self",
+            ": 'undefined' != typeof global && null != global ? global : this;",
             "function b() {}",
             "b.exportedName;",
             "a.Object.defineProperties(b, {",
