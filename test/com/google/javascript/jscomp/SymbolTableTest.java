@@ -365,15 +365,14 @@ public final class SymbolTableTest {
     Symbol goog = getGlobalVar(table, "goog");
     assertThat(goog).isNotNull();
 
-    // 8 references:
+    // 6 references:
     // 5 in code
-    // 2 in strings
     // 1 created by ProcessClosurePrimitives when it processes the provide.
     //
     // NOTE(nicksantos): In the future, we may de-dupe references such
     // that the one in the goog.provide string and the one created by
     // ProcessClosurePrimitives count as the same reference.
-    assertThat(table.getReferences(goog)).hasSize(8);
+    assertThat(table.getReferences(goog)).hasSize(6);
   }
 
   @Test

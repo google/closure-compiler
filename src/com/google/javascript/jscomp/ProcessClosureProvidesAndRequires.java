@@ -271,7 +271,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       }
 
       maybeAddNameToSymbolTable(left);
-      maybeAddStringToSymbolTable(arg);
+      maybeAddNameToSymbolTable(arg);
 
       // Requires should be removed before further processing.
       // Some clients run closure pass multiple times, first with
@@ -306,7 +306,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       String ns = arg.getString();
 
       maybeAddNameToSymbolTable(left);
-      maybeAddStringToSymbolTable(arg);
+      maybeAddNameToSymbolTable(arg);
 
       if (providedNames.containsKey(ns)) {
         ProvidedName previouslyProvided = providedNames.get(ns);
@@ -981,13 +981,6 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       value = value.getOnlyChild();
     }
     return value.isObjectLit() && !value.hasChildren();
-  }
-
-  /** Add the given qualified name node to the symbol table. */
-  private void maybeAddStringToSymbolTable(Node string) {
-    if (preprocessorSymbolTable != null) {
-      preprocessorSymbolTable.addStringNode(string, compiler);
-    }
   }
 
   /** Add the given qualified name node to the symbol table. */

@@ -369,7 +369,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       Node nameNode = args;
 
       maybeAddNameToSymbolTable(left);
-      maybeAddStringToSymbolTable(nameNode);
+      maybeAddNameToSymbolTable(nameNode);
 
       this.defineCalls.add(n);
     }
@@ -954,13 +954,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       return false;
     }
     return true;
-  }
-
-  /** Add the given qualified name node to the symbol table. */
-  private void maybeAddStringToSymbolTable(Node string) {
-    if (preprocessorSymbolTable != null) {
-      preprocessorSymbolTable.addStringNode(string, compiler);
-    }
   }
 
   /** Add the given qualified name node to the symbol table. */

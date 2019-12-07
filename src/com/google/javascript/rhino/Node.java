@@ -180,9 +180,6 @@ public class Node implements Serializable {
     GOOG_MODULE_REQUIRE,
     // Attaches a FeatureSet to SCRIPT nodes.
     FEATURE_SET,
-    // Indicates that a STRING node represents a namespace from goog.module() or goog.require()
-    // call.
-    IS_MODULE_NAME,
     // Indicates a namespace that was provided at some point in the past.
     WAS_PREVIOUSLY_PROVIDED,
     // Indicates that a SCRIPT represents a transpiled file
@@ -261,7 +258,6 @@ public class Node implements Serializable {
   public static final Prop PARSE_RESULTS = Prop.PARSE_RESULTS;
   public static final Prop GOOG_MODULE = Prop.GOOG_MODULE;
   public static final Prop FEATURE_SET = Prop.FEATURE_SET;
-  public static final Prop IS_MODULE_NAME = Prop.IS_MODULE_NAME;
   public static final Prop WAS_PREVIOUSLY_PROVIDED = Prop.WAS_PREVIOUSLY_PROVIDED;
   public static final Prop TRANSPILED = Prop.TRANSPILED;
   public static final Prop MODULE_ALIAS = Prop.MODULE_ALIAS;
@@ -2100,7 +2096,7 @@ public class Node implements Serializable {
    */
   @Nullable
   public final String getOriginalQualifiedName() {
-    if (token == Token.NAME || getBooleanProp(Prop.IS_MODULE_NAME)) {
+    if (token == Token.NAME) {
       String name = getOriginalName();
       if (name == null) {
         name = getString();

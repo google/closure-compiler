@@ -107,20 +107,11 @@ final class PreprocessorSymbolTable
   }
 
   /**
-   * This variant of Node#getQualifiedName is adds special support for
-   * IS_MODULE_NAME.
+   * This variant of Node#getQualifiedName is adds special support STRING nodes which represent
+   * module names.
    */
   public String getQualifiedName(Node n) {
-    if (n.getBooleanProp(Node.IS_MODULE_NAME)) {
-      return n.getString();
-    } else if (n.isGetProp()) {
-      String left = getQualifiedName(n.getFirstChild());
-      if (left == null) {
-        return null;
-      }
-      return left + "." + n.getLastChild().getString();
-    }
-    return n.getQualifiedName();
+    return n.isString() ? n.getString() : n.getQualifiedName();
   }
 
   static final class Reference extends SimpleReference<SimpleSlot> {
@@ -153,40 +144,5 @@ final class PreprocessorSymbolTable
     public PreprocessorSymbolTable getInstanceOrNull() {
       return instance;
     }
-  }
-
-  /**
-   * Adds a synthetic reference for a 'string' node representing a reference name.
-   *
-   * <p>This does some work to set the source info for the reference as well.
-   */
-  void addStringNode(Node n, AbstractCompiler compiler) {
-    String name = n.getString();
-    Node syntheticRef =
-        NodeUtil.newQName(
-            compiler, name, n /* real source offsets will be filled in below */, name);
-
-    // Offsets to add to source. Named for documentation purposes.
-    final int forQuote = 1;
-    final int forDot = 1;
-
-    Node current = null;
-    for (current = syntheticRef; current.isGetProp(); current = current.getFirstChild()) {
-      int fullLen = current.getQualifiedName().length();
-      int namespaceLen = current.getFirstChild().getQualifiedName().length();
-
-      current.setSourceEncodedPosition(n.getSourcePosition() + forQuote);
-      current.setLength(fullLen);
-
-      current
-          .getLastChild()
-          .setSourceEncodedPosition(n.getSourcePosition() + namespaceLen + forQuote + forDot);
-      current.getLastChild().setLength(current.getLastChild().getString().length());
-    }
-
-    current.setSourceEncodedPosition(n.getSourcePosition() + forQuote);
-    current.setLength(current.getString().length());
-
-    addReference(syntheticRef);
   }
 }

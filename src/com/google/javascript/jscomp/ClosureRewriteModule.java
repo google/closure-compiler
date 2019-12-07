@@ -1918,9 +1918,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
    * @return A NAMESPACE node with the same name and source info as provided node.
    */
   private static Node createNamespaceNode(Node n) {
-    Node node = Node.newString(n.getString()).useSourceInfoFrom(n);
-    node.putBooleanProp(Node.IS_MODULE_NAME, true);
-    return node;
+    return Node.newString(n.getString()).useSourceInfoFrom(n);
   }
 
   /**
