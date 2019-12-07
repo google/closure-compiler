@@ -2270,6 +2270,17 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSuperDotPropWithoutExtends() {
+    testError(
+        lines(
+            "class C {", //
+            "  foo() { return super.x; }",
+            "}",
+            ""),
+        CANNOT_CONVERT_YET);
+  }
+
+  @Test
   public void testClassComputedPropGetterAndSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
     test(
