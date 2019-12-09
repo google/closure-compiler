@@ -533,7 +533,7 @@ public class JSTypeRegistry implements Serializable {
     JSType promiseParameterType =
         createFunctionType(
             /* returnType= */ unknownType,
-            /* parameterTypes= */ createFunctionType(
+            /* parameterTypes...= */ createFunctionType(
                 unknownType,
                 createOptionalParameters(
                     createUnionType(
@@ -541,8 +541,7 @@ public class JSTypeRegistry implements Serializable {
                         createTemplatizedType(ithenableType, promiseTemplateKey),
                         thenableType,
                         nullType))),
-            /* parameterTypes= */ createFunctionType(
-                unknownType, createOptionalParameters(allType)));
+            createFunctionType(unknownType, createOptionalParameters(allType)));
     Node promiseParameter = IR.name("");
     promiseParameter.setJSType(promiseParameterType);
 
