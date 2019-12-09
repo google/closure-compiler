@@ -208,7 +208,6 @@ public final class DefaultPassConfig extends PassConfig {
 
   private void addTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
     if (options.checkTypes || options.inferTypes) {
-      checks.add(resolveTypes);
       checks.add(inferTypes);
       if (options.checkTypes) {
         checks.add(checkTypes);
@@ -1732,14 +1731,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSet(ES_NEXT)
           .build();
 
-  /** Creates a typed scope and adds types to the type registry. */
-  final PassFactory resolveTypes =
-      PassFactory.builderForHotSwap()
-          .setName(PassNames.RESOLVE_TYPES)
-          .setInternalFactory(GlobalTypeResolver::new)
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
-          .build();
-
   /** Clears the typed scope when we're done. */
   private final PassFactory clearTypedScopePass =
       PassFactory.builder()
@@ -1756,16 +1747,27 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new HotSwapCompilerPass() {
                     @Override
-                    public void process(Node externs, Node root) {
-                      checkNotNull(topScope);
-                      checkNotNull(getTypedScopeCreator());
+                    public void process(Node unused, Node srcRoot) {
+                      Node globalRoot = srcRoot.getParent();
+                      compiler.setTypeCheckingHasRun(true);
 
-                      makeTypeInference(compiler).process(externs, root);
+                      DefaultPassConfig.this.topScope =
+                          this.createInference().inferAllScopes(globalRoot);
                     }
 
                     @Override
                     public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                      makeTypeInference(compiler).inferAllScopes(scriptRoot);
+                      this.createInference()
+                          .reuseTopScope(getTopScope())
+                          .inferAllScopes(scriptRoot);
+                    }
+
+                    /** Create a type inference pass. */
+                    private TypeInferencePass createInference() {
+                      return new TypeInferencePass(
+                          compiler,
+                          compiler.getReverseAbstractInterpreter(),
+                          getTypedScopeCreator(compiler));
                     }
                   })
           .setFeatureSet(TYPE_CHECK_SUPPORTED)
@@ -1920,28 +1922,6 @@ public final class DefaultPassConfig extends PassConfig {
     return new CombinedCompilerPass(compiler, callbacks);
   }
 
-  /** A compiler pass that resolves types in the global scope. */
-  class GlobalTypeResolver implements HotSwapCompilerPass {
-    private AbstractCompiler compiler;
-
-    GlobalTypeResolver(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      this.compiler.setTypeCheckingHasRun(true);
-      if (topScope == null) {
-        regenerateGlobalTypedScope(compiler, root.getParent());
-      } else {
-        compiler.getTypeRegistry().resolveTypes();
-      }
-    }
-    @Override
-    public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-      patchGlobalTypedScope(compiler, scriptRoot);
-    }
-  }
 
   /** A compiler pass that clears the global scope. */
   class ClearTypedScope implements CompilerPass {

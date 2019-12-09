@@ -75,8 +75,6 @@ public abstract class CodePrinterTestBase {
 
     if (typeChecked) {
       DefaultPassConfig passConfig = new DefaultPassConfig(null);
-      CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
-      typeResolver.process(externs, root);
       CompilerPass inferTypes = passConfig.inferTypes.create(compiler);
       inferTypes.process(externs, root);
     }

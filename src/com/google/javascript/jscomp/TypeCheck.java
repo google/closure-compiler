@@ -467,19 +467,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     checkArgument(jsRoot.isRoot(), jsRoot);
 
     checkState(jsRoot.getParent() != null && jsRoot.getParent().isRoot(), jsRoot.getParent());
-    Node externsAndJsRoot = jsRoot.getParent();
     checkState(
         externsRoot == null || externsRoot.getNext() == jsRoot,
         "externs root must be the preceding sibling of the js root");
 
     scopeCreator = new TypedScopeCreator(compiler);
-    topScope = scopeCreator.createScope(externsAndJsRoot, null);
 
-    TypeInferencePass inference =
-        new TypeInferencePass(compiler, reverseInterpreter, topScope, scopeCreator);
+    this.topScope =
+        new TypeInferencePass(compiler, reverseInterpreter, scopeCreator)
+            .inferAllScopes(jsRoot.getParent());
 
-    inference.process(externsRoot, jsRoot);
-    process(externsRoot, jsRoot);
+    this.process(externsRoot, jsRoot);
 
     return topScope;
   }

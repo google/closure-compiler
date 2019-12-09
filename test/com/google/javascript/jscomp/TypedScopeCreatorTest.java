@@ -149,10 +149,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
       new GatherModuleMetadata(compiler, false, moduleResolutionMode).process(externs, root);
       new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externs, root);
       TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-      TypedScope topScope = scopeCreator.createScope(root.getParent(), null);
-      new TypeInferencePass(
-              compiler, compiler.getReverseAbstractInterpreter(), topScope, scopeCreator)
-          .process(externs, root);
+      new TypeInferencePass(compiler, compiler.getReverseAbstractInterpreter(), scopeCreator)
+          .inferAllScopes(root.getParent());
       new NodeTraversal(compiler, new ScopeFinder(), scopeCreator).traverseRoots(externs, root);
     };
   }

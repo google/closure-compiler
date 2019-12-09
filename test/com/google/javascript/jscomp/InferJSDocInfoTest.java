@@ -72,11 +72,9 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
       @Override
       public void process(Node externs, Node root) {
         TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-        TypedScope topScope = scopeCreator.createScope(root.getParent(), null);
 
-        new TypeInferencePass(
-                compiler, compiler.getReverseAbstractInterpreter(), topScope, scopeCreator)
-            .process(externs, root);
+        new TypeInferencePass(compiler, compiler.getReverseAbstractInterpreter(), scopeCreator)
+            .inferAllScopes(root.getParent());
 
         new InferJSDocInfo(compiler).process(externs, root);
       }
