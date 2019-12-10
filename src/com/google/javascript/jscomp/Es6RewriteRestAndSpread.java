@@ -351,6 +351,8 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     checkArgument(spreadParent.isCall());
 
     Node callee = spreadParent.getFirstChild();
+    // ES6 classes must all be transpiled away before this pass runs.
+    checkState(!callee.isSuper(), "Cannot spread into super calls");
     // Check if the callee has side effects before removing it from the AST (since some NodeUtil
     // methods assume the node they are passed has a non-null parent).
     boolean calleeMayHaveSideEffects = compiler.getAstAnalyzer().mayHaveSideEffects(callee);

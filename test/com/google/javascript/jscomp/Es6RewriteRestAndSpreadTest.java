@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
@@ -411,69 +412,25 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSpreadFunctionArgumentsIntoSuperParameterList() {
-    // TODO(b/76024335): Enable these validations and checks.
-    // We need to test super, but super only makes sense in the context of a class, but
-    // the type-checker doesn't understand class syntax and fails before the test even runs.
-    disableTypeInfoValidation();
-    disableTypeCheck();
-
-    test(
-        lines(
-            "class A {",
-            "  constructor(a) {",
-            "      this.p = a;",
-            "  }",
-            "}",
-            "",
-            "class B extends A {",
-            "   constructor(a) {",
-            "     super(0, ...arguments, 2);",
-            "   }",
-            "}"),
-        // The `super.apply` syntax below is invalid, but won't survive other transpilation passes.
-        lines(
-            "class A {",
-            "  constructor(a) {",
-            "      this.p = a;",
-            "  }",
-            "}",
-            "",
-            "class B extends A {",
-            "   constructor(a) {",
-            "     super.apply(null, [0].concat($jscomp.arrayFromIterable(arguments), [2]));",
-            "   }",
-            "}"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
-  }
-
-  @Test
-  public void testSpreadVariableIntoSuperParameterList() {
-    // TODO(b/76024335): Enable these validations and checks.
-    // We need to test super, but super only makes sense in the context of a class, but
-    // the type-checker doesn't understand class syntax and fails before the test even runs.
-    disableTypeInfoValidation();
-    disableTypeCheck();
-
-    test(
-        lines(
-            "class D {}",
-            "",
-            "class C extends D {",
-            "  constructor(args) {",
-            "    super(0, ...args, 2)",
-            "  }",
-            "}"),
-        // The `super.apply` syntax below is invalid, but won't survive other transpilation passes.
-        lines(
-            "class D {}",
-            "",
-            "class C extends D {",
-            "  constructor(args) {",
-            "    super.apply(null, [0].concat($jscomp.arrayFromIterable(args), [2]));",
-            "  }",
-            "}"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
+  public void testSpreadIntoSuperThrows() {
+    // All ES6 classes must be transpiled away before this pass runs,
+    // because we cannot spread into super() calls without creating invalid syntax.
+    assertThrows(
+        RuntimeException.class,
+        () ->
+            testSame(
+                lines(
+                    "class A {",
+                    "  constructor(...args) {",
+                    "      this.p = args;",
+                    "  }",
+                    "}",
+                    "",
+                    "class B extends A {",
+                    "   constructor(...args) {",
+                    "     super(0, ...args, 2);",
+                    "   }",
+                    "}")));
   }
 
   @Test
