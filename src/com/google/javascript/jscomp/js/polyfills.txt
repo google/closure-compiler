@@ -80,4 +80,3 @@ String.prototype.trimStart es_2019 es3 es6/string/trimstart
 String.raw es6 es6
 WeakMap es6 es3 es6/weakmap
 WeakSet es6 es3 es6/weakset
-globalThis es_next es3 es6/globalthis
