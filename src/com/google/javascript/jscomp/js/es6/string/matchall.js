@@ -82,6 +82,7 @@ $jscomp.polyfill('String.prototype.matchAll', function(orig) {
         }
       }
     };
+    matchAllIterator[Symbol.iterator] = function() { return matchAllIterator; };
     return /**@type {!IteratorIterable<!RegExpResult>}> */ (matchAllIterator);
   };
   return polyfill;
