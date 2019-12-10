@@ -74,7 +74,7 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
-    if (options.needsTranspilationFrom(FeatureSet.ES_NEXT)) {
+    if (options.needsTranspilationFrom(FeatureSet.ES2019)) {
       passes.add(rewriteCatchWithNoBinding);
     }
 

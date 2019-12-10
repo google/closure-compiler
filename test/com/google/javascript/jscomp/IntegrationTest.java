@@ -7443,6 +7443,27 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testOptionalCatchBinding_toEs2019() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    // trying to make sure the catch binding transpilation pass does not run when it should not be
+    testSame(
+        options,
+        new String[] {
+          lines(
+              "function foo() {}",
+              "function reportError() {}",
+              "try {",
+              " foo();",
+              "} catch {",
+              "  reportError();",
+              "}")
+        });
+  }
+
+  @Test
   public void testOptionalCatchBinding_noTranspile() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
