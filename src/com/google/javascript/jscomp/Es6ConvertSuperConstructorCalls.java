@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -67,22 +68,19 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       // TODO(bradfordcsmith): Avoid creating data for non-constructor functions.
       constructorDataStack.push(new ConstructorData(n));
     } else if (n.isSuper()) {
-      // NOTE(sdh): Es6RewriteRestAndSpread rewrites super(...args) to super.apply(this, args),
-      // so we need to go up a level if that happened.  This extra getParent() could be removed
-      // if we could flip the order of these transpilation passes.
-      Node superCall = parent.isCall() ? parent : parent.getParent();
-      if (!superCall.isCall() && parent.isGetProp()) {
-        // This is currently broken because whatever earlier pass is responsible for transpiling
-        // away super inside GETPROP is not handling it. Unfortunately there's not really a good
-        // way to handle it without additional runtime support, and it will be a lot easier to deal
-        // with after classes are typechecked natively. So for now, we just don't support it. This
-        // is not a problem, since any such usages were already broken, just with a different error.
+      // super(args) or super.prop
+      checkState(n.isFirstChildOf(parent), parent);
+      if (parent.isGetProp()) {
+        // TODO(bradfordcsmith): `super.prop` should have been removed before this code executes,
+        //     but instead is being left untranspiled when there's no `extends` clause, so
+        //     we have to report that problem here.
         t.report(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "super access with no extends clause");
         return false;
       }
-      checkState(superCall.isCall(), superCall);
+      // must be super(args)
+      checkState(parent.isCall(), parent);
       ConstructorData constructorData = checkNotNull(constructorDataStack.peek());
-      constructorData.superCalls.add(superCall);
+      constructorData.superCalls.add(parent);
     }
     return true;
   }
@@ -100,10 +98,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     // NOTE: When this pass runs:
     // -   ES6 classes have already been rewritten as ES5 functions.
     // -   All subclasses have $jscomp.inherits() calls connecting them to their parent class.
-    // -   All instances of super() that are not super constructor calls have been rewritten.
-    // -   However, if the original call used spread (e.g. super(...list)), then spread
-    //     transpilation will have turned that into something like
-    //     super.apply(null, $jscomp$expanded$args).
+    // -   All instances of `super` that are not super constructor calls have been rewritten.
     Node constructor = constructorData.constructor;
     List<Node> superCalls = constructorData.superCalls;
     if (superCalls.isEmpty()) {
@@ -292,74 +287,90 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     }
   }
 
+  /**
+   * Returns a transpiled version of the super constructor call.
+   *
+   * <p>The children of the passed in `superCall` are all removed from it by this method, but the
+   * existing call itself is not replaced in the AST yet. The returned node is not yet attached to
+   * the AST.
+   */
   private Node createNewSuperCall(Node superClassQNameNode, Node superCall, JSType thisType) {
     checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
     checkArgument(superCall.isCall(), superCall);
-    Node callee = superCall.getFirstChild();
 
-    if (callee.isSuper()) {
-      return createNewSuperCallWithDotCall(superClassQNameNode, superCall, thisType);
+    Node callee = superCall.removeFirstChild();
+    checkState(callee.isSuper(), callee);
+
+    List<Node> args = new ArrayList<>();
+    boolean hasSpreadArg = false;
+    while (superCall.hasChildren()) {
+      final Node arg = superCall.removeFirstChild();
+      hasSpreadArg = hasSpreadArg || arg.isSpread();
+      args.add(arg);
+    }
+
+    // Node to which args should be appended
+    if (hasSpreadArg) {
+      // We want to convert
+      //
+      // super(x, ...params, y)
+      // to
+      // Foo.apply(this, [x, ...params, y])
+      //
+      // because, after transpilation of spread this becomes
+      //
+      // Foo.apply(this, [x, $jscomp.arrayFromIterable(params), y])
+      //
+      // If we used `call`, we'd get this nonsense instead
+      //
+      // Foo.call.apply(Foo, [this, x, $jscomp.arrayFromIterable(params), y])
+      Node superClassDotApply =
+          astFactory
+              .createGetProp(superClassQNameNode.cloneTree(), "apply")
+              .useSourceInfoFromForTree(callee);
+      // Create `SuperClass.call(this)`
+      Node newSuperCall = astFactory.createCall(superClassDotApply).useSourceInfoFrom(superCall);
+      newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(callee));
+      newSuperCall.putBooleanProp(Node.FREE_CALL, false); // callee is now a getprop
+      // It's very common to just have `super(...arguments)`, because we generate constructors
+      // containing that for extending classes that don't have an explicit constructor.
+      // For that case it's more efficient to just convert `super(...arguments)` to
+      // `SuperClass.apply(this, arguments)` here rather than relying on later optimizations to
+      // convert `[...arguments]` to `arguments`.
+      if (isSingleSpreadOfArguments(args)) {
+        newSuperCall.addChildToBack(Iterables.getOnlyElement(args).getOnlyChild().detach());
+      } else {
+        newSuperCall.addChildToBack(astFactory.createArraylit(args).useSourceInfoFrom(superCall));
+      }
+      return newSuperCall;
     } else {
-      return createNewSuperCallWithDotApply(superClassQNameNode, superCall, thisType);
+      // We want to convert
+      //
+      // super(arg1, arg2)
+      // to
+      // Foo.call(this, arg1, arg2)
+      //
+      // Using `call` is shorter than using `apply`.
+      Node superClassDotCall =
+          astFactory
+              .createGetProp(superClassQNameNode.cloneTree(), "call")
+              .useSourceInfoFromForTree(callee);
+      Node newSuperCall = astFactory.createCall(superClassDotCall).useSourceInfoFrom(superCall);
+      newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(callee));
+      newSuperCall.putBooleanProp(Node.FREE_CALL, false); // callee is now a getprop
+      for (Node arg : args) {
+        newSuperCall.addChildToBack(arg);
+      }
+      return newSuperCall;
     }
   }
 
-  private Node createNewSuperCallWithDotCall(
-      Node superClassQNameNode, Node superCall, JSType thisType) {
-    // super(...) -> SuperClass.call(this, ...)
-    checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
-    checkArgument(superCall.isCall(), superCall);
-    Node callee = superCall.removeFirstChild();
-
-    // Create `SuperClass.call`
-    Node superClassDotCall =
-        astFactory
-            .createGetProp(superClassQNameNode.cloneTree(), "call")
-            .useSourceInfoFromForTree(callee);
-    // Create `SuperClass.call(this)`
-    Node newSuperCall = astFactory.createCall(superClassDotCall).useSourceInfoFrom(superCall);
-    newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(callee));
-    newSuperCall.putBooleanProp(Node.FREE_CALL, false); // callee is now a getprop
-
-    // add any additional arguments to the new super call
-    while (superCall.hasChildren()) {
-      newSuperCall.addChildToBack(superCall.removeFirstChild());
-    }
-    return newSuperCall;
+  private static boolean isSingleSpreadOfArguments(List<Node> nodeList) {
+    return nodeList.size() == 1 && isSpreadOfArguments(Iterables.getOnlyElement(nodeList));
   }
 
-  private Node createNewSuperCallWithDotApply(
-      Node superClassQNameNode, Node superCall, JSType thisType) {
-    // spread transpilation does
-    // super(...arguments) -> super.apply(null, arguments)
-    // Now we must do
-    // super.apply(null, arguments) -> SuperClass.apply(this, arguments)
-    checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
-    checkArgument(superCall.isCall(), superCall);
-    Node callee = superCall.removeFirstChild();
-    checkState(callee.isGetProp(), callee);
-
-    Node applyNode = checkNotNull(callee.getSecondChild());
-    checkState(applyNode.getString().equals("apply"), applyNode);
-    Node superNode = callee.getFirstChild();
-
-    // Replace `super.apply` with `SuperClass.apply`
-    callee.replaceChild(
-        superNode, superClassQNameNode.cloneTree().useSourceInfoFromForTree(superNode));
-    // Get `null` from `super.apply(null, arguments)`
-    Node nullNode = superCall.getFirstChild();
-    checkState(nullNode.isNull(), nullNode);
-    superCall.removeChild(nullNode);
-
-    // Create `SuperClass.apply(null)`
-    Node newSuperCall = astFactory.createCall(callee).useSourceInfoFrom(superCall);
-    newSuperCall.addChildToBack(astFactory.createThis(thisType).useSourceInfoFrom(nullNode));
-
-    // add any additional arguments to the new super call
-    while (superCall.hasChildren()) {
-      newSuperCall.addChildToBack(superCall.removeFirstChild());
-    }
-    return newSuperCall;
+  private static boolean isSpreadOfArguments(Node node) {
+    return node.isSpread() && node.getOnlyChild().matchesName("arguments");
   }
 
   private void replaceNativeErrorSuperCall(Node superCall, Node newSuperCall) {

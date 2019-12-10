@@ -329,6 +329,15 @@ public class TestExternsBuilder {
           "var console;",
           "");
 
+  private static final String ALERT_EXTERNS =
+      lines(
+          "/**",
+          " * @param {*} message",
+          " * @return {undefined}",
+          " */",
+          "function alert(message) {}",
+          "");
+
   private static final String PROMISE_EXTERNS =
       lines(
           "", //
@@ -540,6 +549,7 @@ public class TestExternsBuilder {
   private boolean includeArrayExterns = false;
   private boolean includeArgumentsExterns = false;
   private boolean includeConsoleExterns = false;
+  private boolean includeAlertExterns = false;
   private boolean includePromiseExterns = false;
   private boolean includeAsyncIterableExterns = false;
   private boolean includeEs6ClassTranspilationExterns = false;
@@ -592,6 +602,12 @@ public class TestExternsBuilder {
     return this;
   }
 
+  /** Adds declaration of `alert(message)` */
+  public TestExternsBuilder addAlert() {
+    includeAlertExterns = true;
+    return this;
+  }
+
   public TestExternsBuilder addAsyncIterable() {
     includeAsyncIterableExterns = true;
     addIterable(); // IIterableResult + Symbol
@@ -639,6 +655,9 @@ public class TestExternsBuilder {
     }
     if (includeConsoleExterns) {
       externSections.add(CONSOLE_EXTERNS);
+    }
+    if (includeAlertExterns) {
+      externSections.add(ALERT_EXTERNS);
     }
     if (includePromiseExterns) {
       externSections.add(PROMISE_EXTERNS);

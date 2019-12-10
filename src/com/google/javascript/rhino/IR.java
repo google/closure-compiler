@@ -41,6 +41,7 @@ package com.google.javascript.rhino;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -588,6 +589,10 @@ public class IR {
   }
 
   public static Node arraylit(Node ... exprs) {
+    return arraylit(Arrays.asList(exprs));
+  }
+
+  public static Node arraylit(Iterable<Node> exprs) {
     Node arraylit = new Node(Token.ARRAYLIT);
     for (Node expr : exprs) {
       checkState(mayBeExpressionOrEmpty(expr) || expr.isSpread(), expr);

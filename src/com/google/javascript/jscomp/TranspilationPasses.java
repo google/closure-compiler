@@ -121,8 +121,8 @@ public class TranspilationPasses {
       passes.add(es6RewriteArrowFunction);
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
-      passes.add(es6RewriteRestAndSpread);
       passes.add(es6ConvertSuperConstructorCalls);
+      passes.add(es6RewriteRestAndSpread);
       passes.add(lateConvertEs6ToEs3);
       passes.add(es6ForOf);
       passes.add(rewriteBlockScopedFunctionDeclaration);

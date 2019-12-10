@@ -116,6 +116,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     // instead of re-enumerating all these passes.
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
+        makePassFactory("es6InjectRuntimeLibraries", new Es6InjectRuntimeLibraries(compiler)));
+    optimizer.addOneTimePass(
         makePassFactory(
             "Es6RenameVariablesInParamLists", new Es6RenameVariablesInParamLists(compiler)));
     optimizer.addOneTimePass(
@@ -123,10 +125,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
     optimizer.addOneTimePass(
-        makePassFactory("es6InjectRuntimeLibraries", new Es6InjectRuntimeLibraries(compiler)));
-    // Automatically generated constructor calls will contain a call to super() using spread.
-    // super(...arguments);
-    // We depend on that getting rewritten before we do the super constructor call rewriting.
+        makePassFactory(
+            "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("es6RewriteRestAndSpread", new Es6RewriteRestAndSpread(compiler)));
     optimizer.addOneTimePass(
@@ -135,9 +135,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     optimizer.addOneTimePass(
         makePassFactory(
             "Es6RewriteBlockScopedDeclaration", new Es6RewriteBlockScopedDeclaration(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
     return optimizer;
   }
 

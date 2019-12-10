@@ -40,45 +40,26 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteClassTest extends CompilerTestCase {
 
-  private static final String EXTERNS_BASE =
-      lines(
-          "/** @constructor @template T */",
-          "function Arguments() {}",
-          "",
-          "/**",
-          " * @constructor",
-          " * @param {...*} var_args",
-          " * @return {!Array}",
-          " * @template T",
-          " */",
-          "function Array(var_args) {}",
-          "",
-          "/**",
-          " * @param {...*} var_args",
-          " * @return {*}",
-          " */",
-          "Function.prototype.apply = function(var_args) {};",
-          "",
-          "/**",
-          " * @param {...*} var_args",
-          " * @return {*}",
-          " */",
-          "Function.prototype.call = function(var_args) {};",
-          "",
-          // Stub out just enough of ES6 runtime libraries to satisfy the typechecker.
-          // In a real compilation, the needed parts of the library are loaded automatically.
-          "/**",
-          " * @param {function(new: ?)} subclass",
-          " * @param {function(new: ?)} superclass",
-          " */",
-          "$jscomp.inherits = function(subclass, superclass) {};",
-          "",
-          "/** @const */ var console = {};",
-          "console.log = function(x) {};",
-          "function alert(x) {}");
-
   public Es6RewriteClassTest() {
-    super(EXTERNS_BASE);
+    super(
+        new TestExternsBuilder()
+            .addArguments()
+            .addArray()
+            .addFunction()
+            .addConsole()
+            .addAlert()
+            .addExtra(
+                lines(
+                    // Stub out just enough of ES6 runtime libraries to satisfy the typechecker.
+                    // In a real compilation, the needed parts of the library are loaded
+                    // automatically.
+                    "/**",
+                    " * @param {function(new: ?)} subclass",
+                    " * @param {function(new: ?)} superclass",
+                    " */",
+                    "$jscomp.inherits = function(subclass, superclass) {};",
+                    ""))
+            .build());
   }
 
   @Override
@@ -107,11 +88,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    // Automatically generated constructor calls will contain a call to super() using spread.
-    // super(...arguments);
-    // We depend on that getting rewritten before we do the super constructor call rewriting.
-    optimizer.addOneTimePass(
-        makePassFactory("es6RewriteRestAndSpread", new Es6RewriteRestAndSpread(compiler)));
     optimizer.addOneTimePass(
         makePassFactory(
             "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
@@ -281,7 +257,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @extends {D}",
             " */",
             "const testcode$classdecl$var0 = function() {",
-            "  return D.apply(this,arguments) || this; ",
+            "  return D.apply(this, arguments) || this; ",
             "};",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
             "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
@@ -614,6 +590,69 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 " * @extends {D}",
                 " */",
                 "let C = function() { D.apply(this, arguments); };",
+                "$jscomp.inherits(C, D);")));
+  }
+
+  @Test
+  public void testExtendsWithImplicitConstructorNoTypeInfo() {
+    disableTypeCheck();
+    disableTypeInfoValidation();
+    test(
+        srcs("class D {} class C extends D {}"),
+        expected(
+            lines(
+                "/** @constructor */",
+                "let D = function() {};",
+                "/** @constructor",
+                " * @extends {D}",
+                " */",
+                "let C = function() {",
+                // even without type information we recognize `arguments` and avoid generating
+                // `[...arguments]`
+                "  D.apply(this, arguments);",
+                "};",
+                "$jscomp.inherits(C, D);")));
+  }
+
+  @Test
+  public void testExtendsWithSpreadsPassedToSuper() {
+    test(
+        srcs(
+            lines(
+                "class D {", //
+                "  /** @param {...string|number} args*/",
+                "  constructor(...args) {",
+                "    /** @type {!Arguments} */",
+                "    this.args = arguments;",
+                "  }",
+                "}",
+                "class C extends D {",
+                "  /**",
+                "   * @param {!Array<number>} numbers",
+                "   * @param {!Array<string>} strings",
+                "   */",
+                "  constructor(numbers, strings) {",
+                "    super(...numbers, ...strings);",
+                "  }",
+                "}",
+                "")),
+        expected(
+            lines(
+                "/**",
+                " * @constructor",
+                " * @param {!Array<string|number>}",
+                " */",
+                "let D = function(...args) {",
+                "  /** @type {!Arguments} */",
+                "  this.args = arguments;",
+                "};",
+                "/**",
+                " * @constructor",
+                " * @extends {D}",
+                " */",
+                "let C = function(numbers, strings) {",
+                "  D.apply(this, [...numbers, ...strings]);",
+                "};",
                 "$jscomp.inherits(C, D);")));
   }
 
@@ -1867,7 +1906,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 " * @extends {ExternsClass}",
                 " */",
                 "let CodeClass = function() {",
-                "  return ExternsClass.apply(this,arguments) || this;",
+                "  return ExternsClass.apply(this, arguments) || this;",
                 "};",
                 "$jscomp.inherits(CodeClass,ExternsClass)")));
   }
@@ -2036,7 +2075,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @extends {C}",
             " */",
             "let D = function() {",
-            "  C.apply(this,arguments); ",
+            "  C.apply(this, arguments); ",
             "};",
             "/** @nocollapse */",
             "D.value;",

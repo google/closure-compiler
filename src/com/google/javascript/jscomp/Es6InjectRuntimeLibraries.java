@@ -79,8 +79,12 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterator");
     }
 
-    if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)) {
-      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayfromiterable");
+    if (mustBeCompiledAway.contains(Feature.SPREAD_EXPRESSIONS)
+        || mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {
+      // We must automatically generate the default constructor for descendent classes,
+      // and those must call super(...arguments), so we end up injecting our own spread
+      // expressions for such cases.
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "arrayFromIterable");
     }
 
     if (mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {

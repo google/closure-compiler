@@ -34,6 +34,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
+import java.util.Arrays;
 import javax.annotation.Nullable;
 
 /**
@@ -797,6 +798,10 @@ final class AstFactory {
   }
 
   Node createArraylit(Node... elements) {
+    return createArraylit(Arrays.asList(elements));
+  }
+
+  Node createArraylit(Iterable<Node> elements) {
     Node result = IR.arraylit(elements);
     if (isAddingTypes()) {
       result.setJSType(
