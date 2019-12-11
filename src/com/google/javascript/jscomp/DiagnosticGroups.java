@@ -608,10 +608,12 @@ public class DiagnosticGroups {
   // ANALYZER_CHECKS was directly enabled or only appears to be, because
   // UNUSED_PRIVATE_PROPERTY was enabled.
   static final DiagnosticGroup ANALYZER_CHECKS_INTERNAL =
-      DiagnosticGroups.registerGroup("analyzerChecksInternal", // undocumented
+      DiagnosticGroups.registerGroup(
+          "analyzerChecksInternal", // undocumented
           CheckArrayWithGoogObject.ARRAY_PASSED_TO_GOOG_OBJECT,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
+          ImplicitNullabilityCheck.IMPLICITLY_NONNULL_JSDOC,
           ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
 
   // Similar to the lintChecks group above, but includes things that cannot be done on a single

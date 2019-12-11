@@ -20,6 +20,7 @@ import static com.google.common.collect.Lists.transform;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -40,6 +41,24 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
         "JSC_IMPLICITLY_NULLABLE_JSDOC",
         "Name {0} in JSDoc is implicitly nullable, and is discouraged by the style guide.\n"
         + "Please add a '!' to make it non-nullable, or a '?' to make it explicitly nullable.");
+
+  public static final DiagnosticType IMPLICITLY_NONNULL_JSDOC =
+      DiagnosticType.disabled(
+          "JSC_IMPLICITLY_NONNULL_JSDOC",
+          "Name {0} in JSDoc is implicitly non-null, and is discouraged by the style guide.\n"
+              + "Please add a '!' to make it explicit.");
+
+  private static final ImmutableSet<String> NULLABILITY_OMITTED_TYPES =
+      ImmutableSet.of(
+          "*", //
+          "?",
+          "boolean",
+          "null",
+          "number",
+          "string",
+          "symbol",
+          "undefined",
+          "void");
 
   private final AbstractCompiler compiler;
 
@@ -115,12 +134,17 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
                 }
               }
               String typeName = node.getString();
-              if (typeName.equals("null") || registry.getType(scope, typeName) == null) {
+              if (NULLABILITY_OMITTED_TYPES.contains(typeName)) {
+                return;
+              }
+              if (registry.getType(scope, typeName) == null) {
                 return;
               }
               JSType type = registry.createTypeFromCommentNode(node);
               if (type.isNullable()) {
                 compiler.report(JSError.make(node, IMPLICITLY_NULLABLE_JSDOC, typeName));
+              } else {
+                compiler.report(JSError.make(node, IMPLICITLY_NONNULL_JSDOC, typeName));
               }
             }
           },
