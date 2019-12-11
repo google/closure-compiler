@@ -157,7 +157,7 @@ public final class NamedType extends ProxyObjectType {
   JSType getBangType() {
     if (nonNull) {
       return this;
-    } else if (resolutionScope == null) {
+    } else if (isResolved()) {
       // Already resolved, just restrict.
       return getReferencedType().restrictByNotNullOrUndefined();
     }

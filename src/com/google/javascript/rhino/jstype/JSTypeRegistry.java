@@ -1918,8 +1918,7 @@ public class JSTypeRegistry implements Serializable {
           JSType child =
               createFromTypeNodesInternal(
                   n.getFirstChild(), sourceName, scope, recordUnresolvedTypes);
-          if (child instanceof NamedType
-              && isNonNullableName(scope, child.toMaybeNamedType().getReferenceName())) {
+          if (child instanceof NamedType) {
             JSType type = ((NamedType) child).getBangType();
             if (type instanceof NamedType
                 && recordUnresolvedTypes

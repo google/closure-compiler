@@ -25019,6 +25019,42 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBangOperatorOnIndirectlyForwardReferencedType() {
+    testTypes(
+        lines(
+            "/** @return {!b.Foo} */",
+            "function f() {}",
+            "/** @const {!b.Foo} */",
+            "var x = f();",
+            "",
+            "const a = {};",
+            "/** @typedef {?number} */",
+            "a.Foo;",
+            "const b = a;",
+            ""));
+  }
+
+  @Test
+  public void testBangOperatorOnIndirectlyForwardReferencedType_mismatch() {
+    testTypes(
+        lines(
+            "/** @return {?b.Foo} */",
+            "function f() {}",
+            "/** @const {!b.Foo} */",
+            "var x = f();",
+            "",
+            "const a = {};",
+            "/** @typedef {?number} */",
+            "a.Foo;",
+            "const b = a;",
+            ""),
+        lines(
+            "initializing variable", //
+            "found   : (null|number)",
+            "required: number"));
+  }
+
+  @Test
   public void testBangOperatorOnTypedefForShadowedNamespace() {
     // NOTE: This is a pattern used to work around the fact that @ngInjected constructors very
     // frequently (and unavoidably) shadow global namespaces (i.e. angular.modules) with constructor
