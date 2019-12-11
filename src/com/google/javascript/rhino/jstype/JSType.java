@@ -756,8 +756,8 @@ public abstract class JSType implements Serializable {
           that.toMaybeFunctionType(), eqMethod, eqCache);
     }
 
-    if (!getTemplateTypeMap().checkEquivalenceHelper(
-        that.getTemplateTypeMap(), eqMethod, eqCache, SubtypingMode.NORMAL)) {
+    if (!getTemplateTypeMap()
+        .checkEquivalenceHelper(that.getTemplateTypeMap(), eqMethod, eqCache)) {
       return false;
     }
 

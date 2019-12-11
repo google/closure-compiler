@@ -45,7 +45,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.EqCache;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
-import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Set;
@@ -290,30 +289,18 @@ public class TemplateTypeMap implements Serializable {
         : resolvedTemplateValues[index];
   }
 
-  /**
-   * An enum tracking the three different equivalence match states for a
-   * template key-value pair.
-   */
-  private enum EquivalenceMatch {
-    NO_KEY_MATCH, VALUE_MISMATCH, VALUE_MATCH
+  /** Determines if this map and the specified map have equivalent template types. */
+  public boolean checkEquivalenceHelper(TemplateTypeMap that, EquivalenceMethod eqMethod) {
+    return checkEquivalenceHelper(that, eqMethod, EqCache.create());
   }
 
-  /**
-   * Determines if this map and the specified map have equivalent template
-   * types.
-   */
   public boolean checkEquivalenceHelper(
-      TemplateTypeMap that, EquivalenceMethod eqMethod, SubtypingMode subtypingMode) {
-    return checkEquivalenceHelper(that, eqMethod, EqCache.create(), subtypingMode);
-  }
-
-  public boolean checkEquivalenceHelper(TemplateTypeMap that,
-      EquivalenceMethod eqMethod, EqCache eqCache, SubtypingMode subtypingMode) {
+      TemplateTypeMap that, EquivalenceMethod eqMethod, EqCache eqCache) {
     @Nullable MatchStatus status = eqCache.checkCache(this, that);
     if (status == null) {
       boolean result =
-          checkEquivalenceHelper(eqMethod, this, that, eqCache, subtypingMode)
-              && checkEquivalenceHelper(eqMethod, that, this, eqCache, subtypingMode);
+          checkEquivalenceHelper(eqMethod, this, that, eqCache)
+              && checkEquivalenceHelper(eqMethod, that, this, eqCache);
       eqCache.updateCache(this, that, MatchStatus.valueOf(result));
       return result;
     } else {
@@ -321,17 +308,20 @@ public class TemplateTypeMap implements Serializable {
     }
   }
 
-  private static boolean checkEquivalenceHelper(EquivalenceMethod eqMethod,
-      TemplateTypeMap thisMap, TemplateTypeMap thatMap,
-      EqCache eqCache, SubtypingMode subtypingMode) {
+  private static boolean checkEquivalenceHelper(
+      EquivalenceMethod eqMethod,
+      TemplateTypeMap thisMap,
+      TemplateTypeMap thatMap,
+      EqCache eqCache) {
     ImmutableList<TemplateType> thisKeys = thisMap.getTemplateKeys();
     ImmutableList<TemplateType> thatKeys = thatMap.getTemplateKeys();
 
+    outer:
     for (int i = 0; i < thisKeys.size(); i++) {
       TemplateType thisKey = thisKeys.get(i);
       JSType thisType = thisMap.getResolvedTemplateType(thisKey);
-      EquivalenceMatch thisMatch = EquivalenceMatch.NO_KEY_MATCH;
 
+      inner:
       for (int j = 0; j < thatKeys.size(); j++) {
         TemplateType thatKey = thatKeys.get(j);
         JSType thatType = thatMap.getResolvedTemplateType(thatKey);
@@ -339,34 +329,19 @@ public class TemplateTypeMap implements Serializable {
         // Cross-compare every key-value pair in this TemplateTypeMap with
         // those in that TemplateTypeMap. Update the Equivalence match for both
         // key-value pairs involved.
-        if (JSType.areIdentical(thisKey, thatKey)) {
-          EquivalenceMatch newMatchType = EquivalenceMatch.VALUE_MISMATCH;
-          if (thisType.checkEquivalenceHelper(thatType, eqMethod, eqCache)
-              || (subtypingMode == SubtypingMode.IGNORE_NULL_UNDEFINED
-                  && thisType.isSubtypeOf(thatType, subtypingMode)
-                  && thatType.isSubtypeOf(thatType, subtypingMode))) {
-            newMatchType = EquivalenceMatch.VALUE_MATCH;
-          }
+        if (!JSType.areIdentical(thisKey, thatKey)) {
+          continue inner;
+        }
 
-          if (thisMatch != EquivalenceMatch.VALUE_MATCH) {
-            thisMatch = newMatchType;
-          }
+        if (thisType.checkEquivalenceHelper(thatType, eqMethod, eqCache)) {
+          continue outer;
         }
       }
 
-      if (failedEquivalenceCheck(thisMatch)) {
-        return false;
-      }
+      return false;
     }
-    return true;
-  }
 
-  /**
-   * Determines if the specified EquivalenceMatch is considered a failing condition for an
-   * equivalence check, given the EquivalenceMethod used for the check.
-   */
-  private static boolean failedEquivalenceCheck(EquivalenceMatch eqMatch) {
-    return eqMatch == EquivalenceMatch.VALUE_MISMATCH || eqMatch == EquivalenceMatch.NO_KEY_MATCH;
+    return true;
   }
 
   boolean hasAnyTemplateTypesInternal() {

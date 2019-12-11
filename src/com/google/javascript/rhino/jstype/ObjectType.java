@@ -617,8 +617,8 @@ public abstract class ObjectType extends JSType implements Serializable {
   final boolean checkStructuralEquivalenceHelper(
       ObjectType otherObject, EquivalenceMethod eqMethod, EqCache eqCache) {
     if (this.isTemplatizedType() && this.toMaybeTemplatizedType().wrapsSameRawType(otherObject)) {
-      return this.getTemplateTypeMap().checkEquivalenceHelper(
-          otherObject.getTemplateTypeMap(), eqMethod, eqCache, SubtypingMode.NORMAL);
+      return this.getTemplateTypeMap()
+          .checkEquivalenceHelper(otherObject.getTemplateTypeMap(), eqMethod, eqCache);
     }
 
     MatchStatus result = eqCache.checkCache(this, otherObject);

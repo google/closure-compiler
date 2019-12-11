@@ -851,9 +851,7 @@ public class UnionType extends JSType {
               if (alternate
                   .getTemplateTypeMap()
                   .checkEquivalenceHelper(
-                      current.getTemplateTypeMap(),
-                      EquivalenceMethod.IDENTITY,
-                      SubtypingMode.NORMAL)) {
+                      current.getTemplateTypeMap(), EquivalenceMethod.IDENTITY)) {
                 // case 8
                 return this;
               } else {
