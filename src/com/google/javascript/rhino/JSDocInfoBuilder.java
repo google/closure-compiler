@@ -91,17 +91,51 @@ public final class JSDocInfoBuilder {
     return new JSDocInfoBuilder(clone, info.isDocumentationIncluded(), true);
   }
 
+  public static JSDocInfoBuilder maybeCopyFrom(@Nullable JSDocInfo info) {
+    if (info == null) {
+      return new JSDocInfoBuilder(true);
+    }
+    return copyFrom(info);
+  }
+
+  /**
+   * Returns a JSDocInfoBuilder that contains a copy of the given JSDocInfo in which only the
+   * {@code @type} field of the JSDocInfo is replaced with the given typeExpression. This is done to
+   * prevent generating code in the client module which references local variables from another
+   * module.
+   */
+  public static JSDocInfoBuilder maybeCopyFromWithNewType(
+      JSDocInfo info, JSTypeExpression typeExpression) {
+    if (info == null) {
+      JSDocInfo temp = new JSDocInfo(true);
+      return copyFromWithNewType(temp, typeExpression);
+    }
+    return copyFromWithNewType(info, typeExpression);
+  }
+
   public static JSDocInfoBuilder copyFromWithNewType(
       JSDocInfo info, JSTypeExpression typeExpression) {
     JSDocInfo newTypeInfo = info.cloneWithNewType(false, typeExpression);
     return new JSDocInfoBuilder(newTypeInfo, info.isDocumentationIncluded(), true);
   }
 
-  public static JSDocInfoBuilder maybeCopyFrom(@Nullable JSDocInfo info) {
+  /**
+   * Returns a JSDocInfoBuilder that contains a JSDoc in which all module local types (which may be
+   * inside {@code @param}, {@code @type} or {@code @returns} are replaced with unknown. This is
+   * done to prevent generating code in the client module which references local variables from
+   * another module.
+   */
+  public static JSDocInfoBuilder maybeCopyFromAndReplaceNames(
+      JSDocInfo info, Set<String> moduleLocalNamesToReplace) {
     if (info == null) {
-      return new JSDocInfoBuilder(true);
+      info = new JSDocInfo(true);
     }
-    return copyFrom(info);
+    return copyFromAndReplaceNames(info, moduleLocalNamesToReplace);
+  }
+
+  private static JSDocInfoBuilder copyFromAndReplaceNames(JSDocInfo info, Set<String> oldNames) {
+    JSDocInfo newTypeInfo = info.cloneAndReplaceTypeNames(oldNames);
+    return new JSDocInfoBuilder(newTypeInfo, info.isDocumentationIncluded(), true);
   }
 
   /**

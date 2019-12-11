@@ -2243,6 +2243,68 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  /**
+   * Tests that no reference to the 'Data' module's local variable 'Item' gets generated in the
+   * 'Client' module by the PolymerClassRewriter.
+   */
+  @Test
+  public void testBehaviorInModule_NoBehaviorProps() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('Data');\n",
+                "class Item {\n",
+                "}\n",
+                "exports.Item = Item;\n",
+                "/**\n",
+                " * A Polymer behavior providing common data access and formatting methods.\n",
+                " * @polymerBehavior\n",
+                " */\n",
+                "exports.SummaryDataBehavior = {\n",
+                "  /**\n",
+                "   * @param {?Item} item\n",
+                "   * @export\n",
+                "   */\n",
+                "  getValue(item) {\n",
+                "    return this.getItemValue_(item);\n",
+                "  },\n",
+                "};"),
+            lines(
+                "goog.module('Client');",
+                "const Data = goog.require('Data');",
+                "var A = Polymer({",
+                "  is: 'x-element',",
+                "  behaviors: [ Data.SummaryDataBehavior ],",
+                "});")));
+  }
+
+  @Test
+  public void testBehaviorInModule_WithBehaviorProps() {
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('Data');",
+                "class Item {}",
+                "exports.Item = Item;",
+                "/** @polymerBehavior */",
+                "exports.SummaryDataBehavior = {",
+                "  properties: {",
+                "    /** @type {!Item} */",
+                "    ABC: {type: Object}",
+                "  }",
+                "};"),
+            lines(
+                "goog.module(\"client\");",
+                "const Data = goog.require('Data');",
+                "",
+                "var A = Polymer({",
+                "  is: 'x',",
+                "  behaviors: [Data.SummaryDataBehavior],",
+                "});")));
+  }
+
   @Test
   public void testSimpleBehavior() {
     test(
@@ -2878,6 +2940,72 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  @Test
+  public void testGlobalBehaviorPropsPrototypesGetCreated() {
+    test(
+        lines(
+            "/** @polymerBehavior */",
+            "var FunBehavior = {",
+            "  properties: {",
+            "    isFun: Boolean",
+            "  },",
+            "}",
+            "var A = Polymer({",
+            "  is: 'x-element',",
+            "  behaviors: [ FunBehavior]",
+            "});"),
+        lines(
+            "/** @polymerBehavior @nocollapse */",
+            "var FunBehavior = {",
+            "  properties: {",
+            "    isFun: Boolean",
+            "  },",
+            "}",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "var A = function() {};",
+            "/** @type {boolean} */",
+            "A.prototype.isFun;",
+            "A = Polymer(/** @lends {A.prototype} */ {",
+            "  is: 'x-element',",
+            "  behaviors: [ FunBehavior ],",
+            "});"));
+  }
+
+  @Test
+  public void testGlobalBehaviorPropsPrototypesGetCreated_transitively() {
+    test(
+        lines(
+            "/** @polymerBehavior */",
+            "var FunBehavior = {",
+            "  properties: {",
+            "    isFun: Boolean",
+            "  },",
+            "}",
+            "/** @polymerBehavior */",
+            "var SuperCoolBehaviors = [FunBehavior];",
+            "var A = Polymer({",
+            "  is: 'x-element',",
+            "  behaviors: [ SuperCoolBehaviors]",
+            "});"),
+        lines(
+            "/** @polymerBehavior @nocollapse */",
+            "var FunBehavior = {",
+            "  properties: {",
+            "    isFun: Boolean",
+            "  },",
+            "}",
+            "/** @polymerBehavior @nocollapse */",
+            "var SuperCoolBehaviors = [FunBehavior];",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "var A = function() {};",
+            "/** @type {boolean} */",
+            "A.prototype.isFun;",
+            "A = Polymer(/** @lends {A.prototype} */ {",
+            "  is: 'x-element',",
+            "  behaviors: [ SuperCoolBehaviors ],",
+            "});"));
+  }
+
   /**
    * If an element has two or more behaviors which define the same function, only the last
    * behavior's function should be copied over to the element's prototype.
@@ -3140,7 +3268,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "  },",
             "  /** @suppress {checkTypes|globalThis|visibility} */",
-            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
+            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!');",
+            "},",
             "  /** @suppress {checkTypes|globalThis|visibility} */",
             "  created: function() {}",
             "};",
@@ -3298,6 +3427,52 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "    name: String,",
             "  },",
+            "  behaviors: [ Polymer.FunBehavior ],",
+            "});"));
+  }
+
+  /**
+   * Behaviors whose declarations are not in the global scope may contain references to symbols
+   * which do not exist in the element's scope. Only copy a function stub.
+   *
+   */
+  @Test
+  public void testBehaviorInIIFE_NoTypeAnnotation() {
+    test(
+        lines(
+            "(function() {",
+            "  /** @polymerBehavior */",
+            "  Polymer.FunBehavior = {",
+            "    properties: {", // no annotation /** @type {number} */
+            "      isFun: {",
+            "        type: Boolean,",
+            "        value: true,",
+            "      }",
+            "    },",
+            "  };",
+            "})();",
+            "var A = Polymer({",
+            "  is: 'x-element',",
+            "  behaviors: [ Polymer.FunBehavior ],",
+            "});"),
+        lines(
+            "(function() {",
+            "  /** @polymerBehavior @nocollapse */",
+            "  Polymer.FunBehavior = {",
+            "    properties: {",
+            "      isFun: {",
+            "        type: Boolean,",
+            "        value: true,",
+            "      }",
+            "    },",
+            "  };",
+            "})();",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
+            "var A = function() {};",
+            "/** @type {boolean} */",
+            "A.prototype.isFun;",
+            "A = Polymer(/** @lends {A.prototype} */ {",
+            "  is: 'x-element',",
             "  behaviors: [ Polymer.FunBehavior ],",
             "});"));
   }
@@ -3552,10 +3727,10 @@ public class PolymerPassTest extends CompilerTestCase {
             "var SuperCoolBehaviors = [FunBehavior, RadBehavior];",
             "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface0}*/",
             "var A = function() {};",
-            "/** @type {number} */",
-            "A.prototype.howRad;",
             "/** @type {boolean} */",
             "A.prototype.isFun;",
+            "/** @type {number} */",
+            "A.prototype.howRad;",
             "/** @type {!Array} */",
             "A.prototype.pets;",
             "/** @type {string} */",

@@ -44,6 +44,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * When parsing a jsdoc, a type-annotation string is parsed to a type AST. Somewhat confusingly, we
@@ -70,6 +71,47 @@ public final class JSTypeExpression implements Serializable {
   public JSTypeExpression(Node root, String sourceName) {
     this.root = root;
     this.sourceName = sourceName;
+  }
+
+  /** Replaces given names in this type expression with unknown */
+  public JSTypeExpression replaceNamesWithUnknownType(Set<String> names) {
+    JSTypeExpression newTypeExpression = this.copy();
+    replaceNames(newTypeExpression.getRoot(), names);
+    return newTypeExpression;
+  }
+
+  /** Recursively traverse over the type tree and replace matched types with unknown type */
+  private static void replaceNames(Node n, Set<String> names) {
+    if (n == null) {
+      return;
+    }
+    for (Node child : n.children()) {
+      replaceNames(child, names);
+    }
+    if (n.isString() && names.contains(n.getString())) {
+      Node qMark = new Node(Token.QMARK);
+      n.replaceWith(qMark);
+    }
+  }
+
+  /** Returns a set of all string names in this type expression */
+  public Set<String> getAllTypeNames() {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    getAllNames(this.root, builder);
+    return builder.build();
+  }
+
+  /** Recursively traverse over the type tree and get all string names */
+  private static void getAllNames(Node n, ImmutableSet.Builder<String> builder) {
+    if (n == null) {
+      return;
+    }
+    for (Node child : n.children()) {
+      getAllNames(child, builder);
+    }
+    if (n.isString()) {
+      builder.add(n.getString());
+    }
   }
 
   /**
