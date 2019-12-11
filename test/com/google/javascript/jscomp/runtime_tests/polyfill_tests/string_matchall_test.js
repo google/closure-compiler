@@ -72,18 +72,10 @@ testSuite({
     assertFails(Error, () => 'abc'.matchAll('(abc'));
   },
 
-  testMatchAll_validRegExNoGlobalTag() {
-    // in official specs a regex input with no global tag should throw an error
-    // but MDN states it should just return the first match.
-    // Chrome exhibits behavior described in MDN
-    let regex = /test/;
-    let testString = 'test1test2';
-
-    let matchAllIterator = testString.matchAll(regex);
-    let firstResult = resultBuilder(['test'], 0, testString);
-
-    assertMatchAllEquals(firstResult, matchAllIterator.next());
-    assertObjectEquals(endOfIterator, matchAllIterator.next());
+  disabledTestMatchAll_regExNoGlobalTag_shouldThrowError() {
+    // TODO(annieyw): enable this when chrome is following the correct behaviour
+    // V8 has implemented the change already and it will ship with M80.
+    assertFails(TypeError, () => 'test1test2'.matchAll(/test/));
   },
 
   testMatchAll_validRegExGlobalTag() {
@@ -186,7 +178,7 @@ testSuite({
   },
 
   testMatchAll_noLoopingAfterFinishedMatching() {
-    let regex = /a/;
+    let regex = /a/g;
     let testString = 'a';
 
     let matchAllIterator = testString.matchAll(regex);
