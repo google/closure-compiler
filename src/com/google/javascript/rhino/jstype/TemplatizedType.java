@@ -44,7 +44,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
@@ -194,8 +193,7 @@ public final class TemplatizedType extends ProxyObjectType {
     TemplatizedType that = rawThat.toMaybeTemplatizedType();
     checkNotNull(that);
 
-    if (getTemplateTypeMap().checkEquivalenceHelper(
-        that.getTemplateTypeMap(), EquivalenceMethod.INVARIANT, SubtypingMode.NORMAL)) {
+    if (this.isEquivalentTo(that)) {
       return this;
     }
 

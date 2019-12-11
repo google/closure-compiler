@@ -53,31 +53,19 @@ enum EquivalenceMethod {
   IDENTITY,
 
   /**
-   * Indicates that the two types are almost exactly the same, and that a
-   * data flow analysis algorithm comparing them should consider them equal.
+   * Indicates that the two types are almost exactly the same, and that a data flow analysis
+   * algorithm comparing them should consider them equal.
    *
-   * In traditional type inference, the types form a finite lattice, and this
-   * ensures that type inference will terminate.
+   * <p>In traditional type inference, the types form a finite lattice, and this ensures that type
+   * inference will terminate.
    *
-   * In our type system, the unknown types do not obey the lattice rules. So
-   * if we continue to perform inference over the unknown types, we may
-   * never terminate.
+   * <p>In our type system, the unknown types do not obey the lattice rules. So if we continue to
+   * perform inference over the unknown types, we may never terminate.
    *
-   * By treating all unknown types as equivalent for the purposes of data
-   * flow analysis, we ensure that the algorithm will terminate.
+   * <p>By treating all unknown types as equivalent for the purposes of data flow analysis, we
+   * ensure that the algorithm will terminate.
    *
-   * Thus, {string} != {?} and {Unresolved} ~= {?}
+   * <p>Thus, {string} != {?} and {Unresolved} ~= {?}
    */
-  DATA_FLOW,
-
-  /**
-   * Indicates that two types are invariant.
-   *
-   * In a type system without unknown types, this would be the same
-   * as IDENTITY. But we always want to consider type A invariant with type B
-   * if B is unknown.
-   *
-   * Thus, {string} ~= {?} and {Unresolved} ~= {?}
-   */
-  INVARIANT
+  DATA_FLOW
 }

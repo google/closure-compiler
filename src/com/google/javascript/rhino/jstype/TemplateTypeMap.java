@@ -354,7 +354,7 @@ public class TemplateTypeMap implements Serializable {
         }
       }
 
-      if (failedEquivalenceCheck(thisMatch, eqMethod)) {
+      if (failedEquivalenceCheck(thisMatch)) {
         return false;
       }
     }
@@ -362,14 +362,11 @@ public class TemplateTypeMap implements Serializable {
   }
 
   /**
-   * Determines if the specified EquivalenceMatch is considered a failing
-   * condition for an equivalence check, given the EquivalenceMethod used for
-   * the check.
+   * Determines if the specified EquivalenceMatch is considered a failing condition for an
+   * equivalence check, given the EquivalenceMethod used for the check.
    */
-  private static boolean failedEquivalenceCheck(
-      EquivalenceMatch eqMatch, EquivalenceMethod eqMethod) {
-    return eqMatch == EquivalenceMatch.VALUE_MISMATCH
-        || (eqMatch == EquivalenceMatch.NO_KEY_MATCH && eqMethod != EquivalenceMethod.INVARIANT);
+  private static boolean failedEquivalenceCheck(EquivalenceMatch eqMatch) {
+    return eqMatch == EquivalenceMatch.VALUE_MISMATCH || eqMatch == EquivalenceMatch.NO_KEY_MATCH;
   }
 
   boolean hasAnyTemplateTypesInternal() {

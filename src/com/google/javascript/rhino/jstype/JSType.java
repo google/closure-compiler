@@ -733,11 +733,7 @@ public abstract class JSType implements Serializable {
     boolean thisUnknown = isUnknownType();
     boolean thatUnknown = that.isUnknownType();
     if (thisUnknown || thatUnknown) {
-      if (eqMethod == EquivalenceMethod.INVARIANT) {
-        // If we're checking for invariance, the unknown type is invariant
-        // with everyone.
-        return true;
-      } else if (eqMethod == EquivalenceMethod.DATA_FLOW) {
+      if (eqMethod == EquivalenceMethod.DATA_FLOW) {
         // If we're checking data flow, then two types are the same if they're
         // both unknown.
         return thisUnknown && thatUnknown;
