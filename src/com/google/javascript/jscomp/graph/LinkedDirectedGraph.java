@@ -402,12 +402,12 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
 
     @Override
     public String getLabel() {
-      return String.valueOf(value);
+      return this.toString();
     }
 
     @Override
     public String toString() {
-      return getLabel();
+      return String.valueOf(value);
     }
 
     @Override
@@ -440,6 +440,15 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
     @Override
     public void setAnnotation(Annotation data) {
       annotation = data;
+    }
+
+    @Override
+    public String getLabel() {
+      String result = this.toString();
+      if (this.annotation != null) {
+        result += "\n" + this.annotation;
+      }
+      return result;
     }
   }
 
