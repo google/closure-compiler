@@ -30,6 +30,7 @@ delete Array.prototype.find;
 delete Array.prototype.findIndex;
 delete Array.prototype.includes;
 
+// this works here because Map is a property on the global object
 delete Map;
 
 delete Math.acosh;
@@ -86,3 +87,5 @@ delete Symbol;
 
 delete WeakMap;
 delete WeakSet;
+
+delete globalThis;
