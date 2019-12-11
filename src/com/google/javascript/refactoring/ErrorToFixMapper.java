@@ -60,6 +60,7 @@ public final class ErrorToFixMapper {
       return ImmutableList.of(fix);
     }
     switch (error.getType().key) {
+      case "JSC_IMPLICITLY_NONNULL_JSDOC":
       case "JSC_IMPLICITLY_NULLABLE_JSDOC":
       case "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC":
       case "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC":
@@ -266,6 +267,9 @@ public final class ErrorToFixMapper {
       case "JSC_IMPLICITLY_NULLABLE_JSDOC":
         // The type-based check prefers ? over ! since it only warns for names that are nullable.
         return ImmutableList.of(qmark, bang);
+      case "JSC_IMPLICITLY_NONNULL_JSDOC":
+        // Using type-information, we can also be confident about ! for enums and typedefs.
+        return ImmutableList.of(bang);
       default:
         throw new IllegalArgumentException("Unexpected JSError Type: " + error.getType().key);
     }

@@ -257,6 +257,20 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testMissingBangOnEnum() {
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, OFF);
+    String prelude = "/** @enum {number} */ var Enum;\n";
+    assertChanges(prelude + "/** @type {Enum} */ var o;", prelude + "/** @type {!Enum} */ var o;");
+  }
+
+  @Test
+  public void testMissingBangOnTypedef() {
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, OFF);
+    String prelude = "/** @typedef {number} */ var Num;\n";
+    assertChanges(prelude + "/** @type {Num} */ var o;", prelude + "/** @type {!Num} */ var o;");
+  }
+
+  @Test
   public void testMissingNullabilityModifier3() {
     options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, OFF);
     String originalCode =
