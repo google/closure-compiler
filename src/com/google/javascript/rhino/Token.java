@@ -115,6 +115,7 @@ public enum Token {
   HOOK, // conditional (?:)
   OR, // logical or (||)
   AND, // logical and (&&)
+  COALESCE, // Nullish coalesce (??)
   INC, // increment (++)
   DEC, // decrement (--)
   FUNCTION, // function keyword
@@ -344,6 +345,7 @@ public enum Token {
       case BITOR:
       case BITXOR:
       case CASE:
+      case COALESCE:
       case CATCH:
       case COMMA:
       case COMPUTED_PROP:

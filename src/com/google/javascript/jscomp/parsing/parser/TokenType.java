@@ -110,6 +110,7 @@ public enum TokenType {
   AND("&&"),
   OR("||"),
   QUESTION("?"),
+  QUESTION_QUESTION("??"),
   COLON(":"),
   EQUAL("="),
   PLUS_EQUAL("+="),
