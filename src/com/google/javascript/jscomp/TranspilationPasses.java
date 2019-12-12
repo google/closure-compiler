@@ -121,7 +121,6 @@ public class TranspilationPasses {
       passes.add(es6RewriteArrowFunction);
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
-      passes.add(es6ConvertSuperConstructorCalls);
       passes.add(es6RewriteRestAndSpread);
       passes.add(lateConvertEs6ToEs3);
       passes.add(es6ForOf);
@@ -276,13 +275,6 @@ public class TranspilationPasses {
           .setName("Es6SplitVariableDeclarations")
           .setInternalFactory(Es6SplitVariableDeclarations::new)
           .setFeatureSet(FeatureSet.latest())
-          .build();
-
-  static final PassFactory es6ConvertSuperConstructorCalls =
-      PassFactory.builderForHotSwap()
-          .setName("es6ConvertSuperConstructorCalls")
-          .setInternalFactory(Es6ConvertSuperConstructorCalls::new)
-          .setFeatureSet(ES8)
           .build();
 
   static final PassFactory es6ConvertSuper =

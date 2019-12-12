@@ -125,9 +125,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
     optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
-    optimizer.addOneTimePass(
         makePassFactory("es6RewriteRestAndSpread", new Es6RewriteRestAndSpread(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));

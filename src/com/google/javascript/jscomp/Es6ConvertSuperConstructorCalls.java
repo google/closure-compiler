@@ -23,8 +23,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -33,9 +31,8 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-/** Converts {@code super()} calls. This has to run after typechecking. */
-public final class Es6ConvertSuperConstructorCalls
-implements NodeTraversal.Callback, HotSwapCompilerPass {
+/** Converts {@code super()} calls. */
+public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Callback {
   private static final String TMP_ERROR = "$jscomp$tmp$error";
   private static final String SUPER_THIS = "$jscomp$super$this";
 
@@ -54,7 +51,6 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final Deque<ConstructorData> constructorDataStack;
   private final AstFactory astFactory;
   private GlobalNamespace globalNamespace;
-  private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
 
   public Es6ConvertSuperConstructorCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -580,17 +576,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
     }
   }
 
-  @Override
-  public void process(Node externs, Node root) {
-    globalNamespace = new GlobalNamespace(compiler, externs, root);
-    // Might need to synthesize constructors for ambient classes in .d.ts externs
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
+  void setGlobalNamespace(GlobalNamespace globalNamespace) {
+    this.globalNamespace = globalNamespace;
   }
 }

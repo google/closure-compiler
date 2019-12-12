@@ -88,9 +88,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
     return optimizer;
   }
 

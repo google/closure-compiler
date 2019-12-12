@@ -47,7 +47,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
           Feature.CLASSES,
           Feature.CLASS_EXTENDS,
           Feature.CLASS_GETTER_SETTER,
-          Feature.NEW_TARGET);
+          Feature.NEW_TARGET,
+          Feature.SUPER);
 
   static final DiagnosticType DYNAMIC_EXTENDS_TYPE = DiagnosticType.error(
       "JSC_DYNAMIC_EXTENDS_TYPE",
@@ -64,6 +65,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   private final JSTypeRegistry registry;
   private final AstFactory astFactory;
   private final JSType objectPropertyDescriptorType;
+  private final Es6ConvertSuperConstructorCalls convertSuperConstructorCalls;
 
   public Es6RewriteClass(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -77,18 +79,30 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         actualObjectPropertyDescriptorType != null
             ? actualObjectPropertyDescriptorType
             : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    convertSuperConstructorCalls = new Es6ConvertSuperConstructorCalls(compiler);
   }
 
   @Override
   public void process(Node externs, Node root) {
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
+    // Super constructor calls are done all at once as a separate step largely for historical
+    // reasons. It used to be an entirely separate pass, but that has been fixed so we no longer
+    // have an invalid AST state between passes.
+    // TODO(bradfordcsmith): It would probably be more readable and efficient to merge the super
+    //     constructor rewriting logic into this class.
+    convertSuperConstructorCalls.setGlobalNamespace(new GlobalNamespace(compiler, externs, root));
+    TranspilationPasses.processTranspile(compiler, externs, features, convertSuperConstructorCalls);
+    TranspilationPasses.processTranspile(compiler, root, features, convertSuperConstructorCalls);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, features, this);
+    TranspilationPasses.hotSwapTranspile(
+        compiler, scriptRoot, features, convertSuperConstructorCalls);
+
     // Don't mark features as transpiled away if we had errors that prevented transpilation.
     // We don't want a redundant error from the AstValidator complaining that the features are still
     // there
