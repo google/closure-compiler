@@ -29,13 +29,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -72,9 +66,6 @@ final class PolymerClassDefinition {
   /** Properties declared in the Polymer "properties" block. */
   final List<MemberDefinition> props;
 
-  /** Properties declared in the Polymer behavior's "properties" block. */
-  final Map<MemberDefinition, BehaviorDefinition> behaviorProps;
-
   /** Methods on the element. */
   @Nullable final List<MemberDefinition> methods;
 
@@ -96,7 +87,6 @@ final class PolymerClassDefinition {
       MemberDefinition constructor,
       String nativeBaseElement,
       List<MemberDefinition> props,
-      Map<MemberDefinition, BehaviorDefinition> behaviorProps,
       List<MemberDefinition> methods,
       ImmutableList<BehaviorDefinition> behaviors,
       FeatureSet features) {
@@ -109,7 +99,6 @@ final class PolymerClassDefinition {
     this.constructor = constructor;
     this.nativeBaseElement = nativeBaseElement;
     this.props = props;
-    this.behaviorProps = behaviorProps;
     this.methods = methods;
     this.behaviors = behaviors;
     this.features = features;
@@ -186,29 +175,18 @@ final class PolymerClassDefinition {
     Node behaviorArray = NodeUtil.getFirstPropMatchingKey(descriptor, "behaviors");
     ImmutableList<BehaviorDefinition> behaviors =
         behaviorExtractor.extractBehaviors(behaviorArray, moduleMetadata);
-    List<MemberDefinition> properties = new ArrayList<>();
-    Map<MemberDefinition, BehaviorDefinition> behaviorProps = new LinkedHashMap<>();
+    List<MemberDefinition> allProperties = new ArrayList<>();
     for (BehaviorDefinition behavior : behaviors) {
-      for (MemberDefinition prop : behavior.props) {
-        behaviorProps.put(prop, behavior);
-      }
+      overwriteMembersIfPresent(allProperties, behavior.props);
     }
     overwriteMembersIfPresent(
-        properties,
+        allProperties,
         PolymerPassStaticUtils.extractProperties(
             descriptor,
             DefinitionType.ObjectLiteral,
             compiler,
             /** constructor= */
             null));
-
-    // Behaviors might get included multiple times for the same element. See test case
-    // testDuplicatedBehaviorsAreCopiedOnce
-    // In those cases, behaviorProps will have repeated names. We must remove those duplicates.
-    removeDuplicateBehaviorProps(behaviorProps);
-
-    // Remove behavior properties which are already present in element properties
-    removeBehaviorPropsOverlappingWithElementProps(behaviorProps, properties);
 
     FeatureSet newFeatures = null;
     if (!behaviors.isEmpty()) {
@@ -239,8 +217,7 @@ final class PolymerClassDefinition {
         classInfo,
         new MemberDefinition(ctorInfo, null, constructor),
         nativeBaseElement,
-        properties,
-        behaviorProps,
+        allProperties,
         methods,
         behaviors,
         newFeatures);
@@ -343,7 +320,7 @@ final class PolymerClassDefinition {
       ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
     }
 
-    List<MemberDefinition> properties =
+    List<MemberDefinition> allProperties =
         PolymerPassStaticUtils.extractProperties(
             propertiesDescriptor, DefinitionType.ES6Class, compiler, constructor);
 
@@ -365,8 +342,7 @@ final class PolymerClassDefinition {
         classInfo,
         new MemberDefinition(ctorInfo, null, constructor),
         null,
-        properties,
-        null,
+        allProperties,
         methods,
         null,
         null);
@@ -386,56 +362,6 @@ final class PolymerClassDefinition {
         }
       }
       list.add(newMember);
-    }
-  }
-
-  /**
-   * Removes duplicate properties from the given map, keeping only the first property
-   *
-   * <p>Duplicates occur when either the same behavior is transitively added multiple times to
-   * Polymer element, or when two unique added behaviors share a property with the same name.
-   */
-  private static void removeDuplicateBehaviorProps(
-      Map<MemberDefinition, BehaviorDefinition> behaviorProps) {
-    if (behaviorProps == null) {
-      return;
-    }
-    Iterator<Map.Entry<MemberDefinition, BehaviorDefinition>> behaviorsItr =
-        behaviorProps.entrySet().iterator();
-    Set<String> seen = new HashSet<>();
-    while (behaviorsItr.hasNext()) {
-      MemberDefinition memberDefinition = behaviorsItr.next().getKey();
-      String propertyName = memberDefinition.name.getString();
-      if (!seen.add(propertyName)) {
-        behaviorsItr.remove();
-      }
-    }
-  }
-
-  /**
-   * Removes any behavior properties from the given map that have the same name as a property in the
-   * given list.
-   *
-   * <p>For example, if a Polymer element with a property "name" depends on a behavior with a
-   * property "name", then this method removes the behavior property in favor of the element
-   * property.
-   */
-  private static void removeBehaviorPropsOverlappingWithElementProps(
-      Map<MemberDefinition, BehaviorDefinition> behaviorProps,
-      List<MemberDefinition> polymerElementProps) {
-    if (behaviorProps == null) {
-      return;
-    }
-    Set<String> elementPropNames =
-        polymerElementProps.stream().map(x -> x.name.getString()).collect(Collectors.toSet());
-    Iterator<Map.Entry<MemberDefinition, BehaviorDefinition>> behaviorsItr =
-        behaviorProps.entrySet().iterator();
-    while (behaviorsItr.hasNext()) {
-      MemberDefinition memberDefinition = behaviorsItr.next().getKey();
-      if (elementPropNames.contains(memberDefinition.name.getString())) {
-        behaviorsItr.remove();
-        break;
-      }
     }
   }
 

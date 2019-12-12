@@ -1147,52 +1147,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         });
   }
 
-  /**
-   * Tests that no reference to the 'Data' module's local variable 'Item' gets generated in the
-   * 'Client' module by the PolymerClassRewriter.
-   */
-  @Test
-  public void testNoUnrecognizedTypeErrorForBehaviorInsideGoogModule() {
-    CompilerOptions options = createCompilerOptions();
-    options.setPolymerVersion(1);
-    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setClosurePass(true);
-    addPolymerExterns();
-    testNoWarnings(
-        options,
-        new String[] {
-          CLOSURE_DEFS,
-          lines(
-              "goog.module('Data');",
-              "class Item {",
-              "}",
-              "exports.Item = Item;",
-              "/**",
-              " * A Polymer behavior providing common data access and formatting methods.",
-              " * @polymerBehavior",
-              " */",
-              "exports.SummaryDataBehavior = {",
-              "  /**",
-              "   * @param {?Item} item",
-              "   * @return {*}",
-              "   * @export",
-              "   */",
-              "  getValue(item) {",
-              "    return item;",
-              "  },",
-              "};"),
-          lines(
-              "goog.module('Client');",
-              "const Data = goog.require('Data');",
-              "var A = Polymer({",
-              "  is: 'x-element',",
-              "  behaviors: [ Data.SummaryDataBehavior ],",
-              "});")
-        });
-  }
-
   @Test
   public void testConstPolymerElementAllowed() {
     CompilerOptions options = createCompilerOptions();
