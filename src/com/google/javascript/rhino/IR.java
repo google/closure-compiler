@@ -799,6 +799,7 @@ public class IR {
       case BITXOR:
       case CALL:
       case CAST:
+      case COALESCE:
       case COMMA:
       case DEC:
       case DELPROP:
