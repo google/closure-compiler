@@ -184,6 +184,9 @@ public final class FeatureSet implements Serializable {
     DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
     IMPORT_META("import.meta", LangVersion.ES_UNSUPPORTED),
 
+    // ES 2020 Stage 4
+    NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES_UNSUPPORTED),
+
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
