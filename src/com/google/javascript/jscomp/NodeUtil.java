@@ -917,50 +917,6 @@ public final class NodeUtil {
   }
 
   /**
-   * True for aliases defined with @const, not for aliases defined with @constructor/@interface.
-   */
-  static boolean isAliasedConstDefinition(Node lhs) {
-    JSDocInfo jsdoc = getBestJSDocInfo(lhs);
-    if (jsdoc == null && !lhs.isFromExterns()) {
-      return false;
-    }
-    if (jsdoc != null && !jsdoc.hasConstAnnotation()) {
-      return false;
-    }
-    Node rhs = getRValueOfLValue(lhs);
-    if (rhs == null || !rhs.isQualifiedName()) {
-      return false;
-    }
-    Node parent = lhs.getParent();
-    return (lhs.isName() && parent.isVar())
-        || (lhs.isGetProp()
-            && lhs.isQualifiedName()
-            && parent.isAssign()
-            && parent.getParent().isExprResult());
-  }
-
-  static boolean isTypedefDecl(Node n) {
-    if (n.isVar()
-        || (n.isName() && n.getParent().isVar())
-        || (n.isGetProp() && n.getParent().isExprResult())) {
-      JSDocInfo jsdoc = getBestJSDocInfo(n);
-      return jsdoc != null && jsdoc.hasTypedefType();
-    }
-    return false;
-  }
-
-  static boolean isEnumDecl(Node n) {
-    if (NodeUtil.isNameDeclaration(n)
-        || (n.isName() && NodeUtil.isNameDeclaration(n.getParent()))
-        || (n.isGetProp() && n.getParent().isAssign() && n.getGrandparent().isExprResult())
-        || (n.isAssign() && n.getParent().isExprResult())) {
-      JSDocInfo jsdoc = getBestJSDocInfo(n);
-      return jsdoc != null && jsdoc.hasEnumParameterType();
-    }
-    return false;
-  }
-
-  /**
    * Returns true iff this node defines a namespace, e.g.,
    *
    * /** @const * / var goog = {};
