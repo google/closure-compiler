@@ -6461,6 +6461,31 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInferredLegacyNsExport_requiredInModule() {
+    processClosurePrimitives = true;
+    testSame(
+        new String[] {
+          CLOSURE_GLOBALS,
+          lines(
+              "goog.module('a.b.c')",
+              "goog.module.declareLegacyNamespace();",
+              "",
+              "/** @return {number} */",
+              "function getNumber() { return 0; }",
+              "exports = getNumber();")
+        });
+
+    TypedVar ab = globalScope.getVar("a.b");
+    assertThat(ab).isNotInferred();
+    // TODO(b/146225122): this should be `number`
+    assertThat(ab).hasJSTypeThat().withTypeOfProp("c").isUnknown();
+
+    TypedVar abc = globalScope.getVar("a.b.c");
+    // TODO(b/146225122): this should be `number`.
+    assertThat(abc).hasJSTypeThat().isNull();
+  }
+
+  @Test
   public void testGoogProvide_typedef_requiredInModule() {
     processClosurePrimitives = true;
     testSame(

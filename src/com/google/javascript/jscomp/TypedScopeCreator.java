@@ -856,14 +856,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 exportsVar.getType(),
                 exportsVar.getInput(),
                 exportsVar.isTypeInferred());
-        if (!moduleNamespace.isSimple()) {
+
+        if (!moduleNamespace.isSimple() && !exportsVar.isTypeInferred()) {
           JSType parentType =
               currentScope.getGlobalScope().lookupQualifiedName(moduleNamespace.getOwner());
           if (parentType != null && parentType.toMaybeObjectType() != null) {
-            parentType
-                .toMaybeObjectType()
-                .defineDeclaredProperty(
-                    moduleNamespace.getComponent(), exportsVar.getType(), exportsVar.getNameNode());
+            declarePropertyIfNamespaceType(
+                parentType.toMaybeObjectType(),
+                exportsVar.getNameNode(),
+                moduleNamespace.getComponent(),
+                exportsVar.getType(),
+                exportsVar.getNameNode());
           }
         }
         declareAliasTypeIfRvalueIsAliasable(
@@ -2681,9 +2684,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (!inferred) {
         ObjectType ownerType = getObjectSlot(ownerName);
         if (ownerType != null) {
-
-          // need ownernode - is it always just first child of n?
-          declarePropertyIfNamespaceType(t, ownerType, n, valueType);
+          declarePropertyIfNamespaceType(ownerType, ownerNode, propName, valueType, n);
         }
 
         // If the property is already declared, the error will be
@@ -2937,9 +2938,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     }
 
     void declarePropertyIfNamespaceType(
-        NodeTraversal t, ObjectType ownerType, Node getpropNode, JSType valueType) {
-      checkState(getpropNode.isGetProp());
-      String propName = getpropNode.getLastChild().getString();
+        ObjectType ownerType,
+        Node ownerNode,
+        String propName,
+        JSType valueType,
+        Node declarationNode) {
       // Only declare this as an official property if it has not been
       // declared yet.
       if (ownerType.hasOwnProperty(propName) && !ownerType.isPropertyTypeInferred(propName)) {
@@ -2954,12 +2957,12 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       //   (3) it's an assignment to 'this', which covers instance properties assigned in
       //       constructors or other methods.
       boolean isNonNativeExtern =
-          t.getInput() != null && t.getInput().isExtern() && !ownerType.isNativeObjectType();
-      if (isNonNativeExtern
-          || !ownerType.isInstanceType()
-          || getpropNode.getFirstChild().isThis()) {
+          getCompilerInput() != null
+              && getCompilerInput().isExtern()
+              && !ownerType.isNativeObjectType();
+      if (isNonNativeExtern || !ownerType.isInstanceType() || ownerNode.isThis()) {
         // If the property is undeclared or inferred, declare it now.
-        ownerType.defineDeclaredProperty(propName, valueType, getpropNode);
+        ownerType.defineDeclaredProperty(propName, valueType, declarationNode);
       }
     }
   } // end AbstractScopeBuilder
