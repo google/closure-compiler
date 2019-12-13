@@ -51,6 +51,7 @@ public final class AllType extends JSType {
 
   AllType(JSTypeRegistry registry) {
     super(registry);
+    this.eagerlyResolveToSelf();
   }
 
   @Override
@@ -110,8 +111,8 @@ public final class AllType extends JSType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter) {
-    return this;
+  final JSType resolveInternal(ErrorReporter reporter) {
+    throw new AssertionError();
   }
 
   @Override

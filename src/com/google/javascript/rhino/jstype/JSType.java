@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -1654,6 +1655,16 @@ public abstract class JSType implements Serializable {
    */
   void setResolvedTypeInternal(JSType type) {
     resolveResult = type;
+    resolved = true;
+  }
+
+  /**
+   * Bypasses the normal call to {@link #resolve(ErrorReporter)}. Useful if you are aware that no
+   * resolution work needs to be done.
+   */
+  void eagerlyResolveToSelf() {
+    checkState(!this.isResolved());
+    resolveResult = this;
     resolved = true;
   }
 

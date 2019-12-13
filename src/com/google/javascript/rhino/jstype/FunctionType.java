@@ -45,7 +45,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -72,7 +71,6 @@ import java.util.Set;
  * <p>Note: the parameters list is the PARAM_LIST node that is the parent of the actual NAME node
  * containing the parsed argument list (annotated with JSDOC_TYPE_PROP's for the compile-time type
  * of each argument.
- *
  */
 public class FunctionType extends PrototypeObjectType implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -80,7 +78,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   enum Kind {
     ORDINARY,
     CONSTRUCTOR,
-    INTERFACE
+    INTERFACE,
+    NONE;
   }
 
   // relevant only for constructors
@@ -182,27 +181,28 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     checkArgument(source == null || source.isFunction() || source.isClass());
     this.source = source;
     this.kind = builder.kind;
-    switch (kind) {
-      case CONSTRUCTOR:
-        this.propAccess = PropAccess.ANY;
-        this.typeOfThis =
-            builder.typeOfThis != null
-                ? builder.typeOfThis
-                : InstanceObjectType.builderForCtor(this).build();
-        break;
-      case ORDINARY:
-        this.typeOfThis =
-            builder.typeOfThis != null
-                ? builder.typeOfThis
-                : registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
-        break;
-      case INTERFACE:
-        this.typeOfThis =
-            builder.typeOfThis != null
-                ? builder.typeOfThis
-                : InstanceObjectType.builderForCtor(this).build();
-        break;
+
+    if (builder.typeOfThis != null) {
+      this.typeOfThis = builder.typeOfThis;
+    } else {
+      switch (kind) {
+        case CONSTRUCTOR:
+        case INTERFACE:
+          this.typeOfThis = InstanceObjectType.builderForCtor(this).build();
+          break;
+        case ORDINARY:
+          this.typeOfThis = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+          break;
+        case NONE:
+          this.typeOfThis = this;
+          break;
+      }
     }
+
+    if (this.kind == Kind.CONSTRUCTOR) {
+      this.propAccess = PropAccess.ANY;
+    }
+
     this.call = builder.buildArrowType();
     this.closurePrimitive = builder.primitiveId;
     this.isStructuralInterface = false;
@@ -227,7 +227,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   @Override
-  public boolean isConstructor() {
+  public final boolean isConstructor() {
     return kind == Kind.CONSTRUCTOR;
   }
 
@@ -1035,12 +1035,16 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    *     #isConstructor()}).
    */
   public final ObjectType getInstanceType() {
-    Preconditions.checkState(hasInstanceType(), "Expected a constructor; got %s", this);
+    checkState(this.hasInstanceType());
+
     return typeOfThis.toObjectType();
   }
 
   /** Sets the instance type. This should only be used for special native types. */
   final void setInstanceType(ObjectType instanceType) {
+    checkState(this.hasInstanceType());
+    checkArgument(instanceType.isObjectType());
+
     typeOfThis = instanceType;
   }
 

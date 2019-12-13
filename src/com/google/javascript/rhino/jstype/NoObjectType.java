@@ -62,9 +62,12 @@ public class NoObjectType extends FunctionType {
   private static final long serialVersionUID = 1L;
 
   NoObjectType(JSTypeRegistry registry) {
-    super(FunctionType.builder(registry).forConstructor().forNativeType());
-    getInternalArrowType().returnType = this;
-    this.setInstanceType(this);
+    super(
+        FunctionType.builder(registry)
+            .withKind(FunctionType.Kind.NONE)
+            .withReturnsOwnInstanceType()
+            .forNativeType());
+    this.eagerlyResolveToSelf();
   }
 
   @Override
@@ -80,11 +83,6 @@ public class NoObjectType extends FunctionType {
   @Override
   public boolean isNoObjectType() {
     return true;
-  }
-
-  @Override
-  public final boolean isConstructor() {
-    return false;
   }
 
   @Override
@@ -159,6 +157,6 @@ public class NoObjectType extends FunctionType {
 
   @Override
   final JSType resolveInternal(ErrorReporter reporter) {
-    return this;
+    throw new AssertionError();
   }
 }

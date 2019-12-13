@@ -55,6 +55,7 @@ public class UnknownType extends ObjectType {
 
   UnknownType(JSTypeRegistry registry, boolean isChecked) {
     super(registry);
+    this.eagerlyResolveToSelf();
     this.isChecked = isChecked;
   }
 
@@ -165,8 +166,8 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter reporter) {
-    return this;
+  final JSType resolveInternal(ErrorReporter reporter) {
+    throw new AssertionError();
   }
 
   @Override
