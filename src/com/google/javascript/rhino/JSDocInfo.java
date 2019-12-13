@@ -56,6 +56,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -162,7 +163,7 @@ public class JSDocInfo implements Serializable {
     }
 
     protected LazilyInitializedInfo clone(boolean cloneTypeNodes) {
-      LazilyInitializedInfo other = new LazilyInitializedInfo();
+      LazilyInitializedInfo other = cloneWithoutTypes();
       other.baseType = cloneType(baseType, cloneTypeNodes);
       other.extendedInterfaces = cloneTypeList(extendedInterfaces, cloneTypeNodes);
       other.implementedInterfaces = cloneTypeList(implementedInterfaces, cloneTypeNodes);
@@ -174,16 +175,18 @@ public class JSDocInfo implements Serializable {
           : new HashSet<>(disposedParameters);
       other.typeTransformations = typeTransformations == null ? null
           : new LinkedHashMap<>(typeTransformations);
+      return other;
+    }
 
+    protected LazilyInitializedInfo cloneWithoutTypes() {
+      LazilyInitializedInfo other = new LazilyInitializedInfo();
       other.description = description;
       other.meaning = meaning;
       other.deprecated = deprecated;
       other.license = license;
       other.suppressions = suppressions == null ? null : ImmutableSet.copyOf(suppressions);
-      other.modifies = modifies == null ? null :  ImmutableSet.copyOf(modifies);
-      other.lendsName = cloneType(lendsName, cloneTypeNodes);
+      other.modifies = modifies == null ? null : ImmutableSet.copyOf(modifies);
       other.closurePrimitiveId = closurePrimitiveId;
-
       other.propertyBitField = propertyBitField;
       return other;
     }
@@ -229,7 +232,7 @@ public class JSDocInfo implements Serializable {
       return (mask & propertyBitField) != 0;
     }
 
-    private int getMaskForBitIndex(int bitIndex) {
+    private static int getMaskForBitIndex(int bitIndex) {
       checkArgument(bitIndex >= 0, "Bit index should be non-negative integer");
         return 1 << bitIndex;
     }
@@ -568,9 +571,128 @@ public class JSDocInfo implements Serializable {
 
   public JSDocInfo cloneWithNewType(boolean cloneTypeNodes, JSTypeExpression typeExpression) {
     JSDocInfo other = clone(cloneTypeNodes);
-    other.bitset = other.bitset & COMPLEMENT_TYPEFIELD;
-    other.setType(typeExpression);
+    if (this.hasType()) {
+      other.bitset = other.bitset & COMPLEMENT_TYPEFIELD; // clear type field bits
+      other.setType(typeExpression);
+    }
     return other;
+  }
+
+  /**
+   * Clones this JSDoc but replaces the given names in any type related annotation with unknown
+   * type.
+   *
+   * @return returns the the cloned JSDocInfo
+   */
+  public JSDocInfo cloneAndReplaceTypeNames(Set<String> names) {
+    JSDocInfo other = cloneWithoutTypes();
+    Map<JSTypeExpression, TypeExpressionKind> typeExpressions = this.getTypeExpressionsWithKind();
+    for (Map.Entry<JSTypeExpression, TypeExpressionKind> itr : typeExpressions.entrySet()) {
+      JSTypeExpression typeExpression = itr.getKey();
+      TypeExpressionKind kind = itr.getValue();
+      JSTypeExpression newExpr = constructNewTypeExpression(names, typeExpression);
+      switch (kind) {
+        case TYPE:
+          other.setType(newExpr);
+          break;
+        case RETURN:
+          other.setReturnType(newExpr);
+          break;
+        case ENUM:
+          other.setEnumParameterType(newExpr);
+          break;
+        case TYPEDEF:
+          other.setTypedefType(newExpr);
+          break;
+        case BASE:
+          other.setBaseType(newExpr);
+          break;
+        case LEND:
+          other.setLendsName(newExpr);
+          break;
+        case THIS:
+          other.setThisType(newExpr);
+          break;
+        case PARAM:
+          if (this.info != null) {
+            other.info.parameters = constructNewTypesFromMap(this.info.parameters, names);
+          }
+          break;
+        case TEMPLATE:
+          if (this.info != null) {
+            other.info.templateTypeNames =
+                constructNewTypesFromMap(this.info.templateTypeNames, names);
+          }
+          break;
+        case IMPLEMENTS:
+          if (this.info != null) {
+            other.info.implementedInterfaces =
+                constructNewTypesFromList(this.info.implementedInterfaces, names);
+          }
+          break;
+        case EXTENDS:
+          if (this.info != null) {
+            other.info.extendedInterfaces =
+                constructNewTypesFromList(this.info.extendedInterfaces, names);
+          }
+          break;
+        case THROWS:
+          if (this.info != null) {
+            other.info.thrownTypes = constructNewTypesFromList(this.info.thrownTypes, names);
+          }
+          break;
+      }
+    }
+    return other;
+  }
+
+  /**
+   * Removes any module local names from the given JSTypeExpression and replaces them with unknown
+   */
+  private static JSTypeExpression constructNewTypeExpression(
+      Set<String> names, JSTypeExpression oldTypeExpression) {
+    if (oldTypeExpression == null) {
+      return null;
+    }
+    JSTypeExpression newTypeExpression = oldTypeExpression.replaceNamesWithUnknownType(names);
+    return newTypeExpression;
+  }
+
+  /**
+   * Removes any module local names used in the typeExpressions in any {@code Map<String,
+   * JSTypeExpression>} and replaces them with the unknown type. Intended to be used
+   * for @param, @throws or @templateTypeNames data members that are stored as maps.
+   */
+  private static LinkedHashMap<String, JSTypeExpression> constructNewTypesFromMap(
+      Map<String, JSTypeExpression> map, Set<String> names) {
+    if (map == null) {
+      return null;
+    }
+    LinkedHashMap<String, JSTypeExpression> ret = new LinkedHashMap<>();
+    for (Entry<String, JSTypeExpression> itr : map.entrySet()) {
+      String key = itr.getKey();
+      JSTypeExpression typeExpression = itr.getValue();
+      JSTypeExpression newTypeExpression = constructNewTypeExpression(names, typeExpression);
+      ret.put(key, newTypeExpression);
+    }
+    return ret;
+  }
+
+  /**
+   * Removes any module local names used in any {@code ArrayList<JSTypeExpression>} and replaces
+   * them with unknown Intended to be used for @implements or @extends that are stored as lists.
+   */
+  private static ArrayList<JSTypeExpression> constructNewTypesFromList(
+      ArrayList<JSTypeExpression> arr, Set<String> names) {
+    if (arr == null) {
+      return null;
+    }
+    ArrayList<JSTypeExpression> ret = new ArrayList<>();
+    for (JSTypeExpression typeExpression : arr) {
+      JSTypeExpression newTypeExpression = constructNewTypeExpression(names, typeExpression);
+      ret.add(newTypeExpression);
+    }
+    return ret;
   }
 
   public JSDocInfo clone(boolean cloneTypeNodes) {
@@ -581,6 +703,17 @@ public class JSDocInfo implements Serializable {
     other.bitset = this.bitset;
     other.type = cloneType(this.type, cloneTypeNodes);
     other.thisType = cloneType(this.thisType, cloneTypeNodes);
+    other.includeDocumentation = this.includeDocumentation;
+    other.originalCommentPosition = this.originalCommentPosition;
+    return other;
+  }
+
+  private JSDocInfo cloneWithoutTypes() {
+    JSDocInfo other = new JSDocInfo();
+    other.info = this.info == null ? null : this.info.cloneWithoutTypes();
+    other.documentation = this.documentation;
+    other.visibility = this.visibility;
+    other.bitset = this.bitset & COMPLEMENT_TYPEFIELD;
     other.includeDocumentation = this.includeDocumentation;
     other.originalCommentPosition = this.originalCommentPosition;
     return other;
@@ -1027,6 +1160,21 @@ public class JSDocInfo implements Serializable {
                 | MASK_IMPLICITCAST
                 | MASK_NOSIDEEFFECTS
                 | MASK_RECORD));
+  }
+
+  private boolean hasParamType() {
+    return getParameterCount() != 0;
+  }
+
+  /** Returns whether this JSDoc contains a type declaration such as {@code /** @type {string}} */
+  public boolean containsTypeDeclaration() {
+    return hasType()
+        || hasReturnType()
+        || hasEnumParameterType()
+        || hasTypedefType()
+        || hasThisType()
+        || hasBaseType()
+        || hasParamType();
   }
 
   /**
@@ -1522,6 +1670,10 @@ public class JSDocInfo implements Serializable {
 
   void setReturnType(JSTypeExpression type) {
     setType(type, TYPEFIELD_RETURN);
+  }
+
+  void setTypedefType(JSTypeExpression type) {
+    setType(type, TYPEFIELD_TYPEDEF);
   }
 
   void setEnumParameterType(JSTypeExpression type) {
@@ -2120,12 +2272,120 @@ public class JSDocInfo implements Serializable {
     return ImmutableMap.copyOf(info.typeTransformations);
   }
 
+  // What kind of type expression this JSTypeExpression represents
+  private enum TypeExpressionKind {
+    BASE,
+    ENUM,
+    EXTENDS,
+    IMPLEMENTS,
+    LEND,
+    PARAM,
+    RETURN,
+    TEMPLATE,
+    THIS,
+    THROWS,
+    TYPE,
+    TYPEDEF,
+  }
+
+  /**
+   * Finds type expressions within the JsDoc and returns them with their kind. The kind of type
+   * expression can be:
+   *
+   * <ul>
+   *   <li>BASE
+   *   <li>ENUM
+   *   <li>EXTENDS
+   *   <li>IMPLEMENTS
+   *   <li>LEND
+   *   <li>PARAM
+   *   <li>RETURN
+   *   <li>THIS
+   *   <li>THROWS
+   *   <li>TYPE
+   *   <li>TYPEDEF,
+   * </ul>
+   */
+  private Map<JSTypeExpression, TypeExpressionKind> getTypeExpressionsWithKind() {
+    Map<JSTypeExpression, TypeExpressionKind> nodes = new LinkedHashMap<>();
+    if (type != null) {
+      if (hasType()) {
+        nodes.put(type, TypeExpressionKind.TYPE);
+      } else if (hasEnumParameterType()) {
+        nodes.put(type, TypeExpressionKind.ENUM);
+      } else if (hasReturnType()) {
+        nodes.put(type, TypeExpressionKind.RETURN);
+      } else if (hasTypedefType()) {
+        nodes.put(type, TypeExpressionKind.TYPEDEF);
+      } else {
+        throw new IllegalStateException(
+            "type field holds none of @type, @enum, @return or @typedef types");
+      }
+    }
+
+    if (thisType != null) {
+      nodes.put(thisType, TypeExpressionKind.THIS);
+    }
+
+    if (info != null) {
+      if (info.baseType != null) {
+        nodes.put(info.baseType, TypeExpressionKind.BASE);
+      }
+
+      if (info.extendedInterfaces != null) {
+        for (JSTypeExpression interfaceType : info.extendedInterfaces) {
+          if (interfaceType != null) {
+            nodes.put(interfaceType, TypeExpressionKind.EXTENDS);
+          }
+        }
+      }
+
+      if (info.implementedInterfaces != null) {
+        for (JSTypeExpression interfaceType : info.implementedInterfaces) {
+          if (interfaceType != null) {
+            nodes.put(interfaceType, TypeExpressionKind.IMPLEMENTS);
+          }
+        }
+      }
+
+      if (info.parameters != null) {
+        for (JSTypeExpression parameterType : info.parameters.values()) {
+          if (parameterType != null) {
+            nodes.put(parameterType, TypeExpressionKind.PARAM);
+          }
+        }
+      }
+
+      if (info.thrownTypes != null) {
+        for (JSTypeExpression thrownType : info.thrownTypes) {
+          if (thrownType != null) {
+            nodes.put(thrownType, TypeExpressionKind.THROWS);
+          }
+        }
+      }
+
+      if (info.lendsName != null) {
+        nodes.put(info.lendsName, TypeExpressionKind.LEND);
+      }
+
+      if (info.templateTypeNames != null) {
+        for (JSTypeExpression upperBound : info.templateTypeNames.values()) {
+          if (upperBound != null) {
+            nodes.put(upperBound, TypeExpressionKind.TEMPLATE);
+          }
+        }
+      }
+    }
+    return nodes;
+  }
+
   /**
    * Returns a collection of all JSTypeExpressions that are a part of this JSDocInfo.
    *
    * <p>This includes:
    *
    * <ul>
+   *   <li>base type
    *   <li>@extends
    *   <li>@implements
    *   <li>@lend
@@ -2142,67 +2402,7 @@ public class JSDocInfo implements Serializable {
    * @return collection of all type nodes
    */
   public Collection<JSTypeExpression> getTypeExpressions() {
-    List<JSTypeExpression> nodes = new ArrayList<>();
-
-    if (type != null) {
-      nodes.add(type);
-    }
-
-    if (thisType != null) {
-      nodes.add(thisType);
-    }
-
-    if (info != null) {
-      if (info.baseType != null) {
-        nodes.add(info.baseType);
-      }
-
-      if (info.extendedInterfaces != null) {
-        for (JSTypeExpression interfaceType : info.extendedInterfaces) {
-          if (interfaceType != null) {
-            nodes.add(interfaceType);
-          }
-        }
-      }
-
-      if (info.implementedInterfaces != null) {
-        for (JSTypeExpression interfaceType : info.implementedInterfaces) {
-          if (interfaceType != null) {
-            nodes.add(interfaceType);
-          }
-        }
-      }
-
-      if (info.parameters != null) {
-        for (JSTypeExpression parameterType : info.parameters.values()) {
-          if (parameterType != null) {
-            nodes.add(parameterType);
-          }
-        }
-      }
-
-      if (info.thrownTypes != null) {
-        for (JSTypeExpression thrownType : info.thrownTypes) {
-          if (thrownType != null) {
-            nodes.add(thrownType);
-          }
-        }
-      }
-
-      if (info.lendsName != null) {
-        nodes.add(info.lendsName);
-      }
-
-      if (info.templateTypeNames != null) {
-        for (JSTypeExpression upperBound : info.templateTypeNames.values()) {
-          if (upperBound != null) {
-            nodes.add(upperBound);
-          }
-        }
-      }
-    }
-
-    return nodes;
+    return getTypeExpressionsWithKind().keySet();
   }
 
   /**

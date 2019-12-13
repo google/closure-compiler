@@ -59,6 +59,8 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -134,6 +136,22 @@ public class JSDocInfoTest {
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
     assertThat(info.isHidden()).isFalse();
+  }
+
+  /** Tests that all module local names get correctly removed from a JSTypeExpression */
+  @Test
+  public void testRemovesModuleLocalNames() {
+    JSTypeExpression jsTypeExpression = createSampleTypeExpression();
+    Set<String> mockedModuleLocals = new LinkedHashSet<>();
+    mockedModuleLocals.add("Item");
+    mockedModuleLocals.add("AnotherItem");
+
+    JSTypeExpression newExpr = jsTypeExpression.replaceNamesWithUnknownType(mockedModuleLocals);
+    Set<String> replacedNames = newExpr.getAllTypeNames();
+    assertThat(replacedNames).doesNotContain("Item");
+    assertThat(replacedNames).contains("string");
+    assertThat(replacedNames).contains("boolean");
+    assertThat(replacedNames).doesNotContain("AnotherItem");
   }
 
   @Test
@@ -543,6 +561,45 @@ public class JSDocInfoTest {
     assertThat(cloned.getParameterType("a")).isNull();
   }
 
+  /** Test names in {@code @param} get replaced */
+  @Test
+  public void testJSDocInfoCloneAndReplaceNames_params() {
+    JSDocInfo info = new JSDocInfo();
+    JSTypeExpression jsTypeExpression = createSampleTypeExpression();
+    info.declareParam(jsTypeExpression, "a");
+
+    Set<String> mockedModuleLocals = new LinkedHashSet<>();
+    mockedModuleLocals.add("Item");
+    mockedModuleLocals.add("AnotherItem");
+
+    JSDocInfo cloned = info.cloneAndReplaceTypeNames(mockedModuleLocals);
+
+    assertThat(cloned.getParameterCount()).isEqualTo(1);
+    assertThat(cloned.getParameterNameAt(0)).isEqualTo("a");
+    assertThat(cloned.getParameterType("a"))
+        .isNotEqualTo(jsTypeExpression); // not same reference after cloning
+    assertThat(cloned.getParameterType("a").getAllTypeNames()).doesNotContain("Item");
+    assertThat(cloned.getParameterType("a").getAllTypeNames()).doesNotContain("AnotherItem");
+  }
+
+  /** Test names in {@code @type} get replaced */
+  @Test
+  public void testJSDocInfoCloneAndReplaceNames_Type() {
+    JSDocInfo info = new JSDocInfo();
+    JSTypeExpression jsTypeExpression = createSampleTypeExpression();
+    info.setType(jsTypeExpression);
+
+    Set<String> mockedModuleLocals = new LinkedHashSet<>();
+    mockedModuleLocals.add("Item");
+    mockedModuleLocals.add("AnotherItem");
+
+    JSDocInfo cloned = info.cloneAndReplaceTypeNames(mockedModuleLocals);
+
+    assertThat(cloned.getType()).isNotEqualTo(jsTypeExpression);
+    assertThat(cloned.getType().getAllTypeNames()).doesNotContain("Item");
+    assertThat(cloned.getType().getAllTypeNames()).doesNotContain("AnotherItem");
+  }
+
   @Test
   public void testSetFileOverviewWithDocumentationOff() {
     JSDocInfo info = new JSDocInfo();
@@ -681,12 +738,23 @@ public class JSDocInfoTest {
   }
 
   /** Gets the type expression for a simple type name. */
-  private JSTypeExpression fromString(String s) {
+  private static JSTypeExpression fromString(String s) {
     return new JSTypeExpression(Node.newString(s), "");
   }
 
   private JSType resolve(JSTypeExpression n, String... warnings) {
     errorReporter.setWarnings(warnings);
     return n.evaluate(null, registry);
+  }
+
+  private static JSTypeExpression createSampleTypeExpression() {
+    Node root = new Node(Token.BANG, Node.newString("Item"));
+    Node child1 = new Node(Token.QMARK, Node.newString("string"));
+    Node child2 = new Node(Token.QMARK, Node.newString("boolean"));
+    Node child3 = new Node(Token.QMARK, Node.newString("AnotherItem"));
+    root.addChildToBack(child1);
+    root.addChildToBack(child2);
+    root.addChildToBack(child3);
+    return new JSTypeExpression(root, "");
   }
 }
