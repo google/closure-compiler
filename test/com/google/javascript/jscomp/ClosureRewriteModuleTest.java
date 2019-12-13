@@ -354,6 +354,29 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDeepNamespace() {
+    test(
+        new String[] {
+          "goog.provide('ns.a.b.Foo'); /** @constructor */ ns.a.b.Foo = function() {};",
+          lines(
+              "goog.module('ns.other');",
+              "",
+              "var Foo = goog.require('ns.a.b.Foo');",
+              "",
+              "/** @type {Foo} */",
+              "var f = new Foo;")
+        },
+        new String[] {
+          "goog.provide('ns.a.b.Foo'); /** @constructor */ ns.a.b.Foo = function() {};",
+          lines(
+              "/** @const */ var module$exports$ns$other = {}",
+              "goog.require('ns.a.b.Foo');",
+              "/** @type {ns.a.b.Foo} */",
+              "var module$contents$ns$other_f = new ns.a.b.Foo;")
+        });
+  }
+
+  @Test
   public void testDestructuringImports() {
     test(
         new String[] {
@@ -2417,17 +2440,25 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGoogModuleValidReferences() {
+  public void testGoogModuleValidReferences1() {
     test(
         new String[] {
           "goog.module('a.b.c');",
-          "goog.module('x.y.z'); var c = goog.require('a.b.c'); use(c);"
+          lines(
+              "goog.module('x.y.z');", //
+              "var c = goog.require('a.b.c');",
+              "use(c);")
         },
         new String[] {
           "/** @const */ var module$exports$a$b$c={};",
-          "/** @const */ var module$exports$x$y$z={}; use(module$exports$a$b$c);"
+          lines(
+              "/** @const */ var module$exports$x$y$z={};", //
+              "use(module$exports$a$b$c);")
         });
+  }
 
+  @Test
+  public void testGoogModuleValidReferences2() {
     test(
         new String[] {
           "goog.module('a.b.c');",
