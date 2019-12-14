@@ -75,6 +75,8 @@ import java.util.Set;
 public class FunctionType extends PrototypeObjectType implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  private static final JSTypeClass TYPE_CLASS = JSTypeClass.FUNCTION;
+
   enum Kind {
     ORDINARY,
     CONSTRUCTOR,
@@ -212,11 +214,13 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         canonicalRepresentation == null || kind == Kind.CONSTRUCTOR,
         "Only constructors should have canonical representations");
     this.canonicalRepresentation = canonicalRepresentation;
+
+    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return JSTypeClass.FUNCTION;
+    return TYPE_CLASS;
   }
 
   @Override

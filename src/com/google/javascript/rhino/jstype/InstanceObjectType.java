@@ -47,11 +47,15 @@ import com.google.javascript.rhino.Node;
 final class InstanceObjectType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
+  private static final JSTypeClass TYPE_CLASS = JSTypeClass.INSTANCE_OBJECT;
+
   private final FunctionType constructor;
 
   private InstanceObjectType(Builder builder) {
     super(builder);
     this.constructor = checkNotNull(builder.constructor);
+
+    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   static final class Builder extends PrototypeObjectType.Builder<Builder> {
@@ -88,7 +92,7 @@ final class InstanceObjectType extends PrototypeObjectType {
 
   @Override
   JSTypeClass getTypeClass() {
-    return JSTypeClass.INSTANCE_OBJECT;
+    return TYPE_CLASS;
   }
 
   @Override

@@ -79,6 +79,8 @@ import javax.annotation.Nullable;
 public class UnionType extends JSType {
   private static final long serialVersionUID = 2L;
 
+  private static final JSTypeClass TYPE_CLASS = JSTypeClass.UNION;
+
   /**
    * Generally, if the best we can do is say "this object is one of thirty things", then we should
    * just give up and admit that we have no clue.
@@ -107,13 +109,16 @@ public class UnionType extends JSType {
    * <p>This ctor is private because all instances are created using a {@link Builder}. The builder
    * is also responsible for setting the alternates, which is why they aren't passed as a parameter.
    */
-  private UnionType(JSTypeRegistry registry) {
+  private UnionType(JSTypeRegistry registry, ImmutableList<JSType> alternates) {
     super(registry);
+    this.setAlternates(alternates);
+
+    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return JSTypeClass.UNION;
+    return TYPE_CLASS;
   }
 
   /** Creates a {@link Builder} for a new {@link UnionType}. */
@@ -917,7 +922,7 @@ public class UnionType extends JSType {
       if (alternates.size() == 1) {
         return alternates.get(0);
       } else {
-        return new UnionType(registry).setAlternates(alternates);
+        return new UnionType(registry, alternates);
       }
     }
 
