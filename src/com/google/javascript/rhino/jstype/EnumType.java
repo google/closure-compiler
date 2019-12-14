@@ -55,8 +55,6 @@ import java.util.Set;
 public class EnumType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeClass TYPE_CLASS = JSTypeClass.ENUM;
-
   // the type of the individual elements
   private EnumElementType elementsType;
   // the elements' names (they all have the same type)
@@ -75,13 +73,11 @@ public class EnumType extends PrototypeObjectType {
     super(PrototypeObjectType.builder(registry).setName("enum{" + name + "}"));
     this.elementsType = new EnumElementType(registry, elementsType, name, this);
     this.source = source;
-
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return TYPE_CLASS;
+    return JSTypeClass.ENUM;
   }
 
   @Override

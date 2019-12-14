@@ -59,8 +59,6 @@ import java.util.Map;
 public class RecordType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeClass TYPE_CLASS = JSTypeClass.RECORD;
-
   private final boolean declared;
   private boolean isFrozen = false;
 
@@ -98,13 +96,11 @@ public class RecordType extends PrototypeObjectType {
     }
     // Freeze the record type.
     isFrozen = true;
-
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return TYPE_CLASS;
+    return JSTypeClass.RECORD;
   }
 
   /** @return Is this synthesized for internal bookkeeping? */

@@ -90,8 +90,6 @@ import javax.annotation.Nullable;
 public final class NamedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeClass TYPE_CLASS = JSTypeClass.NAMED;
-
   static int nominalHashCode(ObjectType type) {
     checkState(type.hasReferenceName());
     String name = checkNotNull(type.getReferenceName());
@@ -148,13 +146,11 @@ public final class NamedType extends ProxyObjectType {
     this.lineno = lineno;
     this.charno = charno;
     this.templateTypes = templateTypes;
-
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return TYPE_CLASS;
+    return JSTypeClass.NAMED;
   }
 
   /** Returns a new non-null version of this type. */

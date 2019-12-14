@@ -49,8 +49,6 @@ import com.google.javascript.rhino.Node;
 public class EnumElementType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeClass TYPE_CLASS = JSTypeClass.ENUM_ELEMENT;
-
   /**
    * The primitive type this enum element type wraps. For instance, in
    * the following code defining the {@code LOCAL_CODES} enum
@@ -73,13 +71,11 @@ public class EnumElementType extends ObjectType {
     this.primitiveObjectType = elementType.toObjectType();
     this.name = name;
     this.enumType = enumType;
-
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return TYPE_CLASS;
+    return JSTypeClass.ENUM_ELEMENT;
   }
 
   public EnumType getEnumType() {

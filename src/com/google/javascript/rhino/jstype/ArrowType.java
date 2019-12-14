@@ -53,8 +53,6 @@ import java.util.Objects;
 final class ArrowType extends JSType {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeClass TYPE_CLASS = JSTypeClass.ARROW;
-
   final Node parameters;
   JSType returnType;
 
@@ -75,13 +73,11 @@ final class ArrowType extends JSType {
     this.returnType = returnType == null ?
         getNativeType(UNKNOWN_TYPE) : returnType;
     this.returnTypeInferred = returnTypeInferred;
-
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return TYPE_CLASS;
+    return JSTypeClass.ARROW;
   }
 
   /**

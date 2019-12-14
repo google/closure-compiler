@@ -58,8 +58,6 @@ import java.util.Collections;
 public class ProxyObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeClass TYPE_CLASS = JSTypeClass.PROXY_OBJECT;
-
   private JSType referencedType;
   private ObjectType referencedObjType;
 
@@ -71,13 +69,11 @@ public class ProxyObjectType extends ObjectType {
                   TemplateTypeMap templateTypeMap) {
     super(registry, templateTypeMap);
     setReferencedType(checkNotNull(referencedType));
-
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return TYPE_CLASS;
+    return JSTypeClass.PROXY_OBJECT;
   }
 
   @Override

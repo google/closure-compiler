@@ -70,8 +70,6 @@ import java.util.function.Function;
 public class PrototypeObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
-  private static final JSTypeClass TYPE_CLASS = JSTypeClass.PROTOTYPE_OBJECT;
-
   private final String className;
   private final int templateParamCount;
   private final PropertyMap properties = new PropertyMap();
@@ -120,13 +118,11 @@ public class PrototypeObjectType extends ObjectType {
     checkNotNull(this.templateTypeMap);
     // Also guarantees `templateParamCount >= 0`.
     checkState(this.templateTypeMap.size() >= this.templateParamCount);
-
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return TYPE_CLASS;
+    return JSTypeClass.PROTOTYPE_OBJECT;
   }
 
   static class Builder<T extends Builder<T>> {
