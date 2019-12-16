@@ -838,7 +838,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
                 "function a(){}",
                 "a.prototype = {",
                 // Don't use `super.bar()` because that might effect the test.
-                "  foo: function() { return super.x; }",
+                "  foo() { return super.x; }",
                 "};",
                 "",
                 // We need at least one normal call to trigger rewriting.

@@ -455,6 +455,10 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
 
   @Test
   public void testCannotConvertSuperGetElemInAsyncGenerator() {
+    // The rewriting gets partially done before we notice and report that we cannot convert
+    // the code. The partially done code is invalid, so we must disable AST validation to see the
+    // error message. (AST validation is not enabled in normal execution, just developer mode.)
+    disableAstValidation();
     testError(
         lines(
             "class A {",

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -280,10 +281,6 @@ public final class AstValidator implements CompilerPass {
         validateFeature(Feature.IMPORT_META, n);
         validateChildless(n);
         return;
-      case SUPER:
-        validateFeature(Feature.SUPER, n);
-        validateChildless(n);
-        return;
       case FALSE:
       case NULL:
       case THIS:
@@ -352,7 +349,6 @@ public final class AstValidator implements CompilerPass {
         validateFeature(Feature.EXPONENT_OP, n);
         validateBinaryOp(n);
         return;
-      case GETELEM:
       case COMMA:
       case OR:
       case AND:
@@ -378,6 +374,10 @@ public final class AstValidator implements CompilerPass {
       case MOD:
       case DIV:
         validateBinaryOp(n);
+        return;
+
+      case GETELEM:
+        validateGetElem(n);
         return;
 
       case GETPROP:
@@ -1021,10 +1021,48 @@ public final class AstValidator implements CompilerPass {
   private void validateCall(Node n) {
     validateNodeType(Token.CALL, n);
     validateMinimumChildCount(n, 1);
-
-    validateExpression(n.getFirstChild());
-    for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+    Node callee = n.getFirstChild();
+    if (callee.isSuper()) {
+      validateSuper(callee);
+    } else {
+      validateExpression(callee);
+    }
+    for (Node c = callee.getNext(); c != null; c = c.getNext()) {
       validatePseudoExpression(c, Token.ITER_SPREAD);
+    }
+  }
+
+  private void validateSuper(Node superNode) {
+    validateFeature(Feature.SUPER, superNode);
+    validateChildless(superNode);
+    if (isTypeValidationEnabled) {
+      expectSomeTypeInformation(superNode);
+    }
+    Node superParent = superNode.getParent();
+    Node methodNode = NodeUtil.getEnclosingNonArrowFunction(superParent);
+
+    if (NodeUtil.isGet(superParent) && superNode.isFirstChildOf(superParent)) {
+      // `super.prop` or `super['prop']`
+      if (methodNode == null || !NodeUtil.isMethodDeclaration(methodNode)) {
+        violation("super property references are only allowed in methods", superNode);
+      }
+    } else if (superParent.isCall() && superNode.isFirstChildOf(superParent)) {
+      // super() constructor call
+      if (methodNode == null || !NodeUtil.isEs6Constructor(methodNode)) {
+        violation("super constructor call is only allowed in a constructor method", superNode);
+      } else {
+        Node extendsNode =
+            methodNode
+                .getParent() // MEMBER_FUNCTION_DEF
+                .getParent() // CLASS_METHODS
+                .getParent() // CLASS
+                .getSecondChild(); // extends clause
+        if (extendsNode.isEmpty()) {
+          violation("super constructor call in a class that extends nothing", superNode);
+        }
+      }
+    } else {
+      violation("`super` is a syntax error here", superNode);
     }
   }
 
@@ -1165,7 +1203,7 @@ public final class AstValidator implements CompilerPass {
         validateGetProp(n);
         break;
       case GETELEM:
-        validateBinaryOp(n);
+        validateGetElem(n);
         break;
       default:
         throw new IllegalStateException(
@@ -1454,13 +1492,28 @@ public final class AstValidator implements CompilerPass {
     validateExpression(n.getLastChild());
   }
 
+  private void validateGetElem(Node n) {
+    checkArgument(n.isGetElem(), n);
+    validateChildCount(n, 2);
+    validatePropertyReferenceTarget(n.getFirstChild());
+    validateExpression(n.getLastChild());
+  }
+
   private void validateGetProp(Node n) {
     validateNodeType(Token.GETPROP, n);
     validateChildCount(n);
-    validateExpression(n.getFirstChild());
+    validatePropertyReferenceTarget(n.getFirstChild());
     Node prop = n.getLastChild();
     validateNodeType(Token.STRING, prop);
     validateNonEmptyString(prop);
+  }
+
+  private void validatePropertyReferenceTarget(Node objectNode) {
+    if (objectNode.isSuper()) {
+      validateSuper(objectNode);
+    } else {
+      validateExpression(objectNode);
+    }
   }
 
   private void validateRegExpLit(Node n) {

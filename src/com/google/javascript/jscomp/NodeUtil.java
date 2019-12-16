@@ -1718,9 +1718,8 @@ public final class NodeUtil {
         });
   }
 
-  /** Finds the class member function containing the given node. */
-  static Node getEnclosingClassMemberFunction(Node n) {
-    return getEnclosingType(n, Token.MEMBER_FUNCTION_DEF);
+  static Node getEnclosingNonArrowFunction(Node n) {
+    return getEnclosingNode(n, NodeUtil::isNonArrowFunction);
   }
 
   /** Finds the class containing the given node. */

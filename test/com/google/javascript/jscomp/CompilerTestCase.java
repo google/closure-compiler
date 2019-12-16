@@ -1688,7 +1688,9 @@ public abstract class CompilerTestCase {
           check.processForTesting(externsRoot, mainRoot);
         }
 
-        if (astValidationEnabled) {
+        // Transpilation passes are allowed to leave the AST in a bad state when there is a halting
+        // error.
+        if (astValidationEnabled && !compiler.hasHaltingErrors()) {
           new AstValidator(compiler, scriptFeatureValidationEnabled)
               .setTypeValidationEnabled(typeInfoValidationEnabled)
               .validateRoot(root);

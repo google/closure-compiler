@@ -181,12 +181,13 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
         "foo.bar();",
         "this.bar;",
         "this.bar();",
-        "super();",
         "super.bar();");
 
     for (String sig : MEMBER_SIGNATURES) {
       testSame(wrap(sig, body));
     }
+    // Super constructor call is only allowed in the constructor
+    testSame(wrap("constructor()", "super();"));
   }
 
   @Test
@@ -194,8 +195,6 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     String body = lines(
         "super.x;",
         "super.x = y;");
-
-    testSame(body);
 
     for (String sig : MEMBER_SIGNATURES) {
       testSame(wrap("static " + sig, body));

@@ -38,6 +38,8 @@ public final class CheckSuperTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    // AST validation will throw exceptions for the cases we want to report as errors here.
+    disableAstValidation();
   }
 
   @Test

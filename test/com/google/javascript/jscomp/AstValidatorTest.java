@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -81,6 +82,14 @@ public final class AstValidatorTest extends CompilerTestCase {
     disableNormalize();
     disableLineNumberCheck();
     enableTypeCheck();
+  }
+
+  @Test
+  public void testValidGetPropAndGetElem() {
+    valid(
+        lines(
+            "a.b;", //
+            "a['b'];"));
   }
 
   @Test
@@ -569,6 +578,148 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSuperInvalidAtScriptLevel() {
+    Node scriptNode = IR.script();
+    Node superNode = IR.superNode();
+    Node superStatementNode = IR.exprResult(IR.getprop(superNode, "prop"));
+    scriptNode.addChildToBack(superStatementNode);
+
+    expectInvalid(superStatementNode, Check.STATEMENT);
+  }
+
+  @Test
+  public void testSuperInvalidInNonMemberFunction() {
+    invalid(
+        lines(
+            "function nonMethod() {", //
+            "  return super.toString();",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testSuperPropReferenceIsValidInClassWithoutExtendsClause() {
+    valid(
+        lines(
+            "class C {", //
+            "  method() {",
+            "    super.prop;",
+            "    super['prop'];",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testSuperPropReferenceIsValidInObjectLiteralMethod() {
+    valid(
+        lines(
+            "const myObj = {", //
+            "  method() {",
+            "    super.prop;",
+            "    super['prop'];",
+            "  }",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void testSuperInvalidAsAnExpression() {
+    Node scriptNode =
+        parseValidScript(
+            lines(
+                "class D {}", //
+                "class C extends D {",
+                "  method() {",
+                "    return replaceWithSuper;",
+                "  }",
+                "}",
+                ""));
+
+    Node nodeToReplace =
+        Streams.stream(NodeUtil.preOrderIterable(scriptNode))
+            .filter(node -> node.isName() && node.getString().equals("replaceWithSuper"))
+            .findFirst()
+            .get();
+    nodeToReplace.replaceWith(IR.superNode());
+
+    expectInvalid(scriptNode, Check.SCRIPT);
+  }
+
+  @Test
+  public void testSuperInvalidIfTypeInfoIsMissing() {
+    Node scriptNode =
+        parseValidScript(
+            lines(
+                "class C {", //
+                "  method() {",
+                "    return super.toString();",
+                "  }",
+                "}",
+                ""));
+
+    Node superNode =
+        Streams.stream(NodeUtil.preOrderIterable(scriptNode))
+            .filter(node -> node.isSuper())
+            .findFirst()
+            .get();
+    // Erase the type information to make the super node invalid
+    superNode.setJSType(null);
+
+    expectInvalid(scriptNode, Check.SCRIPT);
+  }
+
+  @Test
+  public void testValidSuperConstructorCall() {
+    valid(
+        lines(
+            "class D {}", //
+            "class C extends D {",
+            "  constructor() {",
+            "    super();",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testInvalidSuperConstructorCallInNonConstructor() {
+    invalid(
+        lines(
+            "class D {}", //
+            "class C extends D {",
+            "  nonConstructor() {",
+            "    super();",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testSuperConstructorCallInvalidInClassWithoutExtendsClause() {
+    invalid(
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    super();",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
+  public void testSuperConstructorCallInvalidInObjectLiteralMethod() {
+    invalid(
+        lines(
+            "const myObj = {", //
+            "  constructor() {",
+            "    return super();",
+            "  }",
+            "}",
+            ""));
+  }
+
+  @Test
   public void testSetter() {
     valid(
         lines(
@@ -760,8 +911,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Test
   public void testFeatureValidation_super() {
-    testFeatureValidation("class C { constructor() { super(); } }", Feature.SUPER);
-    testFeatureValidation("class C { f() { super.toString(); } }", Feature.SUPER);
+    testFeatureValidation("const obj = { f() { super.toString(); } };", Feature.SUPER);
   }
 
   @Test
@@ -853,6 +1003,22 @@ public final class AstValidatorTest extends CompilerTestCase {
   private void valid(String code) {
     testSame(code);
     assertThat(lastCheckWasValid).isTrue();
+  }
+
+  /**
+   * Parse and validate code for a script that should be valid.
+   *
+   * @return the SCRIPT Node created by the parsing.
+   */
+  private Node parseValidScript(String scriptCode) {
+    testSame(scriptCode);
+    assertThat(lastCheckWasValid).isTrue();
+    return getLastCompiler().getJsRoot().getFirstChild();
+  }
+
+  private void invalid(String code) {
+    testSame(code);
+    assertThat(lastCheckWasValid).isFalse();
   }
 
   private enum Check {

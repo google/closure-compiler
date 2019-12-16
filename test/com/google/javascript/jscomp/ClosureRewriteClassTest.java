@@ -774,55 +774,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExtendedObjLitSuperCall1() {
-    testRewrite(
-        lines(
-            "var FancyClass = goog.defineClass(null, {",
-            "  constructor: function() {},",
-            "  someMethod: function() {",
-            "    super.someMethod();",
-            "  }",
-            "});"),
-        lines(
-            "/** @constructor @struct */",
-            "  var FancyClass = function() {};",
-            "  FancyClass.prototype.someMethod = function() {",
-            "    super.someMethod();",
-            "  };"),
-        LanguageMode.ECMASCRIPT_2015);
-  }
-
-  @Test
-  public void testExtendedObjLitSuperCall2() {
-    testRewrite(
-        lines(
-            "var FancyClass = goog.defineClass(null, {",
-            "  constructor: function() {super();},",
-            "  someMethod: function() {}",
-            "});"),
-        lines(
-            "/** @constructor @struct */",
-            "  var FancyClass = function() {super();};",
-            "  FancyClass.prototype.someMethod = function() {};"),
-        LanguageMode.ECMASCRIPT_2015);
-  }
-
-  @Test
-  public void testExtendedObjLitSuperCall3() {
-    testRewrite(
-        lines(
-            "var FancyClass = goog.defineClass(null, {",
-            "  constructor: function() {},",
-            "  someMethod: function() {super();}",
-            "});"),
-        lines(
-            "/** @constructor @struct */",
-            "var FancyClass = function() {};",
-            "FancyClass.prototype.someMethod = function() {super();};"),
-        LanguageMode.ECMASCRIPT_2015);
-  }
-
-  @Test
   public void testNoExportInModule() {
     // TODO(b/138324343): This should keep the @export so that we later warn on this code.
     testRewrite(
