@@ -23,8 +23,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CrossChunkMethodMotion}.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class CrossChunkMethodMotionTest extends CompilerTestCase {
@@ -53,6 +51,11 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
     canMoveExterns = false;
     noStubs = false;
     enableNormalize();
+    // We move code from one script to another, and thus may move a feature from one to
+    // another.
+    // By the time CCMM runs we no longer care about what features individual scripts say
+    // they contain.
+    disableScriptFeatureValidation();
   }
 
   @Test
@@ -172,6 +175,17 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Test
+  public void doNotMoveMethodDefinedInPrototypeLiteralContainingSuper() {
+    testSame(
+        createModuleChain(
+            lines(
+                "function Foo() {}", //
+                "Foo.prototype = { method() { return super.toString(); } };"),
+            // Chunk 2
+            "(new Foo).method()"));
+  }
+
+  @Test
   public void doNotMoveMethodDefinedInPrototypeLiteralAsComputedProp() {
     testSame(
         createModuleChain(
@@ -200,6 +214,131 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
               "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
               "(new Foo).method();")
         });
+  }
+
+  @Test
+  public void doNotMoveClassMethodContainingSuper() {
+    test(
+        createModuleChain(
+            // Chunk 1
+            lines(
+                "", //
+                "class Bar { method() {} }",
+                "class Foo extends Bar { method2() { super.method(); } }",
+                ""),
+            // Chunk 2
+            "(new Foo).method2()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Bar {}",
+              "Bar.prototype.method = JSCompiler_stubMethod(0);",
+              "class Foo extends Bar { method2() { super.method(); } }",
+              ""),
+          lines(
+              "", //
+              "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).method2();",
+              "")
+        });
+  }
+
+  @Test
+  public void doNotMoveClassMethodContainingSuperInAnArrow() {
+    test(
+        createModuleChain(
+            // Chunk 1
+            lines(
+                "", //
+                "class Bar { method() {} }",
+                "class Foo extends Bar { method2() { return () => super.method(); } }",
+                ""),
+            // Chunk 2
+            "(new Foo).method2()"),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Bar {}",
+              "Bar.prototype.method = JSCompiler_stubMethod(0);",
+              "class Foo extends Bar { method2() { return () => super.method(); } }",
+              ""),
+          lines(
+              "", //
+              "Bar.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo).method2();",
+              "")
+        });
+  }
+
+  @Test
+  public void moveClassMethodContainingObjLitContainingSuper() {
+    // Don't be fooled by `super` that isn't referring to the method's `super`.
+    test(
+        createModuleChain(
+            // Chunk 1
+            lines(
+                "", //
+                "class Foo {",
+                "  method() {",
+                "    return {",
+                "      objLitMethod() {",
+                // This `super` isn't really a reference within `method()`
+                // It refers to Object.prototype.toString.
+                "        super.toString;",
+                "      }",
+                "    };",
+                "  }",
+                "}",
+                ""),
+            // Chunk 2
+            "(new Foo).method();"),
+        new String[] {
+          lines(
+              "", //
+              STUB_DECLARATIONS,
+              "class Foo {",
+              "}",
+              "Foo.prototype.method = JSCompiler_stubMethod(0);",
+              ""),
+          lines(
+              "", //
+              "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {",
+              "  return {",
+              "    objLitMethod() {",
+              "      super.toString;",
+              "    }",
+              "  };",
+              "});",
+              "(new Foo).method();",
+              "")
+        });
+  }
+
+  @Test
+  public void doNotMoveClassMethodContainingSuperDefaultParam() {
+    testSame(
+        createModuleChain(
+            // Chunk 1
+            lines(
+                "", //
+                "class Bar { defaultValue() { return 1; } }",
+                "class Foo extends Bar { method(x = super.defaultValue()) { return x; } }",
+                ""),
+            // Chunk 2
+            "(new Foo).method2()"));
+  }
+
+  @Test
+  public void doNotMoveClassConstructor() {
+    testSame(
+        createModuleChain(
+            // Chunk 1
+            lines(
+                "", //
+                "class Foo { constructor() { } }",
+                ""),
+            // Chunk 2
+            "(new Foo).constructor"));
   }
 
   @Test

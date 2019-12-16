@@ -249,6 +249,24 @@ class AnalyzePrototypeProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case SUPER:
+          // Example:
+          // class X extends Y {
+          //   method() {
+          //     return () => super.x;
+          //   }
+          // }
+          // Names associated with the arrow function, the method body, and the method itself
+          // should be marked as referencing super, but not the class definition or anything
+          // containing it.
+          for (NameContext context : symbolStack) {
+            context.name.referencesSuper = true;
+            if (NodeUtil.isMethodDeclaration(context.scope.getRootNode())) {
+              break;
+            }
+          }
+          break;
+
         case GETPROP:
           String propName = n.getSecondChild().getString();
 
@@ -815,6 +833,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
     // outer scope which isn't the global scope.
     private boolean readClosureVariables = false;
 
+    // does the definition refer to `super`?
+    // We cannot move references to `super` outside of the class body.
+    private boolean referencesSuper = false;
+
     /**
      * Constructs a new NameInfo.
      *
@@ -838,6 +860,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
     /** Determines whether it reads a closure variable. */
     boolean readsClosureVariables() {
       return readClosureVariables;
+    }
+
+    /** Does the definition refer to `super`? */
+    boolean referencesSuper() {
+      return referencesSuper;
     }
 
     /**
