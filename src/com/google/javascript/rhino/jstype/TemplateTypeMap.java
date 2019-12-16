@@ -43,18 +43,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.rhino.jstype.JSType.EqCache;
-import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
- * Manages a mapping from TemplateType to its resolved JSType. Provides utility
- * methods for cloning/extending the map.
- *
- * @author izaakr@google.com (Izaak Rubin)
+ * Manages a mapping from TemplateType to its resolved JSType. Provides utility methods for
+ * cloning/extending the map.
  */
 public class TemplateTypeMap implements Serializable {
 
@@ -287,61 +282,6 @@ public class TemplateTypeMap implements Serializable {
     return (index == -1)
         ? unknownIfUnbounded(key)
         : resolvedTemplateValues[index];
-  }
-
-  /** Determines if this map and the specified map have equivalent template types. */
-  public boolean checkEquivalenceHelper(TemplateTypeMap that, EquivalenceMethod eqMethod) {
-    return checkEquivalenceHelper(that, eqMethod, EqCache.create());
-  }
-
-  public boolean checkEquivalenceHelper(
-      TemplateTypeMap that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    @Nullable MatchStatus status = eqCache.checkCache(this, that);
-    if (status == null) {
-      boolean result =
-          checkEquivalenceHelper(eqMethod, this, that, eqCache)
-              && checkEquivalenceHelper(eqMethod, that, this, eqCache);
-      eqCache.updateCache(this, that, MatchStatus.valueOf(result));
-      return result;
-    } else {
-      return status.subtypeValue();
-    }
-  }
-
-  private static boolean checkEquivalenceHelper(
-      EquivalenceMethod eqMethod,
-      TemplateTypeMap thisMap,
-      TemplateTypeMap thatMap,
-      EqCache eqCache) {
-    ImmutableList<TemplateType> thisKeys = thisMap.getTemplateKeys();
-    ImmutableList<TemplateType> thatKeys = thatMap.getTemplateKeys();
-
-    outer:
-    for (int i = 0; i < thisKeys.size(); i++) {
-      TemplateType thisKey = thisKeys.get(i);
-      JSType thisType = thisMap.getResolvedTemplateType(thisKey);
-
-      inner:
-      for (int j = 0; j < thatKeys.size(); j++) {
-        TemplateType thatKey = thatKeys.get(j);
-        JSType thatType = thatMap.getResolvedTemplateType(thatKey);
-
-        // Cross-compare every key-value pair in this TemplateTypeMap with
-        // those in that TemplateTypeMap. Update the Equivalence match for both
-        // key-value pairs involved.
-        if (!JSType.areIdentical(thisKey, thatKey)) {
-          continue inner;
-        }
-
-        if (thisType.checkEquivalenceHelper(thatType, eqMethod, eqCache)) {
-          continue outer;
-        }
-      }
-
-      return false;
-    }
-
-    return true;
   }
 
   boolean hasAnyTemplateTypesInternal() {

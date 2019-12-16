@@ -46,7 +46,6 @@ import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType.EqCache;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.HashMap;
@@ -84,7 +83,6 @@ final class SubtypeChecker {
   private SubtypingMode subtypingMode;
 
   private HashMap<CacheKey, MatchStatus> subtypeCache;
-  private EqCache eqCache;
 
   private boolean hasRun = false;
   private int recursionDepth = 0;
@@ -228,7 +226,7 @@ final class SubtypeChecker {
     }
 
     // Reflexive case.
-    if (this.cachingEquals(subtype, supertype)) {
+    if (this.areEqual(subtype, supertype)) {
       return true;
     }
 
@@ -722,13 +720,8 @@ final class SubtypeChecker {
     return unwrapped != null && unwrapped.isNativeObjectType() ? unwrapped : null;
   }
 
-  private boolean cachingEquals(JSType left, JSType right) {
-    if (this.eqCache == null) {
-      this.eqCache =
-          this.isUsingStructuralTyping ? EqCache.create() : EqCache.createWithoutStructuralTyping();
-    }
-
-    return left.checkEquivalenceHelper(right, EquivalenceMethod.IDENTITY, this.eqCache);
+  private boolean areEqual(JSType left, JSType right) {
+    return left.isEquivalentTo(right, this.isUsingStructuralTyping);
   }
 
   /** How to treat explicitly voidable properties for structural subtype checking. */
@@ -778,7 +771,7 @@ final class SubtypeChecker {
        * insufficient in the case of recursive parameterized types because new equivalent copies of
        * the type are generated on-the-fly to compute the types of various properties.
        */
-      return cachingEquals(this.left, that.left) && cachingEquals(this.right, that.right);
+      return areEqual(this.left, that.left) && areEqual(this.right, that.right);
     }
 
     CacheKey(JSType left, JSType right) {

@@ -80,55 +80,6 @@ final class ArrowType extends JSType {
     return JSTypeClass.ARROW;
   }
 
-  /**
-   * @return True if our parameter spec is equal to {@code that}'s parameter
-   *     spec.
-   */
-  boolean hasEqualParameters(ArrowType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    Node thisParam = parameters.getFirstChild();
-    Node otherParam = that.parameters.getFirstChild();
-    while (thisParam != null && otherParam != null) {
-      JSType thisParamType = thisParam.getJSType();
-      JSType otherParamType = otherParam.getJSType();
-      if (thisParamType != null) {
-        // Both parameter lists give a type for this param, it should be equal
-        if (otherParamType != null &&
-            !thisParamType.checkEquivalenceHelper(otherParamType, eqMethod, eqCache)) {
-          return false;
-        }
-      } else {
-        if (otherParamType != null) {
-          return false;
-        }
-      }
-
-      // Check var_args/optionality
-      if (thisParam.isOptionalArg() != otherParam.isOptionalArg()) {
-        return false;
-      }
-
-      if (thisParam.isVarArgs() != otherParam.isVarArgs()) {
-        return false;
-      }
-
-      thisParam = thisParam.getNext();
-      otherParam = otherParam.getNext();
-    }
-    // One of the parameters is null, so the types are only equal if both
-    // parameter lists are null (they are equal).
-    return thisParam == otherParam;
-  }
-
-  boolean checkArrowEquivalenceHelper(
-      ArrowType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    // Please keep this method in sync with the hashCode() method below.
-    if (!returnType.checkEquivalenceHelper(
-        that.returnType, eqMethod, eqCache)) {
-      return false;
-    }
-    return hasEqualParameters(that, eqMethod, eqCache);
-  }
-
   @Override
   int recursionUnsafeHashCode() {
     int hashCode = Objects.hashCode(returnType);

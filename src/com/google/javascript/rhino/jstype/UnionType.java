@@ -375,34 +375,6 @@ public class UnionType extends JSType {
     }
   }
 
-  /**
-   * Two union types are equal if, after flattening nested union types, they have the same number of
-   * alternates and all alternates are equal.
-   */
-  boolean checkUnionEquivalenceHelper(UnionType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    List<JSType> thatAlternates = that.getAlternates();
-    if (eqMethod == EquivalenceMethod.IDENTITY && alternates.size() != thatAlternates.size()) {
-      return false;
-    }
-    for (int i = 0; i < thatAlternates.size(); i++) {
-      JSType thatAlternate = thatAlternates.get(i);
-      if (!hasAlternate(thatAlternate, eqMethod, eqCache)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private boolean hasAlternate(JSType type, EquivalenceMethod eqMethod, EqCache eqCache) {
-    for (int i = 0; i < alternates.size(); i++) {
-      JSType alternate = alternates.get(i);
-      if (alternate.checkEquivalenceHelper(type, eqMethod, eqCache)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   @Override
   public HasPropertyKind getPropertyKind(String pname, boolean autobox) {
     boolean found = false;
@@ -848,10 +820,8 @@ public class UnionType extends JSType {
             TemplatizedType templatizedCurrent = current.toMaybeTemplatizedType();
 
             if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
-              if (alternate
-                  .getTemplateTypeMap()
-                  .checkEquivalenceHelper(
-                      current.getTemplateTypeMap(), EquivalenceMethod.IDENTITY)) {
+
+              if (current.isEquivalentTo(alternate)) {
                 // case 8
                 return this;
               } else {

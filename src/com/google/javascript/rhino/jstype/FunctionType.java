@@ -52,6 +52,7 @@ import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -841,7 +842,10 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   /** Try to get the sup/inf of two functions by looking at the piecewise components. */
   private FunctionType tryMergeFunctionPiecewise(FunctionType other, boolean leastSuper) {
     Node newParamsNode = null;
-    if (call.hasEqualParameters(other.call, EquivalenceMethod.IDENTITY, EqCache.create())) {
+    if (new EqualityChecker()
+        .setEqMethod(EqMethod.IDENTITY)
+        .setUsingStructuralEquality(true)
+        .checkParameters(this.call, other.call)) {
       newParamsNode = call.parameters;
     } else {
       // If the parameters are not equal, don't try to merge them.
@@ -888,31 +892,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     return maybeSuperInstanceType.getConstructor();
   }
 
-  /**
-   * Two function types are equal if their signatures match. Since they don't have signatures, two
-   * interfaces are equal if their names match.
-   */
-  final boolean checkFunctionEquivalenceHelper(
-      FunctionType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (JSType.areIdentical(this, that)) {
-      return true;
-    }
-    if (kind != that.kind) {
-      return false;
-    }
-    switch (kind) {
-      case CONSTRUCTOR:
-      case INTERFACE:
-        // constructors and interfaces use identity semantics, which we checked for above.
-        return false;
-      case ORDINARY:
-        return typeOfThis.checkEquivalenceHelper(that.typeOfThis, eqMethod, eqCache)
-            && call.checkArrowEquivalenceHelper(that.call, eqMethod, eqCache);
-      default:
-        throw new AssertionError();
-    }
-  }
-
   @Override
   int recursionUnsafeHashCode() {
     int hc = kind.hashCode();
@@ -929,9 +908,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
   }
 
-  public final boolean hasEqualCallType(FunctionType otherType) {
-    return this.call.checkArrowEquivalenceHelper(
-        otherType.call, EquivalenceMethod.IDENTITY, EqCache.create());
+  public final boolean hasEqualCallType(FunctionType that) {
+    return new EqualityChecker()
+        .setEqMethod(EqMethod.IDENTITY)
+        .setUsingStructuralEquality(true)
+        .check(this.call, that.call);
   }
 
   /**

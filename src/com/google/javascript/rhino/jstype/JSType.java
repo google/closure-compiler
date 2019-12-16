@@ -47,9 +47,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -677,17 +676,19 @@ public abstract class JSType implements Serializable {
 
   @Override
   public boolean equals(@Nullable Object jsType) {
-    return (jsType instanceof JSType) && isEquivalentTo((JSType) jsType);
+    return (jsType instanceof JSType) && this.isEquivalentTo((JSType) jsType);
   }
 
   /** Checks if two types are equivalent. */
   public final boolean isEquivalentTo(@Nullable JSType that) {
-    return isEquivalentTo(that, false);
+    return this.isEquivalentTo(that, false);
   }
 
   public final boolean isEquivalentTo(@Nullable JSType that, boolean isStructural) {
-    EqCache eqCache = isStructural ? EqCache.create() : EqCache.createWithoutStructuralTyping();
-    return checkEquivalenceHelper(that, EquivalenceMethod.IDENTITY, eqCache);
+    return new EqualityChecker()
+        .setEqMethod(EqMethod.IDENTITY)
+        .setUsingStructuralEquality(isStructural)
+        .check(this, that);
   }
 
   public static final boolean isEquivalent(@Nullable JSType typeA, @Nullable JSType typeB) {
@@ -699,145 +700,13 @@ public abstract class JSType implements Serializable {
    * flow analysis.
    *
    * <p>This is a trickier check than pure equality, because it has to properly handle unknown
-   * types. See {@code EquivalenceMethod} for more info.
+   * types. See {@code EqMethod} for more info.
    */
   public final boolean differsFrom(JSType that) {
-    return !checkEquivalenceHelper(that, EquivalenceMethod.DATA_FLOW, EqCache.create());
-  }
-
-
-  boolean checkEquivalenceHelper(
-      final @Nullable JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (that == null) {
-      return false;
-    }
-
-    if (areIdentical(this, that)) {
-      return true;
-    }
-
-    if (this.isTemplateType() || that.isTemplateType()) {
-      /// Template types have identity equality. Make sure we unwrap any proxies to them.
-      return areIdentical(this.toMaybeTemplateType(), that.toMaybeTemplateType());
-    }
-
-    if (this.isNoResolvedType() && that.isNoResolvedType()) {
-      if (this.isNamedType() && that.isNamedType()) {
-        return Objects.equals(
-            this.toMaybeNamedType().getReferenceName(), //
-            that.toMaybeNamedType().getReferenceName());
-      } else {
-        return true;
-      }
-    }
-
-    boolean thisUnknown = isUnknownType();
-    boolean thatUnknown = that.isUnknownType();
-    if (thisUnknown || thatUnknown) {
-      if (eqMethod == EquivalenceMethod.DATA_FLOW) {
-        // If we're checking data flow, then two types are the same if they're
-        // both unknown.
-        return thisUnknown && thatUnknown;
-      } else if (thisUnknown && thatUnknown &&
-          (isNominalType() ^ that.isNominalType())) {
-        // If they're both unknown, but one is a nominal type and the other
-        // is not, then we should fail out immediately. This ensures that
-        // we won't unbox the unknowns further down.
-        return false;
-      }
-    }
-
-    if (isUnionType() && that.isUnionType()) {
-      return toMaybeUnionType().checkUnionEquivalenceHelper(
-          that.toMaybeUnionType(), eqMethod, eqCache);
-    }
-
-    if (isFunctionType() && that.isFunctionType()) {
-      return toMaybeFunctionType().checkFunctionEquivalenceHelper(
-          that.toMaybeFunctionType(), eqMethod, eqCache);
-    }
-
-    if (!getTemplateTypeMap()
-        .checkEquivalenceHelper(that.getTemplateTypeMap(), eqMethod, eqCache)) {
-      return false;
-    }
-
-    // Whether or not we use structural typing to compare object types is based on:
-    // 1. if eqCache.isStructuralTyping() is true, we always use structural typing
-    // 2. if we are comparing to anonymous record types (e.g. `{a: 3}`), always use structural types
-    // Ideally we would also use structural typing to compare anything declared @record, but
-    // that is harder to do with our current representation of types.
-    if (eqCache.shouldMatchStructurally(this, that)) {
-      return toMaybeObjectType()
-          .checkStructuralEquivalenceHelper(that.toMaybeObjectType(), eqMethod, eqCache);
-    }
-
-    if (isNominalType() && that.isNominalType()) {
-      JSType thisUnwrapped = unwrapNamedTypeAndTemplatizedType(this.toObjectType());
-      JSType thatUnwrapped = unwrapNamedTypeAndTemplatizedType(that.toObjectType());
-      if (isResolved() && that.isResolved()) {
-        return areIdentical(thisUnwrapped, thatUnwrapped);
-      }
-
-      // TODO(b/140763807): this is not valid across scopes pre-resolution.
-      @Nullable
-      String nameOfThis =
-          thisUnwrapped.toObjectType() != null
-              ? thisUnwrapped.toObjectType().getReferenceName()
-              : null;
-      @Nullable
-      String nameOfThat =
-          thatUnwrapped.toObjectType() != null
-              ? thatUnwrapped.toObjectType().getReferenceName()
-              : null;
-      if ((nameOfThis == null) && (nameOfThat == null)) {
-        // These are two anonymous types that were masquerading as nominal, so don't compare names.
-      } else {
-        return Objects.equals(nameOfThis, nameOfThat);
-      }
-    }
-
-    if (isTemplateType() && that.isTemplateType()) {
-      // TemplateType are they same only if they are object identical,
-      // which we check at the start of this function.
-      return false;
-    }
-
-    // Unbox other proxies.
-    if (this instanceof ProxyObjectType) {
-      return ((ProxyObjectType) this)
-          .getReferencedTypeInternal().checkEquivalenceHelper(
-              that, eqMethod, eqCache);
-    }
-
-    if (that instanceof ProxyObjectType) {
-      return checkEquivalenceHelper(
-          ((ProxyObjectType) that).getReferencedTypeInternal(),
-          eqMethod, eqCache);
-    }
-
-    // Relies on the fact that for the base {@link JSType}, only one
-    // instance of each sub-type will ever be created in a given registry, so
-    // there is no need to verify members. If the object pointers are not
-    // identical, then the type member must be different.
-    return false;
-  }
-
-  private static JSType unwrapNamedTypeAndTemplatizedType(ObjectType objType) {
-    if (!objType.isResolved() || (!objType.isNamedType() && !objType.isTemplatizedType())) {
-      // Don't unwrap TemplateTypes, as they should use identity semantics even if their bounds
-      // are compatible. On the other hand, different TemplatizedType instances may be equal if
-      // their TemplateTypeMaps are compatible (which was checked for earlier).
-      return objType;
-    }
-
-    ObjectType internal =
-        objType.isNamedType()
-            ? objType.toMaybeNamedType().getReferencedObjTypeInternal()
-            : objType.toMaybeTemplatizedType().getReferencedObjTypeInternal();
-    return (internal != null && internal.isNominalType())
-        ? unwrapNamedTypeAndTemplatizedType(internal)
-        : internal;
+    return !new EqualityChecker()
+        .setEqMethod(EqMethod.DATA_FLOW)
+        .setUsingStructuralEquality(true)
+        .check(this, that);
   }
 
   /**
@@ -1817,123 +1686,6 @@ public abstract class JSType implements Serializable {
 
     static MatchStatus valueOf(boolean match) {
       return match ? MATCH : NOT_MATCH;
-    }
-  }
-
-  /** cache used by equivalence check logic */
-  static final class EqCache {
-    private final boolean isStructuralTyping;
-    private HashMap<Key, MatchStatus> matchCache;
-
-    static EqCache create() {
-      return new EqCache(true);
-    }
-
-    static EqCache createWithoutStructuralTyping() {
-      return new EqCache(false);
-    }
-
-    private EqCache(boolean isStructuralTyping) {
-      this.isStructuralTyping = isStructuralTyping;
-    }
-
-    boolean isStructuralTyping() {
-      return this.isStructuralTyping;
-    }
-
-    void updateCache(JSType left, JSType right, MatchStatus isMatch) {
-      updateCacheAnyType(left, right, isMatch); // Defer Key instantiation.
-    }
-
-    void updateCache(TemplateTypeMap left, TemplateTypeMap right, MatchStatus isMatch) {
-      updateCacheAnyType(left, right, isMatch); // Defer Key instantiation.
-    }
-
-    private void updateCacheAnyType(Object left, Object right, MatchStatus isMatch) {
-      if (left == right) {
-        // Recall that we never bother reading keys with equal elements.
-        return;
-      }
-
-      getMatchCache().put(new Key(left, right), isMatch);
-    }
-
-    @Nullable
-    MatchStatus checkCache(JSType left, JSType right) {
-      return checkCacheAnyType(left, right); // Defer Key instantiation.
-    }
-
-    @Nullable
-    MatchStatus checkCache(TemplateTypeMap left, TemplateTypeMap right) {
-      return checkCacheAnyType(left, right); // Defer Key instantiation.
-    }
-
-    private MatchStatus checkCacheAnyType(Object left, Object right) {
-      if (left == right) {
-        return MatchStatus.MATCH;
-      }
-
-      return getMatchCache().putIfAbsent(new Key(left, right), MatchStatus.PROCESSING);
-    }
-
-    private HashMap<Key, MatchStatus> getMatchCache() {
-      if (matchCache == null) {
-        matchCache = new HashMap<>();
-      }
-      return matchCache;
-    }
-
-    boolean shouldMatchStructurally(JSType left, JSType right) {
-      return isStructuralTyping()
-          ? left.isStructuralType() && right.isStructuralType()
-          : left.isRecordType() && right.isRecordType();
-    }
-
-    private static final class Key {
-      private final Object left;
-      private final Object right;
-      private final int hashCode; // Cache this calculation because it is made often.
-
-      @Override
-      public int hashCode() {
-        return hashCode;
-      }
-
-      @Override
-      @SuppressWarnings({
-        "ShortCircuitBoolean",
-        "ReferenceEquality",
-        "EqualsBrokenForNull",
-        "EqualsUnsafeCast"
-      })
-      public boolean equals(Object other) {
-        // Calling this with `null` or not a `Key` should cause a crash.
-        Key that = (Key) other;
-        if (this == other) {
-          return true;
-        }
-
-        // Recall that `Key` implements identity equality on `left` and `right`.
-        //
-        // Recall that `left` and `right` are not ordered.
-        //
-        // Use non-short circuiting operators to eliminate branches. Equality checks are
-        // side-effect-free and less expensive than branches.
-        return ((this.left == that.left) & (this.right == that.right))
-            | ((this.left == that.right) & (this.right == that.left));
-      }
-
-      Key(Object left, Object right) {
-        this.left = left;
-        this.right = right;
-
-        // XOR the component hashcodes because:
-        //   - It's a symmetric operator, so we don't have to worry about order.
-        //   - It's assumed the inputs are already uniformly distributed and unrelated.
-        //     - `left` and `right` should never be identical.
-        // Recall that `Key` implements identity equality on `left` and `right`.
-        this.hashCode = System.identityHashCode(left) ^ System.identityHashCode(right);
-      }
     }
   }
 

@@ -611,38 +611,6 @@ public abstract class ObjectType extends JSType implements Serializable {
   }
 
   /**
-   * Check for structural equivalence with {@code that}.
-   * (e.g. two @record types with the same prototype properties)
-   */
-  final boolean checkStructuralEquivalenceHelper(
-      ObjectType otherObject, EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (this.isTemplatizedType() && this.toMaybeTemplatizedType().wrapsSameRawType(otherObject)) {
-      return this.getTemplateTypeMap()
-          .checkEquivalenceHelper(otherObject.getTemplateTypeMap(), eqMethod, eqCache);
-    }
-
-    MatchStatus result = eqCache.checkCache(this, otherObject);
-    if (result != null) {
-      return result.subtypeValue();
-    }
-    Set<String> keySet = getPropertyNames();
-    Set<String> otherKeySet = otherObject.getPropertyNames();
-    if (!otherKeySet.equals(keySet)) {
-      eqCache.updateCache(this, otherObject, MatchStatus.NOT_MATCH);
-      return false;
-    }
-    for (String key : keySet) {
-      if (!otherObject.getPropertyType(key).checkEquivalenceHelper(
-              getPropertyType(key), eqMethod, eqCache)) {
-        eqCache.updateCache(this, otherObject, MatchStatus.NOT_MATCH);
-        return false;
-      }
-    }
-    eqCache.updateCache(this, otherObject, MatchStatus.MATCH);
-    return true;
-  }
-
-  /**
    * Returns a list of properties defined or inferred on this type and any of
    * its supertypes.
    */
