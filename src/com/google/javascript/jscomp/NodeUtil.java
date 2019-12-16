@@ -3865,10 +3865,8 @@ public final class NodeUtil {
     return lhsNodes;
   }
 
-  /**
-   * @return {@code true} if the node is a definition with Object.defineProperties
-   */
-  static boolean isObjectDefinePropertiesDefinition(Node n) {
+  /** Returns {@code true} if the node is a definition with Object.defineProperties */
+  public static boolean isObjectDefinePropertiesDefinition(Node n) {
     if (!n.isCall() || !n.hasXChildren(3)) {
       return false;
     }

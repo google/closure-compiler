@@ -16,22 +16,22 @@
 package com.google.javascript.jscomp;
 
 /** Shared diagnotic type related to property renaming. */
-final class PropertyRenamingDiagnostics {
+public final class PropertyRenamingDiagnostics {
   // TODO(user): {1} and {2} are not exactly useful for most people.
-  static final DiagnosticType INVALIDATION =
+  public static final DiagnosticType INVALIDATION =
       DiagnosticType.disabled(
           "JSC_INVALIDATION",
           "Property disambiguator skipping all instances of property {0} "
               + "because of type {1} node {2}. {3}");
 
-  static final DiagnosticType INVALIDATION_ON_TYPE =
+  public static final DiagnosticType INVALIDATION_ON_TYPE =
       DiagnosticType.disabled(
           "JSC_INVALIDATION_TYPE",
           "Property disambiguator skipping instances of property {0} on type {1}. {2}");
 
   // TODO(tbreisacher): Check this in a separate pass, so that users get the error even if
   // optimizations are not running.
-  static final DiagnosticType INVALID_RENAME_FUNCTION =
+  public static final DiagnosticType INVALID_RENAME_FUNCTION =
       DiagnosticType.error("JSC_INVALID_RENAME_FUNCTION", "{0} call is invalid: {1}");
 
   private PropertyRenamingDiagnostics() {}
