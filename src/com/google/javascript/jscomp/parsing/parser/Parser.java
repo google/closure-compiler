@@ -3226,7 +3226,7 @@ public class Parser {
   // 11.12 Conditional Expression
   private ParseTree parseConditional(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
-    ParseTree condition = parseLogicalOR(expressionIn);
+    ParseTree condition = parseShortCircuit(expressionIn);
     if (peek(TokenType.QUESTION)) {
       eat(TokenType.QUESTION);
       ParseTree left = parseAssignment(expressionIn);
@@ -3236,6 +3236,35 @@ public class Parser {
           getTreeLocation(start), condition, left, right);
     }
     return condition;
+  }
+
+  private ParseTree parseShortCircuit(Expression expressionIn) {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree left = parseLogicalOR(expressionIn);
+    if (peek(TokenType.QUESTION_QUESTION)) {
+      if (left.type == ParseTreeType.BINARY_OPERATOR) {
+        BinaryOperatorTree binaryTree = left.asBinaryOperator();
+        if (binaryTree.operator.type == TokenType.AND || binaryTree.operator.type == TokenType.OR) {
+          reportError("Logical OR and logical AND require parentheses when used with '??'");
+        }
+      }
+      return parseNullishCoalesce(expressionIn, left, start);
+    } else {
+      return left;
+    }
+  }
+
+  private ParseTree parseNullishCoalesce(
+      Expression expressionIn, ParseTree left, SourcePosition start) {
+    while (peek(TokenType.QUESTION_QUESTION)) {
+      Token operator = eat(TokenType.QUESTION_QUESTION);
+      ParseTree right = parseBitwiseOR(expressionIn);
+      left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
+    }
+    if (peek(TokenType.AND) || peek(TokenType.OR)) {
+      reportError("Logical OR and logical AND require parentheses when used with '??'");
+    }
+    return left;
   }
 
   // 11.11 Logical OR

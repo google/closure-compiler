@@ -466,7 +466,12 @@ public class Scanner {
       case ';': return createToken(TokenType.SEMI_COLON, beginToken);
       case ',': return createToken(TokenType.COMMA, beginToken);
       case '~': return createToken(TokenType.TILDE, beginToken);
-      case '?': return createToken(TokenType.QUESTION, beginToken);
+      case '?':
+        if (peek('?')) { // see ??
+          nextChar();
+          return createToken(TokenType.QUESTION_QUESTION, beginToken);
+        }
+        return createToken(TokenType.QUESTION, beginToken);
       case ':': return createToken(TokenType.COLON, beginToken);
       case '<':
         switch (peekChar()) {

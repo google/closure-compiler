@@ -450,6 +450,10 @@ public class IR {
     return binaryOp(Token.OR, expr1, expr2);
   }
 
+  public static Node coalesce(Node expr1, Node expr2) {
+    return binaryOp(Token.COALESCE, expr1, expr2);
+  }
+
   public static Node not(Node expr1) {
     return unaryOp(Token.NOT, expr1);
   }

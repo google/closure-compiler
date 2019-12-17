@@ -5542,6 +5542,67 @@ public final class ParserTest extends BaseJSTypeTestCase {
         .isEqualTo(IR.exprResult(IR.getprop(IR.name("x"), "import", "meta")));
   }
 
+  @Test
+  public void testNullishCoalesce() {
+    mode = LanguageMode.UNSUPPORTED;
+    expectFeatures(Feature.NULL_COALESCE_OP);
+
+    Node tree = parse("x??y");
+    assertNode(tree.getFirstChild())
+        .isEqualTo(IR.exprResult(IR.coalesce(IR.name("x"), IR.name("y"))));
+  }
+
+  @Test
+  public void testNullishCoalesce_es2019() {
+    mode = LanguageMode.ECMASCRIPT_2019;
+    expectFeatures(Feature.NULL_COALESCE_OP);
+
+    parseWarning("x??y", unsupportedFeatureMessage(Feature.NULL_COALESCE_OP));
+  }
+
+  @Test
+  public void testNullishCoalesce_withLogicalAND_shouldFail() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parseError("x&&y??z", "Logical OR and logical AND require parentheses when used with '??'");
+  }
+
+  @Test
+  public void testNullishCoalesce_withLogicalOR_shouldFail() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parseError("x??y||z", "Logical OR and logical AND require parentheses when used with '??'");
+  }
+
+  @Test
+  public void testNullishCoalesce_withLogicalANDinParens() {
+    mode = LanguageMode.UNSUPPORTED;
+    expectFeatures(Feature.NULL_COALESCE_OP);
+
+    Node tree = parse("(x&&y)??z");
+    assertNode(tree.getFirstChild())
+        .isEqualTo(IR.exprResult(IR.coalesce(IR.and(IR.name("x"), IR.name("y")), IR.name("z"))));
+  }
+
+  @Test
+  public void testNullishCoalesce_chaining() {
+    mode = LanguageMode.UNSUPPORTED;
+    expectFeatures(Feature.NULL_COALESCE_OP);
+
+    Node tree = parse("x??y??z");
+    Node expr = tree.getFirstChild();
+    Node coalesce = expr.getFirstChild();
+
+    assertNode(expr)
+        .isEqualTo(
+            IR.exprResult(IR.coalesce(IR.coalesce(IR.name("x"), IR.name("y")), IR.name("z"))));
+    assertNode(expr).hasLineno(1).hasCharno(0).hasLength(7);
+    assertNode(coalesce).hasType(Token.COALESCE);
+    assertNode(coalesce).hasLineno(1).hasCharno(0).hasLength(7);
+    assertNode(coalesce.getFirstChild()).hasType(Token.COALESCE);
+    assertNode(coalesce.getFirstChild()).hasLineno(1).hasCharno(0).hasLength(4);
+  }
+
   private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {
     JSDocInfo info = node.getJSDocInfo();
     assertWithMessage("Node has no JSDocInfo: %s", node).that(info).isNotNull();

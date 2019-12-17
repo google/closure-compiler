@@ -1660,6 +1660,8 @@ class IRFactory {
         if (exprNode.operator.type == TokenType.STAR_STAR
             || exprNode.operator.type == TokenType.STAR_STAR_EQUAL) {
           maybeWarnForFeature(exprNode, Feature.EXPONENT_OP);
+        } else if (exprNode.operator.type == TokenType.QUESTION_QUESTION) {
+          maybeWarnForFeature(exprNode, Feature.NULL_COALESCE_OP);
         }
         return newNode(
             transformBinaryTokenType(exprNode.operator.type),
@@ -1681,6 +1683,9 @@ class IRFactory {
         if (exprTree.operator.type == TokenType.STAR_STAR
             || exprTree.operator.type == TokenType.STAR_STAR_EQUAL) {
           maybeWarnForFeature(exprTree, Feature.EXPONENT_OP);
+        }
+        if (exprTree.operator.type == TokenType.QUESTION_QUESTION) {
+          maybeWarnForFeature(exprTree, Feature.NULL_COALESCE_OP);
         }
         previous = current;
         // Skip the first child but recurse normally into the right operand as typically this isn't
@@ -3767,6 +3772,8 @@ class IRFactory {
         return Token.OR;
       case AND:
         return Token.AND;
+      case QUESTION_QUESTION:
+        return Token.COALESCE;
 
       default:
         throw new IllegalStateException(String.valueOf(token));

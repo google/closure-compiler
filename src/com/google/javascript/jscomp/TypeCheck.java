@@ -990,6 +990,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case HOOK:
       case OBJECTLIT:
       case OR:
+      case COALESCE:
         if (n.getJSType() != null) { // If we didn't run type inference.
           ensureTyped(n);
         } else {
