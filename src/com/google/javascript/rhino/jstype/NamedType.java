@@ -100,12 +100,19 @@ public final class NamedType extends ProxyObjectType {
   private final String sourceName;
   private final int lineno;
   private final int charno;
-  private final boolean nonNull;
+  private final ResolutionKind resolutionKind;
 
-  /**
-   * Validates the type resolution.
-   */
+  @Nullable private StaticTypedScope resolutionScope;
+
+  /** Validates the type resolution. */
   private transient Predicate<JSType> validator;
+
+  // The following instance properties (`propertyContinuations`, `templateTypes`, and
+  // `restrictByNull`) are used to indicate that some type operation should be applied to the type
+  // after resolution. This is necessary because type operations are not well-defined when applied
+  // to unresolved NamedTypes.
+  //
+  // TODO(lharker): Generalize this pattern instead of storing these arbitrary fields.
 
   /** Property-defining continuations. */
   private transient List<PropertyContinuation> propertyContinuations = null;
@@ -115,37 +122,26 @@ public final class NamedType extends ProxyObjectType {
    * ignored during resolution, for backwards compatibility with existing usage. This field is not
    * used for JSCompiler's type checking; it is only needed by Clutz.
    */
-  @Nullable private final ImmutableList<JSType> templateTypes;
+  private final ImmutableList<JSType> templateTypes;
 
-  @Nullable private StaticTypedScope resolutionScope;
+  /** Applies the "!" operator to the resolved type, which removes null and undefined */
+  private final boolean restrictByNull;
 
-  /** Create a named type based on the reference. */
-  NamedType(
-      StaticTypedScope scope,
-      JSTypeRegistry registry,
-      String reference,
-      String sourceName,
-      int lineno,
-      int charno) {
-    this(scope, registry, reference, sourceName, lineno, charno, null);
-  }
+  private NamedType(Builder builder) {
+    super(builder.registry, builder.registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
+    checkNotNull(builder.referenceName);
+    checkNotNull(builder.resolutionKind);
+    checkNotNull(builder.templateTypes);
+    // TODO(lharker): enforce that the scope is not null
 
-  NamedType(
-      StaticTypedScope scope,
-      JSTypeRegistry registry,
-      String reference,
-      String sourceName,
-      int lineno,
-      int charno,
-      ImmutableList<JSType> templateTypes) {
-    super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
-    this.nonNull = reference.startsWith("!");
-    this.resolutionScope = scope;
-    this.reference = nonNull ? reference.substring(1) : reference;
-    this.sourceName = sourceName;
-    this.lineno = lineno;
-    this.charno = charno;
-    this.templateTypes = templateTypes;
+    this.restrictByNull = builder.restrictByNull;
+    this.resolutionScope = builder.scope;
+    this.reference = builder.referenceName;
+    this.sourceName = builder.sourceName;
+    this.lineno = builder.lineno;
+    this.charno = builder.charno;
+    this.templateTypes = builder.templateTypes;
+    this.resolutionKind = builder.resolutionKind;
   }
 
   @Override
@@ -155,7 +151,7 @@ public final class NamedType extends ProxyObjectType {
 
   /** Returns a new non-null version of this type. */
   JSType getBangType() {
-    if (nonNull) {
+    if (restrictByNull) {
       return this;
     } else if (isResolved()) {
       // Already resolved, just restrict.
@@ -165,8 +161,7 @@ public final class NamedType extends ProxyObjectType {
           ? this
           : getReferencedType().restrictByNotNullOrUndefined();
     }
-    return new NamedType(
-        resolutionScope, registry, "!" + reference, sourceName, lineno, charno, templateTypes);
+    return this.toBuilder().setRestrictByNull(true).build();
   }
 
   @Override
@@ -212,7 +207,7 @@ public final class NamedType extends ProxyObjectType {
 
   @Override
   public String getReferenceName() {
-    return reference;
+    return resolutionKind.equals(ResolutionKind.TYPE_NAME) ? reference : "typeof " + reference;
   }
 
   @Override
@@ -255,7 +250,7 @@ public final class NamedType extends ProxyObjectType {
     }
 
     boolean resolved = false;
-    if (reference.startsWith("typeof ")) {
+    if (resolutionKind.equals(ResolutionKind.TYPEOF)) {
       resolveTypeof(reporter);
       resolved = true;
     }
@@ -409,9 +404,8 @@ public final class NamedType extends ProxyObjectType {
   }
 
   private void resolveTypeof(ErrorReporter reporter) {
-    String name = reference.substring("typeof ".length());
     // TODO(sdh): require var to be const?
-    JSType type = resolutionScope.lookupQualifiedName(QualifiedName.of(name));
+    JSType type = resolutionScope.lookupQualifiedName(QualifiedName.of(reference));
     if (type == null || type.isUnknownType()) {
       warning(reporter, "Missing type for `typeof` value. The value must be declared and const.");
       setReferencedAndResolvedType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE), reporter);
@@ -420,7 +414,7 @@ public final class NamedType extends ProxyObjectType {
         // Create an extra layer of wrapping so that the "typeof" name is preserved for namespaces.
         // This is depended on by Clutz to prevent infinite loops in self-referential typeof types.
         JSType objlit = type;
-        type = registry.createNamedType(resolutionScope, reference, sourceName, lineno, charno);
+        type = toBuilder().build();
         ((NamedType) type).setReferencedType(objlit);
       }
       setReferencedAndResolvedType(type, reporter);
@@ -495,7 +489,7 @@ public final class NamedType extends ProxyObjectType {
 
   private void setReferencedAndResolvedType(
       JSType type, ErrorReporter reporter) {
-    if (nonNull) {
+    if (restrictByNull) {
       type = type.restrictByNotNullOrUndefined();
     }
     if (validator != null) {
@@ -623,5 +617,78 @@ public final class NamedType extends ProxyObjectType {
   @Override
   public <T> T visit(Visitor<T> visitor) {
     return visitor.caseNamedType(this);
+  }
+
+  static Builder builder(JSTypeRegistry registry, String reference) {
+    return new Builder(registry, reference);
+  }
+
+  enum ResolutionKind {
+    TYPE_NAME,
+    TYPEOF
+  }
+
+  Builder toBuilder() {
+    return new Builder(this.registry, this.reference)
+        .setScope(this.resolutionScope)
+        .setResolutionKind(this.resolutionKind)
+        .setErrorReportingLocation(this.sourceName, this.lineno, this.charno)
+        .setTemplateTypes(this.templateTypes)
+        .setRestrictByNull(this.restrictByNull);
+  }
+
+  static final class Builder {
+    private final JSTypeRegistry registry;
+    private ResolutionKind resolutionKind;
+    private final String referenceName;
+    private StaticTypedScope scope;
+    private String sourceName;
+    private int lineno;
+    private int charno;
+    private boolean restrictByNull;
+    private ImmutableList<JSType> templateTypes = ImmutableList.of();
+
+    private Builder(JSTypeRegistry registry, String referenceName) {
+      this.registry = registry;
+      this.referenceName = referenceName;
+    }
+
+    Builder setScope(StaticTypedScope scope) {
+      this.scope = scope;
+      return this;
+    }
+
+    Builder setResolutionKind(ResolutionKind resolutionKind) {
+      this.resolutionKind = resolutionKind;
+      return this;
+    }
+
+    Builder setErrorReportingLocation(String sourceName, int lineno, int charno) {
+      this.sourceName = sourceName;
+      this.lineno = lineno;
+      this.charno = charno;
+      return this;
+    }
+
+    Builder setErrorReportingLocationFrom(Node source) {
+      this.sourceName = source.getSourceFileName();
+      this.lineno = source.getLineno();
+      this.charno = source.getCharno();
+      return this;
+    }
+
+    Builder setTemplateTypes(ImmutableList<JSType> templateTypes) {
+      this.templateTypes = templateTypes;
+      return this;
+    }
+
+    private Builder setRestrictByNull(boolean restrictByNull) {
+      this.restrictByNull = restrictByNull;
+      return this;
+    }
+
+    NamedType build() {
+      return new NamedType(this);
+    }
   }
 }

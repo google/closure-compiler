@@ -123,8 +123,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             .withReturnType(NUMBER_TYPE)
             .withTypeOfThis(DATE_TYPE)
             .build();
-    unresolvedNamedType = new NamedType(scope, registry, "not.resolved.named.type", null, -1, -1);
-    namedGoogBar = new NamedType(scope, registry, "goog.Bar", null, -1, -1);
+    unresolvedNamedType = registry.createNamedType(scope, "not.resolved.named.type", null, -1, -1);
+    namedGoogBar = registry.createNamedType(scope, "goog.Bar", null, -1, -1);
 
     subclassCtor = FunctionType.builder(registry).forConstructor().build();
     subclassCtor.setPrototypeBasedOn(unresolvedNamedType);
@@ -155,7 +155,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     namedGoogBar.resolve(null);
     assertThat(namedGoogBar.getImplicitPrototype()).isNotNull();
 
-    forwardDeclaredNamedType = new NamedType(scope, registry, "forwardDeclared", "source", 1, 0);
+    forwardDeclaredNamedType = registry.createNamedType(scope, "forwardDeclared", "source", 1, 0);
     forwardDeclaredNamedType.resolve(new SimpleErrorReporter());
 
     types =
@@ -4701,11 +4701,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests the {@link NamedType#equals} function, which had a bug in it. */
   @Test
   public void testNamedTypeEquals() {
-    JSTypeRegistry jst = new JSTypeRegistry(null);
+    JSTypeRegistry registry = new JSTypeRegistry(null);
 
     // test == if references are equal
-    NamedType a = new NamedType(EMPTY_SCOPE, jst, "type1", "source", 1, 0);
-    NamedType b = new NamedType(EMPTY_SCOPE, jst, "type1", "source", 1, 0);
+    NamedType a = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
+    NamedType b = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
     assertThat(a.isEquivalentTo(b)).isTrue();
 
     // test == instance of referenced type
@@ -4717,8 +4717,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testNamedTypeEquals2() {
     // test == if references are equal
-    NamedType a = new NamedType(EMPTY_SCOPE, registry, "typeA", "source", 1, 0);
-    NamedType b = new NamedType(EMPTY_SCOPE, registry, "typeB", "source", 1, 0);
+    NamedType a = registry.createNamedType(EMPTY_SCOPE, "typeA", "source", 1, 0);
+    NamedType b = registry.createNamedType(EMPTY_SCOPE, "typeB", "source", 1, 0);
 
     ObjectType realA =
         registry.createConstructorType("typeA", null, null, null, null, false).getInstanceType();
@@ -5514,7 +5514,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // Normally, there is no way to create a Named NoType alias so
     // avoid confusing things by doing it here..
     if (!jstype.isNoType()) {
-      NamedType namedWrapper = new NamedType(EMPTY_SCOPE, registry, name, "[testcode]", -1, -1);
+      NamedType namedWrapper = registry.createNamedType(EMPTY_SCOPE, name, "[testcode]", -1, -1);
       namedWrapper.setReferencedType(jstype);
       return namedWrapper;
     } else {

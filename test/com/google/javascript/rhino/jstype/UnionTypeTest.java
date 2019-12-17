@@ -64,7 +64,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   public void setUp() throws Exception {
     super.setUp();
     unresolvedNamedType =
-        new NamedType(EMPTY_SCOPE, registry, "not.resolved.named.type", null, -1, -1);
+        registry.createNamedType(EMPTY_SCOPE, "not.resolved.named.type", null, -1, -1);
 
     this.base =
         FunctionType.builder(registry).forConstructor().withName("Base").build().getInstanceType();

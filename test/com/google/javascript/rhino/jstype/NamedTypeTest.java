@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.EqualsTester;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import javax.annotation.Nullable;
@@ -246,7 +247,11 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     ObjectType barType = createNominalType("Bar", /* resolve= */ false);
 
     NamedType fooType =
-        new NamedType(fooToFooScope, registry, "Foo", "a.js", 0, 0, ImmutableList.of(barType));
+        NamedType.builder(registry, "Foo")
+            .setResolutionKind(ResolutionKind.TYPE_NAME)
+            .setScope(fooToFooScope)
+            .setTemplateTypes(ImmutableList.of(barType))
+            .build();
 
     assertThat(barType.isResolved()).isFalse();
 
@@ -397,7 +402,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
     public NamedType build() {
       checkNotNull(name, "NamedType requires a name");
-      return new NamedType(scope, registry, name, "source", 1, 0);
+      return registry.createNamedType(scope, name, "source", 1, 0);
     }
   }
 }

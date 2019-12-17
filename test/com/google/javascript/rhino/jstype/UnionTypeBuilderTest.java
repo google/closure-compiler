@@ -144,9 +144,9 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
 
   @Test
   public void testUnknownTypes() {
-    JSType unresolvedNameA1 = new NamedType(EMPTY_SCOPE, registry, "not.resolved.A", null, -1, -1);
-    JSType unresolvedNameA2 = new NamedType(EMPTY_SCOPE, registry, "not.resolved.A", null, -1, -1);
-    JSType unresolvedNameB = new NamedType(EMPTY_SCOPE, registry, "not.resolved.B", null, -1, -1);
+    JSType unresolvedNameA1 = registry.createNamedType(EMPTY_SCOPE, "not.resolved.A", null, -1, -1);
+    JSType unresolvedNameA2 = registry.createNamedType(EMPTY_SCOPE, "not.resolved.A", null, -1, -1);
+    JSType unresolvedNameB = registry.createNamedType(EMPTY_SCOPE, "not.resolved.B", null, -1, -1);
 
     assertUnion("?", UNKNOWN_TYPE);
     assertUnion("?", UNKNOWN_TYPE, UNKNOWN_TYPE);

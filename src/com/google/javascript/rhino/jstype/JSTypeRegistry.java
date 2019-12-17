@@ -72,6 +72,7 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -1869,7 +1870,11 @@ public class JSTypeRegistry implements Serializable {
   @VisibleForTesting
   public NamedType createNamedType(
       StaticTypedScope scope, String reference, String sourceName, int lineno, int charno) {
-    return new NamedType(scope, this, reference, sourceName, lineno, charno);
+    return NamedType.builder(this, reference)
+        .setScope(scope)
+        .setResolutionKind(ResolutionKind.TYPE_NAME)
+        .setErrorReportingLocation(sourceName, lineno, charno)
+        .build();
   }
 
   /** Identifies the name of a typedef or enum before we actually declare it. */
@@ -1977,16 +1982,19 @@ public class JSTypeRegistry implements Serializable {
           if (type == null || type.isUnknownType() || rootSlot.getScope() != declarationScope) {
             // Create a NamedType via getType so that it will be added to the list of types to
             // eventually resolve if necessary.
-            return getType(scope, "typeof " + n.getFirstChild().getString(),
-                sourceName,
-                n.getLineno(),
-                n.getCharno(),
-                recordUnresolvedTypes);
+            return NamedType.builder(this, name)
+                .setScope(scope)
+                .setResolutionKind(ResolutionKind.TYPEOF)
+                .setErrorReportingLocationFrom(n)
+                .build();
           }
           if (type.isLiteralObject()) {
             JSType scopeType = type;
             type =
-                createNamedType(scope, "typeof " + name, sourceName, n.getLineno(), n.getCharno());
+                NamedType.builder(this, name)
+                    .setScope(scope)
+                    .setResolutionKind(ResolutionKind.TYPEOF)
+                    .build();
             ((NamedType) type).setReferencedType(scopeType);
           }
           return type;
@@ -2030,14 +2038,9 @@ public class JSTypeRegistry implements Serializable {
             }
             return addNullabilityBasedOnParseContext(
                 n,
-                new NamedType(
-                    scope,
-                    this,
-                    n.getString(),
-                    sourceName,
-                    n.getLineno(),
-                    n.getCharno(),
-                    templateArgs.build()));
+                nominalType.toMaybeNamedType().toBuilder()
+                    .setTemplateTypes(templateArgs.build())
+                    .build());
           }
 
           boolean isObject =
@@ -2048,16 +2051,6 @@ public class JSTypeRegistry implements Serializable {
           List<JSType> templateArgs = new ArrayList<>();
 
           for (Node templateNode : typeList.children()) {
-            // Don't parse more templatized type nodes than the type can
-            // accommodate. This is because some existing clients have
-            // template annotations on non-templatized classes, for instance:
-            //   goog.structs.Set<SomeType>
-            // The problem in these cases is that the previously-unparsed
-            // SomeType is not actually a valid type. To prevent these clients
-            // from seeing unknown type errors, we explicitly don't parse
-            // these types.
-            // TODO(dimvar): Address this issue by removing bad template
-            // annotations on non-templatized classes.
             if (templateArgs.size() >= requiredTemplateArgCount) {
               reporter.warning(
                   "Too many template parameters",

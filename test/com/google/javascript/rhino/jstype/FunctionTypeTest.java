@@ -281,7 +281,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
             .build();
 
     // Bar points to `typeof Foo`.
-    NamedType barType = new NamedType(emptyScope, registry, "Bar", "", -1, -1);
+    NamedType barType = registry.createNamedType(emptyScope, "Bar", "", -1, -1);
     registry.declareType(emptyScope, "Bar", fooCtor);
     barType.resolve(null);
 
