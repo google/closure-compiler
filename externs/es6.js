@@ -192,7 +192,7 @@ Math.fround = function(value) {};
  * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
  */
-Object.is;
+Object.is = function(a, b) {};
 
 
 /**
