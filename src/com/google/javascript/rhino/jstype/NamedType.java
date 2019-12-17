@@ -159,7 +159,11 @@ public final class NamedType extends ProxyObjectType {
       return this;
     } else if (isResolved()) {
       // Already resolved, just restrict.
-      return getReferencedType().restrictByNotNullOrUndefined();
+      // TODO(b/146173738): just return getReferencedType().restrictByNotNullOrUndefined() after
+      // fixing how conformance checks handle unresolved types.
+      return this.isUnresolvedOrResolvedUnknown()
+          ? this
+          : getReferencedType().restrictByNotNullOrUndefined();
     }
     return new NamedType(
         resolutionScope, registry, "!" + reference, sourceName, lineno, charno, templateTypes);

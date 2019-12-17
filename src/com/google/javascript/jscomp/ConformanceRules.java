@@ -1107,8 +1107,7 @@ public final class ConformanceRules {
       ImmutableList.Builder <TemplateAstMatcher> builder =
           ImmutableList.builder();
       for (String value : requirement.getValueList()) {
-        Node parseRoot = new JsAst(SourceFile.fromCode(
-            "template", value)).getAstRoot(compiler);
+        Node parseRoot = new JsAst(SourceFile.fromCode("<template>", value)).getAstRoot(compiler);
         if (!parseRoot.hasOneChild()
             || !parseRoot.getFirstChild().isFunction()) {
           throw new InvalidRequirementSpec(

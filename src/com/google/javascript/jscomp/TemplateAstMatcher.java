@@ -476,7 +476,7 @@ public final class TemplateAstMatcher {
   }
 
   private boolean isUnresolvedType(JSType type) {
-    // TODO(mknichel): When types are used in templates that do not appear in the
+    // TODO(b/146173738): When types are used in templates that do not appear in the
     // compilation unit being processed, the template type will be a named type
     // that resolves to unknown instead of being a no resolved type. This should
     // be fixed in the compiler such that it resolves to a no resolved type, and

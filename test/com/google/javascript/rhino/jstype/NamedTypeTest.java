@@ -326,6 +326,38 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(fooType, modDotFoo.getReferencedType());
   }
 
+  @Test
+  public void testGetBangType_onUnresolvedType() {
+    NamedType barType =
+        new NamedTypeBuilder()
+            .setName("Bar")
+            .setScope(new MapBasedScope(ImmutableMap.of()))
+            .build();
+
+    JSType barNonNull = barType.getBangType();
+    assertThat(barNonNull.isResolved()).isFalse();
+
+    registry.declareType(null, "Bar", registry.createUnionType(fooType, NULL_TYPE));
+    barNonNull.resolveOrThrow();
+
+    assertType(barNonNull).toStringIsEqualTo("Foo");
+  }
+
+  @Test
+  public void testGetBangType_onResolvedType() {
+    NamedType barType =
+        new NamedTypeBuilder()
+            .setName("Bar")
+            .setScope(new MapBasedScope(ImmutableMap.of()))
+            .build();
+    registry.declareType(null, "Bar", registry.createUnionType(fooType, NULL_TYPE));
+    barType.resolveOrThrow();
+
+    JSType barNonNull = barType.getBangType().resolveOrThrow();
+
+    assertType(barNonNull).toStringIsEqualTo("Foo");
+  }
+
   private static NamedType forceResolutionWith(JSType type, NamedType proxy) {
     proxy.setResolvedTypeInternal(type);
     proxy.setReferencedType(type);

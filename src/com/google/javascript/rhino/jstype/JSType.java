@@ -187,6 +187,7 @@ public abstract class JSType implements Serializable {
   }
 
   public final boolean isUnresolvedOrResolvedUnknown() {
+    // TODO(b/146173738): delete this method
     return isNoResolvedType() || (isNamedType() && isUnknownType());
   }
 

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -213,6 +214,46 @@ public final class TemplateAstMatcherTest {
     assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
     assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
     assertNotMatch(pair.templateNode, pair.testNode.getSecondChild());
+  }
+
+  @Test
+  public void testMatches_againstUnresolvedType_fromTemplate_withImplicitNullability_noMatch() {
+    assertMatches_againstUnresolvedType_fromTemplate_withTypeModifier("");
+  }
+
+  @Test
+  public void testMatches_againstUnresolvedType_fromTemplate_withBangNullability_noMatch() {
+    assertMatches_againstUnresolvedType_fromTemplate_withTypeModifier("!");
+  }
+
+  @Test
+  public void testMatches_againstUnresolvedType_fromTemplate_withQmarkNullability_noMatch() {
+    assertMatches_againstUnresolvedType_fromTemplate_withTypeModifier("?");
+  }
+
+  @Test
+  public void testMatches_againstUnresolvedType_fromTemplate_inUnion_noMatch() {
+    // TODO(b/146173738): consider making this a match. It's certain that `str` is a subtype of
+    // the union `!Some.Missing.Type|string`, even though the compiler does not know what type
+    // `Some.Missing.Type` is.
+    assertMatches_againstUnresolvedType_fromTemplate_withTypeModifier("string|?");
+  }
+
+  private void assertMatches_againstUnresolvedType_fromTemplate_withTypeModifier(String modifier) {
+    TestNodePair pair =
+        compile(
+            "",
+            lines(
+                "",
+                "/**",
+                " * @param {" + modifier + "Some.Missing.Type} foo",
+                " */",
+                "function template(foo) {",
+                "  foo;",
+                "}"),
+            "'str'");
+    assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
+    assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
   }
 
   @Test
