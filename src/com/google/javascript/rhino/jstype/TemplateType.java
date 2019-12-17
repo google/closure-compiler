@@ -52,6 +52,8 @@ import com.google.javascript.rhino.Node;
 public final class TemplateType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
+  private static final JSTypeClass TYPE_CLASS = JSTypeClass.TEMPLATE;
+
   private final String name;
   private JSType bound;
   private final Node typeTransformation;
@@ -68,11 +70,6 @@ public final class TemplateType extends ProxyObjectType {
     this(registry, name, null, typeTransformation);
   }
 
-  @Override
-  JSTypeClass getTypeClass() {
-    return JSTypeClass.TEMPLATE;
-  }
-
   private TemplateType(
       JSTypeRegistry registry, String name, JSType bound, Node typeTransformation) {
     super(
@@ -80,6 +77,13 @@ public final class TemplateType extends ProxyObjectType {
     this.name = name;
     this.bound = bound == null ? registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE) : bound;
     this.typeTransformation = typeTransformation;
+
+    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
+  }
+
+  @Override
+  JSTypeClass getTypeClass() {
+    return TYPE_CLASS;
   }
 
   @Override

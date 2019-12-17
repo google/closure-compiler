@@ -234,6 +234,8 @@ public class JSTypeRegistry implements Serializable {
   // there are no template types.
   private final TemplateTypeMap emptyTemplateTypeMap;
 
+  private final JSTypeResolver resolver;
+
   public JSTypeRegistry(ErrorReporter reporter) {
     this(reporter, ImmutableSet.<String>of());
   }
@@ -243,6 +245,7 @@ public class JSTypeRegistry implements Serializable {
     this.reporter = reporter;
     this.forwardDeclaredTypes = forwardDeclaredTypes;
     this.emptyTemplateTypeMap = TemplateTypeMap.createEmpty(this);
+    this.resolver = JSTypeResolver.create(this);
     this.nativeTypes = new JSType[JSTypeNative.values().length];
 
     resetForTypeCheck();
@@ -700,6 +703,7 @@ public class JSTypeRegistry implements Serializable {
             return registry.getNativeFunctionType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
           }
         };
+    u2uConstructorType.eagerlyResolveToSelf();
 
     // The u2uConstructor is weird, because it's the supertype of its own constructor.
     functionFunctionType.setInstanceType(u2uConstructorType);
@@ -1411,6 +1415,10 @@ public class JSTypeRegistry implements Serializable {
   /** Records a named type that needs to be resolved later. */
   void addUnresolvedNamedType(NamedType type) {
     unresolvedNamedTypes.add(type);
+  }
+
+  JSTypeResolver getResolver() {
+    return this.resolver;
   }
 
   /** Resolve all the unresolved types in the given scope. */

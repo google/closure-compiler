@@ -97,6 +97,8 @@ public abstract class JSType implements Serializable {
 
     this.templateTypeMap =
         (templateTypeMap == null) ? registry.getEmptyTemplateTypeMap() : templateTypeMap;
+
+    registry.getResolver().addUnresolved(this);
   }
 
   abstract JSTypeClass getTypeClass();
@@ -1536,6 +1538,7 @@ public abstract class JSType implements Serializable {
     checkState(!this.isResolved());
     resolveResult = this;
     resolved = true;
+    this.registry.getResolver().resolveIfClosed(this, this.getTypeClass());
   }
 
   /**

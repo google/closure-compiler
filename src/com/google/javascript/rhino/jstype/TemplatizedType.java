@@ -55,6 +55,8 @@ import java.util.Objects;
 public final class TemplatizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
+  private static final JSTypeClass TYPE_CLASS = JSTypeClass.TEMPLATIZED;
+
   /** A cache of the type parameter values for this specialization. */
   private final ImmutableList<JSType> templateTypes;
   /** Whether all type parameter values for this specialization are `?`. */
@@ -81,11 +83,13 @@ public final class TemplatizedType extends ProxyObjectType {
     this.isSpecializedOnlyWithUnknown = maybeIsSpecializedOnlyWithUnknown;
 
     this.replacer = TemplateTypeReplacer.forPartialReplacement(registry, getTemplateTypeMap());
+
+    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return JSTypeClass.TEMPLATIZED;
+    return TYPE_CLASS;
   }
 
   // NOTE(dimvar): If getCtorImplementedInterfaces is implemented here, this is the
