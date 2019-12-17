@@ -2940,6 +2940,11 @@ WebGLContextAttributes.prototype.preserveDrawingBuffer;
 /**
  * @type {boolean}
  */
+WebGLContextAttributes.prototype.desynchronized;
+
+/**
+ * @type {boolean}
+ */
 WebGLContextAttributes.prototype.failIfMajorPerformanceCaveat;
 
 /**
