@@ -1831,15 +1831,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     Map<String, CompilerInput> inputsByProvide = new HashMap<>();
     Map<String, CompilerInput> inputsByIdentifier = new HashMap<>();
     for (CompilerInput input : moduleGraph.getAllInputs()) {
-      if (!options.getDependencyOptions().shouldDropMoochers() && input.getProvides().isEmpty()) {
+      Iterable<String> provides =
+          Iterables.filter(input.getProvides(), p -> !p.startsWith("module$"));
+      if (!options.getDependencyOptions().shouldDropMoochers() && Iterables.isEmpty(provides)) {
         entryPoints.add(input);
       }
       inputsByIdentifier.put(
           ModuleIdentifier.forFile(input.getPath().toString()).toString(), input);
-      for (String provide : input.getProvides()) {
-        if (!provide.startsWith("module$")) {
-          inputsByProvide.put(provide, input);
-        }
+      for (String provide : provides) {
+        inputsByProvide.put(provide, input);
       }
     }
     for (ModuleIdentifier moduleIdentifier : options.getDependencyOptions().getEntryPoints()) {

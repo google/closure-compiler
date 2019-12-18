@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
@@ -32,6 +33,7 @@ import org.junit.runners.JUnit4;
 public final class GatherModuleMetadataTest extends CompilerTestCase {
 
   private boolean rewriteScriptsToModules;
+  private boolean sortOnly;
   private ImmutableList<ModuleIdentifier> entryPoints;
 
   @Override
@@ -39,13 +41,17 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     super.setUp();
     entryPoints = ImmutableList.of();
     rewriteScriptsToModules = false;
+    sortOnly = false;
   }
 
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     if (!entryPoints.isEmpty()) {
+      checkState(!sortOnly, "sortOnly must be false if entry points are provided.");
       options.setDependencyOptions(DependencyOptions.pruneForEntryPoints(entryPoints));
+    } else if (sortOnly) {
+      options.setDependencyOptions(DependencyOptions.sortOnly());
     }
     return options;
   }
@@ -658,5 +664,22 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
         .isEqualTo(ModuleType.ES6_MODULE);
     // Pruned
     assertThat(metadataMap().getModulesByPath().keySet()).doesNotContain("notimported.js");
+  }
+
+  @Test
+  public void testImportedScriptWithSortOnly() {
+    rewriteScriptsToModules = true;
+    sortOnly = true;
+
+    test(
+        srcs(
+            SourceFile.fromCode("imported.js", "console.log('lol');"),
+            SourceFile.fromCode("notimported.js", "console.log('lol');"),
+            SourceFile.fromCode("module.js", "import './imported.js';")));
+
+    assertThat(metadataMap().getModulesByPath().get("imported.js").moduleType())
+        .isEqualTo(ModuleType.ES6_MODULE);
+    assertThat(metadataMap().getModulesByPath().get("notimported.js").moduleType())
+        .isEqualTo(ModuleType.SCRIPT);
   }
 }

@@ -793,6 +793,18 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testBug139862607() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        new String[] {lines("var x = 1;"), lines("import * as y from './i0.js';", "const z = y.x")},
+        // Property x never defined on module$i0
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
+
+  @Test
   public void testArrayValuesIsPolyfilledForEs2015Out() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
