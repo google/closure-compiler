@@ -819,6 +819,8 @@ public class CompilerOptions implements Serializable {
   /** Processes the output of J2CL */
   J2clPassMode j2clPassMode;
 
+  boolean j2clMinifierEnabled = true;
+
   /** Remove goog.abstractMethod assignments and @abstract methods. */
   boolean removeAbstractMethods;
 
@@ -1420,6 +1422,7 @@ public class CompilerOptions implements Serializable {
     polymerExportPolicy = PolymerExportPolicy.LEGACY;
     dartPass = false;
     j2clPassMode = J2clPassMode.AUTO;
+    j2clMinifierEnabled = true;
     removeAbstractMethods = false;
     removeClosureAsserts = false;
     stripTypes = ImmutableSet.of();
@@ -1875,6 +1878,10 @@ public class CompilerOptions implements Serializable {
 
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
+  }
+
+  public void setJ2clMinifierEnabled(boolean enabled) {
+    this.j2clMinifierEnabled = enabled;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {
@@ -3056,6 +3063,7 @@ public class CompilerOptions implements Serializable {
             .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
             .add("instrumentBranchCoverage", instrumentBranchCoverage)
+            .add("j2clMinifierEnabled", j2clMinifierEnabled)
             .add("j2clPassMode", j2clPassMode)
             .add("labelRenaming", labelRenaming)
             .add("languageIn", getLanguageIn())

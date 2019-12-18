@@ -45,6 +45,7 @@ public final class ClosureBundler {
   // currently required due to the API that source maps must be accessible
   // via just a path (and not the file contents).
   private final Map<String, String> sourceMapCache;
+  private final Object minifier;
 
   public ClosureBundler() {
     this(Transpiler.NULL);
@@ -61,6 +62,7 @@ public final class ClosureBundler {
         EvalMode.NORMAL,
         /* sourceUrl= */ null,
         /* path= */ "unknown_source",
+        null,
         new ConcurrentHashMap<>());
   }
 
@@ -70,6 +72,7 @@ public final class ClosureBundler {
       EvalMode mode,
       String sourceUrl,
       String path,
+      Object minifier,
       Map<String, String> sourceMapCache) {
     this.transpiler = transpiler;
     this.mode = mode;
@@ -77,12 +80,13 @@ public final class ClosureBundler {
     this.path = path;
     this.sourceMapCache = sourceMapCache;
     this.es6ModuleTranspiler = es6ModuleTranspiler;
+    this.minifier = minifier;
   }
 
   public ClosureBundler withTranspilers(
       Transpiler newTranspiler, Transpiler newEs6ModuleTranspiler) {
     return new ClosureBundler(
-        newTranspiler, newEs6ModuleTranspiler, mode, sourceUrl, path, sourceMapCache);
+        newTranspiler, newEs6ModuleTranspiler, mode, sourceUrl, path, minifier, sourceMapCache);
   }
 
   public ClosureBundler withTranspiler(Transpiler newTranspiler) {
@@ -93,20 +97,31 @@ public final class ClosureBundler {
     return withTranspilers(transpiler, newEs6ModuleTranspiler);
   }
 
+  public ClosureBundler disableJ2clMinifier() {
+    return new ClosureBundler(
+        transpiler,
+        es6ModuleTranspiler,
+        mode,
+        sourceUrl,
+        path,
+        /* minifier= */ null,
+        sourceMapCache);
+  }
+
   public final ClosureBundler useEval(boolean useEval) {
     EvalMode newMode = useEval ? EvalMode.EVAL : EvalMode.NORMAL;
     return new ClosureBundler(
-        transpiler, es6ModuleTranspiler, newMode, sourceUrl, path, sourceMapCache);
+        transpiler, es6ModuleTranspiler, newMode, sourceUrl, path, minifier, sourceMapCache);
   }
 
   public final ClosureBundler withSourceUrl(String newSourceUrl) {
     return new ClosureBundler(
-        transpiler, es6ModuleTranspiler, mode, newSourceUrl, path, sourceMapCache);
+        transpiler, es6ModuleTranspiler, mode, newSourceUrl, path, minifier, sourceMapCache);
   }
 
   public final ClosureBundler withPath(String newPath) {
     return new ClosureBundler(
-        transpiler, es6ModuleTranspiler, mode, sourceUrl, newPath, sourceMapCache);
+        transpiler, es6ModuleTranspiler, mode, sourceUrl, newPath, minifier, sourceMapCache);
   }
 
   /** Append the contents of the string to the supplied appendable. */
@@ -138,15 +153,16 @@ public final class ClosureBundler {
       Appendable out,
       DependencyInfo info,
       CharSource content) throws IOException {
+    String code = content.read();
     if (info.isModule()) {
-      mode.appendGoogModule(transpile(content.read()), out, sourceUrl);
+      mode.appendGoogModule(transpile(code), out, sourceUrl);
     } else if ("es6".equals(info.getLoadFlags().get("module")) && transpiler == Transpiler.NULL) {
       // TODO(johnplaisted): Make the default transpiler the ES_MODULE_TO_CJS_TRANSPILER. Currently
       // some code is passing in unicode identifiers in non-ES6 modules the compiler fails to parse.
       // Once this compiler bug is fixed we can always transpile.
-      mode.appendTraditional(transpileEs6Module(content.read()), out, sourceUrl);
+      mode.appendTraditional(transpileEs6Module(code), out, sourceUrl);
     } else {
-      mode.appendTraditional(transpile(content.read()), out, sourceUrl);
+      mode.appendTraditional(transpile(code), out, sourceUrl);
     }
   }
 
