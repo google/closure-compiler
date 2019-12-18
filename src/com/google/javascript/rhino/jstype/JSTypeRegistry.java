@@ -325,11 +325,13 @@ public class JSTypeRegistry implements Serializable {
    * Reset to run the TypeCheck pass.
    */
   public void resetForTypeCheck() {
-    typesIndexedByProperty.clear();
-    eachRefTypeIndexedByProperty.clear();
-    initializeBuiltInTypes();
-    scopedNameTable.clear();
-    initializeRegistry();
+    try (JSTypeResolver.Closer closer = this.resolver.openForDefinition()) {
+      typesIndexedByProperty.clear();
+      eachRefTypeIndexedByProperty.clear();
+      initializeBuiltInTypes();
+      scopedNameTable.clear();
+      initializeRegistry();
+    }
   }
 
   private void initializeBuiltInTypes() {
@@ -1382,11 +1384,7 @@ public class JSTypeRegistry implements Serializable {
     if (type == null) {
       // TODO(user): Each instance should support named type creation using
       // interning.
-      NamedType namedType = createNamedType(scope, jsTypeName, sourceName, lineno, charno);
-      if (recordUnresolvedTypes) {
-        unresolvedNamedTypes.add(namedType);
-      }
-      type = namedType;
+      return createNamedType(scope, jsTypeName, sourceName, lineno, charno);
     }
     return type;
   }
@@ -1412,42 +1410,8 @@ public class JSTypeRegistry implements Serializable {
     unresolvedNamedTypes.clear();
   }
 
-  /** Records a named type that needs to be resolved later. */
-  void addUnresolvedNamedType(NamedType type) {
-    unresolvedNamedTypes.add(type);
-  }
-
-  JSTypeResolver getResolver() {
+  public JSTypeResolver getResolver() {
     return this.resolver;
-  }
-
-  /** Resolve all the unresolved types in the given scope. */
-  public void resolveTypes() {
-    for (JSType nativeType : nativeTypes) {
-      nativeType.resolve(reporter);
-    }
-
-    for (NamedType type : unresolvedNamedTypes) {
-      type.resolve(reporter);
-    }
-
-    unresolvedNamedTypes.clear();
-
-    // By default, the global "this" type is just an anonymous object.
-    // If the user has defined a Window type, make the Window the
-    // implicit prototype of "this".
-    PrototypeObjectType globalThis = (PrototypeObjectType) getNativeType(
-        JSTypeNative.GLOBAL_THIS);
-    JSType windowType = getTypeInternal(null, "Window");
-    if (globalThis.isUnknownType()) {
-      ObjectType windowObjType = ObjectType.cast(windowType);
-      if (windowObjType != null) {
-        globalThis.setImplicitPrototype(windowObjType);
-      } else {
-        globalThis.setImplicitPrototype(
-            getNativeObjectType(JSTypeNative.OBJECT_TYPE));
-      }
-    }
   }
 
   public JSType evaluateTypeExpressionInGlobalScope(JSTypeExpression expr) {
@@ -1932,13 +1896,7 @@ public class JSTypeRegistry implements Serializable {
               createFromTypeNodesInternal(
                   n.getFirstChild(), sourceName, scope, recordUnresolvedTypes);
           if (child instanceof NamedType) {
-            JSType type = ((NamedType) child).getBangType();
-            if (type instanceof NamedType
-                && recordUnresolvedTypes
-                && !JSType.areIdentical(type, child)) {
-              unresolvedNamedTypes.add((NamedType) type);
-            }
-            return type;
+            return ((NamedType) child).getBangType();
           }
           return child.restrictByNotNullOrUndefined();
         }

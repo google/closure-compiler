@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.JSTypeResolver;
 
 /** A compiler pass to run the type inference analysis. */
 class TypeInferencePass {
@@ -87,24 +88,26 @@ class TypeInferencePass {
     // ns.method();
     // In this code, we need to build the symbol table for the inner scope in
     // order to propagate the type of ns.method in the outer scope.
-    if (this.topScope == null) {
-      checkState(inferenceRoot.isRoot());
-      checkState(inferenceRoot.getParent() == null);
-      this.topScope = scopeCreator.createScope(inferenceRoot, null);
-    } else {
-      checkState(inferenceRoot.isScript());
-      scopeCreator.patchGlobalScope(this.topScope, inferenceRoot);
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      if (this.topScope == null) {
+        checkState(inferenceRoot.isRoot());
+        checkState(inferenceRoot.getParent() == null);
+        this.topScope = scopeCreator.createScope(inferenceRoot, null);
+      } else {
+        checkState(inferenceRoot.isScript());
+        scopeCreator.patchGlobalScope(this.topScope, inferenceRoot);
+      }
+
+      new NodeTraversal(compiler, new FirstScopeBuildingCallback(), scopeCreator)
+          .traverseWithScope(inferenceRoot, this.topScope);
+
+      scopeCreator.finishScopes();
     }
 
-    (new NodeTraversal(compiler, new FirstScopeBuildingCallback(), scopeCreator))
-        .traverseWithScope(inferenceRoot, this.topScope);
-
-    scopeCreator.resolveTypes();
-
-    (new NodeTraversal(compiler, new SecondScopeBuildingCallback(), scopeCreator))
-        .traverseWithScope(inferenceRoot, this.topScope);
-
-    this.registry.resolveTypes();
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      new NodeTraversal(compiler, new SecondScopeBuildingCallback(), scopeCreator)
+          .traverseWithScope(inferenceRoot, this.topScope);
+    }
 
     return this.topScope;
   }

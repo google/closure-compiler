@@ -63,8 +63,8 @@ public abstract class BaseJSTypeTestCase {
 
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
-  protected JSTypeRegistry registry;
-  protected TestErrorReporter errorReporter;
+  protected final TestErrorReporter errorReporter = new TestErrorReporter(null, null);
+  protected final JSTypeRegistry registry;
 
   protected JSType ALL_TYPE;
   protected ObjectType NO_OBJECT_TYPE;
@@ -108,11 +108,22 @@ public abstract class BaseJSTypeTestCase {
 
   protected int NATIVE_PROPERTIES_COUNT;
 
-  @Before
-  public void setUp() throws Exception {
-    errorReporter = new TestErrorReporter(null, null);
-    registry = new JSTypeRegistry(errorReporter, ImmutableSet.of(FORWARD_DECLARED_TYPE_NAME));
+  public BaseJSTypeTestCase() {
+    this(null);
+  }
+
+  public BaseJSTypeTestCase(JSTypeRegistry registry) {
+    this.registry =
+        (registry == null)
+            ? new JSTypeRegistry(errorReporter, ImmutableSet.of(FORWARD_DECLARED_TYPE_NAME))
+            : registry;
     initTypes();
+  }
+
+  @Before
+  @SuppressWarnings({"MustBeClosedChecker"})
+  public void setUp() throws Exception {
+    this.registry.getResolver().openForDefinition();
   }
 
   protected void initTypes() {

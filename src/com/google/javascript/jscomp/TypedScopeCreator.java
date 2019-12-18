@@ -713,7 +713,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     deferredSetTypes.add(new DeferredSetType(node, type));
   }
 
-  void resolveTypes() {
+  void finishScopes() {
     // Declare goog.module type requires in scope.
     for (WeakModuleImport weakImport : weakImports) {
       weakImport.resolve();
@@ -731,9 +731,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
       scope.validateCompletelyBuilt();
     }
-
-    // Tell the type registry that any remaining types are unknown.
-    typeRegistry.resolveTypes();
   }
 
   /** Adds all enums and typedefs to the registry's list of non-nullable types. */

@@ -34,6 +34,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.JSTypeResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -983,9 +984,12 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  @SuppressWarnings("MustBeClosedChecker")
   public void testUnresolvedTypesAreBanned() {
     Compiler compiler = createCompiler();
     JSTypeRegistry registry = compiler.getTypeRegistry();
+    JSTypeResolver.Closer closer = registry.getResolver().openForDefinition();
+
     JSType unresolvedFunction =
         registry.createFunctionType(registry.getNativeType(JSTypeNative.VOID_TYPE));
     assertThat(unresolvedFunction.isResolved()).isFalse();
@@ -995,7 +999,7 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     expectInvalid(expr, Check.STATEMENT);
 
-    unresolvedFunction.resolveOrThrow();
+    closer.close();
 
     expectValid(expr, Check.STATEMENT);
   }

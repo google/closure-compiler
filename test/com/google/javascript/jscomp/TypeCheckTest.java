@@ -17282,6 +17282,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTemplateTypeForwardReference_declaredMissing() {
     compiler.forwardDeclareType("Foo");
+    compiler.forwardDeclareType("DoesNotExist");
     testTypes(
         lines(
             "/** @param {!Foo<DoesNotExist>} x */",

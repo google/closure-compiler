@@ -88,8 +88,10 @@ public final class JSTypeResolver implements Serializable {
       return registry.getResolver();
     }
 
-    return new JSTypeResolver();
+    return new JSTypeResolver(registry);
   }
+
+  private final JSTypeRegistry registry;
 
   /**
    * The sequence of instantiated types.
@@ -104,7 +106,9 @@ public final class JSTypeResolver implements Serializable {
 
   private State state = State.CLOSED;
 
-  private JSTypeResolver() {}
+  private JSTypeResolver(JSTypeRegistry registry) {
+    this.registry = registry;
+  }
 
   /**
    * Record that a new type has been instantiated.
@@ -181,9 +185,26 @@ public final class JSTypeResolver implements Serializable {
     }
 
     this.state = State.CLOSED;
+
+    // TODO(sdh): Stop doing this here. It's obviously the wrong place.
+    // By default, the global "this" type is just an anonymous object.
+    // If the user has defined a Window type, make the Window the
+    // implicit prototype of "this".
+    PrototypeObjectType globalThis =
+        (PrototypeObjectType) this.registry.getNativeType(JSTypeNative.GLOBAL_THIS);
+    JSType windowType = this.registry.getGlobalType("Window");
+    if (globalThis.isUnknownType()) {
+      ObjectType windowObjType = ObjectType.cast(windowType);
+      if (windowObjType != null) {
+        globalThis.setImplicitPrototype(windowObjType);
+      } else {
+        globalThis.setImplicitPrototype(
+            this.registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
+      }
+    }
   }
 
-  private void doResolve(JSType unused) {
-    // TODO(b/145838483): Call resolve here.
+  private void doResolve(JSType type) {
+    type.resolve(this.registry.getErrorReporter());
   }
 }

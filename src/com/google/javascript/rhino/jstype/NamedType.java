@@ -259,6 +259,10 @@ public final class NamedType extends ProxyObjectType {
       resolved = true;
     }
 
+    if (resolutionScope == null) {
+      return this;
+    }
+
     // TODO(user): Investigate whether it is really necessary to keep two
     // different mechanisms for resolving named types, and if so, which order
     // makes more sense.

@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeResolver;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.testing.TestErrorReporter;
@@ -1152,6 +1153,8 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
 
   private void testTTL(JSType expectedType, String ttlExp,
       String... expectedWarnings) {
+    try (JSTypeResolver.Closer closer =
+        compiler.getTypeRegistry().getResolver().openForDefinition()) {
     TypeTransformationParser ttlParser = new TypeTransformationParser(ttlExp,
         SourceFile.fromCode("[testcode]", ttlExp), errorReporter, 0, 0);
     // Run the test if the parsing was successful
@@ -1168,6 +1171,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
       JSType resultType = typeTransformation.eval(ast, typeVars, nameVars);
       checkReportedWarningsHelper(expectedWarnings);
       assertTypeEquals(expectedType, resultType);
+    }
     }
   }
 }

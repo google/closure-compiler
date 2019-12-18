@@ -62,6 +62,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.JSTypeResolver;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
@@ -84,6 +85,7 @@ public final class TypeInferenceTest {
 
   private Compiler compiler;
   private JSTypeRegistry registry;
+  private JSTypeResolver.Closer closer;
   private Map<String, JSType> assumptions;
   private JSType assumedThisType;
   private FlowScope returnScope;
@@ -109,6 +111,7 @@ public final class TypeInferenceTest {
   }
 
   @Before
+  @SuppressWarnings({"MustBeClosedChecker"})
   public void setUp() {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -118,6 +121,7 @@ public final class TypeInferenceTest {
     registry = compiler.getTypeRegistry();
     assumptions = new HashMap<>();
     returnScope = null;
+    this.closer = this.registry.getResolver().openForDefinition();
   }
 
   private void assumingThisType(JSType type) {
@@ -175,58 +179,65 @@ public final class TypeInferenceTest {
     parseAndRunTypeInference(root, function);
   }
 
+  @SuppressWarnings({"MustBeClosedChecker"})
   private void parseAndRunTypeInference(Node root, Node cfgRoot) {
-    // Create the scope with the assumptions.
-    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-    // Also populate a map allowing us to look up labeled statements later.
-    labeledStatementMap = new HashMap<>();
-    new NodeTraversal(
-            compiler,
-            new AbstractPostOrderCallback() {
-              @Override
-              public void visit(NodeTraversal t, Node n, Node parent) {
-                TypedScope scope = t.getTypedScope();
-                if (parent != null && parent.isLabel() && !n.isLabelName()) {
-                  // First child of a LABEL is a LABEL_NAME, n is the second child.
-                  Node labelNameNode = checkNotNull(n.getPrevious(), n);
-                  checkState(labelNameNode.isLabelName(), labelNameNode);
-                  String labelName = labelNameNode.getString();
-                  assertWithMessage("Duplicate label name: %s", labelName)
-                      .that(labeledStatementMap)
-                      .doesNotContainKey(labelName);
-                  labeledStatementMap.put(labelName, new LabeledStatement(n, scope));
+    this.closer.close();
+
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      // Create the scope with the assumptions.
+      TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
+      // Also populate a map allowing us to look up labeled statements later.
+      labeledStatementMap = new HashMap<>();
+      new NodeTraversal(
+              compiler,
+              new AbstractPostOrderCallback() {
+                @Override
+                public void visit(NodeTraversal t, Node n, Node parent) {
+                  TypedScope scope = t.getTypedScope();
+                  if (parent != null && parent.isLabel() && !n.isLabelName()) {
+                    // First child of a LABEL is a LABEL_NAME, n is the second child.
+                    Node labelNameNode = checkNotNull(n.getPrevious(), n);
+                    checkState(labelNameNode.isLabelName(), labelNameNode);
+                    String labelName = labelNameNode.getString();
+                    assertWithMessage("Duplicate label name: %s", labelName)
+                        .that(labeledStatementMap)
+                        .doesNotContainKey(labelName);
+                    labeledStatementMap.put(labelName, new LabeledStatement(n, scope));
+                  }
                 }
-              }
-            },
-            scopeCreator)
-        .traverse(root);
-    TypedScope assumedScope = scopeCreator.createScope(cfgRoot);
-    for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
-      assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
+              },
+              scopeCreator)
+          .traverse(root);
+      TypedScope assumedScope = scopeCreator.createScope(cfgRoot);
+      for (Map.Entry<String, JSType> entry : assumptions.entrySet()) {
+        assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
+      }
+      scopeCreator.finishScopes();
+      // Create the control graph.
+      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
+      cfa.process(null, cfgRoot);
+      ControlFlowGraph<Node> cfg = cfa.getCfg();
+      // Create a simple reverse abstract interpreter.
+      ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
+      // Do the type inference by data-flow analysis.
+      TypeInference dfa =
+          new TypeInference(compiler, cfg, rai, assumedScope, scopeCreator, ASSERTION_FUNCTION_MAP);
+      dfa.analyze();
+      // Get the scope of the implicit return.
+      BranchedFlowState<FlowScope> rtnState = cfg.getImplicitReturn().getAnnotation();
+      if (cfgRoot.isFunction()) {
+        // Reset the flow scope's syntactic scope to the function block, rather than the function
+        // node
+        // itself.  This allows pulling out local vars from the function by name to verify their
+        // types.
+        returnScope =
+            rtnState.getIn().withSyntacticScope(scopeCreator.createScope(cfgRoot.getLastChild()));
+      } else {
+        returnScope = rtnState.getIn();
+      }
     }
-    scopeCreator.resolveTypes();
-    // Create the control graph.
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
-    cfa.process(null, cfgRoot);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
-    // Create a simple reverse abstract interpreter.
-    ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
-    // Do the type inference by data-flow analysis.
-    TypeInference dfa = new TypeInference(compiler, cfg, rai, assumedScope,
-        scopeCreator, ASSERTION_FUNCTION_MAP);
-    dfa.analyze();
-    // Get the scope of the implicit return.
-    BranchedFlowState<FlowScope> rtnState =
-        cfg.getImplicitReturn().getAnnotation();
-    if (cfgRoot.isFunction()) {
-      // Reset the flow scope's syntactic scope to the function block, rather than the function node
-      // itself.  This allows pulling out local vars from the function by name to verify their
-      // types.
-      returnScope =
-          rtnState.getIn().withSyntacticScope(scopeCreator.createScope(cfgRoot.getLastChild()));
-    } else {
-      returnScope = rtnState.getIn();
-    }
+
+    this.closer = this.registry.getResolver().openForDefinition();
   }
 
   private LabeledStatement getLabeledStatement(String label) {

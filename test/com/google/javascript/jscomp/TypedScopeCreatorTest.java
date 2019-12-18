@@ -51,6 +51,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.JSTypeResolver;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
@@ -6727,14 +6728,16 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "class Middle extends mixin() {}",
             "class Parent {}"));
 
-    NamedType namedMiddleType = registry.createNamedType(globalScope, "Middle", null, -1, -1);
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      NamedType namedMiddleType = registry.createNamedType(globalScope, "Middle", null, -1, -1);
 
-    assertThat(namedMiddleType.isResolved()).isFalse();
-    assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+      assertThat(namedMiddleType.isResolved()).isFalse();
+      assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
 
-    namedMiddleType.resolveOrThrow();
+      namedMiddleType.resolveOrThrow();
 
-    assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+      assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+    }
   }
 
   @Test

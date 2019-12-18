@@ -4701,8 +4701,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests the {@link NamedType#equals} function, which had a bug in it. */
   @Test
   public void testNamedTypeEquals() {
-    JSTypeRegistry registry = new JSTypeRegistry(null);
-
     // test == if references are equal
     NamedType a = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
     NamedType b = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
@@ -6356,54 +6354,5 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // is structural.
     assertType(firstType).isNotSubtypeOf(secondType);
     assertType(secondType).isSubtypeOf(firstType);
-  }
-
-  /**
-   * A minimal implementation of {@link JSType} for unit tests and nothing else.
-   *
-   * <p>This class has no innate behaviour. It is intended as a stand-in for testing behaviours on
-   * {@link JSType} that require a concrete instance. Test cases are responsible for any
-   * configuration.
-   */
-  private static class UnitTestingJSType extends JSType {
-
-    UnitTestingJSType(JSTypeRegistry registry) {
-      super(registry);
-    }
-
-    @Override
-    JSTypeClass getTypeClass() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    int recursionUnsafeHashCode() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BooleanLiteralSet getPossibleToBooleanOutcomes() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> T visit(Visitor<T> visitor) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    JSType resolveInternal(ErrorReporter reporter) {
-      return this;
-    }
-
-    @Override
-    StringBuilder appendTo(StringBuilder builder, boolean forAnnotation) {
-      throw new UnsupportedOperationException();
-    }
   }
 }

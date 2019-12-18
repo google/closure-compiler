@@ -25,6 +25,7 @@ import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.JSTypeResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -245,24 +246,26 @@ public final class ClosureCodingConventionTest {
   public void testApplySubclassRelationship() {
     JSTypeRegistry registry = new JSTypeRegistry(null);
 
-    Node nodeA = new Node(Token.FUNCTION);
-    FunctionType ctorA =
-        registry.createConstructorType("A", nodeA, new Node(Token.PARAM_LIST), null, null, false);
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      Node nodeA = new Node(Token.FUNCTION);
+      FunctionType ctorA =
+          registry.createConstructorType("A", nodeA, new Node(Token.PARAM_LIST), null, null, false);
 
-    Node nodeB = new Node(Token.FUNCTION);
-    FunctionType ctorB =
-        registry.createConstructorType("B", nodeB, new Node(Token.PARAM_LIST), null, null, false);
+      Node nodeB = new Node(Token.FUNCTION);
+      FunctionType ctorB =
+          registry.createConstructorType("B", nodeB, new Node(Token.PARAM_LIST), null, null, false);
 
-    conv.applySubclassRelationship(
-        new NominalTypeBuilder(ctorA, ctorA.getInstanceType()),
-        new NominalTypeBuilder(ctorB, ctorB.getInstanceType()),
-        SubclassType.INHERITS);
+      conv.applySubclassRelationship(
+          new NominalTypeBuilder(ctorA, ctorA.getInstanceType()),
+          new NominalTypeBuilder(ctorB, ctorB.getInstanceType()),
+          SubclassType.INHERITS);
 
-    assertThat(ctorB.getPrototype().hasOwnProperty("constructor")).isTrue();
-    assertThat(ctorB.getPrototype().getPropertyNode("constructor")).isEqualTo(nodeB);
+      assertThat(ctorB.getPrototype().hasOwnProperty("constructor")).isTrue();
+      assertThat(ctorB.getPrototype().getPropertyNode("constructor")).isEqualTo(nodeB);
 
-    assertThat(ctorB.hasOwnProperty("superClass_")).isTrue();
-    assertThat(ctorB.getPropertyNode("superClass_")).isEqualTo(nodeB);
+      assertThat(ctorB.hasOwnProperty("superClass_")).isTrue();
+      assertThat(ctorB.getPropertyNode("superClass_")).isEqualTo(nodeB);
+    }
   }
 
   @Test
