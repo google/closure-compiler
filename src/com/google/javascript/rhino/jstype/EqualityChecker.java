@@ -137,12 +137,6 @@ final class EqualityChecker {
   }
 
   private boolean areEqualCaching(JSType left, JSType right) {
-    if (JSType.areIdentical(left, right)) {
-      return true;
-    } else if (left == null || right == null) {
-      return false;
-    }
-
     // Wait to instantiate/use the cache until we have some hint that there may be recursion.
     if (this.recursionDepth > POTENTIALLY_CYCLIC_RECURSION_DEPTH) {
       if (this.eqCache == null) {
@@ -178,6 +172,12 @@ final class EqualityChecker {
   }
 
   private boolean areEqualInternal(JSType left, JSType right) {
+    if (JSType.areIdentical(left, right)) {
+      return true;
+    } else if (left == null || right == null) {
+      return false;
+    }
+
     if (left.isNoResolvedType() && right.isNoResolvedType()) {
       if (left.isNamedType() && right.isNamedType()) {
         return Objects.equals(
@@ -258,18 +258,15 @@ final class EqualityChecker {
       }
     }
 
-    if (left.isTemplateType() && right.isTemplateType()) {
-      // TemplateType are they same only if they are object identical,
-      // which we check at the start of left function.
-      return false;
-    }
-
-    // Unbox other proxies.
-    if (left instanceof ProxyObjectType) {
+    /**
+     * Unwrap proxies.
+     *
+     * <p>Remember that `TemplateType` has identity semantics ans shouldn't be unwrapped.
+     */
+    if (left instanceof ProxyObjectType && !(left instanceof TemplateType)) {
       return this.areEqualCaching(((ProxyObjectType) left).getReferencedTypeInternal(), right);
     }
-
-    if (right instanceof ProxyObjectType) {
+    if (right instanceof ProxyObjectType && !(right instanceof TemplateType)) {
       return this.areEqualCaching(left, ((ProxyObjectType) right).getReferencedTypeInternal());
     }
 

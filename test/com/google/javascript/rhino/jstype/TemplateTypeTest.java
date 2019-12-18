@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -50,7 +51,7 @@ import org.junit.runners.JUnit4;
 public final class TemplateTypeTest extends BaseJSTypeTestCase {
 
   @Test
-  public void unknownBoundedTypesAreNotEqual() {
+  public void templateTypes_boundedByUnknown_areNotEqual() {
     JSType unknownType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     TemplateType t1 = new TemplateType(registry, "T", unknownType);
     TemplateType t2 = new TemplateType(registry, "T", unknownType);
@@ -63,7 +64,7 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void nominalBoundedTypesAreNotEqual() {
+  public void templateTypes_boundedByNominalTypes_areNotEqual() {
     JSType fooType =
         registry.createObjectType("Foo", registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
     TemplateType t1 = new TemplateType(registry, "T", fooType);
@@ -77,7 +78,7 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void proxiesOfNominalBoundedTypesAreNotEqual() {
+  public void proxiesOf_templateTypes_boundedByNominalTypes_areNotEqual() {
     JSType fooType =
         registry.createObjectType("Foo", registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE));
 
@@ -93,5 +94,27 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
 
     assertType(t1Proxy).isNotEqualTo(t2Proxy);
     assertType(t1Proxy).isNotSubtypeOf(t2Proxy);
+  }
+
+  @Test
+  public void templateTypes_areNotEqualToUnknown() {
+    // Given
+    TemplateType t = new TemplateType(registry, "T");
+    t.resolveOrThrow();
+    assertThat(t.isUnknownType()).isTrue();
+
+    // Then
+    assertType(t).isNotEqualTo(UNKNOWN_TYPE);
+    assertType(t).isNotEqualTo(CHECKED_UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void templateTypes_withBound_areNotEqualToBound() {
+    // Given
+    TemplateType t = new TemplateType(registry, "T", NUMBER_TYPE);
+    t.resolveOrThrow();
+
+    // Then
+    assertType(t).isNotEqualTo(NUMBER_TYPE);
   }
 }
