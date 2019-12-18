@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -46,11 +48,13 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     }
 
     Node replacement = trySubstituteEqualitySame(node);
-    if (replacement != node) {
-      replacement = replacement.useSourceInfoIfMissingFrom(node);
-      node.replaceWith(replacement);
-      reportChangeToEnclosingScope(replacement);
+    if (replacement == null) {
+      return node;
     }
+
+    replacement.useSourceInfoIfMissingFrom(node);
+    node.replaceWith(replacement);
+    reportChangeToEnclosingScope(replacement);
     return replacement;
   }
 
@@ -61,7 +65,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     NodeValue secondExprValue = getKnownLiteralValue(secondExpr);
 
     if (firstExprValue == NodeValue.UNKNOWN && secondExprValue == NodeValue.UNKNOWN) {
-      return callNode;
+      return null;
     }
 
     if (firstExprValue == NodeValue.NULL_OR_UNDEFINED) {
@@ -72,9 +76,14 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
       return rewriteNullCheck(firstExpr, secondExpr);
     }
 
-    // There is a coercion danger (e.g. 0 == null) but since at least one side is not null, we can
-    // safely use === that will not trigger any coercion.
-    return rewriteAsStrictEq(firstExpr, secondExpr);
+    if (firstExprValue == NodeValue.NON_NULL || secondExprValue == NodeValue.NON_NULL) {
+      // There is a coercion danger (e.g. 0 == null) but since at least one side is not null, we can
+      // safely use === that will not trigger any coercion.
+      return rewriteAsStrictEq(firstExpr, secondExpr);
+    }
+
+    checkState(firstExprValue == NodeValue.NUMBER || secondExprValue == NodeValue.NUMBER);
+    return rewriteNumberCheck(firstExpr, secondExpr);
   }
 
   private Node rewriteNullCheck(Node expr, Node nullExpression) {
@@ -102,9 +111,46 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     return IR.sheq(firstExpr, secondExpr);
   }
 
+  private Node rewriteNumberCheck(Node firstExpr, Node secondExpr) {
+    Double firstValue = NodeUtil.getNumberValue(firstExpr);
+    Double secondValue = NodeUtil.getNumberValue(secondExpr);
+
+    if (firstValue != null && secondValue != null) {
+      firstExpr.detach();
+      secondExpr.detach();
+      return NodeUtil.booleanNode(firstValue.equals(secondValue));
+    }
+
+    if (isSafeNumber(firstValue) || isSafeNumber(secondValue)) {
+      // Since one side is not 0, -0 or NaN, there is no risk of -0 vs 0 or NaN vs NaN comparison.
+      return rewriteAsStrictEq(firstExpr, secondExpr);
+    }
+
+    if (useTypes && (!canBeNumber(firstExpr) || !canBeNumber(secondExpr))) {
+      // Since one side is not number, there is no risk of -0 vs 0 or NaN vs NaN comparision.
+      return rewriteAsStrictEq(firstExpr, secondExpr);
+    }
+
+    return null;
+  }
+
+  private static boolean isSafeNumber(Double d) {
+    return d != null && d != 0 && !d.isNaN();
+  }
+
+  private static boolean canBeNumber(Node n) {
+    JSType type = n.getJSType();
+    if (type == null) {
+      return true;
+    }
+    type = type.restrictByNotNullOrUndefined();
+    return type.isUnknownType() || type.isEmptyType() || type.isAllType() || !type.isObjectType();
+  }
+
   private enum NodeValue {
     NULL_OR_UNDEFINED,
     NON_NULL,
+    NUMBER,
     UNKNOWN,
   }
 
@@ -115,11 +161,13 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
       case NULL:
         return NodeValue.NULL_OR_UNDEFINED;
 
-      case NUMBER:
       case STRING:
       case BOOLEAN:
       case OBJECT:
         return NodeValue.NON_NULL;
+
+      case NUMBER:
+        return NodeValue.NUMBER;
 
       case UNDETERMINED:
         return NodeValue.UNKNOWN;
