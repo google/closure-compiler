@@ -1263,15 +1263,34 @@ public class CompilerOptions implements Serializable {
    */
   private Optional<Boolean> isStrictModeInput = Optional.absent();
 
+  // Store four unique states:
+  //  - run module rewriting before typechecking
+  //  - run module rewriting after typechecking
+  //  - don't run module rewriting, but if it's reenabled, run it before typechecking
+  //  - don't run module rewriting, but if it's reenabled, run it after typechecking
   private boolean rewriteModulesBeforeTypechecking = true;
+  private boolean enableModuleRewriting = true;
 
   /** Whether to enable the bad module rewriting before typechecking that we want to get rid of */
   public void setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(boolean b) {
     this.rewriteModulesBeforeTypechecking = b;
   }
 
-  public boolean shouldRewriteModulesBeforeTypechecking() {
-    return this.rewriteModulesBeforeTypechecking;
+  boolean shouldRewriteModulesBeforeTypechecking() {
+    return this.enableModuleRewriting && this.rewriteModulesBeforeTypechecking;
+  }
+
+  /**
+   * Experimental option to disable all Closure and ES module rewriting
+   *
+   * <p>Use at your own risk - disabling module rewriting is not fully tested yet.
+   */
+  public void setEnableModuleRewriting(boolean enable) {
+    this.enableModuleRewriting = enable;
+  }
+
+  boolean shouldRewriteModulesAfterTypechecking() {
+    return this.enableModuleRewriting && !this.rewriteModulesBeforeTypechecking;
   }
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */
@@ -1317,6 +1336,7 @@ public class CompilerOptions implements Serializable {
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
     rewriteModulesBeforeTypechecking = true;
+    enableModuleRewriting = true;
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -2996,6 +3016,7 @@ public class CompilerOptions implements Serializable {
             .add("devMode", devMode)
             .add("disambiguatePrivateProperties", disambiguatePrivateProperties)
             .add("disambiguateProperties", disambiguateProperties)
+            .add("enableModuleRewriting", enableModuleRewriting)
             .add("enforceAccessControlCodingConventions", enforceAccessControlCodingConventions)
             .add("environment", getEnvironment())
             .add("errorFormat", errorFormat)
@@ -3108,6 +3129,7 @@ public class CompilerOptions implements Serializable {
             .add("runtimeTypeCheckLogFunction", runtimeTypeCheckLogFunction)
             .add("runtimeTypeCheck", runtimeTypeCheck)
             .add("shadowVariables", shadowVariables)
+            .add("rewriteModulesBeforeTypechecking", rewriteModulesBeforeTypechecking)
             .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
             .add("smartNameRemoval", smartNameRemoval)
             .add("sourceMapDetailLevel", sourceMapDetailLevel)

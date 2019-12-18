@@ -40,7 +40,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.Map;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1705,14 +1704,15 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  @Ignore("We don't currently have a way to completely disable module rewriting")
   public void testDisableModuleRewriting() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
-    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+    options.setEnableModuleRewriting(false);
     options.setChecksOnly(true);
+    options.setCheckTypes(true);
+
     test(
         options,
         lines(
@@ -1726,7 +1726,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testTypecheckNativeModulesDoesntCrash() {
+  public void testTypecheckNativeModulesDoesntCrash_givenTemplatizedTypedefOfUnionType() {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
