@@ -125,6 +125,14 @@ public enum CompilationParam {
     }
   },
 
+  /** Run the module rewriting pass before the typechecking pass. */
+  REWRITE_MODULES_BEFORE_TYPECHECKING(true, ParamGroup.ERROR_CHECKING) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(value);
+    }
+  },
+
   /** Checks visibility. */
   CHECK_CONSTANTS(ParamGroup.ERROR_CHECKING) {
     @Override
