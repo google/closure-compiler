@@ -228,6 +228,21 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "}"));
   }
 
+  @Test
+  public void testForLetOfWithoutExterns() {
+    test(
+        externs(""),
+        srcs("for (let x of [1, 2, 3]) {}"),
+        expected(
+            lines(
+                "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
+                "    $jscomp$key$x = $jscomp$iter$0.next();",
+                "    !$jscomp$key$x.done; $jscomp$key$x = $jscomp$iter$0.next()) {",
+                "  let x = $jscomp$key$x.value;",
+                "  {}",
+                "}")));
+  }
+
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();

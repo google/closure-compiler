@@ -108,8 +108,11 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
                 .resolveOrThrow()
                 .toMaybeFunctionType()
             : null;
-    JSType iIterableResultType =
-        addTypes ? iteratorNextType.getReturnType().resolveOrThrow() : null;
+
+    JSType iIterableResultType = unknownType;
+    if (addTypes && iteratorNextType != null) {
+      iIterableResultType = iteratorNextType.getReturnType().resolveOrThrow();
+    }
 
     JSDocInfo varJSDocInfo = variable.getJSDocInfo();
     Node iterName =
