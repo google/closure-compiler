@@ -453,7 +453,7 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
   }
 
   /** A directed graph edge that stores the source and destination nodes at each edge. */
-  static class LinkedDiGraphEdge<N, E> implements DiGraphEdge<N, E>, GraphvizEdge {
+  public static class LinkedDiGraphEdge<N, E> implements DiGraphEdge<N, E>, GraphvizEdge {
 
     private LinkedDiGraphNode<N, E> sourceNode;
 

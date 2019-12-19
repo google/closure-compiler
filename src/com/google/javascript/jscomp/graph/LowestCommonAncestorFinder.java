@@ -54,6 +54,16 @@ public class LowestCommonAncestorFinder<N, E> {
     int measure(N node);
   }
 
+  /**
+   * An abstraction for the {@code LowestCommonAncestorFinder::new}.
+   *
+   * <p>This interface allows injection in tests.
+   */
+  @FunctionalInterface
+  public interface Factory<N, E> {
+    LowestCommonAncestorFinder<N, E> create(DiGraph<N, E> graph, HeightFunction<N> heightFn);
+  }
+
   /** A "color" for a node, encoded as a combination of other colors using a one-hot scheme. */
   @Immutable
   private static final class Color {
