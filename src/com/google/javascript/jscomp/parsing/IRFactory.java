@@ -2257,6 +2257,8 @@ class IRFactory {
       Node operand = transform(exprNode.operand);
       if (type == Token.NEG && operand.isNumber()) {
         operand.setDouble(-operand.getDouble());
+        operand.setLineno(-1);
+        setSourceInfo(operand, exprNode.operator.getStart(), exprNode.operand.getEnd());
         return operand;
       } else {
         if (type == Token.DELPROP

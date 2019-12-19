@@ -1259,9 +1259,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrint("var x = 0xFE;", "var x = 254;\n");
     assertPrettyPrintSame("var x = 1" + String.format("%0100d", 0) + ";\n"); // a googol
     assertPrettyPrintSame("f(10000);\n");
-    assertPrettyPrintSame("var x = -10000;\n");
-    assertPrettyPrintSame("var x = y - -10000;\n");
-    assertPrettyPrintSame("f(-10000);\n");
+    assertPrettyPrint("var x = -10000;\n", "var x = -1E4;\n");
+    assertPrettyPrint("var x = y - -10000;\n", "var x = y - -1E4;\n");
+    assertPrettyPrint("f(-10000);\n", "f(-1E4);\n");
     assertPrettyPrintSame("x < 2592000;\n");
     assertPrettyPrintSame("x < 1000.000;\n");
     assertPrettyPrintSame("x < 1000.912;\n");

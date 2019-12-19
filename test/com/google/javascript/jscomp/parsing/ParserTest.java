@@ -747,6 +747,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testLinenoCharnoNegativeNumber() {
+    Node n = parse("var x = -1000").getFirstChild().getFirstFirstChild();
+
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(8);
+    assertNode(n).hasLength(5);
+  }
+
+  @Test
   public void testJSDocAttachment1() {
     Node varNode = parse("/** @type {number} */var a;").getFirstChild();
 
