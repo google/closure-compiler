@@ -1132,8 +1132,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
-    setResolvedTypeInternal(this);
-
     call = (ArrowType) safeResolve(call, reporter);
     if (prototypeSlot != null) {
       prototypeSlot.setType(safeResolve(prototypeSlot.getType(), reporter));

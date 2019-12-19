@@ -234,7 +234,6 @@ public final class TemplatizedType extends ProxyObjectType {
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
     JSType baseTypeBefore = getReferencedType();
-    setResolvedTypeInternal(this); // for circularly defined types.
     super.resolveInternal(reporter);
 
     boolean rebuild = baseTypeBefore != getReferencedType();

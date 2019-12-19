@@ -63,14 +63,17 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   private FunctionType fooCtorType; // The type of the constructor of "Foo".
   private ObjectType fooType; // A realized type with the canonical name "Foo".
 
-  @Override
   @Before
+  @Override
+  @SuppressWarnings("MustBeClosedChecker")
   public void setUp() throws Exception {
     super.setUp();
 
-    fooCtorType =
-        forceResolutionOf(FunctionType.builder(registry).forConstructor().withName("Foo").build());
-    fooType = forceResolutionOf(fooCtorType.getInstanceType());
+    this.fooCtorType = FunctionType.builder(registry).forConstructor().withName("Foo").build();
+    this.fooCtorType.resolveOrThrow();
+
+    this.fooType = fooCtorType.getInstanceType();
+    this.fooType.resolveOrThrow();
   }
 
   @Test
@@ -133,8 +136,9 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testEquality() {
     // Given
-    ObjectType barType = createNominalType("Bar");
-    FunctionType anonType = forceResolutionOf(FunctionType.builder(registry).build());
+    ObjectType barType = createNominalType("Bar", /* resolve= */ true);
+    FunctionType anonType = FunctionType.builder(registry).build();
+    anonType.resolveOrThrow();
 
     NamedTypeBuilder namedFooBuilder = new NamedTypeBuilder().setName("Foo");
     NamedType namedFooUnresolved = namedFooBuilder.build();
@@ -170,7 +174,9 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     // Given
     ObjectType barTypeA = createNominalType("Bar", /* resolve= */ false);
     ObjectType barTypeB = createNominalType("Bar", /* resolve= */ false);
-    FunctionType anonType = forceResolutionOf(FunctionType.builder(registry).build());
+    FunctionType anonType = FunctionType.builder(registry).build();
+    ;
+    anonType.resolveOrThrow();
 
     NamedTypeBuilder namedFooBuilder = new NamedTypeBuilder().setName("Foo");
     NamedType namedFooUnresolved = namedFooBuilder.build();
@@ -194,7 +200,9 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     // Given
     ObjectType barTypeA = createNominalType("Bar", /* resolve= */ true);
     ObjectType barTypeB = createNominalType("Bar", /* resolve= */ true);
-    FunctionType anonType = forceResolutionOf(FunctionType.builder(registry).build());
+    FunctionType anonType = FunctionType.builder(registry).build();
+    ;
+    anonType.resolveOrThrow();
 
     NamedTypeBuilder namedFooBuilder = new NamedTypeBuilder().setName("Foo");
     NamedType namedFooUnsuccessfullyResolved =
@@ -245,6 +253,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
         FunctionType.builder(registry).setName("Foo").forConstructor().build();
     StaticTypedScope fooToFooScope = new MapBasedScope(ImmutableMap.of("Foo", fooCtorType));
     ObjectType barType = createNominalType("Bar", /* resolve= */ false);
+    assertThat(barType.isResolved()).isFalse();
 
     NamedType fooType =
         NamedType.builder(registry, "Foo")
@@ -252,7 +261,6 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
             .setScope(fooToFooScope)
             .setTemplateTypes(ImmutableList.of(barType))
             .build();
-
     assertThat(barType.isResolved()).isFalse();
 
     fooType.resolve(registry.getErrorReporter());
@@ -307,7 +315,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testResolveToGoogModule_usesLongestModulePrefix() {
-    ObjectType barType = createNominalType("Bar");
+    ObjectType barType = createNominalType("Bar", /* resolve= */ true);
     registry.registerClosureModule(
         "mod.Foo", null, registry.createRecordType(ImmutableMap.of("Bar", fooCtorType)));
     registry.registerClosureModule("mod.Foo.Bar", null, barType.getConstructor());
@@ -325,7 +333,7 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     registry.registerClosureModule("mod.Foo", null, fooCtorType);
     MapBasedScope scope = new MapBasedScope(ImmutableMap.of());
     NamedType modDotFoo = new NamedTypeBuilder().setScope(scope).setName("mod.Foo").build();
-    registry.declareType(scope, "mod.Foo", createNominalType("other.mod.Foo"));
+    registry.declareType(scope, "mod.Foo", createNominalType("other.mod.Foo", /* resolve= */ true));
 
     modDotFoo.resolve(ErrorReporter.NULL_INSTANCE);
     assertTypeEquals(fooType, modDotFoo.getReferencedType());
@@ -364,26 +372,18 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   }
 
   private static NamedType forceResolutionWith(JSType type, NamedType proxy) {
-    proxy.setResolvedTypeInternal(type);
     proxy.setReferencedType(type);
+    proxy.resolve(null);
     return proxy;
   }
 
-  private static <T extends JSType> T forceResolutionOf(T type) {
-    type.setResolvedTypeInternal(type);
-    return type;
-  }
-
-  private ObjectType createNominalType(String name) {
-    FunctionType ctorType =
-        forceResolutionOf(FunctionType.builder(registry).forConstructor().withName(name).build());
-    return forceResolutionOf(ctorType.getInstanceType());
-  }
-
   private ObjectType createNominalType(String name, boolean resolve) {
-    FunctionType ctorType =
-        forceResolutionOf(FunctionType.builder(registry).forConstructor().withName(name).build());
-    return resolve ? forceResolutionOf(ctorType.getInstanceType()) : ctorType.getInstanceType();
+    FunctionType ctorType = FunctionType.builder(registry).forConstructor().withName(name).build();
+    if (resolve) {
+      ctorType.resolveOrThrow();
+    }
+    assertThat(ctorType.getInstanceType().isResolved()).isEqualTo(resolve);
+    return ctorType.getInstanceType();
   }
 
   private class NamedTypeBuilder {

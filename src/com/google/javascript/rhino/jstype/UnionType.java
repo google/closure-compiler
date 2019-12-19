@@ -569,8 +569,6 @@ public class UnionType extends JSType {
 
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
-    setResolvedTypeInternal(this); // for circularly defined types.
-
     for (int i = 0; i < alternates.size(); i++) {
       JSType alternate = alternates.get(i);
       alternate.resolve(reporter);

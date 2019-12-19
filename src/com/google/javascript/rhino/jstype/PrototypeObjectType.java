@@ -434,8 +434,6 @@ public class PrototypeObjectType extends ObjectType {
 
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
-    setResolvedTypeInternal(this);
-
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
       implicitPrototypeFallback =

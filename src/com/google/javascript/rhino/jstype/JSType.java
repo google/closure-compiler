@@ -1498,7 +1498,6 @@ public abstract class JSType implements Serializable {
     }
     resolved = true;
     resolveResult = resolveInternal(reporter);
-    resolveResult.setResolvedTypeInternal(resolveResult);
     return resolveResult;
   }
 
@@ -1520,15 +1519,6 @@ public abstract class JSType implements Serializable {
   /** @see #resolve */
   @ForOverride
   abstract JSType resolveInternal(ErrorReporter reporter);
-
-  /**
-   * Bypasses the normal call to {@link #resolve(ErrorReporter)}. Useful if you are aware that no
-   * resolution work needs to be done.
-   */
-  void setResolvedTypeInternal(JSType type) {
-    resolveResult = type;
-    resolved = true;
-  }
 
   /**
    * Bypasses the normal call to {@link #resolve(ErrorReporter)}. Useful if you are aware that no
