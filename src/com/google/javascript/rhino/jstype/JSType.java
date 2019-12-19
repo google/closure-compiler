@@ -75,7 +75,6 @@ public abstract class JSType implements Serializable {
     return a == b;
   }
 
-  private boolean resolved = false;
   private JSType resolveResult = null;
   protected TemplateTypeMap templateTypeMap;
   private boolean loosenTypecheckingDueToForwardReferencedSupertype;
@@ -1488,16 +1487,19 @@ public abstract class JSType implements Serializable {
    * a generational flag instead of a boolean one.
    */
   public final JSType resolve(ErrorReporter reporter) {
-    if (resolved) {
-      if (resolveResult == null) {
-        // If there is a circular definition, keep the NamedType around. This is not ideal,
-        // but is still a better type than unknown.
-        return this;
-      }
-      return resolveResult;
+    if (!this.isResolved()) {
+      /**
+       * Prevent infinite recursion in cyclically defined types.
+       *
+       * <p>If resolve is called a twice on a type, before the first call completes, there is a
+       * cycle somewhere. The only thing we can do is return `this`. Doing so is safe because the
+       * resolve result *should* be equal to `this`, even though the different calls will return
+       * different objects.
+       */
+      this.resolveResult = this;
+      this.resolveResult = this.resolveInternal(reporter);
+      checkState(this.isResolved());
     }
-    resolved = true;
-    resolveResult = resolveInternal(reporter);
     return resolveResult;
   }
 
@@ -1527,7 +1529,6 @@ public abstract class JSType implements Serializable {
   void eagerlyResolveToSelf() {
     checkState(!this.isResolved());
     resolveResult = this;
-    resolved = true;
     this.registry.getResolver().resolveIfClosed(this, this.getTypeClass());
   }
 
@@ -1538,7 +1539,7 @@ public abstract class JSType implements Serializable {
    * it was attempted and has finished.
    */
   public final boolean isResolved() {
-    return resolved;
+    return this.resolveResult != null;
   }
 
   /** Returns whether the type has undergone resolution and resolved to a "useful" type. */
