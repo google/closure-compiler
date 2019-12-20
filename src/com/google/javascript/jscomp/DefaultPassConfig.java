@@ -2053,7 +2053,8 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkConsts =
       PassFactory.builder()
           .setName("checkConsts")
-          .setInternalFactory(ConstCheck::new)
+          .setInternalFactory(
+              (compiler) -> new ConstCheck(compiler, compiler.getModuleMetadataMap()))
           .setFeatureSet(ES_NEXT)
           .build();
 
