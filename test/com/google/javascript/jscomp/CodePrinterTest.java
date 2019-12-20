@@ -127,6 +127,34 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testNullishCoalesceOperator() {
+    useUnsupportedFeatures = true;
+    assertPrintSame("x??y??z");
+    // Nullish coalesce is left associative
+    assertPrintSame("x??(y??z)");
+    assertPrint("(x??y)??z", "x??y??z");
+    // // parens are kept because logical AND and logical OR must be separated from '??'
+    assertPrintSame("(x&&y)??z");
+    assertPrintSame("(x??y)||z");
+    assertPrintSame("x??(y||z)");
+    // NOTE: "x&&y??z" is a syntax error tested in ParserTest
+  }
+
+  @Test
+  public void testNullishCoalesceOperator2() {
+    useUnsupportedFeatures = true;
+    // | has higher precedence than ??
+    assertPrint("(a|b)??c", "a|b??c");
+    assertPrintSame("(a??b)|c");
+    assertPrintSame("a|(b??c)");
+    assertPrint("a??(b|c)", "a??b|c");
+    // ?? has higher precedence than : ? (conditional)
+    assertPrint("(a??b)?(c??d):(e??f)", "a??b?c??d:e??f");
+    assertPrintSame("a??(b?c:d)");
+    assertPrintSame("(a?b:c)??d");
+  }
+
+  @Test
   public void testObjectLiteralWithSpread() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("({...{}})");

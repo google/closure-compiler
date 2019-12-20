@@ -799,6 +799,7 @@ public final class NodeUtil {
     switch (type) {
       case OR:
       case AND:
+      case COALESCE:
       case BITOR:
       case BITXOR:
       case BITAND:
@@ -1159,31 +1160,40 @@ public final class NodeUtil {
       case HOOK:   return 3;  // ?: operator
       case OR:     return 4;
       case AND:    return 5;
-      case BITOR:  return 6;
-      case BITXOR: return 7;
-      case BITAND: return 8;
+      case COALESCE:
+        return 6;
+      case BITOR:
+        return 7;
+      case BITXOR:
+        return 8;
+      case BITAND:
+        return 9;
       case EQ:
       case NE:
       case SHEQ:
-      case SHNE:   return 9;
+      case SHNE:
+        return 10;
       case LT:
       case GT:
       case LE:
       case GE:
       case INSTANCEOF:
-      case IN:     return 10;
+      case IN:
+        return 11;
       case LSH:
       case RSH:
-      case URSH:   return 11;
+      case URSH:
+        return 12;
       case SUB:
-      case ADD:    return 12;
+      case ADD:
+        return 13;
       case MUL:
       case MOD:
       case DIV:
-        return 13;
+        return 14;
 
       case EXPONENT:
-        return 14;
+        return 15;
 
       case AWAIT:
       case NEW:
@@ -1194,11 +1204,11 @@ public final class NodeUtil {
       case BITNOT:
       case POS:
       case NEG:
-        return 15; // Unary operators
+        return 16; // Unary operators
 
       case INC:
       case DEC:
-        return 16; // Update operators
+        return 17; // Update operators
 
       case CALL:
       case GETELEM:
@@ -1238,12 +1248,12 @@ public final class NodeUtil {
       case DYNAMIC_IMPORT:
         // Tokens from the type declaration AST
       case UNION_TYPE:
-        return 17;
-      case FUNCTION_TYPE:
         return 18;
+      case FUNCTION_TYPE:
+        return 19;
       case ARRAY_TYPE:
       case PARAMETERIZED_TYPE:
-        return 19;
+        return 20;
       case STRING_TYPE:
       case NUMBER_TYPE:
       case BOOLEAN_TYPE:
@@ -1253,9 +1263,9 @@ public final class NodeUtil {
       case NAMED_TYPE:
       case UNDEFINED_TYPE:
       case GENERIC_TYPE:
-        return 20;
-      case CAST:
         return 21;
+      case CAST:
+        return 22;
 
       default:
         checkArgument(type != Token.TEMPLATELIT_STRING);
@@ -1292,6 +1302,7 @@ public final class NodeUtil {
         return allResultsMatch(n.getLastChild(), p);
       case AND:
       case OR:
+      case COALESCE:
         return allResultsMatch(n.getFirstChild(), p)
             && allResultsMatch(n.getLastChild(), p);
       case HOOK:
@@ -1326,6 +1337,7 @@ public final class NodeUtil {
         return getKnownValueType(n.getLastChild());
       case AND:
       case OR:
+      case COALESCE:
         return and(
             getKnownValueType(n.getFirstChild()),
             getKnownValueType(n.getLastChild()));
@@ -1570,6 +1582,7 @@ public final class NodeUtil {
       case MUL:
       case AND:
       case OR:
+      case COALESCE:
       case BITOR:
       case BITXOR:
       case BITAND:
@@ -3306,6 +3319,8 @@ public final class NodeUtil {
    */
   public static String opToStr(Token operator) {
     switch (operator) {
+      case COALESCE:
+        return "??";
       case BITOR:
         return "|";
       case OR:
@@ -3987,6 +4002,7 @@ public final class NodeUtil {
       case TYPEOF:
       case AND:
       case OR:
+      case COALESCE:
         return true;
 
       case NE:
@@ -4602,6 +4618,7 @@ public final class NodeUtil {
         return evaluatesToLocalValue(value.getLastChild());
       case AND:
       case OR:
+      case COALESCE:
         return evaluatesToLocalValue(value.getFirstChild())
             && evaluatesToLocalValue(value.getLastChild());
       case HOOK:
@@ -4678,6 +4695,8 @@ public final class NodeUtil {
       case CAST:
       case COMMA:
         return isDefinedValue(value.getLastChild());
+      case COALESCE:
+        return isDefinedValue(value.getFirstChild()) || isDefinedValue(value.getSecondChild());
       case AND:
       case OR:
         return isDefinedValue(value.getFirstChild())
@@ -4994,6 +5013,7 @@ public final class NodeUtil {
       case HOOK:
       case AND:
       case OR:
+      case COALESCE:
         return (expr == parent.getFirstChild()) || isExpressionResultUsed(parent);
       case COMMA:
         Node grandparent = parent.getParent();
@@ -5034,6 +5054,7 @@ public final class NodeUtil {
         case HOOK:
         case AND:
         case OR:
+        case COALESCE:
           if (parent.getFirstChild() != n) {
             return false;
           }

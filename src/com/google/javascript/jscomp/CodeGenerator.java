@@ -1629,9 +1629,27 @@ public class CodeGenerator {
       // ExponentiationExpression cannot expand to
       //     UnaryExpression ** ExponentiationExpression
       return true;
+    } else if (isLogicalANDorLogicalORChildOfNullishCoalesce(n)
+        || isNullishCoalesceChildOfLogicalANDorLogicalOR(n)) {
+      // precedence is not enough here since using && or || with ?? without parentheses
+      // is a syntax error as ?? expands directly to |
+      return true;
     } else {
       return precedence(n) < minPrecedence;
     }
+  }
+
+  private static boolean isLogicalANDorLogicalORChildOfNullishCoalesce(Node n) {
+    Node parent = n.getParent();
+    boolean logicalANDorLogicalOR = n.isAnd() || n.isOr();
+    boolean childOfNullishCoalesce = parent != null && parent.isNullishCoalesce();
+    return logicalANDorLogicalOR && childOfNullishCoalesce;
+  }
+
+  private static boolean isNullishCoalesceChildOfLogicalANDorLogicalOR(Node n) {
+    Node parent = n.getParent();
+    boolean childOfLogicalANDorLogicalOR = parent != null && (parent.isAnd() || parent.isOr());
+    return n.isNullishCoalesce() && childOfLogicalANDorLogicalOR;
   }
 
   private boolean isFirstOperandOfExponentiationExpression(Node n) {

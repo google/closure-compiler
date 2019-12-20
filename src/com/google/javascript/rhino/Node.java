@@ -3408,6 +3408,10 @@ public class Node implements Serializable {
     return this.token == Token.NULL;
   }
 
+  public final boolean isNullishCoalesce() {
+    return this.token == Token.COALESCE;
+  }
+
   public final boolean isNumber() {
     return this.token == Token.NUMBER;
   }
