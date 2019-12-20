@@ -31,6 +31,8 @@ public class J2clSuppressWarningsGuard extends DiagnosticGroupWarningsGuard {
           DiagnosticGroups.CONST,
           DiagnosticGroups.EXTRA_REQUIRE,
           DiagnosticGroups.LATE_PROVIDE,
+          // TODO(b/146671765): Remove LATE_NAMESPACE_DEF_CHECK when J2CL is clean.
+          DiagnosticGroups.LATE_NAMESPACE_DEF_CHECK,
           DiagnosticGroups.MISSING_OVERRIDE,
           DiagnosticGroups.MISSING_REQUIRE,
           DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
