@@ -82,8 +82,6 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
-  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2019_MODULES;
-
   private enum LangVersion {
     ES3,
     ES5,
@@ -270,9 +268,6 @@ public final class FeatureSet implements Serializable {
     if (ES5.contains(this)) {
       return "es5";
     }
-    if (TYPE_CHECK_SUPPORTED.contains(this)) {
-      return "typeCheckSupported";
-    }
     if (ES6_MODULES.contains(this)) {
       return "es6";
     }
@@ -420,8 +415,6 @@ public final class FeatureSet implements Serializable {
         return ES5;
       case "es6":
         return ES6;
-      case "typeCheckSupported":
-        return TYPE_CHECK_SUPPORTED;
       case "es7":
         return ES7;
       case "es8":

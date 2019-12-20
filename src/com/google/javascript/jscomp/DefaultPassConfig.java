@@ -26,7 +26,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPE_CHECK_SUPPORTED;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -1412,7 +1411,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("Es6StaticInheritance")
           .setInternalFactory(Es6ToEs3ClassSideInheritance::new)
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory inlineTypeAliases =
@@ -1770,7 +1769,7 @@ public final class DefaultPassConfig extends PassConfig {
                           getTypedScopeCreator(compiler));
                     }
                   })
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory inferJsDocInfo =
@@ -1792,7 +1791,7 @@ public final class DefaultPassConfig extends PassConfig {
                       makeInferJsDocInfo(compiler).hotSwapScript(scriptRoot, originalRoot);
                     }
                   })
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Checks type usage */
@@ -1817,7 +1816,7 @@ public final class DefaultPassConfig extends PassConfig {
                       makeTypeCheck(compiler).check(scriptRoot, false);
                     }
                   })
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /**
@@ -1848,7 +1847,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new CheckAccessControls(compiler, options.enforceAccessControlCodingConventions))
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory lintChecks =
@@ -1898,7 +1897,7 @@ public final class DefaultPassConfig extends PassConfig {
                 }
                 return combineChecks(compiler, callbacks.build());
               })
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory checkRequiresAndProvidesSorted =
@@ -1949,7 +1948,7 @@ public final class DefaultPassConfig extends PassConfig {
                           .process(externs, jsRoot);
                     }
                   })
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Checks that the code is ES5 strict compliant. */
@@ -1976,7 +1975,7 @@ public final class DefaultPassConfig extends PassConfig {
                           .process(externs, jsRoot);
                     }
                   })
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Override @define-annotated constants. */
@@ -1992,7 +1991,7 @@ public final class DefaultPassConfig extends PassConfig {
                       .checksOnly(options.checksOnly)
                       .injectNamespace(() -> namespaceForChecks)
                       .build())
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /**
@@ -2707,7 +2706,7 @@ public final class DefaultPassConfig extends PassConfig {
                   return new CoverageInstrumentationPass(compiler, CoverageReach.CONDITIONAL);
                 }
               })
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Extern property names gathering pass. */
@@ -2867,7 +2866,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new CheckConformance(
                       compiler, ImmutableList.copyOf(options.getConformanceConfigs())))
-          .setFeatureSet(TYPE_CHECK_SUPPORTED)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Optimizations that output ES6 features. */
