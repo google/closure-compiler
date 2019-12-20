@@ -32,7 +32,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -160,7 +159,7 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   @CheckReturnValue
   protected FlowScope declareNameInScope(FlowScope scope, Node node, JSType type) {
-    Preconditions.checkState(type == null || type.isResolved(), type);
+    type.resolveOrThrow();
     switch (node.getToken()) {
       case NAME:
         return scope.inferSlotType(node.getString(), type);
