@@ -583,6 +583,13 @@ public class JSDocInfoTest {
   }
 
   /** Test names in {@code @type} get replaced */
+  //              BANG                                        BANG
+  //               |                                           |
+  //              Item                                         ?
+  //            /  |   \                                    /  |   \
+  //       QMARK QMARK QMARK          -------->        QMARK QMARK QMARK
+  //          /    |    \                                 /    |     \
+  //    string boolean  AnotherItem                 string   boolean  ?
   @Test
   public void testJSDocInfoCloneAndReplaceNames_Type() {
     JSDocInfo info = new JSDocInfo();
@@ -596,6 +603,49 @@ public class JSDocInfoTest {
     JSDocInfo cloned = info.cloneAndReplaceTypeNames(mockedModuleLocals);
 
     assertThat(cloned.getType()).isNotEqualTo(jsTypeExpression);
+    assertThat(cloned.getType().getAllTypeNames()).doesNotContain("Item");
+    assertThat(cloned.getType().getAllTypeNames()).doesNotContain("AnotherItem");
+  }
+
+  /** Test names in {@code @type} get replaced */
+  //              Item                                       ?
+  //            /  |   \                                  /  |  \
+  //       QMARK QMARK QMARK       --------->        QMARK QMARK QMARK
+  //          /    |    \                               /    |    \
+  //    string boolean  AnotherItem               string   boolean  ?
+  @Test
+  public void testJSDocInfoCloneAndReplaceNames_Type_rootReplacement() {
+    JSDocInfo info = new JSDocInfo();
+    JSTypeExpression jsTypeExpression = createSampleTypeExpression_rootReplacement();
+    info.setType(jsTypeExpression);
+
+    Set<String> mockedModuleLocals = new LinkedHashSet<>();
+    mockedModuleLocals.add("Item");
+    mockedModuleLocals.add("AnotherItem");
+
+    JSDocInfo cloned = info.cloneAndReplaceTypeNames(mockedModuleLocals);
+
+    assertThat(cloned.getType()).isNotEqualTo(jsTypeExpression);
+    assertThat(cloned.getType().getRoot().getToken()).isEqualTo(Token.QMARK);
+    assertThat(cloned.getType().getAllTypeNames()).doesNotContain("Item");
+    assertThat(cloned.getType().getAllTypeNames()).doesNotContain("AnotherItem");
+  }
+
+  @Test
+  public void testJSDocInfoCloneAndReplaceNames_Type_SingleNode() {
+    JSDocInfo info = new JSDocInfo();
+    Node root = Node.newString("Item");
+    JSTypeExpression jsTypeExpression = new JSTypeExpression(root, "");
+    info.setType(jsTypeExpression);
+
+    Set<String> mockedModuleLocals = new LinkedHashSet<>();
+    mockedModuleLocals.add("Item");
+    mockedModuleLocals.add("AnotherItem");
+
+    JSDocInfo cloned = info.cloneAndReplaceTypeNames(mockedModuleLocals);
+
+    assertThat(cloned.getType()).isNotEqualTo(jsTypeExpression);
+    assertThat(cloned.getType().getRoot().getToken()).isEqualTo(Token.QMARK);
     assertThat(cloned.getType().getAllTypeNames()).doesNotContain("Item");
     assertThat(cloned.getType().getAllTypeNames()).doesNotContain("AnotherItem");
   }
@@ -747,8 +797,34 @@ public class JSDocInfoTest {
     return n.evaluate(null, registry);
   }
 
+  /** Generates a sample type expression tree */
+  //
+  //              BANG
+  //               |
+  //              Item
+  //            /  |   \
+  //       QMARK QMARK QMARK
+  //          /    |    \
+  //    string boolean  AnotherItem
   private static JSTypeExpression createSampleTypeExpression() {
     Node root = new Node(Token.BANG, Node.newString("Item"));
+    Node child1 = new Node(Token.QMARK, Node.newString("string"));
+    Node child2 = new Node(Token.QMARK, Node.newString("boolean"));
+    Node child3 = new Node(Token.QMARK, Node.newString("AnotherItem"));
+    root.addChildToBack(child1);
+    root.addChildToBack(child2);
+    root.addChildToBack(child3);
+    return new JSTypeExpression(root, "");
+  }
+
+  /** Generates a sample type expression tree with root node as a typename */
+  //              Item
+  //            /  |   \
+  //       QMARK QMARK QMARK
+  //          /    |    \
+  //    string boolean  AnotherItem
+  private static JSTypeExpression createSampleTypeExpression_rootReplacement() {
+    Node root = Node.newString("Item");
     Node child1 = new Node(Token.QMARK, Node.newString("string"));
     Node child2 = new Node(Token.QMARK, Node.newString("boolean"));
     Node child3 = new Node(Token.QMARK, Node.newString("AnotherItem"));

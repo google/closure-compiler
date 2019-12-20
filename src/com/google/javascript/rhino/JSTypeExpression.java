@@ -75,23 +75,35 @@ public final class JSTypeExpression implements Serializable {
 
   /** Replaces given names in this type expression with unknown */
   public JSTypeExpression replaceNamesWithUnknownType(Set<String> names) {
-    JSTypeExpression newTypeExpression = this.copy();
-    replaceNames(newTypeExpression.getRoot(), names);
+    Node oldExprRoot = this.root.cloneTree();
+    Node newExprRoot = replaceNames(oldExprRoot, names);
+    JSTypeExpression newTypeExpression = new JSTypeExpression(newExprRoot, sourceName);
     return newTypeExpression;
   }
 
-  /** Recursively traverse over the type tree and replace matched types with unknown type */
-  private static void replaceNames(Node n, Set<String> names) {
+  /**
+   * Recursively traverse over the type tree and replace matched types with unknown type
+   *
+   * @param n Root of the JsTypeExpression on which replacement is applied
+   * @param names The set of names to replace in this type expression
+   * @return the new root after replacing the names
+   */
+  private static Node replaceNames(Node n, Set<String> names) {
     if (n == null) {
-      return;
+      return null;
     }
     for (Node child : n.children()) {
       replaceNames(child, names);
     }
     if (n.isString() && names.contains(n.getString())) {
       Node qMark = new Node(Token.QMARK);
-      n.replaceWith(qMark);
+      qMark.addChildrenToBack(n.removeChildren());
+      if (n.getParent() != null) {
+        n.replaceWith(qMark);
+      }
+      return qMark;
     }
+    return n;
   }
 
   /** Returns a set of all string names in this type expression */
