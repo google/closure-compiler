@@ -53,42 +53,43 @@ import org.junit.runners.JUnit4;
 public class UnionTypeTest extends BaseJSTypeTestCase {
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
-  private NamedType unresolvedNamedType;
   private ObjectType base;
   private ObjectType sub1;
   private ObjectType sub2;
   private ObjectType sub3;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
-    unresolvedNamedType =
-        registry.createNamedType(EMPTY_SCOPE, "not.resolved.named.type", null, -1, -1);
 
-    this.base =
-        FunctionType.builder(registry).forConstructor().withName("Base").build().getInstanceType();
-    this.sub1 =
-        FunctionType.builder(registry)
-            .forConstructor()
-            .withName("Sub1")
-            .withPrototypeBasedOn(base)
-            .build()
-            .getInstanceType();
-    this.sub2 =
-        FunctionType.builder(registry)
-            .forConstructor()
-            .withName("Sub2")
-            .withPrototypeBasedOn(base)
-            .build()
-            .getInstanceType();
-    this.sub3 =
-        FunctionType.builder(registry)
-            .forConstructor()
-            .withName("Sub3")
-            .withPrototypeBasedOn(base)
-            .build()
-            .getInstanceType();
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      this.base =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Base")
+              .build()
+              .getInstanceType();
+      this.sub1 =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Sub1")
+              .withPrototypeBasedOn(base)
+              .build()
+              .getInstanceType();
+      this.sub2 =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Sub2")
+              .withPrototypeBasedOn(base)
+              .build()
+              .getInstanceType();
+      this.sub3 =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Sub3")
+              .withPrototypeBasedOn(base)
+              .build()
+              .getInstanceType();
+    }
   }
 
   /**
@@ -116,8 +117,19 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertTypeCanAssignToItself(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE));
     assertTypeCanAssignToItself(createUnionType(VOID_TYPE));
 
-    UnionType nullOrUnknown =
-        (UnionType) createUnionType(NULL_TYPE, unresolvedNamedType);
+    // findPropertyType
+    assertType(nullOrString.findPropertyType("length")).isStructurallyEqualTo(NUMBER_TYPE);
+    assertThat(nullOrString.findPropertyType("lengthx")).isNull();
+
+    Asserts.assertResolvesToSame(nullOrString);
+  }
+
+  @Test
+  public void testUnionOfNullAndUnresolvedNamedType() {
+    errorReporter.expectAllWarnings("Bad type annotation. Unknown type not.resolved.named.type");
+    NamedType unresolvedNamedType =
+        registry.createNamedType(EMPTY_SCOPE, "not.resolved.named.type", "", -1, -1);
+    UnionType nullOrUnknown = (UnionType) createUnionType(NULL_TYPE, unresolvedNamedType);
     assertThat(nullOrUnknown.isUnknownType()).isTrue();
     assertType(NULL_TYPE.getLeastSupertype(nullOrUnknown)).isStructurallyEqualTo(nullOrUnknown);
     assertType(nullOrUnknown.getLeastSupertype(NULL_TYPE)).isStructurallyEqualTo(nullOrUnknown);
@@ -134,12 +146,6 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
 
     assertType(nullOrUnknown.restrictByNotNullOrUndefined())
         .isStructurallyEqualTo(unresolvedNamedType);
-
-    // findPropertyType
-    assertType(nullOrString.findPropertyType("length")).isStructurallyEqualTo(NUMBER_TYPE);
-    assertThat(nullOrString.findPropertyType("lengthx")).isNull();
-
-    Asserts.assertResolvesToSame(nullOrString);
   }
 
   /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */

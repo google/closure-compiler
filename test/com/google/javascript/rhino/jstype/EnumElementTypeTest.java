@@ -98,9 +98,7 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
 
     assertType(greatestSubtype).isSubtypeOf(typeA);
     assertType(greatestSubtype).isSubtypeOf(typeB);
-    // This equality is because comparing unresolved type equality is just dependent on reference
-    // name, due to 'NamedTypes' being difficult or impossible to correctly check equality on.
-    assertType(greatestSubtype).isEqualTo(typeA);
+    assertType(greatestSubtype).isNotEqualTo(typeA);
     assertType(greatestSubtype).isNotEqualTo(typeB);
 
     assertType(typeA).isNotSubtypeOf(greatestSubtype);
@@ -111,11 +109,8 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
   public void testGetGreatestSubtype_twoEnumElementTypes_postResolution() {
     EnumElementType typeA = registry.createEnumType("typeA", null, NUMBER_TYPE).getElementsType();
     EnumElementType typeB = registry.createEnumType("typeB", null, NUMBER_TYPE).getElementsType();
-    typeA.resolve(null);
-    typeB.resolve(null);
 
     JSType greatestSubtype = EnumElementType.getGreatestSubtype(typeA, typeB);
-    greatestSubtype.resolve(null);
 
     assertType(greatestSubtype).isSubtypeOf(typeA);
     assertType(greatestSubtype).isSubtypeOf(typeB);
@@ -130,14 +125,6 @@ public class EnumElementTypeTest extends BaseJSTypeTestCase {
   public void testEqualityOfEnumTypes_withSameReferenceName() {
     EnumType firstFoo = registry.createEnumType("Foo", null, NUMBER_TYPE);
     EnumType secondFoo = registry.createEnumType("Foo", null, NUMBER_TYPE);
-
-    assertType(firstFoo).isNotEqualTo(secondFoo);
-    // Pre-resolution type equality is intentionally loose because of NamedTypes, so treat these
-    // types as potentially equal.
-    assertType(firstFoo.getElementsType()).isEqualTo(secondFoo.getElementsType());
-
-    firstFoo.resolve(registry.getErrorReporter());
-    secondFoo.resolve(registry.getErrorReporter());
 
     assertType(firstFoo).isNotEqualTo(secondFoo);
     assertType(firstFoo.getElementsType()).isNotEqualTo(secondFoo.getElementsType());

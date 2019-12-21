@@ -56,7 +56,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import org.junit.After;
-import org.junit.Before;
 
 /** A base class for tests on {@code JSType}s. */
 public abstract class BaseJSTypeTestCase {
@@ -119,12 +118,6 @@ public abstract class BaseJSTypeTestCase {
             ? new JSTypeRegistry(errorReporter, ImmutableSet.of(FORWARD_DECLARED_TYPE_NAME))
             : registry;
     initTypes();
-  }
-
-  @Before
-  @SuppressWarnings({"MustBeClosedChecker"})
-  public void setUp() throws Exception {
-    this.registry.getResolver().openForDefinition();
   }
 
   @After
@@ -563,3 +556,4 @@ public abstract class BaseJSTypeTestCase {
     return LINE_JOINER.join(lines);
   }
 }
+

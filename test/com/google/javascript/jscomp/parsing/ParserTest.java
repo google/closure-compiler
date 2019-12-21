@@ -93,10 +93,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private boolean isIdeMode = false;
   private FeatureSet expectedFeatures;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     mode = LanguageMode.ES_NEXT;
     parsingMode = JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
     strictMode = SLOPPY;
