@@ -737,8 +737,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseFunctionalTypeError6() {
-    resolve(parse("@type {function (this:number)}*/").getType(),
-        "this type must be an object type");
+    resolve(parse("@type {function (this:number)}*/").getType());
   }
 
   @Test
@@ -1039,7 +1038,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseThisType4() {
-    resolve(parse("@this {number}*/").getThisType(), "@this must specify an object type");
+    resolve(parse("@this {number}*/").getThisType());
   }
 
   @Test
@@ -1049,8 +1048,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseThisType6() {
-    resolve(parse("@this {Date|number}*/").getThisType(),
-        "@this must specify an object type");
+    resolve(parse("@this {Date|number}*/").getThisType());
   }
 
   @Test
@@ -5682,7 +5680,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   private Node parseFull(String code, String... warnings) {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
+    TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     Config config =
         Config.builder()
             .setExtraAnnotationNames(extraAnnotations)
@@ -5698,7 +5696,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         ParserRunner.parse(
             new SimpleSourceFile("source", SourceKind.STRONG), code, config, testErrorReporter);
 
-    testErrorReporter.assertHasEncounteredAllWarnings();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
     return result.ast;
   }
 
@@ -5735,7 +5733,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private JSDocInfo parse(String comment, JsDocParsing parseDocumentation,
       boolean parseFileOverview, String... warnings) {
-    TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
+    TestErrorReporter errorReporter = new TestErrorReporter().expectAllWarnings(warnings);
 
     Config config =
         Config.builder()
@@ -5766,7 +5764,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     jsdocParser.parse();
 
-    errorReporter.assertHasEncounteredAllWarnings();
+    errorReporter.verifyHasEncounteredAllWarningsAndErrors();
 
     final JSDocInfo result;
     if (parseFileOverview) {

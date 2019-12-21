@@ -45,7 +45,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.collect.Iterables;
-import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.Iterator;
 import org.junit.Assert;
@@ -64,12 +63,13 @@ public class Asserts {
 
   /** @return The resolved type */
   public static JSType assertValidResolve(JSType type) {
-    ErrorReporter reporter = TestErrorReporter.forNoExpectedReports();
+    TestErrorReporter reporter = new TestErrorReporter();
     JSType resolvedType = type.resolve(reporter);
     assertWithMessage("JSType#resolve should not affect object equality")
         .about(types())
         .that(resolvedType)
         .isStructurallyEqualTo(type);
+    reporter.verifyHasEncounteredAllWarningsAndErrors();
     return resolvedType;
   }
 

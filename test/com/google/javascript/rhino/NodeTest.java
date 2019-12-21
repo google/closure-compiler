@@ -138,13 +138,14 @@ public class NodeTest {
 
   @Test
   public void testCheckTreeTypeAwareEqualsSame() {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
+    TestErrorReporter testErrorReporter = new TestErrorReporter();
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
     Node node1 = Node.newString(Token.NAME, "f");
     node1.setJSType(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
     Node node2 = Node.newString(Token.NAME, "f");
     node2.setJSType(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
     assertThat(node1.isEquivalentToTyped(node2)).isTrue();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   @Test
@@ -156,23 +157,25 @@ public class NodeTest {
 
   @Test
   public void testCheckTreeTypeAwareEqualsDifferent() {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
+    TestErrorReporter testErrorReporter = new TestErrorReporter();
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
     Node node1 = Node.newString(Token.NAME, "f");
     node1.setJSType(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
     Node node2 = Node.newString(Token.NAME, "f");
     node2.setJSType(registry.getNativeType(JSTypeNative.STRING_TYPE));
     assertThat(node1.isEquivalentToTyped(node2)).isFalse();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   @Test
   public void testCheckTreeTypeAwareEqualsDifferentNull() {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, null);
+    TestErrorReporter testErrorReporter = new TestErrorReporter();
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);
     Node node1 = Node.newString(Token.NAME, "f");
     node1.setJSType(registry.getNativeType(JSTypeNative.NUMBER_TYPE));
     Node node2 = Node.newString(Token.NAME, "f");
     assertThat(node1.isEquivalentToTyped(node2)).isFalse();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   @Test

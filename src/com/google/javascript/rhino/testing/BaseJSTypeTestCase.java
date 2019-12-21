@@ -55,6 +55,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
+import org.junit.After;
 import org.junit.Before;
 
 /** A base class for tests on {@code JSType}s. */
@@ -63,7 +64,7 @@ public abstract class BaseJSTypeTestCase {
 
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
-  protected final TestErrorReporter errorReporter = new TestErrorReporter(null, null);
+  protected final TestErrorReporter errorReporter = new TestErrorReporter();
   protected final JSTypeRegistry registry;
 
   protected JSType ALL_TYPE;
@@ -124,6 +125,11 @@ public abstract class BaseJSTypeTestCase {
   @SuppressWarnings({"MustBeClosedChecker"})
   public void setUp() throws Exception {
     this.registry.getResolver().openForDefinition();
+  }
+
+  @After
+  public void validateWarningsAndErrors() {
+    errorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   protected void initTypes() {
@@ -393,7 +399,7 @@ public abstract class BaseJSTypeTestCase {
    * Resolves a type expression, expecting the given warnings.
    */
   protected JSType resolve(JSTypeExpression n, String... warnings) {
-    errorReporter.setWarnings(warnings);
+    errorReporter.expectAllWarnings(warnings);
     return n.evaluate(null, registry);
   }
 

@@ -55,7 +55,7 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    errorReporter = new TestErrorReporter(null, null);
+    errorReporter = new TestErrorReporter();
     initRecordTypeTests();
     typeVars =
         new ImmutableMap.Builder<String, JSType>()

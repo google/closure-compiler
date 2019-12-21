@@ -5668,7 +5668,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
    * @return If in IDE mode, returns a partial tree.
    */
   private Node parseError(String source, String... errors) {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(errors, null);
+    TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllErrors(errors);
     ParseResult result =
         ParserRunner.parse(
             new SimpleSourceFile("input", SourceKind.STRONG),
@@ -5681,8 +5681,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertFS(result.features).contains(expectedFeatures);
 
     // verifying that all errors were seen
-    testErrorReporter.assertHasEncounteredAllErrors();
-    testErrorReporter.assertHasEncounteredAllWarnings();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
 
     return script;
   }
@@ -5696,7 +5695,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   private ParserRunner.ParseResult doParse(String string, String... warnings) {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
+    TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     StaticSourceFile file = new SimpleSourceFile("input", SourceKind.STRONG);
     ParserRunner.ParseResult result = ParserRunner.parse(
         file,
@@ -5708,8 +5707,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertFS(result.features).contains(expectedFeatures);
 
     // verifying that all warnings were seen
-    testErrorReporter.assertHasEncounteredAllErrors();
-    testErrorReporter.assertHasEncounteredAllWarnings();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
     assertSourceInfoPresent(result.ast);
     return result;
   }

@@ -118,7 +118,7 @@ public final class ParsingUtilTest {
   }
 
   private static Node parse(String source, String... warnings) {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
+    TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     Config config =
         ParserRunner.createConfig(
             LanguageMode.ES_NEXT,
@@ -133,8 +133,7 @@ public final class ParsingUtilTest {
             .ast;
 
     // verifying that all warnings were seen
-    testErrorReporter.assertHasEncounteredAllErrors();
-    testErrorReporter.assertHasEncounteredAllWarnings();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
 
     return script;
   }

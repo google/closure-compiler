@@ -41,6 +41,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+import org.junit.After;
 import org.junit.Before;
 
 /** This class is mostly used by passes testing {@link TypeCheck}. */
@@ -129,8 +130,13 @@ abstract class CompilerTypeTestCase {
 
   @Before
   public void setUp() throws Exception {
-    errorReporter = new TestErrorReporter(null, null);
+    errorReporter = new TestErrorReporter();
     initializeNewCompiler(getDefaultOptions());
+  }
+
+  @After
+  public void validateWarningsAndErrors() {
+    errorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   protected static String lines(String line) {
@@ -193,7 +199,7 @@ abstract class CompilerTypeTestCase {
 
   /** Resolves a type expression, expecting the given warnings. */
   protected JSType resolve(JSTypeExpression n, String... warnings) {
-    errorReporter.setWarnings(warnings);
+    errorReporter.expectAllWarnings(warnings);
     return n.evaluate(null, registry);
   }
 

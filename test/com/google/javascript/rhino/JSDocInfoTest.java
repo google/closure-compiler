@@ -61,17 +61,23 @@ import com.google.javascript.rhino.testing.TestErrorReporter;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class JSDocInfoTest {
-  private final TestErrorReporter errorReporter = new TestErrorReporter(null, null);
+  private final TestErrorReporter errorReporter = new TestErrorReporter();
   private final JSTypeRegistry registry = new JSTypeRegistry(errorReporter);
 
   private JSType getNativeType(JSTypeNative typeId) {
     return registry.getNativeType(typeId);
+  }
+
+  @After
+  public void validateWarningsAndErrors() {
+    errorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   /** Tests the assigned ordinal of the elements of the {@link JSDocInfo.Visibility} enum. */
@@ -793,7 +799,7 @@ public class JSDocInfoTest {
   }
 
   private JSType resolve(JSTypeExpression n, String... warnings) {
-    errorReporter.setWarnings(warnings);
+    errorReporter.expectAllWarnings(warnings);
     return n.evaluate(null, registry);
   }
 
