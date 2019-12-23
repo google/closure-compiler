@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
@@ -1950,7 +1949,6 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguage(LanguageMode language) {
     checkState(language != LanguageMode.NO_TRANSPILE);
-    checkState(language != LanguageMode.UNSUPPORTED);
     this.setLanguageIn(language);
     this.setLanguageOut(language);
   }
@@ -1961,19 +1959,7 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     checkState(languageIn != LanguageMode.NO_TRANSPILE);
-    checkState(languageIn != LanguageMode.UNSUPPORTED);
     this.languageIn = languageIn == LanguageMode.STABLE ? LanguageMode.STABLE_IN : languageIn;
-  }
-
-  /**
-   * Sets the ECMAScript version to the unsupported features that can be parsed but are not
-   * understood by the rest of the compiler.
-   *
-   * <p>Should not be used outside tests!
-   */
-  @VisibleForTesting()
-  public void setLanguageInToUnsupported() {
-    this.languageIn = LanguageMode.UNSUPPORTED;
   }
 
   public LanguageMode getLanguageIn() {
@@ -1989,7 +1975,6 @@ public class CompilerOptions implements Serializable {
    * #setOutputFeatureSet.
    */
   public void setLanguageOut(LanguageMode languageOut) {
-    checkState(languageOut != LanguageMode.UNSUPPORTED);
     if (languageOut == LanguageMode.NO_TRANSPILE) {
       languageOutIsDefaultStrict = Optional.absent();
       outputFeatureSet = Optional.absent();

@@ -94,7 +94,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testOptionalCatchBlock() {
-    useUnsupportedFeatures = true;
     assertPrintSame("try{}catch{}");
     assertPrintSame("try{}catch{}finally{}");
   }
@@ -128,7 +127,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testNullishCoalesceOperator() {
-    useUnsupportedFeatures = true;
     assertPrintSame("x??y??z");
     // Nullish coalesce is left associative
     assertPrintSame("x??(y??z)");
@@ -142,7 +140,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testNullishCoalesceOperator2() {
-    useUnsupportedFeatures = true;
     // | has higher precedence than ??
     assertPrint("(a|b)??c", "a|b??c");
     assertPrintSame("(a??b)|c");
@@ -2776,7 +2773,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testImportMeta() {
-    useUnsupportedFeatures = true;
     assertPrintSame("import.meta");
     assertPrintSame("import.meta.url");
     assertPrintSame("console.log(import.meta.url)");
