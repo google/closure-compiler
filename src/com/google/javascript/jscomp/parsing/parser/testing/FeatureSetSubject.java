@@ -81,4 +81,12 @@ public class FeatureSetSubject extends Subject {
                   "Expected a FeatureSet that doesn't have: %s\nBut got: %s", feature, actual)));
     }
   }
+
+  public void equals(FeatureSet other) {
+    if (!actual.equals(other)) {
+      failWithoutActual(
+          simpleFact(
+              lenientFormat("Expected a FeatureSet equal to: %s\nBut got: %s", other, actual)));
+    }
+  }
 }

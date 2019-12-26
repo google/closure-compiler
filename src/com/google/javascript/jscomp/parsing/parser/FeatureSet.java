@@ -92,7 +92,8 @@ public final class FeatureSet implements Serializable {
     ES2019,
     ES_NEXT,
     ES_UNSUPPORTED,
-    TYPESCRIPT;
+    TYPESCRIPT,
+    ;
 
     private EnumSet<Feature> features() {
       EnumSet<Feature> set = EnumSet.noneOf(Feature.class);
@@ -283,9 +284,13 @@ public final class FeatureSet implements Serializable {
     if (ES2019_MODULES.contains(this)) {
       return "es_2019";
     }
+    // Note that this method will not return "es_next" when ES_NEXT contains only features that
+    // are part of an official ES spec release. It will return the name of that release instead.
     if (ES_NEXT.contains(this)) {
       return "es_next";
     }
+    // Note that this method will not return "es_unsupported" when ES_UNSUPPORTED
+    // contains the same features as ES_NEXT. It will return es_next.
     if (ES_UNSUPPORTED.contains(this)) {
       return "es_unsupported";
     }
@@ -426,6 +431,8 @@ public final class FeatureSet implements Serializable {
         return ES2019;
       case "es_next":
         return ES_NEXT;
+      case "es_unsupported":
+        return ES_UNSUPPORTED;
       case "ts":
         return TYPESCRIPT;
       default:
