@@ -7176,7 +7176,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
     options.setAssumeGettersArePure(false);
-    options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
     return options;
   }
 
