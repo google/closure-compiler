@@ -671,6 +671,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testNullishCoalesce() {
+    // TODO(annieyw) b/146659618 Calculate the appropriate type here
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/**@type {?} */var x = 0 ?? \"hi\";");
+  }
+
+  @Test
   public void testNullAnd() {
     testTypes("/** @type {null} */var x;\n" +
         "/** @type {number} */var r = x && x;",

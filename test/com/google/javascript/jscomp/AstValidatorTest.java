@@ -945,6 +945,14 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFeatureValidation_nullishCoalesceOp() {
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+
+    testFeatureValidation("x ?? y", Feature.NULL_COALESCE_OP);
+    testFeatureValidation("x ?? y ?? z", Feature.NULL_COALESCE_OP);
+  }
+
+  @Test
   public void testFeatureValidation_asyncFunctions() {
     testFeatureValidation("const f = async function() {}", Feature.ASYNC_FUNCTIONS);
     testFeatureValidation("async function f() {}", Feature.ASYNC_FUNCTIONS);

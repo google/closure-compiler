@@ -349,6 +349,10 @@ public final class AstValidator implements CompilerPass {
         validateFeature(Feature.EXPONENT_OP, n);
         validateBinaryOp(n);
         return;
+      case COALESCE:
+        validateFeature(Feature.NULL_COALESCE_OP, n);
+        validateBinaryOp(n);
+        return;
       case COMMA:
       case OR:
       case AND:

@@ -553,6 +553,11 @@ class TypeInference
         scope = traverseOr(n, scope).getJoinedFlowScope();
         break;
 
+      case COALESCE:
+        // TODO(annieyw) b/146659618 Calculate the appropriate type here
+        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        break;
+
       case HOOK:
         scope = traverseHook(n, scope);
         break;
