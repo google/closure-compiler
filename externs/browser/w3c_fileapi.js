@@ -58,6 +58,13 @@ Blob.prototype.type;
  */
 Blob.prototype.slice = function(start, length, opt_contentType) {};
 
+/**
+ * @see http://www.w3.org/TR/FileAPI/#arraybuffer-method-algo
+ * @return {!Promise<!ArrayBuffer>}
+ * @nosideeffects
+ */
+Blob.prototype.arrayBuffer = function() {};
+
 
 /**
  * @record
