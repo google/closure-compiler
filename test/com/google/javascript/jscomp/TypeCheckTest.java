@@ -296,6 +296,48 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testPropertyOnATypedefGetsResolved() {
+    testTypes(
+        lines(
+            "const a = {};",
+            "/** @typedef {{prop: string}} */",
+            "  a.b;",
+            "/** @typedef {string} */",
+            "  a.b.c;",
+            "const abAlias = a.b;",
+            "var /** !abAlias.whatIsThis */ y = 'foo';"),
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testPropertyOnTypedefAliasesGetsRecognized() {
+    // TODO(b/144187784): Handle making property b.c recognized when referenced via aAlias
+    testTypes(
+        lines(
+            "const a = {};",
+            "/** @typedef {{prop: string}} */",
+            "  a.b;",
+            "/** @typedef {string} */",
+            "  a.b.c;",
+            "const aAlias = a;",
+            "var /** aAlias.b.c */ x;"),
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
+  public void testPropertyOnTypedefAliasesGetsRecognized2() {
+    testTypes(
+        lines(
+            "const a = {};",
+            "/** @typedef {{prop: string}} */",
+            "  a.b;",
+            "/** @typedef {string} */",
+            "  a.b.c;",
+            "const aAlias = a;",
+            "var /** aAlias.b */ x = {prop: 'foo'};"));
+  }
+
+  @Test
   public void testTypeCheckInlineReturns() {
     testTypes(
         "function /** string */ foo(x) { return x; }" +

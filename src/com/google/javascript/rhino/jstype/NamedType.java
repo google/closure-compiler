@@ -347,7 +347,7 @@ public final class NamedType extends ProxyObjectType {
   /**
    * Resolve a type using a given StaticTypedSlot and list of properties on that type.
    *
-   * @param slotType the JSType of teh slot, possibly null
+   * @param slotType the JSType of the slot, possibly null
    * @param definitionNode If known, the Node representing the type definition.
    * @param componentIndex the index into {@code componentNames} at which to start resolving
    */
@@ -357,8 +357,9 @@ public final class NamedType extends ProxyObjectType {
       List<String> componentNames,
       ErrorReporter reporter,
       int componentIndex) {
-    if (resolveTypeFromNodeIfTypedef(definitionNode, reporter)) {
-      return;
+    if (componentIndex == componentNames.size()
+        && resolveTypeFromNodeIfTypedef(definitionNode, reporter)) {
+      return; // is last component and a also typedef
     }
 
     // If the first component has a type of 'Unknown', then any type
