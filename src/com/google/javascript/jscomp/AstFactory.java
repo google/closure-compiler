@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -342,6 +343,17 @@ final class AstFactory {
   }
 
   /**
+   * Creates a new `var` declaration statement for a single variable name.
+   *
+   * <p>Takes the type for the variable name from the value node.
+   *
+   * <p>e.g. `const variableName = value;`
+   */
+  Node createSingleVarNameDeclaration(String variableName, Node value) {
+    return IR.var(createName(variableName, value.getJSType()), value);
+  }
+
+  /**
    * Creates a new `const` declaration statement for a single variable name.
    *
    * <p>Takes the type for the variable name from the value node.
@@ -405,9 +417,18 @@ final class AstFactory {
     return createQName(scope, Splitter.on(".").split(qname));
   }
 
-  private Node createQName(Scope scope, Iterable<String> names) {
+  Node createQName(Scope scope, Iterable<String> names) {
     String baseName = checkNotNull(Iterables.getFirst(names, null));
     Iterable<String> propertyNames = Iterables.skip(names, 1);
+    return createQName(scope, baseName, propertyNames);
+  }
+
+  Node createQName(Scope scope, String baseName, String... propertyNames) {
+    checkNotNull(baseName);
+    return createQName(scope, baseName, Arrays.asList(propertyNames));
+  }
+
+  Node createQName(Scope scope, String baseName, Iterable<String> propertyNames) {
     Node baseNameNode = createName(scope, baseName);
     return createGetProps(baseNameNode, propertyNames);
   }
@@ -471,6 +492,21 @@ final class AstFactory {
       result.setJSType(value.getJSType());
     }
     return result;
+  }
+
+  /**
+   * Create a getter definition to be inserted into either a class body or object literal.
+   *
+   * <p>{@code get name() { return value; }}
+   */
+  Node createGetterDef(String name, Node value) {
+    JSType returnType = value.getJSType();
+    // Name is stored on the GETTER_DEF node. The function has no name.
+    Node functionNode =
+        createZeroArgFunction(/* name= */ "", IR.block(createReturn(value)), returnType);
+    Node getterNode = Node.newString(Token.GETTER_DEF, name);
+    getterNode.addChildToFront(functionNode);
+    return getterNode;
   }
 
   Node createIn(Node left, Node right) {
@@ -692,6 +728,15 @@ final class AstFactory {
     Node result = IR.objectlit(elements);
     if (isAddingTypes()) {
       result.setJSType(registry.createAnonymousObjectType(null).resolveOrThrow());
+    }
+    return result;
+  }
+
+  /** Creates an object-literal with zero or more elements and a specific type. */
+  Node createObjectLit(@Nullable JSType jsType, Node... elements) {
+    Node result = IR.objectlit(elements);
+    if (isAddingTypes()) {
+      result.setJSType(checkNotNull(jsType));
     }
     return result;
   }
