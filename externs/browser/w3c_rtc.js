@@ -1703,6 +1703,8 @@ RTCStreamStats.prototype.qpSum;
 
 /**
  * @interface
+ * @extends {Iterable<!Array<string|!RTCStats>>}
+ * @see https://w3c.github.io/webrtc-pc/#rtcstatsreport-object
  */
 function RTCStatsReport() {}
 
