@@ -10569,6 +10569,12 @@ chrome.inputMethodPrivate.finishComposingText = function(
 
 
 /**
+ * Resets the current engine to its initial state. Fires an OnReset event.
+ */
+chrome.inputMethodPrivate.reset = function() {};
+
+
+/**
  * @const
  * @see https://goo.gl/7dvJFW
  */
