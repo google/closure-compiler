@@ -128,7 +128,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     if (context.needsThisVar) {
       Node name = IR.name(THIS_VAR).setJSType(context.getThisType());
       Node thisVar = IR.constNode(name, IR.thisNode().setJSType(context.getThisType()));
-      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       thisVar.useSourceInfoIfMissingFromForTree(scopeBody);
       makeTreeNonIndexable(thisVar);
 
@@ -147,7 +147,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
       Node name = IR.name(ARGUMENTS_VAR).setJSType(context.getArgumentsType());
       Node argumentsVar =
           IR.constNode(name, IR.name("arguments").setJSType(context.getArgumentsType()));
-      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
       scopeBody.addChildToFront(argumentsVar);
 
       argumentsVar.useSourceInfoIfMissingFromForTree(scopeBody);
