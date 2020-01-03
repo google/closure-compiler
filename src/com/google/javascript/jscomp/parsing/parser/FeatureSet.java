@@ -26,16 +26,12 @@ import java.util.Set;
 /**
  * Represents various aspects of language version and support.
  *
- * <p>This is somewhat redundant with LanguageMode, but is separate
- * for two reasons: (1) it's used for parsing, which cannot
- * depend on LanguageMode, and (2) it's concerned with slightly
- * different nuances: implemented features and modules rather
- * than strictness.
+ * <p>This is somewhat redundant with LanguageMode, but is separate for two reasons: (1) it's used
+ * for parsing, which cannot depend on LanguageMode, and (2) it's concerned with slightly different
+ * nuances: implemented features and modules rather than strictness.
  *
- * <p>In the long term, it would be good to disentangle all these
- * concerns and pull out a single LanguageSyntax enum with a
- * separate strict mode flag, and then these could possibly be
- * unified.
+ * <p>In the long term, it would be good to disentangle all these concerns and pull out a single
+ * LanguageSyntax enum with a separate strict mode flag, and then these could possibly be unified.
  *
  * <p>Instances of this class are immutable.
  */
@@ -82,6 +78,9 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
+  public static final FeatureSet TS_UNSUPPORTED =
+      TYPESCRIPT.with(LangVersion.ES_UNSUPPORTED.features());
+
   private enum LangVersion {
     ES3,
     ES5,
@@ -93,6 +92,7 @@ public final class FeatureSet implements Serializable {
     ES_NEXT,
     ES_UNSUPPORTED,
     TYPESCRIPT,
+    TS_UNSUPPORTED,
     ;
 
     private EnumSet<Feature> features() {
@@ -253,6 +253,9 @@ public final class FeatureSet implements Serializable {
     if (TYPESCRIPT.contains(this)) {
       return "ts";
     }
+    if (TS_UNSUPPORTED.contains(this)) {
+      return "ts_unsupported";
+    }
     throw new IllegalStateException(this.toString());
   }
 
@@ -296,6 +299,9 @@ public final class FeatureSet implements Serializable {
     }
     if (TYPESCRIPT.contains(this)) {
       return "ts";
+    }
+    if (TS_UNSUPPORTED.contains(this)) {
+      return "ts_unsupported";
     }
     throw new IllegalStateException(this.toString());
   }
@@ -435,6 +441,8 @@ public final class FeatureSet implements Serializable {
         return ES_UNSUPPORTED;
       case "ts":
         return TYPESCRIPT;
+      case "ts_unsupported":
+        return TS_UNSUPPORTED;
       default:
         throw new IllegalArgumentException("No such FeatureSet: " + name);
     }

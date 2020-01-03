@@ -47,6 +47,7 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsOrdering() {
+    assertFS(FeatureSet.TS_UNSUPPORTED).contains(FeatureSet.TYPESCRIPT);
     assertFS(FeatureSet.TYPESCRIPT).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2019);
@@ -70,7 +71,7 @@ public final class FeatureSetTest {
 
   @Test
   public void testVersionForDebugging() {
-    // ES_NEXT and ES_UNSUPPORTED are tested separately - see below
+    // ES_NEXT, ES_UNSUPPORTED, TS_UNSUPPORTED are tested separately - see below
     assertThat(FeatureSet.ES3.versionForDebugging()).isEqualTo("es3");
     assertThat(FeatureSet.ES5.versionForDebugging()).isEqualTo("es5");
     assertThat(FeatureSet.ES6.versionForDebugging()).isEqualTo("es6");
@@ -106,6 +107,17 @@ public final class FeatureSetTest {
     // This is on purpose so the test case serves as documentation that we intentionally
     // have ES_UNSUPPORTED the same as or different from ES_NEXT
     assertThat(FeatureSet.ES_UNSUPPORTED.versionForDebugging()).isEqualTo("es_unsupported");
+  }
+
+  @Test
+  public void testTsUnsupported() {
+    // TS_UNSUPPORTED is currently has more features than TYPESCRIPT, so versionForDebugging() will
+    // return ts_unsupported
+    // This will change when new features are added to TYPESCRIPT/TS_UNSUPPORTED, so this test case
+    // will then have to change.
+    // This is on purpose so the test case serves as documentation that we intentionally
+    // have TS_UNSUPPORTED the same as or different from TYPESCRIPT
+    assertThat(FeatureSet.TS_UNSUPPORTED.versionForDebugging()).isEqualTo("ts_unsupported");
   }
 
   @Test
