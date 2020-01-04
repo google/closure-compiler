@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
-import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
@@ -52,7 +51,6 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -3662,18 +3660,6 @@ public final class NodeUtilTest {
               .collect(Collectors.toList());
 
       assertThat(nodeNames).containsExactly("A", "B", "C", "D", "E").inOrder();
-    }
-
-    @Test
-    public void addFeatureToScriptUpdatesCompilerFeatureSet() {
-      Node scriptNode = parse("");
-      Compiler compiler = new Compiler();
-      compiler.setFeatureSet(FeatureSet.BARE_MINIMUM);
-      NodeUtil.addFeatureToScript(scriptNode, Feature.MODULES, compiler);
-
-      assertThat(NodeUtil.getFeatureSetOfScript(scriptNode))
-          .isEqualTo(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
-      assertFS(compiler.getFeatureSet()).equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
     }
 
     /**

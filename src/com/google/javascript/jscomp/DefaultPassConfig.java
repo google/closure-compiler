@@ -25,7 +25,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2019_MODU
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TS_UNSUPPORTED;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -242,8 +241,6 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
-
-    checks.add(syncCompilerFeatures);
 
     if (options.shouldGenerateTypedExterns()) {
       checks.add(addSyntheticScript);
@@ -969,14 +966,6 @@ public final class DefaultPassConfig extends PassConfig {
         || options.isRemoveUnusedClassProperties()
         || options.rewritePolyfills;
   }
-
-  /** Set feature set of compiler to only features used in the externs and sources */
-  private final PassFactory syncCompilerFeatures =
-      PassFactory.builder()
-          .setName("syncCompilerFeatures")
-          .setInternalFactory(SyncCompilerFeatures::new)
-          .setFeatureSet(TS_UNSUPPORTED)
-          .build();
 
   private final PassFactory checkSideEffects =
       PassFactory.builderForHotSwap()

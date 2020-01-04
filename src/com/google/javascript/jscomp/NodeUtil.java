@@ -5629,12 +5629,8 @@ public final class NodeUtil {
     return (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
   }
 
-  /**
-   * Adds the given features to a SCRIPT node's FeatureSet property.
-   *
-   * <p>Also updates the compiler's FeatureSet.
-   */
-  static void addFeatureToScript(Node scriptNode, Feature feature, AbstractCompiler compiler) {
+  /** Adds the given features to a SCRIPT node's FeatureSet property. */
+  static void addFeatureToScript(Node scriptNode, Feature feature) {
     checkState(scriptNode.isScript(), scriptNode);
     FeatureSet currentFeatures = getFeatureSetOfScript(scriptNode);
     FeatureSet newFeatures =
@@ -5642,7 +5638,6 @@ public final class NodeUtil {
             ? currentFeatures.with(feature)
             : FeatureSet.BARE_MINIMUM.with(feature);
     scriptNode.putProp(Node.FEATURE_SET, newFeatures);
-    compiler.setFeatureSet(compiler.getFeatureSet().with(feature));
   }
 
   /** Calls {@code cb} with all NAMEs declared in a PARAM_LIST or destructuring pattern. */

@@ -182,8 +182,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
       compiler.reportChangeToEnclosingScope(member);
       compiler.reportChangeToChangeScope(function);
-      NodeUtil.addFeatureToScript(
-          traversal.getCurrentScript(), Feature.COMPUTED_PROPERTIES, compiler);
+      NodeUtil.addFeatureToScript(traversal.getCurrentScript(), Feature.COMPUTED_PROPERTIES);
       return classMembers;
     }
 

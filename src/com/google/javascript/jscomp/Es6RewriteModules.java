@@ -614,7 +614,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
         script.addChildToBack(exprResult);
       } else if (mutated) {
         addGetterExport(script, nodeForSourceInfo, objLit, exportedName, boundVariableName);
-        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.GETTER, compiler);
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.GETTER);
       } else {
         // This step is done before type checking and the type checker doesn't understand getters.
         // However it does understand aliases. So if an export isn't mutated use an alias to make it
