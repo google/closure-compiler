@@ -2495,6 +2495,24 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGlobalThis_includesProvidedNamesAsProperties() {
+    processClosurePrimitives = true;
+    testSame(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.provide('my.alert');",
+                "/** @param {string} msg */",
+                "my.alert = function(msg) {};",
+                "var x = this;")));
+
+    ObjectType myType = findNameType("my", globalScope).toObjectType();
+    ObjectType globalThis = findNameType("x", globalScope).toObjectType();
+    assertType(globalThis).toStringIsEqualTo("global this");
+    assertType(globalThis).withTypeOfProp("my").isSameInstanceAs(myType);
+  }
+
+  @Test
   public void testObjectLiteralCast() {
     // Verify that "goog.reflect.object" does not modify the types on
     // "A.B"

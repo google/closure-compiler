@@ -1965,6 +1965,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // default is no type and a type may be inferred later
       JSType type = null;
       boolean allowLaterTypeInference = true;
+      boolean forGoogProvidedName = false;
 
       // TODO(bradfordcsmith): Once all the logic needed for ES_2017 features has been added,
       //     make the API to this class more restrictive to avoid accidental misuse.
@@ -2026,6 +2027,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return this;
       }
 
+      SlotDefiner forGoogProvidedName() {
+        this.forGoogProvidedName = true;
+        return this;
+      }
+
       /**
        * Define the slot and do related work.
        *
@@ -2033,6 +2039,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
        */
       void defineSlot() {
         checkNotNull(declarationNode, "declarationNode not set");
+        checkState(
+            declarationNode.isName()
+                || declarationNode.isGetProp()
+                || NodeUtil.mayBeObjectLitKey(declarationNode)
+                || (this.forGoogProvidedName && NodeUtil.isExprCall(declarationNode)),
+            "declaration node must be an lvalue or goog.provide call, found %s",
+            declarationNode);
         checkNotNull(variableName, "variableName not set");
         checkState(allowLaterTypeInference || type != null, "null type but inference not allowed");
         checkState(!variableName.isEmpty());
@@ -2043,7 +2056,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         TypedScope scopeToDeclareIn = scope;
 
         boolean isGlobalVar = declarationNode.isName() && scopeToDeclareIn.isGlobal();
-        boolean shouldDeclareOnGlobalThis = isGlobalVar && (parent.isVar() || parent.isFunction());
+        boolean shouldDeclareOnGlobalThis =
+            isGlobalVar && (parent.isVar() || parent.isFunction())
+                || this.forGoogProvidedName && !variableName.contains(".");
 
         // TODO(sdh): Remove this special case.  It is required to reproduce the original
         // non-block-scoped behavior, which is depended on in several places including
@@ -2812,6 +2827,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           .forVariableName(providedName.getNamespace())
           .forDeclarationNode(provideCall)
           .withType(anonymousObjectType)
+          .forGoogProvidedName()
           .defineSlot();
 
       QualifiedName namespace = QualifiedName.of(providedName.getNamespace());
