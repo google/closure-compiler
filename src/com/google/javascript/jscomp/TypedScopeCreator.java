@@ -67,6 +67,8 @@ import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -469,20 +471,25 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   /** Builds the beginning of a module-scope. This can be an ES module or a goog.module. */
   private void initializeModuleScope(Node moduleBody, Module module, TypedScope moduleScope) {
-    if (module.metadata().isGoogModule()) {
-      declareExportsInModuleScope(module, moduleBody, moduleScope);
-      markGoogModuleExportsAsConst(moduleBody);
-    } else {
-      // For now, assume this is an ES module. In the future, it might be a CommonJS module.
-      checkState(module.metadata().isEs6Module(), "CommonJS module typechecking not supported yet");
-
-      Map<Node, ScopedName> unresolvedImports =
-          moduleImportResolver.declareEsModuleImports(
-              module, moduleScope, compiler.getInput(NodeUtil.getInputId(moduleBody)));
-      weakImports.addAll(
-          unresolvedImports.entrySet().stream()
-              .map(entry -> new WeakModuleImport(entry.getKey(), entry.getValue(), moduleScope))
-              .collect(Collectors.toList()));
+    ModuleType moduleType = module.metadata().moduleType();
+    switch (moduleType) {
+      case LEGACY_GOOG_MODULE:
+      case GOOG_MODULE:
+        declareExportsInModuleScope(module, moduleBody, moduleScope);
+        markGoogModuleExportsAsConst(moduleBody);
+        break;
+      case ES6_MODULE:
+        Map<Node, ScopedName> unresolvedImports =
+            moduleImportResolver.declareEsModuleImports(
+                module, moduleScope, compiler.getInput(NodeUtil.getInputId(moduleBody)));
+        weakImports.addAll(
+            unresolvedImports.entrySet().stream()
+                .map(entry -> new WeakModuleImport(entry.getKey(), entry.getValue(), moduleScope))
+                .collect(Collectors.toList()));
+        break;
+      default:
+        throw new IllegalStateException(
+            SimpleFormat.format("Unexpected module type %s in module %s", moduleType, module));
     }
   }
 
