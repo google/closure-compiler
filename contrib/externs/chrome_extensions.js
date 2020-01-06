@@ -4028,7 +4028,7 @@ chrome.management.InstallOptions;
 /**
  * @param {function(!Array<!ExtensionInfo>): void=} opt_callback Optional
  *     callback function.
- * @return {!Array<!ExtensionInfo>}
+ * @return {undefined}
  */
 chrome.management.getAll = function(opt_callback) {};
 
