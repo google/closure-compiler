@@ -3446,6 +3446,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPrettyPrint(true);
+
+    // If we don't allow the compiler to inject the definition of $jscomp, we'll get a normalization
+    // RuntimeException.
+    // useNoninjectingCompiler = true;
     test(
         options,
         LINE_JOINER.join(
@@ -3457,16 +3462,32 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  /** @export @param {number} x */ static set exportedName(x) {}",
             "};",
             "C.exportedName = 0;"),
-        EMPTY_JOINER.join(
-            // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
-            "var a = 'undefined' != typeof window&& window === this ? this",
-            "           : 'undefined' != typeof global && null != global ? global : this;",
-            "function b() {}",
-            "b.exportedName;",
-            "a.Object.defineProperties(b, {",
-            "  exportedName : {configurable : !0, enumerable : !0, set : function(){}}",
-            "});",
-            "b.exportedName = 0"));
+        LINE_JOINER.join(
+            // TODO(tbreisacher): Find out why C is renamed despite the @export annotation.
+            "function d(a) {",
+            "  a = [",
+            "    \"object\" == typeof window && window,",
+            "    \"object\" == typeof self && self,",
+            "    \"object\" == typeof global && global,",
+            "    a",
+            "  ];",
+            "  for (var b = 0; b < a.length; ++b) {",
+            "    var c = a[b];",
+            "    if (c && c.Math == Math) {",
+            "      return c;",
+            "    }",
+            "  }",
+            "  return globalThis;",
+            "}",
+            "var e = d(this);",
+            "function f() {}",
+            "f.exportedName;",
+            "e.Object.defineProperties(",
+            "    f,",
+            "    {",
+            "      exportedName: { configurable:!0, enumerable:!0, set:function() {} }",
+            "    });",
+            "f.exportedName = 0;"));
   }
 
   @Test
