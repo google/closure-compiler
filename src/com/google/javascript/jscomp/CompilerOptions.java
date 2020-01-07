@@ -175,9 +175,10 @@ public class CompilerOptions implements Serializable {
    */
   public void validateBrowserFeaturesetYearOption(Integer inputYear) {
     checkState(
-        inputYear == 2019 || inputYear == 2012,
+        inputYear == 2020 || inputYear == 2019 || inputYear == 2012,
         SimpleFormat.format(
-            "Illegal browser_featureset_year=%d. We support values 2012 and 2019 only", inputYear));
+            "Illegal browser_featureset_year=%d. We support values 2012, 2019, and 2020 only",
+            inputYear));
   }
 
   public void setBrowserFeaturesetYear(Integer year) {
