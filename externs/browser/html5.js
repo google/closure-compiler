@@ -4127,7 +4127,7 @@ FullscreenOptions.prototype.navigationUI;
 /**
  * @see https://fullscreen.spec.whatwg.org/#dom-element-requestfullscreen
  * @param {!FullscreenOptions=} options
- * @return {undefined}
+ * @return {!Promise<undefined>}
  */
 Element.prototype.requestFullscreen = function(options) {};
 
