@@ -126,7 +126,7 @@ final class InvalidatingTypes {
       types.addAll(
           ImmutableList.of(
               registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
-              registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+              registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
               registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
               registry.getNativeType(JSTypeNative.OBJECT_TYPE),
               registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),

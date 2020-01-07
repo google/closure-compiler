@@ -188,7 +188,4 @@ public enum JSTypeNative {
 
   /** (number,string,symbol) */
   NUMBER_STRING_SYMBOL;
-
-  // TODO(nickreid): Delete this alias.
-  public static final JSTypeNative U2U_CONSTRUCTOR_TYPE = FUNCTION_TYPE;
 }

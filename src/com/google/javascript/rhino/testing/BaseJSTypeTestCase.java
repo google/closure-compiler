@@ -101,7 +101,7 @@ public abstract class BaseJSTypeTestCase {
   protected JSType STRING_TYPE;
   protected ObjectType SYMBOL_OBJECT_TYPE;
   protected JSType SYMBOL_TYPE;
-  protected FunctionType U2U_CONSTRUCTOR_TYPE;
+  protected FunctionType FUNCTION_TYPE;
   protected FunctionType U2U_FUNCTION_TYPE;
   protected ObjectType UNKNOWN_TYPE;
   protected JSType VOID_TYPE;
@@ -160,7 +160,7 @@ public abstract class BaseJSTypeTestCase {
     STRING_TYPE = registry.getNativeType(JSTypeNative.STRING_TYPE);
     SYMBOL_OBJECT_TYPE = registry.getNativeObjectType(JSTypeNative.SYMBOL_OBJECT_TYPE);
     SYMBOL_TYPE = registry.getNativeType(JSTypeNative.SYMBOL_TYPE);
-    U2U_CONSTRUCTOR_TYPE = registry.getNativeFunctionType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+    FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.FUNCTION_TYPE);
     U2U_FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.U2U_FUNCTION_TYPE);
     UNKNOWN_TYPE = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     VOID_TYPE = registry.getNativeType(JSTypeNative.VOID_TYPE);

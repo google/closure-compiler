@@ -876,7 +876,7 @@ class TypeInference
       // undefined, since methods are not constructable.
       JSTypeNative type =
           NodeUtil.isEs6ConstructorMemberFunctionDef(parent)
-              ? JSTypeNative.U2U_CONSTRUCTOR_TYPE
+              ? JSTypeNative.FUNCTION_TYPE
               : VOID_TYPE;
       newTargetNode.setJSType(registry.getNativeType(type));
     } else {
@@ -884,7 +884,7 @@ class TypeInference
       newTargetNode.setJSType(
           registry
               .createUnionType(
-                  registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+                  registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
                   registry.getNativeType(VOID_TYPE))
               .resolveOrThrow());
     }

@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUN
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.DATE_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_FUNCTION_TYPE;
@@ -39,7 +40,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_FUNCTION_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -2588,7 +2588,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         if (delegatorCtor != null && delegateBaseCtor != null && delegateSuperCtor != null) {
           FunctionParamBuilder functionParamBuilder = new FunctionParamBuilder(typeRegistry);
-          functionParamBuilder.addRequiredParams(getNativeType(U2U_CONSTRUCTOR_TYPE));
+          functionParamBuilder.addRequiredParams(getNativeType(FUNCTION_TYPE));
           FunctionType findDelegate =
               typeRegistry.createFunctionType(
                   typeRegistry.createNullableType(delegateBaseObject),

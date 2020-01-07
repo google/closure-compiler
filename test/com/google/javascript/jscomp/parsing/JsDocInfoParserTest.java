@@ -289,9 +289,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseFunctionType() {
-    assertTypeEquals(
-        createNullableType(U2U_CONSTRUCTOR_TYPE),
-        parse("@type {Function}*/").getType());
+    assertTypeEquals(createNullableType(FUNCTION_TYPE), parse("@type {Function}*/").getType());
   }
 
   @Test

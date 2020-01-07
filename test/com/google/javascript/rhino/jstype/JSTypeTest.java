@@ -198,127 +198,125 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testUniversalConstructorType() {
     // isXxx
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNoObjectType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNoType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isArrayType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isBooleanValueType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isDateType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isEnumElementType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNullType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNamedType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNullType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNumber()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNumberObjectType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNumberValueType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isObject()).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isFunctionPrototypeType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isRegexpType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isString()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isStringObjectType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isStringValueType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSymbol()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSymbolObjectType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSymbolValueType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isEnumType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isUnionType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isStruct()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isDict()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isAllType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isVoidType()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isConstructor()).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isInstanceType()).isTrue();
+    assertThat(FUNCTION_TYPE.isNoObjectType()).isFalse();
+    assertThat(FUNCTION_TYPE.isNoType()).isFalse();
+    assertThat(FUNCTION_TYPE.isArrayType()).isFalse();
+    assertThat(FUNCTION_TYPE.isBooleanValueType()).isFalse();
+    assertThat(FUNCTION_TYPE.isDateType()).isFalse();
+    assertThat(FUNCTION_TYPE.isEnumElementType()).isFalse();
+    assertThat(FUNCTION_TYPE.isNullType()).isFalse();
+    assertThat(FUNCTION_TYPE.isNamedType()).isFalse();
+    assertThat(FUNCTION_TYPE.isNullType()).isFalse();
+    assertThat(FUNCTION_TYPE.isNumber()).isFalse();
+    assertThat(FUNCTION_TYPE.isNumberObjectType()).isFalse();
+    assertThat(FUNCTION_TYPE.isNumberValueType()).isFalse();
+    assertThat(FUNCTION_TYPE.isObject()).isTrue();
+    assertThat(FUNCTION_TYPE.isFunctionPrototypeType()).isFalse();
+    assertThat(FUNCTION_TYPE.isRegexpType()).isFalse();
+    assertThat(FUNCTION_TYPE.isString()).isFalse();
+    assertThat(FUNCTION_TYPE.isStringObjectType()).isFalse();
+    assertThat(FUNCTION_TYPE.isStringValueType()).isFalse();
+    assertThat(FUNCTION_TYPE.isSymbol()).isFalse();
+    assertThat(FUNCTION_TYPE.isSymbolObjectType()).isFalse();
+    assertThat(FUNCTION_TYPE.isSymbolValueType()).isFalse();
+    assertThat(FUNCTION_TYPE.isEnumType()).isFalse();
+    assertThat(FUNCTION_TYPE.isUnionType()).isFalse();
+    assertThat(FUNCTION_TYPE.isStruct()).isFalse();
+    assertThat(FUNCTION_TYPE.isDict()).isFalse();
+    assertThat(FUNCTION_TYPE.isAllType()).isFalse();
+    assertThat(FUNCTION_TYPE.isVoidType()).isFalse();
+    assertThat(FUNCTION_TYPE.isConstructor()).isTrue();
+    assertThat(FUNCTION_TYPE.isInstanceType()).isTrue();
 
     // isSubtype
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(NO_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(NO_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(ARRAY_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(BOOLEAN_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(BOOLEAN_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(DATE_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(functionType)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(recordType)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(NULL_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(NUMBER_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(NUMBER_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(REGEXP_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(STRING_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(STRING_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(SYMBOL_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(SYMBOL_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(ALL_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(VOID_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(NO_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(NO_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(ARRAY_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(BOOLEAN_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(BOOLEAN_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(DATE_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(functionType)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(recordType)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(NULL_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(NUMBER_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(NUMBER_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(REGEXP_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(STRING_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(STRING_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(SYMBOL_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(SYMBOL_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.isSubtype(ALL_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(VOID_TYPE)).isFalse();
 
     // canTestForEqualityWith
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(NO_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(ALL_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(ARRAY_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(BOOLEAN_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(BOOLEAN_OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(DATE_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(functionType)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(recordType)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(NULL_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(NUMBER_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(NUMBER_OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(REGEXP_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(STRING_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(SYMBOL_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(SYMBOL_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForEqualityWith(VOID_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(NO_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(NO_OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(ALL_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(ARRAY_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(BOOLEAN_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(BOOLEAN_OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(DATE_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(functionType)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(recordType)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(NULL_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(NUMBER_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(NUMBER_OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(REGEXP_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(STRING_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(STRING_OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(SYMBOL_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(SYMBOL_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForEqualityWith(VOID_TYPE)).isFalse();
 
     // canTestForShallowEqualityWith
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(NO_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(NO_OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(ARRAY_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(DATE_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(functionType)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(recordType)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(NULL_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(STRING_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE)).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(ALL_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.canTestForShallowEqualityWith(VOID_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(NO_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(NO_OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(ARRAY_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(BOOLEAN_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(BOOLEAN_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(DATE_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(functionType)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(recordType)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(NULL_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(NUMBER_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(NUMBER_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(OBJECT_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(REGEXP_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(STRING_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(STRING_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(SYMBOL_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(SYMBOL_OBJECT_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(ALL_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.canTestForShallowEqualityWith(VOID_TYPE)).isFalse();
 
     // isNullable
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNullable()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isVoidable()).isFalse();
+    assertThat(FUNCTION_TYPE.isNullable()).isFalse();
+    assertThat(FUNCTION_TYPE.isVoidable()).isFalse();
 
     // isObject
-    assertThat(U2U_CONSTRUCTOR_TYPE.isObject()).isTrue();
+    assertThat(FUNCTION_TYPE.isObject()).isTrue();
 
     // matchesXxx
-    assertThat(U2U_CONSTRUCTOR_TYPE.matchesNumberContext()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.matchesObjectContext()).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.matchesStringContext()).isFalse();
-    assertThat(U2U_CONSTRUCTOR_TYPE.matchesSymbolContext()).isFalse();
+    assertThat(FUNCTION_TYPE.matchesNumberContext()).isFalse();
+    assertThat(FUNCTION_TYPE.matchesObjectContext()).isTrue();
+    assertThat(FUNCTION_TYPE.matchesStringContext()).isFalse();
+    assertThat(FUNCTION_TYPE.matchesSymbolContext()).isFalse();
 
     // toString
-    assertThat(U2U_CONSTRUCTOR_TYPE.toString()).isEqualTo("Function");
-    assertThat(U2U_CONSTRUCTOR_TYPE.hasDisplayName()).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.getDisplayName()).isEqualTo("Function");
+    assertThat(FUNCTION_TYPE.toString()).isEqualTo("Function");
+    assertThat(FUNCTION_TYPE.hasDisplayName()).isTrue();
+    assertThat(FUNCTION_TYPE.getDisplayName()).isEqualTo("Function");
 
     // getPropertyType
-    assertTypeEquals(UNKNOWN_TYPE,
-        U2U_CONSTRUCTOR_TYPE.getPropertyType("anyProperty"));
+    assertTypeEquals(UNKNOWN_TYPE, FUNCTION_TYPE.getPropertyType("anyProperty"));
 
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNativeObjectType()).isTrue();
+    assertThat(FUNCTION_TYPE.isNativeObjectType()).isTrue();
 
-    this.closer.close();
-    Asserts.assertResolvesToSame(U2U_CONSTRUCTOR_TYPE);
+    Asserts.assertResolvesToSame(FUNCTION_TYPE);
 
-    assertThat(U2U_CONSTRUCTOR_TYPE.isNominalConstructor()).isTrue();
+    assertThat(FUNCTION_TYPE.isNominalConstructor()).isTrue();
   }
 
   /** Tests the behavior of the Bottom Object type. */
@@ -2558,7 +2556,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(recordType.isSubtypeOf(REGEXP_TYPE)).isFalse();
     assertThat(recordType.isSubtypeOf(UNKNOWN_TYPE)).isTrue();
     assertThat(recordType.isSubtypeOf(OBJECT_TYPE)).isTrue();
-    assertThat(recordType.isSubtypeOf(U2U_CONSTRUCTOR_TYPE)).isFalse();
+    assertThat(recordType.isSubtypeOf(FUNCTION_TYPE)).isFalse();
 
     // autoboxesTo
     assertThat(recordType.autoboxesTo()).isNull();
@@ -2612,7 +2610,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests the behavior of the instance of Function. */
   @Test
   public void testFunctionInstanceType() {
-    FunctionType functionInst = U2U_CONSTRUCTOR_TYPE;
+    FunctionType functionInst = FUNCTION_TYPE;
 
     // isXxx
     assertThat(functionInst.isObject()).isTrue();
@@ -2628,7 +2626,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(functionInst.isSubtype(DATE_TYPE)).isFalse();
     assertThat(functionInst.isSubtype(REGEXP_TYPE)).isFalse();
     assertThat(functionInst.isSubtype(UNKNOWN_TYPE)).isTrue();
-    assertThat(functionInst.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
+    assertThat(functionInst.isSubtype(FUNCTION_TYPE)).isTrue();
 
     // autoboxesTo
     assertThat(functionInst.autoboxesTo()).isNull();
@@ -2704,7 +2702,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(functionType.isSubtype(DATE_TYPE)).isFalse();
     assertThat(functionType.isSubtype(REGEXP_TYPE)).isFalse();
     assertThat(functionType.isSubtype(UNKNOWN_TYPE)).isTrue();
-    assertThat(functionType.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
+    assertThat(functionType.isSubtype(FUNCTION_TYPE)).isTrue();
 
     // autoboxesTo
     assertThat(functionType.autoboxesTo()).isNull();
@@ -2926,16 +2924,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType recordType = builder.build();
 
-    assertTypeEquals(NO_OBJECT_TYPE,
-                 recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
+    assertTypeEquals(NO_OBJECT_TYPE, recordType.getGreatestSubtype(FUNCTION_TYPE));
 
     // if Function is given a property "a" of type "string", then it's
     // a subtype of the record type {a: string}.
-    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("a", STRING_TYPE, null);
-    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
-                 recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
-    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
-                 U2U_CONSTRUCTOR_TYPE.getGreatestSubtype(recordType));
+    FUNCTION_TYPE.defineDeclaredProperty("a", STRING_TYPE, null);
+    assertTypeEquals(FUNCTION_TYPE, recordType.getGreatestSubtype(FUNCTION_TYPE));
+    assertTypeEquals(FUNCTION_TYPE, FUNCTION_TYPE.getGreatestSubtype(recordType));
   }
 
   @Test
@@ -2945,16 +2940,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType recordType = builder.build();
 
-    assertTypeEquals(NO_OBJECT_TYPE,
-                 recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
+    assertTypeEquals(NO_OBJECT_TYPE, recordType.getGreatestSubtype(FUNCTION_TYPE));
 
     // if Function is given a property "x" of type "string", then it's
     // also a subtype of the record type {x: ?}.
-    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, null);
-    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
-                 recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
-    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
-                 U2U_CONSTRUCTOR_TYPE.getGreatestSubtype(recordType));
+    FUNCTION_TYPE.defineDeclaredProperty("x", STRING_TYPE, null);
+    assertTypeEquals(FUNCTION_TYPE, recordType.getGreatestSubtype(FUNCTION_TYPE));
+    assertTypeEquals(FUNCTION_TYPE, FUNCTION_TYPE.getGreatestSubtype(recordType));
   }
 
   @Test
@@ -2966,9 +2958,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // if Function is given a property "x" of type "string", then it's
     // not a subtype of the record type {x: number}.
-    U2U_CONSTRUCTOR_TYPE.defineDeclaredProperty("x", STRING_TYPE, null);
-    assertTypeEquals(NO_OBJECT_TYPE,
-                 recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
+    FUNCTION_TYPE.defineDeclaredProperty("x", STRING_TYPE, null);
+    assertTypeEquals(NO_OBJECT_TYPE, recordType.getGreatestSubtype(FUNCTION_TYPE));
   }
 
   @Test
@@ -2978,17 +2969,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     JSType recordType = builder.build();
 
-    assertTypeEquals(NO_OBJECT_TYPE,
-                 recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
+    assertTypeEquals(NO_OBJECT_TYPE, recordType.getGreatestSubtype(FUNCTION_TYPE));
 
     // if goog.Bar is given a property "xyz" of type "string", then it's
     // also a subtype of the record type {x: ?}.
     googBar.defineDeclaredProperty("xyz", STRING_TYPE, null);
 
-    assertTypeEquals(googBar,
-                 recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
-    assertTypeEquals(googBar,
-                 U2U_CONSTRUCTOR_TYPE.getGreatestSubtype(recordType));
+    assertTypeEquals(googBar, recordType.getGreatestSubtype(FUNCTION_TYPE));
+    assertTypeEquals(googBar, FUNCTION_TYPE.getGreatestSubtype(recordType));
 
     ObjectType googBarInst = googBar.getInstanceType();
     assertTypeEquals(NO_OBJECT_TYPE,
@@ -3253,8 +3241,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           assertTypeEquals(typeA, typeA.getLeastSupertype(typeB));
           assertTypeEquals(typeA, typeA.getGreatestSubtype(typeB));
         } else {
-          assertTypeEquals(String.format("sup(%s, %s)", typeA, typeB),
-              U2U_CONSTRUCTOR_TYPE, typeA.getLeastSupertype(typeB));
+          assertTypeEquals(
+              String.format("sup(%s, %s)", typeA, typeB),
+              FUNCTION_TYPE,
+              typeA.getLeastSupertype(typeB));
           assertTypeEquals(String.format("inf(%s, %s)", typeA, typeB),
               LEAST_FUNCTION_TYPE, typeA.getGreatestSubtype(typeB));
         }
@@ -3281,8 +3271,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ProxyObjectType proxyDateMethodWithParam =
         new ProxyObjectType(registry, dateMethodWithParam);
 
-    assertTypeEquals(U2U_CONSTRUCTOR_TYPE,
-        proxyDateMethodEmpty.getLeastSupertype(proxyDateMethodWithParam));
+    assertTypeEquals(
+        FUNCTION_TYPE, proxyDateMethodEmpty.getLeastSupertype(proxyDateMethodWithParam));
     assertTypeEquals(LEAST_FUNCTION_TYPE,
         proxyDateMethodEmpty.getGreatestSubtype(proxyDateMethodWithParam));
   }
@@ -3327,8 +3317,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           assertTypeEquals(typeA, typeA.getLeastSupertype(typeB));
           assertTypeEquals(typeA, typeA.getGreatestSubtype(typeB));
         } else {
-          assertTypeEquals(String.format("sup(%s, %s)", typeA, typeB),
-              U2U_CONSTRUCTOR_TYPE, typeA.getLeastSupertype(typeB));
+          assertTypeEquals(
+              String.format("sup(%s, %s)", typeA, typeB),
+              FUNCTION_TYPE,
+              typeA.getLeastSupertype(typeB));
           assertTypeEquals(String.format("inf(%s, %s)", typeA, typeB),
               LEAST_FUNCTION_TYPE, typeA.getGreatestSubtype(typeB));
         }
@@ -4142,13 +4134,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     compare(UNKNOWN, UNKNOWN_TYPE, NULL_TYPE);
     compare(UNKNOWN, UNKNOWN_TYPE, VOID_TYPE);
 
-    compare(FALSE, U2U_CONSTRUCTOR_TYPE, BOOLEAN_TYPE);
-    compare(FALSE, U2U_CONSTRUCTOR_TYPE, NUMBER_TYPE);
-    compare(FALSE, U2U_CONSTRUCTOR_TYPE, STRING_TYPE);
-    compare(FALSE, U2U_CONSTRUCTOR_TYPE, VOID_TYPE);
-    compare(FALSE, U2U_CONSTRUCTOR_TYPE, NULL_TYPE);
-    compare(UNKNOWN, U2U_CONSTRUCTOR_TYPE, OBJECT_TYPE);
-    compare(UNKNOWN, U2U_CONSTRUCTOR_TYPE, ALL_TYPE);
+    compare(FALSE, FUNCTION_TYPE, BOOLEAN_TYPE);
+    compare(FALSE, FUNCTION_TYPE, NUMBER_TYPE);
+    compare(FALSE, FUNCTION_TYPE, STRING_TYPE);
+    compare(FALSE, FUNCTION_TYPE, VOID_TYPE);
+    compare(FALSE, FUNCTION_TYPE, NULL_TYPE);
+    compare(UNKNOWN, FUNCTION_TYPE, OBJECT_TYPE);
+    compare(UNKNOWN, FUNCTION_TYPE, ALL_TYPE);
 
     compare(UNKNOWN, NULL_TYPE, subclassOfUnresolvedNamedType);
 
@@ -4345,10 +4337,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(f2.isSubtype(f1)).isTrue();
     assertThat(f2.isSubtype(f2)).isTrue();
 
-    assertThat(f1.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(f2.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f1)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f2)).isTrue();
+    assertThat(f1.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(f2.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f1)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f2)).isTrue();
   }
 
   @Test
@@ -4361,10 +4353,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(f2.isSubtype(f1)).isTrue();
     assertThat(f2.isSubtype(f2)).isTrue();
 
-    assertThat(f1.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(f2.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f1)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f2)).isTrue();
+    assertThat(f1.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(f2.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f1)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f2)).isTrue();
   }
 
   @Test
@@ -4377,10 +4369,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(f2.isSubtype(f1)).isTrue();
     assertThat(f2.isSubtype(f2)).isTrue();
 
-    assertThat(f1.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(f2.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f1)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f2)).isTrue();
+    assertThat(f1.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(f2.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f1)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f2)).isTrue();
   }
 
   @Test
@@ -4395,10 +4387,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(f2.isSubtype(f1)).isFalse();
     assertThat(f2.isSubtype(f2)).isTrue();
 
-    assertThat(f1.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(f2.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f1)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f2)).isTrue();
+    assertThat(f1.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(f2.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f1)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f2)).isTrue();
   }
 
   @Test
@@ -4415,10 +4407,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(f2.isSubtype(f1)).isTrue();
     assertThat(f2.isSubtype(f2)).isTrue();
 
-    assertThat(f1.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(f2.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f1)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(f2)).isTrue();
+    assertThat(f1.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(f2.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f1)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(f2)).isTrue();
   }
 
   @Test
@@ -4444,12 +4436,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         STRING_OBJECT_TYPE, NUMBER_STRING, OBJECT_TYPE, STRING_TYPE);
 
     assertThat(LEAST_FUNCTION_TYPE.isSubtypeOf(GREATEST_FUNCTION_TYPE)).isTrue();
-    assertThat(LEAST_FUNCTION_TYPE.isSubtypeOf(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(LEAST_FUNCTION_TYPE)).isTrue();
+    assertThat(LEAST_FUNCTION_TYPE.isSubtypeOf(FUNCTION_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(LEAST_FUNCTION_TYPE)).isTrue();
 
     assertThat(GREATEST_FUNCTION_TYPE.isSubtypeOf(LEAST_FUNCTION_TYPE)).isFalse();
-    assertThat(GREATEST_FUNCTION_TYPE.isSubtypeOf(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(GREATEST_FUNCTION_TYPE)).isTrue();
+    assertThat(GREATEST_FUNCTION_TYPE.isSubtypeOf(FUNCTION_TYPE)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(GREATEST_FUNCTION_TYPE)).isTrue();
 
     assertThat(f1.isSubtype(GREATEST_FUNCTION_TYPE)).isTrue();
     assertThat(f2.isSubtype(GREATEST_FUNCTION_TYPE)).isTrue();
@@ -4498,7 +4490,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         STRING_TYPE,
         BOOLEAN_TYPE,
         OBJECT_TYPE,
-        U2U_CONSTRUCTOR_TYPE,
+        FUNCTION_TYPE,
         LEAST_FUNCTION_TYPE,
         GREATEST_FUNCTION_TYPE,
         ALL_TYPE,
@@ -4529,11 +4521,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         createTemplatizedType(OBJECT_TYPE, NUMBER_TYPE),
         createTemplatizedType(ARRAY_TYPE, STRING_TYPE),
         createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE),
-        createUnionType(
-            createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE),
-        createUnionType(
-            createTemplatizedType(OBJECT_TYPE, BOOLEAN_TYPE), NULL_TYPE)
-        );
+        createUnionType(createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE),
+        createUnionType(createTemplatizedType(OBJECT_TYPE, BOOLEAN_TYPE), NULL_TYPE));
   }
 
   @Test
@@ -5043,7 +5032,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
             registry.getNativeType(JSTypeNative.OBJECT_TYPE),
             registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
-            registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+            registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
             registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
             registry.getNativeType(JSTypeNative.NO_TYPE));
     verifySubtypeChain(typeChain);
@@ -5053,7 +5042,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testGoogBarSubtypeChain() throws Exception {
     List<JSType> typeChain =
         ImmutableList.of(
-            registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+            registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
             googBar,
             googSubBar,
             googSubSubBar,
@@ -5072,7 +5061,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     List<JSType> typeChain =
         ImmutableList.of(
-            registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE),
+            registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
             googBarArgConstructor,
             googSubBarArgConstructor,
             registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE));
@@ -5935,10 +5924,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @SuppressWarnings("checked")
   @Test
   public void testBug903110() {
-    UnionType union =
-        (UnionType) createUnionType(U2U_CONSTRUCTOR_TYPE, VOID_TYPE);
+    UnionType union = (UnionType) createUnionType(FUNCTION_TYPE, VOID_TYPE);
     assertThat(VOID_TYPE.isSubtypeOf(union)).isTrue();
-    assertThat(U2U_CONSTRUCTOR_TYPE.isSubtype(union)).isTrue();
+    assertThat(FUNCTION_TYPE.isSubtype(union)).isTrue();
     assertThat(union.isSubtype(union)).isTrue();
   }
 
@@ -5948,8 +5936,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   @Test
   public void testBug904123() {
-    assertThat(U2U_FUNCTION_TYPE.isSubtype(U2U_CONSTRUCTOR_TYPE)).isTrue();
-    assertThat(U2U_FUNCTION_TYPE.isSubtype(createOptionalType(U2U_CONSTRUCTOR_TYPE))).isTrue();
+    assertThat(U2U_FUNCTION_TYPE.isSubtype(FUNCTION_TYPE)).isTrue();
+    assertThat(U2U_FUNCTION_TYPE.isSubtype(createOptionalType(FUNCTION_TYPE))).isTrue();
   }
 
   /**

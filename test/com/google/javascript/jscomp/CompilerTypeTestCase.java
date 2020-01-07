@@ -272,7 +272,7 @@ abstract class CompilerTypeTestCase {
   }
 
   protected FunctionType getNativeU2UConstructorType() {
-    return getNativeFunctionType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+    return getNativeFunctionType(JSTypeNative.FUNCTION_TYPE);
   }
 
   protected FunctionType getNativeU2UFunctionType() {

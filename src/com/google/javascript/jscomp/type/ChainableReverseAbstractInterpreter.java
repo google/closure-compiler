@@ -22,13 +22,13 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -455,7 +455,7 @@ public abstract class ChainableReverseAbstractInterpreter
     @Override
     public JSType caseObjectType(ObjectType type) {
       if (value.equals("function")) {
-        JSType ctorType = getNativeType(U2U_CONSTRUCTOR_TYPE);
+        JSType ctorType = getNativeType(FUNCTION_TYPE);
         if (resultEqualsValue) {
           // Objects are restricted to "Function", subtypes are left
           return ctorType.getGreatestSubtype(type).resolveOrThrow();
@@ -555,7 +555,7 @@ public abstract class ChainableReverseAbstractInterpreter
         // TypeScript, and (c) it's more useful than simply not narrowing.
         return typeRegistry.createUnionType(getNativeType(OBJECT_TYPE), getNativeType(NULL_TYPE));
       case "function":
-        return getNativeType(U2U_CONSTRUCTOR_TYPE);
+        return getNativeType(FUNCTION_TYPE);
       default:
         return null;
     }
