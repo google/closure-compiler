@@ -130,13 +130,10 @@ public final class NamedType extends ProxyObjectType {
   private final boolean restrictByNull;
 
   private NamedType(Builder builder) {
-    super(builder.registry, builder.referencedType);
+    super(builder.registry, builder.registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
     checkNotNull(builder.referenceName);
     checkNotNull(builder.resolutionKind);
     checkNotNull(builder.templateTypes);
-    if (builder.resolutionKind.equals(ResolutionKind.TYPEOF)) {
-      checkState(builder.referenceName.startsWith("typeof "));
-    }
     // TODO(lharker): enforce that the scope is not null
 
     this.restrictByNull = builder.restrictByNull;
@@ -214,14 +211,14 @@ public final class NamedType extends ProxyObjectType {
 
   @Override
   public String getReferenceName() {
-    return reference;
+    return resolutionKind.equals(ResolutionKind.TYPE_NAME) ? reference : "typeof " + reference;
   }
 
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     JSType type = this.getReferencedType();
     if (!isResolved() || type.isNoResolvedType()) {
-      return sb.append(getReferenceName());
+      return sb.append(this.reference);
     } else {
       return type.appendTo(sb, forAnnotations);
     }
@@ -252,13 +249,12 @@ public final class NamedType extends ProxyObjectType {
     ImmutableList<JSType> resolvedTypeArgs =
         JSTypeIterations.mapTypes((t) -> t.resolve(reporter), this.templateTypes);
 
-    if (resolutionKind.equals(ResolutionKind.NONE)) {
+    if (!getReferencedType().isUnknownType()) {
       // In some cases (e.g. typeof(ns) when the actual type is just a literal object), a NamedType
       // is created solely for the purpose of naming an already-known type. When that happens,
       // there's nothing to look up, so just resolve the referenced type.
       return super.resolveInternal(reporter);
     }
-    checkState(getReferencedType().isUnknownType());
 
     if (resolutionScope == null) {
       return this;
@@ -419,8 +415,7 @@ public final class NamedType extends ProxyObjectType {
     }
 
     // TODO(sdh): require var to be const?
-    String scopeName = reference.substring("typeof ".length());
-    JSType type = resolutionScope.lookupQualifiedName(QualifiedName.of(scopeName));
+    JSType type = resolutionScope.lookupQualifiedName(QualifiedName.of(reference));
     if (type == null || type.isUnknownType()) {
       warning(reporter, "Missing type for `typeof` value. The value must be declared and const.");
       setReferencedAndResolvedType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE), reporter);
@@ -429,11 +424,8 @@ public final class NamedType extends ProxyObjectType {
         // Create an extra layer of wrapping so that the "typeof" name is preserved for namespaces.
         // This is depended on by Clutz to prevent infinite loops in self-referential typeof types.
         JSType objlit = type;
-        type =
-            NamedType.builder(registry, getReferenceName())
-                .setResolutionKind(ResolutionKind.NONE)
-                .setReferencedType(objlit)
-                .build();
+        type = toBuilder().build();
+        ((NamedType) type).setReferencedType(objlit);
       }
       setReferencedAndResolvedType(type, reporter);
     }
@@ -640,7 +632,6 @@ public final class NamedType extends ProxyObjectType {
   }
 
   enum ResolutionKind {
-    NONE,
     TYPE_NAME,
     TYPEOF
   }
@@ -651,7 +642,6 @@ public final class NamedType extends ProxyObjectType {
         .setResolutionKind(this.resolutionKind)
         .setErrorReportingLocation(this.sourceName, this.lineno, this.charno)
         .setTemplateTypes(this.templateTypes)
-        .setReferencedType(getReferencedType())
         .setRestrictByNull(this.restrictByNull);
   }
 
@@ -663,14 +653,12 @@ public final class NamedType extends ProxyObjectType {
     private String sourceName;
     private int lineno;
     private int charno;
-    private JSType referencedType;
     private boolean restrictByNull;
     private ImmutableList<JSType> templateTypes = ImmutableList.of();
 
     private Builder(JSTypeRegistry registry, String referenceName) {
       this.registry = registry;
       this.referenceName = referenceName;
-      this.referencedType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
 
     Builder setScope(StaticTypedScope scope) {
@@ -699,11 +687,6 @@ public final class NamedType extends ProxyObjectType {
 
     Builder setTemplateTypes(ImmutableList<JSType> templateTypes) {
       this.templateTypes = templateTypes;
-      return this;
-    }
-
-    Builder setReferencedType(JSType referencedType) {
-      this.referencedType = referencedType;
       return this;
     }
 
