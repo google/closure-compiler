@@ -132,6 +132,10 @@ jasmine.Matchers.prototype.not;
 jasmine.Matchers.prototype.actual;
 
 
+/** @return {void} */
+jasmine.Matchers.prototype.nothing = function() {};
+
+
 /** @param {*} value */
 jasmine.Matchers.prototype.toBe = function(value) {};
 
@@ -542,10 +546,10 @@ function expectAsync(expectedValue) {}
 
 
 /**
- * @param {*} expectedValue
+ * @param {*=} expectedValue
  * @return {!jasmine.Matchers} matcher
  */
-function expect(expectedValue) {}
+function expect(expectedValue = undefined) {}
 
 /** @typedef {function()} */
 var DoneFunc;
