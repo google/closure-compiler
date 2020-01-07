@@ -71,7 +71,7 @@ public abstract class JSType implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @SuppressWarnings("ReferenceEquality")
-  static final boolean areIdentical(JSType a, JSType b) {
+  public static final boolean areIdentical(JSType a, JSType b) {
     return a == b;
   }
 

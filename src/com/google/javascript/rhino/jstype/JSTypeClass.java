@@ -77,7 +77,6 @@ enum JSTypeClass {
   SYMBOL,
   TEMPLATE,
   TEMPLATIZED,
-  U2U_FUNCTION,
   UNION,
   UNKNOWN,
   VOID;

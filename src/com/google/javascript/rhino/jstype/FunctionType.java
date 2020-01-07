@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -225,10 +224,15 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   @Override
+  public FunctionType getConstructor() {
+    // Every function type, including `Function`, is constructed by `(typeof Function)`.
+    return checkNotNull(this.registry.getNativeFunctionType(JSTypeNative.FUNCTION_FUNCTION_TYPE));
+  }
+
+  @Override
   public final boolean isInstanceType() {
-    // The universal constructor is its own instance, bizarrely. It overrides
-    // getConstructor() appropriately when it's declared.
-    return JSType.areIdentical(this, registry.getNativeType(U2U_CONSTRUCTOR_TYPE));
+    // Only `Function` is both a function type and the intance type of a nominal constructor.
+    return JSType.areIdentical(this, this.registry.getNativeType(JSTypeNative.FUNCTION_TYPE));
   }
 
   @Override
@@ -825,7 +829,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     // The function instance type is a special case
     // that lives above the rest of the lattice.
-    JSType functionInstance = registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+    JSType functionInstance = registry.getNativeType(JSTypeNative.FUNCTION_TYPE);
     if (functionInstance.isEquivalentTo(that)) {
       return leastSuper ? that : this;
     } else if (functionInstance.isEquivalentTo(this)) {
@@ -838,7 +842,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     // means that all parameters register a type warning.
     //
     // Instead, we use the U2U ctor type, which has unknown type args.
-    FunctionType greatestFn = registry.getNativeFunctionType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+    FunctionType greatestFn = registry.getNativeFunctionType(JSTypeNative.FUNCTION_TYPE);
     FunctionType leastFn = registry.getNativeFunctionType(JSTypeNative.LEAST_FUNCTION_TYPE);
     return leastSuper ? greatestFn : leastFn;
   }
@@ -927,7 +931,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     if (!isPrettyPrint()
-        || JSType.areIdentical(this, registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE))) {
+        || JSType.areIdentical(this, registry.getNativeType(JSTypeNative.FUNCTION_TYPE))) {
       return sb.append(forAnnotations ? "!Function" : "Function");
     }
 
@@ -1023,14 +1027,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     checkState(this.hasInstanceType());
 
     return typeOfThis.toObjectType();
-  }
-
-  /** Sets the instance type. This should only be used for special native types. */
-  final void setInstanceType(ObjectType instanceType) {
-    checkState(this.hasInstanceType());
-    checkArgument(instanceType.isObjectType());
-
-    typeOfThis = instanceType;
   }
 
   /** Returns whether this function type has an instance type. */
@@ -1462,7 +1458,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     private Builder(JSTypeRegistry registry) {
       super(registry);
 
-      this.setImplicitPrototype(registry.getNativeObjectType(JSTypeNative.U2U_CONSTRUCTOR_TYPE));
+      this.setImplicitPrototype(
+          checkNotNull(registry.getNativeObjectType(JSTypeNative.FUNCTION_PROTOTYPE)));
     }
 
     /** Set the name of the function type. */
@@ -1644,11 +1641,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         ft.getInternalArrowType().returnType = ft.getInstanceType();
       }
       if (hasConstructorOnlyKeys) {
-        ft.setInstanceType(
+        ft.typeOfThis =
             InstanceObjectType.builderForCtor(ft)
                 .setTemplateTypeMap(ft.templateTypeMap.copyWithoutKeys(this.constructorOnlyKeys))
                 .setTemplateParamCount(ft.getTemplateParamCount() - this.constructorOnlyKeys.size())
-                .build());
+                .build();
       }
       return ft;
     }

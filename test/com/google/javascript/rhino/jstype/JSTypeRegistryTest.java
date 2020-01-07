@@ -295,7 +295,6 @@ public class JSTypeRegistryTest {
 
   @Test
   public void testNativeTypesAreUnique() {
-
     for (JSTypeNative n1 : JSTypeNative.values()) {
       for (JSTypeNative n2 : JSTypeNative.values()) {
         JSType t1 = registry.getNativeType(n1);

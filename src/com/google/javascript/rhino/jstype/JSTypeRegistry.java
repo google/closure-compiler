@@ -383,19 +383,64 @@ public class JSTypeRegistry implements Serializable {
     iThenableTemplateKey = new TemplateType(this, "TYPE");
     promiseTemplateKey = new TemplateType(this, "TYPE");
 
-    // Top Level Prototype (the One)
-    // The initializations of OBJECT_PROTOTYPE and OBJECT_FUNCTION_TYPE
-    // use each other's results, so at least one of them will get null
-    // instead of an actual type; however, this seems to be benign.
-    PrototypeObjectType topLevelPrototype =
-        PrototypeObjectType.builder(this).setNative(true).build();
+    /**
+     * The default prototype of all functions: 'Function.prototype`.
+     *
+     * <p>Must be created and registered early so `FunctionType.Builder` has access to it.
+     */
+    PrototypeObjectType functionPrototype =
+        PrototypeObjectType.builder(this)
+            .setName("Function.prototype")
+            .setNative(true)
+            // Defer until `Object` is defined. .setImplicitPrototype(objectType)
+            .build();
+    registerNativeType(JSTypeNative.FUNCTION_PROTOTYPE, functionPrototype);
 
-    // IObject
-    FunctionType iObjectFunctionType =
-        nativeInterface("IObject", iObjectIndexTemplateKey, iObjectElementTemplateKey);
-    registerNativeType(JSTypeNative.I_OBJECT_FUNCTION_TYPE, iObjectFunctionType);
-    ObjectType iObjectType = iObjectFunctionType.getInstanceType();
-    registerNativeType(JSTypeNative.I_OBJECT_TYPE, iObjectType);
+    /**
+     * `Function`
+     *
+     * <p>The default implict prototype of all `FunctionType`s is `Function.prototype`. The
+     * ",prototype" property of `Function` is not actually interesting, since it constructs
+     * unknowns.
+     */
+    FunctionType functionType =
+        FunctionType.builder(this)
+            .withName("Function")
+            .forConstructor()
+            .forNativeType()
+            .withParamsNode(createParametersWithVarArgs(unknownType))
+            .withTypeOfThis(unknownType)
+            .withReturnsOwnInstanceType()
+            .build();
+    registerNativeType(JSTypeNative.FUNCTION_TYPE, functionType);
+
+    /**
+     * `(typeof Function)`
+     *
+     * <p>The default implict prototype of all `FunctionType`s is `Function.prototype`. The
+     * ",prototype" property of this type is the interesting one. It's also the same as its implicit
+     * prototype.
+     */
+    FunctionType functionFunctionType =
+        FunctionType.builder(this)
+            .withName("Function")
+            .forConstructor()
+            .forNativeType()
+            .withParamsNode(createParametersWithVarArgs(allType))
+            .withTypeOfThis(functionType)
+            // TODO(nickreid): .withReturnsOwnInstanceType()
+            .build();
+    functionFunctionType.setPrototype(functionPrototype, null);
+    registerNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE, functionFunctionType);
+
+    // `Object.prototype`
+    ObjectType objectPrototype =
+        PrototypeObjectType.builder(this)
+            .setName("Object.prototype")
+            .setNative(true)
+            .setImplicitPrototype(null)
+            .build();
+    registerNativeType(JSTypeNative.OBJECT_PROTOTYPE, objectPrototype);
 
     // Object
     FunctionType objectFunctionType =
@@ -404,25 +449,21 @@ public class JSTypeRegistry implements Serializable {
             .withReturnsOwnInstanceType()
             .withTemplateKeys(iObjectIndexTemplateKey, iObjectElementTemplateKey)
             .build();
-    objectFunctionType.setPrototype(topLevelPrototype, null);
+    objectFunctionType.setPrototype(objectPrototype, null);
     registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, objectFunctionType);
-    registerNativeType(JSTypeNative.OBJECT_PROTOTYPE, objectFunctionType.getPrototype());
 
     ObjectType objectType = objectFunctionType.getInstanceType();
     registerNativeType(JSTypeNative.OBJECT_TYPE, objectType);
 
-    // Function
-    FunctionType functionFunctionType =
-        nativeConstructorBuilder("Function")
-            .withParamsNode(createParametersWithVarArgs(allType))
-            .withReturnType(unknownType)
-            .withPrototypeBasedOn(objectType)
-            .build();
-    functionFunctionType.setPrototypeBasedOn(objectType);
-    registerNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE, functionFunctionType);
+    functionPrototype.clearCachedValues();
+    functionPrototype.setImplicitPrototype(objectType);
 
-    ObjectType functionPrototype = functionFunctionType.getPrototype();
-    registerNativeType(JSTypeNative.FUNCTION_PROTOTYPE, functionPrototype);
+    // IObject
+    FunctionType iObjectFunctionType =
+        nativeInterface("IObject", iObjectIndexTemplateKey, iObjectElementTemplateKey);
+    registerNativeType(JSTypeNative.I_OBJECT_FUNCTION_TYPE, iObjectFunctionType);
+    ObjectType iObjectType = iObjectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.I_OBJECT_TYPE, iObjectType);
 
     // Bottom Types
     NoType noType = new NoType(this);
@@ -675,40 +716,6 @@ public class JSTypeRegistry implements Serializable {
     FunctionType u2uFunctionType = createFunctionTypeWithVarArgs(unknownType, unknownType);
     registerNativeType(JSTypeNative.U2U_FUNCTION_TYPE, u2uFunctionType);
 
-    // unknown constructor type, i.e. (?...) -> ? with the Unknown type
-    // as instance type
-    FunctionType u2uConstructorType =
-        // This is equivalent to
-        // createConstructorType(unknownType, true, unknownType), but,
-        // in addition, overrides getInstanceType() to return the NoObject type
-        // instead of a new anonymous object.
-        new FunctionType(
-            FunctionType.builder(this)
-                .withName("Function")
-                .withParamsNode(createParametersWithVarArgs(unknownType))
-                .withReturnType(unknownType)
-                .withTypeOfThis(unknownType)
-                .forConstructor()
-                .forNativeType()) {
-          private static final long serialVersionUID = 1L;
-
-          @Override
-          JSTypeClass getTypeClass() {
-            return JSTypeClass.U2U_FUNCTION;
-          }
-
-          @Override
-          public FunctionType getConstructor() {
-            return registry.getNativeFunctionType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
-          }
-        };
-    u2uConstructorType.eagerlyResolveToSelf();
-
-    // The u2uConstructor is weird, because it's the supertype of its own constructor.
-    functionFunctionType.setInstanceType(u2uConstructorType);
-    u2uConstructorType.setImplicitPrototype(functionPrototype);
-    registerNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE, u2uConstructorType);
-
     // least function type, i.e. (All...) -> NoType
     FunctionType leastFunctionType = createNativeFunctionTypeWithVarArgs(noType, allType);
     registerNativeType(JSTypeNative.LEAST_FUNCTION_TYPE, leastFunctionType);
@@ -762,7 +769,7 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "Undefined");
     registerGlobalType(getNativeType(JSTypeNative.VOID_TYPE), "void");
-    registerGlobalType(getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE), "Function");
+    registerGlobalType(getNativeType(JSTypeNative.FUNCTION_TYPE), "Function");
     registerGlobalType(getNativeType(JSTypeNative.GLOBAL_THIS), "Global");
   }
 
@@ -1198,18 +1205,20 @@ public class JSTypeRegistry implements Serializable {
     } else if (type.isFunctionPrototypeType()) {
       return type.toString();
     } else if (type instanceof ObjectType) {
-      if (type.toObjectType() != null && type.toObjectType().getConstructor() != null) {
-        Node source = type.toObjectType().getConstructor().getSource();
-        if (source != null) {
-          checkState(source.isFunction() || source.isClass(), source);
-          String readable = source.getFirstChild().getOriginalName();
-          if (readable != null) {
-            return readable;
-          }
-        }
-        return type.toString();
+      if (!isReadableObjectType(type.toMaybeObjectType())) {
+        return null;
       }
-      return null;
+
+      Node source = type.toObjectType().getConstructor().getSource();
+      if (source != null) {
+        checkState(source.isFunction() || source.isClass(), source);
+        String readable = source.getFirstChild().getOriginalName();
+        if (readable != null) {
+          return readable;
+        }
+      }
+      return type.toString();
+
     } else if (type instanceof UnionType) {
       UnionType unionType = type.toMaybeUnionType();
       String union = null;
@@ -1267,9 +1276,7 @@ public class JSTypeRegistry implements Serializable {
 
         // Don't show complex function names or anonymous types.
         // Instead, try to get a human-readable type name.
-        if (objectType != null
-            && (objectType.getConstructor() != null
-                || objectType.isFunctionPrototypeType())) {
+        if (isReadableObjectType(objectType)) {
           return objectType + "." + propName;
         }
       }
@@ -1283,6 +1290,20 @@ public class JSTypeRegistry implements Serializable {
     } else {
       return type.toString();
     }
+  }
+
+  private static boolean isReadableObjectType(ObjectType type) {
+    if (type == null) {
+      return false;
+    } else if (type.isInstanceType()) {
+      return true;
+    } else if (type.isFunctionPrototypeType()) {
+      return true;
+    } else if (type.isEnumElementType()) {
+      // TODO(b/147236174): This case should be deleted as impossible.
+      return type.toMaybeEnumElementType().getConstructor() != null;
+    }
+    return false;
   }
 
   private JSType getJSTypeOrUnknown(Node n) {

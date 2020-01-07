@@ -205,8 +205,8 @@ public class EnumElementType extends ObjectType {
 
   @Override
   public FunctionType getConstructor() {
-    return primitiveObjectType == null ?
-        null : primitiveObjectType.getConstructor();
+    // TODO(b/147236174): This should always return null.
+    return primitiveObjectType == null ? null : primitiveObjectType.getConstructor();
   }
 
   @Override

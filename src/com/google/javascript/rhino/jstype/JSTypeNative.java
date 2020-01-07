@@ -90,6 +90,7 @@ public enum JSTypeNative {
   DATE_TYPE,
   DATE_FUNCTION_TYPE,
 
+  FUNCTION_TYPE,
   FUNCTION_FUNCTION_TYPE,
   FUNCTION_PROTOTYPE,
 
@@ -150,8 +151,7 @@ public enum JSTypeNative {
   NO_OBJECT_TYPE,
   NO_RESOLVED_TYPE,
   GLOBAL_THIS,
-  // TODO(dimvar): merge these two if possible.
-  U2U_CONSTRUCTOR_TYPE,
+
   // unknown function type, i.e. (?...) -> ?
   U2U_FUNCTION_TYPE,
 
@@ -186,8 +186,9 @@ public enum JSTypeNative {
    */
   NUMBER_STRING,
 
-  /**
-   * (number,string,symbol)
-   */
-  NUMBER_STRING_SYMBOL,
+  /** (number,string,symbol) */
+  NUMBER_STRING_SYMBOL;
+
+  // TODO(nickreid): Delete this alias.
+  public static final JSTypeNative U2U_CONSTRUCTOR_TYPE = FUNCTION_TYPE;
 }

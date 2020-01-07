@@ -2693,8 +2693,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // isXxx
     assertThat(functionType.isObject()).isTrue();
     assertThat(functionType.isFunctionPrototypeType()).isFalse();
-    assertThat(functionType.getImplicitPrototype().getImplicitPrototype().isFunctionPrototypeType())
-        .isTrue();
+    assertThat(functionType.getImplicitPrototype().isFunctionPrototypeType()).isTrue();
 
     // isSubtype
     assertThat(functionType.isSubtype(ALL_TYPE)).isTrue();
