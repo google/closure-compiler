@@ -37,3 +37,15 @@ function testInheritedGetter() {
   assertEquals('sub2', Sub2.foo);
   assertEquals(2, i);
 }
+
+/** @unrestricted */
+var Computed = class {
+  static get['foo']() {
+    return 'computed';
+  }
+};
+
+
+function testGetStaticGetter() {
+  assertEquals('computed', Computed['foo']);
+}

@@ -2296,13 +2296,56 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Test
   public void testClassStaticComputedProps_withSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-    testError("/** @unrestricted */ class C { static set [foo](val) {}}", CANNOT_CONVERT_YET);
+    test(
+        "/** @unrestricted */ class C { static set [se()](val) {}}",
+        lines(
+            "/** @constructor @unrestricted */",
+            "let C = function() {};",
+            "$jscomp.global.Object.defineProperty(C, se(), {",
+            "  configurable: true,",
+            "  enumerable: true,",
+            "  set: function(val) {},",
+            "});"));
   }
 
   @Test
   public void testClassStaticComputedProps_withGetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-    testError("/** @unrestricted */ class C { static get [foo]() {}}", CANNOT_CONVERT_YET);
+    test(
+        "/** @unrestricted */ class C { static get [se()]() {}}",
+        lines(
+            "/** @constructor @unrestricted */",
+            "let C = function() {};",
+            "$jscomp.global.Object.defineProperty(C, se(), {",
+            "  configurable: true,",
+            "  enumerable: true,",
+            "  get: function() {},",
+            "});"));
+  }
+
+  @Test
+  public void testClassStaticComputedProps_withGetterSetterPair() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        "/** @unrestricted */ class C { static get [se()]() {} static set [se()](val) {}}",
+        lines(
+            "/** @constructor @unrestricted */",
+            "let C = function() {};",
+            "",
+            "$jscomp.global.Object.defineProperty(",
+            "  C,",
+            "  se(), {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    get: function() {},",
+            "  }",
+            ");",
+            "",
+            "$jscomp.global.Object.defineProperty(C, se(), {",
+            "  configurable: true,",
+            "  enumerable: true,",
+            "  set: function(val) {},",
+            "});"));
   }
 
   @Test
@@ -2331,22 +2374,18 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         lines(
             "/** @constructor @unrestricted */",
             "let C = function() {};",
-            "$jscomp.global.Object.defineProperties(",
-            "  C.prototype,",
-            "  {",
-            "    [foo]: {",
-            "      configurable:true,",
-            "      enumerable:true,",
-            "      /**",
-            "       * @return {boolean}",
-            "       */",
-            "      get: function() {},",
-            "      /**",
-            "       * @param {boolean} val",
-            "       */",
-            "      set: function(val) {},",
-            "    },",
-            "  });"));
+            "",
+            "$jscomp.global.Object.defineProperty(C.prototype, foo, {",
+            "  configurable:true,",
+            "  enumerable:true,",
+            "  get: function() {},",
+            "});",
+            "",
+            "$jscomp.global.Object.defineProperty(C.prototype, foo, {",
+            "  configurable:true,",
+            "  enumerable:true,",
+            "  set: function(val) {},",
+            "});"));
   }
 
   @Test
@@ -2361,6 +2400,61 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "  /** @param {string} val */",
             "  set [foo](val) {}",
             "}"));
+  }
+
+  @Test
+  public void testClassComputedPropGetterAndSetter_mixedWithOtherMembers() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        externs(
+            lines(
+                "function one() {}", //
+                "function two() {}",
+                "function three() {}")),
+        srcs(
+            lines(
+                "/** @unrestricted */",
+                "class C {",
+                "  get [one()]() { return true; }",
+                "  get a() {}",
+                "  [two()]() {}",
+                "  get b() {}",
+                "  c() {}",
+                "  set [three()](val) { return true; }",
+                "}")),
+        expected(
+            lines(
+                "/** @unrestricted  @constructor */",
+                "let C = function() {};",
+                "$jscomp.global.Object.defineProperty(C.prototype, one(), {",
+                "  configurable: true,",
+                "  enumerable: true,",
+                "  get: function() {",
+                "    return true",
+                "  },",
+                "});",
+                "C.prototype[two()] = function() {};",
+                "C.prototype.c = function() {};",
+                "$jscomp.global.Object.defineProperty(C.prototype, three(), {",
+                "  configurable: true,",
+                "  enumerable: true,",
+                "  set: function(val) {",
+                "    return true",
+                "  },",
+                "});",
+                "$jscomp.global.Object.defineProperties(C.prototype, {",
+                "  a: {",
+                "    configurable: true,",
+                "    enumerable: true,",
+                "    get: function() {},",
+                "  },",
+                "  b: {",
+                "    configurable: true,",
+                "    enumerable: true,",
+                "    get: function() {},",
+                "  }",
+                "});",
+                "")));
   }
 
   @Test
