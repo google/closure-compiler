@@ -457,8 +457,15 @@ public final class FeatureSet implements Serializable {
     }
   }
 
+  /**
+   * Returns a {@code FeatureSet} containing all known features.
+   *
+   * <p>NOTE: {@code PassFactory} classes that claim to support {@code FeatureSet.everything()}
+   * should be only those that cannot be broken by new features being added to the language. Mainly
+   * these are passes that don't have to actually look at the AST at all, like empty marker passes.
+   */
   public static FeatureSet all() {
-    return TYPESCRIPT;
+    return TS_UNSUPPORTED;
   }
 
   public static FeatureSet latest() {

@@ -106,7 +106,7 @@ public abstract class PassFactory {
   public static PassFactory createEmptyPass(String name) {
     return builder()
         .setName(name)
-        .setFeatureSet(FeatureSet.latest())
+        .setFeatureSet(FeatureSet.all())
         .setInternalFactory((c) -> (CompilerPass) (externs, root) -> {})
         .build();
   }
