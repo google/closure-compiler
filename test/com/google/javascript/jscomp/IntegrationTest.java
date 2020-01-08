@@ -7827,4 +7827,42 @@ public final class IntegrationTest extends IntegrationTestCase {
       }
     }
   }
+
+  @Test
+  public void testBrowserFeaturesetYear2020() {
+    CompilerOptions options = createCompilerOptions();
+    options.setBrowserFeaturesetYear(2020);
+
+    // async generators and for await ... of are emitted untranspiled.
+    test(
+        options,
+        lines(
+            "async function* foo() {yield 1; await 0; yield 2;}",
+            "async function bar() {",
+            "  for await (const val of foo()) {",
+            "    console.log(val);",
+            "  }",
+            "}",
+            "bar();"),
+        "async function*foo(){yield 1;await 0;yield 2}async function bar(){for await(const val of"
+            + " foo())console.log(val)}bar()");
+
+    // So is object rest and spread.
+    test(
+        options,
+        lines(
+            "const {foo, ...bar} = {foo: 10, bar: 20, ...{baz: 30}};",
+            "console.log(foo);",
+            "console.log(bar);"),
+        "const {foo,...bar}={foo:10,bar:20,...{baz:30}};console.log(foo);console.log(bar)");
+
+    // But we won't emit ES 2018 regexp features.
+    DiagnosticType untranspilable =
+        MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
+    test(options, "/foo/s", untranspilable);
+    test(options, "/(?<foo>.)/", untranspilable);
+    test(options, "/(?<=foo)/", untranspilable);
+    test(options, "/(?<!foo)/", untranspilable);
+    test(options, "/\\p{Number}/u", untranspilable);
+  }
 }

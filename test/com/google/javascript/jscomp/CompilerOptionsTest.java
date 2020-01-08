@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayInputStream;
@@ -49,6 +50,9 @@ public final class CompilerOptionsTest {
     options.setBrowserFeaturesetYear(2019);
     assertThat(options.getOutputFeatureSet())
         .isEqualTo(LanguageMode.ECMASCRIPT_2017.toFeatureSet());
+
+    options.setBrowserFeaturesetYear(2020);
+    assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2020);
   }
 
   @Test

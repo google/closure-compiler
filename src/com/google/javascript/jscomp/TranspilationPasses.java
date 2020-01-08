@@ -74,12 +74,19 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
-    if (options.needsTranspilationFrom(FeatureSet.ES2019)) {
+    // Note that, for features >ES8 we detect feature by feature rather than by yearly languages
+    // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
+    if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.add(rewriteCatchWithNoBinding);
     }
 
-    if (options.needsTranspilationFrom(ES2018)) {
+    if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
+        || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
       passes.add(rewriteAsyncIteration);
+    }
+
+    if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
+        || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(rewriteObjectSpread);
     }
 

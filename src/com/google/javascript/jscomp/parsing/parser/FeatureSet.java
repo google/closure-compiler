@@ -78,6 +78,15 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
 
+  public static final FeatureSet BROWSER_2020 =
+      ES2019_MODULES.without(
+          // https://kangax.github.io/compat-table/es2016plus/
+          // All four of these are missing in Firefox 71 and lookbehind is missing in Safari 13.
+          Feature.REGEXP_FLAG_S,
+          Feature.REGEXP_LOOKBEHIND,
+          Feature.REGEXP_NAMED_GROUPS,
+          Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
+
   public static final FeatureSet TS_UNSUPPORTED =
       TYPESCRIPT.with(LangVersion.ES_UNSUPPORTED.features());
 
