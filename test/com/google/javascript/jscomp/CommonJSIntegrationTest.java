@@ -381,10 +381,10 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
               "module$i0.default.foo = 1;",
               "module$i0.default.bar = function() { return 'bar'; };"),
           lines(
-              "var $jscomp$destructuring$var0 = module$i0.default;",
-              "var foo$$module$i1 = $jscomp$destructuring$var0.foo;",
-              "var b$$module$i1 = module$i0.default.bar();",
-              "var module$i1 = {};")
+              "/** @const */ var $jscomp$destructuring$var0 = module$i0.default;",
+              "/** @const */ var foo$$module$i1 = module$i0.default.foo;",
+              "/** @const */ var b$$module$i1 = module$i0.default.bar();",
+              "/** @const */ var module$i1 = {};")
         });
   }
 

@@ -5764,7 +5764,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testLegacyGoogModuleExport() {
+  public void testLegacyGoogModuleExport1() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
@@ -5774,10 +5774,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('foo.example.ClassName');",
               "goog.module.declareLegacyNamespace();",
               "",
@@ -5787,24 +5787,34 @@ public final class IntegrationTest extends IntegrationTestCase {
               "exports = ClassName;"),
         },
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "var foo = {};",
               "foo.example = {};",
               "function module$contents$foo$example$ClassName_ClassName() {}",
               "foo.example.ClassName = module$contents$foo$example$ClassName_ClassName;",
-              "goog.exportSymbol('foo.example.ClassName', foo.example.ClassName);"),
+              "goog.exportSymbol('foo.example.ClassName',"
+                  + " module$contents$foo$example$ClassName_ClassName);"),
         });
+  }
+
+  @Test
+  public void testLegacyGoogModuleExport2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setCodingConvention(new ClosureCodingConvention());
+    options.setGenerateExports(true);
 
     test(
         options,
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('foo.ns');",
               "goog.module.declareLegacyNamespace();",
               "",
@@ -5814,15 +5824,15 @@ public final class IntegrationTest extends IntegrationTestCase {
               "exports.ExportedName = ClassName;"),
         },
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "var foo = {};",
               "foo.ns = {};",
               "function module$contents$foo$ns_ClassName() {}",
               "foo.ns.ExportedName = module$contents$foo$ns_ClassName;",
-              "goog.exportSymbol('foo.ns.ExportedName', foo.ns.ExportedName);"),
+              "goog.exportSymbol('foo.ns.ExportedName', module$contents$foo$ns_ClassName);"),
         });
   }
 

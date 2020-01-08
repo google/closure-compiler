@@ -411,10 +411,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureProvidesRequires);
     }
 
-    // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
-    if (!options.allowsHotswapReplaceScript()) {
-      checks.add(inlineTypeAliases);
-    }
+
 
     // CheckSuspiciousCode requires type information, so must run after the type checker.
     if (options.checkSuspiciousCode
@@ -526,6 +523,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.skipNonTranspilationPasses) {
       return passes;
+    }
+
+    // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
+    if (!options.allowsHotswapReplaceScript()) {
+      passes.add(inlineTypeAliases);
     }
 
     passes.add(removeWeakSources);
