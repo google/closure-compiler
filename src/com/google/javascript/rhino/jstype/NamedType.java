@@ -231,7 +231,7 @@ public final class NamedType extends ProxyObjectType {
 
   @Override
   public boolean isNominalType() {
-    return true;
+    return isResolved() ? super.isNominalType() : true;
   }
 
   @Override

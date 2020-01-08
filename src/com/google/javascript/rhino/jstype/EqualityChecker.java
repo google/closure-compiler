@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
@@ -234,26 +235,16 @@ final class EqualityChecker {
     }
 
     if (left.isNominalType() && right.isNominalType()) {
-      JSType leftUnwrapped = unwrapNamedTypeAndTemplatizedType(left.toObjectType());
-      JSType rightUnwrapped = unwrapNamedTypeAndTemplatizedType(right.toObjectType());
+      ObjectType leftUnwrapped = unwrapNominalTypeProxies(left.toObjectType());
+      ObjectType rightUnwrapped = unwrapNominalTypeProxies(right.toObjectType());
+
+      checkState(leftUnwrapped.isNominalType() && rightUnwrapped.isNominalType());
       if (left.isResolved() && right.isResolved()) {
         return JSType.areIdentical(leftUnwrapped, rightUnwrapped);
-      }
-
-      // TODO(b/140763807): left is not valid across scopes pre-resolution.
-      @Nullable
-      String nameOfleft =
-          leftUnwrapped.toObjectType() != null
-              ? leftUnwrapped.toObjectType().getReferenceName()
-              : null;
-      @Nullable
-      String nameOfright =
-          rightUnwrapped.toObjectType() != null
-              ? rightUnwrapped.toObjectType().getReferenceName()
-              : null;
-      if ((nameOfleft == null) && (nameOfright == null)) {
-        // These are two anonymous types right were masquerading as nominal, so don't compare names.
       } else {
+        // TODO(b/140763807): this is not valid across scopes pre-resolution.
+        String nameOfleft = checkNotNull(leftUnwrapped.getReferenceName());
+        String nameOfright = checkNotNull(rightUnwrapped.getReferenceName());
         return Objects.equals(nameOfleft, nameOfright);
       }
     }
@@ -472,7 +463,7 @@ final class EqualityChecker {
       }
     }
 
-  private static JSType unwrapNamedTypeAndTemplatizedType(ObjectType objType) {
+  private static ObjectType unwrapNominalTypeProxies(ObjectType objType) {
     if (!objType.isResolved() || (!objType.isNamedType() && !objType.isTemplatizedType())) {
       // Don't unwrap TemplateTypes, as they should use identity semantics even if their bounds
       // are compatible. On the other hand, different TemplatizedType instances may be equal if
@@ -484,8 +475,6 @@ final class EqualityChecker {
         objType.isNamedType()
             ? objType.toMaybeNamedType().getReferencedObjTypeInternal()
             : objType.toMaybeTemplatizedType().getReferencedObjTypeInternal();
-    return (internal != null && internal.isNominalType())
-        ? unwrapNamedTypeAndTemplatizedType(internal)
-        : internal;
+    return unwrapNominalTypeProxies(internal);
   }
 }

@@ -167,8 +167,8 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
   @SuppressWarnings({"MustBeClosedChecker"})
   public void testEqualityOfTypesWithSameReferenceName_postResolution() {
     // Given
-    ObjectType barTypeA = createNominalType("Bar"/* resolve= */ );
-    ObjectType barTypeB = createNominalType("Bar"/* resolve= */ );
+    ObjectType barTypeA = createNominalType("Bar");
+    ObjectType barTypeB = createNominalType("Bar");
     FunctionType anonType = FunctionType.builder(registry).build();
 
     JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition();
@@ -180,6 +180,8 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     NamedType namedFooResolvedToAnon = forceResolutionWith(anonType, namedFooBuilder.build());
     NamedType namedFooResolvedToBarA = forceResolutionWith(barTypeA, namedFooBuilder.build());
     NamedType namedFooResolvedToBarB = forceResolutionWith(barTypeB, namedFooBuilder.build());
+    NamedType namedFooResolvedToNumber = forceResolutionWith(NUMBER_TYPE, namedFooBuilder.build());
+    NamedType namedFooResolvedToString = forceResolutionWith(STRING_TYPE, namedFooBuilder.build());
 
     NamedTypeBuilder namedBarBuilder = new NamedTypeBuilder().setName("Bar");
     NamedType namedBarUnsuccessfullyResolved =
@@ -188,6 +190,8 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     NamedType namedBarResolvedToAnon = forceResolutionWith(anonType, namedBarBuilder.build());
     NamedType namedBarResolvedToBarA = forceResolutionWith(barTypeA, namedBarBuilder.build());
     NamedType namedBarResolvedToBarB = forceResolutionWith(barTypeB, namedBarBuilder.build());
+    NamedType namedBarResolvedToNumber = forceResolutionWith(NUMBER_TYPE, namedBarBuilder.build());
+    NamedType namedBarResolvedToString = forceResolutionWith(STRING_TYPE, namedBarBuilder.build());
 
     closer.close();
 
@@ -197,6 +201,8 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
         .addEqualityGroup(barTypeA, namedFooResolvedToBarA, namedBarResolvedToBarA)
         .addEqualityGroup(barTypeB, namedFooResolvedToBarB, namedBarResolvedToBarB)
         .addEqualityGroup(anonType, namedFooResolvedToAnon, namedBarResolvedToAnon)
+        .addEqualityGroup(NUMBER_TYPE, namedFooResolvedToNumber, namedBarResolvedToNumber)
+        .addEqualityGroup(STRING_TYPE, namedFooResolvedToString, namedBarResolvedToString)
         .addEqualityGroup(namedFooUnsuccessfullyResolved)
         .addEqualityGroup(namedBarUnsuccessfullyResolved)
         // TODO(b/112425334): Either re-enable this equality group or remove the NO_RESOLVED_TYPE
