@@ -145,6 +145,13 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testWarning("var f = s => {s}", e);
   }
 
+  // just here to make sure import.meta doesn't break anything
+  @Test
+  public void testImportMeta() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    testSame("var x = import.meta");
+  }
+
   @Test
   public void testUselessCodeInFor() {
     testSame("for(var x = 0; x < 100; x++) { foo(x) }");

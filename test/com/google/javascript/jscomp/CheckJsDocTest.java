@@ -111,6 +111,13 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testWarning("[/** string */ f().y['z']] = [];", CheckJSDoc.MISPLACED_ANNOTATION);
   }
 
+  // just here to make sure import.meta doesn't break anything
+  @Test
+  public void testImportMeta() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    testSame("var /** number */ x = foo; import.meta.foo = x");
+  }
+
   @Test
   public void testInlineJsDocOnDeclaration() {
     testSame("var /** number */ x;");

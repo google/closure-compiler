@@ -50,7 +50,6 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Override
   public CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     if (enableUnusedLocalAssignmentCheck) {
       options.setWarningLevel(DiagnosticGroups.UNUSED_LOCAL_VARIABLE, CheckLevel.WARNING);
     }
@@ -67,7 +66,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    setLanguage(LanguageMode.ECMASCRIPT_2018, LanguageMode.ECMASCRIPT5);
     enableUnusedLocalAssignmentCheck = false;
+  }
+
+  @Test
+  public void testWithImportMeta() {
+    // just to confirm that presence of import.meta does not cause a compiler crash
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+
+    testSame("export function g() { return import.meta; }");
   }
 
   @Test

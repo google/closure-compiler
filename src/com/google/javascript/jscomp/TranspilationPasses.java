@@ -50,7 +50,7 @@ public class TranspilationPasses {
                       compiler.getModuleMap(),
                       preprocessorTableFactory.getInstanceOrNull());
                 })
-            .setFeatureSet(ES_NEXT)
+            .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
             .build());
   }
 
