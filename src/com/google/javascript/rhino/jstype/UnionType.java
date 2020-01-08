@@ -742,6 +742,17 @@ public class UnionType extends JSType {
         return this;
       }
       if (alternate.isUnionType()) {
+        if (JSType.areIdentical(this.rebuildTarget, alternate.toMaybeUnionType())) {
+          /**
+           * Avoid infinite recursion.
+           *
+           * <p>This union is defined cyclically and no further exploration is needed. Additionally,
+           * the cyclic reference contributes no alternates. That is, given `A = (B|string)` and `B
+           * = (A|number)`, `A == B == (number|string).
+           */
+          return this;
+        }
+
         addAlternates(alternate.toMaybeUnionType().getAlternates());
         return this;
       }

@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.STRICT_INEXISTENT_PROPERTY;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
@@ -24946,24 +24945,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testCyclicUnionTypedefs() {
-    // TODO(b/112964849): This case should not throw anything.
-    assertThrows(
-        StackOverflowError.class,
-        () -> {
-          testTypes(
-              lines(
-                  "/** @typedef {Foo|string} */",
-                  "var Bar;",
-                  "/** @typedef {Bar|number} */",
-                  "var Foo;",
-                  "var /** Foo */ foo;",
-                  "var /** null */ x = foo;",
-                  ""),
-              lines(
-                  "initializing variable", //
-                  "found   : (number|string)",
-                  "required: null"));
-        });
+    testTypes(
+        lines(
+            "/** @typedef {!Foo|string} */",
+            "var Bar;",
+            "/** @typedef {!Bar|number} */",
+            "var Foo;",
+            "var /** !Foo */ foo;",
+            "var /** null */ x = foo;",
+            ""),
+        lines(
+            "initializing variable", //
+            "found   : (number|string)",
+            "required: null"));
   }
 
   @Test
