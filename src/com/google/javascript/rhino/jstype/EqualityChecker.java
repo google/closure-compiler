@@ -333,7 +333,7 @@ final class EqualityChecker {
   }
 
   private boolean areArrowEqual(ArrowType left, ArrowType right) {
-    return this.areEqualCaching(left.returnType, right.returnType)
+    return this.areEqualCaching(left.getReturnType(), right.getReturnType())
         && this.areArrowParameterEqual(left, right);
   }
 

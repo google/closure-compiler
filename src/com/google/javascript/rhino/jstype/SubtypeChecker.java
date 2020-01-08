@@ -421,7 +421,7 @@ final class SubtypeChecker {
     // Section 3.4.7: Subtyping Function Types.
 
     // this.returnType <: that.returnType (covariant)
-    if (!this.isSubtypeCaching(subtype.returnType, supertype.returnType)) {
+    if (!this.isSubtypeCaching(subtype.getReturnType(), supertype.getReturnType())) {
       return false;
     }
 

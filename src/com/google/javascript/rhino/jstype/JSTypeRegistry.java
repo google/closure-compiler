@@ -410,7 +410,7 @@ public class JSTypeRegistry implements Serializable {
             .forNativeType()
             .withParamsNode(createParametersWithVarArgs(unknownType))
             .withTypeOfThis(unknownType)
-            .withReturnsOwnInstanceType()
+            .withReturnType(unknownType)
             .build();
     registerNativeType(JSTypeNative.FUNCTION_TYPE, functionType);
 

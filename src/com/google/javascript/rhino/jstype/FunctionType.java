@@ -186,15 +186,34 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     if (builder.typeOfThis != null) {
       this.typeOfThis = builder.typeOfThis;
+    } else if (this instanceof NoResolvedType) {
+      /**
+       * TODO(b/112425334): Delete this special case if NO_RESOLVED_TYPE is deleted.
+       *
+       * <p>Despite being a subclass of `NoType`, `NoResolvedType` should behave more like `?`.
+       * There's no reason to believe its properties are of its own type.
+       */
+      this.typeOfThis = this.registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else {
       switch (kind) {
         case CONSTRUCTOR:
         case INTERFACE:
-          this.typeOfThis = InstanceObjectType.builderForCtor(this).build();
+          InstanceObjectType.Builder typeOfThisBuilder = InstanceObjectType.builderForCtor(this);
+
+          Set<TemplateType> ctorKeys = builder.constructorOnlyKeys;
+          if (!ctorKeys.isEmpty()) {
+            typeOfThisBuilder
+                .setTemplateTypeMap(this.templateTypeMap.copyWithoutKeys(ctorKeys))
+                .setTemplateParamCount(this.getTemplateParamCount() - ctorKeys.size());
+          }
+
+          this.typeOfThis = typeOfThisBuilder.build();
           break;
+
         case ORDINARY:
-          this.typeOfThis = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+          this.typeOfThis = this.registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
           break;
+
         case NONE:
           this.typeOfThis = this;
           break;
@@ -205,17 +224,27 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       this.propAccess = PropAccess.ANY;
     }
 
-    this.call = builder.buildArrowType();
+    this.call =
+        new ArrowType(
+            this.registry,
+            builder.parametersNode,
+            builder.returnsOwnInstanceType ? this.typeOfThis : builder.returnType,
+            builder.returnTypeIsInferred);
+
     this.closurePrimitive = builder.primitiveId;
     this.isStructuralInterface = false;
-    this.isAbstract = builder.isAbstract();
+    this.isAbstract = builder.isAbstract;
     FunctionType canonicalRepresentation = builder.canonicalRepresentation;
     checkArgument(
         canonicalRepresentation == null || kind == Kind.CONSTRUCTOR,
         "Only constructors should have canonical representations");
     this.canonicalRepresentation = canonicalRepresentation;
 
-    registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
+    if (builder.setPrototypeBasedOn != null) {
+      this.setPrototypeBasedOn(builder.setPrototypeBasedOn);
+    }
+
+    this.registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
 
   @Override
@@ -388,7 +417,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   public final JSType getReturnType() {
-    return call.returnType;
+    return call.getReturnType();
   }
 
   public final boolean isReturnTypeInferred() {
@@ -863,8 +892,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     JSType newReturnType =
         leastSuper
-            ? call.returnType.getLeastSupertype(other.call.returnType)
-            : call.returnType.getGreatestSubtype(other.call.returnType);
+            ? call.getReturnType().getLeastSupertype(other.call.getReturnType())
+            : call.getReturnType().getGreatestSubtype(other.call.getReturnType());
 
     JSType newTypeOfThis = null;
     if (isEquivalent(typeOfThis, other.typeOfThis)) {
@@ -973,7 +1002,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       }
     }
     sb.append("): ");
-    call.returnType.appendAsNonNull(sb, forAnnotations);
+    call.getReturnType().appendAsNonNull(sb, forAnnotations);
 
     setPrettyPrint(true);
     return sb;
@@ -1439,11 +1468,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    */
   public static final class Builder extends PrototypeObjectType.Builder<Builder> {
 
-    // Bit masks for various boolean properties
-    private static final int IS_ABSTRACT = 0x1;
-    private static final int INFERRED_RETURN_TYPE = 0x4;
-    private static final int RETURNS_OWN_INSTANCE_TYPE = 0x8;
-
     private Node sourceNode = null;
     private Node parametersNode = null;
     private JSType returnType = null;
@@ -1451,7 +1475,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     private ObjectType setPrototypeBasedOn = null;
     private Set<TemplateType> constructorOnlyKeys = ImmutableSet.of();
     private Kind kind = Kind.ORDINARY;
-    private int properties = 0;
+    private boolean isAbstract;
+    private boolean returnTypeIsInferred;
+    private boolean returnsOwnInstanceType;
     private ClosurePrimitive primitiveId = null;
     private FunctionType canonicalRepresentation = null;
 
@@ -1494,23 +1520,20 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     /** Set the return type and whether it's inferred. */
     public Builder withReturnType(JSType returnType, boolean inferred) {
       this.returnType = returnType;
-      this.properties =
-          inferred
-              ? this.properties | INFERRED_RETURN_TYPE
-              : this.properties & ~INFERRED_RETURN_TYPE;
+      this.returnTypeIsInferred = inferred;
       return this;
     }
 
     /** Set the return type to be a constructor's own instance type. */
     Builder withReturnsOwnInstanceType() {
-      this.properties = this.properties | RETURNS_OWN_INSTANCE_TYPE;
+      this.returnsOwnInstanceType = true;
       return this;
     }
 
     /** Sets an inferred return type. */
     public Builder withInferredReturnType(JSType returnType) {
       this.returnType = returnType;
-      this.properties = this.properties | INFERRED_RETURN_TYPE;
+      this.returnTypeIsInferred = true;
       return this;
     }
 
@@ -1569,12 +1592,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     /** Mark abstract method. */
     public Builder withIsAbstract(boolean isAbstract) {
-      this.properties = isAbstract ? this.properties | IS_ABSTRACT : this.properties & ~IS_ABSTRACT;
+      this.isAbstract = isAbstract;
       return this;
-    }
-
-    private boolean isAbstract() {
-      return (this.properties & IS_ABSTRACT) != 0;
     }
 
     /** Set the prototype property of a constructor. */
@@ -1595,16 +1614,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       return this;
     }
 
-    /** Returns a new {@link ArrowType} instance each time with the given param/return types */
-    private ArrowType buildArrowType() {
-      boolean inferredReturnType = (properties & INFERRED_RETURN_TYPE) != 0;
-      return new ArrowType(registry, parametersNode, returnType, inferredReturnType);
-    }
-
     /** Copies all the information from another function type. */
     public Builder copyFromOtherFunction(FunctionType otherType) {
-      int isAbstract = otherType.isAbstract() ? IS_ABSTRACT : 0;
-      int inferredReturnType = otherType.isReturnTypeInferred() ? INFERRED_RETURN_TYPE : 0;
       this.setName(otherType.getReferenceName())
           .setNative(otherType.isNativeObjectType())
           .setTemplateTypeMap(otherType.getTemplateTypeMap())
@@ -1614,7 +1625,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       this.returnType = otherType.getReturnType();
       this.typeOfThis = otherType.getTypeOfThis();
       this.kind = otherType.getKind();
-      this.properties = isAbstract | inferredReturnType;
+      this.returnTypeIsInferred = otherType.isReturnTypeInferred();
+      this.isAbstract = otherType.isAbstract();
       this.primitiveId = otherType.getClosurePrimitive();
       return this;
     }
@@ -1622,32 +1634,43 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     /** Constructs a new function type. */
     @Override
     public FunctionType build() {
-      boolean returnsOwnInstanceType = (properties & RETURNS_OWN_INSTANCE_TYPE) != 0;
-      boolean hasConstructorOnlyKeys = !constructorOnlyKeys.isEmpty();
+      // Verify that the builder is an a sensible state before instantiating a function.
 
-      if (hasConstructorOnlyKeys) {
-        // We can't pass in the correct this type yet because it depends on the finished
-        // constructor.
-        // Instead, just pass in unknown so that it doesn't try to instantiate a new instance type.
-        this.typeOfThis = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+      switch (this.kind) {
+        case CONSTRUCTOR:
+        case INTERFACE:
+          /**
+           * These kinds have no implication on whether `returnsOwnInstanceType` is reasonable. This
+           * configuration may be intended to synthesize an instance type. The return type and
+           * instance type are independent.
+           */
+          break;
+        case NONE:
+          checkState(this.returnsOwnInstanceType);
+          break;
+        case ORDINARY:
+          checkState(!this.returnsOwnInstanceType);
+          break;
       }
 
-      FunctionType ft = new FunctionType(this);
+      if (this.returnsOwnInstanceType) {
+        // If the return type or instance type was available to set, there's no need to use
+        // `returnsOwnInstanceType`.
+        checkState(this.returnType == null);
+        checkState(this.typeOfThis == null);
+      }
 
-      if (setPrototypeBasedOn != null) {
-        ft.setPrototypeBasedOn(setPrototypeBasedOn);
+      switch (this.kind) {
+        case CONSTRUCTOR:
+        case INTERFACE:
+          break;
+        case NONE:
+        case ORDINARY:
+          checkState(this.constructorOnlyKeys.isEmpty());
+          break;
       }
-      if (returnsOwnInstanceType) {
-        ft.getInternalArrowType().returnType = ft.getInstanceType();
-      }
-      if (hasConstructorOnlyKeys) {
-        ft.typeOfThis =
-            InstanceObjectType.builderForCtor(ft)
-                .setTemplateTypeMap(ft.templateTypeMap.copyWithoutKeys(this.constructorOnlyKeys))
-                .setTemplateParamCount(ft.getTemplateParamCount() - this.constructorOnlyKeys.size())
-                .build();
-      }
-      return ft;
+
+      return new FunctionType(this);
     }
 
     public FunctionType buildAndResolve() {
