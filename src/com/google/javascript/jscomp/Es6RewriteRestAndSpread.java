@@ -163,7 +163,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     Node name = IR.name(paramName);
     Node let = IR.let(name, newArrayName).useSourceInfoIfMissingFromForTree(functionBody);
     newBlock.addChildToFront(let);
-    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
 
     for (Node child : functionBody.children()) {
       newBlock.addChildToBack(child.detach());
