@@ -1929,7 +1929,7 @@ public class JSTypeRegistry implements Serializable {
           if (type == null || type.isUnknownType() || rootSlot.getScope() != declarationScope) {
             // Create a NamedType via getType so that it will be added to the list of types to
             // eventually resolve if necessary.
-            return NamedType.builder(this, name)
+            return NamedType.builder(this, "typeof " + name)
                 .setScope(scope)
                 .setResolutionKind(ResolutionKind.TYPEOF)
                 .setErrorReportingLocationFrom(n)
@@ -1938,11 +1938,10 @@ public class JSTypeRegistry implements Serializable {
           if (type.isLiteralObject()) {
             JSType scopeType = type;
             type =
-                NamedType.builder(this, name)
-                    .setScope(scope)
-                    .setResolutionKind(ResolutionKind.TYPEOF)
+                NamedType.builder(this, "typeof " + name)
+                    .setResolutionKind(ResolutionKind.NONE)
+                    .setReferencedType(scopeType)
                     .build();
-            ((NamedType) type).setReferencedType(scopeType);
           }
           return type;
         }
@@ -1979,7 +1978,10 @@ public class JSTypeRegistry implements Serializable {
             }
             return addNullabilityBasedOnParseContext(
                 n,
-                nominalType.toMaybeNamedType().toBuilder()
+                NamedType.builder(this, n.getString())
+                    .setResolutionKind(ResolutionKind.TYPE_NAME)
+                    .setScope(scope)
+                    .setErrorReportingLocationFrom(n)
                     .setTemplateTypes(templateArgs.build())
                     .build());
           }

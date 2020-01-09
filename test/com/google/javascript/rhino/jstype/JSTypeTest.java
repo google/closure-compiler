@@ -56,6 +56,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
+import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
@@ -5535,12 +5536,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   JSType getNamedWrapper(String name, JSType jstype) {
-    // Normally, there is no way to create a Named NoType alias so
-    // avoid confusing things by doing it here..
+    // Normally, there is no way to create a Named NoType alias so avoid confusing things by doing
+    // it here explicitly.
     if (!jstype.isNoType()) {
-      NamedType namedWrapper = registry.createNamedType(EMPTY_SCOPE, name, "[testcode]", -1, -1);
-      namedWrapper.setReferencedType(jstype);
-      return namedWrapper;
+      return NamedType.builder(registry, name)
+          .setResolutionKind(ResolutionKind.NONE)
+          .setReferencedType(jstype)
+          .build();
     } else {
       return jstype;
     }
