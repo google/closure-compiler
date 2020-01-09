@@ -17227,8 +17227,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @template T",
             " */",
             "function f(T) {}"),
-        "variable T redefined with type undefined, "
-            + "original definition at [testcode]:5 with type T");
+        "variable T redefined with type undefined, original definition at [testcode]:5 with type"
+            + " T");
   }
 
   @Test
@@ -22806,7 +22806,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @record */ function rec3(){}",
             "/** @record */ function rec4(){}",
             "/** @type {!rec3} */ ns.x;",
-            "/** @type {!rec4} */ ns.x;"));
+            "/** @type {!rec4} */ ns.x;"),
+        ImmutableList.of(
+            "variable ns.x redefined with type rec4, original definition at [testcode]:4 with type"
+                + " rec3"));
   }
 
   @Test
@@ -22866,7 +22869,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {{prop:number}} */ ns.x;",
             "",
             "/** @type {{prop:number}} */ ns.y;",
-            "/** @type {!rec} */ ns.y;"));
+            "/** @type {!rec} */ ns.y;"),
+        ImmutableList.of(
+            "variable ns.x redefined with type {prop: number}, original definition at [testcode]:5"
+                + " with type rec",
+            "variable ns.y redefined with type rec, original definition at [testcode]:8 with type"
+                + " {prop: number}"));
   }
 
   @Test
@@ -22882,8 +22890,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "",
             "/** @type {{prop:number}} */ ns.y;",
             "/** @type {!rec} */ ns.y;"),
-        "variable ns.x redefined with type {prop: string}, original "
-        + "definition at [testcode]:5 with type rec");
+        ImmutableList.of(
+            "variable ns.x redefined with type {prop: string}, original "
+                + "definition at [testcode]:5 with type rec",
+            "variable ns.y redefined with type rec, original definition at [testcode]:8 with type"
+                + " {prop: number}"));
   }
 
   @Test
@@ -22899,8 +22910,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "",
             "/** @type {{prop:number}} */ ns.y;",
             "/** @type {!rec} */ ns.y;"),
-        "variable ns.y redefined with type rec, original definition at "
-        + "[testcode]:8 with type {prop: number}");
+        ImmutableList.of(
+            "variable ns.x redefined with type {prop: string}, original definition at [testcode]:5"
+                + " with type rec",
+            "variable ns.y redefined with type rec, original definition at "
+                + "[testcode]:8 with type {prop: number}"));
   }
 
   @Test
@@ -22914,7 +22928,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {I} */ rec.prototype.prop;",
             "",
             "/** @type {!rec} */ ns.x;",
-            "/** @type {{prop:I}} */ ns.x;"));
+            "/** @type {{prop:I}} */ ns.x;"),
+        ImmutableList.of(
+            "variable ns.x redefined with type {prop: (I|null)}, original definition at"
+                + " [testcode]:7 with type rec"));
   }
 
   @Test
@@ -22928,7 +22945,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {I<number>} */ rec.prototype.prop;",
             "",
             "/** @type {!rec} */ ns.x;",
-            "/** @type {{prop:I<number>}} */ ns.x;"));
+            "/** @type {{prop:I<number>}} */ ns.x;"),
+        ImmutableList.of(
+            "variable ns.x redefined with type {prop: (I<number>|null)}, original definition at"
+                + " [testcode]:7 with type rec"));
   }
 
   @Test

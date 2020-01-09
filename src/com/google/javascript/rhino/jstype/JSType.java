@@ -686,10 +686,9 @@ public abstract class JSType implements Serializable {
     return this.isEquivalentTo(that, false);
   }
 
-  public final boolean isEquivalentTo(@Nullable JSType that, boolean isStructural) {
+  public final boolean isEquivalentTo(@Nullable JSType that, boolean unused) {
     return new EqualityChecker()
         .setEqMethod(EqMethod.IDENTITY)
-        .setUsingStructuralEquality(isStructural)
         .check(this, that);
   }
 
@@ -707,7 +706,6 @@ public abstract class JSType implements Serializable {
   public final boolean differsFrom(JSType that) {
     return !new EqualityChecker()
         .setEqMethod(EqMethod.DATA_FLOW)
-        .setUsingStructuralEquality(true)
         .check(this, that);
   }
 

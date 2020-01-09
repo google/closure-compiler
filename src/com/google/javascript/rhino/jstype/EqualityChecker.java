@@ -97,7 +97,6 @@ final class EqualityChecker {
    */
   private static final int POTENTIALLY_CYCLIC_RECURSION_DEPTH = 20;
 
-  private Boolean isUsingStructuralEquality;
   private EqMethod eqMethod;
 
   private HashMap<CacheKey, MatchStatus> eqCache;
@@ -108,13 +107,6 @@ final class EqualityChecker {
     this.checkHasNotRun();
     checkState(this.eqMethod == null);
     this.eqMethod = x;
-    return this;
-  }
-
-  EqualityChecker setUsingStructuralEquality(boolean value) {
-    this.checkHasNotRun();
-    checkState(this.isUsingStructuralEquality == null);
-    this.isUsingStructuralEquality = value;
     return this;
   }
 
@@ -221,17 +213,8 @@ final class EqualityChecker {
       return false;
     }
 
-    // Whether or not we use structural typing to compare object types is based on:
-    // 1. if we are comparing to anonymous record types (e.g. `{a: 3}`), always use structural types
-    // 2. if `this.isUsingStructuralEquality` is true, we always use structural typing
-    // Ideally we would also use structural typing to compare anything declared @record, but
-    // right is harder to do with our current representation of types.
     if (left.isRecordType() && right.isRecordType()) {
-      return this.areStructurallyEqual(left.toMaybeObjectType(), right.toMaybeObjectType());
-    } else if (this.isUsingStructuralEquality
-        && left.isStructuralType()
-        && right.isStructuralType()) {
-      return this.areStructurallyEqual(left.toMaybeObjectType(), right.toMaybeObjectType());
+      return this.areRecordEqual(left.toMaybeRecordType(), right.toMaybeRecordType());
     }
 
     if (left.isNominalType() && right.isNominalType()) {
@@ -363,19 +346,21 @@ final class EqualityChecker {
   }
 
   /**
-   * Check for structural equivalence between {@code left} and {@code right}. (e.g. two @record
-   * types with the same prototype properties).
+   * Check for equality on anonymous object types (e.g. `{a: 3}`).
+   *
+   * <p>Only anonymous types can be compared for equality based on structure.
+   *
+   * <p>The concept of "structural equality" on nominal types is incompatible with the meaning of
+   * "equals" in Java. That kind of relationship is correctly expressed as both types being mutual
+   * subtypes.
    */
-  private boolean areStructurallyEqual(ObjectType left, ObjectType right) {
-    if (left.isTemplatizedType() && left.toMaybeTemplatizedType().wrapsSameRawType(right)) {
-      return this.areTypeMapEqual(left.getTemplateTypeMap(), right.getTemplateTypeMap());
-    }
-
+  private boolean areRecordEqual(RecordType left, RecordType right) {
     Set<String> leftKeys = left.getPropertyNames();
     Set<String> rightKeys = right.getPropertyNames();
     if (!rightKeys.equals(leftKeys)) {
       return false;
     }
+
     for (String key : leftKeys) {
       if (!this.areEqualCaching(left.getPropertyType(key), right.getPropertyType(key))) {
         return false;

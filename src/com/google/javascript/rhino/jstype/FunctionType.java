@@ -881,7 +881,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     Node newParamsNode = null;
     if (new EqualityChecker()
         .setEqMethod(EqMethod.IDENTITY)
-        .setUsingStructuralEquality(true)
         .checkParameters(this.call, other.call)) {
       newParamsNode = call.parameters;
     } else {
@@ -948,7 +947,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   public final boolean hasEqualCallType(FunctionType that) {
     return new EqualityChecker()
         .setEqMethod(EqMethod.IDENTITY)
-        .setUsingStructuralEquality(true)
         .check(this.call, that.call);
   }
 

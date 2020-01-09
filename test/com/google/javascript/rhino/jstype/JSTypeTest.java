@@ -6357,7 +6357,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // These are not equal but are structurally equivalent
     assertType(firstType).isNotEqualTo(secondType);
-    assertType(firstType).isStructurallyEqualTo(secondType);
+    assertType(firstType).isNotStructurallyEqualTo(secondType);
   }
 
   @Test
