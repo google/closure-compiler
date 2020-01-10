@@ -498,9 +498,17 @@ final class FunctionTypeBuilder {
       if (info != null) {
         for (JSTypeExpression t : info.getExtendedInterfaces()) {
           JSType maybeInterfaceType = t.evaluate(templateScope, typeRegistry);
-          if (maybeInterfaceType != null &&
-              maybeInterfaceType.setValidator(new ExtendedTypeValidator())) {
-            extendedInterfaces.add((ObjectType) maybeInterfaceType);
+          if (maybeInterfaceType != null) {
+            // setValidator runs validation and returns whether validation was successful (except
+            // for not-yet resolved named types, where validation is delayed).
+            // This code must run even for non-object types (which we know are invalid) to generate
+            // and record the user error message.
+            boolean isValid = maybeInterfaceType.setValidator(new ExtendedTypeValidator());
+            // ExtendedTypeValidator guarantees that maybeInterfaceType is an object type, but
+            // setValidator might not (e.g. due to delayed execution).
+            if (isValid && maybeInterfaceType.toMaybeObjectType() != null) {
+              extendedInterfaces.add(maybeInterfaceType.toMaybeObjectType());
+            }
           }
           // de-dupe baseType (from extends keyword) if it's also in @extends jsdoc.
           if (classExtendsType != null && maybeInterfaceType.isSubtypeOf(classExtendsType)) {

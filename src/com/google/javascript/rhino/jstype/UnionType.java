@@ -51,7 +51,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
@@ -580,15 +579,6 @@ public class UnionType extends JSType {
       return alternates.get(0);
     }
     return this;
-  }
-
-  @Override
-  public boolean setValidator(Predicate<JSType> validator) {
-    for (int i = 0; i < alternates.size(); i++) {
-      JSType a = alternates.get(i);
-      a.setValidator(validator);
-    }
-    return true;
   }
 
   @Override

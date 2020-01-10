@@ -5387,6 +5387,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBadExtends_withUnionType() {
+    // Regression test for b/146562659, crash when extending a union type.
+    testTypes(
+        lines(
+            "/** @interface */",
+            "class Foo {}",
+            "/** @interface */",
+            "class Bar {}",
+            "/** @typedef {!Foo|!Bar} */",
+            "let Baz;",
+            "/**",
+            " * @interface",
+            " * @extends {Baz}",
+            " */",
+            "class Blah {}"),
+        "Blah @extends non-object type (Bar|Foo)");
+  }
+
+  @Test
   public void testGoodExtends_withNamespacedAliasOfSuperclass() {
     testTypesWithCommonExterns(
         CLOSURE_DEFS
