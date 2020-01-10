@@ -595,6 +595,13 @@ function spyOn(spiedOnObject, methodName) {}
  */
 function spyOnAllFunctions(spiedOnObject) {}
 
+/**
+ * @param {!Object} spiedOnObject
+ * @param {string} propertyName
+ * @param {string=} accessType
+ * @return {!jasmine.Spy}
+ */
+function spyOnProperty(spiedOnObject, propertyName, accessType) {}
 
 /**
  * @param {string} description
