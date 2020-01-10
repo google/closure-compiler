@@ -281,6 +281,9 @@ public final class AstAnalyzerTest {
           kase().js("({...f().x});").token(OBJECT_SPREAD).assumeGettersArePure(true).expect(true),
           kase().js("({...f().x} = y);").token(OBJECT_REST).assumeGettersArePure(true).expect(true),
 
+          // the presence of `a` affects what gets put into `x`
+          kase().js("({a, ...x} = y);").token(STRING_KEY).assumeGettersArePure(true).expect(true),
+
           // Getters and setters
           kase().js("x.getter;").token(GETPROP).expect(true),
           // Overapproximation to avoid inspecting the parent.
@@ -470,6 +473,8 @@ public final class AstAnalyzerTest {
           // OBJECT_REST
           // This could invoke getters.
           kase().expect(true).token(OBJECT_REST).js("({...x} = something)"),
+          // the presence of `a` affects what goes into `x`
+          kase().expect(true).token(STRING_KEY).js("({a, ...x} = something)"),
 
           // ITER_REST
           // We currently assume all iterable-rests are side-effectful.

@@ -376,6 +376,11 @@ public class AstAnalyzer {
           // Assumption: GETELEM (via a COMPUTED_PROP) never triggers a getter or setter.
           if (getPropertyKind(n.getString()).hasGetter()) {
             return true;
+          } else if (parent.getLastChild().isObjectRest()) {
+            // Due to language syntax, only the last child can be an OBJECT_REST.
+            // `({ thisKey: target, ...rest} = something())`
+            // The presence of `thisKey` affects what properties get put into `rest`.
+            return true;
           }
         }
         break;

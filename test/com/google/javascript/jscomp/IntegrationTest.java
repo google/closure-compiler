@@ -7504,9 +7504,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
-    // This is just a melunge of various global namespace operations. The exact squence of values
+    // This is just a melange of various global namespace operations. The exact sequence of values
     // aren't important so much as trying out lots of combinations.
     test(
         options,
@@ -7531,21 +7533,21 @@ public final class IntegrationTest extends IntegrationTestCase {
             "alert(d.acc);"),
         lines(
             "const a = {",
-            "  a: 2,",
-            "  d: 'hello',",
+            "  $aa$: 2,",
+            "  $ab$: 'hello',",
             "};",
             "",
-            "a.b = {",
-            "  e: !0,",
+            "a.$ac$ = {",
+            "  $aca$: !0,",
             "  ...a,",
-            "  f: !1,",
+            "  $acb$: !1,",
             "};",
             "",
-            "const {b,...c} = a;",
+            "const {$ab$: $ab$$, $ac$: $ac$$, ...$c$$} = a;",
             "",
-            "({a: b.c} = a);",
+            "({$aa$: $ac$$.$acc$} = a);",
             "",
-            "alert(b.c);"));
+            "alert($ac$$.$acc$);"));
   }
 
   @Test

@@ -3440,6 +3440,10 @@ public class Node implements Serializable {
     return this.token == Token.ITER_REST || this.token == Token.OBJECT_REST;
   }
 
+  public final boolean isObjectRest() {
+    return this.token == Token.OBJECT_REST;
+  }
+
   public final boolean isReturn() {
     return this.token == Token.RETURN;
   }
