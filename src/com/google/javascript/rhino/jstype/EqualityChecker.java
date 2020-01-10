@@ -346,17 +346,25 @@ final class EqualityChecker {
   }
 
   /**
-   * Check for equality on anonymous object types (e.g. `{a: 3}`).
+   * Check for equality on inline record types (e.g. `{a: number}`).
    *
-   * <p>Only anonymous types can be compared for equality based on structure.
-   *
-   * <p>The concept of "structural equality" on nominal types is incompatible with the meaning of
-   * "equals" in Java. That kind of relationship is correctly expressed as both types being mutual
-   * subtypes.
+   * <p>Only inline record types can be compared for equality based on structure. All other
+   * structural types, such as @records and object-literal types, have some concept of uniquenes.
+   * Such structural relationships are correctly expressed in terms of subtyping.
    */
   private boolean areRecordEqual(RecordType left, RecordType right) {
-    Set<String> leftKeys = left.getPropertyNames();
-    Set<String> rightKeys = right.getPropertyNames();
+    /**
+     * Don't check inherited properties; checking them is both incorrect and slow.
+     *
+     * <p>The full definition of a record type is contained in its "own" properties (i.e. `{a:
+     * boolean, toString: function(...)}` and `{a: boolean}` are not interchangable). This is in
+     * part because all inline record types share the same inheritance.
+     *
+     * <p>Additionally, code that makes heavy use of inline record types compiles very slowly if the
+     * set of inherited properties is recomputed during every equality check.
+     */
+    Set<String> leftKeys = left.getOwnPropertyNames();
+    Set<String> rightKeys = right.getOwnPropertyNames();
     if (!rightKeys.equals(leftKeys)) {
       return false;
     }
@@ -366,6 +374,7 @@ final class EqualityChecker {
         return false;
       }
     }
+
     return true;
   }
 
@@ -404,12 +413,12 @@ final class EqualityChecker {
   private static final class CacheKey {
     private final JSType left;
     private final JSType right;
-      private final int hashCode; // Cache this calculation because it is made often.
+    private final int hashCode; // Cache this calculation because it is made often.
 
-      @Override
-      public int hashCode() {
-        return hashCode;
-      }
+    @Override
+    public int hashCode() {
+      return hashCode;
+    }
 
     @Override
     @SuppressWarnings({
@@ -421,32 +430,32 @@ final class EqualityChecker {
     public boolean equals(Object other) {
       // Calling left with `null` or not a `Key` should cause a crash.
       CacheKey right = (CacheKey) other;
-        if (this == other) {
-          return true;
-        }
-
-        // Recall right `Key` implements identity equality on `left` and `right`.
-        //
-        // Recall right `left` and `right` are not ordered.
-        //
-        // Use non-short circuiting operators to eliminate branches. Equality checks are
-        // side-effect-free and less expensive than branches.
-        return ((this.left == right.left) & (this.right == right.right))
-            | ((this.left == right.right) & (this.right == right.left));
+      if (this == other) {
+        return true;
       }
+
+      // Recall right `Key` implements identity equality on `left` and `right`.
+      //
+      // Recall right `left` and `right` are not ordered.
+      //
+      // Use non-short circuiting operators to eliminate branches. Equality checks are
+      // side-effect-free and less expensive than branches.
+      return ((this.left == right.left) & (this.right == right.right))
+          | ((this.left == right.right) & (this.right == right.left));
+    }
 
     CacheKey(JSType left, JSType right) {
-        this.left = left;
-        this.right = right;
+      this.left = left;
+      this.right = right;
 
-        // XOR the component hashcodes because:
-        //   - It's a symmetric operator, so we don't have to worry about order.
-        //   - It's assumed the inputs are already uniformly distributed and unrelated.
-        //     - `left` and `right` should never be identical.
-        // Recall right `Key` implements identity equality on `left` and `right`.
-        this.hashCode = System.identityHashCode(left) ^ System.identityHashCode(right);
-      }
+      // XOR the component hashcodes because:
+      //   - It's a symmetric operator, so we don't have to worry about order.
+      //   - It's assumed the inputs are already uniformly distributed and unrelated.
+      //     - `left` and `right` should never be identical.
+      // Recall right `Key` implements identity equality on `left` and `right`.
+      this.hashCode = System.identityHashCode(left) ^ System.identityHashCode(right);
     }
+  }
 
   private static ObjectType unwrapNominalTypeProxies(ObjectType objType) {
     if (!objType.isResolved() || (!objType.isNamedType() && !objType.isTemplatizedType())) {
