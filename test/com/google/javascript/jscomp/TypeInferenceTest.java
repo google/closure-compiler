@@ -296,10 +296,7 @@ public final class TypeInferenceTest {
   }
 
   private void verify(String name, JSType type) {
-    assertWithMessage("Mismatch for " + name)
-        .about(types())
-        .that(getType(name))
-        .isStructurallyEqualTo(type);
+    assertWithMessage("Mismatch for " + name).about(types()).that(getType(name)).isEqualTo(type);
   }
 
   private void verify(String name, JSTypeNative type) {

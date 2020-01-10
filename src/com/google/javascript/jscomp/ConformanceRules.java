@@ -349,7 +349,7 @@ public final class ConformanceRules {
 
     protected boolean isNativeObjectType(Node n) {
       JSType type = n.getJSType().restrictByNotNullOrUndefined();
-      return type.isEquivalentTo(nativeObjectType);
+      return type.equals(nativeObjectType);
     }
 
     protected static boolean isTop(Node n) {
@@ -650,7 +650,7 @@ public final class ConformanceRules {
               || foundType.isTypeVariable()
               || foundType.isEmptyType()
               || foundType.isAllType()
-              || foundType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+              || foundType.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
             if (reportLooseTypeViolations) {
               return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
             }
@@ -672,7 +672,7 @@ public final class ConformanceRules {
     private boolean matchesPrototype(JSType type, JSType maybePrototype) {
       ObjectType methodClassObjectType = type.toMaybeObjectType();
       if (methodClassObjectType != null) {
-        if (methodClassObjectType.getImplicitPrototype().isEquivalentTo(maybePrototype)) {
+        if (methodClassObjectType.getImplicitPrototype().equals(maybePrototype)) {
           return true;
         }
       }
@@ -994,7 +994,7 @@ public final class ConformanceRules {
       if (methodClassType != null && lhs.getJSType() != null) {
         JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
         if (ConformanceUtil.isLooseType(targetType)
-            || targetType.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
+            || targetType.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
           if (reportLooseTypeViolations
               && !ConformanceUtil.validateCall(
                   compiler, n.getParent(), r.restrictedCallType, isCallInvocation)) {
@@ -1953,7 +1953,7 @@ public final class ConformanceRules {
       if (type == null) {
         return false;
       }
-      if (type.isEquivalentTo(domHelperType)) {
+      if (type.equals(domHelperType)) {
         return true;
       }
       return false;

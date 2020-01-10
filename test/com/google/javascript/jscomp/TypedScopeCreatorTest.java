@@ -1339,8 +1339,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("function Foo() {}; Foo.bar;");
     ObjectType foo = (ObjectType) globalScope.getVar("Foo").getType();
     assertThat(foo.hasProperty("bar")).isFalse();
-    assertType(foo.getPropertyType("bar"))
-        .isStructurallyEqualTo(registry.getNativeType(UNKNOWN_TYPE));
+    assertType(foo.getPropertyType("bar")).isEqualTo(registry.getNativeType(UNKNOWN_TYPE));
   }
 
   @Test
@@ -1656,8 +1655,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @enum */ var FooAlias = Foo; var f = FooAlias;");
 
     assertThat(registry.getType(null, "FooAlias").toString()).isEqualTo("Foo<number>");
-    assertType(registry.getType(null, "Foo"))
-        .isStructurallyEqualTo(registry.getType(null, "FooAlias"));
+    assertType(registry.getType(null, "Foo")).isEqualTo(registry.getType(null, "FooAlias"));
 
     ObjectType f = (ObjectType) findNameType("f", globalScope);
     assertThat(f.hasProperty("BAR")).isTrue();
@@ -1672,7 +1670,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertThat(registry.getType(null, "goog.FooAlias").toString()).isEqualTo("goog.Foo<number>");
     assertType(registry.getType(null, "goog.FooAlias"))
-        .isStructurallyEqualTo(registry.getType(null, "goog.Foo"));
+        .isEqualTo(registry.getType(null, "goog.Foo"));
   }
 
   @Test
@@ -1716,8 +1714,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(goog.getPropertyType("foo").toString()).isEqualTo("function(number): ?");
     assertThat(goog.isPropertyTypeDeclared("foo")).isTrue();
 
-    assertType(goog.getPropertyType("foo"))
-        .isStructurallyEqualTo(globalScope.getVar("goog.foo").getType());
+    assertType(goog.getPropertyType("foo")).isEqualTo(globalScope.getVar("goog.foo").getType());
   }
 
   @Test
@@ -1733,8 +1730,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(goog.getPropertyType("foo").toString()).isEqualTo("function(number): ?");
     assertThat(goog.isPropertyTypeDeclared("foo")).isTrue();
 
-    assertType(goog.getPropertyType("foo"))
-        .isStructurallyEqualTo(lastLocalScope.getVar("goog.foo").getType());
+    assertType(goog.getPropertyType("foo")).isEqualTo(lastLocalScope.getVar("goog.foo").getType());
   }
 
   @Test
@@ -2027,12 +2023,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType instanceType = (ObjectType) findNameType("x", globalScope);
     assertThat(instanceType.getPropertiesCount())
         .isEqualTo(getNativeObjectType(OBJECT_TYPE).getPropertiesCount() + 3);
-    assertType(instanceType.getPropertyType("m1"))
-        .isStructurallyEqualTo(getNativeType(NUMBER_TYPE));
-    assertType(instanceType.getPropertyType("m2"))
-        .isStructurallyEqualTo(getNativeType(BOOLEAN_TYPE));
-    assertType(instanceType.getPropertyType("m3"))
-        .isStructurallyEqualTo(getNativeType(STRING_TYPE));
+    assertType(instanceType.getPropertyType("m1")).isEqualTo(getNativeType(NUMBER_TYPE));
+    assertType(instanceType.getPropertyType("m2")).isEqualTo(getNativeType(BOOLEAN_TYPE));
+    assertType(instanceType.getPropertyType("m3")).isEqualTo(getNativeType(STRING_TYPE));
 
     // Verify the prototype chain.
     // This is a special case where we want the anonymous object to
@@ -2226,7 +2219,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(iPrototype.getPropertyType("baz").toString())
         .isEqualTo("function(this:I): undefined");
 
-    assertType(globalScope.getVar("I.prototype").getType()).isStructurallyEqualTo(iPrototype);
+    assertType(globalScope.getVar("I.prototype").getType()).isEqualTo(iPrototype);
   }
 
   @Test
@@ -2474,7 +2467,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         (FunctionType) (globalScope.getVar("Window").getType());
     assertThat(x.toString()).isEqualTo("global this");
     assertThat(x.isSubtypeOf(windowCtor.getInstanceType())).isTrue();
-    assertThat(x.isEquivalentTo(windowCtor.getInstanceType())).isFalse();
+    assertThat(x.equals(windowCtor.getInstanceType())).isFalse();
     assertThat(x.hasProperty("alert")).isTrue();
   }
 
@@ -2490,7 +2483,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         (FunctionType) (globalScope.getVar("Window").getType());
     assertThat(x.toString()).isEqualTo("global this");
     assertThat(x.isSubtypeOf(windowCtor.getInstanceType())).isTrue();
-    assertThat(x.isEquivalentTo(windowCtor.getInstanceType())).isFalse();
+    assertThat(x.equals(windowCtor.getInstanceType())).isFalse();
     assertThat(x.hasProperty("alert")).isTrue();
   }
 
@@ -3169,8 +3162,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ var Foo = function() {};" +
         "/** @constructor */ var FooAlias = Foo;");
     assertThat(registry.getType(null, "FooAlias").toString()).isEqualTo("Foo");
-    assertType(registry.getType(null, "FooAlias"))
-        .isStructurallyEqualTo(registry.getType(null, "Foo"));
+    assertType(registry.getType(null, "FooAlias")).isEqualTo(registry.getType(null, "Foo"));
   }
 
   @Test
@@ -3181,7 +3173,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ goog.FooAlias = goog.Foo;");
     assertThat(registry.getType(null, "goog.FooAlias").toString()).isEqualTo("goog.Foo");
     assertType(registry.getType(null, "goog.FooAlias"))
-        .isStructurallyEqualTo(registry.getType(null, "goog.Foo"));
+        .isEqualTo(registry.getType(null, "goog.Foo"));
   }
 
   @Test
@@ -3595,8 +3587,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "Foo.prototype.baz = function() {};\n" +
         "bind(function() { var g = this; var f = this.baz(); }, new Foo());");
     assertThat(findNameType("g", lastLocalScope).toString()).isEqualTo("T");
-    assertThat(findNameType("g", lastLocalScope).isEquivalentTo(registry.getType(null, "Foo")))
-        .isTrue();
+    assertThat(findNameType("g", lastLocalScope).equals(registry.getType(null, "Foo"))).isTrue();
     assertThat(findNameType("f", lastLocalScope).toString()).isEqualTo("number");
   }
 

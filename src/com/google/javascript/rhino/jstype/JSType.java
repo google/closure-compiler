@@ -677,23 +677,9 @@ public abstract class JSType implements Serializable {
   }
 
   @Override
-  public boolean equals(@Nullable Object jsType) {
-    return (jsType instanceof JSType) && this.isEquivalentTo((JSType) jsType);
-  }
-
-  /** Checks if two types are equivalent. */
-  public final boolean isEquivalentTo(@Nullable JSType that) {
-    return this.isEquivalentTo(that, false);
-  }
-
-  public final boolean isEquivalentTo(@Nullable JSType that, boolean unused) {
-    return new EqualityChecker()
-        .setEqMethod(EqMethod.IDENTITY)
-        .check(this, that);
-  }
-
-  public static final boolean isEquivalent(@Nullable JSType typeA, @Nullable JSType typeB) {
-    return (typeA == null) ? (typeB == null) : typeA.isEquivalentTo(typeB);
+  public final boolean equals(@Nullable Object other) {
+    return (other instanceof JSType)
+        && new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this, (JSType) other);
   }
 
   /**
@@ -1077,7 +1063,7 @@ public abstract class JSType implements Serializable {
    */
   @SuppressWarnings("AmbiguousMethodReference")
   static JSType getLeastSupertype(JSType thisType, JSType thatType) {
-    boolean areEquivalent = thisType.isEquivalentTo(thatType);
+    boolean areEquivalent = thisType.equals(thatType);
     return areEquivalent ? thisType :
         filterNoResolvedType(
             thisType.registry.createUnionType(thisType, thatType));
@@ -1116,13 +1102,14 @@ public abstract class JSType implements Serializable {
       // See the comment in supAndInfHelper for more info on this.
       return thisType.toMaybeFunctionType().supAndInfHelper(
           thatType.toMaybeFunctionType(), false);
-    } else if (thisType.isEquivalentTo(thatType)) {
+    } else if (thisType.equals(thatType)) {
       return thisType;
     } else if (thisType.isUnknownType() || thatType.isUnknownType()) {
       // The greatest subtype with any unknown type is the universal
       // unknown type, unless the two types are equal.
-      return thisType.isEquivalentTo(thatType) ? thisType :
-          thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      return thisType.equals(thatType)
+          ? thisType
+          : thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else if (thisType.isUnionType()) {
       return UnionType.getGreatestSubtype(thisType.toMaybeUnionType(), thatType);
     } else if (thatType.isUnionType()) {
@@ -1474,15 +1461,13 @@ public abstract class JSType implements Serializable {
   /**
    * Resolve this type in the given scope.
    *
-   * The returned value must be equal to {@code this}, as defined by
-   * {@link #isEquivalentTo}. It may or may not be the same object. This method
-   * may modify the internal state of {@code this}, as long as it does
-   * so in a way that preserves Object equality.
+   * <p>The returned value must be equal to {@code this}, as defined by {@link #equals}. It may or
+   * may not be the same object. This method may modify the internal state of {@code this}, as long
+   * as it does so in a way that preserves Object equality.
    *
-   * For efficiency, we should only resolve a type once per compilation job.
-   * For incremental compilations, one compilation job may need the
-   * artifacts from a previous generation, so we will eventually need
-   * a generational flag instead of a boolean one.
+   * <p>For efficiency, we should only resolve a type once per compilation job. For incremental
+   * compilations, one compilation job may need the artifacts from a previous generation, so we will
+   * eventually need a generational flag instead of a boolean one.
    */
   public final JSType resolve(ErrorReporter reporter) {
     if (!this.isResolved()) {

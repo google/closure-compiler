@@ -242,8 +242,7 @@ public abstract class ChainableReverseAbstractInterpreter
       // create a subtype of MyEnum restricted by string. In any case,
       // this should catch the common case.
       JSType type = JSType.nullSafeResolveOrThrow(enumElementType.getPrimitiveType().visit(this));
-      if (type != null &&
-          enumElementType.getPrimitiveType().isEquivalentTo(type)) {
+      if (type != null && enumElementType.getPrimitiveType().equals(type)) {
         return enumElementType;
       } else {
         return type;

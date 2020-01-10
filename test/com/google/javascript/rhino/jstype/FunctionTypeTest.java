@@ -409,14 +409,14 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testIsEquivalentTo() {
+  public void testequals() {
     FunctionType type = FunctionType.builder(registry).build();
     assertThat(type.equals(null)).isFalse();
-    assertThat(type.isEquivalentTo(type)).isTrue();
+    assertThat(type.equals(type)).isTrue();
   }
 
   @Test
-  public void testIsEquivalentToParams() {
+  public void testequalsParams() {
     FunctionType oneNum =
         FunctionType.builder(registry)
             .withParamsNode(registry.createParameters(NUMBER_TYPE))
@@ -432,9 +432,9 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     Asserts.assertEquivalenceOperations(oneNum, oneNum);
     Asserts.assertEquivalenceOperations(optNum, optNum);
     Asserts.assertEquivalenceOperations(varNum, varNum);
-    assertThat(oneNum.isEquivalentTo(optNum)).isFalse();
-    assertThat(oneNum.isEquivalentTo(varNum)).isFalse();
-    assertThat(optNum.isEquivalentTo(varNum)).isFalse();
+    assertThat(oneNum.equals(optNum)).isFalse();
+    assertThat(oneNum.equals(varNum)).isFalse();
+    assertThat(optNum.equals(varNum)).isFalse();
   }
 
   @Test
@@ -452,8 +452,8 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
     // We currently do not consider function(T=, ...T) and function(...T)
     // equivalent. This may change.
-    assertThat(varNum.isEquivalentTo(optAndVarNum)).isFalse();
-    assertThat(optAndVarNum.isEquivalentTo(varNum)).isFalse();
+    assertThat(varNum.equals(optAndVarNum)).isFalse();
+    assertThat(optAndVarNum.equals(varNum)).isFalse();
   }
 
   @Test

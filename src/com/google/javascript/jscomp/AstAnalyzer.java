@@ -217,7 +217,7 @@ public class AstAnalyzer {
       if (type != null) {
         JSType nativeStringType =
             compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE);
-        if (type.isEquivalentTo(nativeStringType)) {
+        if (type.equals(nativeStringType)) {
           return true;
         }
       }

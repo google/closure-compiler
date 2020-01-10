@@ -68,7 +68,7 @@ public class Asserts {
     assertWithMessage("JSType#resolve should not affect object equality")
         .about(types())
         .that(resolvedType)
-        .isStructurallyEqualTo(type);
+        .isEqualTo(type);
     reporter.verifyHasEncounteredAllWarningsAndErrors();
     return resolvedType;
   }
@@ -79,7 +79,7 @@ public class Asserts {
     Iterator<T> aIterator = a.iterator();
     Iterator<S> bIterator = b.iterator();
     while (aIterator.hasNext()) {
-      assertType(bIterator.next()).isStructurallyEqualTo(aIterator.next());
+      assertType(bIterator.next()).isEqualTo(aIterator.next());
     }
   }
 
@@ -88,24 +88,24 @@ public class Asserts {
    * should have trivial solutions (getGreatestSubtype, isEquivalentTo, etc)
    */
   public static void assertEquivalenceOperations(JSType a, JSType b) {
-    assertType(a).isStructurallyEqualTo(a);
-    assertType(b).isStructurallyEqualTo(a);
-    assertType(b).isStructurallyEqualTo(b);
+    assertType(a).isEqualTo(a);
+    assertType(b).isEqualTo(a);
+    assertType(b).isEqualTo(b);
 
     Assert.assertTrue(a.isSubtypeOf(b));
     Assert.assertTrue(a.isSubtypeOf(a));
     Assert.assertTrue(b.isSubtypeOf(b));
     Assert.assertTrue(b.isSubtypeOf(a));
 
-    assertType(a.getGreatestSubtype(b)).isStructurallyEqualTo(a);
-    assertType(a.getGreatestSubtype(a)).isStructurallyEqualTo(a);
-    assertType(b.getGreatestSubtype(b)).isStructurallyEqualTo(a);
-    assertType(b.getGreatestSubtype(a)).isStructurallyEqualTo(a);
+    assertType(a.getGreatestSubtype(b)).isEqualTo(a);
+    assertType(a.getGreatestSubtype(a)).isEqualTo(a);
+    assertType(b.getGreatestSubtype(b)).isEqualTo(a);
+    assertType(b.getGreatestSubtype(a)).isEqualTo(a);
 
-    assertType(a.getLeastSupertype(b)).isStructurallyEqualTo(a);
-    assertType(a.getLeastSupertype(a)).isStructurallyEqualTo(a);
-    assertType(b.getLeastSupertype(b)).isStructurallyEqualTo(a);
-    assertType(b.getLeastSupertype(a)).isStructurallyEqualTo(a);
+    assertType(a.getLeastSupertype(b)).isEqualTo(a);
+    assertType(a.getLeastSupertype(a)).isEqualTo(a);
+    assertType(b.getLeastSupertype(b)).isEqualTo(a);
+    assertType(b.getLeastSupertype(a)).isEqualTo(a);
 
     Assert.assertTrue(a.canCastTo(b));
     Assert.assertTrue(a.canCastTo(a));

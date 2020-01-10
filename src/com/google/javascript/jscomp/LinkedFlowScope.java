@@ -152,7 +152,7 @@ class LinkedFlowScope implements FlowScope {
         if (declaredType == null
             || !inferredType.isSubtypeOf(declaredType)
             || declaredType.isSubtypeOf(inferredType)
-            || inferredType.isEquivalentTo(declaredType)) {
+            || inferredType.equals(declaredType)) {
           return this;
         }
       } else if (declaredType != null && !inferredType.isSubtypeOf(declaredType)) {

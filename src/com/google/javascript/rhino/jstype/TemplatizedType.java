@@ -169,7 +169,7 @@ public final class TemplatizedType extends ProxyObjectType {
 
   boolean wrapsSameRawType(JSType that) {
     return that.isTemplatizedType() && this.getReferencedTypeInternal()
-        .isEquivalentTo(
+        .equals(
             that.toMaybeTemplatizedType().getReferencedTypeInternal());
   }
 
@@ -197,7 +197,7 @@ public final class TemplatizedType extends ProxyObjectType {
     TemplatizedType that = rawThat.toMaybeTemplatizedType();
     checkNotNull(that);
 
-    if (this.isEquivalentTo(that)) {
+    if (this.equals(that)) {
       return this;
     }
 

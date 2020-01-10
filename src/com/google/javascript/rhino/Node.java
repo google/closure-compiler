@@ -47,7 +47,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -62,6 +61,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
@@ -503,7 +503,7 @@ public class Node implements Serializable {
       // '==' rather than 'equals' here to avoid doing unnecessary string equalities.
       return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
           && this.raw == ((TemplateLiteralSubstringNode) node).raw
-          && Objects.equal(this.cooked, ((TemplateLiteralSubstringNode) node).cooked));
+          && Objects.equals(this.cooked, ((TemplateLiteralSubstringNode) node).cooked));
     }
 
     @Override
@@ -1952,7 +1952,7 @@ public class Node implements Serializable {
       return false;
     }
 
-    if (compareType && !JSType.isEquivalent(getJSType(), node.getJSType())) {
+    if (compareType && !Objects.equals(getJSType(), node.getJSType())) {
       return false;
     }
 
@@ -1970,7 +1970,7 @@ public class Node implements Serializable {
     }
 
     for (Function<Node, Object> getter : PROP_GETTERS_FOR_EQUALITY) {
-      if (!Objects.equal(getter.apply(this), getter.apply(node))) {
+      if (!Objects.equals(getter.apply(this), getter.apply(node))) {
         return false;
       }
     }

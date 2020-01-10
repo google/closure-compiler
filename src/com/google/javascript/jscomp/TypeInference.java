@@ -1596,7 +1596,7 @@ class TypeInference
       FunctionType fnType = functionType.toMaybeFunctionType();
       n.setJSType(fnType.getReturnType());
       backwardsInferenceFromCallSite(n, fnType, scope);
-    } else if (functionType.isEquivalentTo(getNativeType(CHECKED_UNKNOWN_TYPE))) {
+    } else if (functionType.equals(getNativeType(CHECKED_UNKNOWN_TYPE))) {
       n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
     } else if (left.getJSType() != null && left.getJSType().isUnknownType()) {
       // TODO(lharker): do we also want to set this to unknown if the left's type is null? We would
@@ -2325,7 +2325,7 @@ class TypeInference
 
     if (propertyType == null) {
       return unknownType;
-    } else if (propertyType.isEquivalentTo(unknownType) && isLocallyInferred) {
+    } else if (propertyType.equals(unknownType) && isLocallyInferred) {
       // If the type has been checked in this scope,
       // then use CHECKED_UNKNOWN_TYPE instead to indicate that.
       return getNativeType(CHECKED_UNKNOWN_TYPE);

@@ -49,6 +49,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 
@@ -226,7 +227,7 @@ final class SubtypeChecker {
     }
 
     // Reflexive case.
-    if (this.areEqual(subtype, supertype)) {
+    if (Objects.equals(subtype, supertype)) {
       return true;
     }
 
@@ -501,8 +502,8 @@ final class SubtypeChecker {
   }
 
   private boolean isEnumSubtype(EnumType subtype, JSType supertype) {
-    return supertype.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))
-        || subtype.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE))
+    return supertype.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE))
+        || subtype.equals(registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE))
         || this.isSubtypeHelper(subtype, supertype);
   }
 
@@ -720,10 +721,6 @@ final class SubtypeChecker {
     return unwrapped != null && unwrapped.isNativeObjectType() ? unwrapped : null;
   }
 
-  private boolean areEqual(JSType left, JSType right) {
-    return left.isEquivalentTo(right, this.isUsingStructuralTyping);
-  }
-
   /** How to treat explicitly voidable properties for structural subtype checking. */
   private enum PropertyOptionality {
     /** Explicitly voidable properties are treated as optional. */
@@ -771,7 +768,7 @@ final class SubtypeChecker {
        * insufficient in the case of recursive parameterized types because new equivalent copies of
        * the type are generated on-the-fly to compute the types of various properties.
        */
-      return areEqual(this.left, that.left) && areEqual(this.right, that.right);
+      return Objects.equals(this.left, that.left) && Objects.equals(this.right, that.right);
     }
 
     CacheKey(JSType left, JSType right) {

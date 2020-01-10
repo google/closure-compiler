@@ -648,7 +648,7 @@ public abstract class ObjectType extends JSType implements Serializable {
         other != null;
         other = deeplyUnwrap(other.getImplicitPrototype())) {
       // The prototype should match exactly.
-      // NOTE: the use of "==" here rather than isEquivalentTo is deliberate.  This method
+      // NOTE: the use of "==" here rather than equals is deliberate.  This method
       // is very hot in the type checker and relying on identity improves performance of both
       // type checking/type inferrence and property disambiguation.
       if (JSType.areIdentical(unwrappedThis, other)) {

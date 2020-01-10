@@ -158,12 +158,12 @@ public class ChangeVerifier {
       return;
     }
     if (n.getChangeTime() > snapshot.getChangeTime()) {
-      if (isEquivalentToExcludingFunctions(n, snapshot)) {
+      if (equalsExcludingFunctions(n, snapshot)) {
         throw new IllegalStateException(
             passNameMsg + "unchanged scope marked as changed: " + getNameForNode(n));
       }
     } else {
-      if (!isEquivalentToExcludingFunctions(n, snapshot)) {
+      if (!equalsExcludingFunctions(n, snapshot)) {
         throw new IllegalStateException(
             passNameMsg + "changed scope not marked as changed: " + getNameForNode(n));
       }
@@ -187,11 +187,10 @@ public class ChangeVerifier {
   }
 
   /**
-   * @return Whether the two node are equivalent while ignoring
-   * differences any descendant functions differences.
+   * @return Whether the two node are equivalent while ignoring differences any descendant functions
+   *     differences.
    */
-  private static boolean isEquivalentToExcludingFunctions(
-      Node thisNode, Node thatNode) {
+  private static boolean equalsExcludingFunctions(Node thisNode, Node thatNode) {
     if (thisNode == null || thatNode == null) {
       return thisNode == null && thatNode == null;
     }
@@ -232,7 +231,7 @@ public class ChangeVerifier {
             return false;
           }
         }
-      } else if (!isEquivalentToExcludingFunctions(thisChild, thatChild)) {
+      } else if (!equalsExcludingFunctions(thisChild, thatChild)) {
         return false;
       }
       thisChild = thisChild.getNext();

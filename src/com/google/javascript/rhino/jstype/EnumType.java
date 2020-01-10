@@ -131,7 +131,7 @@ public class EnumType extends PrototypeObjectType {
     if (result != null) {
       return result;
     }
-    return this.isEquivalentTo(that) ? TRUE : FALSE;
+    return this.equals(that) ? TRUE : FALSE;
   }
 
   @Override

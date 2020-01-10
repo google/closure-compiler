@@ -2057,7 +2057,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       Node propNode,
       @Nullable Node objNode) {
     String propName = propNode.getString();
-    if (propType.isEquivalentTo(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
+    if (propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
       childType = childType.autobox();
       ObjectType objectType = ObjectType.cast(childType);
       if (objectType != null) {
@@ -2065,7 +2065,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // much stricter, and so that we can use hasProperty (which is much
         // faster in most cases).
         if (!objectType.hasProperty(propName)
-            || objectType.isEquivalentTo(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
+            || objectType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
           if (objectType instanceof EnumType) {
             report(getProp != null ? getProp : propNode, INEXISTENT_ENUM_ELEMENT, propName);
           } else {
@@ -2140,7 +2140,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       PropDefinitionKind kind,
       boolean strictReport) {
     String propName = propNode.getString();
-    boolean isObjectType = objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
+    boolean isObjectType = objectType.equals(getNativeType(OBJECT_TYPE));
     boolean lowConfidence = objectType.isUnknownType() || objectType.isAllType() || isObjectType;
 
     boolean isKnownToUnionMember = kind.equals(PropDefinitionKind.LOOSE_UNION);
@@ -2270,7 +2270,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Node constructor = n.getFirstChild();
     JSType type = getJSType(constructor).restrictByNotNullOrUndefined();
     if (!couldBeAConstructor(type)
-        || type.isEquivalentTo(typeRegistry.getNativeType(SYMBOL_OBJECT_FUNCTION_TYPE))) {
+        || type.equals(typeRegistry.getNativeType(SYMBOL_OBJECT_FUNCTION_TYPE))) {
       report(n, NOT_A_CONSTRUCTOR);
       ensureTyped(n);
       return;

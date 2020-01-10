@@ -2184,7 +2184,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           input,
           // declared iff there's an explicit supertype
           superClassCtor == null
-              || superClassCtor.getInstanceType().isEquivalentTo(getNativeType(OBJECT_TYPE)));
+              || superClassCtor.getInstanceType().equals(getNativeType(OBJECT_TYPE)));
     }
 
     /** Check if the given node is a property of a name in the global scope. */

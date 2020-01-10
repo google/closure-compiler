@@ -365,7 +365,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
             rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true)
                 .getSlot("a")
                 .getType())
-        .isStructurallyEqualTo(trueType);
+        .isEqualTo(trueType);
 
     // falseScope
     JSType aType = rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
@@ -373,7 +373,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     if (falseType == null) {
       assertThat(aType).isNull();
     } else {
-      assertType(aType).isStructurallyEqualTo(falseType);
+      assertType(aType).isEqualTo(falseType);
     }
   }
 }

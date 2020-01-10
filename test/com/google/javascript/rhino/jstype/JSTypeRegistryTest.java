@@ -95,55 +95,55 @@ public class JSTypeRegistryTest {
   @Test
   public void testGetBuiltInType_boolean() {
     assertType(registry.getType(null, "boolean"))
-        .isStructurallyEqualTo(registry.getNativeType(JSTypeNative.BOOLEAN_TYPE));
+        .isEqualTo(registry.getNativeType(JSTypeNative.BOOLEAN_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_iterable() {
     assertType(registry.getGlobalType("Iterable"))
-        .isStructurallyEqualTo(registry.getNativeType(ITERABLE_TYPE));
+        .isEqualTo(registry.getNativeType(ITERABLE_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_iterator() {
     assertType(registry.getGlobalType("Iterator"))
-        .isStructurallyEqualTo(registry.getNativeType(ITERATOR_TYPE));
+        .isEqualTo(registry.getNativeType(ITERATOR_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_generator() {
     assertType(registry.getGlobalType("Generator"))
-        .isStructurallyEqualTo(registry.getNativeType(GENERATOR_TYPE));
+        .isEqualTo(registry.getNativeType(GENERATOR_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_async_iterable() {
     assertType(registry.getGlobalType("AsyncIterable"))
-        .isStructurallyEqualTo(registry.getNativeType(ASYNC_ITERABLE_TYPE));
+        .isEqualTo(registry.getNativeType(ASYNC_ITERABLE_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_async_iterator() {
     assertType(registry.getGlobalType("AsyncIterator"))
-        .isStructurallyEqualTo(registry.getNativeType(ASYNC_ITERATOR_TYPE));
+        .isEqualTo(registry.getNativeType(ASYNC_ITERATOR_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_async_generator() {
     assertType(registry.getGlobalType("AsyncGenerator"))
-        .isStructurallyEqualTo(registry.getNativeType(ASYNC_GENERATOR_TYPE));
+        .isEqualTo(registry.getNativeType(ASYNC_GENERATOR_TYPE));
   }
 
   @Test
   public void testGetBuildInType_iTemplateArray() {
     assertType(registry.getGlobalType("ITemplateArray"))
-        .isStructurallyEqualTo(registry.getNativeType(I_TEMPLATE_ARRAY_TYPE));
+        .isEqualTo(registry.getNativeType(I_TEMPLATE_ARRAY_TYPE));
   }
 
   @Test
   public void testGetBuiltInType_Promise() {
     ObjectType promiseType = registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE);
-    assertType(registry.getGlobalType("Promise")).isStructurallyEqualTo(promiseType);
+    assertType(registry.getGlobalType("Promise")).isEqualTo(promiseType);
 
     // Test that it takes one parameter of type
     // function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?
@@ -162,12 +162,12 @@ public class JSTypeRegistryTest {
     JSType type = registry.createAnonymousObjectType(null);
     String name = "Foo";
     registry.declareType(null, name, type);
-    assertType(registry.getType(null, name)).isStructurallyEqualTo(type);
+    assertType(registry.getType(null, name)).isEqualTo(type);
 
     // Ensure different instances are independent.
     JSTypeRegistry typeRegistry2 = new JSTypeRegistry(null);
     assertThat(typeRegistry2.getType(null, name)).isEqualTo(null);
-    assertType(registry.getType(null, name)).isStructurallyEqualTo(type);
+    assertType(registry.getType(null, name)).isEqualTo(type);
   }
 
   @Test

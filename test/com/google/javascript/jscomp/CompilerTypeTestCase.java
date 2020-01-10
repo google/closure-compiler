@@ -190,11 +190,11 @@ abstract class CompilerTypeTestCase {
   }
 
   protected final void assertTypeEquals(JSType a, JSType b) {
-    assertType(b).isStructurallyEqualTo(a);
+    assertType(b).isEqualTo(a);
   }
 
   protected final void assertTypeEquals(String msg, JSType a, JSType b) {
-    assertWithMessage(msg).about(types()).that(b).isStructurallyEqualTo(a);
+    assertWithMessage(msg).about(types()).that(b).isEqualTo(a);
   }
 
   /** Resolves a type expression, expecting the given warnings. */

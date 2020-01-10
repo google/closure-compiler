@@ -128,11 +128,11 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
 
     JSType aSupC = registry.createUnionType(recordA, recordC);
 
-    assertType(recordA.getGreatestSubtype(recordC)).isStructurallyEqualTo(aInfC);
-    assertType(recordA.getLeastSupertype(recordC)).isStructurallyEqualTo(aSupC);
+    assertType(recordA.getGreatestSubtype(recordC)).isEqualTo(aInfC);
+    assertType(recordA.getLeastSupertype(recordC)).isEqualTo(aSupC);
 
-    assertType(proxyRecordA.getGreatestSubtype(proxyRecordC)).isStructurallyEqualTo(aInfC);
-    assertType(proxyRecordA.getLeastSupertype(proxyRecordC)).isStructurallyEqualTo(aSupC);
+    assertType(proxyRecordA.getGreatestSubtype(proxyRecordC)).isEqualTo(aInfC);
+    assertType(proxyRecordA.getLeastSupertype(proxyRecordC)).isEqualTo(aSupC);
   }
 
   @Test

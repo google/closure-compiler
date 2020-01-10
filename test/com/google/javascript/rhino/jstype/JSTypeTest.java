@@ -3215,14 +3215,14 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
         assertWithMessage(String.format("equals(%s, %s)", typeA, typeB))
-            .that(typeA.isEquivalentTo(typeB))
+            .that(typeA.equals(typeB))
             .isEqualTo(i == j);
 
         // For this particular set of functions, the functions are subtypes
         // of each other iff they have the same "this" type.
         assertWithMessage(String.format("isSubtype(%s, %s)", typeA, typeB))
             .that(typeA.isSubtype(typeB))
-            .isEqualTo(typeA.getTypeOfThis().isEquivalentTo(typeB.getTypeOfThis()));
+            .isEqualTo(typeA.getTypeOfThis().equals(typeB.getTypeOfThis()));
 
         if (i == j) {
           assertTypeEquals(typeA, typeA.getLeastSupertype(typeB));
@@ -3295,7 +3295,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         FunctionType typeA = allFunctions.get(i);
         FunctionType typeB = allFunctions.get(j);
         assertWithMessage(String.format("equals(%s, %s)", typeA, typeB))
-            .that(typeA.isEquivalentTo(typeB))
+            .that(typeA.equals(typeB))
             .isEqualTo(i == j);
 
         // TODO(nicksantos): This formulation of least subtype and greatest
@@ -4579,7 +4579,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
                 typeB,
                 aOnB,
                 bOnA)
-            .that(aOnB.isEquivalentTo(bOnA))
+            .that(aOnB.equals(bOnA))
             .isTrue();
       }
     }
@@ -4615,7 +4615,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
                 typeB,
                 aOnB,
                 bOnA)
-            .that(aOnB.isEquivalentTo(bOnA))
+            .that(aOnB.equals(bOnA))
             .isTrue();
       }
     }
@@ -4733,11 +4733,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           "Bad type annotation. Unknown type type1", "Bad type annotation. Unknown type type1");
       NamedType a = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
       NamedType b = registry.createNamedType(EMPTY_SCOPE, "type1", "source", 1, 0);
-      assertThat(a.isEquivalentTo(b)).isTrue();
+      assertThat(a.equals(b)).isTrue();
 
       // test == instance of referenced type
-      assertThat(namedGoogBar.isEquivalentTo(googBar.getInstanceType())).isTrue();
-      assertThat(googBar.getInstanceType().isEquivalentTo(namedGoogBar)).isTrue();
+      assertThat(namedGoogBar.equals(googBar.getInstanceType())).isTrue();
+      assertThat(googBar.getInstanceType().equals(namedGoogBar)).isTrue();
     }
   }
 
@@ -5066,7 +5066,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testConstructorWithArgSubtypeChain() throws Exception {
-
     FunctionType googBarArgConstructor =
         withOpenRegistry(
             () ->
@@ -5421,8 +5420,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     verifySubtypeChain(typeChain, true);
   }
 
-  public void verifySubtypeChain(List<JSType> typeChain,
-                                 boolean checkSubtyping) throws Exception {
+  @SuppressWarnings("SelfEquals")
+  public void verifySubtypeChain(List<JSType> typeChain, boolean checkSubtyping) throws Exception {
     // Ugh. This wouldn't require so much copy-and-paste if we had a functional
     // programming language.
     for (int i = 0; i < typeChain.size(); i++) {
@@ -5436,14 +5435,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         JSType proxyTypeJ = new ProxyObjectType(registry, typeJ);
 
         if (i == j) {
-          assertWithMessage("%s should equal itself", typeI)
-              .that(typeI.isEquivalentTo(typeI))
-              .isTrue();
+          assertWithMessage("%s should equal itself", typeI).that(typeI.equals(typeI)).isTrue();
           assertWithMessage("Named %s should equal itself", typeI)
-              .that(namedTypeI.isEquivalentTo(namedTypeI))
+              .that(namedTypeI.equals(namedTypeI))
               .isTrue();
           assertWithMessage("Proxy %s should equal itself", typeI)
-              .that(proxyTypeI.isEquivalentTo(proxyTypeI))
+              .that(proxyTypeI.equals(proxyTypeI))
               .isTrue();
         } else {
           boolean shouldCheck = true;
@@ -5459,20 +5456,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             if (constructorI != null && constructorJ != null
                 && constructorI.isStructuralInterface()
                 && constructorJ.isStructuralInterface()) {
-              if (constructorI.isEquivalentTo(constructorJ)) {
+              if (constructorI.equals(constructorJ)) {
                 shouldCheck = false;
               }
             }
           }
           if (shouldCheck) {
             assertWithMessage(typeI + " should not equal " + typeJ)
-                .that(typeI.isEquivalentTo(typeJ))
+                .that(typeI.equals(typeJ))
                 .isFalse();
             assertWithMessage("Named " + typeI + " should not equal " + typeJ)
-                .that(namedTypeI.isEquivalentTo(namedTypeJ))
+                .that(namedTypeI.equals(namedTypeJ))
                 .isFalse();
             assertWithMessage("Proxy " + typeI + " should not equal " + typeJ)
-                .that(proxyTypeI.isEquivalentTo(proxyTypeJ))
+                .that(proxyTypeI.equals(proxyTypeJ))
                 .isFalse();
           }
         }
@@ -6392,7 +6389,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertType(firstType).isNotSameInstanceAs(secondType);
     assertType(firstType).isEqualTo(secondType);
-    assertType(firstType).isStructurallyEqualTo(secondType);
+    assertType(firstType).isEqualTo(secondType);
   }
 
   @Test
@@ -6412,7 +6409,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // These are not equal but are structurally equivalent
     assertType(firstType).isNotEqualTo(secondType);
-    assertType(firstType).isNotStructurallyEqualTo(secondType);
   }
 
   @Test
@@ -6428,7 +6424,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // These are neither equal nor structurally equivalent because the second type is not a
     // structural type.
     assertType(firstType).isNotEqualTo(secondType);
-    assertType(firstType).isNotStructurallyEqualTo(secondType);
 
     // The second type is a subtype of the first type but not vice versa because only the first type
     // is structural.

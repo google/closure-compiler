@@ -65,12 +65,12 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     assertThat(arrOfNumber.isSubtype(ARRAY_TYPE)).isTrue();
     assertThat(ARRAY_TYPE.isSubtypeOf(arrOfNumber)).isTrue();
 
-    assertThat(arrOfString.isEquivalentTo(createTemplatizedType(ARRAY_TYPE, STRING_TYPE))).isTrue();
+    assertThat(arrOfString.equals(createTemplatizedType(ARRAY_TYPE, STRING_TYPE))).isTrue();
 
-    assertThat(arrOfString.isEquivalentTo(ARRAY_TYPE)).isFalse();
-    assertThat(arrOfString.isEquivalentTo(ARRAY_TYPE)).isFalse();
-    assertThat(arrOfString.isEquivalentTo(arrOfNumber)).isFalse();
-    assertThat(arrOfNumber.isEquivalentTo(arrOfString)).isFalse();
+    assertThat(arrOfString.equals(ARRAY_TYPE)).isFalse();
+    assertThat(arrOfString.equals(ARRAY_TYPE)).isFalse();
+    assertThat(arrOfString.equals(arrOfNumber)).isFalse();
+    assertThat(arrOfNumber.equals(arrOfString)).isFalse();
   }
 
   @Test

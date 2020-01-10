@@ -1074,7 +1074,7 @@ public class JSTypeRegistry implements Serializable {
     while (!stackA.isEmpty() && !stackB.isEmpty()) {
       ObjectType currentA = stackA.remove(stackA.size() - 1);
       ObjectType currentB = stackB.remove(stackB.size() - 1);
-      if (currentA.isEquivalentTo(currentB)) {
+      if (currentA.equals(currentB)) {
         result = currentA;
       } else {
         return result;

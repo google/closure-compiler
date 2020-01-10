@@ -441,7 +441,7 @@ public class UnionType extends JSType {
    * @return {@code true} if the alternate is in the union
    */
   public boolean contains(JSType type) {
-    return anyTypeMatches(type::isEquivalentTo, this);
+    return anyTypeMatches(type::equals, this);
   }
 
   /**
@@ -776,7 +776,7 @@ public class UnionType extends JSType {
             || current.isNoResolvedType()
             || alternate.hasAnyTemplateTypes()
             || current.hasAnyTemplateTypes()) {
-          if (alternate.isEquivalentTo(current, false)) {
+          if (alternate.equals(current)) {
             // Alternate is unnecessary.
             return this;
           }
@@ -824,7 +824,7 @@ public class UnionType extends JSType {
 
             if (templatizedCurrent.wrapsSameRawType(templatizedAlternate)) {
 
-              if (current.isEquivalentTo(alternate)) {
+              if (current.equals(alternate)) {
                 // case 8
                 return this;
               } else {

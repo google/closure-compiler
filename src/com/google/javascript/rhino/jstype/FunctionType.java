@@ -62,6 +62,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -786,7 +787,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     if ("prototype".equals(name)) {
       ObjectType objType = type.toObjectType();
       if (objType != null) {
-        if (prototypeSlot != null && objType.isEquivalentTo(prototypeSlot.getType())) {
+        if (prototypeSlot != null && objType.equals(prototypeSlot.getType())) {
           return true;
         }
         setPrototypeBasedOn(objType, propertyNode);
@@ -826,7 +827,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     // inf(A, B) is always the bottom function type.
     checkNotNull(that);
 
-    if (isEquivalentTo(that)) {
+    if (equals(that)) {
       return this;
     }
 
@@ -859,9 +860,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     // The function instance type is a special case
     // that lives above the rest of the lattice.
     JSType functionInstance = registry.getNativeType(JSTypeNative.FUNCTION_TYPE);
-    if (functionInstance.isEquivalentTo(that)) {
+    if (functionInstance.equals(that)) {
       return leastSuper ? that : this;
-    } else if (functionInstance.isEquivalentTo(this)) {
+    } else if (functionInstance.equals(this)) {
       return leastSuper ? this : that;
     }
 
@@ -895,7 +896,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
             : call.getReturnType().getGreatestSubtype(other.call.getReturnType());
 
     JSType newTypeOfThis = null;
-    if (isEquivalent(typeOfThis, other.typeOfThis)) {
+    if (Objects.equals(typeOfThis, other.typeOfThis)) {
       newTypeOfThis = typeOfThis;
     } else {
       JSType maybeNewTypeOfThis =

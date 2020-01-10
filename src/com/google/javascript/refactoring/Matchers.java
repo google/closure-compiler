@@ -284,7 +284,8 @@ public final class Matchers {
    */
   public static Matcher enumDefinitionOfType(final String type) {
     return new Matcher() {
-      @Override public boolean matches(Node node, NodeMetadata metadata) {
+      @Override
+      public boolean matches(Node node, NodeMetadata metadata) {
         JSType providedJsType = getJsType(metadata, type);
         if (providedJsType == null) {
           return false;
@@ -292,8 +293,9 @@ public final class Matchers {
         providedJsType = providedJsType.restrictByNotNullOrUndefined();
 
         JSType jsType = node.getJSType();
-        return jsType != null && jsType.isEnumType() && providedJsType.isEquivalentTo(
-            jsType.toMaybeEnumType().getElementsType().getPrimitiveType());
+        return jsType != null
+            && jsType.isEnumType()
+            && providedJsType.equals(jsType.toMaybeEnumType().getElementsType().getPrimitiveType());
       }
     };
   }
@@ -350,7 +352,7 @@ public final class Matchers {
         return jsDoc != null
             && jsDoc.hasType()
             && jsType != null
-            && providedJsType.isEquivalentTo(jsType.restrictByNotNullOrUndefined());
+            && providedJsType.equals(jsType.restrictByNotNullOrUndefined());
       }
     };
   }
@@ -409,12 +411,12 @@ public final class Matchers {
   }
 
   private static boolean areTypesEquivalentIgnoringGenerics(JSType a, JSType b) {
-    boolean equivalent = a.isEquivalentTo(b);
+    boolean equivalent = a.equals(b);
     if (equivalent) {
       return true;
     }
     if (a.isTemplatizedType()) {
-      return a.toMaybeTemplatizedType().getReferencedType().isEquivalentTo(b);
+      return a.toMaybeTemplatizedType().getReferencedType().equals(b);
     }
     return false;
   }

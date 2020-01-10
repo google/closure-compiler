@@ -729,8 +729,8 @@ class TypeValidator implements Serializable {
     }
     if (declaredSuper != null
         && !(superObject instanceof UnknownType)
-        && !declaredSuper.isEquivalentTo(superObject)) {
-      if (declaredSuper.isEquivalentTo(getNativeType(OBJECT_TYPE))) {
+        && !declaredSuper.equals(superObject)) {
+      if (declaredSuper.equals(getNativeType(OBJECT_TYPE))) {
         registerMismatch(
             superObject,
             declaredSuper,
@@ -773,7 +773,7 @@ class TypeValidator implements Serializable {
       FunctionType registeredSuperCtor = subCtor.getSuperClassConstructor();
       if (registeredSuperCtor != null) {
         ObjectType registeredSuperInstance = registeredSuperCtor.getInstanceType();
-        if (!astSuperInstance.isEquivalentTo(registeredSuperInstance)) {
+        if (!astSuperInstance.equals(registeredSuperInstance)) {
           mismatch(
               n,
               "mismatch in declaration of superclass type",

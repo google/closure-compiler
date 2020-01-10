@@ -90,16 +90,8 @@ public final class TypeSubject extends Subject {
     this.checkEqualityAgainst((JSType) provided, true);
   }
 
-  public void isStructurallyEqualTo(@Nullable JSType provided) {
-    this.isEqualTo(provided);
-  }
-
   public void isNotEqualTo(@Nullable JSType provided) {
     this.checkEqualityAgainst(provided, false);
-  }
-
-  public void isNotStructurallyEqualTo(@Nullable JSType provided) {
-    this.isNotEqualTo(provided);
   }
 
   public void isNumber() {
