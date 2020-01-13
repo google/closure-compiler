@@ -720,12 +720,16 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     deferredSetTypes.add(new DeferredSetType(node, type));
   }
 
-  void finishScopes() {
+  /** Needs to run pre-type-resolution to handle weak module imports */
+  void resolveWeakImportsPreResolution() {
     // Declare goog.module type requires in scope.
     for (WeakModuleImport weakImport : weakImports) {
       weakImport.resolve();
     }
+  }
 
+  /** Undo resolved type chains */
+  void undoTypeAliasChains() {
     // Resolve types and attach them to nodes.
     for (DeferredSetType deferred : deferredSetTypes) {
       deferred.resolve();

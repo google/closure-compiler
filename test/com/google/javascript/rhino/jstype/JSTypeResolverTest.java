@@ -293,6 +293,19 @@ public final class JSTypeResolverTest {
     assertThrows(Exception.class, closer::close);
   }
 
+  @Test
+  public void types_cannotBeResolved_whileOpen() {
+    try (JSTypeResolver.Closer closer = this.resolver.openForDefinition()) {
+      assertThrows(
+          Exception.class,
+          () ->
+              new CustomTypeBuilder()
+                  .setCtor((jstype) -> resolver.resolveIfClosed(jstype, jstype.getTypeClass()))
+                  .build()
+                  .resolve(registry.getErrorReporter()));
+    }
+  }
+
   private final class CustomTypeBuilder {
     private Consumer<JSType> ctor = (t) -> {};
     private Consumer<JSType> resolve = (t) -> {};

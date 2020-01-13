@@ -100,14 +100,12 @@ class TypeInferencePass {
 
       new NodeTraversal(compiler, new FirstScopeBuildingCallback(), scopeCreator)
           .traverseWithScope(inferenceRoot, this.topScope);
-
-      scopeCreator.finishScopes();
+      scopeCreator.resolveWeakImportsPreResolution();
     }
+    scopeCreator.undoTypeAliasChains();
 
-    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
-      new NodeTraversal(compiler, new SecondScopeBuildingCallback(), scopeCreator)
-          .traverseWithScope(inferenceRoot, this.topScope);
-    }
+    new NodeTraversal(compiler, new SecondScopeBuildingCallback(), scopeCreator)
+        .traverseWithScope(inferenceRoot, this.topScope);
 
     return this.topScope;
   }

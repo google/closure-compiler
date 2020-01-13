@@ -1470,6 +1470,7 @@ public abstract class JSType implements Serializable {
    * eventually need a generational flag instead of a boolean one.
    */
   public final JSType resolve(ErrorReporter reporter) {
+    registry.getResolver().assertLegalToResolveTypes();
     if (!this.isResolved()) {
       /**
        * Prevent infinite recursion in cyclically defined types.

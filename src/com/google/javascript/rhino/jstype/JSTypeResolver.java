@@ -207,4 +207,15 @@ public final class JSTypeResolver implements Serializable {
   private void doResolve(JSType type) {
     type.resolve(this.registry.getErrorReporter());
   }
+
+  /**
+   * Asserts that it's legal to call {@link JSType#resolve}
+   *
+   * <p>The intent is to enforce that while a type is being resolved, any new types synthesized will
+   * be immediately resolved.
+   */
+  void assertLegalToResolveTypes() {
+    checkState(
+        !this.state.equals(State.OPEN), "Types cannot be resolved while the registry is open");
+  }
 }

@@ -6736,17 +6736,15 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "/** @extends {Parent} */",
             "class Middle extends mixin() {}",
             "class Parent {}"));
-
+    NamedType namedMiddleType;
     try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
-      NamedType namedMiddleType = registry.createNamedType(globalScope, "Middle", null, -1, -1);
+      namedMiddleType = registry.createNamedType(globalScope, "Middle", null, -1, -1);
 
       assertThat(namedMiddleType.isResolved()).isFalse();
       assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    } // types are resolved here
 
-      namedMiddleType.resolveOrThrow();
-
-      assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
-    }
+    assertThat(namedMiddleType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
   }
 
   @Test

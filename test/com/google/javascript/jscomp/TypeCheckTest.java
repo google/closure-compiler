@@ -14061,13 +14061,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testInheritanceCheck14() {
-    testClosureTypes(
-        "var goog = {};\n" +
-        "/** @constructor\n @extends {goog.Missing} */\n" +
-        "goog.Super = function() {};\n" +
-        "/** @constructor\n @extends {goog.Super} */function Sub() {};" +
-        "/** @override */Sub.prototype.foo = function() {};",
-        "Bad type annotation. Unknown type goog.Missing");
+    testClosureTypesMultipleWarnings(
+        lines(
+            "var goog = {};",
+            "/** @constructor\n @extends {goog.Missing} */",
+            "goog.Super = function() {};",
+            "/** @constructor\n @extends {goog.Super} */function Sub() {};",
+            "/** @override */ Sub.prototype.foo = function() {};"),
+        ImmutableList.of(
+            "Bad type annotation. Unknown type goog.Missing",
+            "Could not resolve type in @extends tag of Sub"));
   }
 
   @Test
@@ -24085,6 +24088,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "/** @const */ var ns = {};", //
             "var /** typeof ns */ x = {};"),
+        lines(
+            "initializing variable", //
+            "found   : {}",
+            "required: {}"));
+  }
+
+  @Test
+  public void testTypeofType_namespaceForwardReferenceMismatch() {
+    testTypes(
+        lines(
+            "var /** typeof ns */ x = {};", //
+            "/** @const */ var ns = {};"),
         lines(
             "initializing variable", //
             "found   : {}",

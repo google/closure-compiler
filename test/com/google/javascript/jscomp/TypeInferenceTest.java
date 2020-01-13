@@ -183,9 +183,10 @@ public final class TypeInferenceTest {
   private void parseAndRunTypeInference(Node root, Node cfgRoot) {
     this.closer.close();
 
+    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
+    TypedScope assumedScope;
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
       // Create the scope with the assumptions.
-      TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
       // Also populate a map allowing us to look up labeled statements later.
       labeledStatementMap = new HashMap<>();
       new NodeTraversal(
@@ -208,11 +209,13 @@ public final class TypeInferenceTest {
               },
               scopeCreator)
           .traverse(root);
-      TypedScope assumedScope = scopeCreator.createScope(cfgRoot);
+      assumedScope = scopeCreator.createScope(cfgRoot);
       for (Map.Entry<String, JSType> entry : assumptions.entrySet()) {
         assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
       }
-      scopeCreator.finishScopes();
+      scopeCreator.resolveWeakImportsPreResolution();
+    }
+    scopeCreator.undoTypeAliasChains();
       // Create the control graph.
       ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
       cfa.process(null, cfgRoot);
@@ -235,7 +238,6 @@ public final class TypeInferenceTest {
       } else {
         returnScope = rtnState.getIn();
       }
-    }
 
     this.closer = this.registry.getResolver().openForDefinition();
   }
