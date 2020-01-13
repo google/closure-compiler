@@ -200,4 +200,22 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     assertThat(recordB.isSubtypeOf(recordC)).isTrue();
     assertThat(recordA.isSubtypeOf(recordC)).isTrue();
   }
+
+  @Test
+  public void testEquality_onlyCompares_ownProperties() {
+    // Given
+    RecordType recordA = //
+        (RecordType) new RecordTypeBuilder(registry).addProperty("a", NUMBER_TYPE, null).build();
+    RecordType recordB =
+        (RecordType)
+            new RecordTypeBuilder(registry)
+                .addProperty("a", NUMBER_TYPE, null)
+                .addProperty("toString", OBJECT_TYPE.getPropertyType("toString"), null)
+                .build();
+
+    assertType(recordA.getPropertyType("toString")).isEqualTo(recordB.getPropertyType("toString"));
+
+    // Then
+    assertType(recordA).isNotEqualTo(recordB);
+  }
 }
