@@ -48,6 +48,7 @@ final class TypeStringBuilder implements Appendable {
 
   private final StringBuilder builder = new StringBuilder();
   private final boolean isForAnnotations;
+  private String indentation = "";
 
   TypeStringBuilder(boolean isForAnnotations) {
     this.isForAnnotations = isForAnnotations;
@@ -90,6 +91,19 @@ final class TypeStringBuilder implements Appendable {
       this.append("!");
     }
     return this.append(type);
+  }
+
+  TypeStringBuilder breakLineAndIndent() {
+    this.builder.append("\n").append(this.indentation);
+    return this;
+  }
+
+  TypeStringBuilder indent(Runnable cb) {
+    String lastIndent = this.indentation;
+    this.indentation = lastIndent + "  ";
+    cb.run();
+    this.indentation = lastIndent;
+    return this;
   }
 
   String build() {

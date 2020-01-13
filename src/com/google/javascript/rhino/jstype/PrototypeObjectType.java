@@ -303,52 +303,58 @@ public class PrototypeObjectType extends ObjectType {
       sb.append(sb.isForAnnotations() ? getNormalizedReferenceName() : getReferenceName());
       return;
     }
-    if (!prettyPrint) {
+
+    if (!this.prettyPrint) {
       sb.append(sb.isForAnnotations() ? "?" : "{...}");
       return;
     }
     // Don't pretty print recursively.
-    prettyPrint = false;
+    this.prettyPrint = false;
 
     // Use a tree set so that the properties are sorted.
     Set<String> propertyNames = new TreeSet<>();
-    for (ObjectType current = this;
-        current != null && !current.isNativeObjectType()
-            && propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;
-        current = current.getImplicitPrototype()) {
+    for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
+      if (current.isNativeObjectType() || propertyNames.size() > MAX_PRETTY_PRINTED_PROPERTIES) {
+        break;
+      }
+
       propertyNames.addAll(current.getOwnPropertyNames());
     }
 
-    sb.append("{");
-    boolean useNewlines = !sb.isForAnnotations() && propertyNames.size() > 2;
+    boolean multiline = !sb.isForAnnotations() && propertyNames.size() > 2;
+    sb.append("{")
+        .indent(
+            () -> {
+              if (multiline) {
+                sb.breakLineAndIndent();
+              }
 
-    int i = 0;
-    for (String property : propertyNames) {
-      if (i > 0) {
-        sb.append(",");
-      }
-      if (useNewlines) {
-        sb.append("\n  ");
-      } else if (i > 0) {
-        sb.append(" ");
-      }
+              int i = 0;
+              for (String property : propertyNames) {
+                i++;
 
-      sb.append(property).append(": ");
-      sb.appendNonNull(this.getPropertyType(property));
+                if (!sb.isForAnnotations() && i > MAX_PRETTY_PRINTED_PROPERTIES) {
+                  sb.append("...");
+                  break;
+                }
 
-      ++i;
-      if (!sb.isForAnnotations() && i == MAX_PRETTY_PRINTED_PROPERTIES) {
-        sb.append(", ...");
-        break;
-      }
+                sb.append(property).append(": ").appendNonNull(this.getPropertyType(property));
+                if (i < propertyNames.size()) {
+                  sb.append(",");
+                  if (multiline) {
+                    sb.breakLineAndIndent();
+                  } else {
+                    sb.append(" ");
+                  }
+                }
+              }
+            });
+    if (multiline) {
+      sb.breakLineAndIndent();
     }
-    if (useNewlines) {
-      sb.append("\n");
-    }
-
     sb.append("}");
 
-    prettyPrint = true;
+    this.prettyPrint = true;
   }
 
   void setPrettyPrint(boolean prettyPrint) {

@@ -72,7 +72,7 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testLongToString() {
+  public void testToString_largeRecord() {
     JSType record = new RecordTypeBuilder(registry)
         .addProperty("a01", NUMBER_TYPE, null)
         .addProperty("a02", NUMBER_TYPE, null)
@@ -86,6 +86,7 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("a10", NUMBER_TYPE, null)
         .addProperty("a11", NUMBER_TYPE, null)
         .build();
+
     assertThat(record.toString())
         .isEqualTo(
             LINE_JOINER.join(
@@ -99,12 +100,66 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
                 "  a07: number,",
                 "  a08: number,",
                 "  a09: number,",
-                "  a10: number, ...",
+                "  a10: number,",
+                "  ...",
                 "}"));
+
     assertThat(record.toAnnotationString(Nullability.EXPLICIT))
         .isEqualTo(
             "{a01: number, a02: number, a03: number, a04: number, a05: number, a06: number,"
                 + " a07: number, a08: number, a09: number, a10: number, a11: number}");
+  }
+
+  @Test
+  public void testToString_nestedRecordIndentation() {
+    JSType record =
+        new RecordTypeBuilder(registry)
+            .addProperty(
+                "a",
+                new RecordTypeBuilder(registry)
+                    .addProperty("aa", NUMBER_TYPE, null)
+                    .addProperty("ab", NUMBER_TYPE, null)
+                    .addProperty(
+                        "ac",
+                        new RecordTypeBuilder(registry)
+                            .addProperty("aca", NUMBER_TYPE, null)
+                            .addProperty("acb", NUMBER_TYPE, null)
+                            .addProperty("acc", NUMBER_TYPE, null)
+                            .build(),
+                        null)
+                    .build(),
+                null)
+            .addProperty(
+                "b",
+                new RecordTypeBuilder(registry)
+                    .addProperty("ba", NUMBER_TYPE, null)
+                    .addProperty("bb", NUMBER_TYPE, null)
+                    .build(),
+                null)
+            .addProperty("c", NUMBER_TYPE, null)
+            .build();
+
+    assertThat(record.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a: {",
+                "    aa: number,",
+                "    ab: number,",
+                "    ac: {",
+                "      aca: number,",
+                "      acb: number,",
+                "      acc: number",
+                "    }",
+                "  },",
+                "  b: {ba: number, bb: number},",
+                "  c: number",
+                "}"));
+
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo(
+            "{a: {aa: number, ab: number, ac: {aca: number, acb: number, acc: number}}, b: {ba:"
+                + " number, bb: number}, c: number}");
   }
 
   @Test
