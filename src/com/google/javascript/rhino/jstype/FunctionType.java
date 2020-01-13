@@ -1671,8 +1671,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
 
     public FunctionType buildAndResolve() {
-      FunctionType ft = build().resolveOrThrow().toMaybeFunctionType();
-      return checkNotNull(ft);
+      return checkNotNull(build().toMaybeFunctionType());
     }
   }
 

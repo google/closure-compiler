@@ -105,7 +105,6 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
   public void templateTypes_areNotEqualToUnknown() {
     // Given
     TemplateType t = new TemplateType(registry, "T");
-    t.resolveOrThrow();
     assertThat(t.isUnknownType()).isTrue();
 
     // Then
@@ -117,7 +116,6 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
   public void templateTypes_withBound_areNotEqualToBound() {
     // Given
     TemplateType t = new TemplateType(registry, "T", NUMBER_TYPE);
-    t.resolveOrThrow();
 
     // Then
     assertType(t).isNotEqualTo(NUMBER_TYPE);

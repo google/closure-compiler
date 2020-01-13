@@ -301,10 +301,10 @@ public final class SemanticReverseAbstractInterpreter
           blindScope,
           left,
           leftType,
-          leftIsRefineable ? JSType.nullSafeResolveOrThrow(merged.typeA) : null,
+          leftIsRefineable ? merged.typeA : null,
           right,
           rightType,
-          rightIsRefineable ? JSType.nullSafeResolveOrThrow(merged.typeB) : null);
+          rightIsRefineable ? merged.typeB : null);
     }
     return blindScope;
   }
@@ -332,11 +332,7 @@ public final class SemanticReverseAbstractInterpreter
           right, blindScope, outcome);
     }
     blindScope =
-        maybeRestrictName(
-            blindScope,
-            left,
-            leftType,
-            leftIsRefineable ? restrictedLeftType.resolveOrThrow() : null);
+        maybeRestrictName(blindScope, left, leftType, leftIsRefineable ? restrictedLeftType : null);
 
     // right type
     JSType rightType = getTypeIfRefinable(right, blindScope);
@@ -355,10 +351,7 @@ public final class SemanticReverseAbstractInterpreter
           rightType.getRestrictedTypeGivenToBooleanOutcome(outcome);
       // creating new scope
       return maybeRestrictName(
-          blindScope,
-          right,
-          rightType,
-          rightIsRefineable ? JSType.nullSafeResolveOrThrow(restrictedRightType) : null);
+          blindScope, right, rightType, rightIsRefineable ? restrictedRightType : null);
     }
     return blindScope;
   }
@@ -393,7 +386,7 @@ public final class SemanticReverseAbstractInterpreter
     if (rightVar == null || !leftVar.getName().equals(rightVar.getName())) {
       return unwrap(blindScope);
     }
-    JSType type = leftVar.getType().getLeastSupertype(rightVar.getType()).resolveOrThrow();
+    JSType type = leftVar.getType().getLeastSupertype(rightVar.getType());
     return unwrap(blindScope).inferSlotType(leftVar.getName(), type);
   }
 
@@ -451,8 +444,7 @@ public final class SemanticReverseAbstractInterpreter
     JSType type = getTypeIfRefinable(name, blindScope);
     if (type != null) {
       JSType restrictedType = type.getRestrictedTypeGivenToBooleanOutcome(outcome);
-      return maybeRestrictName(
-          blindScope, name, type, JSType.nullSafeResolveOrThrow(restrictedType));
+      return maybeRestrictName(blindScope, name, type, restrictedType);
     }
     return blindScope;
   }
@@ -483,8 +475,7 @@ public final class SemanticReverseAbstractInterpreter
     } else {
       visitor = new RestrictByFalseInstanceOfResultVisitor(targetType);
     }
-    return maybeRestrictName(
-        blindScope, left, leftType, JSType.nullSafeResolveOrThrow(leftType.visit(visitor)));
+    return maybeRestrictName(blindScope, left, leftType, leftType.visit(visitor));
   }
 
   /**
@@ -563,7 +554,7 @@ public final class SemanticReverseAbstractInterpreter
 
       FunctionType funcTarget = target.toMaybeFunctionType();
       if (funcTarget.hasInstanceType()) {
-        return type.getGreatestSubtype(funcTarget.getInstanceType()).resolveOrThrow();
+        return type.getGreatestSubtype(funcTarget.getInstanceType());
       }
 
       return null;
@@ -607,7 +598,7 @@ public final class SemanticReverseAbstractInterpreter
 
       FunctionType funcTarget = target.toMaybeFunctionType();
       if (funcTarget.hasInstanceType()) {
-        return type.getRestrictedUnion(funcTarget.getInstanceType()).resolveOrThrow();
+        return type.getRestrictedUnion(funcTarget.getInstanceType());
       }
 
       return null;

@@ -630,12 +630,10 @@ final class AstFactory {
       // Make a unique function type that returns the exact type we've inferred it to be.
       // Object.assign in the externs just returns !Object, which loses type information.
       JSType objAssignType =
-          registry
-              .createFunctionTypeWithVarArgs(
-                  returnType,
-                  registry.getNativeType(JSTypeNative.OBJECT_TYPE),
-                  registry.createUnionType(JSTypeNative.OBJECT_TYPE, JSTypeNative.NULL_TYPE))
-              .resolveOrThrow();
+          registry.createFunctionTypeWithVarArgs(
+              returnType,
+              registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+              registry.createUnionType(JSTypeNative.OBJECT_TYPE, JSTypeNative.NULL_TYPE));
       objAssign.setJSType(objAssignType);
       result.setJSType(returnType);
     }
@@ -669,9 +667,7 @@ final class AstFactory {
       // Return type of the function needs to match that of the entire expression. getPrototypeOf
       // normally returns !Object.
       objectGetPrototypeOf.setJSType(
-          registry
-              .createFunctionType(returnedType, getNativeType(JSTypeNative.OBJECT_TYPE))
-              .resolveOrThrow());
+          registry.createFunctionType(returnedType, getNativeType(JSTypeNative.OBJECT_TYPE)));
     }
     return result;
   }
@@ -727,7 +723,7 @@ final class AstFactory {
   Node createObjectLit(Node... elements) {
     Node result = IR.objectlit(elements);
     if (isAddingTypes()) {
-      result.setJSType(registry.createAnonymousObjectType(null).resolveOrThrow());
+      result.setJSType(registry.createAnonymousObjectType(null));
     }
     return result;
   }
@@ -784,9 +780,7 @@ final class AstFactory {
 
   Node createZeroArgFunction(String name, Node body, @Nullable JSType returnType) {
     FunctionType functionType =
-        isAddingTypes()
-            ? registry.createFunctionType(returnType).resolveOrThrow().toMaybeFunctionType()
-            : null;
+        isAddingTypes() ? registry.createFunctionType(returnType).toMaybeFunctionType() : null;
     return createFunction(name, IR.paramList(), body, functionType);
   }
 
@@ -836,8 +830,7 @@ final class AstFactory {
   Node createHook(Node condition, Node expr1, Node expr2) {
     Node result = IR.hook(condition, expr1, expr2);
     if (isAddingTypes()) {
-      result.setJSType(
-          registry.createUnionType(expr1.getJSType(), expr2.getJSType()).resolveOrThrow());
+      result.setJSType(registry.createUnionType(expr1.getJSType(), expr2.getJSType()));
     }
     return result;
   }
@@ -850,12 +843,10 @@ final class AstFactory {
     Node result = IR.arraylit(elements);
     if (isAddingTypes()) {
       result.setJSType(
-          registry
-              .createTemplatizedType(
-                  registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
-                  // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
-                  getNativeType(JSTypeNative.UNKNOWN_TYPE))
-              .resolveOrThrow());
+          registry.createTemplatizedType(
+              registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
+              // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
+              getNativeType(JSTypeNative.UNKNOWN_TYPE)));
     }
     return result;
   }
@@ -904,8 +895,7 @@ final class AstFactory {
       //   function(Iterator<T>): Array<T>
       // with
       //   function(Iterator<number>): Array<number>
-      makeIteratorName.setJSType(
-          replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)).resolveOrThrow());
+      makeIteratorName.setJSType(replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
     }
     return createCall(makeIteratorName, iterator);
   }
@@ -952,7 +942,7 @@ final class AstFactory {
             .getEmptyTemplateTypeMap()
             .copyWithExtension(templatedType.getTemplateTypeMap().getTemplateKeys(), templateTypes);
     TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
-    return templatedType.visit(replacer).resolveOrThrow();
+    return templatedType.visit(replacer);
   }
 
   /**
@@ -1001,17 +991,15 @@ final class AstFactory {
       if (asyncGeneratorWrapperType.isUnknownType()) {
         // Not injecting libraries?
         generatorType =
-            registry
-                .createFunctionType(
-                    replaceTemplate(
-                        getNativeType(JSTypeNative.GENERATOR_TYPE), ImmutableList.of(unknownType)))
-                .resolveOrThrow();
+            registry.createFunctionType(
+                replaceTemplate(
+                    getNativeType(JSTypeNative.GENERATOR_TYPE), ImmutableList.of(unknownType)));
       } else {
         // Generator<$jscomp.AsyncGeneratorWrapper$ActionRecord<number>>
         JSType innerFunctionReturnType =
             Iterables.getOnlyElement(
                 asyncGeneratorWrapperType.toMaybeFunctionType().getParameterTypes());
-        generatorType = registry.createFunctionType(innerFunctionReturnType).resolveOrThrow();
+        generatorType = registry.createFunctionType(innerFunctionReturnType);
       }
     }
 
@@ -1084,6 +1072,6 @@ final class AstFactory {
         && receiver.matchesName("$jscomp")) {
       getpropType = getNativeType(JSTypeNative.GLOBAL_THIS);
     }
-    return getpropType.resolveOrThrow();
+    return getpropType;
   }
 }

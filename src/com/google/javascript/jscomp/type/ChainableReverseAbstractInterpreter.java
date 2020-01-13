@@ -159,7 +159,6 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   @CheckReturnValue
   protected FlowScope declareNameInScope(FlowScope scope, Node node, JSType type) {
-    type.resolveOrThrow();
     switch (node.getToken()) {
       case NAME:
         return scope.inferSlotType(node.getString(), type);
@@ -218,7 +217,7 @@ public abstract class ChainableReverseAbstractInterpreter
           if (restricted == null) {
             restricted = restrictedAlternate;
           } else {
-            restricted = restrictedAlternate.getLeastSupertype(restricted).resolveOrThrow();
+            restricted = restrictedAlternate.getLeastSupertype(restricted);
           }
         }
       }
@@ -241,7 +240,7 @@ public abstract class ChainableReverseAbstractInterpreter
       // need is a notion of "enum subtyping", so that we could dynamically
       // create a subtype of MyEnum restricted by string. In any case,
       // this should catch the common case.
-      JSType type = JSType.nullSafeResolveOrThrow(enumElementType.getPrimitiveType().visit(this));
+      JSType type = enumElementType.getPrimitiveType().visit(this);
       if (type != null && enumElementType.getPrimitiveType().equals(type)) {
         return enumElementType;
       } else {
@@ -457,7 +456,7 @@ public abstract class ChainableReverseAbstractInterpreter
         JSType ctorType = getNativeType(FUNCTION_TYPE);
         if (resultEqualsValue) {
           // Objects are restricted to "Function", subtypes are left
-          return ctorType.getGreatestSubtype(type).resolveOrThrow();
+          return ctorType.getGreatestSubtype(type);
         } else {
           // Only filter out subtypes of "function"
           return type.isSubtypeOf(ctorType) ? null : type;
@@ -519,8 +518,7 @@ public abstract class ChainableReverseAbstractInterpreter
         return null;
       }
     }
-    return JSType.nullSafeResolveOrThrow(
-        type.visit(new RestrictByOneTypeOfResultVisitor(value, resultEqualsValue)));
+    return type.visit(new RestrictByOneTypeOfResultVisitor(value, resultEqualsValue));
   }
 
   JSType getNativeType(JSTypeNative typeId) {
