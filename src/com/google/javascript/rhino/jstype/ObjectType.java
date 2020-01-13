@@ -47,6 +47,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -55,7 +56,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
@@ -610,21 +610,9 @@ public abstract class ObjectType extends JSType implements Serializable {
     return getPropertyMap().getPropertiesCount();
   }
 
-  /**
-   * Returns a list of properties defined or inferred on this type and any of
-   * its supertypes.
-   */
-  public final Set<String> getPropertyNames() {
-    Set<String> props = new TreeSet<>();
-    collectPropertyNames(props);
-    return props;
-  }
-
-  /**
-   * Adds any properties defined on this type or its supertypes to the set.
-   */
-  final void collectPropertyNames(Set<String> props) {
-    getPropertyMap().collectPropertyNames(props);
+  /** Returns a list of properties defined or inferred on this type and any of its supertypes. */
+  public final ImmutableSortedSet<String> getPropertyNames() {
+    return getPropertyMap().keySet();
   }
 
   @Override
