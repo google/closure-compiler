@@ -369,7 +369,15 @@ MessageSender.prototype.url;
 
 
 /** @type {string|undefined} */
+MessageSender.prototype.nativeApplication;
+
+
+/** @type {string|undefined} */
 MessageSender.prototype.tlsChannelId;
+
+
+/** @type {string|undefined} */
+MessageSender.prototype.origin;
 
 
 /**
