@@ -110,11 +110,6 @@ public final class NullType extends ValueType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(getDisplayName());
-  }
-
-  @Override
   public String getDisplayName() {
     return "null";
   }

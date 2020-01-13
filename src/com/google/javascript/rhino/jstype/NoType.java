@@ -106,7 +106,7 @@ public class NoType extends NoObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(forAnnotations ? "?" : "None");
+  void appendTo(TypeStringBuilder sb) {
+    sb.append(sb.isForAnnotations() ? "?" : "None");
   }
 }

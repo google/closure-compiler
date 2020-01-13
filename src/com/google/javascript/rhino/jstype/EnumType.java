@@ -135,8 +135,8 @@ public class EnumType extends PrototypeObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(forAnnotations ? "!Object" : getReferenceName());
+  void appendTo(TypeStringBuilder sb) {
+    sb.append(sb.isForAnnotations() ? "!Object" : getReferenceName());
   }
 
   @Override

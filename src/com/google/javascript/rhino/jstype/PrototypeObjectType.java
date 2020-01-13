@@ -298,12 +298,14 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+  void appendTo(TypeStringBuilder sb) {
     if (hasReferenceName()) {
-      return sb.append(forAnnotations ? getNormalizedReferenceName() : getReferenceName());
+      sb.append(sb.isForAnnotations() ? getNormalizedReferenceName() : getReferenceName());
+      return;
     }
     if (!prettyPrint) {
-      return sb.append(forAnnotations ? "?" : "{...}");
+      sb.append(sb.isForAnnotations() ? "?" : "{...}");
+      return;
     }
     // Don't pretty print recursively.
     prettyPrint = false;
@@ -318,7 +320,7 @@ public class PrototypeObjectType extends ObjectType {
     }
 
     sb.append("{");
-    boolean useNewlines = !forAnnotations && propertyNames.size() > 2;
+    boolean useNewlines = !sb.isForAnnotations() && propertyNames.size() > 2;
 
     int i = 0;
     for (String property : propertyNames) {
@@ -332,10 +334,10 @@ public class PrototypeObjectType extends ObjectType {
       }
 
       sb.append(property).append(": ");
-      getPropertyType(property).appendAsNonNull(sb, forAnnotations);
+      sb.appendNonNull(this.getPropertyType(property));
 
       ++i;
-      if (!forAnnotations && i == MAX_PRETTY_PRINTED_PROPERTIES) {
+      if (!sb.isForAnnotations() && i == MAX_PRETTY_PRINTED_PROPERTIES) {
         sb.append(", ...");
         break;
       }
@@ -347,7 +349,6 @@ public class PrototypeObjectType extends ObjectType {
     sb.append("}");
 
     prettyPrint = true;
-    return sb;
   }
 
   void setPrettyPrint(boolean prettyPrint) {

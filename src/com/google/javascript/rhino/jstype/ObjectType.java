@@ -200,7 +200,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    *
    * <p>Returning an empty string means something different than returning null. An empty string may
    * indicate an anonymous constructor, which we treat differently than a literal type without a
-   * reference name. e.g. in {@link InstanceObjectType#appendTo(StringBuilder, boolean)}
+   * reference name. e.g. in {@link InstanceObjectType#appendTo(TypeStringBuilder)}
    *
    * @return the object's name or {@code null} if this is an anonymous object
    */

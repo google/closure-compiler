@@ -218,12 +218,12 @@ public final class NamedType extends ProxyObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+  void appendTo(TypeStringBuilder sb) {
     JSType type = this.getReferencedType();
     if (!isResolved() || type.isNoResolvedType()) {
-      return sb.append(getReferenceName());
+      sb.append(getReferenceName());
     } else {
-      return type.appendTo(sb, forAnnotations);
+      sb.append(type);
     }
   }
 

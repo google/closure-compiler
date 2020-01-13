@@ -39,77 +39,60 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
-import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
-
-
 /**
- * Boolean type.
+ * Visits types to assemble an associated stringification.
+ *
+ * <p>Instances are single use. They irreversibly accumulate state required during traversal.
  */
-public class BooleanType extends ValueType {
-  private static final long serialVersionUID = 1L;
+final class TypeStringBuilder implements Appendable {
 
-  BooleanType(JSTypeRegistry registry) {
-    super(registry);
+  private final StringBuilder builder = new StringBuilder();
+  private final boolean isForAnnotations;
+
+  TypeStringBuilder(boolean isForAnnotations) {
+    this.isForAnnotations = isForAnnotations;
+  }
+
+  boolean isForAnnotations() {
+    return this.isForAnnotations;
   }
 
   @Override
-  JSTypeClass getTypeClass() {
-    return JSTypeClass.BOOLEAN;
+  public TypeStringBuilder append(CharSequence text) {
+    this.builder.append(text);
+    return this;
   }
 
   @Override
-  public TernaryValue testForEquality(JSType that) {
-    TernaryValue result = super.testForEquality(that);
-    if (result != null) {
-      return result;
+  public TypeStringBuilder append(char c) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TypeStringBuilder append(CharSequence csq, int start, int end) {
+    throw new UnsupportedOperationException();
+  }
+
+  TypeStringBuilder append(JSType type) {
+    type.appendTo(this);
+    return this;
+  }
+
+  TypeStringBuilder appendNonNull(JSType type) {
+    if (this.isForAnnotations
+        && type.isObject()
+        && !type.isUnknownType()
+        && !type.isTemplateType()
+        && !type.isRecordType()
+        && !type.isFunctionType()
+        && !type.isUnionType()
+        && !type.isLiteralObject()) {
+      this.append("!");
     }
-    if (that.isUnknownType() || that.isSubtypeOf(
-            getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN)) ||
-        that.isObject()) {
-      return UNKNOWN;
-    }
-    return FALSE;
+    return this.append(type);
   }
 
-  @Override
-  public boolean isBooleanValueType() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesNumberContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesStringContext() {
-    return true;
-  }
-
-  @Override
-  public boolean matchesObjectContext() {
-    // TODO(user): Revisit this for ES4, which is stricter.
-    return true;
-  }
-
-  @Override
-  public JSType autoboxesTo() {
-    return getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE);
-  }
-
-  @Override
-  public String getDisplayName() {
-    return "boolean";
-  }
-
-  @Override
-  public BooleanLiteralSet getPossibleToBooleanOutcomes() {
-    return BooleanLiteralSet.BOTH;
-  }
-
-  @Override
-  public <T> T visit(Visitor<T> visitor) {
-    return visitor.caseBooleanType();
+  String build() {
+    return this.builder.toString();
   }
 }

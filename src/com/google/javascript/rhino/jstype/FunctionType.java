@@ -957,20 +957,19 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * function expects a known type for {@code this}.
    */
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+  void appendTo(TypeStringBuilder sb) {
     if (!isPrettyPrint()
         || JSType.areIdentical(this, registry.getNativeType(JSTypeNative.FUNCTION_TYPE))) {
-      return sb.append(forAnnotations ? "!Function" : "Function");
+      sb.append(sb.isForAnnotations() ? "!Function" : "Function");
+      return;
     }
 
     if (hasInstanceType() && getSource() != null) {
       // Render function types known to be type definitions as "(typeof Foo)". This includes types
       // defined like "/** @constructor */ function Foo() { }" but not to those defined like "@param
       // {function(new:Foo)}". Only the former will have a source node.
-      sb.append("(typeof ");
-      getInstanceType().appendTo(sb, forAnnotations);
-      sb.append(")");
-      return sb;
+      sb.append("(typeof ").append(this.getInstanceType()).append(")");
+      return;
     }
 
     setPrettyPrint(false);
@@ -984,47 +983,46 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       } else {
         sb.append("this:");
       }
-      typeOfThis.appendTo(sb, forAnnotations);
+      sb.append(typeOfThis);
     }
     if (paramNum > 0) {
       if (hasKnownTypeOfThis) {
         sb.append(", ");
       }
       Node p = call.parameters.getFirstChild();
-      appendArgString(sb, p, forAnnotations);
+      appendArgString(sb, p);
 
       p = p.getNext();
       while (p != null) {
         sb.append(", ");
-        appendArgString(sb, p, forAnnotations);
+        appendArgString(sb, p);
         p = p.getNext();
       }
     }
     sb.append("): ");
-    call.getReturnType().appendAsNonNull(sb, forAnnotations);
+    sb.appendNonNull(call.getReturnType());
 
     setPrettyPrint(true);
-    return sb;
+    return;
   }
 
-  private void appendArgString(StringBuilder sb, Node p, boolean forAnnotations) {
+  private void appendArgString(TypeStringBuilder sb, Node p) {
     if (p.isVarArgs()) {
-      appendVarArgsString(sb, p.getJSType(), forAnnotations);
+      appendVarArgsString(sb, p.getJSType());
     } else if (p.isOptionalArg()) {
-      appendOptionalArgString(sb, p.getJSType(), forAnnotations);
+      appendOptionalArgString(sb, p.getJSType());
     } else {
-      p.getJSType().appendAsNonNull(sb, forAnnotations);
+      sb.appendNonNull(p.getJSType());
     }
   }
 
   /** Gets the string representation of a var args param. */
-  private void appendVarArgsString(StringBuilder sb, JSType paramType, boolean forAnnotations) {
-    sb.append("...");
-    paramType.appendAsNonNull(sb, forAnnotations);
+  private void appendVarArgsString(TypeStringBuilder sb, JSType paramType) {
+    sb.append("...").appendNonNull(paramType);
   }
 
   /** Gets the string representation of an optional param. */
-  private void appendOptionalArgString(StringBuilder sb, JSType paramType, boolean forAnnotations) {
+  private void appendOptionalArgString(TypeStringBuilder sb, JSType paramType) {
     if (paramType.isUnionType()) {
       // Remove the optionality from the var arg.
       paramType =
@@ -1032,7 +1030,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
               .toMaybeUnionType()
               .getRestrictedUnion(registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
-    paramType.appendAsNonNull(sb, forAnnotations).append("=");
+    sb.appendNonNull(paramType).append("=");
   }
 
   @Override

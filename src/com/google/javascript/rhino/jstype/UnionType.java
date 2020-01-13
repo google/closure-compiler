@@ -56,7 +56,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -470,16 +469,22 @@ public class UnionType extends JSType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+  void appendTo(TypeStringBuilder sb) {
     sb.append("(");
+
     // Sort types in character value order in order to get consistent results.
     // This is important for deterministic behavior for testing.
-    SortedSet<String> sortedTypeNames = new TreeSet<>();
-    for (JSType jsType : alternates) {
-      sortedTypeNames.add(jsType.appendTo(new StringBuilder(), forAnnotations).toString());
+    TreeSet<String> sortedTypeNames = new TreeSet<>();
+    for (JSType alt : alternates) {
+      sortedTypeNames.add(new TypeStringBuilder(sb.isForAnnotations()).append(alt).build());
     }
-    Joiner.on('|').appendTo(sb, sortedTypeNames);
-    return sb.append(")");
+    try {
+      Joiner.on('|').appendTo(sb, sortedTypeNames);
+    } catch (Exception e) {
+      throw new AssertionError(e);
+    }
+
+    sb.append(")");
   }
 
   @Override

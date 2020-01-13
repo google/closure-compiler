@@ -55,6 +55,11 @@ abstract class ValueType extends JSType {
     throw new AssertionError();
   }
 
+  @Override
+  final void appendTo(TypeStringBuilder sb) {
+    sb.append(this.getDisplayName());
+  }
+
   // Subclasses must override and return non-null.
   @Override
   public abstract String getDisplayName();

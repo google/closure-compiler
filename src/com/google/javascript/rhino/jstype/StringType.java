@@ -96,11 +96,6 @@ public final class StringType extends ValueType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(getDisplayName());
-  }
-
-  @Override
   public String getDisplayName() {
     return "string";
   }

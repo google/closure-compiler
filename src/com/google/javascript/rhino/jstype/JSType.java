@@ -1573,31 +1573,19 @@ public abstract class JSType implements Serializable {
    */
   @Override
   public String toString() {
-    return appendTo(new StringBuilder(), false).toString();
+    return new TypeStringBuilder(false).append(this).build();
   }
 
   // Don't call from this package; use appendAsNonNull instead.
   public final String toAnnotationString(Nullability nullability) {
-    return nullability == Nullability.EXPLICIT
-        ? appendAsNonNull(new StringBuilder(), true).toString()
-        : appendTo(new StringBuilder(), true).toString();
+    TypeStringBuilder builder = new TypeStringBuilder(true);
+    return (nullability == Nullability.EXPLICIT
+            ? builder.appendNonNull(this)
+            : builder.append(this))
+        .build();
   }
 
-  final StringBuilder appendAsNonNull(StringBuilder sb, boolean forAnnotations) {
-    if (forAnnotations
-        && isObject()
-        && !isUnknownType()
-        && !isTemplateType()
-        && !isRecordType()
-        && !isFunctionType()
-        && !isUnionType()
-        && !isLiteralObject()) {
-      sb.append("!");
-    }
-    return appendTo(sb, forAnnotations);
-  }
-
-  abstract StringBuilder appendTo(StringBuilder sb, boolean forAnnotations);
+  abstract void appendTo(TypeStringBuilder sb);
 
   /**
    * Modify this type so that it matches the specified type.
