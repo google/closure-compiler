@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAV
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.jscomp.testing.TypedVarSubject.assertThat;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
@@ -6856,6 +6857,38 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 .getInstanceType()
                 .loosenTypecheckingDueToForwardReferencedSupertype())
         .isTrue();
+  }
+
+  @Test
+  public void testGoogModule_exportsPropertyIsObjectLit_whosePropertiesNotInferredConst() {
+    testSame(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('a.b.c');",
+                "function modifyThings() {",
+                "  exports.things.thing1 = 'something';",
+                "}",
+                "MOD_SCOPE: null;",
+                "exports.things = {",
+                "  thing1: null,",
+                "};")));
+
+    TypedScope moduleScope = getLabeledStatement("MOD_SCOPE").enclosingScope;
+
+    ObjectType exportsType = findNameType("exports", moduleScope).toObjectType();
+    assertType(exportsType).hasDeclaredProperty("things");
+
+    // Regression test for a bug where 'thing1' used to be a declared property, and assigning
+    //   exports.things.thing1 = 'something'
+    // caused a type mismatch error.
+    ObjectType exportsThingsType = exportsType.getPropertyType("things").toObjectType();
+    assertType(exportsThingsType).hasInferredProperty("thing1");
+    assertType(exportsThingsType)
+        .withTypeOfProp("thing1")
+        .isEqualTo(
+            registry.createUnionType(
+                registry.getNativeType(STRING_TYPE), registry.getNativeType(NULL_TYPE)));
   }
 
   @Test

@@ -2410,11 +2410,18 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return false;
       }
       if (undeclaredNamesForClosure.contains(lValue)) {
+        // includes "exports" and "exports.x"
         return true;
       }
+      // ASSIGN
+      //   NAME "exports"
+      //   OBJECT_LIT
+      //     STRING_KEY "x"
+      //     [value]
       return lValue.isStringKey()
           && lValue.getParent().isObjectLit()
           && lValue.getGrandparent().isAssign()
+          && lValue.getParent().getPrevious().matchesName("exports")
           && undeclaredNamesForClosure.contains(lValue.getParent().getPrevious());
     }
 
