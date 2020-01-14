@@ -3324,6 +3324,10 @@ public class Node implements Serializable {
     return this.token == Token.IMPORT;
   }
 
+  public final boolean isImportMeta() {
+    return this.token == Token.IMPORT_META;
+  }
+
   public final boolean isImportStar() {
     return this.token == Token.IMPORT_STAR;
   }

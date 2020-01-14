@@ -1334,4 +1334,11 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         // Regression test; compiler used to rewrite `exports` to `exports$$module$testcode`.
         expected("typeof exports; /** @const */ var module$testcode = {};"));
   }
+
+  @Test
+  public void testImportMeta() {
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT_NEXT);
+
+    testError("import.meta", Es6ToEs3Util.CANNOT_CONVERT);
+  }
 }

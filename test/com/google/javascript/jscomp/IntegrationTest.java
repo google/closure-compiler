@@ -7877,4 +7877,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "/(?<!foo)/", untranspilable);
     test(options, "/\\p{Number}/u", untranspilable);
   }
+
+  @Test
+  public void testImportMeta() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(options, "import.meta", Es6ToEs3Util.CANNOT_CONVERT);
+  }
 }

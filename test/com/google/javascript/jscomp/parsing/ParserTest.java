@@ -5517,7 +5517,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning(
         "import.meta",
         requiresLanguageModeMessage(LanguageMode.ECMASCRIPT6, Feature.MODULES),
-        unsupportedFeatureMessage(Feature.IMPORT_META));
+        requiresLanguageModeMessage(LanguageMode.ES_NEXT, Feature.IMPORT_META));
   }
 
   @Test
@@ -5525,7 +5525,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     expectFeatures(Feature.MODULES, Feature.IMPORT_META);
 
-    parseWarning("import.meta", unsupportedFeatureMessage(Feature.IMPORT_META));
+    parseWarning(
+        "import.meta", requiresLanguageModeMessage(LanguageMode.ES_NEXT, Feature.IMPORT_META));
   }
 
   @Test

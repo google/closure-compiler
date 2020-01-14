@@ -379,6 +379,11 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       if (n.getFirstChild().matchesQualifiedName("goog.declareModuleId")) {
         n.getParent().detach();
       }
+    } else if (n.isImportMeta()) {
+      // We're choosing to not "support" import.meta because currently all the outputs from the
+      // compiler are scripts and support for import.meta (only works in modules) would be
+      // meaningless
+      t.report(n, Es6ToEs3Util.CANNOT_CONVERT, "import.meta");
     }
   }
 

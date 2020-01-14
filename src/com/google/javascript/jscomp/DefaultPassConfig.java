@@ -63,7 +63,6 @@ import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -990,7 +989,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       options.checkSuspiciousCode,
                       options.shouldProtectHiddenSideEffects()))
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Removes the "protector" functions that were added by CheckSideEffects. */
@@ -1197,7 +1196,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkJsDocAndEs6Modules =
       PassFactory.builderForHotSwap()
           .setName("checkJsDocAndEs6Modules")
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .setInternalFactory(
               (compiler) ->
                   combineChecks(
@@ -1394,8 +1393,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .setInvalidModuleGetHandling(InvalidModuleGetHandling.DELETE)
                     .build();
               })
-          // import.meta is not expected to appear inside goog.scope
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory injectRuntimeLibraries =
@@ -1419,8 +1417,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new MarkUntranspilableFeaturesAsRemoved(compiler, options.getOutputFeatureSet()))
-          // only checks for regex
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory convertStaticInheritance =
@@ -1456,16 +1453,14 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.DECLARED_GLOBAL_EXTERNS_ON_WINDOW)
           .setInternalFactory(DeclaredGlobalExternsOnWindow::new)
-          // only looks at externs - import.meta can never be in externs
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory checkTypeImportCodeReferences =
       PassFactory.builder()
           .setName("checkTypeImportCodeReferences")
           .setInternalFactory(CheckTypeImportCodeReferences::new)
-          // only processes goog.requireType
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrites goog.defineClass */
@@ -1473,8 +1468,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName(PassNames.CLOSURE_REWRITE_CLASS)
           .setInternalFactory(ClosureRewriteClass::new)
-          // only processes goog.defineClass
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Checks of correct usage of goog.module */
@@ -1483,8 +1477,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("closureCheckModule")
           .setInternalFactory(
               (compiler) -> new ClosureCheckModule(compiler, compiler.getModuleMetadataMap()))
-          // import.meta can only be used in es module
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrites goog.module */
@@ -1509,8 +1502,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("checkGoogRequires")
           .setInternalFactory(
               (compiler) -> new CheckClosureImports(compiler, compiler.getModuleMetadataMap()))
-          // import.meta can only be used in es module
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrites goog.require, goog.forwardDeclare, goog.requireType, and goog.module.get calls */
@@ -1525,8 +1517,7 @@ public final class DefaultPassConfig extends PassConfig {
                       preprocessorSymbolTableFactory.getInstanceOrNull(),
                       // TODO(johnplaisted): Expand the Set of modules to rewrite in.
                       ImmutableSet.of()))
-          // import.meta can only be in es modules
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrite imports for Closure Library's goog.js file to global goog references. */
@@ -1539,7 +1530,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       RewriteGoogJsImports.Mode.LINT_AND_REWRITE,
                       compiler.getModuleMap()))
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Checks that CSS class names are wrapped in goog.getCssName */
@@ -1698,8 +1689,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName(PassNames.CHECK_VARS)
           .setInternalFactory(VarCheck::new)
-          // only looks at names
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Infers constants. */
@@ -1742,14 +1732,14 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName(PassNames.CHECK_VARIABLE_REFERENCES)
           .setInternalFactory(VariableReferenceCheck::new)
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory checkSuper =
       PassFactory.builderForHotSwap()
           .setName("checkSuper")
           .setInternalFactory(CheckSuper::new)
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Clears the typed scope when we're done. */
@@ -1978,8 +1968,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("checkStrictMode")
           .setInternalFactory(StrictModeCheck::new)
-          // strict mode check should not apply to es modules
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Process goog.tweak.getTweak() calls. */
@@ -2919,8 +2908,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.REWRITE_SCRIPTS_TO_ES6_MODULES)
           .setInternalFactory(Es6RewriteScriptsToModules::new)
-          // this pass will not run for a script that contains import.meta
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory gatherModuleMetadataPass =
@@ -2933,8 +2921,7 @@ public final class DefaultPassConfig extends PassConfig {
                 return new GatherModuleMetadata(
                     compiler, options.processCommonJSModules, options.moduleResolutionMode);
               })
-          // only looks at imports and exports
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory createModuleMapPass =
@@ -2950,8 +2937,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.GATHER_GETTERS_AND_SETTERS)
           .setInternalFactory(GatherGetterAndSetterProperties::new)
-          // only looks at getters and setters
-          .setFeatureSet(ES_NEXT.with(Feature.IMPORT_META))
+          .setFeatureSet(ES_NEXT)
           .build();
 
   // this pass is just adding script without looking at the AST so it should accept all features
