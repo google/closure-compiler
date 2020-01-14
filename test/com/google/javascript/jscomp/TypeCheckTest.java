@@ -650,6 +650,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBooleanReduction1NullishCoalesce() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/**@type {string} */var x; x = null ?? \"a\";");
+  }
+
+  @Test
   public void testBooleanReduction2() {
     // It's important for the type system to recognize that in no case
     // can the boolean expression evaluate to a boolean value.
@@ -665,8 +671,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBooleanReduction4() {
-    testTypes("/** @param {Object} x\n @return {Object} */" +
-        "(function(x) { return null || x || null ; })");
+    testTypes(
+        "/** @param {?Object} x\n @return {?Object} */"
+            + "(function(x) { return null || x || null ; })");
+  }
+
+  @Test
+  public void testBooleanReduction4NullishCoalesce() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/** @param {?Object} x\n @return {?Object} */",
+            "(function(x) { return null ?? x ?? null ; })"));
   }
 
   @Test
@@ -715,6 +731,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testNullishCoalesce() {
     // TODO(annieyw) b/146659618 Calculate the appropriate type here
+
+    // testTypes( "/**@type{number} */ var x = 0 ?? \"hi\";");
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/**@type {?} */var x = 0 ?? \"hi\";");
   }
@@ -3321,6 +3339,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testInnerFunction6NullishCoalesce() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testClosureTypes(
+        lines(
+            CLOSURE_DEFS,
+            "function f() {",
+            " var x = 0 ?? function() {};",
+            " function g() { if (goog.isFunction(x)) { x(1); } }",
+            " g();",
+            "}"),
+        null);
+    // TOOD(b/146659618): this should report an error
+    // lines(
+    //     "Function x: called with 1 argument(s). ",
+    //     "Function requires at least 0 argument(s) ",
+    //     "and no more than 0 argument(s).")
+  }
+
+  @Test
   public void testInnerFunction7() {
     testClosureTypes(
         CLOSURE_DEFS +
@@ -3333,6 +3370,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "Function x: called with 1 argument(s). " +
         "Function requires at least 0 argument(s) " +
         "and no more than 0 argument(s).");
+  }
+
+  @Test
+  public void testInnerFunction7NullishCoalesce() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testClosureTypes(
+        lines(
+            CLOSURE_DEFS,
+            "function f() {",
+            " /** @type {function()} */",
+            " var x = null ?? function() {};",
+            " function g() { if (goog.isFunction(x)) { x(1); } }",
+            " g();",
+            "}"),
+        "Function x: called with 1 argument(s). "
+            + "Function requires at least 0 argument(s) "
+            + "and no more than 0 argument(s).");
   }
 
   @Test
@@ -7917,6 +7971,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testVar15NullishCoalesce() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/** @return {number} */", //
+            "function f() { var x = x ?? {}; return x; }"));
+    // TOOD(b/146659618): this should report an error
+    // lines("inconsistent return type",
+    //     "found   : {}",
+    //     "required: number")
+  }
+
+  @Test
   public void testAssign1() {
     testTypes("var goog = {};" +
         "/** @type {number} */goog.foo = 'hello';",
@@ -7971,6 +8038,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testNullishCoalesceNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines("/** @type {number}  */var a; /** @type {number}  */var b; a + b ?? undefined;"));
+  }
+
+  @Test
   public void testOr2() {
     testTypes("/** @type {number}  */var a;" +
         "/** @type {number}  */var b;" +
@@ -7981,8 +8055,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testNullishCoalesceNumberVar() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/** @type {number}  */var a;",
+            "/** @type {number|undefined}  */var c = a ?? undefined;"));
+    // TOOD(b/146659618): Calculate the correct type
+    // lines("/** @type {number}  */var a;", "/** @type {number}  */var c = a ?? undefined;"))
+  }
+
+  @Test
   public void testOr3() {
     testTypes("/** @type {(number|undefined)} */var a;" + "/** @type {number}  */var c = a || 3;");
+  }
+
+  @Test
+  public void testNullishCoalesceNumberUndefined() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/** @type {(number|undefined)} */var a; /** @type {number}  */var c = a ?? 3;");
   }
 
   /**
@@ -7997,6 +8088,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
          "required: number");
   }
 
+  @Test
+  public void testNullishCoalesceAssignment() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    // TOOD(b/146659618): this should report an error
+    // lines("assignment", "found   : string", "required: number")
+  }
+
   /** @see #testOr4() */
   @Test
   public void testOr5() {
@@ -8004,6 +8102,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
          "assignment\n" +
          "found   : string\n" +
          "required: number");
+  }
+
+  @Test
+  public void testNullishCoalesceAssignment2() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/**@type {number} */var x;x=undefined ?? \"a\";");
+    // TOOD(b/146659618): this should report an error
+    // lines("assignment", "found   : string", "required: number")
   }
 
   @Test
@@ -8019,6 +8125,24 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "initializing variable",
             "found   : Array",
             "required: undefined"));
+  }
+
+  @Test
+  public void testNullishCoaleceAssignment3() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/** @param {!Array=} opt_x */",
+            "function removeDuplicates(opt_x) {",
+            "  var x = opt_x ?? [];",
+            "  var /** undefined */ y = x;",
+            "}"));
+
+    // TOOD(b/146659618): this should report an error
+    // lines(
+    //             "initializing variable",
+    //             "found   : Array",
+    //             "required: undefined")
   }
 
   @Test
@@ -10928,6 +11052,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "}");
   }
 
+  @Test
+  public void testNullishCoalesceTypeIsFirstOrSecondArgument() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/** @param {Function} opt_f ... */",
+            "function foo(opt_f) {",
+            "  /** @type {Function} */",
+            "  return opt_f ?? function() {};",
+            "}"));
+  }
+
   /**
    * Tests that undefined can be compared shallowly to a value of type (number,undefined) regardless
    * of the side on which the undefined value is.
@@ -11902,6 +12038,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "/** @type {some.unknown.type} */var f1;" +
         "var f2 = opt_f || f1;" +
         "f2();",
+        "Bad type annotation. Unknown type some.unknown.type");
+  }
+
+  @Test
+  public void testCall3NullishCoalesce() {
+    // We are checking that an unresolved named type can successfully
+    // meet with a functional type to produce a callable type.
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/** @type {Function|undefined} */var opt_f;",
+            "/** @type {some.unknown.type} */var f1;",
+            "var f2 = opt_f ?? f1;",
+            "f2();"),
         "Bad type annotation. Unknown type some.unknown.type");
   }
 

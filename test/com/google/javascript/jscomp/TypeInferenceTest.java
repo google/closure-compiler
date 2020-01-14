@@ -512,6 +512,17 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testAssert5NullishCoalesce() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    assuming("y", startType);
+    inFunction("goog.asserts.assert(x ?? y); out1 = x; out2 = y;");
+    verify("out1", startType);
+    verify("out2", startType);
+  }
+
+  @Test
   public void testAssert6() {
     JSType startType = createNullableType(OBJECT_TYPE);
     assuming("x", getNativeType(UNKNOWN_TYPE)); // Only global qname roots can be undeclared
@@ -1527,6 +1538,16 @@ public final class TypeInferenceTest {
     assuming("x", NUMBER_TYPE);
     inFunction("var y = null; var z = 4; if (x || (y = 3)) { z = y; }");
     verify("z", createNullableType(NUMBER_TYPE));
+  }
+
+  @Test
+  public void testShortCircuitingNullishCoalseceNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    assuming("x", NUMBER_TYPE);
+    inFunction("var z = x ?? null");
+    verify("z", UNKNOWN_TYPE);
+    // TODO(annieyw) b/146659618 Calculate the appropriate type here
+    // verify("z", NUMBER_TYPE);
   }
 
   @Test
