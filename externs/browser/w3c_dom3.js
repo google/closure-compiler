@@ -102,9 +102,9 @@ function DOMImplementationSource() {}
 /**
  * @param {?string} namespaceURI
  * @param {string} publicId
- * @param {DocumentType} doctype
+ * @param {DocumentType=} doctype
  * @return {Document}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-DOM-createDocument
+ * @see https://dom.spec.whatwg.org/#ref-for-dom-domimplementation-createdocument%E2%91%A0
  * @nosideeffects
  */
 DOMImplementation.prototype.createDocument = function(namespaceURI, publicId, doctype) {};
