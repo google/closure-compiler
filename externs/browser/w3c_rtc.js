@@ -623,6 +623,12 @@ RTCRtpSender.prototype.setParameters = function(params) {};
 
 
 /**
+ * @return {!Promise<!RTCStatsReport>}
+ */
+RTCRtpSender.prototype.getStats = function() {};
+
+
+/**
  * @record
  * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpsendparameters
  */
@@ -695,6 +701,12 @@ RTCRtpReceiver.prototype.getContributingSources = function() {};
  * @return {!Array<!RTCRtpContributingSource>}
  */
 RTCRtpReceiver.prototype.getSynchronizationSources = function() {};
+
+
+/**
+ * @return {!Promise<!RTCStatsReport>}
+ */
+RTCRtpReceiver.prototype.getStats = function() {};
 
 /**
  * Deprecated, the remnant from Chrome Origin Trial experiment:
