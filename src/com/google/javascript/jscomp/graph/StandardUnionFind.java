@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.Iterators.filter;
 import static com.google.common.collect.Multimaps.asMap;
 
@@ -76,6 +77,12 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     union(e, e);
   }
 
+  public void addAll(Iterable<E> es) {
+    for (E e : es) {
+      this.add(e);
+    }
+  }
+
   @CanIgnoreReturnValue
   @Override
   public E union(@Nullable E a, @Nullable E b) {
@@ -132,6 +139,18 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
       result.add(ImmutableSet.copyOf(group));
     }
     return result.build();
+  }
+
+  /**
+   * Return the reprsentative elements of all the equivalence classes.
+   *
+   * <p>This is a "snapshot" view of the representatives at the time the method was called.
+   */
+  public ImmutableSet<E> allRepresentatives() {
+    return this.elmap.values().stream()
+        .filter((n) -> n == n.parent)
+        .map((n) -> n.element)
+        .collect(toImmutableSet());
   }
 
   /**
