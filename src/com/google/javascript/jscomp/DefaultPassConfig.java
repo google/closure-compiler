@@ -51,6 +51,7 @@ import com.google.javascript.jscomp.lint.CheckEs6Modules;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
+import com.google.javascript.jscomp.lint.CheckMissingTrailingComma;
 import com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
@@ -1878,6 +1879,7 @@ public final class DefaultPassConfig extends PassConfig {
                         .add(new CheckInterfaces(compiler))
                         .add(new CheckJSDocStyle(compiler))
                         .add(new CheckMissingSemicolon(compiler))
+                        .add(new CheckMissingTrailingComma(compiler))
                         .add(new CheckNullabilityModifiers(compiler))
                         .add(new CheckPrimitiveAsObject(compiler))
                         .add(new CheckPrototypeProperties(compiler))
