@@ -7104,4 +7104,34 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "Cannot do '[]' access on a struct",
             "Cannot do '[]' access on a struct"));
   }
+
+  @Test
+  public void testUnion_forwardEnumRefAndNumber() {
+    testTypes(
+        lines(
+            "/** @enum {Type} */",
+            "const Enum = {A: 'a'};",
+            "/** @typedef {string} */ let Type;",
+            "const /** !Enum|number */ n = null;"),
+        lines(
+            "initializing variable",
+            "found   : null",
+            "required: (Enum<string>|number)" // Verify this doesn't drop Enum<string>
+            ));
+  }
+
+  @Test
+  public void testUnion_numberAndForwardEnumRef() {
+    testTypes(
+        lines(
+            "/** @enum {Type} */",
+            "const Enum = {A: 'a'};",
+            "/** @typedef {string} */ let Type;",
+            "const /** number|!Enum */ n = null;"),
+        lines(
+            "initializing variable",
+            "found   : null",
+            "required: (Enum<string>|number)" // Verify this doesn't drop Enum<string>
+            ));
+  }
 }

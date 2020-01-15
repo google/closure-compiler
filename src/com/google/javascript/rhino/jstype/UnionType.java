@@ -718,8 +718,28 @@ public class UnionType extends JSType {
     public Builder addAlternate(JSType alternate) {
       checkHasNotBuilt();
 
-      // build() returns the bottom type by default, so we can
-      // just bail out early here.
+      if (alternate.isUnionType()) {
+        addAlternates(alternate.toMaybeUnionType().getAlternates());
+        return this;
+      }
+
+      if (alternates.size() > maxUnionSize) {
+        return this;
+      }
+
+      // Defer removing duplicate elements until all alternates in the union are resolved.
+      // JSType operations like equality and subtyping are not reliable pre-resolution.
+      if (!alternate.isResolved()) {
+        for (JSType current : alternates) {
+          if (JSType.areIdentical(current, alternate)) {
+            return this;
+          }
+        }
+        alternates.add(alternate);
+        return this;
+      }
+
+      // build() returns the bottom type by default, so we can just bail out early here.
       if (alternate.isNoType()) {
         return this;
       }
@@ -734,13 +754,6 @@ public class UnionType extends JSType {
       }
 
       if (isAllType || isNativeUnknownType) {
-        return this;
-      }
-      if (alternate.isUnionType()) {
-        addAlternates(alternate.toMaybeUnionType().getAlternates());
-        return this;
-      }
-      if (alternates.size() > maxUnionSize) {
         return this;
       }
 
@@ -761,6 +774,9 @@ public class UnionType extends JSType {
       for (int index = 0; index < alternates.size(); index++) {
         boolean removeCurrent = false;
         JSType current = alternates.get(index);
+        if (!current.isResolved()) { // Defer de-duplicating unresolved alternates.
+          continue;
+        }
 
         // Unknown and NoResolved types may just be names that haven't
         // been resolved yet. So keep these in the union, and just use
@@ -827,8 +843,8 @@ public class UnionType extends JSType {
                 ObjectType rawType = templatizedCurrent.getReferencedObjTypeInternal();
                 // Providing no type-parameter values specializes `rawType` on `?` by default.
                 alternate = registry.createTemplatizedType(rawType, ImmutableList.of());
-                    removeCurrent = true;
-                  }
+                removeCurrent = true;
+              }
             }
             // case 9: leave current, add alternate
           }
