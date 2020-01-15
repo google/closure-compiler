@@ -216,7 +216,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     testClosureFunction(
         "goog.isFunction",
         getNativeObjectNumberStringBooleanType(),
-        getNativeU2UConstructorType(),
+        getNativeFunctionType(),
         getNativeObjectNumberStringBooleanType());
   }
 
@@ -225,7 +225,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     testClosureFunction(
         "goog.isFunction",
         getNativeObjectNumberStringBooleanSymbolType(),
-        getNativeU2UConstructorType(),
+        getNativeFunctionType(),
         getNativeObjectNumberStringBooleanSymbolType());
   }
 
@@ -233,14 +233,14 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
   public void testGoogIsFunction3() {
     testClosureFunction(
         "goog.isFunction",
-        createUnionType(getNativeU2UConstructorType(), getNativeNumberStringBooleanType()),
-        getNativeU2UConstructorType(),
+        createUnionType(getNativeFunctionType(), getNativeNumberStringBooleanType()),
+        getNativeFunctionType(),
         getNativeNumberStringBooleanType());
   }
 
   @Test
   public void testGoogIsFunctionOnNull() {
-    testClosureFunction("goog.isFunction", null, getNativeU2UConstructorType(), null);
+    testClosureFunction("goog.isFunction", null, getNativeFunctionType(), null);
   }
 
   @Test

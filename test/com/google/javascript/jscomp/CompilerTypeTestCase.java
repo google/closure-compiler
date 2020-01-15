@@ -271,12 +271,8 @@ abstract class CompilerTypeTestCase {
     return getNativeFunctionType(JSTypeNative.REGEXP_FUNCTION_TYPE);
   }
 
-  protected FunctionType getNativeU2UConstructorType() {
+  protected FunctionType getNativeFunctionType() {
     return getNativeFunctionType(JSTypeNative.FUNCTION_TYPE);
-  }
-
-  protected FunctionType getNativeU2UFunctionType() {
-    return getNativeFunctionType(JSTypeNative.U2U_FUNCTION_TYPE);
   }
 
   FunctionType getNativeFunctionType(JSTypeNative jsTypeNative) {

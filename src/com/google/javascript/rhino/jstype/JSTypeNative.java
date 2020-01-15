@@ -152,9 +152,6 @@ public enum JSTypeNative {
   NO_RESOLVED_TYPE,
   GLOBAL_THIS,
 
-  // unknown function type, i.e. (?...) -> ?
-  U2U_FUNCTION_TYPE,
-
   LEAST_FUNCTION_TYPE,
   GREATEST_FUNCTION_TYPE,
 

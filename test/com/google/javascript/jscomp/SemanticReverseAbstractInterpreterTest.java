@@ -444,7 +444,7 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         Token.EQ,
         new Node(Token.TYPEOF, createVar(blind, "a", getNativeObjectType())),
         Node.newString("function"),
-        ImmutableSet.of(new TypedName("a", getNativeU2UConstructorType())),
+        ImmutableSet.of(new TypedName("a", getNativeFunctionType())),
         ImmutableSet.of(new TypedName("a", getNativeObjectType())));
   }
 
@@ -457,7 +457,7 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         Token.EQ,
         new Node(Token.TYPEOF, createVar(blind, "a", getNativeAllType())),
         Node.newString("function"),
-        ImmutableSet.of(new TypedName("a", getNativeU2UConstructorType())),
+        ImmutableSet.of(new TypedName("a", getNativeFunctionType())),
         ImmutableSet.of(new TypedName("a", getNativeAllType())));
   }
 
@@ -470,7 +470,7 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         Token.EQ,
         new Node(Token.TYPEOF, createVar(blind, "a", getNativeObjectNumberStringBooleanType())),
         Node.newString("function"),
-        ImmutableSet.of(new TypedName("a", getNativeU2UConstructorType())),
+        ImmutableSet.of(new TypedName("a", getNativeFunctionType())),
         ImmutableSet.of(new TypedName("a", getNativeObjectNumberStringBooleanType())));
   }
 
@@ -486,10 +486,9 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             createVar(
                 blind,
                 "a",
-                createUnionType(
-                    getNativeU2UConstructorType(), getNativeNumberStringBooleanType()))),
+                createUnionType(getNativeFunctionType(), getNativeNumberStringBooleanType()))),
         Node.newString("function"),
-        ImmutableSet.of(new TypedName("a", getNativeU2UConstructorType())),
+        ImmutableSet.of(new TypedName("a", getNativeFunctionType())),
         ImmutableSet.of(new TypedName("a", getNativeNumberStringBooleanType())));
   }
 

@@ -712,10 +712,6 @@ public class JSTypeRegistry implements Serializable {
 
     // Native object properties are filled in by externs...
 
-    // unknown function type, i.e. (?...) -> ?
-    FunctionType u2uFunctionType = createFunctionTypeWithVarArgs(unknownType, unknownType);
-    registerNativeType(JSTypeNative.U2U_FUNCTION_TYPE, u2uFunctionType);
-
     // least function type, i.e. (All...) -> NoType
     FunctionType leastFunctionType = createNativeFunctionTypeWithVarArgs(noType, allType);
     registerNativeType(JSTypeNative.LEAST_FUNCTION_TYPE, leastFunctionType);

@@ -446,8 +446,19 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
-        "new F(...args);",
-        "new (Function.prototype.bind.apply(F, [null].concat($jscomp.arrayFromIterable(args))));");
+        externs(
+            lines(
+                "/**",
+                " * @param {?Object|undefined} selfObj",
+                " * @param {...*} var_args",
+                " * @return {!Function}",
+                " */",
+                "Function.prototype.bind = function(selfObj, var_args) {};")),
+        srcs("new F(...args);"),
+        expected(
+            "new (Function.prototype.bind.apply(F,"
+                + " [null].concat($jscomp.arrayFromIterable(args))));"));
+
     assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 

@@ -4645,13 +4645,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testLeastSupertypeUnresolvedNamedType() {
     // (undefined,function(?):?) and ? unresolved named type
-    JSType expected = registry.createUnionType(
-        unresolvedNamedType, U2U_FUNCTION_TYPE);
-    assertTypeEquals(expected,
-        unresolvedNamedType.getLeastSupertype(U2U_FUNCTION_TYPE));
-    assertTypeEquals(expected,
-        U2U_FUNCTION_TYPE.getLeastSupertype(unresolvedNamedType));
-    assertThat(expected.toString()).isEqualTo("(?|function(...?): ?)");
+    JSType expected = registry.createUnionType(unresolvedNamedType, FUNCTION_TYPE);
+    assertTypeEquals(expected, unresolvedNamedType.getLeastSupertype(FUNCTION_TYPE));
+    assertTypeEquals(expected, FUNCTION_TYPE.getLeastSupertype(unresolvedNamedType));
+    assertThat(expected.toString()).isEqualTo("(?|Function)");
   }
 
   @Test
@@ -5977,16 +5974,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
-   * Tests {@code U2U_FUNCTION_TYPE <: U2U_CONSTRUCTOR} and {@code U2U_FUNCTION_TYPE <:
-   * (U2U_CONSTRUCTOR,undefined)}.
-   */
-  @Test
-  public void testBug904123() {
-    assertThat(U2U_FUNCTION_TYPE.isSubtype(FUNCTION_TYPE)).isTrue();
-    assertThat(U2U_FUNCTION_TYPE.isSubtype(createOptionalType(FUNCTION_TYPE))).isTrue();
-  }
-
-  /**
    * Assert that a type can assign to itself.
    */
   private void assertTypeCanAssignToItself(JSType type) {
@@ -6328,8 +6315,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(BOOLEAN_TYPE.canCastTo(OBJECT_NUMBER_STRING)).isFalse();
     assertThat(OBJECT_NUMBER_STRING.canCastTo(BOOLEAN_TYPE)).isFalse();
 
-    assertThat(ARRAY_TYPE.canCastTo(U2U_FUNCTION_TYPE)).isFalse();
-    assertThat(U2U_FUNCTION_TYPE.canCastTo(ARRAY_TYPE)).isFalse();
+    assertThat(ARRAY_TYPE.canCastTo(FUNCTION_TYPE)).isFalse();
+    assertThat(FUNCTION_TYPE.canCastTo(ARRAY_TYPE)).isFalse();
 
     assertThat(NULL_VOID.canCastTo(ARRAY_TYPE)).isFalse();
     assertThat(NULL_VOID.canCastTo(createUnionType(ARRAY_TYPE, NULL_TYPE))).isTrue();

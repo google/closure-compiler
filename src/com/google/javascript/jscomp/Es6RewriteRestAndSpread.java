@@ -58,7 +58,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   private final JSType concatFnType;
   private final JSType nullType;
   private final JSType numberType;
-  private final JSType u2uFunctionType;
   private final JSType functionFunctionType;
 
   public Es6RewriteRestAndSpread(AbstractCompiler compiler) {
@@ -71,7 +70,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       this.concatFnType = arrayType.findPropertyType("concat");
       this.nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
       this.numberType = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
-      this.u2uFunctionType = registry.getNativeType(JSTypeNative.U2U_FUNCTION_TYPE);
       this.functionFunctionType = registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
     } else {
       this.arrayType = null;
@@ -79,7 +77,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       this.concatFnType = null;
       this.nullType = null;
       this.numberType = null;
-      this.u2uFunctionType = null;
       this.functionFunctionType = null;
     }
   }
@@ -485,11 +482,10 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     //      function(function(new:[spreadParent], ...?), !Array<?>):function(new:[spreadParent])
     Node bindApply =
         getpropInferringJSType(
-            IR.getprop(
-                    getpropInferringJSType(
-                        IR.name("Function").setJSType(functionFunctionType), "prototype"),
-                    "bind")
-                .setJSType(u2uFunctionType),
+            getpropInferringJSType(
+                getpropInferringJSType(
+                    IR.name("Function").setJSType(functionFunctionType), "prototype"),
+                "bind"),
             "apply");
     Node result =
         IR.newNode(

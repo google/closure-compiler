@@ -3991,7 +3991,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "  /** @type {Function} */ this.foo;",
             "}"),
         "(new f).foo",
-        createNullableType(getNativeU2UConstructorType()).toString());
+        createNullableType(getNativeFunctionType()).toString());
   }
 
   @Test
@@ -4001,7 +4001,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ function f() {} ", // preserve newlines
             "/** @type {Function} */ f.prototype.foo;"),
         "(new f).foo",
-        createNullableType(getNativeU2UConstructorType()).toString());
+        createNullableType(getNativeFunctionType()).toString());
   }
 
   @Test
@@ -4011,7 +4011,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @constructor */ function f() {} ", // preserve newlines
             "/** @type {Function} */ f.prototype.foo = function() {};"),
         "(new f).foo",
-        createNullableType(getNativeU2UConstructorType()).toString());
+        createNullableType(getNativeFunctionType()).toString());
   }
 
   @Test
@@ -4019,7 +4019,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testFunctionType(
         "/** @type {Function} */ var f = function() {}; ",
         "f",
-        createNullableType(getNativeU2UConstructorType()).toString());
+        createNullableType(getNativeFunctionType()).toString());
   }
 
   @Test
@@ -13901,8 +13901,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
     JSType functionAType = js1Node.getFirstChild().getJSType();
     assertThat(functionAType.toString()).isEqualTo("function(): undefined");
-    assertTypeEquals(getNativeUnknownType(), getNativeU2UFunctionType().getPropertyType("m1"));
-    assertTypeEquals(getNativeUnknownType(), getNativeU2UFunctionType().getPropertyType("m2"));
+    assertTypeEquals(getNativeUnknownType(), getNativeFunctionType().getPropertyType("m1"));
+    assertTypeEquals(getNativeUnknownType(), getNativeFunctionType().getPropertyType("m2"));
   }
 
   @Test
