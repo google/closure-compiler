@@ -482,16 +482,6 @@ public class ChromePassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCrExportPath() {
-    test(
-        "cr.exportPath('a.b.c');",
-        "var a = a || {};\n"
-            + "a.b = a.b || {};\n"
-            + "a.b.c = a.b.c || {};\n"
-            + "cr.exportPath('a.b.c');");
-  }
-
-  @Test
   public void testCrDefineCreatesEveryObjectOnlyOnce() {
     test(
         "cr.define('a.b.c.d', function() {\n"
@@ -507,25 +497,6 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.define('a.b.c.d', function() {\n"
             + "  return {};\n"
             + "});\n"
-            + "a.b.e = a.b.e || {};\n"
-            + "a.b.e.f = a.b.e.f || {};\n"
-            + "cr.define('a.b.e.f', function() {\n"
-            + "  return {};\n"
-            + "});");
-  }
-
-  @Test
-  public void testCrDefineAndCrExportPathCreateEveryObjectOnlyOnce() {
-    test(
-        "cr.exportPath('a.b.c.d');\n"
-            + "cr.define('a.b.e.f', function() {\n"
-            + "  return {};\n"
-            + "});",
-        "var a = a || {};\n"
-            + "a.b = a.b || {};\n"
-            + "a.b.c = a.b.c || {};\n"
-            + "a.b.c.d = a.b.c.d || {};\n"
-            + "cr.exportPath('a.b.c.d');\n"
             + "a.b.e = a.b.e || {};\n"
             + "a.b.e.f = a.b.e.f || {};\n"
             + "cr.define('a.b.e.f', function() {\n"
@@ -614,10 +585,5 @@ public class ChromePassTest extends CompilerTestCase {
             "  }",
             "  return { C: settings.C };",
             "});"));
-  }
-
-  @Test
-  public void testCrExportPathInvalidNumberOfArguments() {
-    testError("cr.exportPath();", ChromePass.CR_EXPORT_PATH_TOO_FEW_ARGUMENTS);
   }
 }

@@ -48,7 +48,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private final Set<String> createdObjects;
 
   private static final String CR_DEFINE = "cr.define";
-  private static final String CR_EXPORT_PATH = "cr.exportPath";
   private static final String OBJECT_DEFINE_PROPERTY = "Object.defineProperty";
   private static final String CR_DEFINE_PROPERTY = "cr.defineProperty";
   private static final String VIRTUAL_FILE = "<ChromePass.java>";
@@ -63,11 +62,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
       DiagnosticType.error(
           "JSC_CR_DEFINE_WRONG_NUMBER_OF_ARGUMENTS",
           "cr.define() should have exactly 2 arguments. " + CR_DEFINE_COMMON_EXPLANATION);
-
-  static final DiagnosticType CR_EXPORT_PATH_TOO_FEW_ARGUMENTS =
-      DiagnosticType.error(
-          "JSC_CR_EXPORT_PATH_TOO_FEW_ARGUMENTS",
-          "cr.exportPath() should have at least 1 argument: path name.");
 
   static final DiagnosticType CR_DEFINE_INVALID_FIRST_ARGUMENT =
       DiagnosticType.error(
@@ -114,8 +108,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
       Node callee = node.getFirstChild();
       if (callee.matchesQualifiedName(CR_DEFINE)) {
         visitNamespaceDefinition(node, parent);
-      } else if (callee.matchesQualifiedName(CR_EXPORT_PATH)) {
-        visitExportPath(node, parent);
       } else if (callee.matchesQualifiedName(OBJECT_DEFINE_PROPERTY)
           || callee.matchesQualifiedName(CR_DEFINE_PROPERTY)) {
         visitPropertyDefinition(node, parent);
@@ -201,19 +193,6 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
     builder.recordType(new JSTypeExpression(type.srcrefTree(VIRTUAL_NODE), VIRTUAL_FILE));
     target.setJSDocInfo(builder.build());
-  }
-
-  private void visitExportPath(Node crExportPathNode, Node parent) {
-    if (crExportPathNode.getChildCount() < 2) {
-      compiler.report(JSError.make(crExportPathNode, CR_EXPORT_PATH_TOO_FEW_ARGUMENTS));
-      return;
-    }
-
-    Node pathArg = crExportPathNode.getSecondChild();
-    if (pathArg.isString()) {
-      // TODO(dbeam): support cr.exportPath('ns').value.
-      createAndInsertObjectsForQualifiedName(parent, pathArg.getString());
-    }
   }
 
   private void createAndInsertObjectsForQualifiedName(Node scriptChild, String namespace) {
