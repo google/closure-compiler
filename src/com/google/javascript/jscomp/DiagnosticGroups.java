@@ -37,7 +37,6 @@ import com.google.javascript.jscomp.lint.CheckEs6Modules;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
-import com.google.javascript.jscomp.lint.CheckMissingTrailingComma;
 import com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
@@ -584,7 +583,6 @@ public class DiagnosticGroups {
               CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
               CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
-              CheckMissingTrailingComma.MISSING_TRAILING_COMMA,
               CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.REDUNDANT_NULLABILITY_MODIFIER_JSDOC,

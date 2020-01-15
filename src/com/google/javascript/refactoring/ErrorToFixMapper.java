@@ -82,8 +82,6 @@ public final class ErrorToFixMapper {
         return getFixForEarlyReference(error, compiler);
       case "JSC_MISSING_SEMICOLON":
         return getFixForMissingSemicolon(error, compiler);
-      case "JSC_MISSING_TRAILING_COMMA":
-        return getFixForMissingTrailingComma(error, compiler);
       case "JSC_REQUIRES_NOT_SORTED":
         return getFixForUnsortedRequires(error, compiler);
       case "JSC_PROVIDES_NOT_SORTED":
@@ -289,14 +287,6 @@ public final class ErrorToFixMapper {
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.getNode(), compiler)
         .insertAfter(error.getNode(), ";")
-        .build();
-  }
-
-  private static SuggestedFix getFixForMissingTrailingComma(
-      JSError error, AbstractCompiler compiler) {
-    return new SuggestedFix.Builder()
-        .attachMatchedNodeInfo(error.getNode(), compiler)
-        .insertAfter(error.getNode(), ",")
         .build();
   }
 
