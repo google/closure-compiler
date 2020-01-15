@@ -2075,6 +2075,74 @@ CSSProperties.prototype.clipPath;
  */
 CSSProperties.prototype.contain;
 
+// SVG Stroke Properties
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.stroke;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeAlignment;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeOpacity;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeWidth;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeLinecap;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeLinejoin;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeMiterlimit;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeDasharray;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeDashoffset;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeDashcorner;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/svg-strokes/
+ */
+CSSProperties.prototype.strokeDashadjust;
+
 /**
  * TODO(dbeam): Put this in separate file named w3c_cssom.js.
  * Externs for the CSSOM View Module.
