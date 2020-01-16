@@ -57,6 +57,13 @@ public class PrototypeObjectTypeTest extends BaseJSTypeTestCase {
     assertThat(type.toString()).isEqualTo("{foo: number}");
 
     type.defineDeclaredProperty("bar", type, null);
-    assertThat(type.toString()).isEqualTo("{bar: {...}, foo: number}");
+    assertThat(type.toString())
+        .isEqualTo(
+            String.join(
+                "\n",
+                "{", //
+                "  bar: {...},",
+                "  foo: number",
+                "}"));
   }
 }

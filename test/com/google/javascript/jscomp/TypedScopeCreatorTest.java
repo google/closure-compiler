@@ -924,7 +924,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("/** @param {{a: string, b: number}} arr */ function f({a, b}) {}");
 
     TypedVar fVar = checkNotNull(globalScope.getVar("f"));
-    assertType(fVar.getType()).toStringIsEqualTo("function({a: string, b: number}): undefined");
+    assertType(fVar.getType())
+        .toStringIsEqualTo("function({\n  a: string,\n  b: number\n}): undefined");
     assertThat(fVar.isTypeInferred()).isFalse();
 
     TypedVar aVar = checkNotNull(lastFunctionScope.getVar("a"));
@@ -4196,7 +4197,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(xType.getPropertyType("y").toString()).isEqualTo("number");
     assertThat(xType.isPropertyTypeDeclared("y")).isFalse();
     assertThat(xType.isPropertyTypeDeclared("z")).isTrue();
-    assertThat(xType.toString()).isEqualTo("{y: number, z: number}");
+    assertThat(xType.toString()).isEqualTo("{\n  y: number,\n  z: number\n}");
   }
 
   @Test

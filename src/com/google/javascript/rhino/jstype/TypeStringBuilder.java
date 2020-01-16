@@ -44,7 +44,7 @@ package com.google.javascript.rhino.jstype;
  *
  * <p>Instances are single use. They irreversibly accumulate state required during traversal.
  */
-final class TypeStringBuilder implements Appendable {
+final class TypeStringBuilder {
 
   private final StringBuilder builder = new StringBuilder();
   private final boolean isForAnnotations;
@@ -58,26 +58,35 @@ final class TypeStringBuilder implements Appendable {
     return this.isForAnnotations;
   }
 
-  @Override
-  public TypeStringBuilder append(CharSequence text) {
-    this.builder.append(text);
+  TypeStringBuilder append(String x) {
+    this.builder.append(x);
     return this;
   }
 
-  @Override
-  public TypeStringBuilder append(char c) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public TypeStringBuilder append(CharSequence csq, int start, int end) {
-    throw new UnsupportedOperationException();
-  }
-
-  TypeStringBuilder append(JSType type) {
-    type.appendTo(this);
+  TypeStringBuilder append(JSType x) {
+    x.appendTo(this);
     return this;
   }
+
+  TypeStringBuilder appendAll(Iterable<?> elements, String separator) {
+    boolean separate = false;
+    for (Object e : elements) {
+      if (separate) {
+        this.append(separator);
+      } else {
+        separate = true;
+      }
+
+      if (e instanceof JSType) {
+        this.append((JSType) e);
+      } else {
+        this.append((String) e);
+      }
+    }
+
+    return this;
+  }
+
 
   TypeStringBuilder appendNonNull(JSType type) {
     if (this.isForAnnotations
@@ -108,5 +117,11 @@ final class TypeStringBuilder implements Appendable {
 
   String build() {
     return this.builder.toString();
+  }
+
+  TypeStringBuilder cloneWithConfig() {
+    TypeStringBuilder clone = new TypeStringBuilder(this.isForAnnotations);
+    clone.indentation = this.indentation;
+    return clone;
   }
 }

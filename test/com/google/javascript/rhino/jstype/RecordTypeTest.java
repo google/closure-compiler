@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -117,26 +118,18 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             .addProperty(
                 "a",
                 new RecordTypeBuilder(registry)
-                    .addProperty("aa", NUMBER_TYPE, null)
-                    .addProperty("ab", NUMBER_TYPE, null)
                     .addProperty(
-                        "ac",
+                        "aa",
                         new RecordTypeBuilder(registry)
-                            .addProperty("aca", NUMBER_TYPE, null)
-                            .addProperty("acb", NUMBER_TYPE, null)
-                            .addProperty("acc", NUMBER_TYPE, null)
+                            .addProperty("aaa", NUMBER_TYPE, null)
+                            .addProperty("aab", NUMBER_TYPE, null)
+                            .addProperty("aac", NUMBER_TYPE, null)
                             .build(),
                         null)
+                    .addProperty("ab", NUMBER_TYPE, null)
                     .build(),
                 null)
-            .addProperty(
-                "b",
-                new RecordTypeBuilder(registry)
-                    .addProperty("ba", NUMBER_TYPE, null)
-                    .addProperty("bb", NUMBER_TYPE, null)
-                    .build(),
-                null)
-            .addProperty("c", NUMBER_TYPE, null)
+            .addProperty("b", NUMBER_TYPE, null)
             .build();
 
     assertThat(record.toString())
@@ -144,22 +137,81 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
             LINE_JOINER.join(
                 "{",
                 "  a: {",
-                "    aa: number,",
-                "    ab: number,",
-                "    ac: {",
-                "      aca: number,",
-                "      acb: number,",
-                "      acc: number",
-                "    }",
+                "    aa: {",
+                "      aaa: number,",
+                "      aab: number,",
+                "      aac: number",
+                "    },",
+                "    ab: number",
                 "  },",
-                "  b: {ba: number, bb: number},",
-                "  c: number",
+                "  b: number",
                 "}"));
 
     assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{a: {aa: {aaa: number, aab: number, aac: number}, ab: number}, b: number}");
+  }
+
+  @Test
+  public void testToString_nestedRecordIndentation_throughUnion() {
+    JSType record =
+        new RecordTypeBuilder(registry)
+            .addProperty("a", NUMBER_TYPE, null)
+            .addProperty(
+                "b",
+                registry.createUnionType(
+                    NUMBER_TYPE,
+                    new RecordTypeBuilder(registry)
+                        .addProperty("ba", NUMBER_TYPE, null)
+                        .addProperty("bb", NUMBER_TYPE, null)
+                        .build()),
+                null)
+            .build();
+
+    assertThat(record.toString())
         .isEqualTo(
-            "{a: {aa: number, ab: number, ac: {aca: number, acb: number, acc: number}}, b: {ba:"
-                + " number, bb: number}, c: number}");
+            LINE_JOINER.join(
+                "{",
+                "  a: number,",
+                "  b: (number|{",
+                "    ba: number,",
+                "    bb: number",
+                "  })",
+                "}"));
+
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{a: number, b: (number|{ba: number, bb: number})}");
+  }
+
+  @Test
+  public void testToString_nestedRecordIndentation_throughTemplateParam() {
+    JSType record =
+        new RecordTypeBuilder(registry)
+            .addProperty("a", NUMBER_TYPE, null)
+            .addProperty(
+                "b",
+                registry.createTemplatizedType(
+                    ARRAY_TYPE,
+                    ImmutableList.of(
+                        new RecordTypeBuilder(registry)
+                            .addProperty("ba", NUMBER_TYPE, null)
+                            .addProperty("bb", NUMBER_TYPE, null)
+                            .build())),
+                null)
+            .build();
+
+    assertThat(record.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a: number,",
+                "  b: Array<{",
+                "    ba: number,",
+                "    bb: number",
+                "  }>",
+                "}"));
+
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{a: number, b: !Array<{ba: number, bb: number}>}");
   }
 
   @Test

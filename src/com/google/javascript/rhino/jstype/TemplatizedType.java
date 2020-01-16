@@ -42,7 +42,6 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.LinkedHashSet;
@@ -120,13 +119,7 @@ public final class TemplatizedType extends ProxyObjectType {
   void appendTo(TypeStringBuilder sb) {
     super.appendTo(sb);
     if (!this.templateTypes.isEmpty()) {
-      sb.append("<");
-      try {
-        Joiner.on(',').appendTo(sb, this.templateTypes);
-      } catch (Exception e) {
-        throw new AssertionError(e);
-      }
-      sb.append(">");
+      sb.append("<").appendAll(this.templateTypes, ",").append(">");
     }
   }
 

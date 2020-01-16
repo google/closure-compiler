@@ -308,8 +308,6 @@ public class PrototypeObjectType extends ObjectType {
       sb.append(sb.isForAnnotations() ? "?" : "{...}");
       return;
     }
-    // Don't pretty print recursively.
-    this.prettyPrint = false;
 
     // Use a tree set so that the properties are sorted.
     Set<String> propertyNames = new TreeSet<>();
@@ -321,7 +319,10 @@ public class PrototypeObjectType extends ObjectType {
       propertyNames.addAll(current.getOwnPropertyNames());
     }
 
-    boolean multiline = !sb.isForAnnotations() && propertyNames.size() > 2;
+    // Don't pretty print recursively. It would cause infinite recursion.
+    this.prettyPrint = false;
+
+    boolean multiline = !sb.isForAnnotations() && propertyNames.size() > 1;
     sb.append("{")
         .indent(
             () -> {

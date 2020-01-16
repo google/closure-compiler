@@ -1792,7 +1792,7 @@ public final class TypeInferenceTest {
         "var out = {};" +
         "f(out);");
     assertThat(getType("out").toString())
-        .isEqualTo("{a: (boolean|undefined), b: (string|undefined)}");
+        .isEqualTo("{\n  a: (boolean|undefined),\n  b: (string|undefined)\n}");
   }
 
   @Test

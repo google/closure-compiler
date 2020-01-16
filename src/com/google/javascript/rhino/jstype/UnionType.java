@@ -50,7 +50,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import java.util.ArrayList;
@@ -472,17 +471,13 @@ public class UnionType extends JSType {
   void appendTo(TypeStringBuilder sb) {
     sb.append("(");
 
-    // Sort types in character value order in order to get consistent results.
-    // This is important for deterministic behavior for testing.
-    TreeSet<String> sortedTypeNames = new TreeSet<>();
-    for (JSType alt : alternates) {
-      sortedTypeNames.add(new TypeStringBuilder(sb.isForAnnotations()).append(alt).build());
+    // Sort types by stringification to get deterministic behaviour.
+    TreeSet<String> sortedNames = new TreeSet<>();
+    for (JSType alt : this.alternates) {
+      // Clone the config to preserve indentation.
+      sortedNames.add(sb.cloneWithConfig().append(alt).build());
     }
-    try {
-      Joiner.on('|').appendTo(sb, sortedTypeNames);
-    } catch (Exception e) {
-      throw new AssertionError(e);
-    }
+    sb.appendAll(sortedNames, "|");
 
     sb.append(")");
   }

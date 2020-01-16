@@ -258,12 +258,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTypeCheck25() {
     testTypes(
-        lines(
-            "function foo(/** {a: number} */ obj) {};",
-            "foo({b: 'abc'});"),
+        lines("function foo(/** {a: number} */ obj) {};", "foo({b: 'abc'});"),
         lines(
             "actual parameter 1 of foo does not match formal parameter",
-            "found   : {a: (number|undefined), b: string}",
+            "found   : {\n  a: (number|undefined),\n  b: string\n}",
             "required: {a: number}",
             "missing : []",
             "mismatch: [a]"));
@@ -17225,17 +17223,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTemplateType19() {
     testTypes(
-        "/**\n" +
-        " * @param {T} t\n" +
-        " * @param {U} u\n" +
-        " * @return {{t:T, u:U}} \n" +
-        " * @template T,U\n" +
-        " */\n" +
-        "function fn(t, u) { return {t:t, u:u}; }\n" +
-        "/** @type {null} */ var x = fn(1, 'str');",
-        "initializing variable\n" +
-        "found   : {t: number, u: string}\n" +
-        "required: null");
+        "/**\n"
+            + " * @param {T} t\n"
+            + " * @param {U} u\n"
+            + " * @return {{t:T, u:U}} \n"
+            + " * @template T,U\n"
+            + " */\n"
+            + "function fn(t, u) { return {t:t, u:u}; }\n"
+            + "/** @type {null} */ var x = fn(1, 'str');",
+        "initializing variable\n"
+            + "found   : {\n  t: number,\n  u: string\n}\n"
+            + "required: null");
   }
 
   @Test
@@ -21241,10 +21239,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "com1 = com2;"),
         lines(
             "assignment",
-            "found   : {fun: function((I7|null)): (C7|null), prop: {prop: (C7|null)}}",
-            "required: {fun: function((C7|null)): (I7|null), prop: {prop: (I7|null)}}",
+            "found   : {\n  fun: function((I7|null)): (C7|null),\n  prop: {prop: (C7|null)}\n}",
+            "required: {\n  fun: function((C7|null)): (I7|null),\n  prop: {prop: (I7|null)}\n}",
             "missing : []",
-        "mismatch: [fun,prop]"));
+            "mismatch: [fun,prop]"));
   }
 
   @Test
@@ -21743,10 +21741,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "initializing variable",
             "found   : Foo",
-            "required: {str: string, unknown: ?}",
+            "required: {\n  str: string,\n  unknown: ?\n}",
             "missing : [unknown]",
-            "mismatch: []"
-        ));
+            "mismatch: []"));
   }
 
   @Test
@@ -21770,7 +21767,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "initializing variable",
             "found   : Foo",
-            "required: {str: string, top: *}",
+            "required: {\n  str: string,\n  top: *\n}",
             "missing : [top]",
             "mismatch: []"));
   }
@@ -22064,7 +22061,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             "assignment",
             "found   : {prop: (C2|null)}",
-            "required: {prop: (C|null), prop2: (C|null)}",
+            "required: {\n  prop: (C|null),\n  prop2: (C|null)\n}",
             "missing : [prop2]",
             "mismatch: []"));
   }
@@ -22129,8 +22126,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "r1 = r2;"),
         lines(
             "assignment",
-            "found   : {prop: (C2|null), prop2: (C|null)}",
-            "required: {prop: (C2|null), prop2: (C2|null)}",
+            "found   : {\n  prop: (C2|null),\n  prop2: (C|null)\n}",
+            "required: {\n  prop: (C2|null),\n  prop2: (C2|null)\n}",
             "missing : []",
             "mismatch: [prop2]"));
   }
@@ -22171,10 +22168,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "/** @type {!Foo} */",
             "var f = new Foo();",
             "f = r1;"),
-        lines(
-            "assignment",
-            "found   : {x: number, y: string}",
-            "required: Foo"));
+        lines("assignment", "found   : {\n  x: number,\n  y: string\n}", "required: Foo"));
   }
 
   @Test
@@ -22967,8 +22961,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var ns = {};",
             "/** @type {{x:number}} */ ns.x;",
             "/** @type {{x:number, y:boolean}} */ ns.x;"),
-        "variable ns.x redefined with type {x: number, y: boolean}, "
-        + "original definition at [testcode]:2 with type {x: number}");
+        "variable ns.x redefined with type {\n  x: number,\n  y: boolean\n}, "
+            + "original definition at [testcode]:2 with type {x: number}");
   }
 
   @Test
@@ -25207,7 +25201,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "const Y = {A: 0, B: 1}; /** @enum {number} */ const X = Y;",
         lines(
             "initializing variable", //
-            "found   : {A: number, B: number}",
+            "found   : {\n  A: number,\n  B: number\n}",
             "required: enum{X}"));
   }
 
