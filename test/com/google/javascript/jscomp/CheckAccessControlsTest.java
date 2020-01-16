@@ -2632,6 +2632,22 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFunctionWithNewType_canReturnFinalClass() {
+    testNoWarning(
+        lines(
+            "goog.forwardDeclare('Parent');",
+            "/** @type {function(new: Parent): !Parent} */",
+            "const PatchedParent = function Parent() { return /** @type {?} */ (0); }"));
+
+    testNoWarning(
+        lines(
+            "/** @constructor @final */",
+            "const Parent = function() {}",
+            "/** @type {function(new: Parent): !Parent} */",
+            "const PatchedParent = function Parent() { return /** @type {?} */ (0); }"));
+  }
+
+  @Test
   public void testFinalClassCannotBeSubclassed() {
     testError(
         lines(
