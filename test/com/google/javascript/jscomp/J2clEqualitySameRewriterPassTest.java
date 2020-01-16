@@ -56,8 +56,11 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
     test(
         lines(
             "Equality.$same(0, 0);",
+            "Equality.$same(-0, -0);",
             "Equality.$same(0, -0);",
             "Equality.$same(NaN, NaN);",
+            "Equality.$same(Infinity, Infinity);",
+            "Equality.$same(Infinity, -Infinity);",
             "Equality.$same(0, null);",
             "Equality.$same(0, '');",
             "var a = 'ABC';",
@@ -71,8 +74,11 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(b, /** @type {null} */ (null));"),
         lines(
             "true",
+            "true",
             "false",
             "true",
+            "true",
+            "false",
             "0 == null;",
             "0 === '';",
             "var a = 'ABC';",
@@ -98,6 +104,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(b, 0);",
             "Equality.$same(b, -0);",
             "Equality.$same(b, NaN);",
+            "Equality.$same(b, Infinity);",
             "var c = 5;",
             "Equality.$same(c, null);",
             "Equality.$same(null, c);",
@@ -110,6 +117,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "b === 0;",
             "b === -0;",
             "b === NaN;",
+            "b === Infinity;",
             "var c = 5;",
             "c == null;", // Note that the semantics are preserved for number.
             "c == null;",
