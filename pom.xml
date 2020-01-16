@@ -138,7 +138,7 @@
     <jdk.version>1.8</jdk.version>
     <junit.version>4.12</junit.version>
     <guava.version>25.1-jre</guava.version>
-    <protobuf.version>3.0.2</protobuf.version>
+    <protobuf.version>3.11.1</protobuf.version>
   </properties>
 
   <build>
