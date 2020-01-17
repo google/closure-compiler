@@ -1276,10 +1276,7 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-
-          // Should be FeatureSet.latest() since it's a trivial pass, but must match "normalize"
-          // TODO(johnlenz): Update this and normalize to latest()
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(FeatureSet.latest())
           .build();
 
   /** Closure pre-processing pass. */
@@ -2107,7 +2104,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.setIdGeneratorMap(pass.getSerializedIdMappings());
                     }
                   })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES2019_MODULES.with(Feature.NULL_COALESCE_OP))
           .build();
 
   /** Replace strings. */
@@ -2570,8 +2567,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.NORMALIZE)
           .setInternalFactory((compiler) -> new Normalize(compiler, false))
-          // TODO(johnlenz): Update this and gatherRawExports to latest()
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(FeatureSet.latest().with(Feature.NULL_COALESCE_OP))
           .build();
 
   private final PassFactory externExports =
@@ -2703,7 +2699,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("varCheckValidity")
           .setInternalFactory((compiler) -> new VarCheck(compiler, true))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES2019_MODULES.with(Feature.NULL_COALESCE_OP))
           .build();
 
   private final PassFactory instrumentForCodeCoverage =
@@ -2887,7 +2883,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("optimizeToEs6")
           .setInternalFactory(SubstituteEs6Syntax::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES2019_MODULES.with(Feature.NULL_COALESCE_OP))
           .build();
 
   /** Rewrites goog.module in whitespace only mode */

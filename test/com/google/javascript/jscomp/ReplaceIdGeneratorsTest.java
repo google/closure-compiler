@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -174,6 +175,19 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
             "f1 = id('f1')"),
         lines("/** @idGenerator {consistent} */ id = function() {};", "f1 = 'a';", "f1 = 'a'"),
         "[id]\n" + "\n" + "a:f1\n" + "\n");
+  }
+
+  @Test
+  public void testNullishCoalesce() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    testWithPseudo(
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {x ?? y;};",
+            "foo.bar = foo.getUniqueId('foo_bar')"),
+        lines("/** @idGenerator */ foo.getUniqueId = function() {x ?? y;};", "foo.bar = 'a'"),
+        lines(
+            "/** @idGenerator */ foo.getUniqueId = function() {x ?? y;};",
+            "foo.bar = 'foo_bar$0'"));
   }
 
   @Test

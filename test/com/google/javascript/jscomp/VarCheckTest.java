@@ -155,6 +155,13 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNullishCoalesce() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    testSame("let x; x = 0 ?? true");
+    testError("let x; x = a ?? \"hi\"", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  @Test
   public void testReferencedLetDefined1_withES6Modules() {
     testSame("export let x; x = 1;");
   }
