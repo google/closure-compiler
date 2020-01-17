@@ -63,6 +63,7 @@ import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -2074,7 +2075,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.CHECK_CONST_PARAMS)
           .setInternalFactory(ConstParamCheck::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES2019_MODULES.with(Feature.NULL_COALESCE_OP))
           .build();
 
   /** Inserts run-time type assertions for debugging. */
@@ -2585,7 +2586,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("denormalize")
           .setInternalFactory(Denormalize::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES2019_MODULES.with(Feature.NULL_COALESCE_OP))
           .build();
 
   /** Inverting name normalization. */
@@ -2596,7 +2597,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> {
                 return MakeDeclaredNamesUnique.getContextualRenameInverter(compiler);
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES2019_MODULES.with(Feature.NULL_COALESCE_OP))
           .build();
 
   /** Renames properties. */
@@ -2726,7 +2727,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("gatherExternProperties")
           .setInternalFactory(GatherExternProperties::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES2019_MODULES.with(Feature.NULL_COALESCE_OP))
           .build();
 
   /**

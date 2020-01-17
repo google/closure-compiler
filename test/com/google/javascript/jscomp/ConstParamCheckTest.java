@@ -140,6 +140,16 @@ public final class ConstParamCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNullishCoalesceArgument() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    // Although `'foo' ?? 'bar'` does definitely resolve to a string literal, it's also
+    // nonsensical code to put into a const declaration, so it deserves an error.
+    testError(
+        CLOSURE_DEFS + "goog.string.Const.from('foo' ?? 'bar');",
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+  }
+
+  @Test
   public void testStringLiteralComplexExpression() {
     testSame(
         CLOSURE_DEFS
