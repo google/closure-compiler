@@ -166,6 +166,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "goog.module.declareLegacyNamespace() must be immediately after the"
               + " goog.module('...'); call");
 
+  static final DiagnosticType LEGACY_NAMESPACE_ARGUMENT =
+      DiagnosticType.error(
+          "JSC_LEGACY_NAMESPACE_ARGUMENT",
+          "goog.module.declareLegacyNamespace() takes no arguments");
+
   private static class ModuleInfo {
     // Name of the module in question (i.e. the argument to goog.module)
     private final String name;
@@ -519,6 +524,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   /** Validates the position of a goog.module.declareLegacyNamespace(); call */
   private static void checkLegacyNamespaceCall(NodeTraversal t, Node callNode, Node parent) {
     checkArgument(callNode.isCall());
+    if (callNode.getChildCount() > 1) {
+      t.report(callNode, LEGACY_NAMESPACE_ARGUMENT);
+    }
     if (!parent.isExprResult()) {
       t.report(callNode, LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL);
       return;

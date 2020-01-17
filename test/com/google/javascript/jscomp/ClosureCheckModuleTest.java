@@ -28,6 +28,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAM
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_ARGUMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
@@ -493,6 +494,12 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "  return exports",
             "});"),
         LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
+
+    testError(
+        lines(
+            "goog.module('my.mod');", //
+            "goog.module.declareLegacyNamespace('some comment');"),
+        LEGACY_NAMESPACE_ARGUMENT);
   }
 
   @Test
