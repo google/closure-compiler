@@ -124,9 +124,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           "JSC_DEFINE_CALL_WITHOUT_ASSIGNMENT",
           "The result of a goog.define call must be assigned as an isolated statement.");
 
-  static final DiagnosticType INVALID_FORWARD_DECLARE = DiagnosticType.error(
-      "JSC_INVALID_FORWARD_DECLARE",
-      "Malformed goog.forwardDeclaration");
+  static final DiagnosticType INVALID_FORWARD_DECLARE =
+      DiagnosticType.error("JSC_INVALID_FORWARD_DECLARE", "Malformed goog.forwardDeclare");
 
   static final DiagnosticType USE_OF_GOOG_BASE = DiagnosticType.disabled(
       "JSC_USE_OF_GOOG_BASE",

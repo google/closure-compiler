@@ -78,8 +78,8 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     test("goog.addDependency('x.js', ['A', 'B'], []);", "0");
 
     Compiler compiler = getLastCompiler();
-    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A")).isTrue();
-    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("B")).isTrue();
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A")).isFalse();
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("B")).isFalse();
     assertThat(compiler.getTypeRegistry().isForwardDeclaredType("C")).isFalse();
   }
 

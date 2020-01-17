@@ -883,16 +883,16 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPredeclaredType() {
-    String js = lines(
-        "goog.addDependency('zzz.js', ['goog.Foo'], []);",
-        "/** @constructor */ ",
-        "function A() {",
-        "  this.x = 3;",
-        "}",
-        "/** @param {goog.Foo} x */",
-        "function f(x) { x.y = 4; }");
+    String js =
+        lines(
+            "goog.forwardDeclare('goog.Foo');",
+            "/** @constructor */ ",
+            "function A() {",
+            "  this.x = 3;",
+            "}",
+            "/** @param {goog.Foo} x */",
+            "function f(x) { x.y = 4; }");
     String result = lines(
-        "0;",
         "/** @constructor */ ",
         "function A() {",
         "  this.a = 3;",

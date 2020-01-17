@@ -12910,10 +12910,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testCast13() {
     // Test to make sure that the forward-declaration still allows for
     // a warning.
-    testClosureTypes("var goog = {}; " +
-        "goog.addDependency('zzz.js', ['goog.foo'], []);" +
-        "goog.foo = function() {};" +
-        "function f() { return /** @type {goog.foo} */ (new Object()); }",
+    testClosureTypes(
+        "var goog = {}; "
+            + "goog.forwardDeclare('goog.foo');"
+            + "goog.foo = function() {};"
+            + "function f() { return /** @type {goog.foo} */ (new Object()); }",
         "Bad type annotation. Unknown type goog.foo");
   }
 
@@ -12921,9 +12922,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testCast14() {
     // Test to make sure that the forward-declaration still prevents
     // some warnings.
-    testClosureTypes("var goog = {}; " +
-        "goog.addDependency('zzz.js', ['goog.bar'], []);" +
-        "function f() { return /** @type {goog.bar} */ (new Object()); }",
+    testClosureTypes(
+        "var goog = {}; "
+            + "goog.forwardDeclare('goog.bar');"
+            + "function f() { return /** @type {goog.bar} */ (new Object()); }",
         null);
   }
 
@@ -15663,21 +15665,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testForwardTypeDeclaration1() {
-    testClosureTypes(
-        // malformed addDependency calls shouldn't cause a crash
-        "goog.addDependency();" +
-        "goog.addDependency('y', [goog]);" +
-
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x \n * @return {number} */" +
-        "function f(x) { return 3; }", null);
-  }
-
-  @Test
   public void testForwardTypeDeclaration2() {
-    String f = "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */ function f(x) { }";
+    String f = "goog.forwardDeclare('MyType');" + "/** @param {MyType} x */ function f(x) { }";
     testClosureTypes(f, null);
     testClosureTypes(f + "f(3);",
         "actual parameter 1 of f does not match formal parameter\n" +
@@ -15688,29 +15677,29 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForwardTypeDeclaration3() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */ function f(x) { return x; }" +
-        "/** @constructor */ var MyType = function() {};" +
-        "f(3);",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : number\n" +
-        "required: (MyType|null)");
+        "goog.forwardDeclare('MyType');"
+            + "/** @param {MyType} x */ function f(x) { return x; }"
+            + "/** @constructor */ var MyType = function() {};"
+            + "f(3);",
+        "actual parameter 1 of f does not match formal parameter\n"
+            + "found   : number\n"
+            + "required: (MyType|null)");
   }
 
   @Test
   public void testForwardTypeDeclaration4() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */ function f(x) { return x; }" +
-        "/** @constructor */ var MyType = function() {};" +
-        "f(new MyType());",
+        "goog.forwardDeclare('MyType');"
+            + "/** @param {MyType} x */ function f(x) { return x; }"
+            + "/** @constructor */ var MyType = function() {};"
+            + "f(new MyType());",
         null);
   }
 
   @Test
   public void testForwardTypeDeclaration5() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);"
+        "goog.forwardDeclare('MyType');"
             + "/**\n"
             + " * @constructor\n"
             + " * @extends {MyType}\n"
@@ -15722,12 +15711,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForwardTypeDeclaration6() {
     testClosureTypesMultipleWarnings(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @implements {MyType}\n" +
-        " */ var YourType = function() {};" +
-        "/** @override */ YourType.prototype.method = function() {};",
+        "goog.forwardDeclare('MyType');"
+            + "/**\n"
+            + " * @constructor\n"
+            + " * @implements {MyType}\n"
+            + " */ var YourType = function() {};"
+            + "/** @override */ YourType.prototype.method = function() {};",
         ImmutableList.of(
             "Could not resolve type in @implements tag of YourType",
             "property method not defined on any superclass of YourType"));
@@ -15736,31 +15725,34 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testForwardTypeDeclaration7() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType=} x */" +
-        "function f(x) { return x == undefined; }", null);
+        "goog.forwardDeclare('MyType');"
+            + "/** @param {MyType=} x */"
+            + "function f(x) { return x == undefined; }",
+        null);
   }
 
   @Test
   public void testForwardTypeDeclaration8() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */" +
-        "function f(x) { return x.name == undefined; }", null);
+        "goog.forwardDeclare('MyType');"
+            + "/** @param {MyType} x */"
+            + "function f(x) { return x.name == undefined; }",
+        null);
   }
 
   @Test
   public void testForwardTypeDeclaration9() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType} x */" +
-        "function f(x) { x.name = 'Bob'; }", null);
+        "goog.forwardDeclare('MyType');"
+            + "/** @param {MyType} x */"
+            + "function f(x) { x.name = 'Bob'; }",
+        null);
   }
 
   @Test
   public void testForwardTypeDeclaration10() {
-    String f = "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/** @param {MyType|number} x */ function f(x) { }";
+    String f =
+        "goog.forwardDeclare('MyType');" + "/** @param {MyType|number} x */ function f(x) { }";
     testClosureTypes(f, null);
     testClosureTypes(f + "f(3);", null);
     testClosureTypes(f + "f('3');",
@@ -15774,12 +15766,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // We assume that {Function} types can produce anything, and don't
     // want to type-check them.
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/**\n" +
-        " * @param {!Function} ctor\n" +
-        " * @return {MyType}\n" +
-        " */\n" +
-        "function f(ctor) { return new ctor(); }", null);
+        "goog.forwardDeclare('MyType');"
+            + "/**\n"
+            + " * @param {!Function} ctor\n"
+            + " * @return {MyType}\n"
+            + " */\n"
+            + "function f(ctor) { return new ctor(); }",
+        null);
   }
 
   @Test
@@ -15788,12 +15781,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // that aren't in their binaries. We want to make sure we can pass these
     // around, but still do other checks on them.
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MyType'], []);" +
-        "/**\n" +
-        " * @param {!Function} ctor\n" +
-        " * @return {MyType}\n" +
-        " */\n" +
-        "function f(ctor) { return (new ctor()).impossibleProp; }",
+        "goog.forwardDeclare('MyType');"
+            + "/**\n"
+            + " * @param {!Function} ctor\n"
+            + " * @return {MyType}\n"
+            + " */\n"
+            + "function f(ctor) { return (new ctor()).impossibleProp; }",
         "Property impossibleProp never defined on ?");
   }
 
@@ -16215,9 +16208,10 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testMissingProperty24() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MissingType'], []);" +
-        "/** @param {MissingType} x */" +
-        "function f(x) { x.impossible(); }", null);
+        "goog.forwardDeclare('MissingType');"
+            + "/** @param {MissingType} x */"
+            + "function f(x) { x.impossible(); }",
+        null);
   }
 
   @Test
@@ -16241,11 +16235,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testMissingProperty27() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MissingType'], []);" +
-        "/** @param {?MissingType} x */" +
-        "function f(x) {" +
-        "  for (var parent = x; parent; parent = parent.getParent()) {}" +
-        "}", null);
+        "goog.forwardDeclare('MissingType');"
+            + "/** @param {?MissingType} x */"
+            + "function f(x) {"
+            + "  for (var parent = x; parent; parent = parent.getParent()) {}"
+            + "}",
+        null);
   }
 
   @Test
@@ -16492,7 +16487,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testMissingProperty40a() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MissingType'], []);"
+        "goog.forwardDeclare('MissingType');"
             + "/** @param {MissingType} x */"
             + "function f(x) { x.impossible(); }",
         null);
@@ -16501,7 +16496,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testMissingProperty40b() {
     testClosureTypes(
-        "goog.addDependency('zzz.js', ['MissingType'], []);"
+        "goog.forwardDeclare('MissingType');"
             + "/** @param {(Array|MissingType)} x */"
             + "function f(x) { x.impossible(); }",
         // TODO(johnlenz): enable this.
@@ -17552,15 +17547,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testTemplateTypeWithUnresolvedType() {
     testClosureTypes(
-        "var goog = {};\n" +
-        "goog.addDependency = function(a,b,c){};\n" +
-        "goog.addDependency('a.js', ['Color'], []);\n" +
-
-        "/** @interface @template T */ function C() {}\n" +
-        "/** @return {!Color} */ C.prototype.method;\n" +
-
-        "/** @constructor @implements {C} */ function D() {}\n" +
-        "/** @override */ D.prototype.method = function() {};", null);  // no warning expected.
+        "var goog = {};\n"
+            + "goog.forwardDeclare = function(a){};\n"
+            + "goog.forwardDeclare('Color');\n"
+            + "/** @interface @template T */ function C() {}\n"
+            + "/** @return {!Color} */ C.prototype.method;\n"
+            + "/** @constructor @implements {C} */ function D() {}\n"
+            + "/** @override */ D.prototype.method = function() {};",
+        null); // no warning expected.
   }
 
   @Test
@@ -25360,7 +25354,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         .that(compiler.getErrorCount())
         .isEqualTo(0);
 
-    // For processing goog.addDependency for forward typedefs.
+    // For processing goog.forwardDeclare for forward typedefs.
     new ProcessClosurePrimitives(compiler, null).process(externs, jsRoot);
     new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
         .process(externs, jsRoot);
