@@ -550,8 +550,7 @@ class TypeInference
         break;
 
       case COALESCE:
-        // TODO(annieyw) b/146659618 Calculate the appropriate type here
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        scope = traverseNullishCoalesce(n, scope);
         break;
 
       case HOOK:
@@ -1540,6 +1539,31 @@ class TypeInference
       n.setJSType(null);
     }
 
+    return scope;
+  }
+
+  private FlowScope traverseNullishCoalesce(Node n, FlowScope scope) {
+    checkArgument(n.isNullishCoalesce());
+    Node left = n.getFirstChild();
+    Node right = n.getLastChild();
+
+    scope = traverse(left, scope);
+
+    // TODO(b/146659618): Do a better job at inferring if LHS is null
+
+    // throwing away scope because we are not sure if the RHS executes, but the LHS always does
+    traverse(right, scope);
+
+    JSType leftType = left.getJSType();
+    JSType rightType = right.getJSType();
+
+    if (leftType != null) {
+      if (!leftType.isNullable() && !leftType.isVoidable()) {
+        n.setJSType(leftType);
+      } else if (rightType != null) {
+        n.setJSType(registry.createUnionType(leftType.restrictByNotNullOrUndefined(), rightType));
+      }
+    }
     return scope;
   }
 

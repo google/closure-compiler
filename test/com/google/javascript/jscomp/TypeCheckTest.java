@@ -728,11 +728,111 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesce() {
-    // TODO(annieyw) b/146659618 Calculate the appropriate type here
-
-    // testTypes( "/**@type{number} */ var x = 0 ?? \"hi\";");
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
-    testTypes("/**@type {?} */var x = 0 ?? \"hi\";");
+    testTypes("/**@type{number} */ var x = 0 ?? \"hi\";");
+  }
+
+  @Test
+  public void testNullishCoalesceWithAndExpressions() {
+    // `(s && undefined)` = `undefined` because `s` is typed as `!Array`, triggering RHS
+    // `(s && "a")` = `"a"` because `s` is typed as `!Array`
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/** @param {!Array} s",
+            "    @return {string} */",
+            "(function(s) { return (s && undefined) ?? (s && \"a\"); })"));
+  }
+
+  @Test
+  public void testNullishCoalesceShortCutsOnZero() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/**@type {number} */var x; x = 0 ?? \"a\";");
+  }
+
+  @Test
+  public void testNullishCoalesceUnionsOperatorTypesWithNullRemoved() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/**",
+            "* @param {string|null} x",
+            "* @return {string|number}",
+            "*/",
+            "var f = function(x) {",
+            "return x ?? 3;",
+            "};"));
+  }
+
+  @Test
+  public void testNullishCoalesceShortCutsOnFalse() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/**@type {boolean} */var x; x = false ?? undefined ?? [];");
+  }
+
+  @Test
+  public void testNullishCoalesceChaining() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/**@type {number} */var x; x = null ?? undefined ?? 3;");
+  }
+
+  @Test
+  public void testNullishCoalesceOptionalNullable() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/**",
+            " * @param {?Object=} optionalNullableObject",
+            " * @return {!Object}",
+            " */",
+            "function f(optionalNullableObject = undefined) {",
+            " return optionalNullableObject ?? {};", // always returns !Object type
+            "};"));
+  }
+
+  @Test
+  public void testNullishCoalesceLHSandRHSConnection() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "/**",
+            " * @param {?Object} x",
+            " * @return {!Object|boolean|string}",
+            // TODO(b/146659618) Calculate the correct type
+            // * @return {!Object|boolean}
+            " */",
+            " function foo(x) {",
+            "   return x ?? (x ? 'hi' : false);",
+            "};"));
+  }
+
+  @Test
+  public void testNullishCoalesceUseNonNullFunction() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    // if we are trying to evaluate the LHS then x must be null and useNonNull only takes non null
+    // objects as inputs
+    testTypes(
+        lines(
+            "/**",
+            " * @param {!Object} x",
+            " * @return {!Object}",
+            " */",
+            " function useNonNull(x) {",
+            "   return x;",
+            " };",
+            "/** @type {?Object} */ var x;",
+            "x ?? useNonNull(x);"),
+        lines(
+            "actual parameter 1 of useNonNull does not match formal parameter",
+            "found   : (Object|null)", // TODO(b/146659618) Should be just null
+            "required: Object"));
+  }
+
+  @Test
+  public void testNullishCoalesceLeftTypeNotDefined() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    // making sure we don't throw a NPE
+    testTypes(lines("/** @type {number} */ var a = x ?? 1;"));
   }
 
   @Test
@@ -3343,16 +3443,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         lines(
             CLOSURE_DEFS,
             "function f() {",
-            " var x = 0 ?? function() {};",
+            " var x = null ?? function() {};",
             " function g() { if (goog.isFunction(x)) { x(1); } }",
             " g();",
             "}"),
-        null);
-    // TOOD(b/146659618): this should report an error
-    // lines(
-    //     "Function x: called with 1 argument(s). ",
-    //     "Function requires at least 0 argument(s) ",
-    //     "and no more than 0 argument(s).")
+        "Function x: called with 1 argument(s). "
+            + "Function requires at least 0 argument(s) "
+            + "and no more than 0 argument(s).");
   }
 
   @Test
@@ -7974,11 +8071,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         lines(
             "/** @return {number} */", //
-            "function f() { var x = x ?? {}; return x; }"));
-    // TOOD(b/146659618): this should report an error
-    // lines("inconsistent return type",
-    //     "found   : {}",
-    //     "required: number")
+            "function f() { var x = x ?? {}; return x; }"),
+        lines("inconsistent return type", "found   : {}", "required: number"));
   }
 
   @Test
@@ -8086,13 +8180,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
          "required: number");
   }
 
-  @Test
-  public void testNullishCoalesceAssignment() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
-    // TOOD(b/146659618): this should report an error
-    // lines("assignment", "found   : string", "required: number")
-  }
-
   /** @see #testOr4() */
   @Test
   public void testOr5() {
@@ -8105,9 +8192,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testNullishCoalesceAssignment2() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
-    testTypes("/**@type {number} */var x;x=undefined ?? \"a\";");
-    // TOOD(b/146659618): this should report an error
-    // lines("assignment", "found   : string", "required: number")
+    testTypes(
+        "/**@type {number} */var x;x=undefined ?? \"a\";",
+        lines("assignment", "found   : string", "required: number"));
   }
 
   @Test
@@ -8134,13 +8221,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "function removeDuplicates(opt_x) {",
             "  var x = opt_x ?? [];",
             "  var /** undefined */ y = x;",
-            "}"));
-
-    // TOOD(b/146659618): this should report an error
-    // lines(
-    //             "initializing variable",
-    //             "found   : Array",
-    //             "required: undefined")
+            "}"),
+        lines("initializing variable", "found   : Array", "required: undefined"));
   }
 
   @Test

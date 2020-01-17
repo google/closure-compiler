@@ -410,6 +410,20 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testNullishCoalesceNullableObject() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("let z = x ?? {}");
+    verify("z", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testNullishCoalesceNullableUnion() {
+    assuming("x", createNullableType(createUnionType(OBJECT_TYPE, STRING_TYPE)));
+    inFunction("let z = x ?? {}");
+    verify("z", createUnionType(STRING_TYPE, OBJECT_TYPE));
+  }
+
+  @Test
   public void testIf2() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var y = x; if (x) { y = x; } else { y = {}; }");
@@ -421,6 +435,15 @@ public final class TypeInferenceTest {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var y = 1; if (x) { y = x; }");
     verify("y", createUnionType(OBJECT_TYPE, NUMBER_TYPE));
+  }
+
+  @Test
+  public void testNullishCoalesce() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("var y = 1; x ?? (y = x);");
+    verify("y", NUMBER_TYPE);
+    // TODO(b/146659618): Calculate correct type
+    // verify("y", createNullableType(NUMBER_TYPE));
   }
 
   @Test
@@ -1545,9 +1568,16 @@ public final class TypeInferenceTest {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     assuming("x", NUMBER_TYPE);
     inFunction("var z = x ?? null");
-    verify("z", UNKNOWN_TYPE);
-    // TODO(annieyw) b/146659618 Calculate the appropriate type here
-    // verify("z", NUMBER_TYPE);
+    verify("z", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testShortCircuitingNullishCoalesce() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("var z = (x) ?? (x ? 'hi' : false)");
+    verify("z", createMultiParamUnionType(OBJECT_TYPE, BOOLEAN_TYPE, STRING_TYPE));
+    // TODO(b/146659618): Calculate correct type
+    // verify("z", createUnionType(OBJECT_TYPE, BOOLEAN_TYPE));
   }
 
   @Test
