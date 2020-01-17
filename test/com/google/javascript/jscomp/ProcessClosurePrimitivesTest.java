@@ -161,7 +161,9 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         srcs("goog.provide('A.B');", "goog.module('mod'); const B = goog.forwardDeclare('A.B');"));
 
     compiler = getLastCompiler();
-    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A.B")).isTrue();
+    // This is a valid forward declaration, but for historical reasons, does not actually forward
+    // declare the type 'A.B'.
+    assertThat(compiler.getTypeRegistry().isForwardDeclaredType("A.B")).isFalse();
   }
 
   @Test

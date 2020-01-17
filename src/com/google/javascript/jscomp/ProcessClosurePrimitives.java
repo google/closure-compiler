@@ -881,6 +881,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
 
   /** Process a goog.forwardDeclare() call and record the specified forward declaration. */
   private void processForwardDeclare(Node n) {
+    if (!n.getParent().isExprResult()) {
+      //  Ignore "const Foo = goog.forwardDeclare('my.Foo');". It's legal but does not actually
+      // forward declare the type 'my.Foo'.
+      return;
+    }
     CodingConvention convention = compiler.getCodingConvention();
 
     String typeDeclaration = null;
