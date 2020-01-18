@@ -356,14 +356,16 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     // Must remove callee before extracting argument groups.
     spreadParent.removeChild(callee);
 
+    while (callee.isCast()) {
+      // Drop any CAST nodes. They're not needed anymore since this pass runs at the end of
+      // the checks phase, and they complicate detecting GETPROP/GETELEM callees.
+      callee = callee.getFirstChild().detach();
+    }
     final Node joinedGroups;
     if (spreadParent.hasOneChild() && isSpreadOfArguments(spreadParent.getOnlyChild())) {
       // Check for special case of `foo(...arguments)` and pass `arguments` directly to
       // `foo.apply(null, arguments)`. We want to avoid calling $jscomp.arrayFromIterable(arguments)
       // for this case, because it can have side effects, which prevents code removal.
-      //
-      // TODO(b/74074478): Generalize this to avoid ever calling $jscomp.arrayFromIterable() for
-      // `arguments`.
       joinedGroups = spreadParent.removeFirstChild().removeFirstChild();
     } else {
       List<Node> groups = extractSpreadGroups(spreadParent);
