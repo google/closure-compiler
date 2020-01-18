@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  * Note that disambiguation has slightly different behavior from the other two, as pointed out in
  * implementation comments.
  */
-final class InvalidatingTypes {
+public final class InvalidatingTypes {
   private final ImmutableSet<JSType> types;
   /** Whether to allow disambiguating enum properties */
   private final boolean allowEnums;
@@ -46,7 +46,7 @@ final class InvalidatingTypes {
     this.allowScalars = builder.allowScalars;
   }
 
-  boolean isInvalidating(JSType type) {
+  public boolean isInvalidating(JSType type) {
     if (type == null || type.isUnknownType() || type.isEmptyType()) {
       return true;
     }
@@ -77,36 +77,38 @@ final class InvalidatingTypes {
         || (!allowScalars && objType.isBoxableScalar());
   }
 
-  static final class Builder {
+  /** Builder */
+  public static final class Builder {
     private final ImmutableSet.Builder<JSType> types = ImmutableSet.builder();
     private final JSTypeRegistry registry;
     private boolean allowEnums = false;
     private boolean allowScalars = false;
     @Nullable private Multimap<JSType, Supplier<JSError>> invalidationMap;
 
-    Builder(JSTypeRegistry registry) {
+    public Builder(JSTypeRegistry registry) {
       this.registry = registry;
     }
 
-    InvalidatingTypes build() {
+    public InvalidatingTypes build() {
       return new InvalidatingTypes(this);
     }
 
     // TODO(sdh): Investigate whether this can be consolidated between all three passes.
     // In particular, mutation testing suggests allowEnums=true should work everywhere.
     // We should revisit what breaks when we disallow scalars everywhere.
-    Builder writeInvalidationsInto(@Nullable Multimap<JSType, Supplier<JSError>> invalidationMap) {
+    public Builder writeInvalidationsInto(
+        @Nullable Multimap<JSType, Supplier<JSError>> invalidationMap) {
       this.invalidationMap = invalidationMap;
       return this;
     }
 
-    Builder allowEnumsAndScalars() {
+    public Builder allowEnumsAndScalars() {
       // Ambiguate and Inline do not allow enums or scalars.
       this.allowEnums = this.allowScalars = true;
       return this;
     }
 
-    Builder disallowGlobalThis() {
+    public Builder disallowGlobalThis() {
       // Disambiguate does not invalidate global this because it
       // sets skipping explicitly for extern properties only on
       // the extern types.
@@ -114,7 +116,7 @@ final class InvalidatingTypes {
       return this;
     }
 
-    Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
+    public Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
       for (TypeMismatch mis : mismatches) {
         addType(mis.typeA, mis);
         addType(mis.typeB, mis);
@@ -122,7 +124,7 @@ final class InvalidatingTypes {
       return this;
     }
 
-    Builder addTypesInvalidForPropertyRenaming() {
+    public Builder addTypesInvalidForPropertyRenaming() {
       types.addAll(
           ImmutableList.of(
               registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),

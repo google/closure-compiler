@@ -1560,7 +1560,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  Iterable<TypeMismatch> getTypeMismatches() {
+  public Iterable<TypeMismatch> getTypeMismatches() {
     if (this.typeCheckingHasRun) {
       return getTypeValidator().getMismatches();
     }
@@ -1568,7 +1568,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  Iterable<TypeMismatch> getImplicitInterfaceUses() {
+  public Iterable<TypeMismatch> getImplicitInterfaceUses() {
     if (this.typeCheckingHasRun) {
       return getTypeValidator().getImplicitInterfaceUses();
     }

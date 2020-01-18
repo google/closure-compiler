@@ -234,17 +234,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract TypeValidator getTypeValidator();
 
-  /**
-   * Gets the central registry of type violations.
-   */
-  abstract Iterable<TypeMismatch> getTypeMismatches();
+  /** Gets the central registry of type violations. */
+  public abstract Iterable<TypeMismatch> getTypeMismatches();
 
   /**
-   * Gets all types that are used implicitly as a
-   * matching interface type. These are
-   * recorded as TypeMismatchs only for convenience
+   * Gets all types that are used implicitly as a matching interface type. These are recorded as
+   * TypeMismatchs only for convenience
    */
-  abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
+  public abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
 
   abstract void setExternExports(String externExports);
 
