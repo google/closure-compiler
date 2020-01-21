@@ -30,6 +30,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -40,6 +41,7 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
@@ -664,7 +666,11 @@ public final class DefaultPassConfig extends PassConfig {
     // information and so that other passes can take advantage of the renamed
     // properties.
     if (options.shouldDisambiguateProperties() && options.isTypecheckingEnabled()) {
-      passes.add(disambiguateProperties);
+      if (options.shouldUseGraphBasedDisambiguator()) {
+        passes.add(disambiguateProperties2);
+      } else {
+        passes.add(disambiguateProperties);
+      }
     }
 
     if (options.computeFunctionSideEffects) {
@@ -2209,6 +2215,17 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new DisambiguateProperties(compiler, options.propertyInvalidationErrors))
+          .setFeatureSet(ES2019_MODULES)
+          .build();
+
+  /** Disambiguate property names based on type information. */
+  private final PassFactory disambiguateProperties2 =
+      PassFactory.builder()
+          .setName(PassNames.DISAMBIGUATE_PROPERTIES)
+          .setInternalFactory(
+              (compiler) ->
+                  new DisambiguateProperties2(
+                      compiler, ImmutableMap.copyOf(options.propertyInvalidationErrors)))
           .setFeatureSet(ES2019_MODULES)
           .build();
 

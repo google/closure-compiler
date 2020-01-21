@@ -702,6 +702,14 @@ public class CompilerOptions implements Serializable {
    */
   private boolean disambiguateProperties;
 
+  /**
+   * Use the graph based disambiguator.
+   *
+   * <p>This is a transitional option while the graph based disambiguator becomes the default. This
+   * option has no effect if disambiguation is disabled.
+   */
+  private boolean useGraphBasedDisambiguator = false;
+
   /** Rename unrelated properties to the same name to reduce code size. */
   private boolean ambiguateProperties;
 
@@ -2474,6 +2482,14 @@ public class CompilerOptions implements Serializable {
 
   public boolean shouldDisambiguateProperties() {
     return this.disambiguateProperties;
+  }
+
+  public void setUseGraphBasedDisambiguator(boolean x) {
+    this.useGraphBasedDisambiguator = x;
+  }
+
+  public boolean shouldUseGraphBasedDisambiguator() {
+    return this.useGraphBasedDisambiguator;
   }
 
   public void setAmbiguateProperties(boolean ambiguateProperties) {
