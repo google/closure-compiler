@@ -117,7 +117,7 @@ class AggressiveInlineAliases implements CompilerPass {
         return false;
       }
       for (Node key : objectPattern.children()) {
-        if (!key.isStringKey()) {
+        if (!key.isStringKey() || key.isQuotedString()) {
           return false;
         }
         checkState(key.hasOneChild());

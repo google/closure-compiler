@@ -1980,6 +1980,11 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontInlineDestructuredAliasProp_quoted() {
+    testSame("var a = {x: 2}; var b = {}; b['y'] = a.x; const {'y': y} = b; use(y);");
+  }
+
+  @Test
   public void testInlineDestructuredAliasProp() {
     test(
         "var a = {x: 2}; var b = {}; b.y = a.x; const {y} = b; use(y);",

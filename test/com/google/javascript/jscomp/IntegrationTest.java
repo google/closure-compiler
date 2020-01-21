@@ -7131,6 +7131,21 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testQuotedDestructuringNotRenamed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
+
+    test(options, "const {'x': x} = window; alert(x);", "const {x:a} = window; alert(a);");
+    test(
+        options,
+        "const {x: {'log': y}} = window; alert(y);",
+        "const {a: {log: a}} = window; alert(a);");
+  }
+
+  @Test
   public void testDestructuringRest() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
