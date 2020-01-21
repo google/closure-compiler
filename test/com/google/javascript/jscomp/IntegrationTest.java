@@ -717,13 +717,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "var goog = {};"
-        + "function F() {}"
-        + "/** @export */ function G() { goog.base(this); } "
-        + "goog.inherits(G, F);",
+            + "function F() {}"
+            + "/** @export */ function G() { G.base(this, 'constructor'); } "
+            + "goog.inherits(G, F);",
         "var goog = {};"
-        + "function F() {}"
-        + "function G() { F.call(this); } "
-        + "goog.inherits(G, F); goog.exportSymbol('G', G);");
+            + "function F() {}"
+            + "function G() { F.call(this); } "
+            + "goog.inherits(G, F); goog.exportSymbol('G', G);");
   }
 
   @Test
@@ -6644,7 +6644,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    test(options,
+    test(
+        options,
         LINE_JOINER.join(
             "var goog = {}",
             "goog.inherits = function(childCtor, parentCtor) {",
@@ -6667,7 +6668,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "goog.inherits(Bar, Foo);",
             "/** @override */",
             "Bar.prototype.resize = function(width, height) {",
-            "  goog.base(this, 'resize', width);",
+            "  Bar.base(this, 'resize', width);",
             "};",
             "(new Bar).resize(100, 200);"),
         LINE_JOINER.join(
