@@ -44,6 +44,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultimap;
@@ -1593,6 +1594,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                     extendsNode.getLineno(),
                     extendsNode.getCharno()));
           }
+        } else if (isGoogModuleGetProperty(extendsNode)) {
+          ctorType = getCtorForGoogModuleGet(extendsNode);
         } else {
           // Anything TypedScopeCreator can infer has already been read off the AST.  This is likely
           // a CALL or GETELEM, which are unknown until TypeInference.  Instead, ignore it for now,
@@ -1621,6 +1624,40 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // We couldn't determine the type, so for TypedScope creation purposes we will treat it as if
       // there were no extends clause.  TypeCheck will give a more precise error later.
       return null;
+    }
+
+    private boolean isGoogModuleGetProperty(Node extendsClause) {
+      if (extendsClause.isCall()) {
+        return ModuleImportResolver.isGoogModuleDependencyCall(extendsClause);
+      } else if (extendsClause.isGetProp()) {
+        return isGoogModuleGetProperty(extendsClause.getFirstChild());
+      } else {
+        return false;
+      }
+    }
+
+    /**
+     * Looks up the type of a goog.module.get property access
+     *
+     * @param extendsNode `goog.module.get('x');` or a getprop `goog.module.get('x').y.z
+     */
+    @Nullable
+    private JSType getCtorForGoogModuleGet(Node extendsNode) {
+      Node call = extendsNode;
+      ArrayList<String> properties = new ArrayList<>();
+      while (!call.isCall()) {
+        properties.add(0, call.getSecondChild().getString());
+        call = call.getFirstChild();
+      }
+      ScopedName extendsCall = moduleImportResolver.getClosureNamespaceTypeFromCall(call);
+      if (extendsCall == null || !memoized.containsKey(extendsCall.getScopeRoot())) {
+        // Handle invalid goog.module.get calls
+        return null;
+      }
+      TypedScope moduleScope = memoized.get(extendsCall.getScopeRoot());
+      properties.add(0, extendsCall.getName());
+      QualifiedName superclassName = QualifiedName.of(Joiner.on('.').join(properties));
+      return moduleScope.lookupQualifiedName(superclassName);
     }
 
     /**

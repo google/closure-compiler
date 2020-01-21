@@ -2690,6 +2690,90 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithExtends_googModuleGet() {
+    testSame(
+        new String[] {
+          CLOSURE_GLOBALS,
+          lines(
+              "goog.module('a.Bar');", //
+              "class Bar {}",
+              "BAR: Bar;",
+              "exports = Bar;"),
+          "class Foo extends goog.module.get('a.Bar') {}"
+        });
+    TypedScope moduleScope = getLabeledStatement("BAR").enclosingScope;
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    FunctionType bar = (FunctionType) findNameType("Bar", moduleScope);
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertType(foo.getImplicitPrototype()).isEqualTo(bar);
+    assertScope(moduleScope).declares("Bar").withTypeThat().isEqualTo(bar);
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+  }
+
+  @Test
+  public void testClassDeclarationWithExtends_googModuleGetProperty() {
+    testSame(
+        new String[] {
+          CLOSURE_GLOBALS,
+          lines(
+              "goog.module('a.b');", //
+              "class Bar {}",
+              "BAR: Bar;",
+              "exports = {Bar};"),
+          "class Foo extends goog.module.get('a.b').Bar {}"
+        });
+    TypedScope moduleScope = getLabeledStatement("BAR").enclosingScope;
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    FunctionType bar = (FunctionType) findNameType("Bar", moduleScope);
+    assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
+    assertType(foo.getImplicitPrototype()).isEqualTo(bar);
+    assertScope(moduleScope).declares("Bar").withTypeThat().isEqualTo(bar);
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+  }
+
+  @Test
+  public void testClassDeclarationWithExtends_googModuleGetNestedProperty() {
+    testSame(
+        new String[] {
+          CLOSURE_GLOBALS,
+          lines(
+              "goog.module('a.b');", //
+              "class Bar {}",
+              "Bar.NestedClass = class {};",
+              "NESTED_CLASS: Bar.NestedClass;",
+              "exports = {Bar};"),
+          "class Foo extends goog.module.get('a.b').Bar.NestedClass {}"
+        });
+    TypedScope moduleScope = getLabeledStatement("NESTED_CLASS").enclosingScope;
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    FunctionType nestedClass =
+        (FunctionType) findNameType("Bar", moduleScope).findPropertyType("NestedClass");
+    assertType(foo.getInstanceType()).isSubtypeOf(nestedClass.getInstanceType());
+    assertType(foo.getImplicitPrototype()).isEqualTo(nestedClass);
+
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+  }
+
+  @Test
+  public void testClassDeclarationWithExtends_missingGoogModuleGet() {
+    testSame(
+        new String[] {
+          CLOSURE_GLOBALS, "class Foo extends goog.module.get('not.a.real.module') {}"
+        });
+    FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
+    assertScope(globalScope).declares("Foo").withTypeThat().isEqualTo(foo);
+
+    assertType(foo.getPrototype().getImplicitPrototype()).isEqualTo(getNativeType(OBJECT_TYPE));
+  }
+
+  @Test
   public void testClassDeclarationWithInheritedConstructor() {
     testSame(
         lines(
