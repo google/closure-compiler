@@ -828,7 +828,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
-  public void testBadTypedef() {
+  public void testBadTypedef_onClass() {
     testWarning(
         "/** @typedef {{foo: string}} */ class C { constructor() { this.foo = ''; }}",
         MISPLACED_ANNOTATION);
@@ -839,6 +839,31 @@ public final class CheckJsDocTest extends CompilerTestCase {
             "var C = goog.defineClass(null, {",
             "  constructor: function() { this.foo = ''; }",
             "});"),
+        MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testBadTypedef_onInstanceProp() {
+    testWarning(
+        "class C { constructor() { /** @typedef {string} */ this.foo = ''; }}",
+        MISPLACED_ANNOTATION);
+
+    testWarning(
+        "class C { constructor() { /** @typedef {string} */ this.foo; }}", MISPLACED_ANNOTATION);
+
+    testWarning(
+        "/** @constructor */ function C() { /** @typedef {string} */ this.foo; }",
+        MISPLACED_ANNOTATION);
+  }
+
+  @Test
+  public void testBadTypedef_onPrototypeProp() {
+    testWarning(
+        "/** @constructor */ function C() {} /** @typedef {string} */ C.prototype.foo;",
+        MISPLACED_ANNOTATION);
+
+    testWarning(
+        "/** @constructor */ function C() {} /** @typedef {string} */ C.prototype.foo = 'foobar';",
         MISPLACED_ANNOTATION);
   }
 

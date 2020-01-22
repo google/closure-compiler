@@ -240,8 +240,16 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   private void validateTypedefs(Node n, JSDocInfo info) {
-    if (info != null && info.hasTypedefType() && isClassDecl(n)) {
+    if (info == null || !info.hasTypedefType()) {
+      return;
+    }
+    if (isClassDecl(n)) {
       reportMisplaced(n, "typedef", "@typedef does not make sense on a class declaration.");
+    } else if (isPrototypeOrInstanceDecl(n)) {
+      reportMisplaced(
+          n,
+          "typedef",
+          "@typedef is not allowed on instance or prototype properties. Did you mean @type?");
     }
   }
 
@@ -263,7 +271,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
    *     specified node, no null if no such function exists.
    */
   @Nullable
-  private Node getFunctionDecl(Node n) {
+  private static Node getFunctionDecl(Node n) {
     if (n.isFunction()) {
       return n;
     }
@@ -311,6 +319,19 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   private boolean isClass(Node n) {
     return n.isClass()
         || (n.isCall() && compiler.getCodingConvention().isClassFactoryCall(n));
+  }
+
+  private static boolean isPrototypeOrInstanceDecl(Node n) {
+    switch (n.getToken()) {
+      case GETPROP:
+        Node receiver = n.getFirstChild();
+        return receiver.isThis()
+            || (receiver.isGetProp() && receiver.getSecondChild().getString().equals("prototype"));
+      case ASSIGN:
+        return isPrototypeOrInstanceDecl(n.getFirstChild());
+      default:
+        return false;
+    }
   }
 
   /**
@@ -384,7 +405,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     }
   }
 
-  private boolean hasClassLevelJsDoc(JSDocInfo info) {
+  private static boolean hasClassLevelJsDoc(JSDocInfo info) {
     return info.isConstructorOrInterface()
         || info.hasBaseType()
         || info.getImplementedInterfaceCount() != 0
@@ -526,7 +547,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   /** Returns whether of not the given name is valid target for the result of goog.getMsg */
-  private boolean isValidMsgName(Node nameNode) {
+  private static boolean isValidMsgName(Node nameNode) {
     if (nameNode.isName() || nameNode.isStringKey()) {
       return nameNode.getString().startsWith("MSG_");
     } else if (nameNode.isQualifiedName()) {
@@ -600,10 +621,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     }
   }
 
-  /**
-   * Is it valid to have a type annotation on the given NAME node?
-   */
-  private boolean isTypeAnnotationAllowedForName(Node n) {
+  /** Is it valid to have a type annotation on the given NAME node? */
+  private static boolean isTypeAnnotationAllowedForName(Node n) {
     checkState(n.isName(), n);
     // Only allow type annotations on nodes used as an lvalue.
     if (!NodeUtil.isLValue(n)) {
