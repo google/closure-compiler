@@ -1403,19 +1403,19 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     /**
      * @param localNameNode The name node of the LHS of the import being defined
-     * @param exportedName The root node of the scope in which the type being imported was defined,
-     *     along with the local name of the overall module object inside the scope where it was
-     *     defined. Or null if no module with that name exists.
+     * @param importedModuleObject The root node of the scope in which the type being imported was
+     *     defined, along with the local name of the overall module object inside the scope where it
+     *     was defined. Or null if no module with that name exists.
      * @param optionalProperty The property name of the locally imported type on the module object,
      *     if destructuring-style importing was used. Or null if this is a namespace import.
      * @param scopeToDeclareIn The scope in which localNameNode is defined
      */
     private void defineModuleImport(
         Node localNameNode,
-        @Nullable ScopedName exportedName,
+        @Nullable ScopedName importedModuleObject,
         String optionalProperty,
         TypedScope scopeToDeclareIn) {
-      if (exportedName == null) {
+      if (importedModuleObject == null) {
         // We could not find the module defining this import. Just declare the name as unknown.
         new SlotDefiner()
             .forDeclarationNode(localNameNode)
@@ -1427,11 +1427,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return;
       }
 
-      // Check if this is a goog dependency loading call. If so, find its type.
-      if (optionalProperty != null) {
+      final ScopedName exportedName;
+      if (optionalProperty == null) {
+        exportedName = importedModuleObject;
+      } else {
+        // If this is a destucuring-style import, find its type.
         exportedName =
             ScopedName.of(
-                exportedName.getName() + "." + optionalProperty, exportedName.getScopeRoot());
+                importedModuleObject.getName() + "." + optionalProperty,
+                importedModuleObject.getScopeRoot());
       }
       // Try getting the actual scope. The scope will be null in the following cases:
       //   - Someone has required a module that does not exist at all.
@@ -1439,6 +1443,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       //     an associated scope yet.
       TypedScope exportScope =
           exportedName.getScopeRoot() != null ? memoized.get(exportedName.getScopeRoot()) : null;
+
       // The scope is null for modules that were not visited yet.
       if (exportScope != null) {
         JSType type = exportScope.lookupQualifiedName(QualifiedName.of(exportedName.getName()));
