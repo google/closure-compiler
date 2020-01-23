@@ -617,7 +617,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
             // Remove the fallthrough case labels
             if (cur != matchingCase) {
               while (block.hasChildren()) {
-                matchingCaseBlock.addChildToBack(block.getFirstChild().detach());
+                matchingCaseBlock.addChildToBack(block.removeFirstChild());
               }
               reportChangeToEnclosingScope(cur);
               cur.detach();

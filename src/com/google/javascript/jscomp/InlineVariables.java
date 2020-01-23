@@ -617,7 +617,7 @@ class InlineVariables implements CompilerPass {
         // The reference is a FUNCTION declaration or normal VAR declaration
         // with a value.
         if (!NodeUtil.isFunctionDeclaration(initialization.getParent())
-            && initialization.getNode().getFirstChild() == null) {
+            && !initialization.getNode().hasChildren()) {
           return false;
         }
       } else {

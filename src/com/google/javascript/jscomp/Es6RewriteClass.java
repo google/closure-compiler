@@ -190,7 +190,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
           || (member.isGetterDef() || member.isSetterDef())) {
         visitNonMethodMember(member, metadata, t.getScope());
       } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(member)) {
-        constructor = member.getFirstChild().detach().setJSType(classNode.getJSType());
+        constructor = member.removeFirstChild().setJSType(classNode.getJSType());
         constructor.setJSTypeBeforeCast(classNode.getJSTypeBeforeCast());
         if (!metadata.isAnonymous()) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
@@ -351,8 +351,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         computedMember.isStaticMember()
             ? metadata.getFullClassNameNode()
             : metadata.getClassPrototypeNode();
-    Node property = computedMember.getFirstChild().detach();
-    Node propertyValue = computedMember.getFirstChild().detach();
+    Node property = computedMember.removeFirstChild();
+    Node propertyValue = computedMember.removeFirstChild();
 
     Node propertyDescriptor = createPropertyDescriptor();
     Node stringKey =

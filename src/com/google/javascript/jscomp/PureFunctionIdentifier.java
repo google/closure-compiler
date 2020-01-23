@@ -250,7 +250,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return collectCallableLeavesInternal(expr.getSecondChild(), results);
 
       case HOOK:
-        return collectCallableLeavesInternal(expr.getChildAtIndex(1), results)
+        return collectCallableLeavesInternal(expr.getSecondChild(), results)
             && collectCallableLeavesInternal(expr.getChildAtIndex(2), results);
 
       case NEW_TARGET:

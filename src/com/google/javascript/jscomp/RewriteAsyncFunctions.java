@@ -394,8 +394,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
             break;
 
           case THIS:
-            n.getParent()
-                .replaceChild(n, asyncThisAndArgumentsContext.createThisVariableReference());
+            n.replaceWith(asyncThisAndArgumentsContext.createThisVariableReference());
             compiler.reportChangeToChangeScope(contextRootNode);
             break;
 
@@ -436,8 +435,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
 
           case AWAIT:
             // Awaits become yields in the converted async function's inner generator function.
-            n.getParent()
-                .replaceChild(n, astFactory.createYield(n.getJSType(), n.removeFirstChild()));
+            n.replaceWith(astFactory.createYield(n.getJSType(), n.removeFirstChild()));
             break;
 
           default:

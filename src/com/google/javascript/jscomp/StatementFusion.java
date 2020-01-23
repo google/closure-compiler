@@ -197,11 +197,11 @@ class StatementFusion extends AbstractPeepholeOptimization {
       case SWITCH:
       case EXPR_RESULT:
       case FOR:
-        before.getParent().removeChild(before);
+        before.detach();
         fuseExpressionIntoFirstChild(before.removeFirstChild(), control);
         return;
       case FOR_IN:
-        before.getParent().removeChild(before);
+        before.detach();
         fuseExpressionIntoSecondChild(before.removeFirstChild(), control);
         return;
       case LABEL:

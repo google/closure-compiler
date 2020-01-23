@@ -38,6 +38,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public class AstFactoryTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 

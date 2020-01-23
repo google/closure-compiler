@@ -1036,6 +1036,7 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
+  @SuppressWarnings("RhinoNodeGetGrandparent")
   private void validateSuper(Node superNode) {
     validateFeature(Feature.SUPER, superNode);
     validateChildless(superNode);

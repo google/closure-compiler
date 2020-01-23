@@ -1918,10 +1918,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       n.putBooleanProp(Node.MODULE_ALIAS, true);
       // Alias can be used in js types. Types have node type STRING and not NAME so we have to
       // use their name as string.
-      String nodeName =
-          n.getToken() == Token.STRING
-              ? n.getString()
-              : preprocessorSymbolTable.getQualifiedName(n);
+      String nodeName = n.isString() ? n.getString() : preprocessorSymbolTable.getQualifiedName(n);
       // We need to include module as part of the name because aliases are local to current module.
       // Aliases with the same name from different module should be completely different entities.
       String name = "alias_" + module + "_" + nodeName;

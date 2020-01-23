@@ -1816,7 +1816,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       if (info == null || !info.hasReturnType()) {
         // when there is no @return annotation, look for inline return type declaration
-        if (rValue != null && rValue.isFunction() && rValue.getFirstChild() != null) {
+        if (rValue != null && rValue.isFunction() && rValue.hasChildren()) {
           JSDocInfo nameDocInfo = rValue.getFirstChild().getJSDocInfo();
           builder.inferReturnType(nameDocInfo, true);
         }

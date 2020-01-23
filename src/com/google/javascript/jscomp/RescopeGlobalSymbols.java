@@ -471,8 +471,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
      */
     void declareModuleGlobals() {
       for (ModuleGlobal global : preDeclarations) {
-        if (global.root.getFirstChild() != null
-            && global.root.getFirstChild().isVar()) {
+        if (global.root.hasChildren() && global.root.getFirstChild().isVar()) {
           global.root.getFirstChild().addChildToBack(global.name);
         } else {
           global.root.addChildToFront(IR.var(global.name).srcref(global.name));

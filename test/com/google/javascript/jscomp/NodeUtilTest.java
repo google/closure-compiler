@@ -90,6 +90,7 @@ import org.mockito.Mockito;
  * runner.
  */
 @RunWith(Enclosed.class)
+@SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public final class NodeUtilTest {
 
   /** Provides methods for parsing and accessing the compiler used for the parsing. */

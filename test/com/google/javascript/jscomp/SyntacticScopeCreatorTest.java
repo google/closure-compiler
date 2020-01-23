@@ -41,6 +41,7 @@ import org.junit.runners.JUnit4;
  * @author moz@google.com (Michael Zhou)
  */
 @RunWith(JUnit4.class)
+@SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public final class SyntacticScopeCreatorTest {
 
   private Compiler compiler;

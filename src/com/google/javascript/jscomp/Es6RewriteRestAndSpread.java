@@ -359,7 +359,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     while (callee.isCast()) {
       // Drop any CAST nodes. They're not needed anymore since this pass runs at the end of
       // the checks phase, and they complicate detecting GETPROP/GETELEM callees.
-      callee = callee.getFirstChild().detach();
+      callee = callee.removeFirstChild();
     }
     final Node joinedGroups;
     if (spreadParent.hasOneChild() && isSpreadOfArguments(spreadParent.getOnlyChild())) {

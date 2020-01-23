@@ -465,7 +465,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       // convert `const [x] = arr` to `[x] = arr`
       // a precondition for this method is that `x` is the only lvalue in the destructuring pattern
       Node destructuringLhs = var.getFirstChild();
-      Node pattern = destructuringLhs.getFirstChild().detach();
+      Node pattern = destructuringLhs.removeFirstChild();
       if (NodeUtil.isEnhancedFor(parent)) {
         var.replaceWith(pattern);
       } else {

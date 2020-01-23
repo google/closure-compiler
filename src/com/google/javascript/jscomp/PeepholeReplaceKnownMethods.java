@@ -617,7 +617,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     switch (arrayFoldedChildren.size()) {
       case 0:
         Node emptyStringNode = IR.string("");
-        n.getParent().replaceChild(n, emptyStringNode);
+        n.replaceWith(emptyStringNode);
         reportChangeToEnclosingScope(emptyStringNode);
         return emptyStringNode;
       case 1:

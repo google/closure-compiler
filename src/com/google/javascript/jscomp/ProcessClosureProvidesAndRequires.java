@@ -934,7 +934,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     }
 
     private Node getProvideStringNode() {
-      return (firstNode.getFirstChild() != null && NodeUtil.isExprCall(firstNode))
+      return (firstNode.hasChildren() && NodeUtil.isExprCall(firstNode))
           ? firstNode.getFirstChild().getLastChild()
           : null;
     }

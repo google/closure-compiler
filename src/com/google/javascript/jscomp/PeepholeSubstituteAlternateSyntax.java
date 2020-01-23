@@ -171,8 +171,8 @@ class PeepholeSubstituteAlternateSyntax
     Node rhs = n.getLastChild();
     if (n.getToken() == rhs.getToken()) {
       // Transform a * (b * c) to a * b * c
-      Node first = n.getFirstChild().detach();
-      Node second = rhs.getFirstChild().detach();
+      Node first = n.removeFirstChild();
+      Node second = rhs.removeFirstChild();
       Node third = rhs.getLastChild().detach();
       Node newLhs = new Node(n.getToken(), first, second).useSourceInfoIfMissingFrom(n);
       Node newRoot = new Node(rhs.getToken(), newLhs, third).useSourceInfoIfMissingFrom(rhs);
@@ -596,7 +596,7 @@ class PeepholeSubstituteAlternateSyntax
         case LT:
         case NE:
           Node number = IR.number(n.isTrue() ? 1 : 0);
-          n.getParent().replaceChild(n, number);
+          n.replaceWith(number);
           reportChangeToEnclosingScope(number);
           return number;
         default:

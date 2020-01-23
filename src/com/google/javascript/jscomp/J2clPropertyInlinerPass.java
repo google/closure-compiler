@@ -112,7 +112,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         compiler.reportChangeToEnclosingScope(objectLit);
         if (!objectLit.hasChildren()) {
           // Remove the whole Object.defineProperties call if there are no properties left.
-          objectLit.getParent().getParent().detach();
+          objectLit.getGrandparent().detach();
         }
       }
     }

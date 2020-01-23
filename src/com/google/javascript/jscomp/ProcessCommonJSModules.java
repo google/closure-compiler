@@ -415,7 +415,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     // TODO(ChadKillingsworth):
     //   Expression could also be forced with: + - ~ void
     //   ! ~ void can be repeated any number of times
-    if (n != null && n.getFirstChild() != null && n.getFirstChild().isNot()) {
+    if (n != null && n.hasChildren() && n.getFirstChild().isNot()) {
       n = n.getFirstChild();
     }
 
@@ -874,7 +874,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         } else if (export.node.isGetElem()) {
           Node prop = export.node.getSecondChild().detach();
           ExportInfo newExport =
-              new ExportInfo(IR.getprop(export.node.getFirstChild().detach(), prop), export.scope);
+              new ExportInfo(IR.getprop(export.node.removeFirstChild(), prop), export.scope);
           export.node.replaceWith(newExport.node);
           compiler.reportChangeToEnclosingScope(newExport.node);
           exportsToReplace.put(export, newExport);
@@ -1484,7 +1484,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         if (rValue != null
             && rValue.isObjectLit()
             && root.getParent().isAssign()
-            && root.getParent().getParent().isExprResult()) {
+            && root.getGrandparent().isExprResult()) {
           if (expandObjectLitAssignment(t, root, export.scope)) {
             return;
           }
@@ -1504,14 +1504,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       if (root.getParent().isAssign()
           && root.getGrandparent().isExprResult()
           && (root.getNext() != null && (root.getNext().isName() || root.getNext().isGetProp()))
-          && root.getParent().getParent().isExprResult()
+          && root.getGrandparent().isExprResult()
           && rValueVar != null
           && (NodeUtil.getEnclosingScript(rValueVar.nameNode) == null
               || (rValueVar.nameNode.getParent() != null && !rValueVar.isParam()))
           && export.isInSupportedScope
           && (rValueVar.getNameNode().getParent() == null
               || !NodeUtil.isLhsByDestructuring(rValueVar.getNameNode()))) {
-        root.getParent().getParent().detach();
+        root.getGrandparent().detach();
         t.reportCodeChange();
         return;
       }
@@ -1597,7 +1597,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
      */
     private boolean expandObjectLitAssignment(NodeTraversal t, Node export, Scope scope) {
       checkState(export.getParent().isAssign());
-      Node insertionRef = export.getParent().getParent();
+      Node insertionRef = export.getGrandparent();
       checkState(insertionRef.isExprResult());
       Node insertionParent = insertionRef.getParent();
       checkNotNull(insertionParent);
@@ -1622,7 +1622,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             value = IR.name(key.getString());
           }
         } else if (key.isMemberFunctionDef()) {
-          value = key.getFirstChild().detach();
+          value = key.removeFirstChild();
         }
 
         Node expr = null;
@@ -1893,7 +1893,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             // remove the node. This can occur when the variable which is exported
             // is declared in an outer scope but assigned in an inner one.
             if (!nameRef.hasChildren()) {
-              parent.detachFromParent();
+              parent.detach();
               break;
             }
 

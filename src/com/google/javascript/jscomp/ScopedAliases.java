@@ -356,7 +356,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       // Given that replacement is GETPROP node, prefix is first child. It's also possible that
       // replacement is single-part namespace. Like goog.provide('Foo') in that case replacement
       // won't have children.
-      if (replacement.getFirstChild() != null) {
+      if (replacement.hasChildren()) {
         replacement.getFirstChild().makeNonIndexableRecursive();
       }
       if (aliasReference.isStringKey()) {
