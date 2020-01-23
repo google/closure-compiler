@@ -1401,6 +1401,15 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           .defineSlot();
     }
 
+    /**
+     * @param localNameNode The name node of the LHS of the import being defined
+     * @param exportedName The root node of the scope in which the type being imported was defined,
+     *     along with the local name of the overall module object inside the scope where it was
+     *     defined. Or null if no module with that name exists.
+     * @param optionalProperty The property name of the locally imported type on the module object,
+     *     if destructuring-style importing was used. Or null if this is a namespace import.
+     * @param scopeToDeclareIn The scope in which localNameNode is defined
+     */
     private void defineModuleImport(
         Node localNameNode,
         @Nullable ScopedName exportedName,
