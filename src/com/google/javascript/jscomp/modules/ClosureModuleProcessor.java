@@ -448,7 +448,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
       if (!key.isStringKey() || key.isQuotedString()) {
         return false;
       }
-      if (key.hasChildren() && !key.getFirstChild().isName()) {
+      if (!key.getFirstChild().isName()) {
         return false;
       }
     }

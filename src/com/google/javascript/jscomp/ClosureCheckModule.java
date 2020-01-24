@@ -315,16 +315,6 @@ public final class ClosureCheckModule extends AbstractModuleCallback
               Node objPattern = importLhs.getFirstChild();
               checkState(objPattern.isObjectPattern(), objPattern);
               for (Node strKey : objPattern.children()) {
-                // const {foo} = goog.require('ns.bar');
-                // Should use the short name "foo" instead of "ns.bar.foo".
-                if (!strKey.hasChildren() && strKey.getString().equals(shortName)) {
-                  t.report(
-                      parent,
-                      REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                      parent.getQualifiedName(),
-                      shortName);
-                  return;
-                }
                 // const {foo: barFoo} = goog.require('ns.bar');
                 // Should use the short name "barFoo" instead of "ns.bar.foo".
                 if (strKey.hasOneChild() && strKey.getString().equals(shortName)) {
@@ -513,8 +503,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     for (Node stringKey : objectPattern.children()) {
       if (!stringKey.isStringKey()) {
         return false;
-      }
-      if (stringKey.hasChildren() && !stringKey.getFirstChild().isName()) {
+      } else if (!stringKey.getFirstChild().isName()) {
         return false;
       }
     }

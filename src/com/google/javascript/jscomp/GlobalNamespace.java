@@ -661,13 +661,8 @@ class GlobalNamespace
      * Gets the type of a value or simple expression.
      *
      * @param n An r-value in an assignment or variable declaration (not null)
-     * @return A {@link NameType}
      */
     NameType getValueType(Node n) {
-      // Shorthand assignment of extended object literal
-      if (n == null) {
-        return NameType.OTHER;
-      }
       switch (n.getToken()) {
         case CLASS:
           return NameType.CLASS;

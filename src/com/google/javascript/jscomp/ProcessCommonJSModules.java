@@ -1384,25 +1384,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             break;
           }
 
-          // ES6 object literal shorthand notation can refer to renamed variables
-        case STRING_KEY:
-          {
-            if (n.hasChildren() || n.isQuotedString() || NodeUtil.isLhsByDestructuring(n)) {
-              break;
-            }
-            Var nameDeclaration = t.getScope().getVar(n.getString());
-            if (nameDeclaration == null) {
-              break;
-            }
-            String importedName = getModuleImportName(t, nameDeclaration.getNode());
-            if (nameDeclaration.isGlobal() || importedName != null) {
-              Node value = IR.name(n.getString()).useSourceInfoFrom(n);
-              n.addChildToBack(value);
-              maybeUpdateName(t, value, nameDeclaration);
-            }
-            break;
-          }
-
         case GETPROP:
           if (n.matchesQualifiedName(MODULE + ".id")
               || n.matchesQualifiedName(MODULE + ".filename")) {
@@ -1616,17 +1597,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         lhs = IR.getprop(export.cloneTree(), IR.string(key.getString()));
         Node value = null;
         if (key.isStringKey()) {
-          if (key.hasChildren()) {
-            value = key.removeFirstChild();
-          } else {
-            value = IR.name(key.getString());
-          }
+          value = key.removeFirstChild();
         } else if (key.isMemberFunctionDef()) {
           value = key.removeFirstChild();
         }
 
-        Node expr = null;
-        expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
+        Node expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
         insertionParent.addChildAfter(expr, insertionRef);
         ExportInfo newExport = new ExportInfo(lhs.getFirstChild(), scope);
         visitExport(t, newExport);
@@ -1989,25 +1965,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 && !key.isQuotedString()
                 && NodeUtil.isValidPropertyName(
                     compiler.getOptions().getLanguageIn().toFeatureSet(), key.getString())) {
-              if (key.hasChildren()) {
-                if (key.getFirstChild().isQualifiedName()) {
-                  if (key.getFirstChild() == n) {
-                    return null;
-                  }
-
-                  Var valVar = t.getScope().getVar(key.getFirstChild().getQualifiedName());
-                  if (valVar != null && valVar.getNameNode() == var.getNameNode()) {
-                    keyIsExport = true;
-                    break;
-                  }
-                }
-              } else {
-                if (key == n) {
+              if (key.getFirstChild().isQualifiedName()) {
+                if (key.getFirstChild() == n) {
                   return null;
                 }
 
-                // Handle ES6 object lit shorthand assignments
-                Var valVar = t.getScope().getVar(key.getString());
+                Var valVar = t.getScope().getVar(key.getFirstChild().getQualifiedName());
                 if (valVar != null && valVar.getNameNode() == var.getNameNode()) {
                   keyIsExport = true;
                   break;

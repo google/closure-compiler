@@ -310,9 +310,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
       HashMap<String, Node> builder = new HashMap<>();
       builder.putAll(compiler.getDefaultDefineValues());
       for (Node c : n.getFirstChild().children()) {
-        if (c.isStringKey()
-            && c.hasChildren() // Shorthand assignment
-            && isValidDefineValue(c.getFirstChild())) {
+        if (c.isStringKey() && isValidDefineValue(c.getFirstChild())) {
           builder.put(c.getString(), c.getFirstChild().cloneTree());
         } else {
           reportBadClosureCommonDefinesDefinition(c);

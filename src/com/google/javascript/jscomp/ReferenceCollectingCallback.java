@@ -167,7 +167,7 @@ public final class ReferenceCollectingCallback
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || n.isImportStar() || (n.isStringKey() && !n.hasChildren())) {
+    if (n.isName() || n.isImportStar()) {
       if ((parent.isImportSpec() && n != parent.getLastChild())
           || (parent.isExportSpec() && n != parent.getFirstChild())) {
         // The n in `import {n as x}` or `export {x as n}` are not references, even though

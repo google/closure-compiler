@@ -347,9 +347,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
             GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED));
         return false;
       }
-      if (key.isStringKey()
-          && key.hasChildren()
-          && key.getFirstChild().isArrowFunction()){
+      if (key.isStringKey() && key.getFirstChild().isArrowFunction()) {
         // report using arrow function
         compiler.report(JSError.make(objlit,
             GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED));

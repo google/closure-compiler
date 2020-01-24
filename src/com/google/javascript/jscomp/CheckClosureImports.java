@@ -359,7 +359,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         if (!stringKey.isStringKey()) {
           return false;
         }
-        if (stringKey.hasChildren() && !stringKey.getFirstChild().isName()) {
+        if (!stringKey.getFirstChild().isName()) {
           return false;
         }
       }
