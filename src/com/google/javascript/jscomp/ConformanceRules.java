@@ -1443,15 +1443,17 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (n.isGetProp()
-          && isUnknown(n)
-          && isUsed(n) // skip most assignments, etc
-          && !isTypeImmediatelyTightened(n)
-          && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
-          && !isTypeVariable(n)
-          && !isDeclaredUnknown(n)) {
-        String propName = n.getLastChild().getString();
-        String typeName = n.getFirstChild().getJSType().toString();
+      Node getprop = n.getParent();
+      if (getprop.isGetProp()
+          && n.isSecondChildOf(getprop)
+          && isUnknown(getprop)
+          && isUsed(getprop) // skip most assignments, etc
+          && !isTypeImmediatelyTightened(getprop)
+          && isCheckablePropertySource(getprop.getFirstChild()) // not a cascading unknown
+          && !isTypeVariable(getprop)
+          && !isDeclaredUnknown(getprop)) {
+        String propName = n.getString();
+        String typeName = getprop.getFirstChild().getJSType().toString();
         return new ConformanceResult(ConformanceLevel.VIOLATION,
             "The property \"" + propName + "\" on type \"" + typeName + "\"");
       }
