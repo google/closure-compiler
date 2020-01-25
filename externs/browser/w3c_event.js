@@ -32,9 +32,11 @@ function EventTarget() {}
 
 /**
  * @param {string} type
- * @param {EventListener|function(!Event):*} listener
+ * @param {EventListener|function(this:THIS, !Event):*} listener
  * @param {(boolean|!AddEventListenerOptions)=} opt_options
  * @return {undefined}
+ * @this {THIS}
+ * @template THIS
  * @see https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
  */
 EventTarget.prototype.addEventListener = function(type, listener, opt_options) {

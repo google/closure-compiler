@@ -423,12 +423,6 @@ Element.prototype.nodePrincipal;
  */
 Element.prototype.style;
 
-/**
- * @override
- * @return {!Element}
- */
-Element.prototype.cloneNode = function(deep) {};
-
 /** @return {undefined} */
 Element.prototype.click = function() {};
 

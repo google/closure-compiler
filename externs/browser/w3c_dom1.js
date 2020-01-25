@@ -203,7 +203,9 @@ Node.prototype.appendChild = function(newChild) {};
 
 /**
  * @param {boolean} deep
- * @return {!Node}
+ * @return {THIS}
+ * @this {THIS}
+ * @template THIS
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-cloneNode
  * @nosideeffects
  */
