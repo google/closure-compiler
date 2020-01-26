@@ -99,7 +99,7 @@ public final class NodeUtilTest {
 
     private Node parse(String js) {
       CompilerOptions options = new CompilerOptions();
-      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+      options.setLanguageIn(LanguageMode.UNSUPPORTED);
 
       // To allow octal literals such as 0123 to be parsed.
       options.setStrictModeInput(false);
@@ -178,6 +178,21 @@ public final class NodeUtilTest {
       }
     }
     return null;
+  }
+
+  @RunWith(JUnit4.class)
+  public static final class IsDefinedValueTests {
+    @Test
+    public void testIsDefinedValue() {
+      // while "null" is "defined" for the purposes of this method, it triggers the RHS.
+      assertThat(NodeUtil.isDefinedValue(parseExpr("null ?? undefined"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("null ?? null"))).isTrue();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("undefined ?? undefined"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("undefined ?? null"))).isTrue();
+
+      // could be true but the logic is not refined enough
+      assertThat(NodeUtil.isDefinedValue(parseExpr("0 ?? undefined"))).isFalse();
+    }
   }
 
   /**

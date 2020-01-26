@@ -4696,7 +4696,10 @@ public final class NodeUtil {
       case COMMA:
         return isDefinedValue(value.getLastChild());
       case COALESCE:
-        return isDefinedValue(value.getFirstChild()) || isDefinedValue(value.getSecondChild());
+        // 'null' is a "defined" value so we can only trust the RHS.
+        // NOTE: consider creating and using a "isDefinedAndNotNull" that would allow us to
+        // trust the tested value.
+        return isDefinedValue(value.getSecondChild());
       case AND:
       case OR:
         return isDefinedValue(value.getFirstChild())
