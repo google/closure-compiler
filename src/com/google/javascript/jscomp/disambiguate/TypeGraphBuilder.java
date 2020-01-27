@@ -18,7 +18,9 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphEdge;
@@ -135,7 +137,7 @@ final class TypeGraphBuilder {
      * would help, we could be more carful.
      */
     ImmutableSet<FlatType> lcas = this.lcaFinder.findAll(flatAlts);
-    checkState(lcas.size() > 1);
+    checkState(lcas.size() > 1 && lcas.contains(flatUnion), "%s to %s", flatUnion, lcas);
     for (FlatType lca : lcas) {
       this.connectSourceToDest(
           checkNotNull(this.typeHoldsInstanceGraph.getNode(lca)), EdgeReason.ALGEBRAIC, unionNode);
@@ -172,11 +174,8 @@ final class TypeGraphBuilder {
     if (flat.getType().isObjectType()) {
       ObjectType flatObjectType = flat.getType().toMaybeObjectType();
 
-      FunctionType ctorType = flatObjectType.getConstructor();
-      if (ctorType != null) {
-        for (ObjectType ifaceType : ctorType.getAncestorInterfaces()) {
-          this.connectSourceToDest(this.addInternal(ifaceType), EdgeReason.INTERFACE, flatNode);
-        }
+      for (ObjectType ifaceType : ownAncestorInterfacesOf(flatObjectType)) {
+        this.connectSourceToDest(this.addInternal(ifaceType), EdgeReason.INTERFACE, flatNode);
       }
 
       JSType prototypeType = flatObjectType.getImplicitPrototype();
@@ -211,6 +210,41 @@ final class TypeGraphBuilder {
     }
 
     throw new AssertionError("Unexpected type: " + flat);
+  }
+
+  /**
+   * Returns the interfaces directly implemented or extended by {@code type}.
+   *
+   * <p>This is distinct from any of the methods on {@link FunctionType}. Specifically, the result
+   * only contains:
+   *
+   * <ul>
+   *   <li>own/direct supertypes
+   *   <li>supertypes that are actually interfaces
+   * </ul>
+   */
+  private static ImmutableList<ObjectType> ownAncestorInterfacesOf(ObjectType type) {
+    FunctionType ctorType = type.getConstructor();
+    if (ctorType == null) {
+      return ImmutableList.of();
+    }
+
+    final Collection<ObjectType> ifaceTypes;
+    if (ctorType.isInterface()) {
+      ifaceTypes = ctorType.getExtendedInterfaces();
+    } else if (ctorType.isConstructor()) {
+      ifaceTypes = ctorType.getOwnImplementedInterfaces();
+    } else {
+      throw new AssertionError();
+    }
+
+    if (ifaceTypes.isEmpty()) {
+      return ImmutableList.of();
+    }
+
+    return ifaceTypes.stream()
+        .filter((t) -> t.getConstructor() != null && t.getConstructor().isInterface())
+        .collect(toImmutableList());
   }
 
   /**

@@ -25,9 +25,12 @@ import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeRea
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.PROTOTYPE;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.truth.Correspondence;
+import com.google.common.truth.MultimapSubject;
 import com.google.common.truth.TableSubject;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -40,7 +43,9 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.JSTypeResolver;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Set;
@@ -273,67 +278,95 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   }
 
   @Test
-  public void interfaces_connectToImplementors() {
+  public void interfaces_classImplementingClass_doesNotCreateConnection() {
     // Given
     TypeGraphBuilder builder = this.createBuilder(null);
 
-    LinkedHashMap<String, FlatType> testTypes =
-        this.collectTypesFromCode(
-            lines(
-                "/** @interface */", //
-                "class IFoo1 { }",
-                "/** @interface */", //
-                "class IFoo2 { }",
-                "",
-                "/**",
-                " * @implements {IFoo1}",
-                " * @implements {IFoo2}",
-                " */",
-                "class Foo { }",
-                "",
-                "const test = new Foo();"));
-    builder.addAll(testTypes.values());
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      FunctionType child =
+          FunctionType.builder(this.registry).forConstructor().withName("Child").build();
+      FunctionType parent =
+          FunctionType.builder(this.registry).forConstructor().withName("Parent").build();
+
+      child.setImplementedInterfaces(ImmutableList.of(parent.getInstanceType()));
+
+      builder.add(flattener.flatten(child.getInstanceType()));
+    }
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("IFoo1", "Foo", INTERFACE);
-    this.assertThatResultAsTable().containsCell("IFoo2", "Foo", INTERFACE);
+    this.assertThatResultAsMultimap().doesNotContainEntry("Parent", "Child");
   }
 
   @Test
-  public void interfaces_connectToSubinterfaces() {
+  public void interfaces_classImplementingInterface_createsConnection() {
     // Given
     TypeGraphBuilder builder = this.createBuilder(null);
 
-    LinkedHashMap<String, FlatType> testTypes =
-        this.collectTypesFromCode(
-            lines(
-                "/** @interface */", //
-                "class IFoo1 { }",
-                "/** @interface */", //
-                "class IFoo2 { }",
-                "",
-                "/**",
-                " * @interface",
-                " * @extends {IFoo1}",
-                " * @extends {IFoo2}",
-                " */",
-                "class IBar { }",
-                "",
-                "let /** !IBar */ test;"));
-    builder.addAll(testTypes.values());
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      FunctionType child =
+          FunctionType.builder(this.registry).forConstructor().withName("Child").build();
+      FunctionType parent =
+          FunctionType.builder(this.registry).forInterface().withName("Parent").build();
+
+      child.setImplementedInterfaces(ImmutableList.of(parent.getInstanceType()));
+
+      builder.add(flattener.flatten(child.getInstanceType()));
+    }
 
     // When
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("IFoo1.prototype", "IFoo1", PROTOTYPE);
-    this.assertThatResultAsTable().containsCell("IFoo2.prototype", "IFoo2", PROTOTYPE);
-    this.assertThatResultAsTable().containsCell("IBar.prototype", "IBar", PROTOTYPE);
-    this.assertThatResultAsTable().containsCell("IFoo1", "IBar", INTERFACE);
-    this.assertThatResultAsTable().containsCell("IFoo2", "IBar", INTERFACE);
+    this.assertThatResultAsTable().containsCell("Parent", "Child", INTERFACE);
+  }
+
+  @Test
+  public void interfaces_interfaceExtendingClass_doesNotCreateConnection() {
+    // Given
+    TypeGraphBuilder builder = this.createBuilder(null);
+
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      FunctionType child =
+          FunctionType.builder(this.registry).forInterface().withName("Child").build();
+      FunctionType parent =
+          FunctionType.builder(this.registry).forConstructor().withName("Parent").build();
+
+      child.setExtendedInterfaces(ImmutableList.of(parent.getInstanceType()));
+
+      builder.add(flattener.flatten(child.getInstanceType()));
+    }
+
+    // When
+    this.result = builder.build();
+
+    // Then
+    this.assertThatResultAsMultimap().doesNotContainEntry("Parent", "Child");
+  }
+
+  @Test
+  public void interfaces_interfaceExtendingInterface_createsConnection() {
+    // Given
+    TypeGraphBuilder builder = this.createBuilder(null);
+
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      FunctionType child =
+          FunctionType.builder(this.registry).forInterface().withName("Child").build();
+      FunctionType parent =
+          FunctionType.builder(this.registry).forInterface().withName("Parent").build();
+
+      child.setExtendedInterfaces(ImmutableList.of(parent.getInstanceType()));
+
+      builder.add(flattener.flatten(child.getInstanceType()));
+    }
+
+    // When
+    this.result = builder.build();
+
+    // Then
+    this.assertThatResultAsTable().containsCell("Parent", "Child", INTERFACE);
   }
 
   @Test
@@ -572,6 +605,16 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
           (EdgeReason) edge.getValue());
     }
     return assertThat(table.build());
+  }
+
+  private MultimapSubject assertThatResultAsMultimap() {
+    ImmutableMultimap.Builder<String, String> multimap = ImmutableMultimap.builder();
+    for (DiGraphEdge<FlatType, Object> edge : this.result.getEdges()) {
+      multimap.put(
+          edge.getSource().getValue().getType().toString(),
+          edge.getDestination().getValue().getType().toString());
+    }
+    return assertThat(multimap.build());
   }
 
   private TypeGraphBuilder createBuilder(@Nullable StubLcaFinder optLcaFinder) {
