@@ -141,7 +141,7 @@ class RhinoErrorReporter {
               Pattern.compile(
                   "^Keywords and reserved words are not allowed as unquoted property.*"),
               INVALID_ES3_PROP_NAME)
-          .put(Pattern.compile("^Too many template parameters"), TOO_MANY_TEMPLATE_PARAMS)
+          .put(Pattern.compile("^Too many template parameters\n.*"), TOO_MANY_TEMPLATE_PARAMS)
           // Type annotation warnings.
           .put(
               Pattern.compile(".*Type annotations should have curly braces.*"),

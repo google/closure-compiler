@@ -293,13 +293,12 @@ public final class NamedType extends ProxyObjectType {
       }
 
       ObjectType asObject = result.toMaybeObjectType();
-      if (asObject == null) {
+      if (asObject == null || !asObject.isRawTypeOfTemplatizedType()) {
         return result;
       }
 
       int numKeys = result.getTemplateParamCount();
-      // Ignore any extraneous type args (but only after resolving them!)
-      // TODO(johnlenz): report an error
+      // TODO(b/287880204): report an error if there are too many type arguments
       if (numKeys < resolvedTypeArgs.size()) {
         resolvedTypeArgs = resolvedTypeArgs.subList(0, numKeys);
       }

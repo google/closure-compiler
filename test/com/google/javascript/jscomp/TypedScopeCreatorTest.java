@@ -6756,6 +6756,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReportBadTypeAnnotation_invalidEnumTemplateParametersAreParsed() {
+    // Enums cannot actually be templatized, but we still parse any types a user attempts to write.
+    testWarning(
+        "/** @enum */ const Colors = {RED: 0}; var /** !Colors<!MissingType> */ x;",
+        RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
+  }
+
+  @Test
   public void testReportBadTypeAnnotationInExtraTemplateParameter() {
     testWarning(
         "class C {} var /** !C<!MissingType> */ x;", RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);

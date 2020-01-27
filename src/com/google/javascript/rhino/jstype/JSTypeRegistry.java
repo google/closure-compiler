@@ -1949,68 +1949,33 @@ public class JSTypeRegistry implements Serializable {
         {
           JSType nominalType =
               getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());
+          ImmutableList<JSType> templateArgs = parseTemplateArgs(nominalType, n, sourceName, scope);
+
+          // Handle forward declared types
+          if (nominalType.isNamedType() && !nominalType.isResolved()) {
+            if (templateArgs != null) {
+              nominalType =
+                  nominalType.toMaybeNamedType().toBuilder().setTemplateTypes(templateArgs).build();
+            }
+            return addNullabilityBasedOnParseContext(n, nominalType, scope);
+          }
+
           if (!(nominalType instanceof ObjectType) || isNonNullableName(scope, n.getString())) {
             return nominalType;
           }
 
-          boolean isForwardDeclared = nominalType instanceof NamedType;
-          if (nominalType.isUnknownType() && !isForwardDeclared) {
-            return addNullabilityBasedOnParseContext(n, nominalType);
-          }
-
-          Node typeList = n.getFirstChild();
-          if (typeList == null) {
-            // We don't want to templatize the result if there are no template parameters.
-            // TODO(nickreid): Warn when `typeList` has 0 children.
+          if (templateArgs == null
+              || !nominalType.isRawTypeOfTemplatizedType()
+              || nominalType.isUnknownType()) {
             // TODO(nickreid): This case leaves template parameters unbound if users fail to
             // specify any arguments, allowing raw types to leak into programs.
-            return addNullabilityBasedOnParseContext(n, nominalType);
-          }
-
-          if (isForwardDeclared) {
-            ImmutableList.Builder<JSType> templateArgs = ImmutableList.builder();
-            for (Node templateNode : typeList.children()) {
-              templateArgs.add(createTypeFromCommentNode(templateNode, sourceName, scope));
-            }
-            return addNullabilityBasedOnParseContext(
-                n,
-                NamedType.builder(this, n.getString())
-                    .setResolutionKind(ResolutionKind.TYPE_NAME)
-                    .setScope(scope)
-                    .setErrorReportingLocationFrom(n)
-                    .setTemplateTypes(templateArgs.build())
-                    .build());
-          }
-
-          boolean isObject =
-              n.getString().equals("Object") || n.getString().equals("window.Object");
-          int requiredTemplateArgCount =
-              // TODO(b/138617950): Eliminate the specical case for `Object`.
-              isObject ? 2 : nominalType.getTemplateParamCount();
-          List<JSType> templateArgs = new ArrayList<>();
-
-          for (Node templateNode : typeList.children()) {
-            if (templateArgs.size() >= requiredTemplateArgCount) {
-              reporter.warning(
-                  "Too many template parameters",
-                  sourceName,
-                  templateNode.getLineno(),
-                  templateNode.getCharno());
-              // The rest of the types aren't needed even if they're unresolved, /but/ we should
-              // still report an error if they are unrecognized types.
-              createTypeFromCommentNode(templateNode, sourceName, scope);
-              continue;
-            }
-            templateArgs.add(createTypeFromCommentNode(templateNode, sourceName, scope));
-          }
-          if (isObject && templateArgs.size() == 1) {
-            // Special case for Object, where Object<X> implies Object<?,X>.
-            templateArgs.add(0, getNativeType(UNKNOWN_TYPE));
+            // TODO(lharker): delete the check isUnknownType - it seems like it should be redundant
+            // given isRawTypeOfTemplatizedType, but in some contexts is not.
+            return addNullabilityBasedOnParseContext(n, nominalType, scope);
           }
 
           return addNullabilityBasedOnParseContext(
-              n,
-              createTemplatizedType((ObjectType) nominalType, ImmutableList.copyOf(templateArgs)));
+              n, createTemplatizedType((ObjectType) nominalType, templateArgs), scope);
         }
 
       case FUNCTION:
@@ -2090,12 +2055,14 @@ public class JSTypeRegistry implements Serializable {
     throw new IllegalStateException("Unexpected node in type expression: " + n);
   }
 
-  private JSType addNullabilityBasedOnParseContext(Node n, JSType type) {
+  private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope) {
     // Other node types may be appropriate in the future.
     checkState(n.isName() || n.isString(), n);
     checkNotNull(type);
 
-    if (type.isTemplateType()) {
+    if (isNonNullableName(scope, n.getString())) {
+      return type;
+    } else if (type.isTemplateType()) {
       // Template types represent the substituted type exactly and should
       // not be wrapped.
       return type;
@@ -2105,6 +2072,57 @@ public class JSTypeRegistry implements Serializable {
     } else {
       return createNullableType(type);
     }
+  }
+
+  @Nullable
+  private ImmutableList<JSType> parseTemplateArgs(
+      JSType nominalType, Node typeNode, String sourceName, StaticTypedScope scope) {
+    Node typeList = typeNode.getFirstChild();
+    if (typeList == null) {
+      return null;
+    }
+
+    ArrayList<JSType> templateArgs = new ArrayList<>();
+    for (Node templateNode : typeList.children()) {
+      templateArgs.add(createTypeFromCommentNode(templateNode, sourceName, scope));
+    }
+
+    // TODO(b/138617950): Eliminate the special case for `Object`.
+    boolean isObject =
+        typeNode.getString().equals("Object") || typeNode.getString().equals("window.Object");
+    if (isObject && templateArgs.size() == 1) {
+      templateArgs.add(0, getNativeType(UNKNOWN_TYPE));
+    }
+
+    if (nominalType.isNamedType() && !nominalType.isResolved()) {
+      // The required number of template args will not be known until resolution, so just return all
+      // the args.
+      return ImmutableList.copyOf(templateArgs);
+    }
+
+    int requiredTemplateArgCount = nominalType.getTemplateParamCount();
+    if (templateArgs.size() <= requiredTemplateArgCount) {
+      return ImmutableList.copyOf(templateArgs);
+    }
+
+    if (!nominalType.isUnknownType()
+        // TODO(b/287880204): delete the following two cases after cleaning up the codebase
+        && nominalType instanceof ObjectType
+        && !isNonNullableName(scope, typeNode.getString())) {
+      Node firstExtraTemplateParam =
+          typeNode.getFirstChild().getChildAtIndex(requiredTemplateArgCount);
+      String message =
+          "Too many template parameters\nFound "
+              + templateArgs.size()
+              + ", required at most "
+              + requiredTemplateArgCount;
+      reporter.warning(
+          message,
+          sourceName,
+          firstExtraTemplateParam.getLineno(),
+          firstExtraTemplateParam.getCharno());
+    }
+    return ImmutableList.copyOf(templateArgs.subList(0, requiredTemplateArgCount));
   }
 
   /**
