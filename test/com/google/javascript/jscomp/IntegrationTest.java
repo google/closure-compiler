@@ -1754,6 +1754,55 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testReferenceToInternalClassName() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setEmitUseStrict(false); // 'use strict'; is just noise here
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("function use(x) {}").buildExternsFile("externs"));
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('a.b.c');",
+              "exports = class Foo {",
+              "  method() { return Foo.EventType.E1; }",
+              "};",
+              "",
+              "/** @enum {number} */",
+              "exports.EventType = {",
+              "  E1: 1,",
+              "};",
+              ""),
+          lines(
+              "", //
+              "goog.module('a.b.d');",
+              "const Foo = goog.require('a.b.c');",
+              "use(new Foo().method());",
+              "")
+        },
+        new String[] {
+          "",
+          "",
+          lines(
+              "", //
+              "use((new class $Foo$$ {",
+              "  $method$() {",
+              // TODO(b/147588398): Definition of EventType should not have been removed.
+              "    return $Foo$$.$EventType$.$E1$;",
+              "  }",
+              "}).$method$());",
+              ""),
+        });
+  }
+
+  @Test
   public void testPreservedForwardDeclare() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
@@ -1775,8 +1824,6 @@ public final class IntegrationTest extends IntegrationTestCase {
               "/** @type {!fwd.declared.Type} */",
               "var y;"),
         });
-    assertThat(lastCompiler.getResult().errors).isEmpty();
-    assertThat(lastCompiler.getResult().warnings).isEmpty();
   }
 
   @Test

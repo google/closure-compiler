@@ -2594,6 +2594,29 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontCollapseLateAddedClassStaticMemberReferencedByInnerName() {
+    // TODO(b/147588398): We should back off of collapsing here
+    test(
+        lines(
+            "const Bar = class BarInternal {",
+            "  method() {",
+            "    return BarInternal.Enum.E1;", // ref via inner name
+            "  }",
+            "}",
+            "/** @enum {number} */",
+            "Bar.Enum = { E1: 1 };", // added after class definition
+            ""),
+        lines(
+            "const Bar = class BarInternal {", //
+            "  method() {",
+            "    return BarInternal.Enum.E1;", // no longer exists!
+            "  }",
+            "};",
+            "var Bar$Enum$E1 = 1;",
+            ""));
+  }
+
+  @Test
   public void testDontCollapseClassStaticMemberReferencingInnerNameInNestedFunction() {
     // probably we could do some rewriting to make this work, but for now just back off.
     testSame(
