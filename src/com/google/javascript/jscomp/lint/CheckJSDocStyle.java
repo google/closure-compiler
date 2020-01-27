@@ -48,6 +48,12 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticType MISSING_JSDOC =
       DiagnosticType.disabled("JSC_MISSING_JSDOC", "Function must have JSDoc.");
 
+  public static final DiagnosticType INCORRECT_ANNOTATION_ON_GETTER_SETTER =
+      DiagnosticType.disabled(
+          "JSC_TYPE_ON_GETTER_SETTER",
+          "Getters and setters must not have @type annotations. Did you mean @return or @param"
+              + " instead?");
+
   public static final DiagnosticType MISSING_PARAMETER_JSDOC =
       DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
 
@@ -92,6 +98,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       new DiagnosticGroup(
           CLASS_DISALLOWED_JSDOC,
           MISSING_JSDOC,
+          INCORRECT_ANNOTATION_ON_GETTER_SETTER,
           MISSING_PARAMETER_JSDOC,
           MIXED_PARAM_JSDOC_STYLES,
           MISSING_RETURN_JSDOC,
@@ -200,6 +207,18 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     }
   }
 
+  private static void checkNoTypeOnGettersAndSetters(
+      NodeTraversal t, Node function, JSDocInfo jsDoc) {
+    if (function.getGrandparent().isClassMembers()) {
+      Node memberNode = function.getParent();
+      if (memberNode.isSetterDef() || memberNode.isGetterDef()) {
+        if (jsDoc != null && jsDoc.hasType()) {
+          t.report(function, INCORRECT_ANNOTATION_ON_GETTER_SETTER);
+        }
+      }
+    }
+  }
+
   private void visitFunction(NodeTraversal t, Node function) {
     JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(function);
 
@@ -214,6 +233,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           || jsDoc.hasReturnType()) {
         checkParams(t, function, jsDoc);
       }
+      checkNoTypeOnGettersAndSetters(t, function, jsDoc);
       checkReturn(t, function, jsDoc);
     }
   }
