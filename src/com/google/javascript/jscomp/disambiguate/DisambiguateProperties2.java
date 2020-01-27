@@ -25,7 +25,6 @@ import static java.util.Comparator.naturalOrder;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.MultimapBuilder;
 import com.google.gson.Gson;
@@ -122,24 +121,41 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private static String locationOf(Node n) {
-    return n.getSourceFileName() + ":" + n.getLineno() + ":" + n.getCharno();
-  }
-
-  private static class PropertyReferenceIndexJson {
+  private static final class PropertyReferenceIndexJson {
     final String name;
-    final ImmutableSortedMap<String, Integer> refs;
+    final ImmutableSortedSet<PropertyReferenceJson> refs;
 
     PropertyReferenceIndexJson(PropertyClustering prop) {
       this.name = prop.getName();
-
-      ImmutableSortedMap.Builder<String, Integer> refs = ImmutableSortedMap.naturalOrder();
-      prop.getUseSites().forEach((node, type) -> refs.put(locationOf(node), type.getId()));
-      this.refs = refs.build();
+      this.refs =
+          prop.getUseSites().entrySet().stream()
+              .map((e) -> new PropertyReferenceJson(e.getKey(), e.getValue()))
+              .collect(toImmutableSortedSet(naturalOrder()));
     }
   }
 
-  private static class TypeNodeJson {
+  private static final class PropertyReferenceJson implements Comparable<PropertyReferenceJson> {
+    final String location;
+    final int receiver;
+
+    PropertyReferenceJson(Node location, FlatType receiver) {
+      this.location =
+          location.getSourceFileName() + ":" + location.getLineno() + ":" + location.getCharno();
+      this.receiver = receiver.getId();
+    }
+
+    @Override
+    public int compareTo(PropertyReferenceJson x) {
+      int location = this.location.compareTo(x.location);
+      if (location != 0) {
+        return location;
+      }
+
+      return this.receiver - x.receiver;
+    }
+  }
+
+  private static final class TypeNodeJson {
     final int id;
     final boolean invalidating;
     final String name;
@@ -155,7 +171,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
       this.edges =
           n.getOutEdges().stream()
               .map(TypeEdgeJson::new)
-              .collect(toImmutableSortedSet(comparingInt((x) -> x.dest)));
+              .collect(toImmutableSortedSet(naturalOrder()));
       this.props =
           t.getAssociatedProps().stream()
               .map(PropertyClustering::getName)
@@ -163,13 +179,19 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private static class TypeEdgeJson {
+  private static final class TypeEdgeJson implements Comparable<TypeEdgeJson> {
     final int dest;
     final Object value;
 
     TypeEdgeJson(DiGraphEdge<FlatType, Object> e) {
       this.dest = e.getDestination().getValue().getId();
       this.value = e.getValue();
+    }
+
+    @Override
+    public int compareTo(TypeEdgeJson x) {
+      checkArgument(this.dest != x.dest);
+      return this.dest - x.dest;
     }
   }
 }
