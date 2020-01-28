@@ -227,12 +227,6 @@ public class DiagnosticGroups {
           VarCheck.STRICT_MODULE_DEP_ERROR,
           CheckGlobalNames.STRICT_MODULE_DEP_QNAME);
 
-  // TODO(b/146671765): Remove LATE_NAMESPACE_DEF_CHECK when J2CL is clean.
-  public static final DiagnosticGroup LATE_NAMESPACE_DEF_CHECK =
-      DiagnosticGroups.registerGroup(
-          "lateNamespaceDefsCheck", // undocumented
-          CheckGlobalNames.NAME_DEFINED_LATE_WARNING);
-
   public static final DiagnosticGroup VIOLATED_MODULE_DEP =
       DiagnosticGroups.registerGroup("violatedModuleDep",
           VarCheck.VIOLATED_MODULE_DEP_ERROR);
