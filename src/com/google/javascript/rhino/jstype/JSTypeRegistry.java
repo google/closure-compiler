@@ -52,6 +52,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -813,7 +814,70 @@ public class JSTypeRegistry implements Serializable {
         return type;
       }
     }
-    return getTypeForScopeInternal(getLookupScope(scope, name), name);
+    StaticScope declarationScope = getLookupScope(scope, name);
+    JSType resolvedViaTable = getTypeForScopeInternal(declarationScope, name);
+    if (resolvedViaTable != null) {
+      return resolvedViaTable;
+    }
+    return resolveViaProperties(declarationScope, name);
+  }
+
+  @Nullable
+  private JSType resolveViaProperties(StaticScope declarationScope, String qualifiedName) {
+    checkNotNull(qualifiedName);
+    if (qualifiedName.isEmpty() || !(declarationScope instanceof StaticTypedScope)) {
+      return null;
+    }
+    StaticTypedScope typedDeclarationScope = (StaticTypedScope) declarationScope;
+    List<String> componentNames = checkNotNull(Splitter.on('.').splitToList(qualifiedName));
+    StaticTypedSlot slot = typedDeclarationScope.getOwnSlot(componentNames.get(0));
+    if (slot == null) {
+      return null;
+    }
+    JSType slotType = slot.getType();
+    if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
+      return null;
+    }
+
+    // resolving component by component
+    for (int i = 1; i < componentNames.size(); i++) {
+      String component = componentNames.get(i);
+      ObjectType parentObj = ObjectType.cast(slotType);
+      if (parentObj == null || component.isEmpty() || !parentObj.hasOwnProperty(component)) {
+        return null;
+      }
+      if (i == componentNames.size() - 1) {
+        // Look for a typedefTypeProp on the definition node of the last component.
+        Node def = parentObj.getPropertyDefSite(component);
+        JSType typedefType = resolveTypeFromNodeIfTypedef(def);
+        if (typedefType != null) {
+          return typedefType;
+        }
+      }
+      slotType = parentObj.getPropertyType(component);
+    }
+
+    // Translate "constructor" types to "instance" types.
+    if (slotType == null) {
+      return null;
+    } else if (slotType.isFunctionType() && (slotType.isConstructor() || slotType.isInterface())) {
+      return slotType.toMaybeFunctionType().getInstanceType();
+    } else if (slotType.isNoObjectType()) {
+      return this.getNativeObjectType(JSTypeNative.NO_OBJECT_TYPE);
+    } else if (slotType instanceof EnumType) {
+      return ((EnumType) slotType).getElementsType();
+    } else {
+      return null;
+    }
+  }
+
+  /** Checks the given Node for a typedef annotation, resolving to that type if existent. */
+  @Nullable
+  private static JSType resolveTypeFromNodeIfTypedef(Node node) {
+    if (node == null) {
+      return null;
+    }
+    return node.getTypedefTypeProp();
   }
 
   private JSType getTypeForScopeInternal(StaticScope scope, String name) {
@@ -1193,7 +1257,7 @@ public class JSTypeRegistry implements Serializable {
     return originalPropName;
   }
 
-  private String getSimpleReadableJSTypeName(JSType type) {
+  private static String getSimpleReadableJSTypeName(JSType type) {
     if (type instanceof AllType) {
       return type.toString();
     } else if (type instanceof ValueType) {

@@ -2670,12 +2670,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     FunctionType foo = (FunctionType) findNameType("Foo", globalScope);
 
     assertType(foo.getInstanceType()).isSubtypeOf(bar.getInstanceType());
-    // TODO(b/144327372): this should be equal to bar
-    assertType(foo.getImplicitPrototype()).isNotEqualTo(bar);
-    assertType(foo.getImplicitPrototype()).toStringIsEqualTo("Function.prototype");
+    assertType(foo.getImplicitPrototype()).isEqualTo(bar);
 
-    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
-    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+    assertThat(foo.getInstanceType().loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(foo.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
   }
 
   @Test

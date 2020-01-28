@@ -893,11 +893,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @const */ alias.foo = 42",
             "/** @type {alias.MyNumber} */ const x = 'str';",
             ""),
-        // TODO(sdh): should be non-nullable number, but we get nullability wrong.
         lines(
             "initializing variable", // preserve newlines
             "found   : string",
-            "required: (null|number)"));
+            "required: number"));
   }
 
   @Test
@@ -913,11 +912,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @const */ alias.foo = 42",
             "  /** @type {alias.MyNumber} */ const x = 'str';",
             "}"),
-        // TODO(sdh): should be non-nullable number, but we get nullability wrong.
         lines(
             "initializing variable", // preserve newlines
             "found   : string",
-            "required: (null|number)"));
+            "required: number"));
   }
 
   @Test
@@ -6262,10 +6260,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "outer.inner = alias;",
             "const /** outer.inner.child.MyNumber */ x = '';"),
         lines(
-            "initializing variable",
+            "initializing variable", //
             "found   : string",
-            // TODO(sdh): this should not be nullable
-            "required: (null|number)"));
+            "required: number"));
   }
 
   @Test
