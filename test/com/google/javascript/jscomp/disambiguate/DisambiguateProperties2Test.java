@@ -496,6 +496,41 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
+  public void bug_propertiesAreDisambiguated_betweenAncestorTypes_ifCommonChildHasNoPropUse() {
+    // TODO(b/147945025): "t" should conflate between `IFoo` and `Foo`.
+    test(
+        srcs(
+            lines(
+                "/** @interface */",
+                "class IFoo {",
+                "  t() { }",
+                "}",
+                "class Foo {",
+                "  t() { }",
+                "}",
+                "/** @implements {IFoo} */",
+                "class SubFoo extends Foo { }",
+                "",
+                // This instantiation isn't necessary to trigger the bug, but clarifies the risk.
+                "const /** !IFoo */ x = new SubFoo();",
+                "x.t();")),
+        expected(
+            lines(
+                "/** @interface */",
+                "class IFoo {",
+                "  JSC$1_t() { }",
+                "}",
+                "class Foo {",
+                "  JSC$2_t() { }",
+                "}",
+                "/** @implements {IFoo} */",
+                "class SubFoo extends Foo { }",
+                "",
+                "const /** !IFoo */ x = new SubFoo();",
+                "x.JSC$1_t();")));
+  }
+
+  @Test
   public void propertiesAreInvalidated_byToplikeAndBottomlikeTypes() {
     ImmutableSet<String> annotations =
         ImmutableSet.of(
