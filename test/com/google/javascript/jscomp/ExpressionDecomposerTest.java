@@ -59,9 +59,6 @@ public final class ExpressionDecomposerTest {
     allowMethodCallDecomposing = false;
     knownConstants.clear();
     times = 1;
-    // Tests using ES6+ features not in the typechecker should set this option to false
-    // TODO(lharker): stop setting this flag to false, since the typechecker should now understand
-    // all features in ES2017
     shouldTestTypes = true;
   }
 
@@ -383,7 +380,6 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testCanExposeExpression12() {
     // Test destructuring rhs is evaluated before the lhs
-    shouldTestTypes = false;
     helperCanExposeExpression(DecompositionType.MOVABLE, "const {a, b = goo()} = foo();", "foo");
 
     helperCanExposeExpression(DecompositionType.MOVABLE, "const [a, b = goo()] = foo();", "foo");
@@ -446,7 +442,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveExpression4() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "const x = foo()",
         "foo",
@@ -455,7 +450,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveExpression5() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "let x = foo()",
         "foo",
@@ -520,7 +514,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveExpression13() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "const {a, b} = foo();",
         "foo",
@@ -529,7 +522,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveExpression14() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "({a, b} = foo());",
         "foo",
@@ -565,7 +557,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression4() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "const x = 1 ? foo() : 0",
         "foo",
@@ -575,7 +566,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression5() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "let x = 1 ? foo() : 0",
         "foo",
@@ -610,7 +600,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression9() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "const x = 1 + (goo() && foo())",
         "foo",
@@ -620,7 +609,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression10() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "let x = 1 + (goo() && foo())",
         "foo",
@@ -752,7 +740,6 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testExposeExpression18() {
     allowMethodCallDecomposing = true;
-    shouldTestTypes = false;
     helperExposeExpression(
         lines(
             "const {a, b, c} = condition ?",
@@ -772,6 +759,8 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testMoveClass1() {
     shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperMoveExpression(
         "alert(class X {});",
         ExpressionDecomposerTest::findClass,
@@ -781,6 +770,8 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testMoveClass2() {
     shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperMoveExpression(
         "console.log(1, 2, class X {});",
         ExpressionDecomposerTest::findClass,
@@ -1013,7 +1004,9 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveSpread_siblingOfCall_outOfArrayLiteral_usesTempArray() {
-    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperExposeExpression(
         "[...x, foo()];",
         "foo",
@@ -1024,7 +1017,9 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveSpread_siblingOfCall_outOfObjectLiteral_usesTempObject() {
-    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperExposeExpression(
         "({...x, y: foo()});",
         "foo",
@@ -1035,7 +1030,9 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveSpread_siblingOfCall_outOfFunctionCall_usesTempArray() {
-    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperExposeExpression(
         lines(
             "function f() { }", //
@@ -1259,11 +1256,7 @@ public final class ExpressionDecomposerTest {
       Function<Node, Node> nodeFinder,
       String expectedResult) {
     Compiler compiler = getCompiler();
-    ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope(), allowMethodCallDecomposing);
-    decomposer.setTempNamePrefix("temp");
-    decomposer.setResultNamePrefix("result");
+
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     Node originalTree = tree.cloneTree();
@@ -1272,6 +1265,16 @@ public final class ExpressionDecomposerTest {
     if (shouldTestTypes) {
       processForTypecheck(compiler, tree);
     }
+
+    ExpressionDecomposer decomposer =
+        new ExpressionDecomposer(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
+    decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
 
     Node expr = nodeFinder.apply(tree);
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
@@ -1312,11 +1315,6 @@ public final class ExpressionDecomposerTest {
       String expectedResult) {
     Compiler compiler = getCompiler();
 
-    ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope(), allowMethodCallDecomposing);
-    decomposer.setTempNamePrefix("temp");
-    decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     Node originalTree = tree.cloneTree();
@@ -1325,6 +1323,16 @@ public final class ExpressionDecomposerTest {
     if (shouldTestTypes) {
       processForTypecheck(compiler, tree);
     }
+
+    ExpressionDecomposer decomposer =
+        new ExpressionDecomposer(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
+    decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
 
     Node expr = nodeFinder.apply(tree);
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
@@ -1346,6 +1354,10 @@ public final class ExpressionDecomposerTest {
       }
       processForTypecheck(compiler, originalTree);
 
+      // TODO(bradfordcsmith): Don't assume type check + decompose gives the same results as
+      // decompose + type check.
+      // There are legitimate cases where the types will be different from one order to another,
+      // but not actually wrong.
       checkTypeStringsEqualAsTree(originalTree, tree);
     }
   }
