@@ -67,6 +67,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
             .addAllTypeMismatches(compiler.getTypeMismatches())
             .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
             .allowEnumsAndScalars()
+            .setAlsoInvalidateRelatedTypes(false)
             .build();
   }
 

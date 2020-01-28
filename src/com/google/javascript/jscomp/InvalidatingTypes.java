@@ -18,13 +18,13 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.LinkedHashSet;
 import javax.annotation.Nullable;
 
 /**
@@ -40,8 +40,8 @@ public final class InvalidatingTypes {
   /** Whether to allow types like 'str'.toString() */
   private final boolean allowScalars;
 
-  private InvalidatingTypes(Builder builder) {
-    this.types = builder.types.build();
+  private InvalidatingTypes(Builder builder, ImmutableSet<JSType> types) {
+    this.types = types;
     this.allowEnums = builder.allowEnums;
     this.allowScalars = builder.allowScalars;
   }
@@ -79,18 +79,48 @@ public final class InvalidatingTypes {
 
   /** Builder */
   public static final class Builder {
-    private final ImmutableSet.Builder<JSType> types = ImmutableSet.builder();
     private final JSTypeRegistry registry;
+
+    @Nullable private Multimap<JSType, Supplier<JSError>> invalidationMap;
+    private final LinkedHashSet<TypeMismatch> mismatches = new LinkedHashSet<>();
     private boolean allowEnums = false;
     private boolean allowScalars = false;
-    @Nullable private Multimap<JSType, Supplier<JSError>> invalidationMap;
+    private boolean allowGlobalThis = true;
+    private boolean allowTypesInvalidForRenaming = true;
+
+    private boolean alsoInvalidateRelatedTypes = true;
+
+    private ImmutableSet.Builder<JSType> types;
 
     public Builder(JSTypeRegistry registry) {
       this.registry = registry;
     }
 
     public InvalidatingTypes build() {
-      return new InvalidatingTypes(this);
+      checkState(this.types == null);
+      this.types = ImmutableSet.builder();
+
+      if (!this.allowGlobalThis) {
+        types.add(registry.getNativeType(JSTypeNative.GLOBAL_THIS));
+      }
+      if (!this.allowTypesInvalidForRenaming) {
+        types.add(
+            registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
+            registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
+            registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
+            registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+            registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
+            registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE));
+      }
+
+      for (TypeMismatch mismatch : this.mismatches) {
+        this.addTypeWithReason(mismatch.typeA, mismatch.error);
+        this.addTypeWithReason(mismatch.typeB, mismatch.error);
+      }
+
+      ImmutableSet<JSType> types = this.types.build();
+      this.types = null;
+      return new InvalidatingTypes(this, types);
     }
 
     // TODO(sdh): Investigate whether this can be consolidated between all three passes.
@@ -109,75 +139,76 @@ public final class InvalidatingTypes {
     }
 
     public Builder disallowGlobalThis() {
-      // Disambiguate does not invalidate global this because it
-      // sets skipping explicitly for extern properties only on
-      // the extern types.
-      types.add(registry.getNativeType(JSTypeNative.GLOBAL_THIS));
+      /**
+       * Disambiguate does not invalidate global this because it sets skipping explicitly for extern
+       * properties only on the extern types.
+       */
+      this.allowGlobalThis = false;
       return this;
     }
 
     public Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
-      for (TypeMismatch mis : mismatches) {
-        addType(mis.typeA, mis);
-        addType(mis.typeB, mis);
-      }
+      mismatches.forEach(this.mismatches::add);
       return this;
     }
 
     public Builder addTypesInvalidForPropertyRenaming() {
-      types.addAll(
-          ImmutableList.of(
-              registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
-              registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
-              registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
-              registry.getNativeType(JSTypeNative.OBJECT_TYPE),
-              registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
-              registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE)));
+      this.allowTypesInvalidForRenaming = false;
+      return this;
+    }
+
+    public Builder setAlsoInvalidateRelatedTypes(boolean x) {
+      this.alsoInvalidateRelatedTypes = x;
       return this;
     }
 
     /** Invalidates the given type, so that no properties on it will be inlined or renamed. */
-    private Builder addType(JSType type, TypeMismatch mismatch) {
+    private void addTypeWithReason(JSType type, Supplier<JSError> error) {
       type = type.restrictByNotNullOrUndefined();
+
       if (type.isUnionType()) {
         for (JSType alt : type.getUnionMembers()) {
-          addType(alt, mismatch);
+          this.addTypeWithReason(alt, error);
         }
-      } else if (type.isEnumElementType()) { // only in disamb
-        addType(type.getEnumeratedTypeOfEnumElement(), mismatch);
-      } else { // amb and inl both do this without the else
-        checkState(!type.isUnionType());
-        types.add(type);
-        recordInvalidation(type, mismatch);
-
-        ObjectType objType = type.toMaybeObjectType();
-        if (objType != null) {
-          ObjectType proto = objType.getImplicitPrototype();
-          if (proto != null) {
-            types.add(proto);
-            recordInvalidation(proto, mismatch);
-          }
-          if (objType.isConstructor()) {
-            ObjectType instanceType = objType.toMaybeFunctionType().getInstanceType();
-            if (instanceType != null) {
-              // TODO(b/142431852): This shouldn't be possible.
-              // Case: `function(new:T)`, `T = number`.
-              types.add(instanceType);
-            }
-          } else if (objType.isInstanceType()) {
-            types.add(objType.getConstructor());
-          }
-        }
-      }
-      return this;
-    }
-
-    private void recordInvalidation(JSType type, TypeMismatch mis) {
-      if (!type.isObjectType()) {
         return;
       }
+      checkState(!type.isUnionType(), type);
+
+      if (!this.alsoInvalidateRelatedTypes) {
+        this.recordTypeWithReason(type, error);
+      } else if (type.isEnumElementType()) {
+        // Only in disambigation.
+        this.recordTypeWithReason(type.getEnumeratedTypeOfEnumElement(), error);
+        return;
+      } else {
+        // Ambiguation and InlineProperties both do this.
+        this.recordTypeWithReason(type, error);
+
+        ObjectType objType = type.toMaybeObjectType();
+        if (objType == null) {
+          return;
+        }
+
+        this.recordTypeWithReason(objType.getImplicitPrototype(), error);
+
+        if (objType.isConstructor()) {
+          // TODO(b/142431852): This should never be null but it is possible.
+          // Case: `function(new:T)`, `T = number`.
+          this.recordTypeWithReason(objType.toMaybeFunctionType().getInstanceType(), error);
+        } else if (objType.isInstanceType()) {
+          this.recordTypeWithReason(objType.getConstructor(), error);
+        }
+      }
+    }
+
+    private void recordTypeWithReason(JSType type, Supplier<JSError> error) {
+      if (type == null || !type.isObjectType()) {
+        return;
+      }
+
+      this.types.add(type);
       if (invalidationMap != null) {
-        invalidationMap.put(type, mis.error);
+        this.invalidationMap.put(type, error);
       }
     }
   }
