@@ -21,12 +21,22 @@
  * @externs
  */
 
+/**
+ * TODO(bradfordcsmith): update the link when PR is merged
+ * @see https://github.com/w3c/pointerlock/pull/49/
+ * @record
+ */
+function PointerLockOptions() {}
+
+/** @type {undefined|boolean} */
+PointerLockOptions.prototype.unadjustedMovement;
 
 /**
  * @see https://w3c.github.io/pointerlock/#widl-Element-requestPointerLock-void
- * @return {void}
+ * @param {!PointerLockOptions=} options
+ * @return {void|!Promise<void>}
  */
-Element.prototype.requestPointerLock = function() {};
+Element.prototype.requestPointerLock = function(options) {};
 
 /**
  * @see https://w3c.github.io/pointerlock/#widl-Document-pointerLockElement
