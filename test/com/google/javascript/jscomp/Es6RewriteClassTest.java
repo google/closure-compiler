@@ -40,6 +40,18 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteClassTest extends CompilerTestCase {
 
+  // Stub out just enough of ES6 runtime libraries to satisfy the typechecker.
+  // In a real compilation, the needed parts of the library are loaded automatically.
+  static final String RUNTIME_LIBRARY_STUBS =
+      lines(
+          "const $jscomp = {};",
+          "/**",
+          " * @param {function(new: ?)} subclass",
+          " * @param {function(new: ?)} superclass",
+          " */",
+          "$jscomp.inherits = function(subclass, superclass) {};",
+          "");
+
   public Es6RewriteClassTest() {
     super(
         new TestExternsBuilder()
@@ -48,17 +60,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             .addFunction()
             .addConsole()
             .addAlert()
-            .addExtra(
-                lines(
-                    // Stub out just enough of ES6 runtime libraries to satisfy the typechecker.
-                    // In a real compilation, the needed parts of the library are loaded
-                    // automatically.
-                    "/**",
-                    " * @param {function(new: ?)} subclass",
-                    " * @param {function(new: ?)} superclass",
-                    " */",
-                    "$jscomp.inherits = function(subclass, superclass) {};",
-                    ""))
             .build());
   }
 
@@ -578,16 +579,15 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Test
   public void testExtendsWithImplicitConstructor() {
     test(
-        srcs("class D {} class C extends D {}"),
-        expected(
-            lines(
-                "/** @constructor */",
-                "let D = function() {};",
-                "/** @constructor",
-                " * @extends {D}",
-                " */",
-                "let C = function() { D.apply(this, arguments); };",
-                "$jscomp.inherits(C, D);")));
+        "class D {} class C extends D {}",
+        lines(
+            "/** @constructor */",
+            "let D = function() {};",
+            "/** @constructor",
+            " * @extends {D}",
+            " */",
+            "let C = function() { D.apply(this, arguments); };",
+            "$jscomp.inherits(C, D);"));
   }
 
   @Test
@@ -614,43 +614,41 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Test
   public void testExtendsWithSpreadsPassedToSuper() {
     test(
-        srcs(
-            lines(
-                "class D {", //
-                "  /** @param {...string|number} args*/",
-                "  constructor(...args) {",
-                "    /** @type {!Arguments} */",
-                "    this.args = arguments;",
-                "  }",
-                "}",
-                "class C extends D {",
-                "  /**",
-                "   * @param {!Array<number>} numbers",
-                "   * @param {!Array<string>} strings",
-                "   */",
-                "  constructor(numbers, strings) {",
-                "    super(...numbers, ...strings);",
-                "  }",
-                "}",
-                "")),
-        expected(
-            lines(
-                "/**",
-                " * @constructor",
-                " * @param {!Array<string|number>}",
-                " */",
-                "let D = function(...args) {",
-                "  /** @type {!Arguments} */",
-                "  this.args = arguments;",
-                "};",
-                "/**",
-                " * @constructor",
-                " * @extends {D}",
-                " */",
-                "let C = function(numbers, strings) {",
-                "  D.apply(this, [...numbers, ...strings]);",
-                "};",
-                "$jscomp.inherits(C, D);")));
+        lines(
+            "class D {", //
+            "  /** @param {...string|number} args*/",
+            "  constructor(...args) {",
+            "    /** @type {!Arguments} */",
+            "    this.args = arguments;",
+            "  }",
+            "}",
+            "class C extends D {",
+            "  /**",
+            "   * @param {!Array<number>} numbers",
+            "   * @param {!Array<string>} strings",
+            "   */",
+            "  constructor(numbers, strings) {",
+            "    super(...numbers, ...strings);",
+            "  }",
+            "}",
+            ""),
+        lines(
+            "/**",
+            " * @constructor",
+            " * @param {!Array<string|number>}",
+            " */",
+            "let D = function(...args) {",
+            "  /** @type {!Arguments} */",
+            "  this.args = arguments;",
+            "};",
+            "/**",
+            " * @constructor",
+            " * @extends {D}",
+            " */",
+            "let C = function(numbers, strings) {",
+            "  D.apply(this, [...numbers, ...strings]);",
+            "};",
+            "$jscomp.inherits(C, D);"));
   }
 
   @Test
@@ -687,9 +685,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   public void testExtendsExternsClass() {
     test(
         externs("const ns = {}; /** @constructor */ ns.D = function() {};"),
-        srcs("class C extends ns.D { }"),
+        srcs(linesWithStubs("class C extends ns.D { }")),
         expected(
-            lines(
+            linesWithStubs(
                 "/** @constructor",
                 " * @extends {ns.D}",
                 " */",
@@ -717,53 +715,34 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   @Test
   public void testExtendForwardDeclaredClass() {
     enableClosurePass();
-    test(
-        srcs(
-            lines(
-                "goog.forwardDeclare('ns.D');", //
-                "class C extends ns.D { }")),
-        expected(
-            lines(
-                "/** @constructor",
-                " * @extends {ns.D} */",
-                "let C = function() {",
-                "  return ns.D.apply(this, arguments) || this;",
-                "};",
-                "$jscomp.inherits(C, ns.D);")),
-        warning(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY));
+    testWarning(
+        lines(
+            "goog.forwardDeclare('ns.D');", //
+            "class C extends ns.D { }"),
+        TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
   }
 
   @Test
   public void testImplementForwardDeclaredInterface() {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     enableClosurePass();
-    test(
-        srcs(
-            lines(
-                "goog.forwardDeclare('ns.D');", //
-                "/** @implements {ns.D} */",
-                "class C { }")),
-        expected(
-            lines(
-                "/** @constructor @implements {ns.D} */", //
-                "let C = function() {};")),
-        warning(FunctionTypeBuilder.RESOLVED_TAG_EMPTY));
+    testWarning(
+        lines(
+            "goog.forwardDeclare('ns.D');", //
+            "/** @implements {ns.D} */",
+            "class C { }"),
+        FunctionTypeBuilder.RESOLVED_TAG_EMPTY);
   }
 
   @Test
   public void testExtendForwardDeclaredInterface() {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     enableClosurePass();
-    test(
-        srcs(
-            lines(
-                "goog.forwardDeclare('ns.D');", //
-                "/** @interface @extends {ns.D} */ class C { }")),
-        expected(
-            lines(
-                "/** @interface @extends {ns.D} */", //
-                "let C = function() {};")),
-        warning(FunctionTypeBuilder.RESOLVED_TAG_EMPTY));
+    testWarning(
+        lines(
+            "goog.forwardDeclare('ns.D');", //
+            "/** @interface @extends {ns.D} */ class C { }"),
+        FunctionTypeBuilder.RESOLVED_TAG_EMPTY);
   }
 
   @Test
@@ -1896,9 +1875,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             lines(
                 "/** @constructor */ function ExternsClass() {}",
                 "ExternsClass.m = function() {};")),
-        srcs("class CodeClass extends ExternsClass {}"),
+        srcs(linesWithStubs("class CodeClass extends ExternsClass {}")),
         expected(
-            lines(
+            linesWithStubs(
                 "/** @constructor",
                 " * @extends {ExternsClass}",
                 " */",
@@ -2412,7 +2391,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 "function two() {}",
                 "function three() {}")),
         srcs(
-            lines(
+            linesWithStubs(
                 "/** @unrestricted */",
                 "class C {",
                 "  get [one()]() { return true; }",
@@ -2423,7 +2402,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 "  set [three()](val) { return true; }",
                 "}")),
         expected(
-            lines(
+            linesWithStubs(
                 "/** @unrestricted  @constructor */",
                 "let C = function() {};",
                 "$jscomp.global.Object.defineProperty(C.prototype, one(), {",
@@ -2867,6 +2846,30 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Override
+  protected void test(String before, String after) {
+    super.test(RUNTIME_LIBRARY_STUBS + before, RUNTIME_LIBRARY_STUBS + after);
+  }
+
+  @Override
+  protected void testError(String before, DiagnosticType error) {
+    super.testError(RUNTIME_LIBRARY_STUBS + before, error);
+  }
+
+  @Override
+  protected void testWarning(String before, DiagnosticType error) {
+    super.testWarning(RUNTIME_LIBRARY_STUBS + before, error);
+  }
+
+  @Override
+  protected void testNoWarning(String before) {
+    super.testNoWarning(RUNTIME_LIBRARY_STUBS + before);
+  }
+
+  private static String linesWithStubs(String... lines) {
+    return RUNTIME_LIBRARY_STUBS + lines(lines);
+  }
+
+  @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();
   }
@@ -2881,7 +2884,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
    * the source and the transpiled source respectively.
    */
   private AstPair testAndReturnAsts(String source, String expected) {
-    Node originalRoot = createCompiler().parseTestCode(source);
+    Node originalRoot = createCompiler().parseTestCode(RUNTIME_LIBRARY_STUBS + source);
 
     test(source, expected);
 
