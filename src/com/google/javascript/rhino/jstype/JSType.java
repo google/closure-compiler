@@ -495,10 +495,6 @@ public abstract class JSType implements Serializable {
     return toMaybeTemplateType() != null;
   }
 
-  public final boolean isTypeVariable() {
-    return isTemplateType();
-  }
-
   /**
    * Downcasts this to a TemplateType, or returns null if this is not
    * a function.

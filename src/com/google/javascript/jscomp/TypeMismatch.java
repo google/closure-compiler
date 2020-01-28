@@ -62,17 +62,16 @@ class TypeMismatch implements Serializable {
   }
 
   /**
-   * In the old type checker, a type variable is considered unknown, so other types can be
-   * used as type variables, and vice versa, without warning. NTI correctly warns.
-   * However, we don't want to block disambiguation in these cases. So, to avoid types getting
-   * invalidated, we don't register the mismatch. Otherwise, to get good disambiguation,
-   * we would have to add casts all over the code base.
-   * TODO(dimvar): this can be made safe in the distant future where we have bounded generics
-   * *and* we have switched all the unsafe uses of type variables in the code base to use
+   * In the old type checker, a type variable is considered unknown, so other types can be used as
+   * type variables, and vice versa, without warning. NTI correctly warns. However, we don't want to
+   * block disambiguation in these cases. So, to avoid types getting invalidated, we don't register
+   * the mismatch. Otherwise, to get good disambiguation, we would have to add casts all over the
+   * code base. TODO(dimvar): this can be made safe in the distant future where we have bounded
+   * generics *and* we have switched all the unsafe uses of type variables in the code base to use
    * bounded generics.
    */
-  private static boolean bothAreNotTypeVariables(JSType found, JSType required) {
-    return !found.isTypeVariable() && !required.isTypeVariable();
+  private static boolean bothAreNotTemplateTypes(JSType found, JSType required) {
+    return !found.isTemplateType() && !required.isTemplateType();
   }
 
   static void registerMismatch(
@@ -86,13 +85,13 @@ class TypeMismatch implements Serializable {
       boolean strictMismatch =
           !found.isSubtypeWithoutStructuralTyping(required)
           && !required.isSubtypeWithoutStructuralTyping(found);
-      if (strictMismatch && bothAreNotTypeVariables(found, required)) {
+      if (strictMismatch && bothAreNotTemplateTypes(found, required)) {
         implicitInterfaceUses.add(new TypeMismatch(found, required, Suppliers.ofInstance(error)));
       }
       return;
     }
 
-    if (bothAreNotTypeVariables(found, required)) {
+    if (bothAreNotTemplateTypes(found, required)) {
       mismatches.add(new TypeMismatch(found, required, Suppliers.ofInstance(error)));
     }
 
@@ -118,7 +117,7 @@ class TypeMismatch implements Serializable {
     if (isInstanceOfObject(sourceType)
         && !isInstanceOfObject(targetType)
         && !targetType.isUnknownType()
-        && bothAreNotTypeVariables(sourceType, targetType)) {
+        && bothAreNotTemplateTypes(sourceType, targetType)) {
       // We don't report a type error, but we still need to construct a JSError,
       // for people who enable the invalidation diagnostics in DisambiguateProperties.
       LazyError err =
@@ -139,7 +138,7 @@ class TypeMismatch implements Serializable {
         !sourceType.isSubtypeWithoutStructuralTyping(targetType)
         && !targetType.isSubtypeWithoutStructuralTyping(sourceType);
     boolean mismatch = !sourceType.isSubtypeOf(targetType) && !targetType.isSubtypeOf(sourceType);
-    if ((strictMismatch || mismatch) && bothAreNotTypeVariables(sourceType, targetType)) {
+    if ((strictMismatch || mismatch) && bothAreNotTemplateTypes(sourceType, targetType)) {
       // We don't report a type error, but we still need to construct a JSError,
       // for people who enable the invalidation diagnostics in DisambiguateProperties.
       LazyError err = LazyError.of("Implicit use of type %s as %s", node, sourceType, targetType);

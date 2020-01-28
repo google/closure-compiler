@@ -344,7 +344,7 @@ public final class ConformanceRules {
     protected static boolean isKnown(Node n) {
       return !isUnknown(n)
           && !isBottom(n)
-          && !isTypeVariable(n); // TODO(johnlenz): Remove this restriction
+          && !isTemplateType(n); // TODO(johnlenz): Remove this restriction
     }
 
     protected boolean isNativeObjectType(Node n) {
@@ -362,9 +362,9 @@ public final class ConformanceRules {
       return (type == null || type.isUnknownType());
     }
 
-    protected static boolean isTypeVariable(Node n) {
+    protected static boolean isTemplateType(Node n) {
       JSType type = n.getJSType().restrictByNotNullOrUndefined();
-      return type.isTypeVariable();
+      return type.isTemplateType();
     }
 
     private static boolean isBottom(Node n) {
@@ -647,7 +647,7 @@ public final class ConformanceRules {
             }
           }
           if (foundType.isUnknownType()
-              || foundType.isTypeVariable()
+              || foundType.isTemplateType()
               || foundType.isEmptyType()
               || foundType.isAllType()
               || foundType.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
@@ -1406,7 +1406,7 @@ public final class ConformanceRules {
       if (n.isGetProp()
           && isKnownThis(n.getFirstChild()) // not a cascading unknown
           && isUnknown(n)
-          && !isTypeVariable(n)
+          && !isTemplateType(n)
           && isUsed(n) // skip most assignments, etc
           && !isTypeImmediatelyTightened(n)
           && !isExplicitlyUnknown(n)) {
@@ -1450,7 +1450,7 @@ public final class ConformanceRules {
           && isUsed(getprop) // skip most assignments, etc
           && !isTypeImmediatelyTightened(getprop)
           && isCheckablePropertySource(getprop.getFirstChild()) // not a cascading unknown
-          && !isTypeVariable(getprop)
+          && !isTemplateType(getprop)
           && !isDeclaredUnknown(getprop)) {
         String propName = n.getString();
         String typeName = getprop.getFirstChild().getJSType().toString();
