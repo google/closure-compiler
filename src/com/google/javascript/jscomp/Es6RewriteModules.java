@@ -31,7 +31,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MOD
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -58,8 +57,7 @@ import javax.annotation.Nullable;
  * Rewrites a ES6 module into a form that can be safely concatenated. Note that we treat a file as
  * an ES6 module if it has at least one import or export statement.
  */
-public final class Es6RewriteModules extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTraversal.Callback {
   static final DiagnosticType LHS_OF_GOOG_REQUIRE_MUST_BE_CONST =
       DiagnosticType.error(
           "JSC_LHS_OF_GOOG_REQUIRE_MUST_BE_CONST",
@@ -84,7 +82,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   private final AbstractCompiler compiler;
 
   @Nullable private final PreprocessorSymbolTable preprocessorSymbolTable;
-  private int scriptNodeCount;
 
   /**
    * Local variable names that were goog.require'd to qualified name we need to line.
@@ -157,10 +154,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     checkArgument(externs.isRoot(), externs);
     checkArgument(root.isRoot(), root);
-    for (Node file : Iterables.concat(externs.children(), root.children())) {
-      checkState(file.isScript(), file);
-      hotSwapScript(file, null);
-    }
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
     compiler.setFeatureSet(compiler.getFeatureSet().without(MODULES));
     // This pass may add getters properties on module objects.
     GatherGetterAndSetterProperties.update(compiler, externs, root);
@@ -169,23 +163,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   @Override
   public void hotSwapScript(Node scriptNode, Node originalRoot) {
     new RewriteRequiresForEs6Modules().rewrite(scriptNode);
-    if (isEs6ModuleRoot(scriptNode)) {
-      processFile(scriptNode);
-    }
+    NodeTraversal.traverse(compiler, scriptNode, this);
   }
 
-  /**
-   * Rewrite a single ES6 module file to a global script version.
-   */
-  private void processFile(Node root) {
-    checkArgument(isEs6ModuleRoot(root), root);
-    clearState();
-    root.putBooleanProp(Node.TRANSPILED, true);
-    NodeTraversal.traverse(compiler, root, this);
-  }
-
-  public void clearState() {
-    this.scriptNodeCount = 0;
+  private void clearPerFileState() {
     this.typedefs = new HashSet<>();
     this.namesToInlineByAlias = new HashMap<>();
   }
@@ -364,6 +345,20 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   @Override
+  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+    if (n.isScript()) {
+      new RewriteRequiresForEs6Modules().rewrite(n);
+      if (isEs6ModuleRoot(n)) {
+        clearPerFileState();
+        n.putBooleanProp(Node.TRANSPILED, true);
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isImport()) {
       maybeWarnExternModule(t, n, parent);
@@ -372,7 +367,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       maybeWarnExternModule(t, n, parent);
       visitExport(t, n, parent);
     } else if (n.isScript()) {
-      scriptNodeCount++;
       visitScript(t, n);
     } else if (n.isCall()) {
       // TODO(johnplaisted): Consolidate on declareModuleId.
@@ -536,10 +530,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     inlineModuleToGlobalScope(script.getFirstChild());
 
     ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
-
-    checkArgument(
-        scriptNodeCount == 1,
-        "Es6RewriteModules supports only one invocation per CompilerInput / script node");
 
     Module thisModule = moduleMap.getModule(t.getInput().getPath());
     String moduleName =
