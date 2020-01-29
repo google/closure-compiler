@@ -155,17 +155,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             // reference via method
             "alert(C.getP());",
             ""),
-        lines(
-            "class C {",
-            "  /** @return {number} */",
-            "  static getP() { return this.p_; }",
-            "}",
-            // declaration and initialization of private static field
-            "/** @private {number} */",
-            "C.p_ = 1;",
-            // reference via method
-            "alert(C.getP());",
-            ""),
         // TODO(b/117437011): should recognize type of `this` in a static method
         UNSAFE_THIS);
   }
@@ -173,18 +162,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void doNotCollapseAStaticPropertyAssignedInAStaticMethod() {
     testWarning(
-        lines(
-            "class C {",
-            "  /** @param {number} v */",
-            "  static setP(v) { this.p_ = v; }",
-            "}",
-            // declaration and initialization of private static field
-            "/** @private {number} */",
-            "C.p_ = 0;",
-            // changing private static field through method
-            "C.setP(1);",
-            "alert(C.p_);",
-            ""),
         lines(
             "class C {",
             "  /** @param {number} v */",
