@@ -135,10 +135,10 @@ class InlineObjectLiterals implements CompilerPass {
 
       return var.isGlobal()
           || var.isExtern()
-          || compiler.getCodingConvention().isExported(var.name)
+          || compiler.getCodingConvention().isExported(var.getName())
           || compiler
               .getCodingConvention()
-              .isPropertyRenameFunction(var.nameNode.getQualifiedName())
+              .isPropertyRenameFunction(var.getNameNode().getQualifiedName())
           || staleVars.contains(var);
     }
 
@@ -355,7 +355,7 @@ class InlineObjectLiterals implements CompilerPass {
       // Compute all of the assignments necessary
       List<Node> nodes = new ArrayList<>();
       Node val = ref.getAssignedValue();
-      blacklistVarReferencesInTree(val, v.scope);
+      blacklistVarReferencesInTree(val, v.getScope());
       checkState(val.isObjectLit(), val);
       Set<String> all = new LinkedHashSet<>(varmap.keySet());
       for (Node key = val.getFirstChild(); key != null;
@@ -446,7 +446,7 @@ class InlineObjectLiterals implements CompilerPass {
           // is this right?
           newVarNode.useSourceInfoIfMissingFromForTree(vnode);
         } else {
-          blacklistVarReferencesInTree(val, v.scope);
+          blacklistVarReferencesInTree(val, v.getScope());
         }
         vnode.getParent().addChildBefore(newVarNode, vnode);
         compiler.reportChangeToEnclosingScope(vnode);

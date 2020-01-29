@@ -113,7 +113,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
       return false;
     }
     Var v = t.getScope().getVar(varname);
-    return v == null || v.isExtern() || (v.scope.isGlobal() && this.externNames.contains(varname));
+    return v == null
+        || v.isExtern()
+        || (v.getScope().isGlobal() && this.externNames.contains(varname));
   }
 
   private void addExternForGlobalSymbolNamespace() {

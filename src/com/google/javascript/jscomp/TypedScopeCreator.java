@@ -319,7 +319,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
   @Override
   public TypedScope getScope(TypedVar var) {
-    return var.scope;
+    return var.getScope();
   }
 
   @Override
@@ -2228,7 +2228,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       // be declared. See TypedScopeCreatorTest#testBogusPrototypeInit.
       // Fortunately, other warnings will complain if this happens.
       TypedVar prototypeVar = scopeToDeclareIn.getVar(prototypeName);
-      if (prototypeVar != null && prototypeVar.scope == scopeToDeclareIn) {
+      if (prototypeVar != null && prototypeVar.getScope() == scopeToDeclareIn) {
         scopeToDeclareIn.undeclare(prototypeVar);
       }
 

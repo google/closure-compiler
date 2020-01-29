@@ -165,7 +165,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       if (scope.isFunctionBlockScope()) {
         varsInFunctionBody.clear();
         for (Var v : scope.getVarIterable()) {
-          varsInFunctionBody.add(v.name);
+          varsInFunctionBody.add(v.getName());
         }
       }
       for (Var v : scope.getVarIterable()) {
@@ -218,7 +218,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         for (Reference r : references) {
           if ((r.isVarDeclaration() || r.isHoistedFunction())
               && r.getNode() != v.getNameNode()) {
-            compiler.report(JSError.make(r.getNode(), REDECLARED_VARIABLE, v.name));
+            compiler.report(JSError.make(r.getNode(), REDECLARED_VARIABLE, v.getName()));
           }
         }
       }
@@ -284,7 +284,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           }
 
           if (!hasErrors && v.isConst() && reference.isLvalue()) {
-            compiler.report(JSError.make(referenceNode, REASSIGNED_CONSTANT, v.name));
+            compiler.report(JSError.make(referenceNode, REASSIGNED_CONSTANT, v.getName()));
           }
 
           // Check for temporal dead zone of let / const declarations in for-in and for-of loops
@@ -293,7 +293,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           if ((v.isLet() || v.isConst())
               && v.getScope() == reference.getScope()
               && NodeUtil.isEnhancedFor(reference.getScope().getRootNode())) {
-            compiler.report(JSError.make(referenceNode, EARLY_REFERENCE_ERROR, v.name));
+            compiler.report(JSError.make(referenceNode, EARLY_REFERENCE_ERROR, v.getName()));
           }
         }
 
@@ -342,7 +342,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     if (!reference.isVarDeclaration() && reference.getGrandparent().isAddedBlock()
         && BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS.contains(
         reference.getGrandparent().getParent().getToken())) {
-      compiler.report(JSError.make(referenceNode, DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
+      compiler.report(JSError.make(referenceNode, DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.getName()));
     }
   }
 
@@ -391,7 +391,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             // where the redeclaration is a function declaration. Check for that case.
             if (isVarNodeSameAsReferenceNode
                 && hoistedFn != null
-                && v.name.equals(hoistedFn.getNode().getString())) {
+                && v.getName().equals(hoistedFn.getNode().getString())) {
               warningNode = hoistedFn.getNode();
             }
           }
@@ -399,8 +399,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               JSError.make(
                   warningNode,
                   diagnosticType,
-                  v.name,
-                  v.input != null ? v.input.getName() : "??"));
+                  v.getName(),
+                  v.getInput() != null ? v.getInput().getName() : "??"));
           return true;
         }
       }
@@ -408,7 +408,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
     if (!shadowDetected && (letConstShadowsVar || shadowCatchVar)
         && v.getScope() == reference.getScope()) {
-      compiler.report(JSError.make(referenceNode, REDECLARED_VARIABLE_ERROR, v.name));
+      compiler.report(JSError.make(referenceNode, REDECLARED_VARIABLE_ERROR, v.getName()));
       return true;
     }
     return false;
@@ -427,7 +427,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         while (curr.isOr() && curr.getParent().getFirstChild() == curr) {
           curr = curr.getParent();
         }
-        if (curr.isName() && curr.getString().equals(v.name)) {
+        if (curr.isName() && curr.getString().equals(v.getName())) {
           return false;
         }
       }
@@ -439,7 +439,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       // We don't track where `f` is called, just where it's defined, and don't want to warn for
       //     function f() { return x; } let x = 5; f();
       // TODO(moz): See if we can remove the bypass for "goog"
-      if (reference.getScope().hasSameContainerScope(v.scope) && !v.getName().equals("goog")) {
+      if (reference.getScope().hasSameContainerScope(v.getScope()) && !v.getName().equals("goog")) {
         compiler.report(
             JSError.make(
                 reference.getNode(),
@@ -448,7 +448,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
                     : (v.isLet() || v.isConst() || v.isClass() || v.isParam())
                         ? EARLY_REFERENCE_ERROR
                         : EARLY_REFERENCE,
-                v.name));
+                v.getName()));
         return true;
       }
     }
@@ -497,6 +497,6 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       }
     }
 
-    compiler.report(JSError.make(unusedAssignment.getNode(), UNUSED_LOCAL_ASSIGNMENT, v.name));
+    compiler.report(JSError.make(unusedAssignment.getNode(), UNUSED_LOCAL_ASSIGNMENT, v.getName()));
   }
 }

@@ -33,22 +33,21 @@ import com.google.javascript.rhino.Token;
 public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S, V>>
     extends ScopedName implements StaticSlot, StaticRef {
 
-  final String name;
+  private final String name;
 
   /** Var node */
-  final Node nameNode;
+  private final Node nameNode;
 
   /** Input source */
-  final CompilerInput input;
+  private final CompilerInput input;
 
   /**
-   * The index at which the var is declared. e.g. if it's 0, it's the first
-   * declared variable in that scope
+   * The index at which the var is declared. e.g. if it's 0, it's the first declared variable in
+   * that scope
    */
-  final int index;
+  private final int index;
 
-  /** The enclosing scope */
-  final S scope;
+  private final S scope;
 
   AbstractVar(String name, Node nameNode, S scope, int index, CompilerInput input) {
     this.name = name;
@@ -108,6 +107,14 @@ public class AbstractVar<S extends AbstractScope<S, V>, V extends AbstractVar<S,
 
   public final S getScope() {
     return scope;
+  }
+
+  /**
+   * The index at which the var is declared. e.g. if it's 0, it's the first declared variable in
+   * that scope
+   */
+  int getIndex() {
+    return index;
   }
 
   // Non-final for jsdev tests

@@ -266,7 +266,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
     }
 
     CompilerInput currInput = t.getInput();
-    CompilerInput varInput = var.input;
+    CompilerInput varInput = var.getInput();
     if (currInput == varInput || currInput == null || varInput == null) {
       // The variable was defined in the same file. This is fine.
       return;
@@ -594,12 +594,11 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
         }
         if (!allowDupe) {
           compiler.report(
-              JSError.make(n,
-                           VAR_MULTIPLY_DECLARED_ERROR,
-                           name,
-                           (origVar.input != null
-                            ? origVar.input.getName()
-                            : "??")));
+              JSError.make(
+                  n,
+                  VAR_MULTIPLY_DECLARED_ERROR,
+                  name,
+                  (origVar.getInput() != null ? origVar.getInput().getName() : "??")));
         }
       } else if (name.equals(ARGUMENTS)
           && !(NodeUtil.isNameDeclaration(n.getParent()) && n.isName())) {

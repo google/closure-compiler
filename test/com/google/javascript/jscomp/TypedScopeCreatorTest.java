@@ -2428,7 +2428,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     FunctionType obj = (FunctionType) v.getType();
     assertThat(obj.toString()).isEqualTo("(typeof Object)");
     assertThat(v.getNode()).isNotNull();
-    assertThat(v.input).isNotNull();
+    assertThat(v.getInput()).isNotNull();
   }
 
   @Test

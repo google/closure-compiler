@@ -83,15 +83,15 @@ public class TypedVar extends AbstractVar<TypedScope, TypedVar>
   }
 
   public String getInputName() {
-    if (input == null) {
+    if (getInput() == null) {
       return "<non-file>";
     }
-    return input.getName();
+    return getInput().getName();
   }
 
   @Override
   public String toString() {
-    return "Var " + name + "{" + type + "}";
+    return "Var " + getName() + "{" + type + "}";
   }
 
   void markEscaped() {

@@ -150,17 +150,17 @@ class ShadowVariables implements CompilerPass {
       // Using the definition of upward referencing, fill in the map.
       if (var.getScope() != scope) {
         for (Scope s = scope; s != var.getScope() && s.isLocal(); s = s.getParent()) {
-          scopeUpRefMap.put(s.getRootNode(), var.name);
+          scopeUpRefMap.put(s.getRootNode(), var.getName());
         }
       } else {
-        scopeUpRefMap.put(t.getScopeRoot(), var.name);
+        scopeUpRefMap.put(t.getScopeRoot(), var.getName());
       }
 
       // Make sure that we don't shadow function parameters or function names from a function block
       // scope, eg.:
       // function f(a) { ... var a; ... } // Unsafe
       if (scope.isFunctionScope() && var.getScope() == scope) {
-        scopeUpRefMap.put(scope.getRootNode().getLastChild(), var.name);
+        scopeUpRefMap.put(scope.getRootNode().getLastChild(), var.getName());
       }
 
       // Find in the usage map that tracks a var and all of its usage.
@@ -197,7 +197,7 @@ class ShadowVariables implements CompilerPass {
         }
 
         // Don't shadow an exported local.
-        if (compiler.getCodingConvention().isExported(var.name, s.isLocal())) {
+        if (compiler.getCodingConvention().isExported(var.getName(), s.isLocal())) {
           continue;
         }
 
@@ -224,7 +224,7 @@ class ShadowVariables implements CompilerPass {
 
         if (oldPseudoNameMap != null) {
           String targetPseudoName =
-            oldPseudoNameMap.get(s.getVar(bestShadow.oldName).nameNode);
+              oldPseudoNameMap.get(s.getVar(bestShadow.oldName).getNameNode());
           for (Reference use : varToNameUsage.get(var)) {
             deltaPseudoNameMap.put(use.nameNode, targetPseudoName);
           }
@@ -290,7 +290,7 @@ class ShadowVariables implements CompilerPass {
           scopeUpRefMap.put(s.getRootNode().getLastChild(), toShadow.oldName);
           scopeUpRefMap.remove(s.getRootNode().getLastChild(), original.oldName);
         }
-        for (Scope curScope = s; curScope != shadowed.scope; curScope = curScope.getParent()) {
+        for (Scope curScope = s; curScope != shadowed.getScope(); curScope = curScope.getParent()) {
           scopeUpRefMap.put(curScope.getRootNode(), toShadow.oldName);
           scopeUpRefMap.remove(curScope.getRootNode(), original.oldName);
         }

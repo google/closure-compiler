@@ -34,6 +34,6 @@ public class Var extends AbstractVar<Scope, Var> implements StaticSlot, StaticRe
 
   @Override
   public String toString() {
-    return "Var " + name + " @ " + nameNode;
+    return "Var " + getName() + " @ " + getNameNode();
   }
 }

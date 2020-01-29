@@ -256,23 +256,20 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       // If we have an identity assignment such as a=a, always remove it
       // regardless of what the liveness results because it
       // does not change the result afterward.
-      if (rhs != null &&
-          rhs.isName() &&
-          rhs.getString().equals(var.name) &&
-          n.isAssign()) {
+      if (rhs != null && rhs.isName() && rhs.getString().equals(var.getName()) && n.isAssign()) {
         n.removeChild(rhs);
         n.replaceWith(rhs);
         compiler.reportChangeToEnclosingScope(rhs);
         return;
       }
 
-      int index = liveness.getVarIndex(var.name);
+      int index = liveness.getVarIndex(var.getName());
       if (state.getOut().isLive(index)) {
         return; // Variable not dead.
       }
 
       if (state.getIn().isLive(index)
-          && isVariableStillLiveWithinExpression(n, exprRoot, var.name)) {
+          && isVariableStillLiveWithinExpression(n, exprRoot, var.getName())) {
         // The variable is killed here but it is also live before it.
         // This is possible if we have say:
         //    if (X = a && a = C) {..} ; .......; a = S;

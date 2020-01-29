@@ -561,7 +561,7 @@ public final class LiveVariablesAnalysisTest {
 
   private static void assertEscaped(String src, String name) {
     for (Var var : computeLiveness(src, false).getEscapedLocals()) {
-      if (var.name.equals(name)) {
+      if (var.getName().equals(name)) {
         return;
       }
     }
@@ -570,7 +570,7 @@ public final class LiveVariablesAnalysisTest {
 
   private static void assertNotEscaped(String src, String name) {
     for (Var var : computeLiveness(src, false).getEscapedLocals()) {
-      assertThat(var.name).isNotEqualTo(name);
+      assertThat(var.getName()).isNotEqualTo(name);
     }
   }
 

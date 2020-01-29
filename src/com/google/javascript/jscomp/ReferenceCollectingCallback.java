@@ -150,7 +150,7 @@ public final class ReferenceCollectingCallback
 
   @Override
   public Scope getScope(Var var) {
-    return var.scope;
+    return var.getScope();
   }
 
   /**

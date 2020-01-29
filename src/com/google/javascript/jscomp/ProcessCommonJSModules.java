@@ -1487,8 +1487,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && (root.getNext() != null && (root.getNext().isName() || root.getNext().isGetProp()))
           && root.getGrandparent().isExprResult()
           && rValueVar != null
-          && (NodeUtil.getEnclosingScript(rValueVar.nameNode) == null
-              || (rValueVar.nameNode.getParent() != null && !rValueVar.isParam()))
+          && (NodeUtil.getEnclosingScript(rValueVar.getNameNode()) == null
+              || (rValueVar.getNameNode().getParent() != null && !rValueVar.isParam()))
           && export.isInSupportedScope
           && (rValueVar.getNameNode().getParent() == null
               || !NodeUtil.isLhsByDestructuring(rValueVar.getNameNode()))) {

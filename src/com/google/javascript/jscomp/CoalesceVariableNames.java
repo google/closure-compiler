@@ -196,7 +196,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       }
 
       // Rename.
-      n.setString(coalescedVar.name);
+      n.setString(coalescedVar.getName());
       compiler.reportChangeToEnclosingScope(n);
 
       if (NodeUtil.isNameDeclaration(parent)
@@ -216,7 +216,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         // and it is merged with the current coalescedVar.
         if (colorings.peek().getGraph().getNode(iVar) != null
             && coalescedVar.equals(colorings.peek().getPartitionSuperNode(iVar))) {
-          allMergedNames.add(iVar.name);
+          allMergedNames.add(iVar.getName());
         }
       }
 

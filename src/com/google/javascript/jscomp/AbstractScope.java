@@ -133,14 +133,14 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
    * a variable and removes it from the scope.
    */
   final void undeclare(V var) {
-    checkState(var.scope == this);
-    checkState(vars.get(var.name).equals(var));
+    checkState(var.getScope() == this);
+    checkState(vars.get(var.getName()).equals(var));
     undeclareInteral(var);
   }
 
   /** Without any safety checks */
   final void undeclareInteral(V var) {
-     vars.remove(var.name);
+    vars.remove(var.getName());
   }
 
   final void declareInternal(String name, V var) {

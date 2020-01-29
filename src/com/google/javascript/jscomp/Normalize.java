@@ -818,7 +818,7 @@ class Normalize implements CompilerPass {
       if (parent.isFunction()) {
         if (v.getParentNode().isVar()) {
           s.undeclare(v);
-          s.declare(name, n, v.input);
+          s.declare(name, n, v.getInput());
           replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
               v.getParentNode().getParent());
         }

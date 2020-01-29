@@ -945,7 +945,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     private boolean isVarDeclaredInSameContainerScope(@Nullable Var v, Scope scope) {
-      return v != null && v.scope.hasSameContainerScope(scope);
+      return v != null && v.getScope().hasSameContainerScope(scope);
     }
 
     /**

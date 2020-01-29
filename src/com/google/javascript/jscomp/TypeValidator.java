@@ -860,7 +860,7 @@ class TypeValidator implements Serializable {
       // case of native types. A null input type means that the declaration
       // was made in TypedScopeCreator#createInitialScope and is a
       // native type. We should redeclare it at the new input site.
-      if (var.input == null) {
+      if (var.getInput() == null) {
         TypedScope s = var.getScope();
         s.undeclare(var);
         newVar = s.declare(variableName, n, varType, input, false);
@@ -891,7 +891,7 @@ class TypeValidator implements Serializable {
                     variableName,
                     newType.toString(),
                     var.getInputName(),
-                    String.valueOf(var.nameNode.getLineno()),
+                    String.valueOf(var.getNameNode().getLineno()),
                     varType.toString()));
           } else if (!var.getParentNode().isExprResult()) {
             // If the type matches and the previous declaration was a stub declaration
@@ -902,7 +902,7 @@ class TypeValidator implements Serializable {
                     DUP_VAR_DECLARATION,
                     variableName,
                     var.getInputName(),
-                    String.valueOf(var.nameNode.getLineno())));
+                    String.valueOf(var.getNameNode().getLineno())));
           }
         }
       }

@@ -136,7 +136,7 @@ final class MustBeReachingVariableDef extends
     public MustDef(Collection<Var> vars) {
       this();
       for (Var var : vars) {
-        reachingDef.put(var, new Definition(var.scope.getRootNode()));
+        reachingDef.put(var, new Definition(var.getScope().getRootNode()));
       }
     }
 
@@ -484,7 +484,7 @@ final class MustBeReachingVariableDef extends
 
     for (Var s : def.depends) {
       // Don't inline try catch
-      if (s.scope.isCatchScope()) {
+      if (s.getScope().isCatchScope()) {
         return true;
       }
     }
