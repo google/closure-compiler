@@ -1394,10 +1394,17 @@ class IRFactory {
     }
 
     Node processElementGet(MemberLookupExpressionTree getNode) {
-      return newNode(
-          Token.GETELEM,
-          transform(getNode.operand),
-          transform(getNode.memberExpression));
+      boolean isOptionalChain = getNode.getIsOptionalChain();
+
+      if (isOptionalChain) {
+        maybeWarnForFeature(getNode, Feature.OPTIONAL_CHAINING);
+      }
+
+      Node getElemNode =
+          newNode(Token.GETELEM, transform(getNode.operand), transform(getNode.memberExpression));
+      getElemNode.setIsOptionalChain(isOptionalChain);
+
+      return getElemNode;
     }
 
     /**
@@ -1469,11 +1476,19 @@ class IRFactory {
     }
 
     Node processFunctionCall(CallExpressionTree callNode) {
+      boolean isOptionalChain = callNode.getIsOptionalChain();
+
+      if (isOptionalChain) {
+        maybeWarnForFeature(callNode, Feature.OPTIONAL_CHAINING);
+      }
       Node node = newNode(Token.CALL,
                            transform(callNode.operand));
       for (ParseTree child : callNode.arguments.arguments) {
         node.addChildToBack(transform(child));
       }
+
+      node.setIsOptionalChain(isOptionalChain);
+
       return node;
     }
 
@@ -2051,13 +2066,23 @@ class IRFactory {
     }
 
     Node processPropertyGet(MemberExpressionTree getNode) {
+      boolean isOptionalChain = getNode.getIsOptionalChain();
+
+      if (isOptionalChain) {
+        maybeWarnForFeature(getNode, Feature.OPTIONAL_CHAINING);
+      }
+
       Node leftChild = transform(getNode.operand);
       IdentifierToken nodeProp = getNode.memberName;
       Node rightChild = processObjectLitKeyAsString(nodeProp);
       if (!rightChild.isQuotedString() && !currentFileIsExterns) {
         maybeWarnKeywordProperty(rightChild);
       }
-      return newNode(Token.GETPROP, leftChild, rightChild);
+
+      Node getPropNode = newNode(Token.GETPROP, leftChild, rightChild);
+      getPropNode.setIsOptionalChain(isOptionalChain);
+
+      return getPropNode;
     }
 
     Node processRegExpLiteral(LiteralExpressionTree literalTree) {

@@ -194,6 +194,7 @@ public final class FeatureSet implements Serializable {
 
     // ES 2020 Stage 4
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES_UNSUPPORTED),
+    OPTIONAL_CHAINING("Optional chaining", LangVersion.ES_UNSUPPORTED),
 
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),

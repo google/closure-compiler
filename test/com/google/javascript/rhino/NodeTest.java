@@ -73,6 +73,59 @@ public class NodeTest {
   }
 
   @Test
+  public void setIsOptionalChain() {
+    Node optionalGetProp = IR.getprop(IR.name("a"), IR.string("b"));
+    optionalGetProp.setIsOptionalChain(true);
+
+    assertNode(optionalGetProp).isOptionalChain();
+  }
+
+  @Test
+  public void isOptionalChain() {
+    Node optionalGetProp = IR.getprop(IR.name("a"), IR.string("b"));
+    assertThat(optionalGetProp.isOptionalChain()).isFalse();
+
+    optionalGetProp.setIsOptionalChain(true);
+    assertThat(optionalGetProp.isOptionalChain()).isTrue();
+  }
+
+  @Test
+  public void isEquivalentToForGetPropConsidersIsOptionalChain() {
+    Node normalGetProp = IR.getprop(IR.name("a"), IR.string("b"));
+    assertNode(normalGetProp).isEquivalentTo(normalGetProp.cloneTree());
+
+    Node optionalGetprop = normalGetProp.cloneTree();
+    optionalGetprop.setIsOptionalChain(true);
+    assertNode(optionalGetprop)
+        .isEquivalentTo(optionalGetprop.cloneTree())
+        .isNotEquivalentTo(normalGetProp);
+  }
+
+  @Test
+  public void isEquivalentToForGetElemConsidersIsOptionalChain() {
+    Node normalGetElem = IR.getelem(IR.name("a"), IR.string("b"));
+    assertNode(normalGetElem).isEquivalentTo(normalGetElem.cloneTree());
+
+    Node optionalGetElem = normalGetElem.cloneTree();
+    optionalGetElem.setIsOptionalChain(true);
+    assertNode(optionalGetElem)
+        .isEquivalentTo(optionalGetElem.cloneTree())
+        .isNotEquivalentTo(normalGetElem);
+  }
+
+  @Test
+  public void isEquivalentToForCallConsidersIsOptionalChain() {
+    Node normalCall = IR.call(IR.name("a"));
+    assertNode(normalCall).isEquivalentTo(normalCall.cloneTree());
+
+    Node optionalCall = normalCall.cloneTree();
+    optionalCall.setIsOptionalChain(true);
+    assertNode(optionalCall)
+        .isEquivalentTo(optionalCall.cloneTree())
+        .isNotEquivalentTo(normalCall);
+  }
+
+  @Test
   public void isEquivalentToForFunctionsConsidersKindOfFunction() {
     Node normalFunction = IR.function(IR.name(""), IR.paramList(), IR.block());
     assertNode(normalFunction).isEquivalentTo(normalFunction.cloneTree());

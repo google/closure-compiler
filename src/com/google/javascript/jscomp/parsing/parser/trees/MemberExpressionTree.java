@@ -19,16 +19,29 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
+/**
+ * Creates a MemberExpressionTree that represents a member expression. Has an isOptionalChain field
+ * to indicate whether it is part of an optional chain e.g. `a?.()`
+ */
 public class MemberExpressionTree extends ParseTree {
 
   public final ParseTree operand;
   public final IdentifierToken memberName;
+  public final boolean isOptionalChain;
 
-  public MemberExpressionTree(SourceRange location, ParseTree operand, IdentifierToken memberName) {
+  public MemberExpressionTree(
+      SourceRange location,
+      ParseTree operand,
+      IdentifierToken memberName,
+      boolean isOptionalChain) {
     super(ParseTreeType.MEMBER_EXPRESSION, location);
 
     this.operand = operand;
     this.memberName = memberName;
+    this.isOptionalChain = isOptionalChain;
   }
 
+  public boolean getIsOptionalChain() {
+    return this.isOptionalChain;
+  }
 }

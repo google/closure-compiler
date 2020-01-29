@@ -2315,6 +2315,9 @@ public class Parser {
   private SuperExpressionTree parseSuperExpression() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SUPER);
+    if (peek(TokenType.QUESTION_DOT)) { // super?.() not allowed
+      reportError("Optional chaining not allowed here.");
+    }
     return new SuperExpressionTree(getTreeLocation(start));
   }
 
@@ -2328,6 +2331,9 @@ public class Parser {
   private DynamicImportTree parseDynamicImportExpression() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.IMPORT);
+    if (peek(TokenType.QUESTION_DOT)) { // import?.() not allowed
+      reportError("Optional chaining not allowed here.");
+    }
     eat(TokenType.OPEN_PAREN);
     ParseTree argument = parseAssignmentExpression();
     eat(TokenType.CLOSE_PAREN);
@@ -3566,22 +3572,31 @@ public class Parser {
         switch (peekType()) {
           case OPEN_PAREN:
             ArgumentListTree arguments = parseArguments();
-            operand = new CallExpressionTree(getTreeLocation(start), operand, arguments);
+            operand =
+                new CallExpressionTree(
+                    getTreeLocation(start), operand, arguments, /* isOptionalChain= */ false);
             break;
           case OPEN_SQUARE:
             eat(TokenType.OPEN_SQUARE);
             ParseTree member = parseExpression();
             eat(TokenType.CLOSE_SQUARE);
-            operand = new MemberLookupExpressionTree(getTreeLocation(start), operand, member);
+            operand =
+                new MemberLookupExpressionTree(
+                    getTreeLocation(start), operand, member, /* isOptionalChain= */ false);
             break;
           case PERIOD:
             eat(TokenType.PERIOD);
             IdentifierToken id = eatIdOrKeywordAsId();
-            operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
+            operand =
+                new MemberExpressionTree(
+                    getTreeLocation(start), operand, id, /* isOptionalChain= */ false);
             break;
           case NO_SUBSTITUTION_TEMPLATE:
           case TEMPLATE_HEAD:
             operand = parseTemplateLiteral(operand);
+            break;
+          case QUESTION_DOT:
+            operand = parseOptionalChain(operand);
             break;
           default:
             throw new AssertionError("unexpected case: " + peekType());
@@ -3596,7 +3611,8 @@ public class Parser {
         || peek(TokenType.OPEN_SQUARE)
         || peek(TokenType.PERIOD)
         || peek(TokenType.NO_SUBSTITUTION_TEMPLATE)
-        || peek(TokenType.TEMPLATE_HEAD);
+        || peek(TokenType.TEMPLATE_HEAD)
+        || peek(TokenType.QUESTION_DOT);
   }
 
   private static final String ASYNC = "async";
@@ -3620,17 +3636,26 @@ public class Parser {
           eat(TokenType.OPEN_SQUARE);
           ParseTree member = parseExpression();
           eat(TokenType.CLOSE_SQUARE);
-          operand = new MemberLookupExpressionTree(
-              getTreeLocation(start), operand, member);
+          operand =
+              new MemberLookupExpressionTree(
+                  getTreeLocation(start), operand, member, /* isOptionalChain= */ false);
           break;
         case PERIOD:
           eat(TokenType.PERIOD);
           IdentifierToken id = eatIdOrKeywordAsId();
-          operand = new MemberExpressionTree(getTreeLocation(start), operand, id);
+          operand =
+              new MemberExpressionTree(
+                  getTreeLocation(start), operand, id, /* isOptionalChain= */ false);
           break;
         case NO_SUBSTITUTION_TEMPLATE:
         case TEMPLATE_HEAD:
+          if (operand.isOptionalChain()) {
+            reportError("template literal cannot be used within optional chaining");
+          }
           operand = parseTemplateLiteral(operand);
+          break;
+        case QUESTION_DOT:
+          operand = parseOptionalChain(operand);
           break;
         default:
           throw new RuntimeException("unreachable");
@@ -3640,9 +3665,11 @@ public class Parser {
   }
 
   private boolean peekMemberExpressionSuffix() {
-    return peek(TokenType.OPEN_SQUARE) || peek(TokenType.PERIOD)
+    return peek(TokenType.OPEN_SQUARE)
+        || peek(TokenType.PERIOD)
         || peek(TokenType.NO_SUBSTITUTION_TEMPLATE)
-        || peek(TokenType.TEMPLATE_HEAD);
+        || peek(TokenType.TEMPLATE_HEAD)
+        || peek(TokenType.QUESTION_DOT);
   }
 
   private ParseTree parseNewExpression() {
@@ -3653,7 +3680,13 @@ public class Parser {
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.NEW);
+      if (peek(TokenType.QUESTION_DOT)) { // new?.target not allowed
+        reportError("Optional chaining not allowed here.");
+      }
       ParseTree operand = parseNewExpression();
+      if (operand.isOptionalChain()) { // new a?.() not allowed
+        reportError("Optional chaining is forbidden in construction contexts.");
+      }
       ArgumentListTree arguments = null;
       if (peek(TokenType.OPEN_PAREN)) {
         arguments = parseArguments();
@@ -3677,6 +3710,57 @@ public class Parser {
     eat(TokenType.PERIOD);
     eatPredefinedString("meta");
     return new ImportMetaExpressionTree(getTreeLocation(start));
+  }
+
+  /**
+   * Parse the next component of an optional chain.
+   *
+   * <p>`operand?.identifier` or `operand?.[expression]` or `operand?.(arg1, arg2)`
+   *
+   * <p>returns parse tree after trying to parse it as an optional chain
+   */
+  private ParseTree parseOptionalChain(ParseTree operand) {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree expressionTree = null;
+    eat(TokenType.QUESTION_DOT);
+    switch (peekType()) {
+      case OPEN_PAREN:
+        ArgumentListTree arguments = parseArguments();
+        expressionTree =
+            new CallExpressionTree(
+                getTreeLocation(start), operand, arguments, /* isOptionalChain= */ true);
+        break;
+      case OPEN_SQUARE:
+        eat(TokenType.OPEN_SQUARE);
+        ParseTree member = parseExpression();
+        eat(TokenType.CLOSE_SQUARE);
+        expressionTree =
+            new MemberLookupExpressionTree(
+                getTreeLocation(start), operand, member, /* isOptionalChain= */ true);
+        break;
+      case NO_SUBSTITUTION_TEMPLATE:
+      case TEMPLATE_HEAD:
+        reportError("template literal cannot be used within optional chaining");
+        break;
+      default:
+        if (peekIdOrKeyword()) {
+          IdentifierToken id = eatIdOrKeywordAsId();
+          expressionTree =
+              new MemberExpressionTree(
+                  getTreeLocation(start), operand, id, /* isOptionalChain= */ true);
+        } else {
+          reportError("syntax error: %s not allowed in optional chain", peekType());
+        }
+    }
+
+    if (expressionTree == null) {
+      // A syntax error prevented us assigning to expressionTree.
+      // Use operand as a substitute and try to continue parsing in case we can find some more
+      // errors to report before giving up.
+      expressionTree = operand;
+    }
+
+    return expressionTree;
   }
 
   private ArgumentListTree parseArguments() {

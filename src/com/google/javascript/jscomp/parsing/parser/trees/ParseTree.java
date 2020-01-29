@@ -223,9 +223,11 @@ public class ParseTree {
     }
 
     switch(parseTree.type) {
-      case IDENTIFIER_EXPRESSION:
       case MEMBER_EXPRESSION:
+        return !parseTree.asMemberExpression().isOptionalChain;
       case MEMBER_LOOKUP_EXPRESSION:
+        return !parseTree.asMemberLookupExpression().isOptionalChain;
+      case IDENTIFIER_EXPRESSION:
       case ARRAY_PATTERN:
       case OBJECT_PATTERN:
       case DEFAULT_PARAMETER:
@@ -237,6 +239,24 @@ public class ParseTree {
 
   public boolean isRestParameter() {
     return this.type == ParseTreeType.ITER_REST;
+  }
+
+  /**
+   * Indicates whether a ParseTree is part of an optional chain. Note only MemberExpressionTree,
+   * MemberLookupExpressionTree, and CallExpression tress can be part of an optional chain.
+   */
+  public boolean isOptionalChain() {
+    ParseTree parseTree = this;
+    switch (parseTree.type) {
+      case MEMBER_EXPRESSION:
+        return parseTree.asMemberExpression().getIsOptionalChain();
+      case MEMBER_LOOKUP_EXPRESSION:
+        return parseTree.asMemberLookupExpression().getIsOptionalChain();
+      case CALL_EXPRESSION:
+        return parseTree.asCallExpression().getIsOptionalChain();
+      default:
+        return false;
+    }
   }
 
   @Override

@@ -204,6 +204,9 @@ public class Node implements Serializable {
     TYPEDEF_TYPE,
     // Original name of a goog.define call.
     DEFINE_NAME,
+    // Indicate that a GETPROP/GETELEM/CALL is actually part of an optional chaining expression
+    // https://github.com/tc39/proposal-optional-chaining
+    OPT_CHAIN,
   }
 
   /**
@@ -2017,6 +2020,7 @@ public class Node implements Serializable {
           Node::isGeneratorFunction,
           Node::isStaticMember,
           Node::isYieldAll,
+          Node::isOptionalChain,
           (n) -> n.getIntProp(Prop.SLASH_V),
           (n) -> n.getIntProp(Prop.INCRDECR),
           (n) -> n.getIntProp(Prop.QUOTED),
@@ -2731,6 +2735,22 @@ public class Node implements Serializable {
    */
   public final boolean isGeneratorSafe() {
     return getBooleanProp(Prop.IS_GENERATOR_SAFE);
+  }
+
+  /**
+   * Sets whether this node is an optional chaining node. This
+   * method is meaningful only on {@link Token#GETELEM}, {@link Token#GETPROP}, {@link Token#CALL}
+   */
+  public final void setIsOptionalChain(boolean isOptional) {
+    checkState(isGetElem() || isGetProp() || isCall());
+    putBooleanProp(Prop.OPT_CHAIN, isOptional);
+  }
+
+  /**
+   * Returns whether this node is an optional chaining node.
+   */
+  public final boolean isOptionalChain() {
+    return (isGetElem() || isGetProp() || isCall()) && getBooleanProp(Prop.OPT_CHAIN);
   }
 
   /**

@@ -18,17 +18,29 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
+/**
+ * Creates a MemberLookupExpressionTree that represents a member lookup expression. Has an
+ * isOptionalChain field to indicate whether it is part of an optional chain e.g. `a?.[1]`
+ */
 public class MemberLookupExpressionTree extends ParseTree {
 
   public final ParseTree operand;
   public final ParseTree memberExpression;
+  public final boolean isOptionalChain;
 
-  public MemberLookupExpressionTree(SourceRange location,
-      ParseTree operand, ParseTree memberExpression) {
+  public MemberLookupExpressionTree(
+      SourceRange location,
+      ParseTree operand,
+      ParseTree memberExpression,
+      boolean isOptionalChain) {
     super(ParseTreeType.MEMBER_LOOKUP_EXPRESSION, location);
 
     this.operand = operand;
     this.memberExpression = memberExpression;
+    this.isOptionalChain = isOptionalChain;
   }
 
+  public boolean getIsOptionalChain() {
+    return this.isOptionalChain;
+  }
 }

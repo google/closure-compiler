@@ -805,7 +805,7 @@ public class CodeGenerator {
             add(last);
             add("]");
           } else {
-            add(".");
+            add(n.isOptionalChain() ? "?." : ".");
             addIdentifier(last.getString());
           }
           break;
@@ -818,6 +818,9 @@ public class CodeGenerator {
             childCount,
             n);
         addExpr(first, NodeUtil.precedence(type), context);
+        if (n.isOptionalChain()) {
+          add("?.");
+        }
         add("[");
         add(first.getNext());
         add("]");
@@ -865,6 +868,9 @@ public class CodeGenerator {
           addExpr(first, NodeUtil.precedence(type), context);
         }
         Node args = first.getNext();
+        if (n.isOptionalChain()) {
+          add("?.");
+        }
         add("(");
         addList(args);
         add(")");
