@@ -468,7 +468,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             break;
           }
           if (method.matchesQualifiedName(GOOG_MODULE)) {
-            updateGoogModule(n);
+            updateGoogModule(t, n);
           } else if (method.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
             updateGoogDeclareLegacyNamespace(n);
           } else if (method.matchesQualifiedName(GOOG_REQUIRE)
@@ -1073,7 +1073,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     currentScript.rootNode = moduleScopeRoot;
   }
 
-  private void updateGoogModule(Node call) {
+  private void updateGoogModule(NodeTraversal t, Node call) {
     checkState(currentScript.isModule, currentScript);
 
     // If it's a goog.module() with a legacy namespace.
@@ -1088,7 +1088,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // avoid ordering issues with goog.define().
     if (!currentScript.willCreateExportsObject) {
       checkState(!currentScript.hasCreatedExportObject, currentScript);
-      exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(call), AddAt.AFTER);
+      exportTheEmptyBinaryNamespaceAt(
+          NodeUtil.getEnclosingStatement(call), AddAt.AFTER, t.getScope());
     }
 
     if (!currentScript.declareLegacyNamespace && !preserveSugar) {
@@ -1302,7 +1303,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // When seeing the first "exports.foo = ..." line put a "var module$exports$pkg$Foo = {};"
     // before it.
     if (!currentScript.hasCreatedExportObject) {
-      exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(parent), AddAt.BEFORE);
+      exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(parent), AddAt.BEFORE, scope);
     }
   }
 
@@ -1546,17 +1547,17 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     currentScript = scriptStack.peekFirst();
   }
 
-  /**
-   * Add the missing "var module$exports$pkg$Foo = {};" line.
-   */
-  private void exportTheEmptyBinaryNamespaceAt(Node atNode, AddAt addAt) {
+  /** Add the missing "var module$exports$pkg$Foo = {};" line. */
+  private void exportTheEmptyBinaryNamespaceAt(Node atNode, AddAt addAt, Scope moduleScope) {
     if (currentScript.declareLegacyNamespace) {
       return;
     }
 
+    String binaryNamespaceString = currentScript.getBinaryNamespace();
     JSType moduleType = currentScript.rootNode.getJSType();
-    Node binaryNamespaceName =
-        astFactory.createName(currentScript.getBinaryNamespace(), moduleType);
+    Node binaryNamespaceName = astFactory.createName(binaryNamespaceString, moduleType);
+    Scope globalScope = moduleScope.getGlobalScope();
+    globalScope.declare(binaryNamespaceString, binaryNamespaceName, null);
     binaryNamespaceName.setOriginalName(currentScript.namespaceId);
     Node binaryNamespaceExportNode = IR.var(binaryNamespaceName, astFactory.createObjectLit());
     if (addAt == AddAt.BEFORE) {

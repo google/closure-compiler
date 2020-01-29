@@ -111,6 +111,30 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOutOfOrderRequireType() {
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.a');",
+              "var b = goog.requireType('ns.b');",
+              "/** @type {b.Foo} */",
+              "let a;",
+              ""),
+          lines("goog.module('ns.b');", "exports.Foo = class {}", ""),
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$a = {};",
+              "/** @type {module$exports$ns$b.Foo} */ let module$contents$ns$a_a;",
+              ""),
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const */ module$exports$ns$b.Foo = class {};",
+              ""),
+        });
+  }
+
+  @Test
   public void testRequireModuleMultivar() {
     test(
         new String[] {
