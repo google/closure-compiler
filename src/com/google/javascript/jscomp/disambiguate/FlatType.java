@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -39,15 +38,11 @@ import java.util.LinkedHashSet;
  */
 final class FlatType {
 
-  static final int INITIAL_UNIONWEIGHT = -1;
-
   private final JSType type;
 
   private final int id;
 
   private final LinkedHashSet<PropertyClustering> associatedProps = new LinkedHashSet<>();
-
-  private int unionWeight = INITIAL_UNIONWEIGHT;
 
   private boolean invalidating = false;
 
@@ -91,22 +86,6 @@ final class FlatType {
     return this.id;
   }
 
-  /**
-   * An approximation of the count of descendant nodes.
-   *
-   * @see {@code TypeGraphAssembler}.
-   */
-  int getUnionWeight() {
-    return this.unionWeight;
-  }
-
-  /** Set the union weight iff it has not been set */
-  void setUnionWeight(int x) {
-    checkArgument(x > 0);
-    checkState(this.unionWeight == INITIAL_UNIONWEIGHT);
-    this.unionWeight = x;
-  }
-
   /** The set of properties that that might be accessed from this type. */
   LinkedHashSet<PropertyClustering> getAssociatedProps() {
     return this.associatedProps;
@@ -133,7 +112,6 @@ final class FlatType {
     return MoreObjects.toStringHelper(this)
         .add("id", this.id)
         .add("type", this.type)
-        .add("union_weight", this.unionWeight)
         .toString();
   }
 }

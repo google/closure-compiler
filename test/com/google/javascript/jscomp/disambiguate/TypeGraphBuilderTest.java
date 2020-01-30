@@ -403,7 +403,6 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
     TypeGraphBuilder builder = this.createBuilder(stubFinder);
 
     FlatType flatKif = this.flattener.flatten(this.registry.createObjectType("Kif", null));
-    flatKif.setUnionWeight(100);
     builder.add(flatKif);
 
     LinkedHashMap<String, FlatType> testTypes =
@@ -434,11 +433,9 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
     TypeGraphBuilder builder = this.createBuilder(stubFinder);
 
     FlatType flatKif = this.flattener.flatten(this.registry.createObjectType("Kif", null));
-    flatKif.setUnionWeight(100);
     builder.add(flatKif);
 
     FlatType flatLop = this.flattener.flatten(this.registry.createObjectType("Lop", null));
-    flatLop.setUnionWeight(100);
     builder.add(flatLop);
 
     LinkedHashMap<String, FlatType> testTypes =
@@ -469,7 +466,6 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
     TypeGraphBuilder builder = this.createBuilder(stubFinder);
 
     FlatType flatKif = this.flattener.flatten(this.registry.createObjectType("Kif", null));
-    flatKif.setUnionWeight(100);
     builder.add(flatKif);
 
     LinkedHashMap<String, FlatType> testTypes =

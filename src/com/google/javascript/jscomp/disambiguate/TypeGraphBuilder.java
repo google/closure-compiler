@@ -23,7 +23,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphEdge;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -92,10 +91,6 @@ final class TypeGraphBuilder {
   }
 
   public LinkedDirectedGraph<FlatType, Object> build() {
-    for (LinkedDiGraphNode<FlatType, Object> node : this.typeHoldsInstanceGraph.getNodes()) {
-      this.applyUnionWeight(node);
-    }
-
     this.typeHoldsInstanceGraph.getNodes().forEach(this::connectUnionWithAncestors);
 
     LinkedDirectedGraph<FlatType, Object> temp = this.typeHoldsInstanceGraph;
@@ -116,7 +111,6 @@ final class TypeGraphBuilder {
       return;
     }
 
-    checkState(flatUnion.getUnionWeight() != FlatType.INITIAL_UNIONWEIGHT);
     checkState(unionNode.getInEdges().isEmpty());
     checkState(!unionNode.getOutEdges().isEmpty());
 
@@ -245,38 +239,6 @@ final class TypeGraphBuilder {
     return ifaceTypes.stream()
         .filter((t) -> t.getConstructor() != null && t.getConstructor().isInterface())
         .collect(toImmutableList());
-  }
-
-  /**
-   * Compute {@code unionWeight} for a node in the type lattice.
-   *
-   * <p>Weight is defined as:
-   *
-   * <ol>
-   *   <li>Leaf flat: 1
-   *   <li>Union flat: sum of weights of immediate children
-   *   <li>Other nodes: 1 + sum of weights of immediate children
-   * </ol>
-   *
-   * <p>This scheme induces an topological sort on the set of nodes. It has the additional useful
-   * property that adding inbound edges to unions maintains the validity of the sort.
-   */
-  private int applyUnionWeight(LinkedDiGraphNode<FlatType, Object> node) {
-    FlatType flat = node.getValue();
-
-    int weight = flat.getUnionWeight();
-    if (weight != FlatType.INITIAL_UNIONWEIGHT) {
-      return weight;
-    }
-
-    weight = flat.getType().isUnionType() ? 0 : 1;
-    for (LinkedDiGraphEdge<FlatType, Object> edge : node.getOutEdges()) {
-      weight += this.applyUnionWeight(edge.getDestination());
-      checkState(weight > 0, "Overflow in unionWeight calculation.");
-    }
-
-    flat.setUnionWeight(weight);
-    return weight;
   }
 
   private void connectSourceToDest(
