@@ -1206,17 +1206,6 @@ public abstract class CompilerTestCase {
 
   /**
    * Verifies that the compiler generates the given warning for the given input.
-   *
-   * @param js Input
-   * @param warning Expected warning
-   */
-  protected void testWarning(String externs, String js, DiagnosticType warning) {
-    assertThat(warning).isNotNull();
-    test(externs(externs), srcs(js), warning(warning));
-  }
-
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
    */
   protected void testWarning(String[] js, DiagnosticType warning) {
     assertThat(warning).isNotNull();

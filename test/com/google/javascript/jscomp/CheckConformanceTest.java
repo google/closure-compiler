@@ -860,14 +860,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "/** @type {string} @implicitCast */\n" +
         "Element.prototype.innerHTML;\n";
 
-    testWarning(externs, "var e = new Element(); e.innerHTML = '<boo>';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        externs(externs),
+        srcs("var e = new Element(); e.innerHTML = '<boo>';"),
+        warning(CheckConformance.CONFORMANCE_VIOLATION));
 
-    testWarning(externs, "var e = new Element(); e.innerHTML = 'foo';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        externs(externs),
+        srcs("var e = new Element(); e.innerHTML = 'foo';"),
+        warning(CheckConformance.CONFORMANCE_VIOLATION));
 
-    testWarning(externs, "var e = new Element(); e['innerHTML'] = 'foo';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        externs(externs),
+        srcs("var e = new Element(); e['innerHTML'] = 'foo';"),
+        warning(CheckConformance.CONFORMANCE_VIOLATION));
   }
 
   @Test

@@ -1047,7 +1047,10 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testArbitraryPropertyNamedForwardDeclare_cannotBeReferencedInExterns() {
-    testWarning("notGoog.forwardDeclare('a.b.C');", "var notGoog;", UNDEFINED_EXTERN_VAR_ERROR);
+    testWarning(
+        externs("notGoog.forwardDeclare('a.b.C');"),
+        srcs("var notGoog;"),
+        warning(UNDEFINED_EXTERN_VAR_ERROR));
   }
 
   @Test

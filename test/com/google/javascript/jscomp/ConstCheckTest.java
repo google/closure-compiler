@@ -283,7 +283,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   public void testConstNameInExterns() {
     String externs = "/** @const */ var FOO;";
     String js = "FOO = 1;";
-    testWarning(externs, js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+    testWarning(externs(externs), srcs(js), warning(ConstCheck.CONST_REASSIGNED_VALUE_ERROR));
   }
 
   @Test
