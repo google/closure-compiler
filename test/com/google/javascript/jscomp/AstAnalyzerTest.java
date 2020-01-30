@@ -27,6 +27,7 @@ import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.BITOR;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
+import static com.google.javascript.rhino.Token.COALESCE;
 import static com.google.javascript.rhino.Token.COMMA;
 import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.DEC;
@@ -230,6 +231,7 @@ public final class AstAnalyzerTest {
           kase().js("a += 3").token(ASSIGN_ADD).expect(true),
           kase().js("a, b, z += 4").token(COMMA).expect(true),
           kase().js("a ? c : d++").token(HOOK).expect(true),
+          kase().js("a ?? b++").token(COALESCE).expect(true),
           kase().js("a + c++").token(ADD).expect(true),
           kase().js("a + c - d()").token(SUB).expect(true),
           kase().js("function foo() {}").token(FUNCTION).expect(true),
@@ -256,6 +258,7 @@ public final class AstAnalyzerTest {
           kase().js("a, b, 3").token(COMMA).expect(false),
           kase().js("(function(a, b) {  })").token(FUNCTION).expect(true),
           kase().js("a ? c : d").token(HOOK).expect(false),
+          kase().js("a ?? b").token(COALESCE).expect(false),
           kase().js("'1' + navigator.userAgent").token(ADD).expect(false),
           kase().js("new RegExp('foobar', 'i')").token(NEW).expect(true),
           kase().js("new RegExp(SomethingWacky(), 'i')").token(NEW).expect(true),
@@ -344,6 +347,7 @@ public final class AstAnalyzerTest {
           kase().expect(true).js("a += 3"),
           kase().expect(true).js("a, b, z += 4"),
           kase().expect(true).js("a ? c : d++"),
+          kase().expect(true).js("a ?? b++"),
           kase().expect(true).js("a + c++"),
           kase().expect(true).js("a + c - d()"),
           kase().expect(true).js("a + c - d()"),
@@ -379,6 +383,7 @@ public final class AstAnalyzerTest {
           kase().expect(false).js("a, b, 3"),
           kase().expect(false).js("(function(a, b) {  })"),
           kase().expect(false).js("a ? c : d"),
+          kase().expect(false).js("a ?? b"),
           kase().expect(false).js("'1' + navigator.userAgent"),
           kase().expect(false).js("`template`"),
           kase().expect(false).js("`template${name}`"),
@@ -657,6 +662,7 @@ public final class AstAnalyzerTest {
           kase().js("x + y").token(ADD).expect(false),
           kase().js("x || y").token(OR).expect(false),
           kase().js("x | y").token(BITOR).expect(false),
+          kase().js("x ?? y").token(COALESCE).expect(false),
 
           // Getters and setters
           kase().js("({...x});").token(OBJECT_SPREAD).expect(true),

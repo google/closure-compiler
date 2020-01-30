@@ -123,6 +123,21 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void nullishCoalesceMovable() {
+    helperCanExposeExpression(DecompositionType.MOVABLE, "x = foo() ?? 1", "foo");
+  }
+
+  @Test
+  public void nullishCoalesceDecomposable() {
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "var x = null ?? foo()", "foo");
+  }
+
+  @Test
+  public void nullishCoalesceUnDecomposable() {
+    helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "while(x = goo()??foo()){}", "foo");
+  }
+
+  @Test
   public void testCanExposeExpression3() {
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "x = 0 && foo()", "foo");
@@ -513,6 +528,12 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testMoveExpressionNullishCoalesce() {
+    helperMoveExpression(
+        "x = foo() ?? 0", "foo", "var result$jscomp$0 = foo(); x = result$jscomp$0 ?? 0");
+  }
+
+  @Test
   public void testMoveExpression13() {
     helperMoveExpression(
         "const {a, b} = foo();",
@@ -582,11 +603,33 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void exposeExpressionNullishCoalesceNoResult() {
+    helperExposeExpression(
+        "goo() ?? foo()",
+        "foo",
+        lines(
+            "var temp$jscomp$1;", //
+            "if((temp$jscomp$1 = goo()) != null) temp$jscomp$1;", //
+            "else foo()"));
+  }
+
+  @Test
   public void testExposeExpression7() {
     helperExposeExpression(
         "x = goo() && foo()",
         "foo",
         "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo(); x = temp$jscomp$0;");
+  }
+
+  @Test
+  public void exposeExpressionNullishCoalesce() {
+    helperExposeExpression(
+        "x = goo() ?? foo()",
+        "foo",
+        lines(
+            "var temp$jscomp$1;var temp$jscomp$0;",
+            "if((temp$jscomp$1 = goo()) != null) temp$jscomp$0 = temp$jscomp$1;",
+            "else temp$jscomp$0=foo(); x = temp$jscomp$0;"));
   }
 
   @Test
@@ -636,6 +679,17 @@ public final class ExpressionDecomposerTest {
             "var temp$jscomp$0;",
             "if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();",
             "switch(temp$jscomp$0){}"));
+  }
+
+  @Test
+  public void exposeExpressionNullishCoalesceSwitch() {
+    helperExposeExpression(
+        "switch(goo() ?? foo()){}",
+        "foo",
+        lines(
+            "var temp$jscomp$1;var temp$jscomp$0;",
+            "if((temp$jscomp$1 = goo()) != null) temp$jscomp$0 = temp$jscomp$1;",
+            "else temp$jscomp$0 = foo(); switch(temp$jscomp$0){}"));
   }
 
   @Test
@@ -1251,6 +1305,32 @@ public final class ExpressionDecomposerTest {
     helperExposeExpression(code, tree -> findCall(tree, fnName), expectedResult);
   }
 
+  private Node helperExposeExpressionThenTypeCheck(String code, Function<Node, Node> nodeFinder) {
+    Compiler compiler = getCompiler();
+    Node tree = parse(compiler, code);
+    assertThat(tree).isNotNull();
+
+    ExpressionDecomposer decomposer =
+        new ExpressionDecomposer(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
+    decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
+
+    Node expr = nodeFinder.apply(tree);
+
+    compiler.resetUniqueNameId();
+    for (int i = 0; i < times; i++) {
+      decomposer.exposeExpression(expr);
+    }
+    processForTypecheck(compiler, tree);
+
+    return tree;
+  }
+
   private void helperExposeExpression(
       String code,
       Function<Node, Node> nodeFinder,
@@ -1259,7 +1339,6 @@ public final class ExpressionDecomposerTest {
 
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
-    Node originalTree = tree.cloneTree();
     assertThat(tree).isNotNull();
 
     if (shouldTestTypes) {
@@ -1290,15 +1369,8 @@ public final class ExpressionDecomposerTest {
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
 
     if (shouldTestTypes) {
-      Node trueExpr = nodeFinder.apply(originalTree);
-
-      compiler.resetUniqueNameId();
-      for (int i = 0; i < times; i++) {
-        decomposer.exposeExpression(trueExpr);
-      }
-      processForTypecheck(compiler, originalTree);
-
-      checkTypeStringsEqualAsTree(originalTree, tree);
+      Node decomposeThenTypeCheck = helperExposeExpressionThenTypeCheck(code, nodeFinder);
+      checkTypeStringsEqualAsTree(decomposeThenTypeCheck, tree);
     }
   }
 

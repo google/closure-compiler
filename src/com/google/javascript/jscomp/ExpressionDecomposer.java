@@ -401,28 +401,52 @@ class ExpressionDecomposer {
 
     // Transform the conditional to an IF statement.
     Node cond = null;
-    Node trueExpr = IR.block().srcref(expr);
-    Node falseExpr = IR.block().srcref(expr);
+    Node trueExpr = astFactory.createBlock().srcref(expr);
+    Node falseExpr = astFactory.createBlock().srcref(expr);
     switch (expr.getToken()) {
       case HOOK:
         // a = x?y:z --> if (x) {a=y} else {a=z}
         cond = first;
         trueExpr.addChildToFront(
-            NodeUtil.newExpr(buildResultExpression(second, needResult, tempName)));
+            astFactory.exprResult(buildResultExpression(second, needResult, tempName)));
         falseExpr.addChildToFront(
-            NodeUtil.newExpr(buildResultExpression(last, needResult, tempName)));
+            astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
         break;
       case AND:
         // a = x&&y --> if (a=x) {a=y} else {}
         cond = buildResultExpression(first, needResult, tempName);
         trueExpr.addChildToFront(
-            NodeUtil.newExpr(buildResultExpression(last, needResult, tempName)));
+            astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
         break;
       case OR:
         // a = x||y --> if (a=x) {} else {a=y}
         cond = buildResultExpression(first, needResult, tempName);
         falseExpr.addChildToFront(
-            NodeUtil.newExpr(buildResultExpression(last, needResult, tempName)));
+            astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
+        break;
+      case COALESCE:
+        // a = x ?? y --> if ((temp=x)!=null) {a=temp} else {a=y}
+        String tempNameAssign = getTempValueName();
+        Node tempVarNodeAssign =
+            astFactory
+                .createSingleVarNameDeclaration(tempNameAssign)
+                .useSourceInfoIfMissingFromForTree(expr);
+        Node injectionPointParent = injectionPoint.getParent();
+        injectionPointParent.addChildBefore(tempVarNodeAssign, injectionPoint);
+
+        Node assignLhs = buildResultExpression(first, true, tempNameAssign);
+        Node nullNode = astFactory.createNull().useSourceInfoFrom(expr);
+        cond = astFactory.createNe(assignLhs, nullNode).useSourceInfoFrom(expr);
+        trueExpr.addChildToFront(
+            astFactory.exprResult(
+                buildResultExpression(
+                    astFactory
+                        .createName(tempNameAssign, first.getJSType())
+                        .useSourceInfoFrom(expr),
+                    needResult,
+                    tempName)));
+        falseExpr.addChildToFront(
+            astFactory.exprResult(buildResultExpression(last, needResult, tempName)));
         break;
       default:
         // With a valid tree we should never get here.
@@ -431,16 +455,17 @@ class ExpressionDecomposer {
 
     Node ifNode;
     if (falseExpr.hasChildren()) {
-      ifNode = IR.ifNode(cond, trueExpr, falseExpr);
+      ifNode = astFactory.createIf(cond, trueExpr, falseExpr);
     } else {
-      ifNode = IR.ifNode(cond, trueExpr);
+      ifNode = astFactory.createIf(cond, trueExpr);
     }
     ifNode.useSourceInfoIfMissingFrom(expr);
 
     if (needResult) {
       Node tempVarNode =
-          NodeUtil.newVarNode(tempName, null).useSourceInfoIfMissingFromForTree(expr);
-      tempVarNode.getFirstChild().setJSType(voidType);
+          astFactory
+              .createSingleVarNameDeclaration(tempName)
+              .useSourceInfoIfMissingFromForTree(expr);
       Node injectionPointParent = injectionPoint.getParent();
       injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
       injectionPointParent.addChildAfter(ifNode, tempVarNode);
@@ -736,6 +761,7 @@ class ExpressionDecomposer {
       case HOOK:
       case AND:
       case OR:
+      case COALESCE:
         return true;
       default:
         return false;

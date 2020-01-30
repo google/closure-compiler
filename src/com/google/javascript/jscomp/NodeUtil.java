@@ -164,7 +164,16 @@ public final class NodeUtil {
             return TernaryValue.UNKNOWN;
           }
         }
-
+      case COALESCE:
+        {
+          TernaryValue lhs = getBooleanValue(n.getFirstChild());
+          TernaryValue rhs = getBooleanValue(n.getLastChild());
+          if (lhs.equals(TernaryValue.TRUE) || lhs.equals(rhs)) {
+            return lhs;
+          } else {
+            return TernaryValue.UNKNOWN;
+          }
+        }
       default:
         return TernaryValue.UNKNOWN;
     }

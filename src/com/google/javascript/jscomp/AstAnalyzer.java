@@ -356,6 +356,7 @@ public class AstAnalyzer {
         // default doesn't itself create a side-effect. Therefore, we prefer to defer the decision.
       case NUMBER:
       case OR:
+      case COALESCE:
       case THIS:
       case TRUE:
       case FALSE:

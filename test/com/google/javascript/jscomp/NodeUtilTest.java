@@ -291,6 +291,13 @@ public final class NodeUtilTest {
             {"a?false:false", TernaryValue.FALSE},
             {"a?true:false", TernaryValue.UNKNOWN},
             {"a?true:foo()", TernaryValue.UNKNOWN},
+
+            // coalesce returns LHS if LHS is truthy or if LHS and RHS have same boolean value
+            {"null??false", TernaryValue.FALSE}, // both false
+            {"2??[]", TernaryValue.TRUE}, // both true
+            {"{}??false", TernaryValue.TRUE}, // LHS is true
+            {"undefined??[]", TernaryValue.UNKNOWN},
+            {"foo()??true", TernaryValue.UNKNOWN},
           });
     }
 

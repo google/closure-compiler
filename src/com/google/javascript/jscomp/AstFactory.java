@@ -99,7 +99,7 @@ final class AstFactory {
    * AstFactory} to create new nodes.
    */
   Node exprResult(Node expr) {
-    return IR.exprResult(expr);
+    return IR.exprResult(expr).srcref(expr);
   }
 
   /**
@@ -340,6 +340,16 @@ final class AstFactory {
   Node createThisAliasDeclarationForFunction(String aliasName, Node functionNode) {
     return createSingleConstNameDeclaration(
         aliasName, createThis(getTypeOfThisForFunctionNode(functionNode)));
+  }
+
+  /**
+   * Creates a new `var` declaration statement for a single variable name with void type and no
+   * JSDoc.
+   *
+   * <p>e.g. `const variableName`
+   */
+  Node createSingleVarNameDeclaration(String variableName) {
+    return IR.var(createName(variableName, JSTypeNative.VOID_TYPE));
   }
 
   /**
@@ -821,6 +831,14 @@ final class AstFactory {
 
   Node createSheq(Node expr1, Node expr2) {
     Node result = IR.sheq(expr1, expr2);
+    if (isAddingTypes()) {
+      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    }
+    return result;
+  }
+
+  Node createNe(Node expr1, Node expr2) {
+    Node result = IR.ne(expr1, expr2);
     if (isAddingTypes()) {
       result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
     }
