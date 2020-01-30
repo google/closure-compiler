@@ -99,6 +99,7 @@ public class UnionType extends JSType {
 
 
   private ImmutableList<JSType> alternates;
+  private final int maxUnionSize;
 
   /**
    * Creates a union.
@@ -106,9 +107,10 @@ public class UnionType extends JSType {
    * <p>This ctor is private because all instances are created using a {@link Builder}. The builder
    * is also responsible for setting the alternates, which is why they aren't passed as a parameter.
    */
-  private UnionType(JSTypeRegistry registry, ImmutableList<JSType> alternates) {
+  private UnionType(JSTypeRegistry registry, ImmutableList<JSType> alternates, int maxUnionSize) {
     super(registry);
     this.setAlternates(alternates);
+    this.maxUnionSize = maxUnionSize;
 
     registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
@@ -146,8 +148,7 @@ public class UnionType extends JSType {
 
   /** Use a {@link Builder} to rebuild the list of alternates. */
   private void rebuildAlternates() {
-    setAlternates(
-        new Builder(this, DEFAULT_MAX_UNION_SIZE).addAlternates(this.alternates).buildInternal());
+    setAlternates(new Builder(this, maxUnionSize).addAlternates(this.alternates).buildInternal());
   }
 
   private UnionType setAlternates(ImmutableList<JSType> alternates) {
@@ -896,7 +897,7 @@ public class UnionType extends JSType {
       if (alternates.size() == 1) {
         return alternates.get(0);
       } else {
-        return new UnionType(registry, alternates);
+        return new UnionType(registry, alternates, maxUnionSize);
       }
     }
 

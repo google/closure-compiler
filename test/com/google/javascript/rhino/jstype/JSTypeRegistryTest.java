@@ -85,11 +85,12 @@ public class JSTypeRegistryTest {
   // now much larger
 
   private final JSTypeRegistry registry = new JSTypeRegistry(null, null);
+  private JSTypeResolver.Closer closer;
 
   @Before
   @SuppressWarnings({"MustBeClosedChecker"})
   public void setUp() throws Exception {
-    registry.getResolver().openForDefinition();
+    this.closer = registry.getResolver().openForDefinition();
   }
 
   @Test
@@ -172,6 +173,7 @@ public class JSTypeRegistryTest {
 
   @Test
   public void testPropertyOnManyTypes() {
+    this.closer.close(); // Force resolution to happen on the union.
     // Given
 
     // By default the UnionType.Builder will treat a union of more than 30
