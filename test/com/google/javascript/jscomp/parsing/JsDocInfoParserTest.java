@@ -2359,12 +2359,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testRegression8() {
     String comment =
-        " * @name random tag here\n" +
-        " * @desc description here\n" +
-        " *\n" +
-        " * @param {boolean} flag and some more description\n" +
-        " *     nicely formatted\n" +
-        " */";
+        lines(
+            " * @name random tag here",
+            " * @desc description here",
+            " *",
+            " * @param {boolean} flag and some more description",
+            " *     nicely formatted",
+            " */");
 
     JSDocInfo info = parse(comment);
     assertThat(info.getParameterCount()).isEqualTo(1);
@@ -5085,6 +5086,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(info.getOriginalCommentString()).isNull();
     info = parse(comment, true/* parseDocumentation */);
     assertThat(info.getOriginalCommentString()).isEqualTo(comment);
+  }
+
+  @Test
+  public void testGetMultilineDesc() {
+    String comment = lines(" * @desc description here", "         continued here", " */");
+    JSDocInfo info = parse(comment);
+    assertThat(info.getDescription()).isEqualTo("description here continued here");
   }
 
   @Test
