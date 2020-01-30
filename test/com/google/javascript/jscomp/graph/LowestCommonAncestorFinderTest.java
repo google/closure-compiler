@@ -144,6 +144,50 @@ public final class LowestCommonAncestorFinderTest {
   }
 
   @Test
+  public void findAll_onCyclic_whenLcaInsideCycle_findsSomeMember_deterministically() {
+    new CaseBuilder()
+        .edge(1, 2)
+        .edge(2, 3)
+        .edge(3, 4)
+        .edge(4, 1)
+        .edge(1, 5)
+        .edge(2, 6)
+        .roots(5, 6)
+        .expect(1)
+        .testAndRenderGraph();
+  }
+
+  @Test
+  public void findAll_onCyclic_whenLcaInsideCycle_appearsUnique_mayFindOtherMember() {
+    new CaseBuilder()
+        .edge(1, 2)
+        .edge(2, 3)
+        .edge(3, 4)
+        .edge(4, 1)
+        .edge(1, 5)
+        // Notice how 3 is a parent of both 5 and 6, yet isn't selected.
+        .edge(3, 5)
+        .edge(3, 6)
+        .roots(5, 6)
+        .expect(1)
+        .testAndRenderGraph();
+  }
+
+  @Test
+  public void findAll_onCyclic_whenLcaBelowCycle_ignoresCycle() {
+    new CaseBuilder()
+        .edge(1, 2)
+        .edge(2, 3)
+        .edge(3, 1)
+        .edge(3, 4)
+        .edge(4, 5)
+        .edge(4, 6)
+        .roots(5, 6)
+        .expect(4)
+        .testAndRenderGraph();
+  }
+
+  @Test
   public void findAll_onDigitLattice_withUnrelatedRoots_findsMultipleLcas() {
     new CaseBuilder() //
         .copyGraph(DIGIT_SUBSTRING_LATTICE)
@@ -210,7 +254,6 @@ public final class LowestCommonAncestorFinderTest {
     private ImmutableSet<Integer> actual;
 
     CaseBuilder edge(int src, int dest) {
-      assertThat(src).isGreaterThan(dest);
       this.graph.createNode(src);
       this.graph.createNode(dest);
       this.graph.connect(src, null, dest);
@@ -240,7 +283,7 @@ public final class LowestCommonAncestorFinderTest {
     void testAndRenderGraph() {
       checkState(this.actual == null);
       LowestCommonAncestorFinder<Integer, Void> finder =
-          new LowestCommonAncestorFinder<>(this.graph, Integer::intValue);
+          new LowestCommonAncestorFinder<>(this.graph);
       this.actual = finder.findAll(this.roots);
 
       String message =

@@ -77,7 +77,7 @@ final class TypeGraphBuilder {
       TypeFlattener flattener,
       LowestCommonAncestorFinder.Factory<FlatType, Object> lcaFinderFactory) {
     this.flattener = flattener;
-    this.lcaFinder = lcaFinderFactory.create(this.typeHoldsInstanceGraph, FlatType::getUnionWeight);
+    this.lcaFinder = lcaFinderFactory.create(this.typeHoldsInstanceGraph);
 
     this.topNode =
         this.typeHoldsInstanceGraph.createNode(this.flattener.flatten(JSTypeNative.ALL_TYPE));

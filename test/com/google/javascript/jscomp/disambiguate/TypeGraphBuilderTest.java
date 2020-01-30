@@ -70,8 +70,6 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   private CompilerPass processor;
   private DiGraph<FlatType, Object> result;
 
-  private LowestCommonAncestorFinder.HeightFunction<FlatType> heightFn;
-
   @Override
   protected Compiler createCompiler() {
     return this.compiler;
@@ -546,20 +544,6 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   }
 
   @After
-  public void verifyResult_satisfiesHeightFn() {
-    assertThat(
-            this.result.getEdges().stream()
-                .filter(this::isSrcBelowDestination)
-                .collect(toImmutableSet()))
-        .isEmpty();
-  }
-
-  private boolean isSrcBelowDestination(DiGraphEdge<FlatType, ?> edge) {
-    return this.heightFn.measure(edge.getSource().getValue())
-        <= this.heightFn.measure(edge.getDestination().getValue());
-  }
-
-  @After
   public void verifyResult_topNodeIsOnlyRoot() {
     assertThat(
             this.result.getNodes().stream()
@@ -619,14 +603,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
 
   private TypeGraphBuilder createBuilder(@Nullable StubLcaFinder optLcaFinder) {
     StubLcaFinder lcaFinder = (optLcaFinder == null) ? new StubLcaFinder() : optLcaFinder;
-
-    return new TypeGraphBuilder(
-        this.flattener,
-        (g, h) -> {
-          assertThat(this.heightFn).isNull();
-          this.heightFn = h;
-          return lcaFinder.setGraph(g);
-        });
+    return new TypeGraphBuilder(this.flattener, lcaFinder::setGraph);
   }
 
   /**
@@ -640,7 +617,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
     private LinkedHashMap<ImmutableSet<String>, ImmutableSet<String>> stubs = new LinkedHashMap<>();
 
     StubLcaFinder() {
-      super(null, null);
+      super(null);
     }
 
     StubLcaFinder setGraph(DiGraph<FlatType, Object> graph) {
