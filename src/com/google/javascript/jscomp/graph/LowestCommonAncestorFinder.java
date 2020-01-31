@@ -33,15 +33,15 @@ import java.util.Set;
 /**
  * Implements a lowest common ancestor search algorithm.
  *
- * <p>The LCA of a set of nodes is the node that is an ancestor to all of them but has the smallest
- * value of {@code heightFn}. In a non-tree, There may be multiple LCAs for a given set of search
- * nodes.
+ * <p>The LCA of a set of nodes is the node that is an ancestor to all of them but is not an
+ * ancestor of any other common ancestor. In a non-tree, There may be multiple LCAs for a given set
+ * of search nodes.
  *
  * <p>In a cyclic graph, the LCAs may not be well defined. Within a cycle, all elements are both
  * above and below one another, so there is no uniquely lowest element. If the set of common
  * ancestors is rooted on a cycle, this implementation returns one or more elements of that cycle.
- * Those element are chosen arbitrarily but deterministically, as long as the underlying graph has
- * deterministic iteration.
+ * Those elements are chosen arbitrarily but deterministically (as long as the underlying graph has
+ * deterministic iteration).
  */
 public class LowestCommonAncestorFinder<N, E> {
 
