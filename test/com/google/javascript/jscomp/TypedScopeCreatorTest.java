@@ -2621,6 +2621,29 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testClassDeclarationWithImplementsForwardRef() {
+    testSame(
+        lines(
+            "/** @implements {Bar} */", //
+            "class Foo {}",
+            "/** @interface */",
+            "class Bar {}",
+            "class SubFoo extends Foo {}"));
+
+    FunctionType fooCtorType = globalScope.getVar("Foo").getType().toMaybeFunctionType();
+    ObjectType fooType = fooCtorType.getInstanceType();
+
+    assertThat(fooCtorType.loosenTypecheckingDueToForwardReferencedSupertype()).isFalse();
+    assertThat(fooType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+
+    FunctionType subFooCtorType = globalScope.getVar("SubFoo").getType().toMaybeFunctionType();
+    ObjectType subFooType = subFooCtorType.getInstanceType();
+
+    assertThat(subFooCtorType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+    assertThat(subFooType.loosenTypecheckingDueToForwardReferencedSupertype()).isTrue();
+  }
+
+  @Test
   public void testClassDeclarationWithExtends() {
     testSame(
         lines(
