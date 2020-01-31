@@ -20,8 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -100,11 +98,8 @@ class DisambiguateProperties implements CompilerPass {
   private final InvalidatingTypes invalidatingTypes;
   private final JSTypeRegistry registry;
 
-  /**
-   * Map of a type to all the related errors that invalidated the type
-   * for disambiguation.
-   */
-  private final Multimap<JSType, Supplier<JSError>> invalidationMap;
+  /** Map of a type to all the related errors that invalidated the type for disambiguation. */
+  private final Multimap<JSType, Node> invalidationMap;
 
   /**
    * In practice any large code base will have thousands and thousands of
@@ -806,12 +801,10 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      Iterable<JSError> invalidations =
-          FluentIterable.from(invalidationMap.get(t))
-              .transform(Suppliers.supplierFunction())
-              .limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY);
-      for (JSError error : invalidations) {
-        errors.add(t + " at " + error.getSourceName() + ":" + error.getLineNumber());
+      Iterable<Node> invalidations =
+          FluentIterable.from(invalidationMap.get(t)).limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY);
+      for (Node location : invalidations) {
+        errors.add(t + " at " + location.getSourceFileName() + ":" + location.getLineno());
       }
     }
   }

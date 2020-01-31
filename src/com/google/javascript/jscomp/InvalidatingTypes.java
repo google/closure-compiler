@@ -17,9 +17,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -81,7 +81,7 @@ public final class InvalidatingTypes {
   public static final class Builder {
     private final JSTypeRegistry registry;
 
-    @Nullable private Multimap<JSType, Supplier<JSError>> invalidationMap;
+    @Nullable private Multimap<JSType, Node> invalidationMap;
     private final LinkedHashSet<TypeMismatch> mismatches = new LinkedHashSet<>();
     private boolean allowEnums = false;
     private boolean allowScalars = false;
@@ -114,8 +114,8 @@ public final class InvalidatingTypes {
       }
 
       for (TypeMismatch mismatch : this.mismatches) {
-        this.addTypeWithReason(mismatch.typeA, mismatch.error);
-        this.addTypeWithReason(mismatch.typeB, mismatch.error);
+        this.addTypeWithReason(mismatch.getFound(), mismatch.getLocation());
+        this.addTypeWithReason(mismatch.getRequired(), mismatch.getLocation());
       }
 
       ImmutableSet<JSType> types = this.types.build();
@@ -126,8 +126,7 @@ public final class InvalidatingTypes {
     // TODO(sdh): Investigate whether this can be consolidated between all three passes.
     // In particular, mutation testing suggests allowEnums=true should work everywhere.
     // We should revisit what breaks when we disallow scalars everywhere.
-    public Builder writeInvalidationsInto(
-        @Nullable Multimap<JSType, Supplier<JSError>> invalidationMap) {
+    public Builder writeInvalidationsInto(@Nullable Multimap<JSType, Node> invalidationMap) {
       this.invalidationMap = invalidationMap;
       return this;
     }
@@ -163,52 +162,52 @@ public final class InvalidatingTypes {
     }
 
     /** Invalidates the given type, so that no properties on it will be inlined or renamed. */
-    private void addTypeWithReason(JSType type, Supplier<JSError> error) {
+    private void addTypeWithReason(JSType type, Node location) {
       type = type.restrictByNotNullOrUndefined();
 
       if (type.isUnionType()) {
         for (JSType alt : type.getUnionMembers()) {
-          this.addTypeWithReason(alt, error);
+          this.addTypeWithReason(alt, location);
         }
         return;
       }
       checkState(!type.isUnionType(), type);
 
       if (!this.alsoInvalidateRelatedTypes) {
-        this.recordTypeWithReason(type, error);
+        this.recordTypeWithReason(type, location);
       } else if (type.isEnumElementType()) {
         // Only in disambigation.
-        this.recordTypeWithReason(type.getEnumeratedTypeOfEnumElement(), error);
+        this.recordTypeWithReason(type.getEnumeratedTypeOfEnumElement(), location);
         return;
       } else {
         // Ambiguation and InlineProperties both do this.
-        this.recordTypeWithReason(type, error);
+        this.recordTypeWithReason(type, location);
 
         ObjectType objType = type.toMaybeObjectType();
         if (objType == null) {
           return;
         }
 
-        this.recordTypeWithReason(objType.getImplicitPrototype(), error);
+        this.recordTypeWithReason(objType.getImplicitPrototype(), location);
 
         if (objType.isConstructor()) {
           // TODO(b/142431852): This should never be null but it is possible.
           // Case: `function(new:T)`, `T = number`.
-          this.recordTypeWithReason(objType.toMaybeFunctionType().getInstanceType(), error);
+          this.recordTypeWithReason(objType.toMaybeFunctionType().getInstanceType(), location);
         } else if (objType.isInstanceType()) {
-          this.recordTypeWithReason(objType.getConstructor(), error);
+          this.recordTypeWithReason(objType.getConstructor(), location);
         }
       }
     }
 
-    private void recordTypeWithReason(JSType type, Supplier<JSError> error) {
+    private void recordTypeWithReason(JSType type, Node location) {
       if (type == null || !type.isObjectType()) {
         return;
       }
 
       this.types.add(type);
       if (invalidationMap != null) {
-        this.invalidationMap.put(type, error);
+        this.invalidationMap.put(type, location);
       }
     }
   }

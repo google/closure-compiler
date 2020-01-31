@@ -15,194 +15,156 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
 
 /**
- * Signals that the first type and the second type have been
- * used interchangeably.
+ * Signals that the first type and the second type have been used interchangeably.
  *
- * Type-based optimizations should take this into account
- * so that they don't wreck code with type warnings.
+ * <p>Type-based optimizations should take this into account so that they don't wreck code with type
+ * warnings.
  */
-class TypeMismatch implements Serializable {
-  final JSType typeA;
-  final JSType typeB;
-  final Supplier<JSError> error;
+@AutoValue
+abstract class TypeMismatch implements Serializable {
+  /** The RHS type; the type of the assignment target. */
+  abstract JSType getFound();
 
-  /**
-   * It's the responsibility of the class that creates the
-   * {@code TypeMismatch} to ensure that {@code a} and {@code b} are
-   * non-matching types.
-   */
-  TypeMismatch(JSType a, JSType b, Supplier<JSError> error) {
-    this.typeA = a;
-    this.typeB = b;
-    this.error = error;
+  /** The LHS type; the type being assigned. */
+  abstract JSType getRequired();
+
+  /** The location of the assignment. */
+  abstract Node getLocation();
+
+  private static TypeMismatch create(JSType found, JSType required, Node location) {
+    return new AutoValue_TypeMismatch(found, required, location);
   }
 
-  static void registerIfMismatch(
-      List<TypeMismatch> mismatches, List<TypeMismatch> implicitInterfaceUses,
-      JSType found, JSType required, JSError error) {
-    if (found != null && required != null && !found.isSubtypeWithoutStructuralTyping(required)) {
-      registerMismatch(mismatches, implicitInterfaceUses, found, required, error);
+  @VisibleForTesting
+  static TypeMismatch createForTesting(JSType found, JSType required) {
+    return create(found, required, TEST_LOCATION);
+  }
+
+  private static final Node TEST_LOCATION = IR.empty();
+
+  /** Collects a set of related mismatches. */
+  static class Accumulator implements Serializable {
+
+    private final ArrayList<TypeMismatch> mismatches = new ArrayList<>();
+    private final ArrayList<TypeMismatch> implicitInterfaceUses = new ArrayList<>();
+
+    void registerMismatch(Node location, JSType found, JSType required) {
+      // Don't register a mismatch for differences in null or undefined or if the
+      // code didn't downcast.
+      found = removeNullUndefinedAndTemplates(found);
+      required = removeNullUndefinedAndTemplates(required);
+      if (found.isSubtypeOf(required) || required.isSubtypeOf(found)) {
+        boolean strictMismatch =
+            !found.isSubtypeWithoutStructuralTyping(required)
+                && !required.isSubtypeWithoutStructuralTyping(found);
+        if (strictMismatch && bothAreNotTemplateTypes(found, required)) {
+          this.implicitInterfaceUses.add(TypeMismatch.create(found, required, location));
+        }
+        return;
+      }
+
+      if (bothAreNotTemplateTypes(found, required)) {
+        this.mismatches.add(TypeMismatch.create(found, required, location));
+      }
+
+      if (found.isFunctionType() && required.isFunctionType()) {
+        FunctionType fnTypeA = found.toMaybeFunctionType();
+        FunctionType fnTypeB = required.toMaybeFunctionType();
+        Iterator<JSType> paramItA = fnTypeA.getParameterTypes().iterator();
+        Iterator<JSType> paramItB = fnTypeB.getParameterTypes().iterator();
+        while (paramItA.hasNext() && paramItB.hasNext()) {
+          this.registerIfMismatch(location, paramItA.next(), paramItB.next());
+        }
+        this.registerIfMismatch(location, fnTypeA.getReturnType(), fnTypeB.getReturnType());
+      }
     }
-  }
 
-  /**
-   * In the old type checker, a type variable is considered unknown, so other types can be used as
-   * type variables, and vice versa, without warning. NTI correctly warns. However, we don't want to
-   * block disambiguation in these cases. So, to avoid types getting invalidated, we don't register
-   * the mismatch. Otherwise, to get good disambiguation, we would have to add casts all over the
-   * code base. TODO(dimvar): this can be made safe in the distant future where we have bounded
-   * generics *and* we have switched all the unsafe uses of type variables in the code base to use
-   * bounded generics.
-   */
-  private static boolean bothAreNotTemplateTypes(JSType found, JSType required) {
-    return !found.isTemplateType() && !required.isTemplateType();
-  }
+    void recordImplicitUseOfNativeObject(Node location, JSType found, JSType required) {
+      found = found.restrictByNotNullOrUndefined();
+      required = required.restrictByNotNullOrUndefined();
+      if (isInstanceOfObject(found)
+          && !isInstanceOfObject(required)
+          && !required.isUnknownType()
+          && bothAreNotTemplateTypes(found, required)) {
+        this.mismatches.add(TypeMismatch.create(found, required, location));
+      }
+    }
 
-  static void registerMismatch(
-      List<TypeMismatch> mismatches, List<TypeMismatch> implicitInterfaceUses,
-      JSType found, JSType required, JSError error) {
-    // Don't register a mismatch for differences in null or undefined or if the
-    // code didn't downcast.
-    found = removeNullUndefinedAndTemplates(found);
-    required = removeNullUndefinedAndTemplates(required);
-    if (found.isSubtypeOf(required) || required.isSubtypeOf(found)) {
+    void recordImplicitInterfaceUses(Node location, JSType found, JSType required) {
+      found = removeNullUndefinedAndTemplates(found);
+      required = removeNullUndefinedAndTemplates(required);
+      if (required.isUnknownType()) {
+        return;
+      }
       boolean strictMismatch =
           !found.isSubtypeWithoutStructuralTyping(required)
-          && !required.isSubtypeWithoutStructuralTyping(found);
-      if (strictMismatch && bothAreNotTemplateTypes(found, required)) {
-        implicitInterfaceUses.add(new TypeMismatch(found, required, Suppliers.ofInstance(error)));
+              && !required.isSubtypeWithoutStructuralTyping(found);
+      boolean mismatch = !found.isSubtypeOf(required) && !required.isSubtypeOf(found);
+      if ((strictMismatch || mismatch) && bothAreNotTemplateTypes(found, required)) {
+        this.implicitInterfaceUses.add(TypeMismatch.create(found, required, location));
       }
-      return;
     }
 
-    if (bothAreNotTemplateTypes(found, required)) {
-      mismatches.add(new TypeMismatch(found, required, Suppliers.ofInstance(error)));
+    ImmutableCollection<TypeMismatch> getMismatches() {
+      return ImmutableList.copyOf(this.mismatches);
     }
 
-    if (found.isFunctionType() && required.isFunctionType()) {
-      FunctionType fnTypeA = found.toMaybeFunctionType();
-      FunctionType fnTypeB = required.toMaybeFunctionType();
-      Iterator<JSType> paramItA = fnTypeA.getParameterTypes().iterator();
-      Iterator<JSType> paramItB = fnTypeB.getParameterTypes().iterator();
-      while (paramItA.hasNext() && paramItB.hasNext()) {
-        TypeMismatch.registerIfMismatch(
-            mismatches, implicitInterfaceUses, paramItA.next(), paramItB.next(), error);
+    ImmutableCollection<TypeMismatch> getImplicitInterfaceUses() {
+      return ImmutableList.copyOf(this.implicitInterfaceUses);
+    }
+
+    private void registerIfMismatch(Node location, JSType found, JSType required) {
+      if (found != null && required != null && !found.isSubtypeWithoutStructuralTyping(required)) {
+        this.registerMismatch(location, found, required);
       }
-      TypeMismatch.registerIfMismatch(
-          mismatches, implicitInterfaceUses,
-          fnTypeA.getReturnType(), fnTypeB.getReturnType(), error);
-    }
-  }
-
-  static void recordImplicitUseOfNativeObject(
-      List<TypeMismatch> mismatches, Node node, JSType sourceType, JSType targetType) {
-    sourceType = sourceType.restrictByNotNullOrUndefined();
-    targetType = targetType.restrictByNotNullOrUndefined();
-    if (isInstanceOfObject(sourceType)
-        && !isInstanceOfObject(targetType)
-        && !targetType.isUnknownType()
-        && bothAreNotTemplateTypes(sourceType, targetType)) {
-      // We don't report a type error, but we still need to construct a JSError,
-      // for people who enable the invalidation diagnostics in DisambiguateProperties.
-      LazyError err =
-          LazyError.of(
-              "Implicit use of Object type: %s as type: %s", node, sourceType, targetType);
-      mismatches.add(new TypeMismatch(sourceType, targetType, err));
-    }
-  }
-
-  static void recordImplicitInterfaceUses(
-      List<TypeMismatch> implicitInterfaceUses, Node node, JSType sourceType, JSType targetType) {
-    sourceType = removeNullUndefinedAndTemplates(sourceType);
-    targetType = removeNullUndefinedAndTemplates(targetType);
-    if (targetType.isUnknownType()) {
-      return;
-    }
-    boolean strictMismatch =
-        !sourceType.isSubtypeWithoutStructuralTyping(targetType)
-        && !targetType.isSubtypeWithoutStructuralTyping(sourceType);
-    boolean mismatch = !sourceType.isSubtypeOf(targetType) && !targetType.isSubtypeOf(sourceType);
-    if ((strictMismatch || mismatch) && bothAreNotTemplateTypes(sourceType, targetType)) {
-      // We don't report a type error, but we still need to construct a JSError,
-      // for people who enable the invalidation diagnostics in DisambiguateProperties.
-      LazyError err = LazyError.of("Implicit use of type %s as %s", node, sourceType, targetType);
-      implicitInterfaceUses.add(new TypeMismatch(sourceType, targetType, err));
-    }
-  }
-
-  private static boolean isInstanceOfObject(JSType type) {
-    // Some type whose class is Object
-    ObjectType obj = type.toMaybeObjectType();
-    if (obj != null && obj.isNativeObjectType() && "Object".equals(obj.getReferenceName())) {
-      return true;
-    }
-    return type.isRecordType() || type.isLiteralObject();
-  }
-
-  private static JSType removeNullUndefinedAndTemplates(JSType t) {
-    JSType result = t.restrictByNotNullOrUndefined();
-    ObjectType obj = result.toMaybeObjectType();
-    if (obj != null && obj.isTemplatizedType()) {
-      // We don't care about the specific specalization involved in the mismatch because all
-      // specializations share the same JS code.
-      return obj.toMaybeTemplatizedType().getRawType();
-    }
-    return result;
-  }
-
-  @Override public boolean equals(Object object) {
-    if (object instanceof TypeMismatch) {
-      TypeMismatch that = (TypeMismatch) object;
-      return (that.typeA.equals(this.typeA) && that.typeB.equals(this.typeB))
-          || (that.typeB.equals(this.typeA) && that.typeA.equals(this.typeB));
-    }
-    return false;
-  }
-
-  @Override public int hashCode() {
-    return Objects.hash(typeA, typeB);
-  }
-
-  @Override public String toString() {
-    return "(" + typeA + ", " + typeB + ")";
-  }
-
-  @AutoValue
-  abstract static class LazyError implements Supplier<JSError>, Serializable {
-    abstract String message();
-    abstract Node node();
-    abstract JSType sourceType();
-    abstract JSType targetType();
-
-    private static LazyError of(String message, Node node, JSType sourceType, JSType targetType) {
-      return new AutoValue_TypeMismatch_LazyError(message, node, sourceType, targetType);
     }
 
-    @Override
-    public JSError get() {
-      // NOTE: GWT does not support String.format, so we work around it with a quick hack.
-      List<String> parts = Splitter.on("%s").splitToList(message());
-      checkState(parts.size() == 3);
-      return JSError.make(
-          node(),
-          TypeValidator.TYPE_MISMATCH_WARNING,
-          parts.get(0) + sourceType() + parts.get(1) + targetType() + parts.get(2));
+    /**
+     * A type variable is considered unknown, so other types can be used as type variables, and vice
+     * versa, without warning. Otherwise, to get good disambiguation, we would have to add casts all
+     * over the code base.
+     *
+     * <p>TODO(dimvar): this can be made safe in the distant future where we have bounded generics
+     * *and* we have switched all the unsafe uses of type variables in the code base to use bounded
+     * generics.
+     */
+    private static boolean bothAreNotTemplateTypes(JSType found, JSType required) {
+      return !found.isTemplateType() && !required.isTemplateType();
+    }
+
+    private static boolean isInstanceOfObject(JSType type) {
+      // Some type whose class is Object
+      ObjectType obj = type.toMaybeObjectType();
+      if (obj != null && obj.isNativeObjectType() && "Object".equals(obj.getReferenceName())) {
+        return true;
+      }
+      return type.isRecordType() || type.isLiteralObject();
+    }
+
+    private static JSType removeNullUndefinedAndTemplates(JSType t) {
+      JSType result = t.restrictByNotNullOrUndefined();
+      ObjectType obj = result.toMaybeObjectType();
+      if (obj != null && obj.isTemplatizedType()) {
+        // We don't care about the specific specalization involved in the mismatch because all
+        // specializations share the same JS code.
+        return obj.toMaybeTemplatizedType().getRawType();
+      }
+      return result;
     }
   }
 }
