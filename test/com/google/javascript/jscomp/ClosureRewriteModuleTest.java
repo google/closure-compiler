@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
+import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
@@ -677,6 +678,16 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
           lines("goog.module('modB');", "", "var {Foo} = goog.requireType('modA');")
         },
         DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
+  }
+
+  @Test
+  public void testDontUseTheMangledModuleNameInCode() {
+    testError(
+        new String[] {
+          "/** @const */ var module$exports$modA = class {};", //
+          "goog.module('modA');",
+        },
+        ILLEGAL_MODULE_RENAMING_CONFLICT);
   }
 
   @Test

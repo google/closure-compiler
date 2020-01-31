@@ -141,6 +141,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_LOAD_MODULE_FN_MISSING_RETURN",
           "goog.loadModule function should end with 'return exports;'");
 
+  static final DiagnosticType ILLEGAL_MODULE_RENAMING_CONFLICT =
+      DiagnosticType.error(
+          "JSC_ILLEGAL_MODULE_RENAMING_CONFLICT",
+          "Internal compiler error: rewritten module global name {0} is already in use.");
+
   private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
 
   private static final String MODULE_EXPORTS_PREFIX = "module$exports$";
@@ -483,7 +488,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
         case GETPROP:
           if (isExportPropertyAssignment(n)) {
-            updateExportsPropertyAssignment(n, t.getScope());
+            updateExportsPropertyAssignment(n, t);
           }
           break;
 
@@ -1088,8 +1093,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // avoid ordering issues with goog.define().
     if (!currentScript.willCreateExportsObject) {
       checkState(!currentScript.hasCreatedExportObject, currentScript);
-      exportTheEmptyBinaryNamespaceAt(
-          NodeUtil.getEnclosingStatement(call), AddAt.AFTER, t.getScope());
+      exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(call), AddAt.AFTER, t);
     }
 
     if (!currentScript.declareLegacyNamespace && !preserveSugar) {
@@ -1282,7 +1286,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private void updateExportsPropertyAssignment(Node getpropNode, Scope scope) {
+  private void updateExportsPropertyAssignment(Node getpropNode, NodeTraversal t) {
     if (!currentScript.isModule) {
       return;
     }
@@ -1295,7 +1299,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     checkState(exportsNameNode.getString().equals("exports"));
     String exportedNamespace = currentScript.getExportedNamespace();
     safeSetMaybeQualifiedString(
-        exportsNameNode, exportedNamespace, scope, /* isModuleNamespace= */ false);
+        exportsNameNode, exportedNamespace, t.getScope(), /* isModuleNamespace= */ false);
 
     Node jsdocNode = parent.isAssign() ? parent : getpropNode;
     markConstAndCopyJsDoc(jsdocNode, jsdocNode);
@@ -1303,7 +1307,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // When seeing the first "exports.foo = ..." line put a "var module$exports$pkg$Foo = {};"
     // before it.
     if (!currentScript.hasCreatedExportObject) {
-      exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(parent), AddAt.BEFORE, scope);
+      exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(parent), AddAt.BEFORE, t);
     }
   }
 
@@ -1548,7 +1552,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   /** Add the missing "var module$exports$pkg$Foo = {};" line. */
-  private void exportTheEmptyBinaryNamespaceAt(Node atNode, AddAt addAt, Scope moduleScope) {
+  private void exportTheEmptyBinaryNamespaceAt(Node atNode, AddAt addAt, NodeTraversal t) {
     if (currentScript.declareLegacyNamespace) {
       return;
     }
@@ -1556,8 +1560,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String binaryNamespaceString = currentScript.getBinaryNamespace();
     JSType moduleType = currentScript.rootNode.getJSType();
     Node binaryNamespaceName = astFactory.createName(binaryNamespaceString, moduleType);
-    Scope globalScope = moduleScope.getGlobalScope();
-    globalScope.declare(binaryNamespaceString, binaryNamespaceName, null);
+    Scope globalScope = t.getScope().getGlobalScope();
+    if (globalScope.hasOwnSlot(binaryNamespaceString)) {
+      t.report(currentScript.rootNode, ILLEGAL_MODULE_RENAMING_CONFLICT, binaryNamespaceString);
+    } else {
+      globalScope.declare(binaryNamespaceString, binaryNamespaceName, t.getInput());
+    }
     binaryNamespaceName.setOriginalName(currentScript.namespaceId);
     Node binaryNamespaceExportNode = IR.var(binaryNamespaceName, astFactory.createObjectLit());
     if (addAt == AddAt.BEFORE) {
