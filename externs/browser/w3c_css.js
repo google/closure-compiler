@@ -2897,7 +2897,8 @@ AnimationEvent.prototype.elapsedTime;
 AnimationEvent.prototype.pseudoElement;
 
 /**
- * @record
+ * @constructor
+ * @extends {CSSRule}
  * @see http://dev.w3.org/csswg/css-animations/#csskeyframerule
  */
 function CSSKeyframeRule() {}
@@ -2916,7 +2917,8 @@ CSSKeyframeRule.prototype.style;
 
 
 /**
- * @record
+ * @constructor
+ * @extends {CSSRule}
  * @see http://dev.w3.org/csswg/css-animations/#csskeyframesrule
  */
 function CSSKeyframesRule() {}
