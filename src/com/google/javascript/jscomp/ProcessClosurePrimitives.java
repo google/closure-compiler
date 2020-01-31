@@ -415,119 +415,132 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
 
     String enclosingQname = enclosingFnNameNode.getQualifiedName();
     if (!enclosingQname.contains(".prototype.")) {
-      // Handle constructors.
-
-      // Check if this is some other "base" method.
-      if (!enclosingQname.equals(baseContainer)) {
-        // Report misuse of "base" methods from other known classes.
-        if (knownClosureSubclasses.contains(baseContainer)) {
-          reportBadBaseMethodUse(
-              n, baseContainer, "Must be used within " + baseContainer + " methods");
-        }
-        return;
-      }
-
-      // Determine if this is a class with a "base" method created by
-      // goog.inherits.
-      Node enclosingParent = enclosingFnNameNode.getParent();
-      Node maybeInheritsExpr =
-          (enclosingParent.isAssign() ? enclosingParent.getParent() : enclosingParent).getNext();
-      while (maybeInheritsExpr != null && maybeInheritsExpr.isEmpty()) {
-        maybeInheritsExpr = maybeInheritsExpr.getNext();
-      }
-      Node baseClassNode = null;
-      if (maybeInheritsExpr != null
-          && maybeInheritsExpr.isExprResult()
-          && maybeInheritsExpr.getFirstChild().isCall()) {
-        Node callNode = maybeInheritsExpr.getFirstChild();
-        if (callNode.getFirstChild().matchesQualifiedName("goog.inherits")
-            && callNode.getLastChild().isQualifiedName()) {
-          baseClassNode = callNode.getLastChild();
-        }
-      }
-
-      if (baseClassNode == null) {
-        // If there is no "goog.inherits", this might be some other "base"
-        // method.
-        return;
-      }
-
-      // This is the expected method, validate its parameters.
-      Node callee = n.getFirstChild();
-      Node thisArg = callee.getNext();
-      if (thisArg == null || !thisArg.isThis()) {
-        reportBadBaseMethodUse(n, baseContainer, "First argument must be 'this'.");
-        return;
-      }
-
-      // Handle methods.
-      Node methodNameNode = thisArg.getNext();
-      if (methodNameNode == null
-          || !methodNameNode.isString()
-          || !methodNameNode.getString().equals("constructor")) {
-        reportBadBaseMethodUse(n, baseContainer, "Second argument must be 'constructor'.");
-        return;
-      }
-
-      // We're good to go.
-      n.replaceChild(
-          callee,
-          NodeUtil.newQName(
-            compiler,
-            baseClassNode.getQualifiedName() + ".call",
-            callee, enclosingQname + ".base"));
-      n.removeChild(methodNameNode);
-      compiler.reportChangeToEnclosingScope(n);
+      rewriteBaseCallInConstructor(enclosingQname, baseContainer, n, enclosingFnNameNode);
     } else {
-      if (!knownClosureSubclasses.contains(baseContainer)) {
-        // Can't determine if this is a known "class" that has a known "base"
-        // method.
-        return;
-      }
+      rewriteBaseCallInMethod(enclosingQname, baseContainer, n, enclosingFnNameNode);
+    }
+  }
 
-      boolean misuseOfBase = !enclosingFnNameNode.
-          getFirstFirstChild().matchesQualifiedName(baseContainer);
-      if (misuseOfBase) {
-        // Report misuse of "base" methods from other known classes.
+  private void rewriteBaseCallInConstructor(
+      String enclosingQname, String baseContainer, Node n, Node enclosingFnNameNode) {
+    // Check if this is some other "base" method.
+    if (!enclosingQname.equals(baseContainer)) {
+      // Report misuse of "base" methods from other known classes.
+      if (knownClosureSubclasses.contains(baseContainer)) {
         reportBadBaseMethodUse(
             n, baseContainer, "Must be used within " + baseContainer + " methods");
-        return;
       }
+      return;
+    }
 
-      // The super class is known.
-      Node callee = n.getFirstChild();
-      Node thisArg = callee.getNext();
-      if (thisArg == null || !thisArg.isThis()) {
-        reportBadBaseMethodUse(n, baseContainer, "First argument must be 'this'.");
-        return;
-      }
+    // Determine if this is a class with a "base" method created by
+    // goog.inherits.
+    Node enclosingParent = enclosingFnNameNode.getParent();
+    Node baseClassNode =
+        findGoogInheritsCall(
+            enclosingParent.isAssign() ? enclosingParent.getParent() : enclosingParent);
+    if (baseClassNode == null) {
+      // If there is no "goog.inherits", this might be some other "base" method.
+      return;
+    }
 
-      // Handle methods.
-      Node methodNameNode = thisArg.getNext();
-      if (methodNameNode == null || !methodNameNode.isString()) {
-        reportBadBaseMethodUse(n, baseContainer, "Second argument must name a method.");
-        return;
-      }
+    // This is the expected method, validate its parameters.
+    Node callee = n.getFirstChild();
+    Node thisArg = callee.getNext();
+    if (thisArg == null || !thisArg.isThis()) {
+      reportBadBaseMethodUse(n, baseContainer, "First argument must be 'this'.");
+      return;
+    }
 
-      String methodName = methodNameNode.getString();
-      String ending = ".prototype." + methodName;
-      if (enclosingQname == null || !enclosingQname.endsWith(ending)) {
-        reportBadBaseMethodUse(n, baseContainer, "Enclosing method does not match " + methodName);
-        return;
-      }
+    // Handle methods.
+    Node methodNameNode = thisArg.getNext();
+    if (methodNameNode == null
+        || !methodNameNode.isString()
+        || !methodNameNode.getString().equals("constructor")) {
+      reportBadBaseMethodUse(n, baseContainer, "Second argument must be 'constructor'.");
+      return;
+    }
 
-      // We're good to go.
-      Node className =
-          enclosingFnNameNode.getFirstFirstChild();
-      n.replaceChild(
-          callee,
-          NodeUtil.newQName(
+    // We're good to go.
+    n.replaceChild(
+        callee,
+        NodeUtil.newQName(
+            compiler,
+            baseClassNode.getQualifiedName() + ".call",
+            callee,
+            enclosingQname + ".base"));
+    n.removeChild(methodNameNode);
+    compiler.reportChangeToEnclosingScope(n);
+  }
+
+  private void rewriteBaseCallInMethod(
+      String enclosingQname, String baseContainer, Node n, Node enclosingFnNameNode) {
+    if (!knownClosureSubclasses.contains(baseContainer)) {
+      // Can't determine if this is a known "class" that has a known "base" method.
+      return;
+    }
+
+    boolean misuseOfBase =
+        !enclosingFnNameNode.getFirstFirstChild().matchesQualifiedName(baseContainer);
+    if (misuseOfBase) {
+      // Report misuse of "base" methods from other known classes.
+      reportBadBaseMethodUse(n, baseContainer, "Must be used within " + baseContainer + " methods");
+      return;
+    }
+
+    // The super class is known.
+    Node callee = n.getFirstChild();
+    Node thisArg = callee.getNext();
+    if (thisArg == null || !thisArg.isThis()) {
+      reportBadBaseMethodUse(n, baseContainer, "First argument must be 'this'.");
+      return;
+    }
+
+    // Handle methods.
+    Node methodNameNode = thisArg.getNext();
+    if (methodNameNode == null || !methodNameNode.isString()) {
+      reportBadBaseMethodUse(n, baseContainer, "Second argument must name a method.");
+      return;
+    }
+
+    String methodName = methodNameNode.getString();
+    String ending = ".prototype." + methodName;
+    if (enclosingQname == null || !enclosingQname.endsWith(ending)) {
+      reportBadBaseMethodUse(n, baseContainer, "Enclosing method does not match " + methodName);
+      return;
+    }
+
+    // We're good to go.
+    Node className = enclosingFnNameNode.getFirstFirstChild();
+    n.replaceChild(
+        callee,
+        NodeUtil.newQName(
             compiler,
             className.getQualifiedName() + ".superClass_." + methodName + ".call",
-            callee, enclosingQname + ".base"));
-      n.removeChild(methodNameNode);
-      compiler.reportChangeToEnclosingScope(n);
+            callee,
+            enclosingQname + ".base"));
+    n.removeChild(methodNameNode);
+    compiler.reportChangeToEnclosingScope(n);
+  }
+
+  private static Node findGoogInheritsCall(Node ctorDeclarationNode) {
+    Node maybeInheritsExpr = ctorDeclarationNode.getNext();
+
+    while (maybeInheritsExpr != null
+        && (maybeInheritsExpr.isEmpty() || NodeUtil.isExprAssign(maybeInheritsExpr))) {
+      // Skip empty nodes (e.g. those created by an unnecessary semicolon) and potential aliases,
+      // e.g. "exports = Ctor;" in a goog.module.
+      maybeInheritsExpr = maybeInheritsExpr.getNext();
     }
+    Node baseClassNode = null;
+    if (maybeInheritsExpr != null && NodeUtil.isExprCall(maybeInheritsExpr)) {
+      Node callNode = maybeInheritsExpr.getFirstChild();
+      if (callNode.getFirstChild().matchesQualifiedName("goog.inherits")
+          && callNode.getLastChild().isQualifiedName()) {
+        baseClassNode = callNode.getLastChild();
+      }
+    }
+    return baseClassNode;
   }
 
   /**
@@ -553,7 +566,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   }
 
   /** Verify if goog.base call is used in a class */
-  private boolean baseUsedInClass(Node n){
+  private static boolean baseUsedInClass(Node n) {
     for (Node curr = n; curr != null; curr = curr.getParent()){
       if (curr.isClassMembers()) {
         return true;

@@ -362,6 +362,37 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testValidBase_exportsAssignmentsBeforeGoogInherits() {
+    test(
+        lines(
+            "goog.module('my.Foo');",
+            "class Bar {}",
+            "function Foo() { Foo.base(this, 'constructor', 1, 2); }",
+            "exports.Foo = Foo;",
+            "exports.Bar = Bar;",
+            FOO_INHERITS),
+        lines(
+            "goog.module('my.Foo');",
+            "class Bar {}",
+            "function Foo() { BaseFoo.call(this, 1, 2); }",
+            "exports.Foo = Foo;",
+            "exports.Bar = Bar;",
+            FOO_INHERITS));
+  }
+
+  @Test
+  public void testInvalidBase_nonAliasLinesBeforeGoogInherits() {
+    testSame(
+        lines(
+            "goog.module('my.Foo');",
+            "function Foo() { Foo.base(this, 'constructor', 1, 2); }",
+            "alert(0);",
+            "alert(1);",
+            "alert(2);",
+            FOO_INHERITS));
+  }
+
+  @Test
   public void testDefineCases() {
     String jsdoc = "/** @define {number} */\n";
     test(jsdoc + "var name = goog.define('name', 1);", jsdoc + "var name = 1");
