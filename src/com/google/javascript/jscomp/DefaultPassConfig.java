@@ -414,10 +414,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.shouldRewriteModulesAfterTypechecking()) {
       addModuleRewritingPasses(checks, options);
-      checks.add(closureProvidesRequires);
+      if (options.closurePass) {
+        checks.add(closureProvidesRequires);
+      }
     }
-
-
 
     // CheckSuspiciousCode requires type information, so must run after the type checker.
     if (options.checkSuspiciousCode
