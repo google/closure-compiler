@@ -57,8 +57,8 @@ import java.util.Set;
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
  *   <li>Rewrite body of arrow function as a block.
- *   <li>Take var statements out from for-loop initializer.
- *       This: for(var a = 0;a<0;a++) {} becomes: var a = 0; for(var a;a<0;a++) {}
+ *   <li>Take var statements out from for-loop initializer. This: for(var a = 0;a<0;a++) {} becomes:
+ *       var a = 0; for(a;a<0;a++) {}
  * </ol>
  */
 class Normalize implements CompilerPass {
