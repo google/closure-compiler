@@ -51,12 +51,12 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -96,6 +96,8 @@ import javax.annotation.Nullable;
  *
  */
 public class JSTypeRegistry implements Serializable {
+  private static final Splitter DOT_SPLITTER = Splitter.on('.');
+
   /**
    * The template variable corresponding to the KEY type in {@code IObject<KEY, VALUE>}
    * (plus the builtin Javascript Object).
@@ -819,28 +821,105 @@ public class JSTypeRegistry implements Serializable {
     if (resolvedViaTable != null) {
       return resolvedViaTable;
     }
-    return resolveViaProperties(declarationScope, name);
+    return resolveViaComponents(declarationScope, name);
+  }
+
+  private JSType resolveViaComponents(StaticScope scope, String qualifiedName) {
+    if (qualifiedName.isEmpty() || !(scope instanceof StaticTypedScope)) {
+      return null;
+    }
+    StaticTypedScope resolutionScope = (StaticTypedScope) scope;
+    // Skip closure namespace resolution of types whose root component is defined in a local scope
+    // (not a global scope). Those will follow the normal resolution scheme. (For legacy
+    // compatibility reasons we don't check for global names that are the same as the module root).
+    if (!isNameDefinedLocally(resolutionScope, getRootElementOfName(qualifiedName))) {
+      JSType resolvedViaClosureNamespace = resolveViaClosureNamespace(qualifiedName);
+      if (resolvedViaClosureNamespace != null) {
+        return resolvedViaClosureNamespace;
+      }
+    }
+    return resolveViaProperties(resolutionScope, qualifiedName);
+  }
+
+  private static boolean isNameDefinedLocally(StaticTypedScope resolutionScope, String reference) {
+    StaticTypedSlot slot = resolutionScope.getSlot(reference);
+    return slot != null && slot.getScope() != null && slot.getScope().getParentScope() != null;
+  }
+
+  /**
+   * Resolves a named type by checking for the longest prefix that matches some Closure namespace,
+   * if any, then attempting to resolve via properties based on the type of the `exports` object in
+   * that namespace.
+   */
+  private JSType resolveViaClosureNamespace(String reference) {
+    // Find the `exports` type of the longest prefix match of this namespace, if any. Then resolve
+    // it via property.
+    String prefix = reference;
+    ImmutableList.Builder<String> unusedComponents = ImmutableList.builder();
+    while (true) {
+      ModuleSlot module = this.getModuleSlot(prefix);
+      if (module != null) {
+        if (module.isLegacyModule()) {
+          // Try to resolve this name via registry or properties.
+          return null;
+        } else {
+          // Always stop resolution here whether successful or not, instead of continuing with
+          // resolution via registry or via properties, to match legacy behavior.
+          return resolveViaPropertyGivenSlot(
+              module.type(), module.definitionNode(), unusedComponents.build().reverse());
+        }
+      }
+
+      int lastDot = prefix.lastIndexOf(".");
+      if (lastDot < 0) {
+        return null;
+      }
+
+      String postfix = prefix.substring(lastDot + 1);
+      unusedComponents.add(postfix);
+      prefix = prefix.substring(0, lastDot);
+    }
   }
 
   @Nullable
-  private JSType resolveViaProperties(StaticScope declarationScope, String qualifiedName) {
+  private JSType resolveViaProperties(StaticTypedScope declarationScope, String qualifiedName) {
     checkNotNull(qualifiedName);
-    if (qualifiedName.isEmpty() || !(declarationScope instanceof StaticTypedScope)) {
-      return null;
-    }
-    StaticTypedScope typedDeclarationScope = (StaticTypedScope) declarationScope;
-    List<String> componentNames = checkNotNull(Splitter.on('.').splitToList(qualifiedName));
-    StaticTypedSlot slot = typedDeclarationScope.getOwnSlot(componentNames.get(0));
+    checkArgument(!qualifiedName.isEmpty());
+    String rootName = getRootElementOfName(qualifiedName);
+    StaticTypedSlot slot = declarationScope.getOwnSlot(rootName);
     if (slot == null) {
       return null;
     }
+    List<String> componentNames =
+        ImmutableList.copyOf(Iterables.skip(DOT_SPLITTER.split(qualifiedName), 1));
     JSType slotType = slot.getType();
+    return resolveViaPropertyGivenSlot(slotType, null, componentNames);
+  }
+
+  /**
+   * Resolve a type using a given StaticTypedSlot and list of properties on that type.
+   *
+   * @param slotType the JSType of the slot, possibly null
+   * @param definitionNode If known, the Node representing the type definition.
+   */
+  private JSType resolveViaPropertyGivenSlot(
+      JSType slotType, Node definitionNode, List<String> componentNames) {
+    if (componentNames.isEmpty()) {
+      JSType typedefType = resolveTypeFromNodeIfTypedef(definitionNode);
+      if (typedefType != null) {
+        return typedefType;
+      }
+    }
+
+    // If the first component has a type of 'Unknown', then any type
+    // names using it should be regarded as silently 'Unknown' rather than be
+    // noisy about it.
     if (slotType == null || slotType.isAllType() || slotType.isNoType()) {
       return null;
     }
 
     // resolving component by component
-    for (int i = 1; i < componentNames.size(); i++) {
+    for (int i = 0; i < componentNames.size(); i++) {
       String component = componentNames.get(i);
       ObjectType parentObj = ObjectType.cast(slotType);
       if (parentObj == null || component.isEmpty() || !parentObj.hasOwnProperty(component)) {
@@ -1432,7 +1511,7 @@ public class JSTypeRegistry implements Serializable {
     if (thisType != null) {
       type = thisType.getTemplateTypeMap().getTemplateTypeKeyByName(jsTypeName);
       if (type != null) {
-        Preconditions.checkState(type.isTemplateType(), "expected:%s", type);
+        checkState(type.isTemplateType(), "expected:%s", type);
         return type;
       }
     }

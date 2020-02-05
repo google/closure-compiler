@@ -32,6 +32,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     CompilerOptions options = super.getDefaultOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setWarningLevel(DiagnosticGroups.TOO_MANY_TYPE_PARAMS, CheckLevel.WARNING);
     return options;
   }
 
@@ -2472,29 +2473,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassTooManyTypeParameters() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "class Foo {}", //
             "var /** !Foo<number> */ x = new Foo();",
-            "var /** !Foo<string> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
   public void testClassWithTemplatizedConstructorTooManyTypeParameters() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "class Foo {",
             "  /** @template T */ constructor() {}",
             "}", //
             "var /** !Foo<number> */ x = new Foo();",
-            "var /** !Foo<string> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
   public void testClassWithTemplatizedClassAndConstructorTooManyTypeParameters() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "/** @template T */",
@@ -2502,7 +2502,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @template U */ constructor() {}",
             "}", //
             "var /** !Foo<number, number> */ x = new Foo();",
-            "var /** !Foo<number, string> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
@@ -3265,7 +3266,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassConstructorTypeParametersNotIncludedOnClass() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "/** @template T */",
@@ -3274,7 +3274,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  constructor() {}",
             "}",
             "var /** !Foo<string, string> */ x = new Foo();",
-            "var /** !Foo<string, number> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
@@ -7004,6 +7005,22 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "actual parameter 1 of takesString does not match formal parameter",
             "found   : number",
             "required: string"));
+  }
+
+  @Test
+  public void testJsdocCanReferToGoogModuleType_withoutNamedType() {
+    testTypes(
+        lines(
+            CLOSURE_DEFS,
+            "goog.loadModule(function(exports) {",
+            "  goog.module('a');",
+            "  exports.Foo = class {};",
+            "  return exports;",
+            "});",
+            "/** @type {!a.Foo<number>} */",
+            "let x;",
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
