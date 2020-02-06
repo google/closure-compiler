@@ -500,43 +500,46 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @GwtIncompatible("Unnecessary")
   public static List<SourceFile> getBuiltinExterns(CompilerOptions.Environment env)
       throws IOException {
-    InputStream input = AbstractCommandLineRunner.class.getResourceAsStream(
-        "/externs.zip");
+    try (InputStream input = getExternsInput()) {
+      ZipInputStream zip = new ZipInputStream(input);
+      String envPrefix = Ascii.toLowerCase(env.toString()) + "/";
+      Map<String, SourceFile> mapFromExternsZip = new HashMap<>();
+      for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
+        String filename = entry.getName();
+
+        // Always load externs in the root folder.
+        // If the non-core-JS externs are organized in subfolders, only load
+        // the ones in a subfolder matching the specified environment. Strip the subfolder.
+        if (filename.contains("/")) {
+          if (!filename.startsWith(envPrefix)) {
+            continue;
+          }
+          filename = filename.substring(envPrefix.length()); // remove envPrefix, including '/'
+        }
+
+        BufferedInputStream entryStream =
+            new BufferedInputStream(ByteStreams.limit(zip, entry.getSize()));
+        mapFromExternsZip.put(
+            filename,
+            SourceFile.fromInputStream(
+                // Give the files an odd prefix, so that they do not conflict
+                // with the user's files.
+                "externs.zip//" + filename, entryStream, UTF_8));
+      }
+      return DefaultExterns.prepareExterns(env, mapFromExternsZip);
+    }
+  }
+
+  @GwtIncompatible("Unnecessary")
+  private static InputStream getExternsInput() {
+    InputStream input = AbstractCommandLineRunner.class.getResourceAsStream("/externs.zip");
     if (input == null) {
       // In some environments, the externs.zip is relative to this class.
       input = AbstractCommandLineRunner.class.getResourceAsStream("externs.zip");
     }
     checkNotNull(input);
-
-    ZipInputStream zip = new ZipInputStream(input);
-    String envPrefix = Ascii.toLowerCase(env.toString()) + "/";
-    Map<String, SourceFile> mapFromExternsZip = new HashMap<>();
-    for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
-      String filename = entry.getName();
-
-      // Always load externs in the root folder.
-      // If the non-core-JS externs are organized in subfolders, only load
-      // the ones in a subfolder matching the specified environment. Strip the subfolder.
-      if (filename.contains("/")) {
-        if (!filename.startsWith(envPrefix)) {
-          continue;
-        }
-        filename = filename.substring(envPrefix.length());  // remove envPrefix, including '/'
-      }
-
-      BufferedInputStream entryStream = new BufferedInputStream(
-          ByteStreams.limit(zip, entry.getSize()));
-      mapFromExternsZip.put(filename,
-          SourceFile.fromInputStream(
-              // Give the files an odd prefix, so that they do not conflict
-              // with the user's files.
-              "externs.zip//" + filename,
-              entryStream,
-              UTF_8));
-    }
-
-    return DefaultExterns.prepareExterns(env, mapFromExternsZip);
- }
+    return input;
+  }
 
   /** Runs the Compiler and calls System.exit() with the exit status of the compiler. */
   @GwtIncompatible("Unnecessary")
