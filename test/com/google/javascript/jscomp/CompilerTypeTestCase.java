@@ -77,6 +77,7 @@ abstract class CompilerTypeTestCase {
           "goog.array.filter = function(arr, f, obj){ return []; };",
           "goog.asserts = {};",
           "/** @return {*} */ goog.asserts.assert = function(x) { return x; };",
+          "goog.provide = function(ns) {};",
           "goog.module = function(ns) {};",
           "/** @return {?} */",
           "goog.module.get = function(ns) {};",
