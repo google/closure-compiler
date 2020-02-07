@@ -979,6 +979,12 @@ CSSProperties.prototype.azimuth;
 
 /**
  * @type {string}
+ * @see https://drafts.fxtf.org/filter-effects-2/#BackdropFilterProperty
+ */
+CSSProperties.prototype.backdropFilter;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-background
  */
 CSSProperties.prototype.background;
