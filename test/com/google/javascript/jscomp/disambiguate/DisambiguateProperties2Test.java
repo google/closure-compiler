@@ -570,33 +570,22 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void propertiesAreInvalidated_byObjectLiteralTypes() {
-    // TODO(b/144063288): Object literal properties should be eligible for disambiguation.
+  public void propertiesAreDisambiguated_onObjectLiteralTypes() {
     test(
         srcs(
             lines(
-                "class Foo0 {",
-                "  ab() { }",
-                "  xy() { }",
-                "}",
-                "class Foo1 {",
-                "  ab() { }",
-                "  xy() { }",
-                "}",
+                "const z = {ab: 0};", //
                 "",
-                "const z = { ab: 0 };")),
+                "class Other {",
+                "  ab() { }",
+                "}")),
         expected(
             lines(
-                "class Foo0 {",
-                "  ab() { }",
-                "  JSC$1_xy() { }",
-                "}",
-                "class Foo1 {",
-                "  ab() { }",
-                "  JSC$2_xy() { }",
-                "}",
+                "const z = {JSC$1_ab: 0};", //
                 "",
-                "const z = { ab: 0 };")));
+                "class Other {",
+                "  JSC$2_ab() { }",
+                "}")));
   }
 
   @Test

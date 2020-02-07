@@ -40,10 +40,13 @@ public final class InvalidatingTypes {
   /** Whether to allow types like 'str'.toString() */
   private final boolean allowScalars;
 
+  private final boolean allowObjectLiteralTypes;
+
   private InvalidatingTypes(Builder builder, ImmutableSet<JSType> types) {
     this.types = types;
     this.allowEnums = builder.allowEnums;
     this.allowScalars = builder.allowScalars;
+    this.allowObjectLiteralTypes = builder.allowObjectLiteralTypes;
   }
 
   public boolean isInvalidating(JSType type) {
@@ -72,9 +75,17 @@ public final class InvalidatingTypes {
 
     return types.contains(objType)
         // Don't disambiguate properties on object literals, e.g. var obj = {a: 'a', b: 'b'};
-        || objType.isAmbiguousObject()
+        || this.isInvalidatingDueToAmbiguity(objType)
         || (!allowEnums && objType.isEnumType())
         || (!allowScalars && objType.isBoxableScalar());
+  }
+
+  private boolean isInvalidatingDueToAmbiguity(ObjectType type) {
+    if (this.allowObjectLiteralTypes && type.isLiteralObject()) {
+      return false;
+    }
+
+    return type.isAmbiguousObject();
   }
 
   /** Builder */
@@ -87,6 +98,7 @@ public final class InvalidatingTypes {
     private boolean allowScalars = false;
     private boolean allowGlobalThis = true;
     private boolean allowTypesInvalidForRenaming = true;
+    private boolean allowObjectLiteralTypes = false;
 
     private boolean alsoInvalidateRelatedTypes = true;
 
@@ -158,6 +170,11 @@ public final class InvalidatingTypes {
 
     public Builder setAlsoInvalidateRelatedTypes(boolean x) {
       this.alsoInvalidateRelatedTypes = x;
+      return this;
+    }
+
+    public Builder setAllowObjectLiteralTypes(boolean x) {
+      this.allowObjectLiteralTypes = x;
       return this;
     }
 
