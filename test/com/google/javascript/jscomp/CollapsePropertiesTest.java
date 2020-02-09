@@ -1316,18 +1316,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // Note: Google's JavaScript Style Guide says to avoid using the 'this'
     // keyword in a static function.
     test(
-        "var a = {}; a.b = function() {this.c}; var d = 1; d = a.b;",
-        "var a$b = function() {this.c}; var d = 1; d = a$b;",
+        "var a = {}; a.b = function() {this.c};",
+        "var a$b = function() {this.c}; ",
         warning(CollapseProperties.UNSAFE_THIS));
   }
 
   @Test
   public void testStaticFunctionReferencingThis2() {
-    // This gives no warning, because "this" is in a scope whose name is not
+    // This gives no warning, because `this` is in a scope whose name is not
     // getting collapsed.
-    test("var a = {}; "
-         + "a.b = function() { return function(){ return this; }; };",
-         "var a$b = function() { return function(){ return this; }; };");
+    test(
+        "var a = {}; a.b = function() { return function(){ return this; }; };",
+        "var a$b = function() { return function(){ return this; }; };");
+
+    // This gives no warning, because `this` is in a scope whose name is not
+    // getting collapsed.
+    testNoWarning("var a = {}; var b = function() { this.c;}; a.b=b;");
   }
 
   @Test
