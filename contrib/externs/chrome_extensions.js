@@ -4193,6 +4193,15 @@ chrome.management.setLaunchType = function(id, launchType, opt_callback) {};
 chrome.management.generateAppForLink = function(url, title, opt_callback) {};
 
 
+
+/**
+ * Event whose listeners take an ExtensionInfo parameter.
+ * @interface
+ * @extends {ChromeBaseEvent<function(!ExtensionInfo)>}
+ */
+function ChromeExtensionInfoEvent() {};
+
+
 /** @type {!ChromeExtensionInfoEvent} */
 chrome.management.onInstalled;
 
@@ -7384,15 +7393,6 @@ ChromeWindow.prototype.state;
 
 /** @type {boolean} */
 ChromeWindow.prototype.alwaysOnTop;
-
-
-
-/**
- * Event whose listeners take an ExtensionInfo parameter.
- * @interface
- * @extends {ChromeBaseEvent<function(!ExtensionInfo)>}
- */
-function ChromeExtensionInfoEvent() {}
 
 
 /**
