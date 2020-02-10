@@ -153,7 +153,6 @@ public class DiagnosticGroups {
           + "unknownDefines, "
           + "unusedLocalVariables, "
           + "unusedPrivateMembers, "
-          + "useOfGoogBase, "
           + "uselessCode, "
           + "untranspilableFeatures,"
           + "visibility";
@@ -625,11 +624,6 @@ public class DiagnosticGroups {
           ANALYZER_CHECKS_INTERNAL,
           UNUSED_PRIVATE_PROPERTY,
           MISSING_CONST_PROPERTY);
-
-  // TODO(b/147919263): delete this group after cleaning up usages
-  @Deprecated
-  public static final DiagnosticGroup USE_OF_GOOG_BASE =
-      DiagnosticGroups.registerDeprecatedGroup("useOfGoogBase");
 
   public static final DiagnosticGroup CLOSURE_DEP_METHOD_USAGE_CHECKS =
       DiagnosticGroups.registerGroup(
