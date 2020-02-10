@@ -936,8 +936,7 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Perform AST normalization before running the test pass, and anti-normalize
-   * after running it.
+   * Perform AST normalization before running the test pass
    *
    * @see Normalize
    */
