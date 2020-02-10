@@ -203,7 +203,7 @@ function IteratorIterable() {}
 
 /**
  * @interface
- * @template KEY1, VALUE1
+ * @template IOBJECT_KEY, IOBJECT_VALUE
  */
 function IObject() {}
 

@@ -99,17 +99,18 @@ public class JSTypeRegistry implements Serializable {
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
   /**
-   * The template variable corresponding to the KEY type in {@code IObject<KEY, VALUE>}
-   * (plus the builtin Javascript Object).
+   * The template variable in {@code IObject<IOBJECT_KEY, IOBJECT_VALUE>} (plus the builtin
+   * Javascript Object).
    */
   private TemplateType iObjectIndexTemplateKey;
 
   /**
-   * The template variable corresponding to the VALUE type in {@code IObject<KEY, VALUE>}
-   * (plus the builtin Javascript Object).
+   * The template variable in {@code IObject<IOBJECT_KEY, IOBJECT_VALUE>} (plus the builtin
+   * Javascript Object).
    */
   private TemplateType iObjectElementTemplateKey;
-  private static final String I_OBJECT_ELEMENT_TEMPLATE = "IObject#VALUE";
+
+  private static final String I_OBJECT_ELEMENT_TEMPLATE = "IOBJECT_VALUE";
 
   /** The template variable corresponding to the VALUE type in {@code Iterable<VALUE>} */
   private TemplateType iterableTemplate;
@@ -363,7 +364,7 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.ALL_TYPE, allType);
 
     // Template Types
-    iObjectIndexTemplateKey = new TemplateType(this, "IObject#KEY1");
+    iObjectIndexTemplateKey = new TemplateType(this, "IOBJECT_KEY");
     iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
     // These should match the template type name in externs files.
     TemplateType iArrayLikeTemplate = new TemplateType(this, "VALUE2");
