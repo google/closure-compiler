@@ -64,15 +64,6 @@ public final class AstValidator implements CompilerPass {
     this.isScriptFeatureValidationEnabled = validateScriptFeatures;
   }
 
-  /**
-   * Deprecated - use the three-argument constructor instead to specify validateScriptFeatures.
-   * TODO(lharker): remove this constructor after the next external release.
-   */
-  @Deprecated
-  public AstValidator(AbstractCompiler compiler, ViolationHandler handler) {
-    this(compiler, handler, false);
-  }
-
   public AstValidator(AbstractCompiler compiler) {
     this(compiler, /* validateScriptFeatures= */ false);
   }
