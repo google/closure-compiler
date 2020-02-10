@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.disambiguate;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,6 +32,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -154,10 +156,12 @@ public final class TypeFlattenerTest {
 
     JSType numberOrStringType =
         this.registry.createUnionType(JSTypeNative.STRING_TYPE, JSTypeNative.NUMBER_TYPE);
-
     JSType numberOrStringObjectType =
         this.registry.createUnionType(
-            JSTypeNative.STRING_OBJECT_TYPE, JSTypeNative.NUMBER_OBJECT_TYPE);
+            JSTypeNative.NUMBER_OBJECT_TYPE, JSTypeNative.STRING_OBJECT_TYPE);
+
+    FlatType flatNumberObject = flattener.flatten(JSTypeNative.NUMBER_OBJECT_TYPE);
+    FlatType flatStringObject = flattener.flatten(JSTypeNative.STRING_OBJECT_TYPE);
     FlatType flatNumberOrStringObject = flattener.flatten(numberOrStringObjectType);
 
     // Given
@@ -165,7 +169,8 @@ public final class TypeFlattenerTest {
 
     // Then
     assertThat(flatNumberOrString).isSameInstanceAs(flatNumberOrStringObject);
-    assertThat(flatNumberOrString.getType()).isEqualTo(numberOrStringObjectType);
+    assertThat(flatNumberOrString.getTypeUnion())
+        .containsExactly(flatNumberObject, flatStringObject);
   }
 
   @Test
@@ -184,6 +189,29 @@ public final class TypeFlattenerTest {
 
     // Then
     assertThat(flatNullOrVoidOrNumber).isSameInstanceAs(flatNumber);
+  }
+
+  @Test
+  public void unionTypes_whenFlattened_toSingleElement_hasSingleArity() {
+    // Given
+    TypeFlattener flattener = this.createFlattener(null);
+
+    TemplateType aKey = this.registry.createTemplateType("A");
+    TemplateType bKey = this.registry.createTemplateType("B");
+    ObjectType rawArray = this.registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE);
+
+    JSType arrayOfAOrArrayOfB =
+        this.registry.createUnionType(
+            this.registry.createTemplatizedType(rawArray, aKey),
+            this.registry.createTemplatizedType(rawArray, bKey));
+    assertThat(arrayOfAOrArrayOfB.getUnionMembers()).hasSize(2);
+
+    // When
+    FlatType flatArray = flattener.flatten(arrayOfAOrArrayOfB);
+
+    // Then
+    assertThat(flatArray.getArity()).isEqualTo(FlatType.Arity.SINGLE);
+    assertType(flatArray.getTypeSingle()).isEqualTo(rawArray);
   }
 
   @Test
@@ -325,7 +353,7 @@ public final class TypeFlattenerTest {
 
   private final Correspondence<FlatType, JSTypeNative> isBoxingTypeFor =
       Correspondence.transforming(
-          FlatType::getType,
+          (f) -> f.getTypeSingle(),
           (n) -> this.registry.getNativeType(n).autobox(),
           "is a boxing object type for");
 

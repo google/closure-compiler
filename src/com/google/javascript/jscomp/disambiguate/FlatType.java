@@ -21,9 +21,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.LinkedHashSet;
+import javax.annotation.Nullable;
 
 /**
  * A struct representing a {@link JSType} "flattened" for use in disambiguation.
@@ -38,7 +40,24 @@ import java.util.LinkedHashSet;
  */
 final class FlatType {
 
-  private final JSType type;
+  /**
+   * The structure of the type wrapped by this {@link FlatType}.
+   *
+   * <p>Each {@link FlatType} has exactly one of its {@code type} fields populated, as indicated by
+   * its {@code arity}.
+   *
+   * <p>Types have a recursive structure. Particularly for unions, this can make it hard to
+   * express/confirm that they have been flattened "all the way down". Storing unions and other
+   * types with different datatypes makes this easier.
+   */
+  enum Arity {
+    SINGLE,
+    UNION;
+  }
+
+  private final Arity arity;
+  @Nullable private final JSType typeSingle;
+  @Nullable private final ImmutableSet<FlatType> typeUnion;
 
   private final int id;
 
@@ -46,36 +65,66 @@ final class FlatType {
 
   private boolean invalidating = false;
 
-  @VisibleForTesting
-  static FlatType createForTesting(int id) {
-    checkArgument(id < 0);
-    return new FlatType(id);
-  }
+  static FlatType createForSingle(JSType single, int id) {
+    checkNotNull(single);
+    checkArgument(!single.isNullType());
+    checkArgument(!single.isVoidType());
+    checkArgument(!single.isNoType());
+    checkArgument(!single.isUnknownType());
+    checkArgument(!single.isTemplatizedType());
+    checkArgument(!single.isUnionType());
 
-  FlatType(JSType type, int id) {
     checkArgument(id >= 0);
 
-    checkNotNull(type);
-    checkArgument(!type.isNullType());
-    checkArgument(!type.isVoidType());
-    checkArgument(!type.isNoType());
-    checkArgument(!type.isUnknownType());
-    checkArgument(!type.isTemplatizedType());
-
-    this.type = type;
-    this.id = id;
+    return new FlatType(single, id);
   }
 
-  /** Test only. */
-  private FlatType(int id) {
-    checkArgument(id < 0); // Test instances have negative IDs.
+  static FlatType createForUnion(ImmutableSet<FlatType> union, int id) {
+    checkArgument(union.size() > 1);
+    for (FlatType alt : union) {
+      checkArgument(alt.hasArity(Arity.SINGLE));
+    }
 
-    this.type = null;
-    this.id = id;
+    checkArgument(id >= 0);
+
+    return new FlatType(union, id);
   }
 
-  JSType getType() {
-    return this.type;
+  @VisibleForTesting
+  static FlatType createForTesting(int id) {
+    checkArgument(id < 0); // All test types have negative ids to differentiate them.
+
+    return new FlatType((JSType) null, id);
+  }
+
+  private FlatType(JSType single, int id) {
+    this.id = id;
+    this.arity = Arity.SINGLE;
+    this.typeUnion = null;
+    this.typeSingle = single;
+  }
+
+  private FlatType(ImmutableSet<FlatType> union, int id) {
+    this.id = id;
+    this.arity = Arity.UNION;
+    this.typeUnion = union;
+    this.typeSingle = null;
+  }
+
+  Arity getArity() {
+    return this.arity;
+  }
+
+  boolean hasArity(Arity x) {
+    return this.arity.equals(x);
+  }
+
+  JSType getTypeSingle() {
+    return checkNotNull(this.typeSingle);
+  }
+
+  ImmutableSet<FlatType> getTypeUnion() {
+    return checkNotNull(this.typeUnion);
   }
 
   /**
@@ -111,7 +160,8 @@ final class FlatType {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("id", this.id)
-        .add("type", this.type)
+        .add("type_single", this.typeSingle)
+        .add("type_union", this.typeUnion)
         .toString();
   }
 }

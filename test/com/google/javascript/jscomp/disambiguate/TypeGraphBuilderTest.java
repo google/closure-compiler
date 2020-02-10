@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeRea
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.ENUM_ELEMENT;
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.INTERFACE;
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.PROTOTYPE;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
@@ -580,9 +581,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
     ImmutableTable.Builder<String, String, EdgeReason> table = ImmutableTable.builder();
     for (DiGraphEdge<FlatType, Object> edge : this.result.getEdges()) {
       table.put(
-          edge.getSource().getValue().getType().toString(),
-          edge.getDestination().getValue().getType().toString(),
-          (EdgeReason) edge.getValue());
+          nameOf(edge.getSource()), nameOf(edge.getDestination()), (EdgeReason) edge.getValue());
     }
     return assertThat(table.build());
   }
@@ -590,9 +589,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   private MultimapSubject assertThatResultAsMultimap() {
     ImmutableMultimap.Builder<String, String> multimap = ImmutableMultimap.builder();
     for (DiGraphEdge<FlatType, Object> edge : this.result.getEdges()) {
-      multimap.put(
-          edge.getSource().getValue().getType().toString(),
-          edge.getDestination().getValue().getType().toString());
+      multimap.put(nameOf(edge.getSource()), nameOf(edge.getDestination()));
     }
     return assertThat(multimap.build());
   }
@@ -649,7 +646,18 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   }
 
   private static String nameOf(FlatType flat) {
-    return flat.getType().toString();
+    switch (flat.getArity()) {
+      case SINGLE:
+        return flat.getTypeSingle().toString();
+      case UNION:
+        return "("
+            + flat.getTypeUnion().stream()
+                .map((f) -> f.getTypeSingle().toString())
+                .sorted()
+                .collect(joining("|"))
+            + ")";
+    }
+    throw new AssertionError();
   }
 
   private static final Correspondence<DiGraphNode<FlatType, Object>, String> NODE_HAS_TYPENAME =

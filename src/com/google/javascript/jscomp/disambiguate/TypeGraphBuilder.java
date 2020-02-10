@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
@@ -30,9 +29,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 
-/** Builds a graph of the type-system given from a specified set of seed types. */
+/** Builds a graph of the type-system from a specified set of seed types. */
 final class TypeGraphBuilder {
 
   /**
@@ -107,32 +105,22 @@ final class TypeGraphBuilder {
    */
   private void connectUnionWithAncestors(LinkedDiGraphNode<FlatType, Object> unionNode) {
     FlatType flatUnion = unionNode.getValue();
-    if (!flatUnion.getType().isUnionType()) {
+    if (!flatUnion.hasArity(FlatType.Arity.UNION)) {
       return;
     }
-
-    checkState(unionNode.getInEdges().isEmpty());
-    checkState(!unionNode.getOutEdges().isEmpty());
-
-    LinkedHashSet<FlatType> flatAlts = new LinkedHashSet<>();
-    for (JSType alt : flatUnion.getType().getUnionMembers()) {
-      flatAlts.add(checkNotNull(this.flattener.flatten(alt)));
-    }
-    checkState(flatAlts.size() >= 2);
 
     /**
      * Connect the LCAs to the union.
      *
-     * <p>The union itself will be found in every case, but since we don't add self-edges, that
+     * <p>The union itself will be found in most cases, but since we don't add self-edges, that
      * won't matter.
      *
      * <p>Some of these edges may pollute the "lattice-ness" of the graph, but all the invariants we
      * actually care about will be maintained. If disambiguation is too slow and stricter invariants
      * would help, we could be more carful.
      */
-    ImmutableSet<FlatType> lcas = this.lcaFinder.findAll(flatAlts);
-    checkState(lcas.size() > 1 && lcas.contains(flatUnion), "%s to %s", flatUnion, lcas);
-    for (FlatType lca : lcas) {
+    checkState(!unionNode.getOutEdges().isEmpty());
+    for (FlatType lca : this.lcaFinder.findAll(flatUnion.getTypeUnion())) {
       this.connectSourceToDest(
           checkNotNull(this.typeHoldsInstanceGraph.getNode(lca)), EdgeReason.ALGEBRAIC, unionNode);
     }
@@ -151,22 +139,22 @@ final class TypeGraphBuilder {
     }
     flatNode = this.typeHoldsInstanceGraph.createNode(flat);
 
-    if (flat.getType().isUnionType()) {
-      for (JSType alt : flat.getType().getUnionMembers()) {
+    if (flat.hasArity(FlatType.Arity.UNION)) {
+      for (FlatType alt : flat.getTypeUnion()) {
         this.connectSourceToDest(flatNode, EdgeReason.ALGEBRAIC, this.addInternal(alt));
       }
       return flatNode;
     }
 
-    if (flat.getType().isEnumElementType()) {
+    if (flat.getTypeSingle().isEnumElementType()) {
       LinkedDiGraphNode<FlatType, Object> elementNode =
-          this.addInternal(flat.getType().getEnumeratedTypeOfEnumElement());
+          this.addInternal(flat.getTypeSingle().getEnumeratedTypeOfEnumElement());
       this.connectSourceToDest(elementNode, EdgeReason.ENUM_ELEMENT, flatNode);
       return flatNode;
     }
 
-    if (flat.getType().isObjectType()) {
-      ObjectType flatObjectType = flat.getType().toMaybeObjectType();
+    if (flat.getTypeSingle().isObjectType()) {
+      ObjectType flatObjectType = flat.getTypeSingle().toMaybeObjectType();
 
       for (ObjectType ifaceType : ownAncestorInterfacesOf(flatObjectType)) {
         this.connectSourceToDest(this.addInternal(ifaceType), EdgeReason.INTERFACE, flatNode);

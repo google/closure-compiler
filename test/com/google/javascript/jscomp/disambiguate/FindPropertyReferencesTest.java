@@ -66,7 +66,6 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
   private final Compiler compiler = new Compiler();
   private final JSTypeRegistry registry = this.compiler.getTypeRegistry();
-  private final JSType customType = this.registry.createObjectType("$$$", null);
 
   private CompilerPass processor;
   private ImmutableSet<FlatType> expectedExternTypes = ImmutableSet.of();
@@ -483,7 +482,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
   }
 
   private FlatType createFlatType() {
-    return new FlatType(this.customType, 1);
+    return FlatType.createForTesting(-1);
   }
 
   private Map<String, PropertyClustering> collectProperties(

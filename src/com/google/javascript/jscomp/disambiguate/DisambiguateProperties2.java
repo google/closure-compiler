@@ -168,8 +168,9 @@ public final class DisambiguateProperties2 implements CompilerPass {
       FlatType t = n.getValue();
 
       this.id = t.getId();
+      this.name =
+          (t.hasArity(FlatType.Arity.SINGLE) ? t.getTypeSingle() : t.getTypeUnion()).toString();
       this.invalidating = t.isInvalidating();
-      this.name = t.getType().toString();
       this.edges =
           n.getOutEdges().stream()
               .map(TypeEdgeJson::new)
@@ -178,6 +179,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
           t.getAssociatedProps().stream()
               .map(PropertyClustering::getName)
               .collect(toImmutableSortedSet(naturalOrder()));
+
     }
   }
 

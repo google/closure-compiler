@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.disambiguate;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -31,7 +33,8 @@ class TypeFlattener {
   private final JSTypeRegistry registry;
   private final Predicate<JSType> isInvalidating;
 
-  private final LinkedHashMap<JSType, FlatType> typeIndex = new LinkedHashMap<>();
+  private final LinkedHashMap</* JSType|ImmutableSet<FlatType> */ Object, FlatType> typeIndex =
+      new LinkedHashMap<>();
 
   private final JSType topType;
 
@@ -49,15 +52,26 @@ class TypeFlattener {
    * results are cached.
    */
   public FlatType flatten(@Nullable JSType type) {
-    FlatType flat =
-        this.typeIndex.computeIfAbsent(
-            this.flattenInternal(type), (t) -> new FlatType(t, this.typeIndex.size()));
+    Object key = this.flattenInternal(type);
+    FlatType flat = this.typeIndex.computeIfAbsent(key, this::newFlatType);
 
     if (!flat.isInvalidating() && this.isInvalidating.test(type)) {
       flat.setInvalidating();
     }
 
     return flat;
+  }
+
+  @SuppressWarnings("unchecked")
+  private FlatType newFlatType(Object key) {
+    int id = this.typeIndex.size();
+    if (key instanceof JSType) {
+      return FlatType.createForSingle((JSType) key, id);
+    } else if (key instanceof ImmutableSet) {
+      return FlatType.createForUnion((ImmutableSet<FlatType>) key, id);
+    } else {
+      throw new AssertionError(key);
+    }
   }
 
   /** See {@link #flatten(JSType)}. */
@@ -69,7 +83,7 @@ class TypeFlattener {
     return ImmutableSet.copyOf(this.typeIndex.values());
   }
 
-  private JSType flattenInternal(JSType type) {
+  private Object flattenInternal(JSType type) {
     if (type == null) {
       return this.topType;
     }
@@ -114,14 +128,23 @@ class TypeFlattener {
        */
       return type.autobox();
     } else if (type.isUnionType()) {
-      UnionType.Builder union = UnionType.builder(this.registry);
-      for (JSType t : type.getUnionMembers()) {
-        FlatType flat = this.flatten(t);
-        union.addAlternate(flat.getType());
-      }
-      return union.build();
+      return this.flattenUnionInternal(type.toMaybeUnionType());
     } else {
       return type;
+    }
+  }
+
+  private Object flattenUnionInternal(UnionType union) {
+    ImmutableSet<FlatType> flatUnion =
+        union.getAlternates().stream().map(this::flatten).collect(toImmutableSet());
+
+    switch (flatUnion.size()) {
+      case 0:
+        throw new AssertionError();
+      case 1:
+        return flatUnion.iterator().next().getTypeSingle();
+      default:
+        return flatUnion;
     }
   }
 }
