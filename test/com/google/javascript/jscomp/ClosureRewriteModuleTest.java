@@ -2179,8 +2179,24 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testDuplicateModuleDoesntCrash() {
-    // The compiler emits a warning elsewhere for this code
-    testError(new String[] {"goog.module('ns.a');", "goog.module('ns.a');"}, DUPLICATE_MODULE);
+    ignoreWarnings(DUPLICATE_MODULE, ILLEGAL_MODULE_RENAMING_CONFLICT);
+    test(
+        srcs("goog.module('ns.a');", "goog.module('ns.a');"),
+        expected(
+            "/** @const */ var module$exports$ns$a = {};",
+            "/** @const */ var module$exports$ns$a = {};"));
+  }
+
+  @Test
+  public void testDuplicateBundledModuleDoesntCrash() {
+    ignoreWarnings(DUPLICATE_MODULE, ILLEGAL_MODULE_RENAMING_CONFLICT);
+    String bundledModule =
+        "goog.loadModule(function(exports) { goog.module('ns.a'); return exports; });";
+    test(
+        srcs(bundledModule, bundledModule),
+        expected(
+            "/** @const */ var module$exports$ns$a = {};",
+            "/** @const */ var module$exports$ns$a = {};"));
   }
 
   @Test

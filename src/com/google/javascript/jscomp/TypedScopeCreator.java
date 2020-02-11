@@ -848,6 +848,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       finishDeclaringGoogModule();
     }
 
+    /**
+     * Declares goog.module.declareLegacyNamespace() names in the global scope and annotates the AST
+     * with type information about module exports.
+     */
     private void finishDeclaringGoogModule() {
       if (module == null || !module.metadata().isGoogModule()) {
         return;
@@ -891,13 +895,14 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
       // Store the type of the namespace on the AST for the convenience of later passes that want
       // to access it.
-      Node rootNode = module.metadata().rootNode();
-      if (rootNode.isScript()) {
-        Node moduleBody = rootNode.getFirstChild();
-        moduleBody.setJSType(exportsVar.getType());
+      Node rootNode = currentScope.getRootNode();
+      if (rootNode.isModuleBody()) {
+        rootNode.setJSType(exportsVar.getType());
       } else {
         // For goog.loadModule, give the `exports` parameter the correct type.
-        Node paramList = NodeUtil.getFunctionParameters(rootNode.getSecondChild());
+        checkState(rootNode.isBlock(), rootNode);
+        Node fn = rootNode.getParent();
+        Node paramList = NodeUtil.getFunctionParameters(fn);
         paramList.getOnlyChild().setJSType(exportsVar.getType());
       }
     }
