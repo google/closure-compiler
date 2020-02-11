@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
@@ -28,6 +29,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
+import java.util.ArrayList;
 import java.util.Collection;
 
 /** Builds a graph of the type-system from a specified set of seed types. */
@@ -41,6 +43,7 @@ final class TypeGraphBuilder {
   enum EdgeReason {
     ALGEBRAIC,
     ENUM_ELEMENT,
+    FORCED,
     INTERFACE,
     PROTOTYPE;
   }
@@ -70,6 +73,8 @@ final class TypeGraphBuilder {
   private LinkedDirectedGraph<FlatType, Object> typeHoldsInstanceGraph =
       LinkedDirectedGraph.createWithoutAnnotations();
 
+  private final ArrayList<TypeMismatch> deferredForcedEdges = new ArrayList<>();
+
   TypeGraphBuilder(
       TypeFlattener flattener,
       LowestCommonAncestorFinder.Factory<FlatType, Object> lcaFinderFactory) {
@@ -88,8 +93,30 @@ final class TypeGraphBuilder {
     flats.forEach(this::add);
   }
 
+  public void addForcedEdge(TypeMismatch mismatch) {
+    this.deferredForcedEdges.add(mismatch);
+
+    // The types on both sides of the edge need to be inserted immediately.
+    this.addInternal(mismatch.getFound());
+    this.addInternal(mismatch.getRequired());
+  }
+
   public LinkedDirectedGraph<FlatType, Object> build() {
     this.typeHoldsInstanceGraph.getNodes().forEach(this::connectUnionWithAncestors);
+
+    /**
+     * A reference of the "required" type was forced to hold an instance of the "found" type.
+     *
+     * <p>This is done after unions are inserted because we don't want forced edges to influence the
+     * LCAs of the unions' members. LCAs are being used to determine "what types could this union
+     * have safely been asigned to". Considering forced edges would be incorrect for that purpose.
+     */
+    for (TypeMismatch mismatch : this.deferredForcedEdges) {
+      this.connectSourceToDest(
+          this.addInternal(mismatch.getRequired()),
+          EdgeReason.FORCED,
+          this.addInternal(mismatch.getFound()));
+    }
 
     LinkedDirectedGraph<FlatType, Object> temp = this.typeHoldsInstanceGraph;
     this.typeHoldsInstanceGraph = null;

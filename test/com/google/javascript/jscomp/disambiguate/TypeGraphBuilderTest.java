@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.ALGEBRAIC;
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.ENUM_ELEMENT;
+import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.FORCED;
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.INTERFACE;
 import static com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason.PROTOTYPE;
 import static java.util.stream.Collectors.joining;
@@ -38,6 +39,7 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.disambiguate.TypeGraphBuilder.EdgeReason;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -45,9 +47,12 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -518,6 +523,73 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   }
 
   @Test
+  public void forcedEdges_areInserted() {
+    // Given
+    TypeGraphBuilder builder = this.createBuilder(null);
+    builder.addForcedEdge(
+        TypeMismatch.createForTesting(
+            this.registry.createObjectType("Foo", null),
+            this.registry.createObjectType("Bar", null)));
+
+    // When
+    this.result = builder.build();
+
+    // Then
+    this.assertThatResultAsTable().containsCell("Bar", "Foo", FORCED);
+  }
+
+  @Test
+  public void forcedEdges_endsAreInsertedEagerly() {
+    // Given
+    StubLcaFinder stubFinder = new StubLcaFinder();
+    TypeGraphBuilder builder = this.createBuilder(stubFinder);
+
+    // When
+    builder.addForcedEdge(
+        TypeMismatch.createForTesting(
+            this.registry.createObjectType("Foo", null),
+            this.registry.createObjectType("Bar", null)));
+    this.result = stubFinder.graph;
+
+    // Then
+    this.assertThatResultAsTable().containsCell("Object", "Foo", PROTOTYPE);
+    this.assertThatResultAsTable().containsCell("Object", "Bar", PROTOTYPE);
+  }
+
+  @Test
+  public void forcedEdges_areInserted_afterUnionLcaEdges() {
+    // Given
+    StubLcaFinder stubFinder =
+        new StubLcaFinder()
+            .addStub(ImmutableSet.of("Kif", "Bar"), ImmutableSet.of("(Bar|Kif)", "Object"));
+    TypeGraphBuilder builder = this.createBuilder(stubFinder);
+
+    ObjectType foo = this.registry.createObjectType("Foo", null);
+    ObjectType bar = this.registry.createObjectType("Bar", foo);
+    ObjectType kif = this.registry.createObjectType("Kif", null);
+    JSType barOrKif = this.registry.createUnionType(bar, kif);
+
+    builder.add(this.flattener.flatten(barOrKif));
+    builder.addForcedEdge(TypeMismatch.createForTesting(foo, kif));
+
+    this.result = stubFinder.graph;
+
+    stubFinder.addPrecondition(
+        1,
+        () -> {
+          // Check in both directions just in case.
+          this.assertThatResultAsMultimap().doesNotContainEntry("Foo", "Kif");
+          this.assertThatResultAsMultimap().doesNotContainEntry("Kif", "Foo");
+        });
+
+    // When
+    builder.build();
+
+    // Then
+    stubFinder.verifyPreconditionCalls();
+  }
+
+  @Test
   public void enumElements_connectedToElementType() {
     // Given
     TypeGraphBuilder builder = this.createBuilder(null);
@@ -607,7 +679,9 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
    */
   private static final class StubLcaFinder extends LowestCommonAncestorFinder<FlatType, Object> {
     private DiGraph<FlatType, Object> graph;
-    private LinkedHashMap<ImmutableSet<String>, ImmutableSet<String>> stubs = new LinkedHashMap<>();
+    private final LinkedHashMap<ImmutableSet<String>, ImmutableSet<String>> stubs =
+        new LinkedHashMap<>();
+    private final LinkedHashMap<Runnable, Integer> preconditions = new LinkedHashMap<>();
 
     StubLcaFinder() {
       super(null);
@@ -623,12 +697,29 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
       return this;
     }
 
+    StubLcaFinder addPrecondition(int callCount, Runnable x) {
+      this.preconditions.put(x, callCount);
+      return this;
+    }
+
+    StubLcaFinder verifyPreconditionCalls() {
+      for (Map.Entry<Runnable, Integer> entry : this.preconditions.entrySet()) {
+        assertThat(entry.getValue()).isEqualTo(0);
+      }
+      return this;
+    }
+
     @Override
     public ImmutableSet<FlatType> findAll(Set<FlatType> roots) {
+      for (Map.Entry<Runnable, Integer> entry : this.preconditions.entrySet()) {
+        entry.getKey().run();
+        entry.setValue(entry.getValue() - 1);
+      }
+
       ImmutableSet<String> rootNames =
           roots.stream().map(TypeGraphBuilderTest::nameOf).collect(toImmutableSet());
+      assertThat(this.stubs).containsKey(rootNames);
       ImmutableSet<String> resultNames = this.stubs.get(rootNames);
-      assertThat(resultNames).isNotNull();
 
       ImmutableSet<FlatType> results =
           this.graph.getNodes().stream()

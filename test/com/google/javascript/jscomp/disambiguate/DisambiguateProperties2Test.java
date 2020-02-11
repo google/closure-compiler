@@ -372,6 +372,47 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
+  public void propertiesAreConflated_betweenUnionAncestors_andTypesMismatchedWithTheUnion() {
+    test(
+        srcs(
+            lines(
+                "class Foo0 {",
+                "  a() { }",
+                "}",
+                "class Foo1 extends Foo0 { }",
+                "class Foo2 extends Foo0 { }",
+                "",
+                "class Bar {",
+                "  a() { }",
+                "}",
+                "",
+                "/** @type {(!Foo1|!Foo2)} @suppress {checkTypes} */",
+                "const x = new Bar();",
+                "",
+                "class Other {",
+                "  a() { }",
+                "}")),
+        expected(
+            lines(
+                "class Foo0 {",
+                "  JSC$1_a() { }",
+                "}",
+                "class Foo1 extends Foo0 { }",
+                "class Foo2 extends Foo0 { }",
+                "",
+                "class Bar {",
+                "  JSC$1_a() { }",
+                "}",
+                "",
+                "/** @type {(!Foo1|!Foo2)} @suppress {checkTypes} */",
+                "const x = new Bar();",
+                "",
+                "class Other {",
+                "  JSC$3_a() { }",
+                "}")));
+  }
+
+  @Test
   public void propertiesAreConflated_acrossTemplateSpecializations() {
     test(
         srcs(
@@ -589,68 +630,51 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void propertiesAreInvalidated_onBothSidesOfStructuralTypeMatch_iffMatchUsed() {
-    // TODO(b/144063288): Structural type matches should only conflate, not invalidate.
+  public void propertiesAreDisambiguated_acrossStructuralTypeMatches_iffMatchUsed() {
     test(
         srcs(
             lines(
+                "/** @record */",
                 "class Foo0 {",
-                "  ab() { }", // Matches `Record0`.
-                "  xy() { }", // Invalidated because of structural match.
+                "  a() { }",
                 "}",
-                "class Foo1 {",
-                "  ab() { }", // Invalidated because of `Foo0`.
-                "  sf() { }",
+                "/** @record */",
+                "class Foo1 extends Foo0 {",
+                "  a() { }",
+                "  b() { }",
                 "}",
                 "class Foo2 {",
-                "  xy() { }",
-                "  jk() { }", // Invalidated because of `Record0`.
+                "  a() { }",
+                "  b() { }",
                 "}",
                 "",
-                "/** @record */",
-                "class Record0 {",
-                "  constructor() {",
-                "    /** @const {undefined} */", // Optional.
-                "    this.jk;", // Invalidated because of structural match.
-                "  }",
+                "const /** !Foo0 */ x = new Foo2();",
                 "",
-                "  ab() { }", // Matches `Foo0`
-                "}",
-                "/** @record */",
-                "class Record1 {",
-                "  sf() { }", // Valid because `Record1` is never structurally matched.
-                "}",
-                "",
-                "const /** !Record0 */ h = new Foo0();")),
+                "class Other {",
+                " a() { }",
+                "}")),
         expected(
             lines(
+                "/** @record */",
                 "class Foo0 {",
-                "  ab() { }",
-                "  xy() { }",
+                "  JSC$3_a() { }",
                 "}",
-                "class Foo1 {",
-                "  ab() { }",
-                "  JSC$2_sf() { }",
+                "/** @record */",
+                "class Foo1 extends Foo0 {",
+                "  JSC$3_a() { }",
+                "  JSC$2_b() { }",
                 "}",
                 "class Foo2 {",
-                "  xy() { }",
-                "  jk() { }",
+                "  JSC$3_a() { }",
+                "  JSC$3_b() { }",
                 "}",
                 "",
-                "/** @record */",
-                "class Record0 {",
-                "  constructor() {",
-                "    /** @const {undefined} */ this.jk;",
-                "  }",
+                "const /** !Foo0 */ x = new Foo2();",
                 "",
-                "  ab() { }",
-                "}",
-                "/** @record */",
-                "class Record1 {",
-                "  JSC$6_sf() { }",
-                "}",
-                "",
-                "const /** !Record0 */ h = new Foo0();")));
+                // `Other` is a structural match but still disambiguates separately.
+                "class Other {",
+                " JSC$4_a() { }",
+                "}")));
   }
 
   @Test
@@ -687,92 +711,45 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void propertiesAreInvalidated_onBothSidesOfTypeMismatch() {
+  public void propertiesAreDisambiguated_acrossTypeMismatches() {
     test(
         srcs(
             lines(
                 "class Foo0 {",
                 "  a() { }",
-                "  b() { }",
                 "}",
-                "class Foo1 {",
+                "class Foo1 extends Foo0 {",
+                "  a() { }",
                 "  b() { }",
-                "  c() { }",
                 "}",
                 "class Foo2 {",
-                "  c() { }",
-                "  d() { }",
-                "}",
-                "class Foo3 {",
-                "  d() { }",
-                "  a() { }",
-                "}",
-                "",
-                "const /** !Foo3 */ x = new Foo0();")),
-        expected(
-            lines(
-                "class Foo0 {",
                 "  a() { }",
                 "  b() { }",
                 "}",
-                "class Foo1 {",
-                "  b() { }",
-                "  JSC$2_c() { }",
-                "}",
-                "class Foo2 {",
-                "  JSC$3_c() { }",
-                "  d() { }",
-                "}",
-                "class Foo3 {",
-                "  d() { }",
-                "  a() { }",
-                "}",
                 "",
-                "const /** !Foo3 */ x = new Foo0();")));
-  }
-
-  @Test
-  public void propertiesAreInvalidated_onAllAncestorsOfInvalidatingTypes() {
-    test(
-        srcs(
-            lines(
-                "class Foo0 {",
-                "  f() { }",
-                "}",
-                "class Foo1 extends Foo0 { }",
-                "class Foo2 extends Foo1 {",
-                "  g() { }",
-                "}",
+                "const /** !Foo0 */ x = new Foo2();",
                 "",
-                "const /** !Foo2 */ x = 0;",
-                "",
-                "class Other0 {",
-                "  f() { }",
-                "  u() { }",
-                "}",
-                "class Other1 {",
-                "  g() { }",
-                "  u() { }",
+                "class Other {",
+                " a() { }",
                 "}")),
         expected(
             lines(
                 "class Foo0 {",
-                "  f() { }",
+                "  JSC$3_a() { }",
                 "}",
-                "class Foo1 extends Foo0 { }",
-                "class Foo2 extends Foo1 {",
-                "  g() { }",
+                "class Foo1 extends Foo0 {",
+                "  JSC$3_a() { }",
+                "  JSC$2_b() { }",
+                "}",
+                "class Foo2 {",
+                "  JSC$3_a() { }",
+                "  JSC$3_b() { }",
                 "}",
                 "",
-                "const /** !Foo2 */ x = 0;",
+                "const /** !Foo0 */ x = new Foo2();",
                 "",
-                "class Other0 {",
-                "  f() { }",
-                "  JSC$3_u() { }",
-                "}",
-                "class Other1 {",
-                "  g() { }",
-                "  JSC$4_u() { }",
+                "class Other {",
+                " JSC$4_a() { }",
                 "}")));
   }
 

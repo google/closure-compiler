@@ -36,12 +36,12 @@ import java.util.Iterator;
  * warnings.
  */
 @AutoValue
-abstract class TypeMismatch implements Serializable {
+public abstract class TypeMismatch implements Serializable {
   /** The RHS type; the type of the assignment target. */
-  abstract JSType getFound();
+  public abstract JSType getFound();
 
   /** The LHS type; the type being assigned. */
-  abstract JSType getRequired();
+  public abstract JSType getRequired();
 
   /** The location of the assignment. */
   abstract Node getLocation();
@@ -51,7 +51,7 @@ abstract class TypeMismatch implements Serializable {
   }
 
   @VisibleForTesting
-  static TypeMismatch createForTesting(JSType found, JSType required) {
+  public static TypeMismatch createForTesting(JSType found, JSType required) {
     return create(found, required, TEST_LOCATION);
   }
 
