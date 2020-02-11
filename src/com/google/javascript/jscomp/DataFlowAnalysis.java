@@ -97,7 +97,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    * If you just have a special case, consider calling
    * {@link #analyze(int)} instead.
    */
-  public static final int MAX_STEPS = 800000;
+  public static final int MAX_STEPS = 1000000;
 
   /**
    * Constructs a data flow analysis.
