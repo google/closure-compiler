@@ -55,6 +55,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
@@ -5581,75 +5582,165 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     }
   }
 
-  /** Tests the behavior of {@link JSType#getRestrictedTypeGivenToBooleanOutcome(boolean)}. */
+  /** Tests the behavior of {@link JSType#getRestrictedTypeGivenOutcome(Outcome)} ()}. */
   @SuppressWarnings("checked")
   @Test
-  public void testRestrictedTypeGivenToBoolean() {
+  public void testRestrictedTypeGivenOutcome() {
     // simple cases
     assertTypeEquals(BOOLEAN_TYPE,
-        BOOLEAN_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        BOOLEAN_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(BOOLEAN_TYPE,
-        BOOLEAN_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        BOOLEAN_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(NO_TYPE,
-        NULL_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        NULL_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(NULL_TYPE,
-        NULL_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        NULL_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(NUMBER_TYPE,
-        NUMBER_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        NUMBER_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(NUMBER_TYPE,
-        NUMBER_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        NUMBER_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(STRING_TYPE,
-        STRING_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        STRING_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(STRING_TYPE,
-        STRING_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        STRING_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(STRING_OBJECT_TYPE,
-        STRING_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        STRING_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(NO_TYPE,
-        STRING_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        STRING_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(NO_TYPE,
-        VOID_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        VOID_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(VOID_TYPE,
-        VOID_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        VOID_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(NO_OBJECT_TYPE,
-        NO_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        NO_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(NO_TYPE,
-        NO_OBJECT_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        NO_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(NO_TYPE,
-        NO_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        NO_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(NO_TYPE,
-        NO_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        NO_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(ALL_TYPE,
-        ALL_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        ALL_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(ALL_TYPE,
-        ALL_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        ALL_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     assertTypeEquals(CHECKED_UNKNOWN_TYPE,
-        UNKNOWN_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
+        UNKNOWN_TYPE.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(UNKNOWN_TYPE,
-        UNKNOWN_TYPE.getRestrictedTypeGivenToBooleanOutcome(false));
+        UNKNOWN_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     // unions
     UnionType nullableStringValue =
         (UnionType) createNullableType(STRING_TYPE);
     assertTypeEquals(STRING_TYPE,
-        nullableStringValue.getRestrictedTypeGivenToBooleanOutcome(true));
+        nullableStringValue.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(nullableStringValue,
-        nullableStringValue.getRestrictedTypeGivenToBooleanOutcome(false));
+        nullableStringValue.getRestrictedTypeGivenOutcome(Outcome.FALSE));
 
     UnionType nullableStringObject =
         (UnionType) createNullableType(STRING_OBJECT_TYPE);
     assertTypeEquals(STRING_OBJECT_TYPE,
-        nullableStringObject.getRestrictedTypeGivenToBooleanOutcome(true));
+        nullableStringObject.getRestrictedTypeGivenOutcome(Outcome.TRUE));
     assertTypeEquals(NULL_TYPE,
-        nullableStringObject.getRestrictedTypeGivenToBooleanOutcome(false));
+        nullableStringObject.getRestrictedTypeGivenOutcome(Outcome.FALSE));
+  }
+
+  @Test
+  public void nullishOutcomeGetRestrictedTypeGivenOutcome() {
+    // simple cases
+    assertTypeEquals(NO_TYPE,
+        BOOLEAN_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NULL_TYPE,
+        NULL_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NO_TYPE,
+        NUMBER_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NO_TYPE,
+        STRING_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NO_TYPE,
+        STRING_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(VOID_TYPE,
+        VOID_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NO_TYPE,
+        NO_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NO_TYPE,
+        NO_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NO_TYPE,
+        ALL_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    assertTypeEquals(NO_TYPE,
+        UNKNOWN_TYPE.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    // unions
+    UnionType nullableStringValue =
+        (UnionType) createNullableType(STRING_TYPE);
+    assertTypeEquals(NULL_TYPE,
+        nullableStringValue.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+
+    UnionType nullableStringObject =
+        (UnionType) createNullableType(STRING_OBJECT_TYPE);
+    assertTypeEquals(NULL_TYPE,
+        nullableStringObject.getRestrictedTypeGivenOutcome(Outcome.NULLISH));
+  }
+
+  @Test
+  public void falseNotNullOutcomeGetRestrictedTypeGivenOutcome() {
+    // simple cases
+    assertTypeEquals(BOOLEAN_TYPE,
+        BOOLEAN_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(NULL_TYPE,
+        NULL_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(NUMBER_TYPE,
+        NUMBER_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(STRING_TYPE,
+        STRING_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(NO_TYPE,
+        STRING_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(VOID_TYPE,
+        VOID_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(NO_TYPE,
+        NO_OBJECT_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(NO_TYPE,
+        NO_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(ALL_TYPE,
+        ALL_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    assertTypeEquals(UNKNOWN_TYPE,
+        UNKNOWN_TYPE.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    // unions
+    UnionType nullableStringValue =
+        (UnionType) createNullableType(STRING_TYPE);
+    assertTypeEquals(nullableStringValue,
+        nullableStringValue.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
+
+    UnionType nullableStringObject =
+        (UnionType) createNullableType(STRING_OBJECT_TYPE);
+    assertTypeEquals(NULL_TYPE,
+        nullableStringObject.getRestrictedTypeGivenOutcome(Outcome.FALSE_NOT_NULL));
   }
 
   @Test

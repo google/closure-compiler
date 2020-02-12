@@ -679,8 +679,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
-            "/** @param {?Object} x\n @return {?Object} */",
-            "(function(x) { return null ?? x ?? null ; })"));
+            "/** @param {?Object} x\n @return {!Object} */",
+            "(function(x) { return null ?? x ?? {} ; })"));
   }
 
   @Test
@@ -724,12 +724,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "}\n" +
         "return null;\n" +
         "};");
-  }
-
-  @Test
-  public void testNullishCoalesce() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
-    testTypes("/**@type{number} */ var x = 0 ?? \"hi\";");
   }
 
   @Test
@@ -799,7 +793,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             " * @param {?Object} x",
             " * @return {!Object|boolean|string}",
             // TODO(b/146659618) Calculate the correct type
-            // * @return {!Object|boolean}
+            // " * @return {!Object|boolean}",
             " */",
             " function foo(x) {",
             "   return x ?? (x ? 'hi' : false);",
@@ -824,7 +818,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "x ?? useNonNull(x);"),
         lines(
             "actual parameter 1 of useNonNull does not match formal parameter",
-            "found   : (Object|null)", // TODO(b/146659618) Should be just null
+            "found   : null",
             "required: Object"));
   }
 
@@ -8148,13 +8142,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceNumberVar() {
+    // Making sure that ?? returns LHS as long as it is not null/undefined
+    // 0 is falsy but not null/undefined so c should always be a
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
-        lines(
-            "/** @type {number}  */var a;",
-            "/** @type {number|undefined}  */var c = a ?? undefined;"));
-    // TOOD(b/146659618): Calculate the correct type
-    // lines("/** @type {number}  */var a;", "/** @type {number}  */var c = a ?? undefined;"))
+        lines("/** @type {number}  */var a;", "/** @type {number}  */var c = a ?? undefined;"));
   }
 
   @Test
