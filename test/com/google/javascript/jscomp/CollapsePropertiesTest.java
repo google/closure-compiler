@@ -1328,9 +1328,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = function() { return function(){ return this; }; };",
         "var a$b = function() { return function(){ return this; }; };");
+  }
 
-    // This gives no warning, because `this` is in a scope whose name is not
-    // getting collapsed.
+  @Test
+  public void testPropAssignedToFunctionReferencingThis() {
+    // This gives no warning, because `this` is in a scope whose name is not getting collapsed.
     testNoWarning("var a = {}; var b = function() { this.c;}; a.b=b;");
   }
 
