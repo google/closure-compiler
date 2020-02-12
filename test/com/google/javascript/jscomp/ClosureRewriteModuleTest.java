@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
@@ -28,6 +29,8 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +54,17 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ClosureRewriteModule(compiler, null, null);
+    return (externs, main) -> {
+      ReverseAbstractInterpreter rai =
+          new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+      compiler.setTypeCheckingHasRun(true);
+      TypedScope globalTypedScope =
+          checkNotNull(
+              new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                  .processForTesting(externs, main));
+
+      new ClosureRewriteModule(compiler, null, null, globalTypedScope).process(externs, main);
+    };
   }
 
   @Override
@@ -61,7 +74,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     preserveClosurePrimitives = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableCreateModuleMap();
-    enableTypeCheck();
     enableTypeInfoValidation();
   }
 

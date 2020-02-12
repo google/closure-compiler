@@ -567,7 +567,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
                 compiler,
                 /* preprocessorSymbolTable= */ null,
                 CheckLevel.OFF,
-                /* preserveGoogProvidesAndRequires= */ true)
+                /* preserveGoogProvidesAndRequires= */ true,
+                /* globalTypedScope= */ null)
             .collectProvidedNames(externs, js);
 
     for (ProvidedName name : providedNames.values()) {

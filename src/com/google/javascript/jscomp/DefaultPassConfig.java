@@ -209,23 +209,6 @@ public final class DefaultPassConfig extends PassConfig {
     return passes;
   }
 
-  private void addTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
-    if (options.checkTypes || options.inferTypes) {
-      checks.add(inferTypes);
-      if (options.checkTypes) {
-        checks.add(checkTypes);
-      } else {
-        checks.add(inferJsDocInfo);
-      }
-
-      // We assume that only clients who are going to re-compile, or do in-depth static analysis,
-      // will need the typed scope creator after the compile job.
-      if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
-        checks.add(clearTypedScopePass);
-      }
-    }
-  }
-
   private void addModuleRewritingPasses(List<PassFactory> checks, CompilerOptions options) {
     if (options.closurePass) {
       checks.add(rewriteClosureImports);
@@ -410,13 +393,26 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(injectRuntimeLibraries);
     checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
 
-    addTypeCheckerPasses(checks, options);
+    if (options.checkTypes || options.inferTypes) {
+      checks.add(inferTypes);
+      if (options.checkTypes) {
+        checks.add(checkTypes);
+      } else {
+        checks.add(inferJsDocInfo);
+      }
+    }
 
     if (options.shouldRewriteModulesAfterTypechecking()) {
       addModuleRewritingPasses(checks, options);
       if (options.closurePass) {
         checks.add(closureProvidesRequires);
       }
+    }
+
+    // We assume that only clients who are going to re-compile, or do in-depth static analysis,
+    // will need the typed scope creator after the compile job.
+    if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
+      checks.add(clearTypedScopePass);
     }
 
     // CheckSuspiciousCode requires type information, so must run after the type checker.
@@ -1319,11 +1315,14 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
+                TypedScope globalTypedScope =
+                    compiler.getOptions().allowsHotswapReplaceScript() ? null : this.getTopScope();
                 return new ProcessClosureProvidesAndRequires(
                     compiler,
                     preprocessorSymbolTableFactory.getInstanceOrNull(),
                     options.brokenClosureRequiresLevel,
-                    options.shouldPreservesGoogProvidesAndRequires());
+                    options.shouldPreservesGoogProvidesAndRequires(),
+                    globalTypedScope);
               })
           .setFeatureSet(ES_NEXT)
           .build();
@@ -1492,10 +1491,13 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) -> {
                 preprocessorSymbolTableFactory.maybeInitialize(compiler);
                 maybeInitializeModuleRewriteState();
+                TypedScope globalTypedScope =
+                    compiler.getOptions().allowsHotswapReplaceScript() ? null : this.getTopScope();
                 return new ClosureRewriteModule(
                     compiler,
                     preprocessorSymbolTableFactory.getInstanceOrNull(),
-                    moduleRewriteState);
+                    moduleRewriteState,
+                    globalTypedScope);
               })
           .setFeatureSet(ES_NEXT)
           .build();

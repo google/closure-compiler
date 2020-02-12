@@ -452,7 +452,7 @@ final class AstFactory {
   }
 
   /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
-  private Node createGetProps(Node receiver, Iterable<String> propertyNames) {
+  Node createGetProps(Node receiver, Iterable<String> propertyNames) {
     Node result = receiver;
     for (String propertyName : propertyNames) {
       result = createGetProp(result, propertyName);

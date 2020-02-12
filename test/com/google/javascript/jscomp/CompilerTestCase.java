@@ -1557,7 +1557,7 @@ public abstract class CompilerTestCase {
           new CheckClosureImports(compiler, compiler.getModuleMetadataMap())
               .process(externsRoot, mainRoot);
           new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
-          new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
+          new ClosureRewriteModule(compiler, null, null, null).process(externsRoot, mainRoot);
           ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1566,7 +1566,7 @@ public abstract class CompilerTestCase {
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler, null).process(externsRoot, mainRoot);
-          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false, null)
               .process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1947,13 +1947,13 @@ public abstract class CompilerTestCase {
 
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosurePrimitives(compiler, null).process(externsRoot, mainRoot);
-      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false, null)
           .process(externsRoot, mainRoot);
     }
 
     if (rewriteClosureCode) {
       new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
-      new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
+      new ClosureRewriteModule(compiler, null, null, null).process(externsRoot, mainRoot);
       ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
     }
 

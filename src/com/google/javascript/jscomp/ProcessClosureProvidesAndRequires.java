@@ -73,17 +73,22 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private boolean hasRewritingOccurred = false;
   private final Set<Node> forwardDeclaresToRemove = new HashSet<>();
   private final Set<Node> previouslyProvidedDefinitions = new HashSet<>();
+  private final TypedScope globalTypedScope;
 
   ProcessClosureProvidesAndRequires(
       AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       CheckLevel requiresLevel,
-      boolean preserveGoogProvidesAndRequires) {
+      boolean preserveGoogProvidesAndRequires,
+      @Nullable TypedScope globalTypedScope) {
+    checkArgument(globalTypedScope == null || globalTypedScope.isGlobal());
+
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
+    this.globalTypedScope = globalTypedScope;
   }
 
   /** When invoked as compiler pass, we rewrite all provides and requires. */
@@ -868,6 +873,11 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     private Node makeVarDeclNode(Node value) {
       Node name = IR.name(namespace);
       name.addChildToFront(value);
+
+      if (globalTypedScope != null) {
+        TypedVar typedVar = checkNotNull(globalTypedScope.getVar(namespace));
+        name.setJSType(checkNotNull(typedVar.getType()));
+      }
 
       Node decl = IR.var(name);
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
