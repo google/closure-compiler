@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.jscomp.type.Outcome;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -57,12 +58,12 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
 
     // true outcome.
     FlowScope informedTrue =
-        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], true);
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], Outcome.TRUE);
     assertTypeEquals(getNativeStringType(), getVarType(informedTrue, "a"));
 
     // false outcome.
     FlowScope informedFalse =
-        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], false);
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], Outcome.FALSE);
     assertTypeEquals(createNullableType(getNativeStringType()), getVarType(informedFalse, "a"));
   }
 
@@ -76,17 +77,16 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
 
     // true outcome.
     FlowScope informedTrue =
-        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], true);
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], Outcome.TRUE);
     assertTypeEquals(createNullableType(getNativeStringType()), getVarType(informedTrue, "a"));
 
     // false outcome.
     FlowScope informedFalse =
-        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], false);
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], Outcome.FALSE);
     assertTypeEquals(getNativeStringType(), getVarType(informedFalse, "a"));
   }
 
   /** Tests reverse interpretation of a ASSIGN expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testAssignCondition1() {
     FlowScope[] blind = newScope();
@@ -102,7 +102,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a SHEQ(NAME, NUMBER) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testSheqCondition1() {
     FlowScope[] blind = newScope();
@@ -117,7 +116,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a SHEQ(NUMBER, NAME) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testSheqCondition2() {
     FlowScope[] blind = newScope();
@@ -132,7 +130,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a SHEQ(NAME, NAME) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testSheqCondition3() {
     FlowScope[] blind = newScope();
@@ -148,7 +145,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("b", createUnionType(getNativeStringType(), getNativeBooleanType()))));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testSheqCondition4() {
     FlowScope[] blind = newScope();
@@ -163,7 +159,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("a", getNativeStringType()), new TypedName("b", getNativeVoidType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testSheqCondition5() {
     FlowScope[] blind = newScope();
@@ -178,7 +173,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("a", getNativeNullType()), new TypedName("b", getNativeVoidType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testSheqCondition6() {
     FlowScope[] blind = newScope();
@@ -195,7 +189,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a SHNE(NAME, NUMBER) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testShneCondition1() {
     FlowScope[] blind = newScope();
@@ -210,7 +203,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a SHNE(NUMBER, NAME) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testShneCondition2() {
     FlowScope[] blind = newScope();
@@ -225,7 +217,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a SHNE(NAME, NAME) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testShneCondition3() {
     FlowScope[] blind = newScope();
@@ -241,7 +232,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("a", getNativeStringType()), new TypedName("b", getNativeStringType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testShneCondition4() {
     FlowScope[] blind = newScope();
@@ -256,7 +246,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("a", getNativeVoidType()), new TypedName("b", getNativeVoidType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testShneCondition5() {
     FlowScope[] blind = newScope();
@@ -271,7 +260,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("a", getNativeNullType()), new TypedName("b", getNativeNullType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testShneCondition6() {
     FlowScope[] blind = newScope();
@@ -288,7 +276,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a EQ(NAME, NULL) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testEqCondition1() {
     FlowScope[] blind = newScope();
@@ -302,7 +289,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a NE(NULL, NAME) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testEqCondition2() {
     FlowScope[] blind = newScope();
@@ -316,7 +302,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of a EQ(NAME, NULL) expression. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testEqCondition3() {
     FlowScope[] blind = newScope();
@@ -335,7 +320,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
   }
 
   /** Tests reverse interpretation of two undefineds. */
-  @SuppressWarnings("unchecked")
   @Test
   public void testEqCondition4() {
     FlowScope[] blind = newScope();
@@ -354,7 +338,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
    * Tests reverse interpretation of a COMPARE(NAME, NUMBER) expression, where COMPARE can be LE,
    * LT, GE or GT.
    */
-  @SuppressWarnings("unchecked")
   @Test
   public void testInequalitiesCondition1() {
     for (Token op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
@@ -374,7 +357,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
    * Tests reverse interpretation of a COMPARE(NAME, NAME) expression, where COMPARE can be LE, LT,
    * GE or GT.
    */
-  @SuppressWarnings("unchecked")
   @Test
   public void testInequalitiesCondition2() {
     for (Token op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
@@ -403,7 +385,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
    * Tests reverse interpretation of a COMPARE(NUMBER-untyped, NAME) expression, where COMPARE can
    * be LE, LT, GE or GT.
    */
-  @SuppressWarnings("unchecked")
   @Test
   public void testInequalitiesCondition3() {
     for (Token op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
@@ -419,7 +400,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testAnd() {
     FlowScope[] blind = newScope();
@@ -435,7 +415,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("b", createUnionType(getNativeStringType(), getNativeNullType()))));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testTypeof1() {
     FlowScope[] blind = newScope();
@@ -448,7 +427,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         ImmutableSet.of(new TypedName("a", getNativeObjectType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testTypeof2() {
     FlowScope[] blind = newScope();
@@ -461,7 +439,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         ImmutableSet.of(new TypedName("a", getNativeAllType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testTypeof3() {
     FlowScope[] blind = newScope();
@@ -474,7 +451,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         ImmutableSet.of(new TypedName("a", getNativeObjectNumberStringBooleanType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testTypeof4() {
     FlowScope[] blind = newScope();
@@ -492,7 +468,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         ImmutableSet.of(new TypedName("a", getNativeNumberStringBooleanType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testInstanceOf() {
     FlowScope[] blind = newScope();
@@ -507,7 +482,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
         ImmutableSet.of(new TypedName("s", getNativeStringObjectConstructorType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testInstanceOf2() {
     FlowScope[] blind = newScope();
@@ -525,7 +499,6 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("s", getNativeStringObjectConstructorType())));
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testInstanceOf3() {
     FlowScope[] blind = newScope();
@@ -541,8 +514,7 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
             new TypedName("x", getNativeObjectType()),
             new TypedName("s", getNativeStringObjectConstructorType())));
   }
-
-  @SuppressWarnings("unchecked")
+  
   @Test
   public void testInstanceOf4() {
     FlowScope[] blind = newScope();
@@ -570,14 +542,14 @@ public final class SemanticReverseAbstractInterpreterTest extends CompilerTypeTe
 
     // true outcome.
     FlowScope informedTrue =
-        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], true);
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], Outcome.TRUE);
     for (TypedName p : trueOutcome) {
       assertTypeEquals(p.name, p.type, getVarType(informedTrue, p.name));
     }
 
     // false outcome.
     FlowScope informedFalse =
-        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], false);
+        interpreter.getPreciserScopeKnowingConditionOutcome(condition, blind[0], Outcome.FALSE);
     for (TypedName p : falseOutcome) {
       assertTypeEquals(p.type, getVarType(informedFalse, p.name));
     }
