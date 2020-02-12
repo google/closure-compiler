@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.rhino.Token.ADD;
 import static com.google.javascript.rhino.Token.ARRAYLIT;
+import static com.google.javascript.rhino.Token.ARRAY_PATTERN;
 import static com.google.javascript.rhino.Token.ASSIGN;
 import static com.google.javascript.rhino.Token.ASSIGN_ADD;
 import static com.google.javascript.rhino.Token.AWAIT;
@@ -33,6 +34,7 @@ import static com.google.javascript.rhino.Token.COMPUTED_PROP;
 import static com.google.javascript.rhino.Token.DEC;
 import static com.google.javascript.rhino.Token.DEFAULT_VALUE;
 import static com.google.javascript.rhino.Token.DELPROP;
+import static com.google.javascript.rhino.Token.DESTRUCTURING_LHS;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_IN;
 import static com.google.javascript.rhino.Token.FOR_OF;
@@ -50,6 +52,7 @@ import static com.google.javascript.rhino.Token.NAME;
 import static com.google.javascript.rhino.Token.NEW;
 import static com.google.javascript.rhino.Token.NUMBER;
 import static com.google.javascript.rhino.Token.OBJECTLIT;
+import static com.google.javascript.rhino.Token.OBJECT_PATTERN;
 import static com.google.javascript.rhino.Token.OBJECT_REST;
 import static com.google.javascript.rhino.Token.OBJECT_SPREAD;
 import static com.google.javascript.rhino.Token.OR;
@@ -628,6 +631,15 @@ public final class AstAnalyzerTest {
           // don't consider name declaration to have a side effect if there's no assignment
           kase().js("var x;").token(NAME).expect(false),
           kase().js("let x;").token(NAME).expect(false),
+
+          // destructuring declarations and assignments are always considered side effectful even
+          // when empty
+          kase().js("var {x} = {};").token(DESTRUCTURING_LHS).expect(true),
+          kase().js("var {} = {};").token(DESTRUCTURING_LHS).expect(true),
+          kase().js("var [x] = [];").token(DESTRUCTURING_LHS).expect(true),
+          kase().js("var {y: [x]} = {};").token(OBJECT_PATTERN).expect(false),
+          kase().js("var {y: [x]} = {};").token(ARRAY_PATTERN).expect(false),
+          kase().js("[x] = arr;").token(ASSIGN).expect(true),
 
           // NOTE: CALL and NEW nodes are delegated to functionCallHasSideEffects() and
           // constructorCallHasSideEffects(), respectively. The cases below are just a few

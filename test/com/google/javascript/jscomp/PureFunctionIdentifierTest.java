@@ -2506,8 +2506,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   @Test
   public void testArgumentTaintedByWayOfForOfScopedConst() {
-    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
-    disableTypeCheck();
     String source =
         lines(
             "function m1(elements) {",
@@ -2517,13 +2515,27 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "}",
             "m1([]);",
             "");
-    assertPureCallsMarked(source, ImmutableList.of());
+    assertNoPureCalls(source);
+  }
+
+  @Test
+  public void testArgumentTaintedByWayOfForOfScopedConstWithDestructuring() {
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    String source =
+        lines(
+            "function m1(elements) {",
+            "  for (const {e} of elements) {",
+            "    e.someProp = 1;",
+            "  }",
+            "}",
+            "m1([]);",
+            "");
+    assertNoPureCalls(source);
   }
 
   @Test
   public void testArgumentTaintedByWayOfNameDeclaration() {
-    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
-    disableTypeCheck();
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     String source =
         lines(
             "function m1(obj) {",
@@ -2536,25 +2548,49 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
-  public void testArgumentTaintedByWayOfDestructuringNameDeclaration() {
-    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
-    disableTypeCheck();
+  public void testUnusedDestructuringNameDeclarationIsPure() {
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     String source =
         lines(
-            "function m1(obj) {",
+            "function m1(obj) {", //
+            "  let {p} = obj;",
+            "}",
+            "m1([]);",
+            "");
+    assertPureCallsMarked(source, ImmutableList.of("m1"));
+  }
+
+  @Test
+  public void testArgumentTaintedByWayOfDestructuringNameDeclaration() {
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    String source =
+        lines(
+            "function m1(obj) {", //
             "  let {p} = obj;",
             "  p.someProp = 1;",
             "}",
             "m1([]);",
             "");
-    // TODO(bradfordcsmith): Fix this logic for destructuring declarations.
-    assertPureCallsMarked(source, ImmutableList.of("m1"));
+    assertNoPureCalls(source);
+  }
+
+  @Test
+  public void testArgumentTaintedByWayOfNestedDestructuringNameDeclaration() {
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
+    String source =
+        lines(
+            "function m1(obj) {", //
+            "  let {q: {p}} = obj;",
+            "  p.someProp = 1;",
+            "}",
+            "m1({});",
+            "");
+    assertNoPureCalls(source);
   }
 
   @Test
   public void testArgumentTaintedByWayOfDestructuringAssignment() {
-    // TODO(bradfordcsmith): Enable type check when it supports the languages features used here.
-    disableTypeCheck();
+    ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     String source =
         lines(
             "function m1(obj) {",
@@ -2564,8 +2600,65 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "}",
             "m1([]);",
             "");
-    // TODO(bradfordcsmith): Fix this logic for destructuring.
-    assertPureCallsMarked(source, ImmutableList.of("m1"));
+    assertNoPureCalls(source);
+  }
+
+  @Test
+  public void testArgumentTaintedByWayOfArrayDestructuringAssignment() {
+    String source =
+        lines(
+            "function m1(obj) {",
+            "  let p;",
+            "  ([p] = obj);",
+            "  p.someProp = 1;",
+            "}",
+            "m1([]);",
+            "");
+    assertNoPureCalls(source);
+  }
+
+  @Test
+  public void testDestructuringAssignMutatingGlobalState() {
+    String source =
+        lines(
+            "var a = 0;", //
+            "function m1() {",
+            "  ([a] = []);",
+            "}",
+            "m1();");
+    assertNoPureCalls(source);
+
+    source =
+        lines(
+            "var a = 0;", //
+            "function m1() {",
+            "  ({a} = {a: 0});",
+            "}",
+            "m1();");
+    assertNoPureCalls(source);
+  }
+
+  @Test
+  public void testDefaultValueInitializers_areConsidered_whenAnalyzingDestructuring() {
+    assertNoPureCalls(
+        lines(
+            "function impure() { throw 'something'; }", //
+            "",
+            "function foo() { const {a = impure()} = {a: undefined}; }",
+            "foo();"));
+
+    assertPureCallsMarked(
+        lines(
+            "function foo() { const {a = 0} = {a: undefined}; }", //
+            "foo();"),
+        ImmutableList.of("foo"));
+
+    assertNoPureCalls(
+        lines(
+            "function impure() { throw 'something'; }", //
+            "",
+            "function foo() { const [{a = impure()}] = [{a: undefined}]; }",
+            "foo();"));
   }
 
   @Test

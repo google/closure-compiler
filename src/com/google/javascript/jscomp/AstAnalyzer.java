@@ -513,9 +513,13 @@ public class AstAnalyzer {
       case NEW:
         return constructorCallHasSideEffects(n);
       case NAME:
-        // A variable definition.
+        // A variable definition that assigns a value.
         // TODO(b/129564961): Consider EXPORT declarations.
         return n.hasChildren();
+      case DESTRUCTURING_LHS:
+        // A destructuring declaration statement or assignment. Technically these might contain no
+        // lvalues but that case is rare enough to be ignored.
+        return true;
       case OBJECT_REST:
       case OBJECT_SPREAD:
         // Object-rest and object-spread may trigger a getter.

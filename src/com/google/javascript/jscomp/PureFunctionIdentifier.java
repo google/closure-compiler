@@ -707,12 +707,18 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           // e.g.
           // lhs = rhs;
           // ({x, y} = object);
+          Node lhs = node.getFirstChild();
+          // Consider destructured properties or values to be nonlocal.
+          Predicate<Node> rhsLocality =
+              lhs.isDestructuringPattern()
+                  ? RHS_IS_NEVER_LOCAL
+                  : FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE;
           visitLhsNodes(
               encloserSummary,
               traversal.getScope(),
               enclosingFunction,
               NodeUtil.findLhsNodesInNode(node),
-              FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE);
+              rhsLocality);
           break;
 
         case INC: // e.g. x++;
@@ -763,6 +769,21 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         case NEW:
         case TAGGED_TEMPLATELIT:
           visitCall(encloserSummary, node);
+          break;
+
+        case DESTRUCTURING_LHS:
+          if (NodeUtil.isAnyFor(node.getParent())) {
+            // This case is handled when visiting the enclosing for loop.
+            break;
+          }
+          // Assume the value assigned to each item is potentially global state. This is overly
+          // conservative but necessary because in the common case the rhs is not a literal.
+          visitLhsNodes(
+              encloserSummary,
+              traversal.getScope(),
+              enclosingFunction,
+              NodeUtil.findLhsNodesInNode(node.getParent()),
+              RHS_IS_NEVER_LOCAL);
           break;
 
         case NAME:
