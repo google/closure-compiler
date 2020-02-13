@@ -161,12 +161,6 @@ final class FunctionTypeBuilder {
           "@this type of a function must be an object\n" +
           "Actual type: {0}");
 
-  static final DiagnosticType SAME_INTERFACE_MULTIPLE_IMPLEMENTS =
-      DiagnosticType.warning(
-          "JSC_SAME_INTERFACE_MULTIPLE_IMPLEMENTS",
-          "Cannot @implement the same interface more than once\n" +
-          "Repeated interface: {0}");
-
   static final DiagnosticGroup ALL_DIAGNOSTICS =
       new DiagnosticGroup(
           EXTENDS_WITHOUT_TYPEDEF,
@@ -183,7 +177,7 @@ final class FunctionTypeBuilder {
           TEMPLATE_TYPE_EXPECTED,
           TEMPLATE_TYPE_ILLEGAL_BOUND,
           THIS_TYPE_NON_OBJECT,
-          SAME_INTERFACE_MULTIPLE_IMPLEMENTS);
+          TypeCheck.SAME_INTERFACE_MULTIPLE_IMPLEMENTS);
 
   private class ExtendedTypeValidator implements Predicate<JSType> {
     @Override
@@ -464,28 +458,15 @@ final class FunctionTypeBuilder {
     if (info != null && info.getImplementedInterfaceCount() > 0) {
       if (isConstructor) {
         implementedInterfaces = new ArrayList<>();
-        Set<JSType> baseInterfaces = new HashSet<>();
         for (JSTypeExpression t : info.getImplementedInterfaces()) {
           JSType maybeInterType = t.evaluate(templateScope, typeRegistry);
 
-          if (maybeInterType != null &&
-              maybeInterType.setValidator(new ImplementedTypeValidator())) {
-            // Disallow implementing the same base (not templatized) interface
-            // type more than once.
-            JSType baseInterface = maybeInterType;
-            if (baseInterface.toMaybeTemplatizedType() != null) {
-              baseInterface = baseInterface.toMaybeTemplatizedType().getReferencedType();
-            }
-            if (!baseInterfaces.add(baseInterface)) {
-              reportWarning(SAME_INTERFACE_MULTIPLE_IMPLEMENTS, baseInterface.toString());
-            }
-
+          if (maybeInterType.setValidator(new ImplementedTypeValidator())) {
             implementedInterfaces.add((ObjectType) maybeInterType);
           }
         }
       } else if (isInterface) {
-        reportWarning(
-            TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, formatFnName());
+        reportWarning(TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, formatFnName());
       } else {
         reportWarning(CONSTRUCTOR_REQUIRED, "@implements", formatFnName());
       }

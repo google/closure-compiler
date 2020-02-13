@@ -5798,7 +5798,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testGoogRequire_multipleRequiresInModule() {
-    // TODO(b/136284768): we should not get this error.
     testSame(
         srcs(
             lines(
@@ -5815,8 +5814,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "const B = goog.require('mod.B');",
                 "/** @implements {A} @implements {B} */",
                 "class C {};",
-                "MOD_C: 0;")),
-        warning(FunctionTypeBuilder.SAME_INTERFACE_MULTIPLE_IMPLEMENTS));
+                "MOD_C: 0;")));
 
     TypedScope modCScope = getLabeledStatement("MOD_C").enclosingScope;
     FunctionType aCtor = modCScope.getVar("A").getType().toMaybeFunctionType();

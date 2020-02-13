@@ -7017,6 +7017,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBadImplementsAConstructorWithSubclass() {
+    testTypes(
+        lines(
+            "/** @constructor */", //
+            "function A() {}",
+            "/** @implements {A} */",
+            "class B {}",
+            "class C extends B {}"),
+        "can only implement interfaces");
+  }
+
+  @Test
   public void testBadImplementsNonInterfaceType() {
     testTypes("/** @constructor \n * @implements {Boolean} */function B() {}",
         "can only implement interfaces");

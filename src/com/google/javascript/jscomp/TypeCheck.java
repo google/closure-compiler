@@ -62,6 +62,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -314,6 +315,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               + "getter type is: {1}\n"
               + "setter type is: {2}");
 
+  static final DiagnosticType SAME_INTERFACE_MULTIPLE_IMPLEMENTS =
+      DiagnosticType.warning(
+          "JSC_SAME_INTERFACE_MULTIPLE_IMPLEMENTS",
+          "Cannot @implement the same interface more than once\nRepeated interface: {0}");
+
   // If a diagnostic is disabled by default, do not add it in this list
   // TODO(dimvar): Either INEXISTENT_PROPERTY shouldn't be here, or we should
   // change DiagnosticGroups.setWarningLevel to not accidentally enable it.
@@ -355,6 +361,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           ABSTRACT_METHOD_IN_CONCRETE_CLASS,
           ABSTRACT_SUPER_METHOD_NOT_USABLE,
           ES5_CLASS_EXTENDING_ES6_CLASS,
+          SAME_INTERFACE_MULTIPLE_IMPLEMENTS,
           RhinoErrorReporter.TYPE_PARSE_ERROR,
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR,
           TypedScopeCreator.UNKNOWN_LENDS,
@@ -2436,13 +2443,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
                 baseConstructor.getDisplayName()));
       }
 
-      // Warn if any interface property is missing or incorrect
-      for (JSType baseInterface : functionType.getImplementedInterfaces()) {
+      // Warn if any @implemented types are not interfaces or if there are any duplicates
+      Set<JSType> alreadySeenInterfaces = new LinkedHashSet<>();
+
+      for (JSType baseInterface : functionType.getOwnImplementedInterfaces()) {
         boolean badImplementedType = false;
         ObjectType baseInterfaceObj = ObjectType.cast(baseInterface);
         if (baseInterfaceObj != null) {
-          FunctionType interfaceConstructor =
-              baseInterfaceObj.getConstructor();
+          FunctionType interfaceConstructor = baseInterfaceObj.getConstructor();
           if (interfaceConstructor != null && !interfaceConstructor.isInterface()) {
             badImplementedType = true;
           }
@@ -2452,6 +2460,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (badImplementedType) {
           report(n, BAD_IMPLEMENTED_TYPE, getBestFunctionName(n));
         }
+        // Disallow implementing both `Foo<string>` and `Foo<number>`, for example.
+        baseInterface = normalizeTemplatizedType(baseInterface);
+        if (!alreadySeenInterfaces.add(baseInterface)) {
+          report(n, SAME_INTERFACE_MULTIPLE_IMPLEMENTS, baseInterface.toString());
+        }
       }
       // check properties
       validator.expectAllInterfaceProperties(n, functionType);
@@ -2459,6 +2472,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         validator.expectAbstractMethodsImplemented(n, functionType);
       }
     }
+  }
+
+  /** Normalizes `Foo<string>` to just `Foo` and is the identify function for other types */
+  private JSType normalizeTemplatizedType(JSType maybeTemplatizedType) {
+    if (!maybeTemplatizedType.isTemplatizedType()) {
+      return maybeTemplatizedType;
+    }
+    return maybeTemplatizedType.toMaybeTemplatizedType().getRawType();
   }
 
   /** Checks an interface, which may be either an ES5-style FUNCTION node, or a CLASS node. */
