@@ -61,7 +61,9 @@ public final class TypeValidatorTest extends CompilerTestCase {
   @Test
   public void testBasicMismatch() {
     testWarning("/** @param {number} x */ function f(x) {} f('a');", TYPE_MISMATCH_WARNING);
-    this.assertThatRecordedMismatches().containsExactly(fromNatives(STRING_TYPE, NUMBER_TYPE));
+    this.assertThatRecordedMismatches()
+        .comparingElementsUsing(HAVE_SAME_TYPES)
+        .containsExactly(fromNatives(STRING_TYPE, NUMBER_TYPE));
   }
 
   @Test
@@ -81,6 +83,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     JSType secondFunction = registry.createFunctionType(string, bool);
 
     this.assertThatRecordedMismatches()
+        .comparingElementsUsing(HAVE_SAME_TYPES)
         .containsExactly(
             TypeMismatch.createForTesting(firstFunction, secondFunction),
             fromNatives(STRING_TYPE, BOOLEAN_TYPE),
@@ -104,6 +107,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     JSType secondFunction = registry.createFunctionType(number, bool);
 
     this.assertThatRecordedMismatches()
+        .comparingElementsUsing(HAVE_SAME_TYPES)
         .containsExactly(
             TypeMismatch.createForTesting(firstFunction, secondFunction),
             fromNatives(STRING_TYPE, BOOLEAN_TYPE));
@@ -202,12 +206,53 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void bug_testMismatchRecursively_throughFields() {
+    testWarning(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    /** @type {number} */ this.x;",
+            "  }",
+            "}",
+            "",
+            "function f(/** {x: string} */ a) {",
+            "  const /** !Foo */ b = a;",
+            "}"),
+        TYPE_MISMATCH_WARNING);
+
+    // TODO(b/148169932): There should be another mismatch {found: string, required: number}.
+    this.assertThatRecordedMismatches().hasSize(1);
+  }
+
+  @Test
+  public void bug_testMismatchRecursively_throughTemplates() {
+    testWarning(
+        lines(
+            "/**",
+            " * @interface",
+            " * @template T",
+            " */",
+            "class Foo { }",
+            "",
+            "/** @implements {Foo<string>} */",
+            "class Bar { }",
+            "",
+            "function f(/** !Bar */ a) {",
+            "  const /** !Foo<number> */ b = a;",
+            "}"),
+        TYPE_MISMATCH_WARNING);
+
+    // TODO(b/148169932): There should be an another mismatch {found: string, required: number}.
+    this.assertThatRecordedMismatches().isEmpty();
+  }
+
+  @Test
   public void testNullUndefined() {
     testWarning(
         "/** @param {string} x */ function f(x) {}\n"
             + "f(/** @type {string|null|undefined} */ ('a'));",
         TYPE_MISMATCH_WARNING);
-    this.assertThatRecordedMismatches().containsExactly();
+    this.assertThatRecordedMismatches().isEmpty();
   }
 
   @Test
@@ -223,7 +268,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
             + "/** @param {Sub} x */ function f(x) {}\n"
             + "f(/** @type {Super} */ (new Sub));",
         TYPE_MISMATCH_WARNING);
-    this.assertThatRecordedMismatches().containsExactly();
+    this.assertThatRecordedMismatches().isEmpty();
   }
 
   @Test
@@ -641,10 +686,8 @@ public final class TypeValidatorTest extends CompilerTestCase {
     return TypeMismatch.createForTesting(registry.getNativeType(a), registry.getNativeType(b));
   }
 
-  private IterableSubject.UsingCorrespondence<TypeMismatch, TypeMismatch>
-      assertThatRecordedMismatches() {
-    return assertThat(getLastCompiler().getTypeMismatches())
-        .comparingElementsUsing(HAVE_SAME_TYPES);
+  private IterableSubject assertThatRecordedMismatches() {
+    return assertThat(getLastCompiler().getTypeMismatches());
   }
 
   private static final Correspondence<TypeMismatch, TypeMismatch> HAVE_SAME_TYPES =
