@@ -2250,8 +2250,7 @@ public class JSTypeRegistry implements Serializable {
     }
 
     if (!nominalType.isUnknownType()
-        // TODO(b/287880204): delete the following two cases after cleaning up the codebase
-        && nominalType instanceof ObjectType
+        // TODO(b/287880204): delete the following case after cleaning up the codebase
         && !isNonNullableName(scope, typeNode.getString())) {
       Node firstExtraTemplateParam =
           typeNode.getFirstChild().getChildAtIndex(requiredTemplateArgCount);
