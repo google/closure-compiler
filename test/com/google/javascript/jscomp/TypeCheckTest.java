@@ -14305,16 +14305,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testInheritanceCheck14() {
-    testClosureTypesMultipleWarnings(
+    testClosureTypes(
         lines(
             "var goog = {};",
             "/** @constructor\n @extends {goog.Missing} */",
             "goog.Super = function() {};",
             "/** @constructor\n @extends {goog.Super} */function Sub() {};",
             "/** @override */ Sub.prototype.foo = function() {};"),
-        ImmutableList.of(
-            "Bad type annotation. Unknown type goog.Missing",
-            "Could not resolve type in @extends tag of Sub"));
+        "Bad type annotation. Unknown type goog.Missing");
   }
 
   @Test
@@ -24127,10 +24125,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             // Verify that ns.fn resolves to the locally assigned ns.fn, not the global ns.fn.
             "  ns.fn(0);",
             "}"),
-        lines(
-            "actual parameter 1 of Namespace.fn does not match formal parameter",
-            "found   : number",
-            "required: string"));
+        ImmutableList.of(
+            "Property fn never defined on Namespace",
+            lines(
+                "actual parameter 1 of ns.fn does not match formal parameter",
+                "found   : number",
+                "required: string")));
   }
 
   @Test

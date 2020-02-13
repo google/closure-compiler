@@ -7024,6 +7024,34 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testJsdocCanReferToFunctionDeclarationType_withoutNamedType() {
+    testTypes(
+        lines(
+            CLOSURE_DEFS,
+            // file1
+            "goog.provide('a.Foo');",
+            "/** @constructor */",
+            "a.Foo = function() {};",
+            "",
+            // file2
+            "goog.loadModule(function(exports) {",
+            "  goog.module('b.Bar');",
+            "",
+            "  const Foo = goog.require('a.Foo');",
+            "  /** @constructor @extends {Foo} */",
+            "  function Bar() {}",
+            "  exports = Bar;",
+            "  return exports;",
+            "});",
+            "",
+            // file3
+            "/** @type {!b.Bar<number>} */",
+            "let x;",
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+  }
+
+  @Test
   public void testTypeCheckingEsModule_exportSpecs() {
     testTypes("const x = 0; export {x};");
   }

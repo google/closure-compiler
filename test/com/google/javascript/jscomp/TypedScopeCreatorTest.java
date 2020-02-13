@@ -993,6 +993,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testNestedObjectPatternParameter_withNamedType() {
     testSame(
         lines(
+            "/** @param {!SomeName} obj */ function f({data: {a}}) { A: a; }",
             "class SomeOtherName {",
             "  constructor() {",
             "    /** @type {number} */",
@@ -1005,7 +1006,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "    this.data;",
             "  }",
             "}",
-            "/** @param {!SomeName} obj */ function f({data: {a}}) { A: a; }",
             ""));
 
     // This variable becomes inferred, even though SomeName is declared before it is referenced,
@@ -1057,12 +1057,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "/** @typedef {!Foo} */",
             "var TypedefOfFoo;",
             "",
+            "/** @param {!ns.TypedefOfFoo} obj */",
+            "function f({a}) { A: a; }",
             "const ns = {};",
             "/** @const */",
             "ns.TypedefOfFoo = TypedefOfFoo;",
-            "",
-            "/** @param {!ns.TypedefOfFoo} obj */",
-            "function f({a}) { A: a; }"));
+            ""));
 
     TypedVar aVar = checkNotNull(getLabeledStatement("A").enclosingScope.getVar("a"));
     assertType(aVar.getType()).toStringIsEqualTo("number");
@@ -1073,6 +1073,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testArrayPatternParameter_withNamedType() {
     testSame(
         lines(
+            "/** @param {!ASubclass} obj */ function f([a]) { A: a; }",
             "/**",
             " * @interface",
             " * @extends {Iterable<T>}",
@@ -1082,7 +1083,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "}",
             "/** @interface @extends {TemplatizedClass<number>} */",
             "class ASubclass {}",
-            "/** @param {!ASubclass} obj */ function f([a]) { A: a; }",
             ""));
 
     // Verify we get the correct type for 'a' after name resolution is complete
@@ -1976,22 +1976,24 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testMethodBeforeFunction1() {
+    // Adding a method to a hoisted constructor before its definition doesn't typecheck correctly.
+    // Technically this code is valid JS but the TypedScopeCreator doesn't model function hoisting.
+    // This is because hoisting causes a lot of new NamedTypes to appear, and NamedTypes are
+    // generally buggy.
     testSame(
-        "var y = Window.prototype;" +
-        "Window.prototype.alert = function(message) {};" +
-        "/** @constructor */ function Window() {}\n" +
-        "var window = new Window(); \n" +
-        "var x = window;");
+        "var y = Window.prototype;"
+            + "Window.prototype.alert = function(message) {};"
+            + "/** @constructor */ function Window() {}\n"
+            + "var window = new Window(); \n"
+            + "var x = window;");
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertThat(x.toString()).isEqualTo("Window");
     assertThat(x.getImplicitPrototype().hasOwnProperty("alert")).isTrue();
-    assertThat(x.getPropertyType("alert").toString())
-        .isEqualTo("function(this:Window, ?): undefined");
+    assertThat(x.getPropertyType("alert").toString()).isEqualTo("function(?): undefined");
     assertThat(x.isPropertyTypeDeclared("alert")).isTrue();
 
     ObjectType y = (ObjectType) findNameType("y", globalScope);
-    assertThat(y.getPropertyType("alert").toString())
-        .isEqualTo("function(this:Window, ?): undefined");
+    assertThat(y.getPropertyType("alert").toString()).isEqualTo("function(?): undefined");
   }
 
   @Test
@@ -2005,13 +2007,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertThat(x.toString()).isEqualTo("Window");
     assertThat(x.getImplicitPrototype().hasOwnProperty("alert")).isTrue();
-    assertThat(x.getPropertyType("alert").toString())
-        .isEqualTo("function(this:Window, ?): undefined");
+    assertThat(x.getPropertyType("alert").toString()).isEqualTo("function(?): undefined");
     assertThat(x.isPropertyTypeDeclared("alert")).isFalse();
 
     ObjectType y = (ObjectType) findNameType("y", globalScope);
-    assertThat(y.getPropertyType("alert").toString())
-        .isEqualTo("function(this:Window, ?): undefined");
+    assertType(y).withTypeOfProp("alert").isUnknown();
   }
 
   @Test
@@ -5226,9 +5226,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertNode(getLabeledStatement("EARLY_REF").statementNode.getOnlyChild())
         .hasJSTypeThat()
-        // TODO(b/116853368): This should just be 'string', but the function declaration is
-        // hoisted so it hits bugs in nullability of forward references to types.
-        .toStringIsEqualTo("(null|string)");
+        .isString();
     assertNode(getLabeledStatement("NORMAL_REF").statementNode.getOnlyChild())
         .hasJSTypeThat()
         .isString();

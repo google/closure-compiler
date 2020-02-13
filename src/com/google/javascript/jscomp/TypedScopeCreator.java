@@ -3064,15 +3064,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     @Override
     void visitPreorder(NodeTraversal t, Node n, Node parent) {
-      // Handle hoisted functions ahead of time, when preorder-visiting their enclosing block.
-      if (NodeUtil.isStatementParent(n) || n.isExport()) {
-        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-          if (NodeUtil.isHoistedFunctionDeclaration(child)) {
-            defineFunctionLiteral(child);
-          }
-        }
-      }
-
       // Create any child block scopes "pre-order" as we see them.
       //
       // This is required because hoisted or qualified names defined in earlier blocks might be
@@ -3089,7 +3080,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       // All other functions (and classes, etc) are handled when we see the actual function node.
-      if (n.isFunction() && !NodeUtil.isHoistedFunctionDeclaration(n)) {
+      if (n.isFunction()) {
         defineFunctionLiteral(n);
       }
     }
