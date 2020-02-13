@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;

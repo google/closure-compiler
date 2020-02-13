@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.type;
 
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Outcome;
 
 /**
  * This interface defines what reversed abstract interpreters provide.

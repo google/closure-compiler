@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import java.io.Serializable;
 import javax.annotation.Nullable;
@@ -1200,26 +1199,13 @@ public abstract class JSType implements Serializable {
    * TODO(user): Move this method to the SemanticRAI and use the visit
    * method of types to get the restricted type.
    */
-  public JSType getRestrictedTypeGivenOutcome(
-      Outcome outcome) {
-    if (outcome.isTruthy() && areIdentical(this, getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
+  public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
+    if (outcome && areIdentical(this, getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
       return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
     }
 
-    // Only `NULL_TYPE` and `VOID_TYPE` can really be nullish,
-    // so the result for any other non-union type must be NO_TYPE.
-    // Note that the UnionType class is responsible for handling the union case.
-    if (outcome.isNullish().toBoolean(false)) {
-      if (areIdentical(this, getNativeType(JSTypeNative.VOID_TYPE))
-          || areIdentical(this, getNativeType(JSTypeNative.NULL_TYPE))) {
-        return this;
-      } else {
-        return getNativeType(JSTypeNative.NO_TYPE);
-      }
-    }
-
     BooleanLiteralSet literals = getPossibleToBooleanOutcomes();
-    if (literals.contains(outcome.isTruthy())) {
+    if (literals.contains(outcome)) {
       return this;
     } else {
       return getNativeType(JSTypeNative.NO_TYPE);

@@ -18,10 +18,10 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.jscomp.type.Outcome;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.Arrays;

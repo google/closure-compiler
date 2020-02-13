@@ -20,7 +20,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -328,7 +327,9 @@ public final class SemanticReverseAbstractInterpreter
 
     // restricting left type
     JSType restrictedLeftType =
-        (leftType == null) ? null : leftType.getRestrictedTypeGivenOutcome(outcome);
+        (leftType == null)
+            ? null
+            : leftType.getRestrictedTypeGivenToBooleanOutcome(outcome.isTruthy());
     if (restrictedLeftType == null) {
       return firstPreciserScopeKnowingConditionOutcome(
           right, blindScope, outcome);
@@ -350,7 +351,9 @@ public final class SemanticReverseAbstractInterpreter
 
     if (outcome.isTruthy()) {
       JSType restrictedRightType =
-          (rightType == null) ? null : rightType.getRestrictedTypeGivenOutcome(outcome);
+          (rightType == null)
+              ? null
+              : rightType.getRestrictedTypeGivenToBooleanOutcome(outcome.isTruthy());
       // creating new scope
       return maybeRestrictName(
           blindScope, right, rightType, rightIsRefineable ? restrictedRightType : null);
@@ -446,7 +449,7 @@ public final class SemanticReverseAbstractInterpreter
   private FlowScope caseNameOrGetProp(Node name, FlowScope blindScope, Outcome outcome) {
     JSType type = getTypeIfRefinable(name, blindScope);
     if (type != null) {
-      JSType restrictedType = type.getRestrictedTypeGivenOutcome(outcome);
+      JSType restrictedType = type.getRestrictedTypeGivenToBooleanOutcome(outcome.isTruthy());
       return maybeRestrictName(blindScope, name, type, restrictedType);
     }
     return blindScope;

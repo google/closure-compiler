@@ -42,10 +42,10 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.jscomp.type.Outcome;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -1550,10 +1550,10 @@ class TypeInference
 
     scope = traverse(left, scope);
 
-    FlowScope rightScope =
-        reverseInterpreter.getPreciserScopeKnowingConditionOutcome(left, scope, Outcome.NULLISH);
+    // TODO(b/146659618): Do a better job at inferring if LHS is null
 
-    FlowScope scopeAfterTraverseRight = traverse(right, rightScope);
+    // throwing away scope because we are not sure if the RHS executes, but the LHS always does
+    traverse(right, scope);
 
     JSType leftType = left.getJSType();
     JSType rightType = right.getJSType();
@@ -1563,7 +1563,6 @@ class TypeInference
         n.setJSType(leftType);
       } else if (rightType != null) {
         n.setJSType(registry.createUnionType(leftType.restrictByNotNullOrUndefined(), rightType));
-        return join(scope, scopeAfterTraverseRight);
       }
     }
     return scope;
@@ -2368,7 +2367,7 @@ class TypeInference
     JSType type;
     BooleanOutcomePair outcome;
     if (leftType != null && rightType != null) {
-      leftType = leftType.getRestrictedTypeGivenOutcome(Outcome.forBoolean(!nIsAnd));
+      leftType = leftType.getRestrictedTypeGivenToBooleanOutcome(!nIsAnd);
       if (leftOutcome.toBooleanOutcomes == BooleanLiteralSet.get(!nIsAnd)) {
         // Either n is && and lhs is false, or n is || and lhs is true.
         // Use the restricted left type; the right side never gets evaluated.
