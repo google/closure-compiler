@@ -602,7 +602,8 @@ public abstract class CompilerTestCase {
           "goog.forwardDeclare = function(ns) {};",
           "goog.setTestOnly = function() {};",
           "goog.scope = function(fn) {};",
-          "goog.defineClass = function(superClass, clazz) {};");
+          "goog.defineClass = function(superClass, clazz) {};",
+          "goog.declareModuleId = function(ns) {};");
 
   /**
    * Constructs a test.
