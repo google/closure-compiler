@@ -147,8 +147,8 @@ public final class ClosureReverseAbstractInterpreter
   }
 
   @Override
-  public FlowScope getPreciserScopeKnowingConditionOutcome(
-      Node condition, FlowScope blindScope, Outcome outcome) {
+  public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
+      FlowScope blindScope, boolean outcome) {
     if (condition.isCall() && condition.hasTwoChildren()) {
       Node callee = condition.getFirstChild();
       Node param = condition.getLastChild();
@@ -161,7 +161,8 @@ public final class ClosureReverseAbstractInterpreter
           Function<TypeRestriction, JSType> restricter =
               restricters.get(right.getString());
           if (restricter != null) {
-            return restrictParameter(param, paramType, blindScope, restricter, outcome.isTruthy());
+            return restrictParameter(param, paramType, blindScope, restricter,
+                outcome);
           }
         }
       }
