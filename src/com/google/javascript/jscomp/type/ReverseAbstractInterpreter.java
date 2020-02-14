@@ -29,14 +29,12 @@ import com.google.javascript.rhino.Node;
  */
 public interface ReverseAbstractInterpreter {
   /**
-   * Calculates a precise version of the scope knowing the outcome of the
-   * condition.
+   * Calculates a precise version of the scope knowing the outcome of the condition.
    *
-   *  @param condition the condition's expression
-   *  @param blindScope the scope without knowledge about the outcome of the
-   *  condition
-   *  @param outcome the outcome of the condition
+   * @param condition the condition's expression
+   * @param blindScope the scope without knowledge about the outcome of the condition
+   * @param outcome the outcome of the condition
    */
-  FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
-      FlowScope blindScope, boolean outcome);
+  FlowScope getPreciserScopeKnowingConditionOutcome(
+      Node condition, FlowScope blindScope, Outcome outcome);
 }

@@ -42,6 +42,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.jscomp.type.Outcome;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -501,7 +502,7 @@ class TypeInference
                       condition,
                       conditionOutcomes.getOutcomeFlowScope(
                           condition.getToken(), branch == Branch.ON_TRUE),
-                      branch == Branch.ON_TRUE);
+                      Outcome.forBoolean(branch.equals(Branch.ON_TRUE)));
             } else {
               // conditionFlowScope is cached from previous iterations
               // of the loop.
@@ -510,7 +511,9 @@ class TypeInference
               }
               newScope =
                   reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
-                      condition, conditionFlowScope, branch == Branch.ON_TRUE);
+                      condition,
+                      conditionFlowScope,
+                      Outcome.forBoolean(branch.equals(Branch.ON_TRUE)));
             }
           }
           break;
@@ -1517,12 +1520,10 @@ class TypeInference
     scope = traverse(condition, scope);
 
     // reverse abstract interpret the condition to produce two new scopes
-    FlowScope trueScope = reverseInterpreter.
-        getPreciserScopeKnowingConditionOutcome(
-            condition, scope, true);
-    FlowScope falseScope = reverseInterpreter.
-        getPreciserScopeKnowingConditionOutcome(
-            condition, scope, false);
+    FlowScope trueScope =
+        reverseInterpreter.getPreciserScopeKnowingConditionOutcome(condition, scope, Outcome.TRUE);
+    FlowScope falseScope =
+        reverseInterpreter.getPreciserScopeKnowingConditionOutcome(condition, scope, Outcome.FALSE);
 
     // traverse the true node with the trueScope
     traverse(trueNode, trueScope);
@@ -1634,7 +1635,8 @@ class TypeInference
         // e.g. given `assert(typeof x === 'string')`, the resulting scope will infer x to be a
         // string.
         scope =
-            reverseInterpreter.getPreciserScopeKnowingConditionOutcome(assertedNode, scope, true);
+            reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+                assertedNode, scope, Outcome.TRUE);
         // Build the result of the assertExpression
         JSType truthyType = getJSType(assertedNode).restrictByNotNullOrUndefined();
         callNode.setJSType(truthyType);
@@ -2354,7 +2356,9 @@ class TypeInference
     // scope in which to verify the right node
     FlowScope rightScope =
         reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
-            left, leftOutcome.getOutcomeFlowScope(left.getToken(), nIsAnd), nIsAnd);
+            left,
+            leftOutcome.getOutcomeFlowScope(left.getToken(), nIsAnd),
+            Outcome.forBoolean(nIsAnd));
 
     // type the right node
     BooleanOutcomePair rightOutcome = traverseWithinShortCircuitingBinOp(right, rightScope);

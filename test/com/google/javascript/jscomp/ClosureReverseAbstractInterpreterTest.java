@@ -21,6 +21,7 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.FlowScope;
+import com.google.javascript.jscomp.type.Outcome;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -362,14 +363,16 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
 
     // trueScope
     assertType(
-            rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true)
+            rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, Outcome.TRUE)
                 .getSlot("a")
                 .getType())
         .isEqualTo(trueType);
 
     // falseScope
-    JSType aType = rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
-        .getSlot("a").getType();
+    JSType aType =
+        rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, Outcome.FALSE)
+            .getSlot("a")
+            .getType();
     if (falseType == null) {
       assertThat(aType).isNull();
     } else {

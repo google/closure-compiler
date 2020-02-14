@@ -91,21 +91,19 @@ public abstract class ChainableReverseAbstractInterpreter
     return firstLink;
   }
 
-  /**
-   * Calculates the preciser scope starting with the first link.
-   */
-  protected FlowScope firstPreciserScopeKnowingConditionOutcome(Node condition,
-      FlowScope blindScope, boolean outcome) {
+  /** Calculates the preciser scope starting with the first link. */
+  protected FlowScope firstPreciserScopeKnowingConditionOutcome(
+      Node condition, FlowScope blindScope, Outcome outcome) {
     return firstLink.getPreciserScopeKnowingConditionOutcome(
         condition, blindScope, outcome);
   }
 
   /**
-   * Delegates the calculation of the preciser scope to the next link.
-   * If there is no next link, returns the blind scope.
+   * Delegates the calculation of the preciser scope to the next link. If there is no next link,
+   * returns the blind scope.
    */
-  protected FlowScope nextPreciserScopeKnowingConditionOutcome(Node condition,
-      FlowScope blindScope, boolean outcome) {
+  protected FlowScope nextPreciserScopeKnowingConditionOutcome(
+      Node condition, FlowScope blindScope, Outcome outcome) {
     return nextLink != null ? nextLink.getPreciserScopeKnowingConditionOutcome(
         condition, blindScope, outcome) : blindScope;
   }
