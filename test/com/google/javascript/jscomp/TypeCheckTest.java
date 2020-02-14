@@ -13002,14 +13002,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testCast13() {
-    // Test to make sure that the forward-declaration still allows for
-    // a warning.
+    // In a typespace world, types and values may collide on the same symbol.
     testClosureTypes(
         "var goog = {}; "
             + "goog.forwardDeclare('goog.foo');"
             + "goog.foo = function() {};"
             + "function f() { return /** @type {goog.foo} */ (new Object()); }",
-        "Bad type annotation. Unknown type goog.foo");
+        null);
   }
 
   @Test

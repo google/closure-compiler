@@ -822,7 +822,8 @@ public class JSTypeRegistry implements Serializable {
     if (resolvedViaTable != null) {
       return resolvedViaTable;
     }
-    return resolveViaComponents(declarationScope, name);
+    StaticScope bestScope = declarationScope != null ? declarationScope : scope;
+    return resolveViaComponents(bestScope, name);
   }
 
   private JSType resolveViaComponents(StaticScope scope, String qualifiedName) {

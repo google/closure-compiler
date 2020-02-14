@@ -920,20 +920,17 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testTypedefOnClassSideInheritedSubtype() {
-    // Class-side inheritance should carry over any typedefs nested on the class.
+  public void testTypedefOnClassSideInheritedSubtypeInaccessible() {
+    // Class-side inheritance should not carry over any types nested on the class.
     testTypes(
         lines(
             "class Base {}",
             "/** @typedef {number} */", // preserve newlines
             "Base.MyNumber;",
             "class Sub extends Base {}",
-            "/** @type {Sub.MyNumber} */ const x = 'str';",
+            "/** @type {Sub.MyNumber} */ let x;",
             ""),
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: (null|number)"));
+        "Bad type annotation. Unknown type Sub.MyNumber");
   }
 
   @Test
