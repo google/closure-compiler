@@ -278,10 +278,10 @@ public final class NamedType extends ProxyObjectType {
             || resolveViaRegistry(reporter)
             || resolveViaProperties(reporter);
 
+    super.resolveInternal(reporter);
     if (detectInheritanceCycle()) {
       handleTypeCycle(reporter);
     }
-    super.resolveInternal(reporter);
     finishPropertyContinuations();
 
     JSType result = getReferencedType();

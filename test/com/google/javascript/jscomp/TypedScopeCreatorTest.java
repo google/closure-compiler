@@ -7002,6 +7002,27 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRequireType_inheritanceChainWithIdenticalClassAndInterfaceName() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('a.Foo');",
+                "const BFoo = goog.requireType('b.Foo');",
+                "var /** !BFoo */ b;",
+                "",
+                "/** @interface */",
+                "class Foo {}",
+                "exports = Foo;"),
+            lines(
+                "goog.module('b.Foo');",
+                "const AFoo = goog.require('a.Foo');",
+                "/** @implements {AFoo} */",
+                "class Foo {}",
+                "exports = Foo;")));
+  }
+
+  @Test
   public void testMemoization() {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();
