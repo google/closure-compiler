@@ -875,8 +875,8 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       name.addChildToFront(value);
 
       if (globalTypedScope != null) {
-        TypedVar typedVar = checkNotNull(globalTypedScope.getVar(namespace));
-        name.setJSType(checkNotNull(typedVar.getType()));
+        TypedVar typedVar = checkNotNull(globalTypedScope.getVar(namespace), namespace);
+        name.setJSType(typedVar.getType());
       }
 
       Node decl = IR.var(name);

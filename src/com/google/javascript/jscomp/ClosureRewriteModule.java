@@ -1265,7 +1265,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (exportedNamespace != null) {
       compiler.reportChangeToEnclosingScope(call);
       Node exportedNamespaceName =
-          this.createQNameUsingRootTypeFromGlobalTypedScie(exportedNamespace).srcrefTree(call);
+          this.createQNameUsingRootTypeFromGlobalTypedScope(exportedNamespace).srcrefTree(call);
       exportedNamespaceName.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
       exportedNamespaceName.setOriginalName(namespaceId);
       call.replaceWith(exportedNamespaceName);
@@ -1458,9 +1458,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node assignNode = n.getParent();
-    if (!currentScript.declareLegacyNamespace
-        && currentScript.defaultExportLocalName != null) {
+    if (!currentScript.declareLegacyNamespace && currentScript.defaultExportLocalName != null) {
       assignNode.getParent().detach();
+
+      Node binaryNamespaceName =
+          astFactory.createName(currentScript.getBinaryNamespace(), n.getJSType());
+      this.declareGlobalVariable(binaryNamespaceName, t);
       return;
     }
 
@@ -1469,7 +1472,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node jsdocNode;
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =
-          this.createQNameUsingRootTypeFromGlobalTypedScie(currentScript.namespaceId).srcrefTree(n);
+          this.createQNameUsingRootTypeFromGlobalTypedScope(currentScript.namespaceId)
+              .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
       assignNode.replaceChild(n, legacyQname);
       jsdocNode = assignNode;
@@ -1505,7 +1509,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =
-          this.createQNameUsingRootTypeFromGlobalTypedScie(currentScript.namespaceId).srcrefTree(n);
+          this.createQNameUsingRootTypeFromGlobalTypedScope(currentScript.namespaceId)
+              .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
       n.replaceWith(legacyQname);
       compiler.reportChangeToEnclosingScope(legacyQname);
@@ -1743,7 +1748,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // name.
     Node nameParent = nameNode.getParent();
     Node newQualifiedName =
-        this.createQNameUsingRootTypeFromGlobalTypedScie(newString).srcrefTree(nameNode);
+        this.createQNameUsingRootTypeFromGlobalTypedScope(newString).srcrefTree(nameNode);
     newQualifiedName.setDefineName(nameNode.getDefineName());
 
     boolean replaced = safeSetStringIfDeclaration(nameParent, nameNode, newQualifiedName);
@@ -1962,7 +1967,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     return method.isGetProp() && method.matchesQualifiedName(targetMethod);
   }
 
-  private Node createQNameUsingRootTypeFromGlobalTypedScie(String qname) {
+  private Node createQNameUsingRootTypeFromGlobalTypedScope(String qname) {
     List<String> nameParts = DOT_SPLITTER.splitToList(qname);
     checkState(!nameParts.isEmpty());
 
