@@ -203,8 +203,6 @@ final class SubtypeChecker {
       } else {
         return this.isProxyObjectSubtype((ProxyObjectType) subtype, supertype);
       }
-    } else if (subtype instanceof RecordType) {
-      return this.isRecordSubtype((RecordType) subtype, supertype);
     } else {
       return this.isSubtypeHelper(subtype, supertype);
     }
@@ -288,15 +286,22 @@ final class SubtypeChecker {
       bivarantMatch = true;
     }
 
-    // If the super type is a structural type, then we can't safely remove a templatized type
-    // (since it might affect the types of the properties)
     if (this.isUsingStructuralTyping && supertype.isStructuralType()) {
+      /**
+       * Do this before considering templatization in general.
+       *
+       * <p>If the super type is a structural type, then we can't safely unwrap any templatized
+       * types. The templates might affect the types of the properties.
+       */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
     } else if (supertype.isRecordType()) {
-      // Anonymous record types are always considered for structural typing because that's the only
-      // kind of typing they support. However, we limit to the case where the supertype is the
-      // record, because records shouldn't be subtypes of nominal types.
+      /**
+       * Anonymous record types are always considered structurally when supertypes.
+       *
+       * <p>Structural typing is the only kind of typing they support. However, we limit to the case
+       * where the supertype is the record, because records shouldn't be subtypes of nominal types.
+       */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
     }
@@ -547,27 +552,6 @@ final class SubtypeChecker {
     } else {
       return this.isProxyObjectSubtype(subtype, supertype);
     }
-  }
-
-  private boolean isRecordSubtype(RecordType subtype, JSType supertype) {
-    if (this.isSubtypeHelper(subtype, supertype)) {
-      return true;
-    }
-
-    // Top of the record types is the empty record, or OBJECT_TYPE.
-    if (this.isSubtypeCaching(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE), supertype)) {
-      return true;
-    }
-
-    // A type is a subtype of a record type if it itself is a record
-    // type and it has at least the same members as the parent record type
-    // with the same types.
-    if (!supertype.isRecordType()) {
-      return false;
-    }
-
-    return this.isStructuralSubtypeHelper(
-        subtype, supertype.toMaybeRecordType(), PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
   }
 
   private boolean isTypeMapSubmap(ObjectType subtype, ObjectType supertype) {
