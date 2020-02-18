@@ -18,13 +18,17 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Joiner;
+import com.google.auto.value.AutoValue;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
+import com.google.javascript.rhino.jstype.JSType;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -40,13 +44,14 @@ final class ModuleRenaming {
   static final String DEFAULT_EXPORT_VAR_PREFIX = "$jscompDefaultExport";
 
   /** Returns the global name of a variable declared in an ES module. */
-  static String getGlobalNameOfEsModuleLocalVariable(
+  static QualifiedName getGlobalNameOfEsModuleLocalVariable(
       ModuleMetadata moduleMetadata, String variableName) {
-    return variableName + "$$" + getGlobalName(moduleMetadata, /* googNamespace= */ null);
+    return QualifiedName.of(
+        variableName + "$$" + getGlobalName(moduleMetadata, /* googNamespace= */ null).join());
   }
 
   /** Returns the global name of the anonymous default export for the given module. */
-  static String getGlobalNameOfAnonymousDefaultExport(ModuleMetadata moduleMetadata) {
+  static QualifiedName getGlobalNameOfAnonymousDefaultExport(ModuleMetadata moduleMetadata) {
     return getGlobalNameOfEsModuleLocalVariable(moduleMetadata, DEFAULT_EXPORT_VAR_PREFIX);
   }
 
@@ -56,25 +61,13 @@ final class ModuleRenaming {
    *     if any
    * @return the global, qualified name to rewrite any references to this module to
    */
-  static String getGlobalName(ModuleMetadata moduleMetadata, @Nullable String googNamespace) {
-    checkState(googNamespace == null || moduleMetadata.googNamespaces().contains(googNamespace));
-    switch (moduleMetadata.moduleType()) {
-      case GOOG_MODULE:
-        return ClosureRewriteModule.getBinaryModuleNamespace(googNamespace);
-      case GOOG_PROVIDE:
-      case LEGACY_GOOG_MODULE:
-        return checkNotNull(googNamespace);
-      case ES6_MODULE:
-      case COMMON_JS:
-        return moduleMetadata.path().toModuleName();
-      case SCRIPT:
-        // fall through, throw an error
-    }
-    throw new IllegalStateException("Unexpected module type: " + moduleMetadata.moduleType());
+  static QualifiedName getGlobalName(
+      ModuleMetadata moduleMetadata, @Nullable String googNamespace) {
+    return GlobalizedModuleName.create(moduleMetadata, googNamespace, null).aliasName();
   }
 
   /** Returns the post-transpilation, globalized name of the export. */
-  static String getGlobalName(Export export) {
+  static QualifiedName getGlobalName(Export export) {
     if (export.moduleMetadata().isEs6Module()) {
       if (export.localName().equals(Export.DEFAULT_EXPORT_NAME)) {
         return getGlobalNameOfAnonymousDefaultExport(export.moduleMetadata());
@@ -82,21 +75,27 @@ final class ModuleRenaming {
       return getGlobalNameOfEsModuleLocalVariable(export.moduleMetadata(), export.localName());
     }
     return getGlobalName(export.moduleMetadata(), export.closureNamespace())
-        + "."
-        + export.exportName();
+        .getprop(export.exportName());
   }
 
   /** Returns the post-transpilation, globalized name of the binding. */
-  static String getGlobalName(Binding binding) {
+  static QualifiedName getGlobalName(Binding binding) {
     if (binding.isModuleNamespace()) {
       return getGlobalName(binding.metadata(), binding.closureNamespace());
     }
     return getGlobalName(binding.originatingExport());
   }
 
+  private static JSType getNameRootType(String qname, @Nullable TypedScope globalTypedScope) {
+    if (globalTypedScope == null) {
+      return null;
+    }
+    String root = NodeUtil.getRootOfQualifiedName(qname);
+    return checkNotNull(globalTypedScope.getVar(root), "missing var for %s", root).getType();
+  }
+
   /**
-   * Returns the globalized name of a reference to a binding in JS Doc. See {@link
-   * #replace(AbstractCompiler, ModuleMap, Binding, Node)} to replace actual code nodes.
+   * Returns the globalized name of a reference to a binding in JS Doc.
    *
    * <p>For example:
    *
@@ -142,78 +141,90 @@ final class ModuleRenaming {
       prop++;
     }
 
-    String globalName = getGlobalName(binding);
+    QualifiedName globalName = getGlobalName(binding);
 
-    if (prop < propertyChain.size()) {
-      globalName =
-          globalName + "." + Joiner.on('.').join(propertyChain.subList(prop, propertyChain.size()));
+    while (prop < propertyChain.size()) {
+      globalName = globalName.getprop(propertyChain.get(prop++));
     }
 
-    return globalName;
+    return globalName.join();
   }
 
   /**
-   * Replaces the reference to a given binding. See {@link #getGlobalNameForJsDoc(ModuleMap,
-   * Binding, List)} for a JS Doc version.
+   * Stores a fully qualified globalized name of a module or provide + the type of its root node.
    *
-   * <p>For example:
+   * <p>For goog.provides and legacy goog.modules, the fully qualified name is just the namespace of
+   * the module "a.b.c.d". For ES modules, it's deterministically generated based on the module
+   * path, e.g. "module$path$to$my$dir". For non-legacy goog.modules, it's deterministically
+   * generated based on the module name, e.g. $module$exports$a$b$c$d".
    *
-   * <pre>
-   *   // bar
-   *   export let baz = {qux: 0};
-   * </pre>
-   *
-   * <pre>
-   *   // foo
-   *   import * as bar from 'bar';
-   *   export {bar};
-   * </pre>
-   *
-   * <pre>
-   *   import * as foo from 'foo';
-   *   use(foo.bar.baz.qux);
-   * </pre>
-   *
-   * <p>Should call this method with the binding and node for {@code foo}. In this example any of
-   * these properties could also be modules. This method will replace as much as the GETPROP as it
-   * can with module exported variables. Meaning in the above example this would return something
-   * like "baz$$module$bar.qux", whereas if this method were called for just "foo.bar" it would
-   * return "module$bar", as it refers to a module object itself.
-   *
-   * @param binding the binding nameNode is a reference to
-   * @param nameNode the node to replace
+   * <p>Used because in some cases, the root of the qualified name will not be present in any scopes
+   * until a subsequent run of {@link ClosureRewriteModule}. It's useful to store the type of
+   * Closure module exports `module$exports$my$goog$module` separately.
    */
-  static Node replace(
-      AbstractCompiler compiler, ModuleMap moduleMap, Binding binding, Node nameNode) {
-    checkState(nameNode.isName());
-    Node n = nameNode;
+  @AutoValue
+  abstract static class GlobalizedModuleName {
+    abstract QualifiedName aliasName();
+    // The type of the root of `aliasName`, as it may not always exist in the scope yet.
+    @Nullable
+    abstract JSType rootNameType();
 
-    while (binding.isModuleNamespace()
-        && binding.metadata().isEs6Module()
-        && n.getParent().isGetProp()) {
-      String propertyName = n.getParent().getSecondChild().getString();
-      Module m = moduleMap.getModule(binding.metadata().path());
-      if (m.namespace().containsKey(propertyName)) {
-        binding = m.namespace().get(propertyName);
-        n = n.getParent();
-      } else {
-        // This means someone referenced an invalid export on a module object. This should be an
-        // error, so just rewrite and let the type checker complain later. It isn't a super clear
-        // error, but we're working on type checking modules soon.
-        break;
+    /** Creates a GETPROP chain with type information representing this name */
+    Node toQname(AstFactory astFactory) {
+      Node rootName = astFactory.createName(this.aliasName().getRoot(), this.rootNameType());
+      if (this.aliasName().isSimple()) {
+        return rootName;
       }
+      return astFactory.createGetProps(rootName, Iterables.skip(this.aliasName().components(), 1));
     }
 
-    String globalName = getGlobalName(binding);
-    Node newNode = NodeUtil.newQName(compiler, globalName);
+    /**
+     * Returns a copy of this name with the given {@code property} appended to the {@link
+     * #aliasName()}
+     */
+    GlobalizedModuleName getprop(String property) {
+      Preconditions.checkArgument(!property.isEmpty() && !property.contains("."));
+      return GlobalizedModuleName.create(aliasName().getprop(property), rootNameType());
+    }
 
-    // For kythe: the new node only represents the last name it replaced, not all the names.
-    // e.g. if we rewrite `a.b.c.d.e` to `x.d.e`, then `x` should map to `c`, not `a.b.c`.
-    Node forSourceInfo = n.isGetProp() ? n.getSecondChild() : n;
+    static GlobalizedModuleName create(QualifiedName aliasName, JSType rootNameType) {
+      return new AutoValue_ModuleRenaming_GlobalizedModuleName(aliasName, rootNameType);
+    }
 
-    n.replaceWith(newNode);
-    newNode.srcrefTree(forSourceInfo);
-    newNode.setOriginalName(forSourceInfo.getString());
-    return newNode;
+    /**
+     * @param moduleMetadata the metadata of the module to get the global name of
+     * @param googNamespace the Closure namespace that is being referenced fromEsModule this module,
+     *     if any
+     * @param globalTypedScope A global scope expected to contain the types of goog.provided names
+     *     and rewritten ES6 module names
+     * @return the global, qualified name to rewrite any references to this module to, along with
+     *     the type of the root of the module if {@code globalTypedScope} is not null.
+     */
+    static GlobalizedModuleName create(
+        ModuleMetadata moduleMetadata,
+        @Nullable String googNamespace,
+        @Nullable TypedScope globalTypedScope) {
+      checkState(googNamespace == null || moduleMetadata.googNamespaces().contains(googNamespace));
+      switch (moduleMetadata.moduleType()) {
+        case GOOG_MODULE:
+          // The exported type is stored on the MODULE_BODY node.
+          Node moduleBody = moduleMetadata.rootNode().getFirstChild();
+          return new AutoValue_ModuleRenaming_GlobalizedModuleName(
+              QualifiedName.of(ClosureRewriteModule.getBinaryModuleNamespace(googNamespace)),
+              moduleBody.getJSType());
+        case GOOG_PROVIDE:
+        case LEGACY_GOOG_MODULE:
+          return new AutoValue_ModuleRenaming_GlobalizedModuleName(
+              QualifiedName.of(googNamespace), getNameRootType(googNamespace, globalTypedScope));
+        case ES6_MODULE:
+        case COMMON_JS:
+          return new AutoValue_ModuleRenaming_GlobalizedModuleName(
+              QualifiedName.of(moduleMetadata.path().toModuleName()),
+              getNameRootType(moduleMetadata.path().toModuleName(), globalTypedScope));
+        case SCRIPT:
+          // fall through, throw an error
+      }
+      throw new IllegalStateException("Unexpected module type: " + moduleMetadata.moduleType());
+    }
   }
 }

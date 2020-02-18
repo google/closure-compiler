@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
@@ -31,6 +32,8 @@ import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAME
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,13 +98,15 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
               "exports.a = class {};",
               " exports.a.d = class {};"));
 
+  private boolean runTypeChecker = true;
+
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
-    enableTypeCheck();
+    enableTypeInfoValidation();
     enableCreateModuleMap();
   }
 
@@ -118,11 +123,25 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (externs, root) -> {
+      final TypedScope globalTypedScope;
+      if (runTypeChecker) {
+        ReverseAbstractInterpreter rai =
+            new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+        compiler.setTypeCheckingHasRun(true);
+        globalTypedScope =
+            checkNotNull(
+                new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                    .processForTesting(externs, root));
+      } else {
+        globalTypedScope = null;
+      }
+
       new Es6RewriteModules(
               compiler,
               compiler.getModuleMetadataMap(),
               compiler.getModuleMap(),
-              /* preprocessorSymbolTable= */ null)
+              /* preprocessorSymbolTable= */ null,
+              globalTypedScope)
           .process(externs, root);
     };
   }
@@ -515,6 +534,37 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   }
 
   @Test
+  public void testGoogRequireTypeForDeclareModuleId_lateLoaded() {
+    test(
+        srcs(
+            CLOSURE_BASE,
+            SourceFile.fromCode(
+                "goog.js",
+                lines(
+                    "goog.module('bar')",
+                    "const es6 = goog.requireType('my.es6');",
+                    "/** @param {es6.x} a */",
+                    "function f(a) {}")),
+            SourceFile.fromCode("es6.js", "export class x {}; goog.declareModuleId('my.es6');")),
+        expected(
+            CLOSURE_BASE,
+            SourceFile.fromCode(
+                "goog.js",
+                lines(
+                    "goog.module('bar')",
+                    "/**",
+                    " * @param {module$es6.x} a",
+                    " */",
+                    "function f(a) {}")),
+            SourceFile.fromCode(
+                "es6.js",
+                lines(
+                    "class x$$module$es6 {}",
+                    "/** @const */ var module$es6={};",
+                    "/** @const */ module$es6.x = x$$module$es6;"))));
+  }
+
+  @Test
   public void testGoogRequireForDeclareModuleIdWithDestructure() {
     test(
         srcs(
@@ -645,7 +695,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   @Test
   public void testNamespaceImports() {
     disableTypeInfoValidation();
-    disableTypeCheck();
+    runTypeChecker = false; // typechecker does not support these namespace imports.
     testModules(
         lines("import Foo from 'goog:closure.provide';", "use(Foo);"),
         "use(closure.provide); /** @const */ var module$testcode = {};");
@@ -1044,6 +1094,19 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             CLOSURE_DEFS,
             lines(
                 "use(is.missing, is.missing.x);", //
+                "/** @const */ var module$input1 = {};")));
+
+    test(
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "const {prop} = goog.require('is.missing');", //
+                "use(prop, prop.x);",
+                "export {};")),
+        expected(
+            CLOSURE_DEFS,
+            lines(
+                "use(is.missing.prop, is.missing.prop.x);", //
                 "/** @const */ var module$input1 = {};")));
 
     test(

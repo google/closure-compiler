@@ -7942,6 +7942,63 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testAccessControlsChecks_esClosureInterop_destructuringRequireModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.VISIBILITY, CheckLevel.WARNING);
+    options.setCheckTypes(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setChecksOnly(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('my.Foo');", //
+              "/** @private */",
+              "exports.fn = function() {}"),
+          lines(
+              "const {fn} = goog.require('my.Foo');", //
+              "fn();",
+              "export {};")
+        },
+        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  @Test
+  public void testAccessControlsChecks_esClosureInterop_requireModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.VISIBILITY, CheckLevel.WARNING);
+    options.setCheckTypes(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setChecksOnly(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('my.Foo');", //
+              "class Foo {",
+              "  /** @private */",
+              "  static build() {}",
+              "}",
+              "exports = Foo;"),
+          lines(
+              "const Foo = goog.require('my.Foo');", //
+              "Foo.build();",
+              "export {};")
+        },
+        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  @Test
   public void testImportMeta() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

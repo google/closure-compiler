@@ -195,7 +195,7 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
 
       Node statementNode = NodeUtil.getEnclosingStatement(callNode);
       Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(statementNode);
-      String globalName = ModuleRenaming.getGlobalName(requiredModule, requiredNamespace);
+      String globalName = ModuleRenaming.getGlobalName(requiredModule, requiredNamespace).join();
 
       if (parentNode.isExprResult()) {
         // goog.require('something');
@@ -295,7 +295,8 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
       } else {
         callNode.replaceWith(
             NodeUtil.newQName(
-                    compiler, ModuleRenaming.getGlobalName(requiredModule, requiredNamespace))
+                    compiler,
+                    ModuleRenaming.getGlobalName(requiredModule, requiredNamespace).join())
                 .srcrefTree(callNode));
       }
 
@@ -549,7 +550,8 @@ final class RewriteClosureImports implements HotSwapCompilerPass {
         // entities.
         String module =
             ModuleRenaming.getGlobalName(
-                currentModule, Iterables.getFirst(currentModule.googNamespaces(), null));
+                    currentModule, Iterables.getFirst(currentModule.googNamespaces(), null))
+                .join();
 
         String name = "alias_" + module + "_" + nodeName;
         maybeAddToSymbolTable(n, name);

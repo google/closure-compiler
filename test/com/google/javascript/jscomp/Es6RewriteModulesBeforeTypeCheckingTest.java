@@ -102,7 +102,8 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
               compiler,
               compiler.getModuleMetadataMap(),
               compiler.getModuleMap(),
-              /* preprocessorSymbolTable= */ null)
+              /* preprocessorSymbolTable= */ null,
+              /* globalTypedScope= */ null)
           .process(externs, root);
     };
   }

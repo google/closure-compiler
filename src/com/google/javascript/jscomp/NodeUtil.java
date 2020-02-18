@@ -3659,6 +3659,15 @@ public final class NodeUtil {
     }
   }
 
+  /** Gets the root node of a string representing a qualified name. */
+  static String getRootOfQualifiedName(String qName) {
+    int dot = qName.indexOf('.');
+    if (dot == -1) {
+      return qName;
+    }
+    return qName.substring(0, dot);
+  }
+
   static int getLengthOfQname(Node qname) {
     int result = 1;
     while (qname.isGetProp() || qname.isGetElem()) {

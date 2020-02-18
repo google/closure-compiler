@@ -48,7 +48,8 @@ public class TranspilationPasses {
                       compiler,
                       compiler.getModuleMetadataMap(),
                       compiler.getModuleMap(),
-                      preprocessorTableFactory.getInstanceOrNull());
+                      preprocessorTableFactory.getInstanceOrNull(),
+                      compiler.getTopScope());
                 })
             .setFeatureSet(ES_NEXT)
             .build());
