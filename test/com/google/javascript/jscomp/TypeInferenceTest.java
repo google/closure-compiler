@@ -438,15 +438,6 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testNullishCoalesce() {
-    assuming("x", createNullableType(OBJECT_TYPE));
-    inFunction("var y = 1; x ?? (y = x);");
-    verify("y", NUMBER_TYPE);
-    // TODO(b/146659618): Calculate correct type
-    // verify("y", createNullableType(NUMBER_TYPE));
-  }
-
-  @Test
   public void testPropertyInference1() {
     ObjectType thisType = registry.createAnonymousObjectType(null);
     thisType.defineDeclaredProperty("foo",
@@ -1557,6 +1548,20 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testShortCircuitingNullishCoalesce() {
+    assuming("x", NUMBER_TYPE);
+    inFunction("var y = null; if (x ?? (y = 3)) { }");
+    verify("y", NULL_TYPE);
+  }
+
+  @Test
+  public void testShortCircuitingNullishCoalesceIf() {
+    assuming("x", NUMBER_TYPE);
+    inFunction("var y = null; var z = 5; if (x ?? (y = 3)) { z = y }");
+    verify("y", NULL_TYPE);
+  }
+
+  @Test
   public void testShortCircuitingOr2() {
     assuming("x", NUMBER_TYPE);
     inFunction("var y = null; var z = 4; if (x || (y = 3)) { z = y; }");
@@ -1572,12 +1577,41 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testShortCircuitingNullishCoalesce() {
+  public void testNullishCoalesce() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("var y = 1; x ?? (y = x);");
+    verify("y", createNullableType(NUMBER_TYPE));
+  }
+
+  @Test
+  public void nullishCoalesceWithHook() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var z = (x) ?? (x ? 'hi' : false)");
+    // Looks like x should be (object|boolean) but hook always traverses both branches
     verify("z", createMultiParamUnionType(OBJECT_TYPE, BOOLEAN_TYPE, STRING_TYPE));
-    // TODO(b/146659618): Calculate correct type
-    // verify("z", createUnionType(OBJECT_TYPE, BOOLEAN_TYPE));
+  }
+
+  @Test
+  public void nullishCoalesceRemoveNull() {
+    assuming("x", createNullableType(NUMBER_TYPE));
+    inFunction("x = x ?? 3");
+    verify("x", NUMBER_TYPE); // nullability removed by ?? operation
+  }
+
+  @Test
+  public void nullishCoalesceZeroIsValid() {
+    // Making sure that ?? does not execute RHS (even if x is 0)
+    assuming("x", createNullableType(NUMBER_TYPE));
+    inFunction("var y = ''; if (x ?? (y = x)) { }");
+    verify("y", createNullableType(STRING_TYPE));
+  }
+
+  @Test
+  public void nullishCoalesceFalseIsValid() {
+    // Making sure that ?? does not execute RHS (even if x is false)
+    assuming("x", createNullableType(BOOLEAN_TYPE));
+    inFunction("var y = ''; x ?? (y = x)");
+    verify("y", createNullableType(STRING_TYPE));
   }
 
   @Test

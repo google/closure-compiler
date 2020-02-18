@@ -52,6 +52,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.Outcome;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -484,8 +485,9 @@ public class UnionType extends JSType {
   }
 
   @Override
-  public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
-    return mapTypes((t) -> t.getRestrictedTypeGivenToBooleanOutcome(outcome), this);
+  public JSType getRestrictedTypeGivenOutcome(
+      Outcome outcome) {
+    return mapTypes((t) -> t.getRestrictedTypeGivenOutcome(outcome), this);
   }
 
   @Override
