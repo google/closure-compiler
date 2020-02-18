@@ -589,9 +589,8 @@ public abstract class CompilerTestCase {
           "function ITemplateArray() {}",
           ACTIVE_X_OBJECT_DEF);
 
-  protected static final String CLOSURE_DEFS =
+  protected static final String CLOSURE_DEFS_WITHOUT_GOOG =
       lines(
-          "/** @const */ var goog = {};",
           "goog.module = function(ns) {};",
           "goog.module.declareLegacyNamespace = function() {};",
           "/** @return {?} */",
@@ -608,6 +607,9 @@ public abstract class CompilerTestCase {
           "goog.scope = function(fn) {};",
           "goog.defineClass = function(superClass, clazz) {};",
           "goog.declareModuleId = function(ns) {};");
+
+  protected static final String CLOSURE_DEFS =
+      "/** @const */ var goog = {};" + CLOSURE_DEFS_WITHOUT_GOOG;
 
   /**
    * Constructs a test.
