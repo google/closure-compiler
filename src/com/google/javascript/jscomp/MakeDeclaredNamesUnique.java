@@ -74,10 +74,6 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal t) {
-    checkState(
-        t.getScopeCreator().hasBlockScope(),
-        "MakeDeclaredNamesUnique requires an ES6-compatible scope creator. %s is not compatible.",
-        t.getScopeCreator());
     Node declarationRoot = t.getScopeRoot();
 
     Renamer renamer;

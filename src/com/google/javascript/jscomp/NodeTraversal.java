@@ -78,7 +78,6 @@ public class NodeTraversal {
 
   /** The scope creator */
   private final ScopeCreator scopeCreator;
-  private final boolean useBlockScope;
 
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
@@ -330,7 +329,6 @@ public class NodeTraversal {
     }
     this.compiler = compiler;
     this.scopeCreator = scopeCreator;
-    this.useBlockScope = scopeCreator.hasBlockScope();
   }
 
   private void throwUnexpectedException(Throwable unexpectedException) {
@@ -512,9 +510,6 @@ public class NodeTraversal {
       }
     } else if (NodeUtil.isAnyFor(n)) {
       if (callback.shouldTraverse(this, n, null)) {
-        // ES6 Creates a separate for scope and for-body scope
-        checkState(scopeCreator.hasBlockScope());
-
         pushScope(s);
 
         Node forAssignmentParam = n.getFirstChild();
@@ -529,9 +524,6 @@ public class NodeTraversal {
       }
     } else if (n.isSwitch()) {
       if (callback.shouldTraverse(this, n, null)) {
-        // ES6 creates a separate switch scope with cases
-        checkState(scopeCreator.hasBlockScope());
-
         pushScope(s);
 
         traverseChildren(n);
@@ -856,7 +848,7 @@ public class NodeTraversal {
       traverseClass(n);
     } else if (type == Token.CLASS_MEMBERS) {
       traverseClassMembers(n);
-    } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
+    } else if (NodeUtil.createsBlockScope(n)) {
       traverseBlockScope(n);
     } else {
       traverseChildren(n);
@@ -1327,7 +1319,7 @@ public class NodeTraversal {
       return true;
     } else if (n.isFunction()) {
       return true;
-    } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
+    } else if (NodeUtil.createsBlockScope(n)) {
       return true;
     }
     return false;

@@ -3565,9 +3565,4 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
   }
-
-  @Override
-  public boolean hasBlockScope() {
-    return true;
-  }
 }
