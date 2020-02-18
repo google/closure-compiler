@@ -1497,6 +1497,130 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testThrow_insideTry_withCatch_hasNoSideEffects() {
+    String source =
+        lines(
+            "function f() {",
+            "  try {",
+            "    throw Error();",
+            "  } catch (e) {",
+            "  } finally {",
+            "  }",
+            "}",
+            "",
+            "f();");
+    assertPureCallsMarked(source, ImmutableList.of("f", "Error"));
+  }
+
+  @Test
+  public void testThrow_insideTry_withoutCatch_hasSideEffects() {
+    String source =
+        lines(
+            "function f() {",
+            "  try {",
+            "    throw Error();",
+            "  } finally {",
+            "  }",
+            "}",
+            "",
+            "f();");
+    assertPureCallsMarked(source, ImmutableList.of("Error"));
+  }
+
+  @Test
+  public void testThrow_insideCatch_hasSideEffects() {
+    String source =
+        lines(
+            "function f() {",
+            "  try {",
+            "  } catch (e) {",
+            "    throw Error();",
+            "  } finally {",
+            "  }",
+            "}",
+            "",
+            "f();");
+    assertPureCallsMarked(source, ImmutableList.of("Error"));
+  }
+
+  @Test
+  public void testThrow_insideFinally_hasSideEffects() {
+    String source =
+        lines(
+            "function f() {",
+            "  try {",
+            "  } catch (e) {",
+            "  } finally {",
+            "    throw Error();",
+            "  }",
+            "}",
+            "",
+            "f();");
+    assertPureCallsMarked(source, ImmutableList.of("Error"));
+  }
+
+  @Test
+  public void testThrow_insideTry_afterNestedTry_hasNoSideEffects() {
+    /** Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
+    String source =
+        lines(
+            "function f() {",
+            "  try {",
+            "    try {",
+            "    } finally {",
+            "    }",
+            "",
+            "    throw Error();",
+            "  } catch (e) {",
+            "  } finally {",
+            "  }",
+            "}",
+            "",
+            "f();");
+    assertPureCallsMarked(source, ImmutableList.of("f", "Error"));
+  }
+
+  @Test
+  public void testThrow_insideFunction_insideTry_hasNoSideEffects() {
+    /** Ensure we track the stack of trys correctly, rather than just toggling a boolean. */
+    String source =
+        lines(
+            "function f() {",
+            "  try {",
+            "    function g() {",
+            "      throw Error();",
+            "    }",
+            "  } catch (e) {",
+            "  } finally {",
+            "  }",
+            "}",
+            "",
+            "f();");
+    assertPureCallsMarked(source, ImmutableList.of("f", "Error"));
+  }
+
+  @Test
+  public void testThrow_fromCallee_insideTry_withCatch_hasNoSideEffects() {
+    String source =
+        lines(
+            "function h() {",
+            "  throw Error();",
+            "}",
+            "",
+            "function f() {",
+            "  try {",
+            "    h()",
+            "  } catch (e) {",
+            "  } finally {",
+            "  }",
+            "}",
+            "",
+            "h();",
+            "f();");
+    assertPureCallsMarked(source, ImmutableList.of("f", "Error"));
+  }
+
+  @Test
   public void testAssignmentOverride() {
     String source = lines(
         "/**@constructor*/function A(){}",

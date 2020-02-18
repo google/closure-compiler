@@ -43,6 +43,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -615,10 +616,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * method is implemented to check if {@code type} is that of a primitive, since primitives
      * exhibit both relevant behaviours.
      */
-    private boolean isLocalValueType(JSType typei, AbstractCompiler compiler) {
-      checkNotNull(typei);
+    private boolean isLocalValueType(JSType type, AbstractCompiler compiler) {
+      checkNotNull(type);
       JSType nativeObj = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
-      JSType subtype = typei.getGreatestSubtype(nativeObj);
+      JSType subtype = type.getGreatestSubtype(nativeObj);
       // If the type includes anything related to a object type, don't assume
       // anything about the locality of the value.
       return subtype.isEmptyType();
@@ -642,22 +643,34 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     private final SetMultimap<Node, Var> blacklistedVarsByFunction = HashMultimap.create();
     private final SetMultimap<Node, Var> taintedVarsByFunction = HashMultimap.create();
 
+    /**
+     * For each function we're inside, the number of "catches" around the current node.
+     *
+     * <p>The stack is preloaded with a `0` to represent the global scope.
+     */
+    private final ArrayDeque<Integer> catchDepthStack = new ArrayDeque<>(ImmutableList.of(0));
+
     @Override
     public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
-      if (!node.isFunction()) {
-        return true;
-      }
+      this.addToCatchDepthIfTryBlock(node, 1);
 
-      // Functions need to be processed as part of pre-traversal so that an entry for the function
-      // exists in the summariesForAllNamesOfFunctionByNode map when processing assignments and
-      // calls within the body.
+      if (node.isFunction()) {
+        this.catchDepthStack.addLast(0);
 
-      if (!summariesForAllNamesOfFunctionByNode.containsKey(node)) {
-        // This function was not part of a definition which is why it was not created by
-        // {@link populateDatastructuresForAnalysisTraversal}. For example, an anonymous function.
-        AmbiguatedFunctionSummary summary =
-            AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<anonymous>");
-        summariesForAllNamesOfFunctionByNode.put(node, summary);
+        // Functions need to be processed as part of pre-traversal so that an entry for the
+        // function
+        // exists in the summariesForAllNamesOfFunctionByNode map when processing assignments
+        // and
+        // calls within the body.
+
+        if (!summariesForAllNamesOfFunctionByNode.containsKey(node)) {
+          // This function was not part of a definition which is why it was not created by
+          // {@link populateDatastructuresForAnalysisTraversal}. For example, an anonymous
+          // function.
+          AmbiguatedFunctionSummary summary =
+              AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<anonymous>");
+          summariesForAllNamesOfFunctionByNode.put(node, summary);
+        }
       }
 
       return true;
@@ -665,6 +678,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
+      this.addToCatchDepthIfTryBlock(node, -1);
+      if (node.isFunction()) {
+        checkState(this.catchDepthStack.removeLast() == 0);
+      }
+
       if (!compiler.getAstAnalyzer().nodeTypeMayHaveSideEffects(node) && !node.isReturn()) {
         return;
       }
@@ -802,7 +820,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           break;
 
         case THROW:
-          encloserSummary.setFunctionThrows();
+          this.recordThrowsBasedOnContext(encloserSummary);
           break;
 
         case RETURN:
@@ -893,7 +911,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * @see b/135475880
      */
     private void deprecatedSetSideEffectsForControlLoss(AmbiguatedFunctionSummary encloserSummary) {
-      encloserSummary.setFunctionThrows();
+      this.recordThrowsBasedOnContext(encloserSummary);
     }
 
     /**
@@ -901,10 +919,16 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * encloserSummary}.
      */
     private void setSideEffectsForUnknownCall(AmbiguatedFunctionSummary encloserSummary) {
-      encloserSummary.setFunctionThrows();
+      this.recordThrowsBasedOnContext(encloserSummary);
       encloserSummary.setMutatesGlobalState();
       encloserSummary.setMutatesArguments();
       encloserSummary.setMutatesThis();
+    }
+
+    private void recordThrowsBasedOnContext(AmbiguatedFunctionSummary encloserSummary) {
+      if (this.catchDepthStack.getLast() == 0) {
+        encloserSummary.setFunctionThrows();
+      }
     }
 
     @Override
@@ -1043,10 +1067,26 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return;
       }
 
+      boolean propatesThrows = this.catchDepthStack.getLast() == 0;
       for (AmbiguatedFunctionSummary calleeInfo : calleeSummaries) {
-        SideEffectPropagation edge = SideEffectPropagation.forInvocation(invocation);
+        SideEffectPropagation edge =
+            SideEffectPropagation.forInvocation(invocation, propatesThrows);
         reverseCallGraph.connect(calleeInfo.graphNode, edge, callerInfo.graphNode);
       }
+    }
+
+    private void addToCatchDepthIfTryBlock(Node n, int delta) {
+      Node parent = n.getParent();
+      if (!n.isBlock() || !parent.isTry() || !n.isFirstChildOf(parent)) {
+        return;
+      }
+
+      Node jsCatch = n.getNext().getFirstChild();
+      if (jsCatch == null) {
+        return;
+      }
+
+      this.catchDepthStack.addLast(this.catchDepthStack.removeLast() + delta);
     }
   }
 
@@ -1106,6 +1146,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      */
     private final boolean calleeThisEqualsCallerThis;
 
+    /**
+     * Whether this propagation includes the "throws" bit.
+     *
+     * <p>In some contexts, such as an invocation inside a "try", the caller is uneffected by the
+     * callee throwing.
+     */
+    private final boolean propagateThrows;
+
     // The token used to invoke the callee by the caller.
     @Nullable private final Node invocation;
 
@@ -1113,26 +1161,29 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         boolean callerIsAlias,
         boolean allArgsUnescapedLocal,
         boolean calleeThisEqualsCallerThis,
+        boolean propagateThrows,
         Node invocation) {
       checkArgument(invocation == null || NodeUtil.isInvocation(invocation), invocation);
 
       this.callerIsAlias = callerIsAlias;
       this.allArgsUnescapedLocal = allArgsUnescapedLocal;
       this.calleeThisEqualsCallerThis = calleeThisEqualsCallerThis;
+      this.propagateThrows = propagateThrows;
       this.invocation = invocation;
     }
 
     static SideEffectPropagation forAlias() {
-      return new SideEffectPropagation(true, false, false, null);
+      return new SideEffectPropagation(true, false, false, true, null);
     }
 
-    static SideEffectPropagation forInvocation(Node invocation) {
+    static SideEffectPropagation forInvocation(Node invocation, boolean propagateThrows) {
       checkArgument(NodeUtil.isInvocation(invocation), invocation);
 
       return new SideEffectPropagation(
           false,
           NodeUtil.allArgsUnescapedLocal(invocation),
           calleeAndCallerShareThis(invocation),
+          propagateThrows,
           invocation);
     }
 
@@ -1188,7 +1239,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         // If the callee modifies global state then so does that caller.
         caller.setMutatesGlobalState();
       }
-      if (callee.functionThrows()) {
+      if (this.propagateThrows && callee.functionThrows()) {
         // If the callee throws an exception then so does the caller.
         caller.setFunctionThrows();
       }
