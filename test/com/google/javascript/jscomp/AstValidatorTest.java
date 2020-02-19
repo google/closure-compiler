@@ -953,6 +953,15 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFeatureValidation_optionalChaining() {
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+
+    testFeatureValidation("x?.y", Feature.OPTIONAL_CHAINING);
+    testFeatureValidation("x?.()", Feature.OPTIONAL_CHAINING);
+    testFeatureValidation("x?.[1]", Feature.OPTIONAL_CHAINING);
+  }
+
+  @Test
   public void testFeatureValidation_asyncFunctions() {
     testFeatureValidation("const f = async function() {}", Feature.ASYNC_FUNCTIONS);
     testFeatureValidation("async function f() {}", Feature.ASYNC_FUNCTIONS);

@@ -1016,6 +1016,9 @@ public final class AstValidator implements CompilerPass {
   private void validateCall(Node n) {
     validateNodeType(Token.CALL, n);
     validateMinimumChildCount(n, 1);
+    if (n.isOptionalChain()) {
+      validateFeature(Feature.OPTIONAL_CHAINING, n);
+    }
     Node callee = n.getFirstChild();
     if (callee.isSuper()) {
       validateSuper(callee);
@@ -1493,6 +1496,9 @@ public final class AstValidator implements CompilerPass {
     validateChildCount(n, 2);
     validatePropertyReferenceTarget(n.getFirstChild());
     validateExpression(n.getLastChild());
+    if (n.isOptionalChain()) {
+      validateFeature(Feature.OPTIONAL_CHAINING, n);
+    }
   }
 
   private void validateGetProp(Node n) {
@@ -1502,6 +1508,9 @@ public final class AstValidator implements CompilerPass {
     Node prop = n.getLastChild();
     validateNodeType(Token.STRING, prop);
     validateNonEmptyString(prop);
+    if (n.isOptionalChain()) {
+      validateFeature(Feature.OPTIONAL_CHAINING, n);
+    }
   }
 
   private void validatePropertyReferenceTarget(Node objectNode) {
