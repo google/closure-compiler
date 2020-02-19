@@ -225,6 +225,7 @@ class MaybeReachingVariableUse extends
 
       case AND:
       case OR:
+      case COALESCE:
         computeMayUse(n.getLastChild(), cfgNode, output, true);
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;

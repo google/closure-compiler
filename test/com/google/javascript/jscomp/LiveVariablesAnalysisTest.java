@@ -103,6 +103,22 @@ public final class LiveVariablesAnalysisTest {
   }
 
   @Test
+  public void nullishCoalesce() {
+    // Reading the condition makes the variable live.
+    assertLiveBeforeX("var a,b;X:if(a??b) {}", "a");
+    assertLiveBeforeX("var a,b;X:if(b??a) {}", "a");
+    assertLiveBeforeX("var a,b;X:if(b??b(a)) {}", "a");
+
+    // The kill can be "conditional" due to short circuit.
+    assertNotLiveAfterX("var a,b;X:a();if((a=b)??b){}a()", "a");
+    assertNotLiveAfterX("var a,b;X:a();while((a=b)??b){}a()", "a");
+    assertLiveBeforeX("var a,b;a();X:if(b??(a=b)){}a()", "a"); // Assumed live.
+    assertLiveBeforeX("var a,b;a();X:if(a??(a=b)){}a()", "a");
+    assertLiveBeforeX("var a,b;a();X:while(b??(a=b)){}a()", "a");
+    assertLiveBeforeX("var a,b;a();X:while(a??(a=b)){}a()", "a");
+  }
+
+  @Test
   public void testArrays() {
     assertLiveBeforeX("var a;X:a[1]", "a");
     assertLiveBeforeX("var a,b;X:b[a]", "a");

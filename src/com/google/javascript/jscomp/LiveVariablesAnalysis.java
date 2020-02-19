@@ -297,6 +297,7 @@ class LiveVariablesAnalysis
 
       case AND:
       case OR:
+      case COALESCE:
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // May short circuit.
         computeGenKill(n.getLastChild(), gen, kill, true);

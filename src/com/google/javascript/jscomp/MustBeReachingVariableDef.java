@@ -278,6 +278,7 @@ final class MustBeReachingVariableDef extends
 
       case AND:
       case OR:
+      case COALESCE:
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         computeMustDef(n.getLastChild(), cfgNode, output, true);
         return;

@@ -79,6 +79,14 @@ public final class MustBeReachingVariableDefTest {
   }
 
   @Test
+  public void nullishCoalesce() {
+    // LHS is always executed so the definition of  x = 1 must be reached
+    assertMatch("var x=0,y; D:(x=1)??y; U:x");
+    // definitions in RHS are not always executed
+    assertNotMatch("var x=0,y; D:y??(x=1); U:x");
+  }
+
+  @Test
   public void testUseAndDefInSameInstruction() {
     assertMatch("D:var x=0; U:x=1,x");
     assertMatch("D:var x=0; U:x,x=1");
