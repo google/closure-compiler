@@ -1628,7 +1628,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * variable.
    */
   @GwtIncompatible("Unnecessary")
-  private boolean shouldGenerateMapPerModule(B options) {
+  protected boolean shouldGenerateMapPerModule(B options) {
     return options.sourceMapOutputPath != null
         && options.sourceMapOutputPath.contains("%outname%");
   }
