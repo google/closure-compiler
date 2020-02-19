@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -492,7 +491,7 @@ public class NodeTraversal {
           traverseBranch(className, n);
         }
         // Omit the extends node, which is in the outer scope. Computed property keys are already
-        // excluded by traverseClassMembers.
+        // excluded by handleClassMembers.
         traverseBranch(body, n);
 
         popScope();
@@ -835,21 +834,25 @@ public class NodeTraversal {
       case MODULE_BODY:
         handleModule(n, parent);
         return;
+      case CLASS:
+        handleClass(n, parent);
+        return;
+      case CLASS_MEMBERS:
+        handleClassMembers(n, parent);
+        return;
       default:
         break;
     }
+
     curNode = n;
     if (!callback.shouldTraverse(this, n, parent)) {
       return;
     }
 
-    Token type = n.getToken();
-    if (type == Token.CLASS) {
-      traverseClass(n);
-    } else if (type == Token.CLASS_MEMBERS) {
-      traverseClassMembers(n);
-    } else if (NodeUtil.createsBlockScope(n)) {
-      traverseBlockScope(n);
+    if (NodeUtil.createsBlockScope(n)) {
+      pushScope(n);
+      traverseChildren(n);
+      popScope();
     } else {
       traverseChildren(n);
     }
@@ -900,14 +903,19 @@ public class NodeTraversal {
   }
 
   /**
-   * Traverses a class.  Note that we traverse some of the child nodes slightly out of order to
-   * ensure children are visited in the correct scope.  The following children are in the outer
+   * Traverses a class. Note that we traverse some of the child nodes slightly out of order to
+   * ensure children are visited in the correct scope. The following children are in the outer
    * scope: (1) the 'extends' clause, (2) any computed method keys, (3) the class name for class
-   * declarations only (class expression names are traversed in the class scope).  This requires
-   * that we visit the extends node (second child) and any computed member keys (grandchildren of
-   * the last, body, child) before visiting the name (first child) or body (last child).
+   * declarations only (class expression names are traversed in the class scope). This requires that
+   * we visit the extends node (second child) and any computed member keys (grandchildren of the
+   * last, body, child) before visiting the name (first child) or body (last child).
    */
-  private void traverseClass(Node n) {
+  private void handleClass(Node n, Node parent) {
+    this.curNode = n;
+    if (!callback.shouldTraverse(this, n, parent)) {
+      return;
+    }
+
     final Node className = n.getFirstChild();
     final Node extendsClause = className.getNext();
     final Node body = extendsClause.getNext();
@@ -942,10 +950,18 @@ public class NodeTraversal {
     traverseBranch(body, n);
 
     popScope();
+
+    this.curNode = n;
+    callback.visit(this, n, parent);
   }
 
   /** Traverse class members, excluding keys of computed props. */
-  private void traverseClassMembers(Node n) {
+  private void handleClassMembers(Node n, Node parent) {
+    this.curNode = n;
+    if (!callback.shouldTraverse(this, n, parent)) {
+      return;
+    }
+
     for (Node child = n.getFirstChild(); child != null;) {
       Node next = child.getNext(); // see traverseChildren
       if (child.isComputedProp()) {
@@ -960,6 +976,9 @@ public class NodeTraversal {
       }
       child = next;
     }
+
+    this.curNode = n;
+    callback.visit(this, n, parent);
   }
 
   private void traverseChildren(Node n) {
@@ -970,13 +989,6 @@ public class NodeTraversal {
       traverseBranch(child, n);
       child = next;
     }
-  }
-
-  /** Traverses a non-function block. */
-  private void traverseBlockScope(Node n) {
-    pushScope(n);
-    traverseChildren(n);
-    popScope();
   }
 
   /** Examines the functions stack for the last instance of a function node. When possible, prefer
