@@ -74,6 +74,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private final Set<Node> forwardDeclaresToRemove = new HashSet<>();
   private final Set<Node> previouslyProvidedDefinitions = new HashSet<>();
   private final TypedScope globalTypedScope;
+  private final AstFactory astFactory;
 
   ProcessClosureProvidesAndRequires(
       AbstractCompiler compiler,
@@ -89,6 +90,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
     this.globalTypedScope = globalTypedScope;
+    this.astFactory = compiler.createAstFactory();
   }
 
   /** When invoked as compiler pass, we rewrite all provides and requires. */
@@ -793,13 +795,14 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
             if (hasAChildNamespace) {
               createNamespaceInitialization(
                   createDeclarationNode(
-                      IR.cast(IR.objectlit(), createUnknownTypeJsDocInfo(exprNode))));
+                      astFactory.createCastToUnknown(
+                          astFactory.createObjectLit(), createUnknownTypeJsDocInfo(exprNode))));
             }
           }
         }
       } else {
         // Handle the case where there's not an existing definition.
-        createNamespaceInitialization(createDeclarationNode(IR.objectlit()));
+        createNamespaceInitialization(createDeclarationNode(astFactory.createObjectLit()));
       }
 
       // Remove the `goog.provide('a.b.c');` call.
@@ -896,13 +899,8 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 
     /** Creates a dotted namespace assignment expression (e.g. <code>foo.bar = {};</code>). */
     private Node makeAssignmentExprNode(Node value) {
-      Node lhs =
-          NodeUtil.newQName(
-              compiler,
-              namespace,
-              firstNode /* real source info will be filled in below */,
-              namespace);
-      Node decl = IR.exprResult(IR.assign(lhs, value));
+      Node lhs = astFactory.createQName(globalTypedScope, namespace).srcrefTree(firstNode);
+      Node decl = IR.exprResult(astFactory.createAssign(lhs, value));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       if (!hasCandidateDefinitionNotFromPreviousPass()) {
         decl.getFirstChild().setJSDocInfo(NodeUtil.createConstantJsDoc());

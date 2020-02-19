@@ -25,7 +25,6 @@ import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIR
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_TYPE_NAMESPACE;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -87,8 +86,6 @@ import javax.annotation.Nullable;
  * </pre>
  */
 final class ClosureRewriteModule implements HotSwapCompilerPass {
-
-  private static final Splitter DOT_SPLITTER = Splitter.on(".");
 
   // TODO(johnlenz): handle non-namespace module identifiers aka 'foo/bar'
 
@@ -1265,7 +1262,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (exportedNamespace != null) {
       compiler.reportChangeToEnclosingScope(call);
       Node exportedNamespaceName =
-          this.createQNameUsingRootTypeFromGlobalTypedScope(exportedNamespace).srcrefTree(call);
+          this.astFactory.createQName(this.globalTypedScope, exportedNamespace).srcrefTree(call);
       exportedNamespaceName.setJSType(rewriteState.getGoogModuleNamespaceType(namespaceId));
       exportedNamespaceName.setOriginalName(namespaceId);
       call.replaceWith(exportedNamespaceName);
@@ -1472,7 +1469,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node jsdocNode;
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =
-          this.createQNameUsingRootTypeFromGlobalTypedScope(currentScript.namespaceId)
+          this.astFactory
+              .createQName(this.globalTypedScope, currentScript.namespaceId)
               .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
       assignNode.replaceChild(n, legacyQname);
@@ -1509,7 +1507,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =
-          this.createQNameUsingRootTypeFromGlobalTypedScope(currentScript.namespaceId)
+          this.astFactory
+              .createQName(this.globalTypedScope, currentScript.namespaceId)
               .srcrefTree(n);
       legacyQname.setJSType(n.getJSType());
       n.replaceWith(legacyQname);
@@ -1748,7 +1747,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // name.
     Node nameParent = nameNode.getParent();
     Node newQualifiedName =
-        this.createQNameUsingRootTypeFromGlobalTypedScope(newString).srcrefTree(nameNode);
+        this.astFactory.createQName(this.globalTypedScope, newString).srcrefTree(nameNode);
     newQualifiedName.setDefineName(nameNode.getDefineName());
 
     boolean replaced = safeSetStringIfDeclaration(nameParent, nameNode, newQualifiedName);
@@ -1965,21 +1964,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
     Node method = n.getFirstChild();
     return method.isGetProp() && method.matchesQualifiedName(targetMethod);
-  }
-
-  private Node createQNameUsingRootTypeFromGlobalTypedScope(String qname) {
-    List<String> nameParts = DOT_SPLITTER.splitToList(qname);
-    checkState(!nameParts.isEmpty());
-
-    String receiverPart = nameParts.get(0);
-    Node receiver = IR.name(receiverPart);
-    if (this.globalTypedScope != null) {
-      TypedVar var = checkNotNull(this.globalTypedScope.getVar(receiverPart), receiverPart);
-      receiver.setJSType(checkNotNull(var.getType(), var));
-    }
-
-    List<String> otherParts = nameParts.subList(1, nameParts.size());
-    return this.astFactory.createGetProps(receiver, otherParts);
   }
 
   private void declareGlobalVariable(Node n, NodeTraversal t) {

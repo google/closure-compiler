@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
@@ -25,6 +26,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -151,6 +155,21 @@ public class AstFactoryTest {
     Node voidNode = astFactory.createVoid(astFactory.createNumber(0));
     assertNode(voidNode).hasType(Token.VOID);
     assertNode(voidNode).hasJSTypeThat().isVoid();
+  }
+
+  @Test
+  public void testCreateCastToUnknown() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node numberNode = astFactory.createNumber(0);
+    JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
+    infoBuilder.recordType(new JSTypeExpression(new Node(Token.QMARK), "test.js"));
+    JSDocInfo info = infoBuilder.build();
+    Node castNode = astFactory.createCastToUnknown(numberNode, info);
+
+    assertNode(castNode).hasType(Token.CAST);
+    assertNode(castNode).hasJSTypeThat().isUnknown();
+    assertThat(castNode.getJSDocInfo()).isEqualTo(info);
   }
 
   @Test
@@ -902,6 +921,61 @@ public class AstFactoryTest {
     assertNode(obj).hasJSTypeThat().toStringIsEqualTo("{inner: {str: string}}");
     assertNode(objDotInner).hasJSTypeThat().toStringIsEqualTo("{str: string}");
     assertNode(objDotInnerDotStr).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testCreateQNameFromSimpleStringAndTypedScope() {
+    AstFactory astFactory = createTestAstFactory();
+
+    TypedScope scope = TypedScope.createGlobalScope(IR.root());
+    scope.declare("x", IR.name("x"), getNativeType(JSTypeNative.NUMBER_TYPE), null, true);
+
+    Node name = astFactory.createQName(scope, "x");
+
+    assertNode(name).hasStringThat().isEqualTo("x");
+    assertNode(name).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testCreateQNameFromDottedStringAndTypedScope() {
+    AstFactory astFactory = createTestAstFactory();
+
+    TypedScope scope = TypedScope.createGlobalScope(IR.root());
+    // Declare a global "x" with the type "{y: number}".
+    ObjectType objectWithYProp = getRegistry().createAnonymousObjectType(null);
+    objectWithYProp.defineDeclaredProperty("y", getNativeType(JSTypeNative.NUMBER_TYPE), null);
+    scope.declare("x", IR.name("x"), objectWithYProp, null, true);
+
+    Node name = astFactory.createQName(scope, "x.y");
+
+    assertNode(name).matchesQualifiedName("x.y");
+    assertNode(name).hasJSTypeThat().isNumber();
+    assertNode(name.getFirstChild()).hasJSTypeThat().isObjectTypeWithProperty("y");
+  }
+
+  @Test
+  public void testCreateQNameFromStringAndTypedScope_crashesGivenMissingName() {
+    AstFactory astFactory = createTestAstFactory();
+
+    TypedScope scope = TypedScope.createGlobalScope(IR.root());
+
+    assertThrows(Exception.class, () -> astFactory.createQName(scope, "x"));
+  }
+
+  @Test
+  public void testCreateQNameFromStringAndTypedScope_crashesGivenLocalScope() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root = IR.root();
+    Node block = IR.block();
+    root.addChildToFront(IR.script(block));
+
+    TypedScope globalScope = TypedScope.createGlobalScope(root);
+    globalScope.declare("x", IR.name("x"), getNativeType(JSTypeNative.NUMBER_TYPE), null, true);
+    TypedScope localScope = new TypedScope(globalScope, block);
+
+    astFactory.createQName(globalScope, "x");
+    assertThrows(IllegalArgumentException.class, () -> astFactory.createQName(localScope, "x"));
   }
 
   @Test

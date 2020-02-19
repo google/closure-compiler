@@ -25,6 +25,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
@@ -36,6 +37,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.Arrays;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -49,6 +51,8 @@ import javax.annotation.Nullable;
  * determine the correct type information from already existing AST nodes and the current scope.
  */
 final class AstFactory {
+
+  private static final Splitter DOT_SPLITTER = Splitter.on(".");
 
   @Nullable private final JSTypeRegistry registry;
   // We need the unknown type so frequently, it's worth caching it.
@@ -247,6 +251,14 @@ final class AstFactory {
     return result;
   }
 
+  Node createCastToUnknown(Node child, JSDocInfo jsdoc) {
+    Node result = IR.cast(child, jsdoc);
+    if (isAddingTypes()) {
+      result.setJSType(getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    }
+    return result;
+  }
+
   Node createNot(Node child) {
     Node result = IR.not(child);
     if (isAddingTypes()) {
@@ -424,7 +436,28 @@ final class AstFactory {
   }
 
   Node createQName(Scope scope, String qname) {
-    return createQName(scope, Splitter.on(".").split(qname));
+    return createQName(scope, DOT_SPLITTER.split(qname));
+  }
+
+  /**
+   * Looks up the type of a name from a {@link TypedScope} created from typechecking
+   *
+   * @param globalTypedScope Must be the top, global scope.
+   */
+  Node createQName(TypedScope globalTypedScope, String qname) {
+    checkArgument(globalTypedScope == null || globalTypedScope.isGlobal(), globalTypedScope);
+    List<String> nameParts = DOT_SPLITTER.splitToList(qname);
+    checkState(!nameParts.isEmpty());
+
+    String receiverPart = nameParts.get(0);
+    Node receiver = IR.name(receiverPart);
+    if (this.isAddingTypes()) {
+      TypedVar var = checkNotNull(globalTypedScope.getVar(receiverPart), receiverPart);
+      receiver.setJSType(checkNotNull(var.getType(), var));
+    }
+
+    List<String> otherParts = nameParts.subList(1, nameParts.size());
+    return this.createGetProps(receiver, otherParts);
   }
 
   Node createQName(Scope scope, Iterable<String> names) {

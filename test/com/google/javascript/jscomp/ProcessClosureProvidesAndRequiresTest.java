@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLASS_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
@@ -25,6 +26,8 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ProcessClosureProvidesAndRequires.ProvidedName;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
@@ -41,10 +44,28 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   private boolean addAdditionalNamespace;
   private boolean preserveGoogProvidesAndRequires;
 
-  private ProcessClosureProvidesAndRequires createClosureProcessor(
+  private ProcessClosureProvidesAndRequires createClosureProcessorWithoutTypechecking(
       Compiler compiler, CheckLevel requireCheckLevel) {
     return new ProcessClosureProvidesAndRequires(
-        compiler, null, requireCheckLevel, preserveGoogProvidesAndRequires, null);
+        compiler,
+        null,
+        requireCheckLevel,
+        preserveGoogProvidesAndRequires,
+        /* globalTypedScope= */ null);
+  }
+
+  private ProcessClosureProvidesAndRequires createClosureProcessorWithTypechecking(
+      Compiler compiler, CheckLevel requireCheckLevel, Node externs, Node main) {
+
+    ReverseAbstractInterpreter rai =
+        new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+    compiler.setTypeCheckingHasRun(true);
+    TypedScope globalTypedScope =
+        checkNotNull(
+            new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                .processForTesting(externs, main));
+    return new ProcessClosureProvidesAndRequires(
+        compiler, null, requireCheckLevel, preserveGoogProvidesAndRequires, globalTypedScope);
   }
 
   @Override
@@ -58,6 +79,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     preserveGoogProvidesAndRequires = false;
     enableTypeCheck();
     enableCreateModuleMap(); // necessary for the typechecker
+    enableTypeInfoValidation();
   }
 
   @Override
@@ -66,13 +88,13 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
       if ((additionalCode == null) && (additionalEndCode == null)) {
         verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.ERROR, compiler);
         ProcessClosureProvidesAndRequires processor =
-            createClosureProcessor(compiler, CheckLevel.ERROR);
+            createClosureProcessorWithTypechecking(compiler, CheckLevel.ERROR, externs, root);
         processor.rewriteProvidesAndRequires(externs, root);
       } else {
         // Process the original code.
         verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.OFF, compiler);
         ProcessClosureProvidesAndRequires processor =
-            createClosureProcessor(compiler, CheckLevel.OFF);
+            createClosureProcessorWithTypechecking(compiler, CheckLevel.OFF, externs, root);
         processor.rewriteProvidesAndRequires(externs, root);
 
         // Inject additional code at the beginning.
@@ -106,7 +128,8 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
         }
 
         verifyCollectProvidedNamesDoesntChangeAst(externs, root, CheckLevel.ERROR, compiler);
-        processor = createClosureProcessor(compiler, CheckLevel.ERROR);
+        processor =
+            createClosureProcessorWithTypechecking(compiler, CheckLevel.ERROR, externs, root);
         processor.rewriteProvidesAndRequires(externs, root);
       }
     };
@@ -1484,7 +1507,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   private Map<String, ProvidedName> getProvidedNameCollection(String js) {
     Compiler compiler = createCompiler();
     ProcessClosureProvidesAndRequires processor =
-        createClosureProcessor(compiler, CheckLevel.ERROR);
+        createClosureProcessorWithoutTypechecking(compiler, CheckLevel.ERROR);
     Node jsRoot = compiler.parseTestCode(js);
     Node scopeRoot = IR.root(IR.root(), IR.root(jsRoot));
     Map<String, ProvidedName> providedNameMap =
@@ -1507,7 +1530,7 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
     Node originalExterns = externs.cloneTree();
     Node originalRoot = root.cloneTree();
     ProcessClosureProvidesAndRequires processor =
-        createClosureProcessor(compiler, requireCheckLevel);
+        createClosureProcessorWithoutTypechecking(compiler, requireCheckLevel);
     processor.collectProvidedNames(externs, root);
 
     assertNode(externs).isEqualIncludingJsDocTo(originalExterns);
