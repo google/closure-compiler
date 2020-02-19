@@ -347,6 +347,14 @@ public class TranspilationPasses {
           .setFeatureSet(ES8)
           .build();
 
+  static final PassFactory rewriteNullishCoalesceOperator =
+      PassFactory.builderForHotSwap()
+          .setName("rewriteNullishCoalesceOperator")
+          .setInternalFactory(RewriteNullishCoalesceOperator::new)
+          .setFeatureSet(ES_NEXT.with(Feature.NULL_COALESCE_OP))
+          // TODO(annieyw) change to ES2020 when avail
+          .build();
+
   /**
    * @param script The SCRIPT node representing a JS file
    * @return If the file has any features which are part of ES6 or higher but not part of ES5.
