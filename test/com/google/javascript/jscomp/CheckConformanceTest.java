@@ -813,6 +813,34 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedProperty_destructuring() {
+    configuration =
+        lines(
+            "requirement: {",
+            "  type: BANNED_PROPERTY",
+            "  value: 'C.prototype.p'",
+            "  error_message: 'C.p is not allowed'",
+            "  whitelist: 'SRC1'",
+            "}");
+
+    String declarations =
+        lines(
+            "/** @constructor */",
+            "var C = function() {}",
+            "/** @type {string} */",
+            "C.prototype.p;",
+            "/** @type {number} */",
+            "C.prototype.m");
+
+    testConformance(declarations, "var {m} = new C();");
+
+    testConformance(declarations, "var {p} = new C();", CheckConformance.CONFORMANCE_VIOLATION);
+
+    testConformance(
+        declarations, "var {['p']: x} = new C();", CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
   public void testBannedPropertyWrite() {
     configuration =
         "requirement: {\n" +

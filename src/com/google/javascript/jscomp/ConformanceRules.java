@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -54,6 +55,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -571,8 +573,8 @@ public final class ConformanceRules {
       final String property;
 
       Property(JSType type, String property) {
-        this.type = type;
-        this.property = property;
+        this.type = checkNotNull(type);
+        this.property = checkNotNull(property);
       }
     }
 
@@ -605,12 +607,19 @@ public final class ConformanceRules {
       ImmutableList.Builder<Property> builder = ImmutableList.builder();
       List<String> values = requirement.getValueList();
       for (String value : values) {
-        String type = ConformanceUtil.getClassFromDeclarationName(value);
+        String typename = ConformanceUtil.getClassFromDeclarationName(value);
         String property = ConformanceUtil.getPropertyFromDeclarationName(value);
-        if (type == null || property == null) {
+        if (typename == null || property == null) {
           throw new InvalidRequirementSpec("bad prop value");
         }
-        builder.add(new Property(registry.getGlobalType(type), property));
+
+        // Type doesn't exist in the copmilation, so it can't be a violation.
+        JSType type = registry.getGlobalType(typename);
+        if (type == null) {
+          continue;
+        }
+
+        builder.add(new Property(type, property));
       }
 
       this.props = builder.build();
@@ -618,36 +627,31 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (!NodeUtil.isGet(n) || !n.getLastChild().isString()) {
+      if (!this.isCandidatePropAccess(n)) {
         return ConformanceResult.CONFORMANCE;
       }
 
-      // TODO(dimvar): Instead of the for-loop, we could make props be a multi-map from
-      // the property name to Property, and then here just pull the relevant Property instances.
-      // Won't make much difference to performance, since props usually only has a few elements,
-      // but it will make the code clearer.
-      for (int i = 0; i < props.size(); i++) {
-        Property prop = props.get(i);
-        ConformanceResult result = checkConformance(n, prop);
+      Property srcProp = this.createSrcProperty(n);
+      if (srcProp == null) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      for (Property checkProp : this.props) {
+        ConformanceResult result = this.matchProps(srcProp, checkProp);
         if (result.level != ConformanceLevel.CONFORMANCE) {
           return result;
         }
       }
+
       return ConformanceResult.CONFORMANCE;
     }
 
-    private ConformanceResult checkConformance(Node propAccess, Property prop) {
-      if (!isCandidatePropUse(propAccess, prop)) {
+    private ConformanceResult matchProps(Property srcProp, Property checkProp) {
+      if (!Objects.equals(srcProp.property, checkProp.property)) {
         return ConformanceResult.CONFORMANCE;
       }
 
-      JSType typeWithBannedProp = prop.type;
-      Node receiver = propAccess.getFirstChild();
-      if (typeWithBannedProp == null || receiver.getJSType() == null) {
-        return ConformanceResult.CONFORMANCE;
-      }
-
-      JSType foundType = receiver.getJSType().restrictByNotNullOrUndefined();
+      JSType foundType = srcProp.type.restrictByNotNullOrUndefined();
       ObjectType foundObj = foundType.toMaybeObjectType();
       if (foundObj != null) {
         if (foundObj.isFunctionPrototypeType()) {
@@ -668,10 +672,10 @@ public final class ConformanceRules {
         if (reportLooseTypeViolations) {
           return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
         }
-      } else if (foundType.isSubtypeOf(typeWithBannedProp)) {
+      } else if (foundType.isSubtypeOf(checkProp.type)) {
         return ConformanceResult.VIOLATION;
-      } else if (typeWithBannedProp.isSubtypeWithoutStructuralTyping(foundType)) {
-        if (matchesPrototype(typeWithBannedProp, foundType)) {
+      } else if (checkProp.type.isSubtypeWithoutStructuralTyping(foundType)) {
+        if (matchesPrototype(checkProp.type, foundType)) {
           return ConformanceResult.VIOLATION;
         } else if (reportLooseTypeViolations) {
           // Access of a banned property through a super class may be a violation
@@ -695,20 +699,10 @@ public final class ConformanceRules {
     /**
      * Determines if {@code n} is a potentially banned use of {@code prop}.
      *
-     * Specifically this is the case if {@code n} is a use of a property with
-     * the name specified by {@code prop}. Furthermore, if the conformance
-     * requirement under consideration only bans assignment to the property,
-     * {@code n} is only a candidate if it is an l-value.
+     * <p>Specifically if the conformance requirement under consideration only bans assignment to
+     * the property, {@code n} is only a candidate if it is an l-value.
      */
-    private boolean isCandidatePropUse(Node propAccess, Property prop) {
-      checkState(
-          propAccess.isGetProp() || propAccess.isGetElem(),
-          "Expected property-access node but found %s",
-          propAccess);
-      if (!propAccess.getLastChild().getString().equals(prop.property)) {
-        return false;
-      }
-
+    private boolean isCandidatePropAccess(Node propAccess) {
       switch (this.requirementType) {
         case BANNED_PROPERTY_WRITE:
           return NodeUtil.isLValue(propAccess);
@@ -733,6 +727,68 @@ public final class ConformanceRules {
         default:
           return true;
       }
+    }
+
+    private Property createSrcProperty(Node n) {
+      final JSType receiverType;
+      switch (n.getToken()) {
+        case GETELEM:
+        case GETPROP:
+          receiverType = n.getFirstChild().getJSType();
+          break;
+
+        case STRING_KEY:
+        case COMPUTED_PROP:
+          {
+            Node parent = n.getParent();
+            switch (parent.getToken()) {
+              case OBJECT_PATTERN:
+                receiverType = parent.getJSType();
+                break;
+
+              case OBJECTLIT:
+              case CLASS_MEMBERS:
+                receiverType = null;
+                break;
+
+              default:
+                throw new AssertionError();
+            }
+          }
+          break;
+
+        default:
+          receiverType = null;
+          break;
+      }
+
+      final String name;
+      switch (n.getToken()) {
+        case STRING_KEY:
+          name = n.getString();
+          break;
+
+        case GETPROP:
+        case GETELEM:
+          {
+            Node string = n.getSecondChild();
+            name = string.isString() ? string.getString() : null;
+          }
+          break;
+
+        case COMPUTED_PROP:
+          {
+            Node string = n.getFirstChild();
+            name = string.isString() ? string.getString() : null;
+          }
+          break;
+
+        default:
+          name = null;
+          break;
+      }
+
+      return (receiverType == null || name == null) ? null : new Property(receiverType, name);
     }
   }
 
