@@ -579,8 +579,8 @@ class RemoveUnusedCode implements CompilerPass {
 
     if (callee.isQualifiedName()
         && codingConvention.isPropertyRenameFunction(callee.getOriginalQualifiedName())) {
-      Node propertyNameNode = checkNotNull(callee.getNext());
-      if (propertyNameNode.isString()) {
+      Node propertyNameNode = callee.getNext();
+      if (propertyNameNode != null && propertyNameNode.isString()) {
         markPropertyNameAsPinned(propertyNameNode.getString());
       }
       traverseChildren(callNode, scope);
