@@ -1329,9 +1329,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       Node lValue = NodeUtil.getBestLValue(n);
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
       String className = NodeUtil.getBestLValueName(lValue);
+      String classTypeIdentifier = getBestTypeName(lValue, className);
 
       // Create the type and assign it on the CLASS node.
-      FunctionType classType = createClassTypeFromNodes(n, className, info, lValue);
+      FunctionType classType =
+          createClassTypeFromNodes(n, classTypeIdentifier, className, info, lValue);
       setDeferredType(n, classType);
 
       // Declare this symbol in the current scope iff it's a class
@@ -1347,6 +1349,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
             .allowLaterTypeInference(classType == null)
             .defineSlot();
       }
+    }
+
+    private String getBestTypeName(Node lvalue, String syntacticLvalueName) {
+      if (isGoogModuleExports(lvalue)) {
+        return syntacticLvalueName.replace("exports", module.closureNamespace());
+      }
+      return syntacticLvalueName;
     }
 
     /**
@@ -1497,12 +1506,17 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      * about stubs and aliases because they are handled by createFunctionTypeFromNodes instead.
      */
     private FunctionType createClassTypeFromNodes(
-        Node clazz, @Nullable String name, @Nullable JSDocInfo info, @Nullable Node lvalueNode) {
+        Node clazz,
+        @Nullable String name,
+        @Nullable String syntacticName,
+        @Nullable JSDocInfo info,
+        @Nullable Node lvalueNode) {
       checkArgument(clazz.isClass(), clazz);
 
       FunctionTypeBuilder builder =
           new FunctionTypeBuilder(name, compiler, clazz, currentScope)
               .usingClassSyntax()
+              .setSyntacticFunctionName(syntacticName)
               .setContents(new AstFunctionContents(clazz))
               .setDeclarationScope(
                   lvalueNode != null ? getLValueRootScope(lvalueNode) : currentScope)
@@ -1824,7 +1838,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
 
       FunctionTypeBuilder builder =
-          new FunctionTypeBuilder(name, compiler, errorRoot, currentScope)
+          new FunctionTypeBuilder(
+                  getBestTypeName(lvalueNode, name), compiler, errorRoot, currentScope)
+              .setSyntacticFunctionName(name)
               .setContents(contents)
               .setDeclarationScope(
                   lvalueNode != null ? getLValueRootScope(lvalueNode) : currentScope)
@@ -1989,7 +2005,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       if (enumType == null) {
         JSType elementsType = info.getEnumParameterType().evaluate(currentScope, typeRegistry);
-        enumType = typeRegistry.createEnumType(name, rValue, elementsType);
+        enumType = typeRegistry.createEnumType(getBestTypeName(lValue, name), rValue, elementsType);
 
         if (rValue != null && rValue.isObjectLit()) {
           // collect enum elements
@@ -2463,7 +2479,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
     /** Whether this lvalue is either `exports`, `exports.x`, or a string key in `exports = {x}`. */
     boolean isGoogModuleExports(Node lValue) {
-      if (module == null) {
+      if (module == null || lValue == null) {
         return false;
       }
       if (undeclaredNamesForClosure.contains(lValue)) {

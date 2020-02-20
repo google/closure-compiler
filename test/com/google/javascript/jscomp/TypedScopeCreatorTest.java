@@ -4889,7 +4889,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "exports.Y = class {};")));
 
     Node xNode = getLabeledStatement("Y").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("exports.Y");
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.x.Y");
   }
 
   @Test
@@ -4968,7 +4968,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "goog.module('b'); const Foo = goog.require('a.Foo'); var /** !Foo */ foo; FOO: foo"));
 
     Node xNode = getLabeledStatement("FOO").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("exports");
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.Foo");
   }
 
   @Test
@@ -5005,8 +5005,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "goog.module('b'); const Foo = goog.require('a.Foo'); var /** !Foo */ foo; FOO: foo"));
 
     Node xNode = getLabeledStatement("FOO").statementNode.getOnlyChild();
-    // TODO(b/124919359): can we make a better name than 'exports' ?
-    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("exports");
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.Foo");
   }
 
   @Test
@@ -5027,10 +5026,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "exports = class {};")));
 
     Node fNode = getLabeledStatement("F").statementNode.getOnlyChild();
-    assertNode(fNode).hasJSTypeThat().toStringIsEqualTo("exports");
+    assertNode(fNode).hasJSTypeThat().toStringIsEqualTo("a.Foo");
 
     Node bNode = getLabeledStatement("B").statementNode.getOnlyChild();
-    assertNode(bNode).hasJSTypeThat().toStringIsEqualTo("exports");
+    assertNode(bNode).hasJSTypeThat().toStringIsEqualTo("b.Bar");
   }
 
   @Test
@@ -5051,10 +5050,10 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "exports.Bar = class {};")));
 
     Node fNode = getLabeledStatement("F").statementNode.getOnlyChild();
-    assertNode(fNode).hasJSTypeThat().toStringIsEqualTo("exports.Foo");
+    assertNode(fNode).hasJSTypeThat().toStringIsEqualTo("a.Foo");
 
     Node bNode = getLabeledStatement("B").statementNode.getOnlyChild();
-    assertNode(bNode).hasJSTypeThat().toStringIsEqualTo("exports.Bar");
+    assertNode(bNode).hasJSTypeThat().toStringIsEqualTo("b.Bar");
   }
 
   @Test
@@ -5301,7 +5300,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "goog.module('b'); const {X} = goog.require('a'); var /** !X */ x; X: x;"));
 
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("exports.X");
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.X");
   }
 
   @Test
@@ -5312,7 +5311,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "goog.module('b'); const {Enum} = goog.require('a'); var /** !Enum */ x; X: x;"));
 
     Node xNode = getLabeledStatement("X").statementNode.getOnlyChild();
-    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("exports.Enum<number>");
+    assertNode(xNode).hasJSTypeThat().toStringIsEqualTo("a.Enum<number>");
   }
 
   @Test
@@ -5384,7 +5383,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "});")));
 
     Node aNode = getLabeledStatement("A").statementNode.getOnlyChild();
-    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("exports");
+    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("A");
   }
 
   @Test
@@ -5401,7 +5400,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "goog.module('b'); const A = goog.require('A'); /** @type {!A} */ var a; A: a;"));
 
     Node aNode = getLabeledStatement("A").statementNode.getOnlyChild();
-    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("exports");
+    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("A");
   }
 
   @Test
@@ -5418,7 +5417,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "goog.module('b'); const {A} = goog.require('mod'); /** @type {!A} */ var a; A: a;"));
 
     Node aNode = getLabeledStatement("A").statementNode.getOnlyChild();
-    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("exports.A");
+    assertNode(aNode).hasJSTypeThat().toStringIsEqualTo("mod.A");
   }
 
   @Test
@@ -5764,7 +5763,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "A: a;")));
 
     assertType(getLabeledStatement("A").statementNode.getOnlyChild().getJSType())
-        .toStringIsEqualTo("exports");
+        .toStringIsEqualTo("mod.A");
   }
 
   @Test
@@ -5837,7 +5836,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "A: a;")));
 
     assertType(getLabeledStatement("A").statementNode.getOnlyChild().getJSType())
-        .toStringIsEqualTo("exports");
+        .toStringIsEqualTo("mod.A");
   }
 
   @Test
@@ -5891,7 +5890,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "mod.B = class B {};")));
 
     JSType modType = globalScope.getVar("mod").getType();
-    assertType(modType).withTypeOfProp("A").toStringIsEqualTo("(typeof exports.A)");
+    assertType(modType).withTypeOfProp("A").toStringIsEqualTo("(typeof mod.A)");
     assertType(modType).withTypeOfProp("B").toStringIsEqualTo("(typeof mod.B)");
   }
 
@@ -5938,7 +5937,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "A: a;")));
 
     assertType(getLabeledStatement("A").statementNode.getOnlyChild().getJSType())
-        .toStringIsEqualTo("exports");
+        .toStringIsEqualTo("mod.A");
   }
 
   @Test
@@ -6444,7 +6443,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild())
         .hasJSTypeThat()
-        .toStringIsEqualTo("exports.X");
+        .toStringIsEqualTo("b.X");
   }
 
   @Test

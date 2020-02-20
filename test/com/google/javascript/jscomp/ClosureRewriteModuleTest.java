@@ -3209,7 +3209,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             (node) -> node.matchesQualifiedName("module$exports$mod$one.Bar"),
             Predicates.alwaysTrue());
 
-    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("exports.Bar");
+    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("mod.one.Bar");
   }
 
   @Test
@@ -3242,7 +3242,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             (node) -> node.matchesQualifiedName("mod.one.Bar"),
             Predicates.alwaysTrue());
 
-    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("exports.Bar");
+    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("mod.one.Bar");
   }
 
   @Test
