@@ -3499,46 +3499,30 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPrettyPrint(true);
 
-    // If we don't allow the compiler to inject the definition of $jscomp, we'll get a normalization
-    // RuntimeException.
-    // useNoninjectingCompiler = true;
+    useNoninjectingCompiler = true;
     test(
         options,
         LINE_JOINER.join(
+            // hack replacement for compiler injected code
+            "var $jscomp = { global: window };",
+            // hack replacement for closure library code
             "var goog = {};",
             "goog.exportSymbol = function(path, symbol) {};",
             "",
-            "/** @export */",
             "class C {",
             "  /** @export @param {number} x */ static set exportedName(x) {}",
             "};",
             "C.exportedName = 0;"),
         LINE_JOINER.join(
-            // TODO(tbreisacher): Find out why C is renamed despite the @export annotation.
-            "function d(a) {",
-            "  a = [",
-            "    \"object\" == typeof window && window,",
-            "    \"object\" == typeof self && self,",
-            "    \"object\" == typeof global && global,",
-            "    a",
-            "  ];",
-            "  for (var b = 0; b < a.length; ++b) {",
-            "    var c = a[b];",
-            "    if (c && c.Math == Math) {",
-            "      return c;",
-            "    }",
-            "  }",
-            "  return globalThis;",
-            "}",
-            "var e = d(this);",
-            "function f() {}",
-            "f.exportedName;",
-            "e.Object.defineProperties(",
-            "    f,",
+            "var a = window;",
+            "function b() {}",
+            "b.exportedName;",
+            "a.Object.defineProperties(",
+            "    b,",
             "    {",
             "      exportedName: { configurable:!0, enumerable:!0, set:function() {} }",
             "    });",
-            "f.exportedName = 0;"));
+            "b.exportedName = 0;"));
   }
 
   @Test

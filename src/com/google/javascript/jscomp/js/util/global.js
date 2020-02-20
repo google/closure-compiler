@@ -36,6 +36,9 @@ $jscomp.getGlobal = function(passedInThis) {
     // NOTE: ES_2020 includes globalThis, but anywhere that has that will also
     // have one of the following names for it, so there's no benefit to making
     // this code larger by looking for it.
+    // Also, if we use `globalThis` here, then that cause RemoveUnusedCode to
+    // keep the polyfill for it even if the code being compiled doesn't refer to
+    // it at all.
     //
     // Browser windows always have `window`
     'object' == typeof window && window,
@@ -62,15 +65,18 @@ $jscomp.getGlobal = function(passedInThis) {
       return /** @type {!Global} */ (maybeGlobal);
     }
   }
-  // TODO(bradfordcsmith): Ideally we should throw an exception if we cannot
-  // find the global object, but if we do that, this code then has a side
-  // effect (throwing an exception) that prevents it from being removed, even
-  // when all usages of `$jscomp.global` get removed.
-  //
-  // Returning `globalThis` here will almost certainly result in an exception
-  // from referencing a non-existent global name, and the resulting error
-  // message will hopefully point engineers in the right direction.
-  return globalThis;
+  // Throw an exception if we cannot find the global object.
+  // We have to be sneaky about it, otherwise the compiler will think this code
+  // has a side effect (throwing an exception) that prevents it from being
+  // removed, even when all usages of `$jscomp.global` get removed.
+  // Casting through unknown is necessary to keep the compiler from rejecting
+  // this code.
+  return /** @type {!Global} */ (
+      /** @type {?} */ ({
+        valueOf: function() {
+          throw new Error('Cannot find global object');
+        }
+      }.valueOf()));
 };
 
 
