@@ -1868,12 +1868,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSType type = n.getJSType();
     if (type == null) {
       type = getNativeType(UNKNOWN_TYPE);
+      // TODO(b/149843534): crash instead of defaulting to '?' when the var is null.
       TypedVar var = t.getTypedScope().getVar(n.getString());
       if (var != null) {
-        JSType varType = var.getType();
-        if (varType != null) {
-          type = varType;
-        }
+        type = checkNotNull(var.getType());
       }
     }
     ensureTyped(n, type);

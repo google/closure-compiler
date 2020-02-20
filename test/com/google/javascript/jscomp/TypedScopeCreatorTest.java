@@ -56,7 +56,6 @@ import com.google.javascript.rhino.jstype.JSTypeResolver;
 import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -608,13 +607,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "/** @const {number} */ let   CONST_LET_WITH_TYPE = 1;",
             "/** @type  {number} */ const CONST_WITH_TYPE     = 1;",
             ""));
-    String[] expectedVarNames = new String[] {"uninitializedVar"};
-    List<TypedVar> expectedVars = new ArrayList<>();
-    for (String varName : expectedVarNames) {
-      expectedVars.add(globalScope.getVar(varName));
-    }
-    assertThat(globalScope.getDeclarativelyUnboundVarsWithoutTypes())
-        .containsExactlyElementsIn(expectedVars);
+
+    // After TypeInference, there should be no more variables in this set.
+    assertThat(globalScope.getDeclarativelyUnboundVarsWithoutTypes()).isEmpty();
+
+    assertThat(globalScope.getVar("uninitializedVar")).hasJSTypeThat().isUnknown();
+    assertThat(globalScope.getVar("uninitializedLet")).hasJSTypeThat().isUnknown();
   }
 
   @Test
@@ -4437,7 +4435,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testDeclaredCatchExpression1() {
     testSame(
         "try {} catch (e) {}");
-    assertThat(lastLocalScope.getVar("e").getType()).isNull();
+    assertThat(lastLocalScope.getVar("e")).hasJSTypeThat().isUnknown();
   }
 
   @Test
@@ -6595,7 +6593,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar abc = globalScope.getVar("a.b.c");
     // TODO(b/146225122): this should be `number`.
-    assertThat(abc).hasJSTypeThat().isNull();
+    assertThat(abc).hasJSTypeThat().isUnknown();
   }
 
   @Test
