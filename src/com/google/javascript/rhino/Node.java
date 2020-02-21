@@ -2379,7 +2379,7 @@ public class Node implements Serializable {
     if (cloneTypeExprs) {
       JSDocInfo info = this.getJSDocInfo();
       if (info != null) {
-        this.setJSDocInfo(info.clone(true));
+        dst.setJSDocInfo(info.clone(true));
       }
     }
     return dst;
