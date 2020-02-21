@@ -244,13 +244,31 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
       return;
     }
     if (isClassDecl(n)) {
-      reportMisplaced(n, "typedef", "@typedef does not make sense on a class declaration.");
-    } else if (isPrototypeOrInstanceDecl(n)) {
+      reportMisplaced(n, "typedef", "@typedef is not allowed on a class declaration.");
+      return;
+    }
+    Node lvalue = NodeUtil.isNameDeclaration(n) || n.isAssign() ? n.getFirstChild() : n;
+    // Static properties for goog.defineClass are rewritten to qualified names before typechecking
+    // runs and are valid as @typedefs.
+    if (!lvalue.isQualifiedName() && !isGoogDefineClassStatic(lvalue)) {
+      reportMisplaced(
+          n,
+          "typedef",
+          "@typedef is only allowed on qualified name declarations. Did you mean @type?");
+    } else if (isPrototypeOrInstanceDecl(lvalue)) {
       reportMisplaced(
           n,
           "typedef",
           "@typedef is not allowed on instance or prototype properties. Did you mean @type?");
     }
+  }
+
+  /** Whether this is a property in this object: {@code goog.defineClass(superClass, {statics: {} */
+  private boolean isGoogDefineClassStatic(Node n) {
+    return n.isStringKey()
+        && n.getParent().isObjectLit()
+        && n.getGrandparent().isStringKey()
+        && n.getGrandparent().getString().equals("statics");
   }
 
   private void validateTemplates(Node n, JSDocInfo info) {
@@ -322,16 +340,14 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   private static boolean isPrototypeOrInstanceDecl(Node n) {
-    switch (n.getToken()) {
-      case GETPROP:
-        Node receiver = n.getFirstChild();
-        return receiver.isThis()
-            || (receiver.isGetProp() && receiver.getSecondChild().getString().equals("prototype"));
-      case ASSIGN:
-        return isPrototypeOrInstanceDecl(n.getFirstChild());
-      default:
-        return false;
+    if (n.isStringKey()) {
+      return false;
     }
+    if (NodeUtil.isPrototypeProperty(n)) {
+      return true;
+    }
+    Node receiver = NodeUtil.getRootOfQualifiedName(n);
+    return receiver.isThis() || receiver.isSuper();
   }
 
   /**
@@ -732,8 +748,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (!n.isReturn() || info == null) {
       return;
     }
-    // @type is handled in validateTypeAnnotations method.
-    if (info.containsDeclaration() && !info.hasType()) {
+    // @type and @typedef are handled separately
+    if (info.containsDeclaration() && !info.hasType() && !info.hasTypedefType()) {
       report(n, JSDOC_ON_RETURN);
     }
   }

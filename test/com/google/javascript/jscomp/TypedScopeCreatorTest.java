@@ -4632,6 +4632,21 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertThat(foo).hasJSTypeThat().isNoType(); // Note: we would like this to be 'void' eventually.
   }
 
+  /** The {@link CheckJSDoc} pass already warns on these misplaced @typedefs */
+  @Test
+  public void testTypedef_notAllowedOnThisProp() {
+    testSame("class C { constructor() { /** @typedef {string} */ this.name; } }");
+
+    assertThat(registry.getType(globalScope, "this.name")).isNull();
+  }
+
+  @Test
+  public void testTypedef_notAllowedOnPrototypeProp() {
+    testSame("/** @constructor */ function C() {} /** @typedef {string} */ C.prototype.name;");
+
+    assertThat(registry.getType(globalScope, "C.prototype.name")).isNull();
+  }
+
   @Test
   public void testTypedefName_usingLetWithLiteralRhs_hasNoType() {
     testSame("/** @typedef {number} */ let Foo = 'a string';"); // This will cause a type error.

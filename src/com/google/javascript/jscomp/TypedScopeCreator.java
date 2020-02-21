@@ -3019,7 +3019,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (info == null || !info.hasTypedefType()) {
         return false;
       }
-      return candidate.isQualifiedName();
+      // `isUnscopedQualifiedName` excludes `this` and `super` properties.
+      return candidate.isUnscopedQualifiedName() && !NodeUtil.isPrototypeProperty(candidate);
     }
 
     /** Declares a typedef'd name in the {@link JSTypeRegistry}. */
