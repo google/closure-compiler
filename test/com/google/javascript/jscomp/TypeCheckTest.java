@@ -16207,6 +16207,109 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "function f(x) { if (x.foo) { x.foo(); } }");
   }
 
+  // since optional chaining is a property test (tests for the existence of x.y), no warnings
+  // about missing properties are emitted
+  @Test
+  public void optionalChainGetPropAllowLoosePropertyAccess() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {?Object} x */", //
+            "function f(x) {", //
+            "  x.y?.z;", //
+            "}"));
+  }
+
+  // this is the same test as above except that it does not use optional chaining so it should
+  // emit a warning about missing properties
+  @Test
+  public void normalGetPropNotAllowLoosePropertyAccess() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {?Object} x */", //
+            "function f(x) {", //
+            "  x.y.z;", //
+            "}"),
+        "Property y never defined on Object");
+  }
+
+  // since optional chaining is a property test (tests for the existence of x.y), no warnings
+  // about missing properties are emitted
+  @Test
+  public void optionalChainGetElemAllowLoosePropertyAccess() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {?Object} x */", //
+            "function f(x) {", //
+            "  x.y?.[z];", //
+            "}"));
+  }
+
+  // this is the same test as above except that it does not use optional chaining so it should emit
+  // a warning about missing properties
+  @Test
+  public void normalGetElemNotAllowLoosePropertyAccess() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {?Object} x */", //
+            "function f(x) {", //
+            "  x.y[z];", //
+            "}"),
+        "Property y never defined on Object");
+  }
+
+  // since optional chaining is a property test (tests for the existence of x.y), no warnings
+  // about missing properties are emitted
+  @Test
+  public void optionalChainCallAllowLoosePropertyAccess() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {?Object} x */", //
+            "function f(x) {", //
+            "  x.y?.();", //
+            "}"));
+  }
+
+  // this is the same test as above except that it does not use optional chaining so it should emit
+  // a warning about missing properties
+  @Test
+  public void normalCallNotAllowLoosePropertyAccess() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {?Object} x */", //
+            "function f(x) {", //
+            "  x.y();", //
+            "}"),
+        "Property y never defined on Object");
+  }
+
+  // prop.access?.() is property test and should allow loose property access
+  // but x?.(prop.access) is not
+  @Test
+  public void getElemNotFirstChildOfOptionalCallNotAllowLoosePropertyAccess() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    disableStrictMissingPropertyChecks();
+    testTypes(
+        lines(
+            "/** @param {?Object} x */", //
+            "function f(x) {", //
+            "  return false;", //
+            "}",
+            "f?.(x.y)"),
+        "Property y never defined on x");
+  }
+
   @Test
   public void testMissingProperty16() {
     disableStrictMissingPropertyChecks();
