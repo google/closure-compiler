@@ -7014,6 +7014,65 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLegacyModuleExternsConflict_defaultExport() {
+    testSame(
+        externs(
+            lines(
+                "/** @const */", //
+                "var a = {};",
+                "a.Foo = class {};")),
+        srcs(
+            CLOSURE_DEFS,
+            lines(
+                "goog.module('a.Foo');",
+                "goog.module.declareLegacyNamespace();",
+                "class Foo {}",
+                "exports = Foo;"),
+            lines(
+                "goog.module('a.Bar');",
+                "const Foo = goog.require('a.Foo');",
+                "REQUIRED_FOO: Foo;")),
+        // There are two warnings, one for assigning to 'a' and one for 'a.Foo'.
+        warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH),
+        warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH));
+
+    TypedVar aVar = globalScope.getVar("a");
+    assertNode(aVar.getNameNode()).isFromExterns();
+
+    TypedVar aDotFoo = globalScope.getVar("a.Foo");
+    assertNode(aDotFoo.getNameNode()).isFromExterns();
+
+    assertThat(aVar).hasJSTypeThat().withTypeOfProp("Foo").isEqualTo(aDotFoo.getType());
+
+    assertType(registry.getGlobalType("a.Foo"))
+        .isEqualTo(aDotFoo.getType().toMaybeFunctionType().getInstanceType());
+  }
+
+  @Test
+  public void testLegacyModuleExternsConflict_namedExport() {
+    testWarning(
+        externs(
+            lines(
+                "/** @const */", //
+                "var a = {};",
+                "a.Foo = class {};")),
+        srcs(
+            lines(
+                "goog.module('a');",
+                "goog.module.declareLegacyNamespace();",
+                "class Foo {}",
+                "exports.Foo = Foo;")),
+        warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH));
+
+    TypedVar aVar = globalScope.getVar("a");
+    assertNode(aVar.getNameNode()).isFromExterns();
+    TypedVar aDotFoo = globalScope.getVar("a.Foo");
+    assertNode(aDotFoo.getNameNode()).isFromExterns();
+
+    assertThat(aVar).hasJSTypeThat().withTypeOfProp("Foo").isEqualTo(aDotFoo.getType());
+  }
+
+  @Test
   public void testRequireType_inheritanceChainWithIdenticalClassAndInterfaceName() {
     testSame(
         srcs(

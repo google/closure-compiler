@@ -359,6 +359,11 @@ public final class NodeSubject extends Subject {
     return assertNode(actual.getSecondChild());
   }
 
+  public NodeSubject isFromExterns() {
+    check("isFromExterns()").that(actual.isFromExterns()).isTrue();
+    return this;
+  }
+
   @CheckReturnValue
   public StringSubject hasStringThat() {
     return check("getString()").that(actual.getString());
