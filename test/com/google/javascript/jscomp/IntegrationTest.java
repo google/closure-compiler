@@ -164,7 +164,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         ImmutableList.of(
             new TestExternsBuilder()
                 .addConsole()
-                .addArray()
                 .addExtra(
                     "var goog;",
                     "",
@@ -180,11 +179,6 @@ public final class IntegrationTest extends IntegrationTestCase {
                     " * @return {string}",
                     " */",
                     "function $localize(template_args){}",
-                    "/**",
-                    " * @constructor",
-                    " * @extends {Array<string>}",
-                    " */",
-                    "var ITemplateArray = function() {};",
                     "")
                 .buildExternsFile("externs.js"));
     test(
@@ -205,7 +199,9 @@ public final class IntegrationTest extends IntegrationTestCase {
             "console.log(i18n_7);",
             ""),
         lines(
-            // Tagged template literal was correctly removed.
+            // TODO(b/141326511): The template literal assignment should be removed.
+            "var $jscomp$templatelit$0 = ['...'];",
+            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
             "console.log(goog.getMsg('test'));"));
   }
 

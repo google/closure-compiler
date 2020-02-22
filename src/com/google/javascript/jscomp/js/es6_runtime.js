@@ -32,7 +32,6 @@
 'require es6/set';
 'require es6/string';
 'require es6/symbol';
-'require es6/util/createtemplatetagfirstarg';
 'require es6/util/arrayfromiterable';
 'require es6/util/arrayfromiterator';
 'require es6/util/inherits';

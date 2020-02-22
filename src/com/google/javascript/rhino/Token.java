@@ -190,7 +190,7 @@ public enum Token {
   COMPUTED_PROP,
 
   TAGGED_TEMPLATELIT, // tagged template literal, e.g. foo`bar`
-  TEMPLATELIT, // template literal, e.g: `bar`
+  TEMPLATELIT, // template literal
   TEMPLATELIT_SUB, // template literal substitution
   TEMPLATELIT_STRING, // template literal string
 
