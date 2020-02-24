@@ -5210,6 +5210,30 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGoogRequire_exportObjectLiteralWithLiteralFunctions() {
+    testSame(
+        srcs(
+            CLOSURE_GLOBALS,
+            lines(
+                "goog.module('my.mod');",
+                "function memoize(fn) { return fn; }",
+                "exports = {",
+                "  /** @return {string} */",
+                "  bar: memoize(() => 'test')",
+                "};"),
+            lines(
+                "goog.module('other.mod');", "const mod = goog.require('my.mod');", "MOD: mod;")));
+
+    Node moduleObject = getLabeledStatement("MOD").statementNode.getOnlyChild();
+    assertNode(moduleObject)
+        .hasJSTypeThat()
+        .withTypeOfProp("bar")
+        .isFunctionTypeThat()
+        .hasReturnTypeThat()
+        .isString();
+  }
+
+  @Test
   public void testModuleTypedef_isNonnullableWithinModule() {
     testSame(
         lines(

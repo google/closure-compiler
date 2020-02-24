@@ -1357,7 +1357,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    private String getBestTypeName(Node lvalue, String syntacticLvalueName) {
+    private String getBestTypeName(Node lvalue, @Nullable String syntacticLvalueName) {
+      if (syntacticLvalueName == null) {
+        return null;
+      }
       if (isGoogModuleExports(lvalue)) {
         return syntacticLvalueName.replace("exports", module.closureNamespace());
       }
