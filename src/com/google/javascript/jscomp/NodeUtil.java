@@ -4009,14 +4009,12 @@ public final class NodeUtil {
    * @param propAccess The GETPROP or GETELEM being tested.
    */
   static boolean isPropertyTest(AbstractCompiler compiler, Node propAccess) {
-    if (propAccess.isCast()) {
-      // `/** @type {someType} */ (prop.access)`
-      Node realPropAccess = propAccess.getFirstChild();
-      checkState(NodeUtil.isGet(realPropAccess), realPropAccess);
-    } else {
-      checkState(NodeUtil.isGet(propAccess), propAccess);
-    }
+    checkState(NodeUtil.isGet(propAccess), propAccess);
     Node parent = propAccess.getParent();
+    while (parent.isCast()) {
+      // in case of nested cast e.g. /** @type {!Foo} / (/* @type {?} */ (a.b))
+      parent = parent.getParent();
+    }
     switch (parent.getToken()) {
       case GETPROP:
       case GETELEM:
@@ -4060,8 +4058,6 @@ public final class NodeUtil {
         return parent.getParent().isOr()
             && parent.getParent().getFirstChild() == parent;
 
-      case CAST:
-        return isPropertyTest(compiler, parent);
       default:
         break;
     }
