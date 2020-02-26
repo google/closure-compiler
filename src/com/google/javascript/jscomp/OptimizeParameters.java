@@ -566,7 +566,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
     // Found something to do, move the values from the call sites to the function definitions.
     for (Node n : refs) {
-      if (ReferenceMap.isCallOrNewTarget(n) && !alreadyRemoved(n)) {
+      if (!alreadyRemoved(n) && ReferenceMap.isCallOrNewTarget(n)) {
         optimizeCallSite(parameters, n);
       }
     }
