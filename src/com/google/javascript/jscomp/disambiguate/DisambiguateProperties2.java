@@ -27,7 +27,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.MultimapBuilder;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CheckLevel;
@@ -121,7 +120,13 @@ public final class DisambiguateProperties2 implements CompilerPass {
     propIndex.values().forEach(renamer::renameUses);
     this.logForDiagnostics(
         "renaming_index",
-        () -> MultimapBuilder.treeKeys().treeSetValues().build(renamer.getRenamingIndex()));
+        () ->
+            renamer.getRenamingIndex().asMap().entrySet().stream()
+                .collect(
+                    toImmutableSortedMap(
+                        naturalOrder(),
+                        (e) -> e.getKey(),
+                        (e) -> ImmutableSortedSet.copyOf(e.getValue()))));
   }
 
   private void logForDiagnostics(String name, Supplier<Object> data) {

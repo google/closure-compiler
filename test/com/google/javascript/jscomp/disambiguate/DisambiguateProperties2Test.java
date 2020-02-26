@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -948,7 +949,9 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   private static void assertValidJson(String src) {
+    assertThat(src.length()).isGreaterThan(10); // Make sure there's at least some data.
+
     Class<?> clazz = (src.charAt(0) == '{') ? LinkedHashMap.class : ArrayList.class;
-    new Gson().fromJson(src, clazz);
+    new Gson().fromJson(src, clazz); // Throws if invalid
   }
 }
