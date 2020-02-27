@@ -7888,6 +7888,18 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testNoSpuriousWarningsOnGeneratedTypedef() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    testNoWarnings(options, "/** @typedef {number} */ export let Foo;");
+  }
+
+  @Test
   public void testBrowserFeaturesetYear2020() {
     CompilerOptions options = createCompilerOptions();
     options.setBrowserFeaturesetYear(2020);
