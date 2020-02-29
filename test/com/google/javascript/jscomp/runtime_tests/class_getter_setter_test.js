@@ -32,7 +32,7 @@ var GetterSetter = class {
 
 function testGetter() {
   let gs = new GetterSetter();
-  assertEquals('foo', gs.foo);
+  assertEquals('foo', /** @type {?} */ (gs.foo));
 }
 
 function testSetter() {
@@ -68,7 +68,7 @@ var Sub = class extends Base {
 
 function testSubclassGetter() {
   let s = new Sub();
-  assertEquals('sub', s.foo);
+  assertEquals('sub', /** @type {?} */ (s.foo));
   assertEquals(0, s.counter);
   s.foo = 'new value';
   assertEquals(1, s.counter);
@@ -83,7 +83,7 @@ class FooWithSuffix extends Sub {
   /** @return {string} */
   get foo() {
     // Invoke super class getter
-    return super.foo + '-' + this.foo_;
+    return /** @type {?} */ (super.foo) + '-' + /** @type {?} */ (this.foo_);
   }
 
   /** @param {string} val */
@@ -114,8 +114,8 @@ var Multiple = class {
 
 function testMultiple() {
   let s =  new Multiple();
-  assertEquals('foo', s.foo);
-  assertEquals('bar', s.bar);
+  assertEquals('foo', /** @type {?} */ (s.foo));
+  assertEquals('bar', /** @type {?} */ (s.bar));
 }
 
 /**
