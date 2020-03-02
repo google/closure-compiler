@@ -183,28 +183,25 @@ final class SubtypeChecker {
    * this behaviour should be integrated into the main body of subtyping logic.
    */
   private boolean isSubtypeDispatching(JSType subtype, JSType supertype) {
-    if (subtype instanceof ArrowType) {
-      return this.isArrowTypeSubtype((ArrowType) subtype, supertype);
-    } else if (subtype instanceof EnumElementType) {
-      return this.isEnumElementSubtype((EnumElementType) subtype, supertype);
-    } else if (subtype instanceof EnumType) {
-      return this.isEnumSubtype((EnumType) subtype, supertype);
-    } else if (subtype instanceof FunctionType) {
-      if (subtype instanceof NoObjectType) {
+    switch (subtype.getTypeClass()) {
+      case ARROW:
+        return this.isArrowTypeSubtype((ArrowType) subtype, supertype);
+      case ENUM_ELEMENT:
+        return this.isEnumElementSubtype((EnumElementType) subtype, supertype);
+      case ENUM:
+        return this.isEnumSubtype((EnumType) subtype, supertype);
+      case NO_OBJECT:
+      case NO:
+      case NO_RESOLVED:
         return this.isVariousBottomsSubtype(subtype, supertype);
-      } else {
+      case FUNCTION:
         return this.isFunctionSubtype((FunctionType) subtype, supertype);
-      }
-    } else if (subtype instanceof ProxyObjectType) {
-      if (subtype instanceof TemplatizedType) {
-        return this.isSubtypeHelper(subtype, supertype);
-      } else if (subtype instanceof TemplateType) {
+      case TEMPLATE:
         return this.isTemplateSubtype((TemplateType) subtype, supertype);
-      } else {
+      case PROXY_OBJECT:
         return this.isProxyObjectSubtype((ProxyObjectType) subtype, supertype);
-      }
-    } else {
-      return this.isSubtypeHelper(subtype, supertype);
+      default:
+        return this.isSubtypeHelper(subtype, supertype);
     }
   }
 
