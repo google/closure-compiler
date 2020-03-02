@@ -38,6 +38,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.JsIterables.MaybeBoxedIterableOrAsyncIterable;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
@@ -535,7 +536,6 @@ class TypeValidator implements Serializable {
    * Expect that the first type can be addressed with GETELEM syntax and that the second type is the
    * right type for an index into the first type.
    *
-   * @param t The node traversal.
    * @param n The GETELEM or COMPUTED_PROP node to issue warnings on.
    * @param objType The type we're indexing into (the left side of the GETELEM).
    * @param indexType The type inside the brackets of the GETELEM/COMPUTED_PROP.
@@ -580,7 +580,6 @@ class TypeValidator implements Serializable {
   /**
    * Expect that the first type can be assigned to a symbol of the second type.
    *
-   * @param t The node traversal.
    * @param n The node to issue warnings on.
    * @param rightType The type on the RHS of the assign.
    * @param leftType The type of the symbol on the LHS of the assign.
@@ -590,6 +589,32 @@ class TypeValidator implements Serializable {
    */
   boolean expectCanAssignToPropertyOf(
       Node n, JSType rightType, JSType leftType, Node owner, String propName) {
+    return expectCanAssignToPropertyOf(
+        n,
+        rightType,
+        leftType,
+        getJSType(owner),
+        () -> typeRegistry.getReadableTypeName(owner),
+        propName);
+  }
+
+  /**
+   * Expect that the first type can be assigned to a symbol of the second type.
+   *
+   * @param n The node to issue warnings on.
+   * @param rightType The type on the RHS of the assign.
+   * @param leftType The type of the symbol on the LHS of the assign.
+   * @param ownerType The owner of the property being assigned to.
+   * @param propName The name of the property being assigned to.
+   * @return True if the types matched, false otherwise.
+   */
+  boolean expectCanAssignToPropertyOf(
+      Node n,
+      JSType rightType,
+      JSType leftType,
+      JSType ownerType,
+      Supplier<String> typeNameSupplier,
+      String propName) {
     if (leftType.isTemplateType()) {
       TemplateType left = leftType.toMaybeTemplateType();
       if (rightType.containsReferenceAncestor(left)
@@ -604,7 +629,7 @@ class TypeValidator implements Serializable {
         registerMismatchAndReport(
             n,
             TYPE_MISMATCH_WARNING,
-            "assignment to property " + propName + " of " + typeRegistry.getReadableTypeName(owner),
+            "assignment to property " + propName + " of " + typeNameSupplier.get(),
             rightType,
             leftType,
             new HashSet<>(),
@@ -617,7 +642,6 @@ class TypeValidator implements Serializable {
       // Do not type-check interface methods, because we expect that
       // they will have dummy implementations that do not match the type
       // annotations.
-      JSType ownerType = getJSType(owner);
       if (ownerType.isFunctionPrototypeType()) {
         FunctionType ownerFn = ownerType.toObjectType().getOwnerFunction();
         if (ownerFn.isInterface()
@@ -628,7 +652,7 @@ class TypeValidator implements Serializable {
 
       mismatch(
           n,
-          "assignment to property " + propName + " of " + typeRegistry.getReadableTypeName(owner),
+          "assignment to property " + propName + " of " + typeNameSupplier.get(),
           rightType,
           leftType);
       return false;
@@ -642,7 +666,6 @@ class TypeValidator implements Serializable {
   /**
    * Expect that the first type can be assigned to a symbol of the second type.
    *
-   * @param t The node traversal.
    * @param n The node to issue warnings on.
    * @param rightType The type on the RHS of the assign.
    * @param leftType The type of the symbol on the LHS of the assign.
@@ -679,7 +702,6 @@ class TypeValidator implements Serializable {
   /**
    * Expect that the type of an argument matches the type of the parameter that it's fulfilling.
    *
-   * @param t The node traversal.
    * @param n The node to issue warnings on.
    * @param argType The type of the argument.
    * @param paramType The type of the parameter.
@@ -705,7 +727,6 @@ class TypeValidator implements Serializable {
   /**
    * Expect that the first type is the direct superclass of the second type.
    *
-   * @param t The node traversal.
    * @param n The node where warnings should point to.
    * @param superObject The expected super instance type.
    * @param subObject The sub instance type.

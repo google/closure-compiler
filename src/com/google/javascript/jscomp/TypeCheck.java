@@ -37,6 +37,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
+import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -889,6 +890,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         visitClass(n);
         break;
 
+      case MODULE_BODY:
+        visitModuleBody(t, n);
+        break;
+
         // These nodes have no interesting type behavior.
         // These nodes require data flow analysis.
       case PARAM_LIST:
@@ -902,7 +907,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case CATCH:
       case TRY:
       case SCRIPT:
-      case MODULE_BODY:
       case EXPORT:
       case EXPORT_SPEC:
       case EXPORT_SPECS:
@@ -2969,6 +2973,36 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         report(n, UNEXPECTED_TOKEN, op.toString());
     }
     ensureTyped(n);
+  }
+
+  /** Validates the implicit assignment to the global for a legacy goog.module */
+  private void visitModuleBody(NodeTraversal t, Node moduleBody) {
+    Module associatedModule =
+        ModuleImportResolver.getModuleFromScopeRoot(
+            compiler.getModuleMap(), (b) -> t.getInput(), moduleBody);
+    if (!associatedModule.metadata().isLegacyGoogModule()) {
+      return;
+    }
+    QualifiedName moduleName = QualifiedName.of(associatedModule.closureNamespace());
+    Node googModuleCall = moduleBody.getFirstChild();
+    if (moduleName.isSimple()) {
+      TypedVar globalVar = topScope.getVar(moduleName.join());
+      validator.expectCanAssignTo(
+          googModuleCall, moduleBody.getJSType(), globalVar.getType(), "legacy goog.module export");
+    } else {
+      JSType parentType = topScope.lookupQualifiedName(moduleName.getOwner());
+      ObjectType parentObjectType = parentType != null ? parentType.toMaybeObjectType() : null;
+      if (parentObjectType == null) {
+        return;
+      }
+      validator.expectCanAssignToPropertyOf(
+          googModuleCall,
+          moduleBody.getJSType(),
+          parentObjectType.getPropertyType(moduleName.getComponent()),
+          parentObjectType,
+          () -> moduleName.getOwner().join(),
+          moduleName.getComponent());
+    }
   }
 
   /**

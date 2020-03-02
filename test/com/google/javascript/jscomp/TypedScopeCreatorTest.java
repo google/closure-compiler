@@ -6610,7 +6610,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInferredLegacyNsExport_requiredInModule() {
+  public void testInferredLegacyNsExport() {
     processClosurePrimitives = true;
     testSame(
         new String[] {
@@ -6618,6 +6618,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
           lines(
               "goog.module('a.b.c')",
               "goog.module.declareLegacyNamespace();",
+              "MOD: 0;",
               "",
               "/** @return {number} */",
               "function getNumber() { return 0; }",
@@ -6626,12 +6627,46 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar ab = globalScope.getVar("a.b");
     assertThat(ab).isNotInferred();
-    // TODO(b/146225122): this should be `number`
-    assertThat(ab).hasJSTypeThat().withTypeOfProp("c").isUnknown();
+    assertThat(ab).hasJSTypeThat().withTypeOfProp("c").isNumber();
 
     TypedVar abc = globalScope.getVar("a.b.c");
-    // TODO(b/146225122): this should be `number`.
-    assertThat(abc).hasJSTypeThat().isUnknown();
+    assertThat(abc).hasJSTypeThat().isNumber();
+
+    Node moduleBody = getLabeledStatement("MOD").enclosingScope.getRootNode();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    assertNode(moduleBody).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testInferredLegacyNsExport_bundled() {
+    processClosurePrimitives = true;
+    testSame(
+        new String[] {
+          CLOSURE_GLOBALS,
+          lines(
+              "goog.loadModule(function(exports) {",
+              "goog.module('a.b.c')",
+              "goog.module.declareLegacyNamespace();",
+              "MOD: 0;",
+              "",
+              "/** @return {number} */",
+              "function getNumber() { return 0; }",
+              "exports = getNumber();",
+              "return exports;",
+              "});")
+        });
+
+    TypedVar ab = globalScope.getVar("a.b");
+    assertThat(ab).isNotInferred();
+    assertThat(ab).hasJSTypeThat().withTypeOfProp("c").isNumber();
+
+    TypedVar abc = globalScope.getVar("a.b.c");
+    assertThat(abc).hasJSTypeThat().isNumber();
+
+    Node fnBlock = getLabeledStatement("MOD").enclosingScope.getRootNode();
+    Node exportsParam = fnBlock.getPrevious().getFirstChild();
+    checkState(exportsParam.getString().equals("exports"));
+    assertNode(exportsParam).hasJSTypeThat().isNumber();
   }
 
   @Test

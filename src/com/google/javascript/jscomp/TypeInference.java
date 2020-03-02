@@ -46,6 +46,7 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -371,15 +372,69 @@ class TypeInference
     output = inferDeclarativelyUnboundVarsWithoutTypes(output);
     output = traverse(n, output);
 
-    if (module != null && module.metadata().isEs6Module()) {
-      // This call only affects exports with an inferred, not declared, type. Declared exports were
-      // already added to the namespace object type in TypedScopeCreator.
-      moduleImportResolver.updateEsModuleNamespaceType(
-          syntacticBlockScope.getVar(Export.NAMESPACE).getType().toObjectType(),
-          module,
-          syntacticBlockScope);
-    }
+    updateModuleScope(module, syntacticBlockScope);
     return output;
+  }
+
+  /** Updates the given scope after running inference over a goog.module or ES module */
+  private void updateModuleScope(Module module, TypedScope syntacticBlockScope) {
+    if (module == null) {
+      return;
+    }
+    switch (module.metadata().moduleType()) {
+      case ES6_MODULE:
+        // This call only affects exports with an inferred, not declared, type. Declared exports
+        // were already added to the namespace object type in TypedScopeCreator.
+        moduleImportResolver.updateEsModuleNamespaceType(
+            syntacticBlockScope.getVar(Export.NAMESPACE).getType().toObjectType(),
+            module,
+            syntacticBlockScope);
+        return;
+      case LEGACY_GOOG_MODULE:
+        // Update the global scope for the implicit assignment "legacy.module.id = exports;" created
+        // by `goog.module.declareLegacyNamespace();`
+        TypedVar exportsVar =
+            checkNotNull(
+                syntacticBlockScope.getVar("exports"),
+                "Missing exports var for %s",
+                module.metadata());
+        if (exportsVar.getType() == null) {
+          return;
+        }
+        JSType exportsType = exportsVar.getType();
+        // Store the type of the namespace on the AST for the convenience of later passes that want
+        // to access it.
+        Node rootNode = syntacticBlockScope.getRootNode();
+        if (rootNode.isModuleBody()) {
+          rootNode.setJSType(exportsType);
+        } else {
+          // For goog.loadModule, give the `exports` parameter the correct type.
+          checkState(rootNode.isBlock(), rootNode);
+          Node paramList = NodeUtil.getFunctionParameters(rootNode.getParent());
+          paramList.getOnlyChild().setJSType(exportsType);
+        }
+
+        String moduleId = module.closureNamespace();
+        TypedScope globalScope = syntacticBlockScope.getGlobalScope();
+        TypedVar globalVar = globalScope.getVar(moduleId);
+        if (globalVar.isTypeInferred()) {
+          globalVar.setType(exportsType);
+        }
+        // Update the property slot on the parent namespace.
+        QualifiedName moduleQname = QualifiedName.of(moduleId);
+        if (!moduleQname.isSimple()) {
+          JSType parentType = globalScope.lookupQualifiedName(moduleQname.getOwner());
+          ObjectType parentObjectType = parentType != null ? parentType.toMaybeObjectType() : null;
+          if (parentObjectType != null
+              && !parentObjectType.isPropertyTypeDeclared(moduleQname.getComponent())) {
+            parentObjectType.defineInferredProperty(
+                moduleQname.getComponent(), exportsType, exportsVar.getNode());
+          }
+        }
+        return;
+      default:
+        break;
+    }
   }
 
   @Override

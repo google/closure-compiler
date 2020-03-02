@@ -25511,6 +25511,69 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "Property bar never defined on Foo");
   }
 
+  @Test
+  public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_simpleModuleId() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @const @suppress {duplicate} */",
+            "var globalNs = {};",
+            "/** @const */",
+            "var goog = {};",
+            "goog.module = function(ns) {};",
+            "goog.module.declareLegacyNamespace = function() {};"),
+        lines(
+            "goog.module('globalNs');", //
+            "goog.module.declareLegacyNamespace();",
+            "exports = 0;"),
+        lines(
+            "legacy goog.module export", //
+            "found   : number",
+            "required: {}"));
+  }
+
+  @Test
+  public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_simpleModuleIdWithProperties() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @const @suppress {duplicate} */",
+            "var globalNs = {};",
+            "/** @const */",
+            "var goog = {};",
+            "goog.module = function(ns) {};",
+            "goog.module.declareLegacyNamespace = function() {};"),
+        lines(
+            "goog.module('globalNs');", //
+            "goog.module.declareLegacyNamespace();",
+            "exports.prop = 0;"),
+        lines(
+            "legacy goog.module export", //
+            "found   : {prop: number}",
+            "required: {}"));
+  }
+
+  @Test
+  public void testLegacyGoogModuleExportTypecheckedAgainstGlobal_dottedModuleId() {
+    testTypesWithExtraExterns(
+        lines(
+            "/** @const @suppress {duplicate} */",
+            "var globalNs = {};",
+            "/** @suppress {duplicate} */",
+            "globalNs.Ctor = class {};",
+            "/** @const */",
+            "var goog = {};",
+            "goog.module = function(ns) {};",
+            "goog.module.declareLegacyNamespace = function() {};"),
+        lines(
+            "goog.module('globalNs.Ctor');",
+            "goog.module.declareLegacyNamespace();",
+            "class Ctor {}",
+            "exports = Ctor;"),
+        lines(
+            "assignment to property Ctor of globalNs",
+            "found   : (typeof Ctor)",
+            "required: (typeof globalNs.Ctor)"));
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));
