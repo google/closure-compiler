@@ -1864,6 +1864,12 @@ HTMLIFrameElement.prototype.srcdoc;
 HTMLIFrameElement.prototype.sandbox;
 
 /**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-allow
+ */
+HTMLIFrameElement.prototype.allow;
+
+/**
  * @type {Window}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/contentWindow
  */
