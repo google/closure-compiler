@@ -589,6 +589,7 @@ public class DiagnosticGroups {
               ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE,
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
+              ClosureCheckModule.USE_OF_GOOG_PROVIDE,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
               RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING));
 

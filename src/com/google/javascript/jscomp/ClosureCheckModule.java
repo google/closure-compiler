@@ -151,6 +151,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
               "Reference to fully qualified import name ''{0}'' in JSDoc."
                   + " Please use the short name ''{1}'' instead.");
 
+  static final DiagnosticType USE_OF_GOOG_PROVIDE =
+      DiagnosticType.disabled(
+          "JSC_USE_OF_GOOG_PROVIDE", "goog.provide is deprecated in favor of goog.module.");
+
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL", "goog.require() must be called at file scope.");
@@ -232,6 +236,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         t.report(n, GOOG_MODULE_IN_NON_MODULE);
       } else if (NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(n)) {
         t.report(n, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
+      } else if (NodeUtil.isCallTo(n, "goog.provide")) {
+        // This error is reported here, rather than in a provide-specific pass, because it
+        // must be reported prior to ClosureRewriteModule converting legacy goog.modules into
+        // goog.provides.
+        t.report(n, USE_OF_GOOG_PROVIDE);
       }
       return;
     }
