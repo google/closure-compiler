@@ -71,12 +71,16 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2019 = ES2019_MODULES.without(Feature.MODULES);
 
+  // "highest" output level
   public static final FeatureSet ES_NEXT = ES2019_MODULES.with(LangVersion.ES_NEXT.features());
 
-  public static final FeatureSet ES_UNSUPPORTED =
-      ES_NEXT.with(LangVersion.ES_UNSUPPORTED.features());
+  // "highest" input level; for features that can be transpiled but lack optimization/pass through
+  public static final FeatureSet ES_NEXT_IN = ES_NEXT.with(LangVersion.ES_NEXT_IN.features());
 
-  public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
+  public static final FeatureSet ES_UNSUPPORTED =
+      ES_NEXT_IN.with(LangVersion.ES_UNSUPPORTED.features());
+
+  public static final FeatureSet TYPESCRIPT = ES_NEXT_IN.with(LangVersion.TYPESCRIPT.features());
 
   public static final FeatureSet BROWSER_2020 =
       ES2019_MODULES.without(
@@ -98,6 +102,7 @@ public final class FeatureSet implements Serializable {
     ES8,
     ES2018,
     ES2019,
+    ES_NEXT_IN,
     ES_NEXT,
     ES_UNSUPPORTED,
     TYPESCRIPT,
@@ -256,6 +261,9 @@ public final class FeatureSet implements Serializable {
     }
     if (ES_NEXT.contains(this)) {
       return "es_next";
+    }
+    if (ES_NEXT_IN.contains(this)) {
+      return "es_next_in";
     }
     if (ES_UNSUPPORTED.contains(this)) {
       return "es_unsupported";
@@ -447,6 +455,8 @@ public final class FeatureSet implements Serializable {
         return ES2019;
       case "es_next":
         return ES_NEXT;
+      case "es_next_in":
+        return ES_NEXT_IN;
       case "es_unsupported":
         return ES_UNSUPPORTED;
       case "ts":

@@ -50,6 +50,7 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.TS_UNSUPPORTED).contains(FeatureSet.TYPESCRIPT);
     assertFS(FeatureSet.TYPESCRIPT).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT);
+    assertFS(FeatureSet.ES_NEXT_IN).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2019);
     assertFS(FeatureSet.ES2019).contains(FeatureSet.ES2018);
     assertFS(FeatureSet.ES2018).contains(FeatureSet.ES8);
@@ -131,6 +132,7 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.valueOf("es9")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es_2019")).equals(FeatureSet.ES2019);
     assertFS(FeatureSet.valueOf("es_next")).equals(FeatureSet.ES_NEXT);
+    assertFS(FeatureSet.valueOf("es_next_in")).equals(FeatureSet.ES_NEXT_IN);
     assertFS(FeatureSet.valueOf("es_unsupported")).equals(FeatureSet.ES_UNSUPPORTED);
     assertFS(FeatureSet.valueOf("ts")).equals(FeatureSet.TYPESCRIPT);
     assertThrows(IllegalArgumentException.class, () -> FeatureSet.valueOf("bad"));
