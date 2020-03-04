@@ -49,8 +49,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckMissingAndExtraRequires(
-        compiler, CheckMissingAndExtraRequires.Mode.FULL_COMPILE);
+    return new CheckMissingAndExtraRequires(compiler);
   }
 
   @Test
@@ -229,7 +228,6 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   @Test
   public void testUnusedForwardDeclareInModule() {
-    // Reports extra require warning, but only in single-file mode.
     testSame(
         lines(
             "goog.module('example');",
@@ -263,7 +261,6 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   @Test
   public void testFailForwardDeclare() {
-    // Reports extra require warning, but only in single-file mode.
     testSame(
         lines(
             "goog.forwardDeclare('goog.events.Event');",
