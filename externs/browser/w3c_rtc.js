@@ -1684,34 +1684,34 @@ RTCStats.prototype.id;
  * @interface
  * @extends {RTCStats}
  */
-function RTCStreamStats() {}
+function RTCRtpStreamStats() {}
 
 /** @const {number} */
-RTCStreamStats.prototype.ssrc;
+RTCRtpStreamStats.prototype.ssrc;
 
 /** @const {string} */
-RTCStreamStats.prototype.kind;
+RTCRtpStreamStats.prototype.kind;
 
 /** @const {string} */
-RTCStreamStats.prototype.transportId;
+RTCRtpStreamStats.prototype.transportId;
 
 /** @const {string} */
-RTCStreamStats.prototype.codecId;
+RTCRtpStreamStats.prototype.codecId;
 
 /** @const {number} */
-RTCStreamStats.prototype.firCount;
+RTCRtpStreamStats.prototype.firCount;
 
 /** @const {number} */
-RTCStreamStats.prototype.pliCount;
+RTCRtpStreamStats.prototype.pliCount;
 
 /** @const {number} */
-RTCStreamStats.prototype.nackCount;
+RTCRtpStreamStats.prototype.nackCount;
 
 /** @const {number} */
-RTCStreamStats.prototype.sliCount;
+RTCRtpStreamStats.prototype.sliCount;
 
 /** @const {number} */
-RTCStreamStats.prototype.qpSum;
+RTCRtpStreamStats.prototype.qpSum;
 
 /**
  * @interface
