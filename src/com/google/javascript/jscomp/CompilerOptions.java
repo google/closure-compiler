@@ -3225,6 +3225,12 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
 
+    /**
+     * ECMAScript latest draft standard. Transpiled but no pass through. Should ONLY be used for
+     * language_in
+     */
+    ECMASCRIPT_NEXT_IN,
+
     /** Use stable features. */
     STABLE,
 
@@ -3290,6 +3296,8 @@ public class CompilerOptions implements Serializable {
         case ECMASCRIPT_NEXT:
         case NO_TRANSPILE:
           return FeatureSet.ES_NEXT;
+        case ECMASCRIPT_NEXT_IN:
+          return FeatureSet.ES_NEXT_IN;
         case UNSUPPORTED:
           return FeatureSet.ES_UNSUPPORTED;
         case ECMASCRIPT6_TYPED:

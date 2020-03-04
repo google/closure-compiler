@@ -2645,6 +2645,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         return Config.LanguageMode.UNSUPPORTED;
       case ECMASCRIPT_NEXT:
         return Config.LanguageMode.ES_NEXT;
+      case ECMASCRIPT_NEXT_IN:
+        return Config.LanguageMode.ES_NEXT_IN;
       default:
         throw new IllegalStateException("Unexpected language mode: "
             + options.getLanguageIn());

@@ -186,6 +186,9 @@ public final class ParserRunner {
       case ES_NEXT:
         parserConfigLanguageMode = Mode.ES_NEXT;
         break;
+      case ES_NEXT_IN:
+        parserConfigLanguageMode = Mode.ES_NEXT_IN;
+        break;
       case UNSUPPORTED:
         parserConfigLanguageMode = Mode.UNSUPPORTED;
         break;

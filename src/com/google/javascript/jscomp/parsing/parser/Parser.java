@@ -230,6 +230,7 @@ public class Parser {
       ES6_OR_ES7,
       ES8_OR_GREATER,
       ES_NEXT,
+      ES_NEXT_IN,
       UNSUPPORTED,
       TYPESCRIPT,
     }
