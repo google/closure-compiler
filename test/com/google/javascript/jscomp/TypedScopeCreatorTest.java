@@ -7153,6 +7153,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testLegacyGoogModule_redeclaredAsVar_reportsError() {
+    // This is a bad pattern but should not crash the compiler.
+    test(
+        srcs(
+            CLOSURE_GLOBALS,
+            "goog.module('GlobalName'); goog.module.declareLegacyNamespace();",
+            "var GlobalName = class {};"),
+        warning(TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH));
+  }
+
+  @Test
   public void testMemoization() {
     Node root1 = createEmptyRoot();
     Node root2 = createEmptyRoot();

@@ -1088,9 +1088,8 @@ class TypeInference
         JSType varType = var == null ? null : var.getType();
         boolean isVarDeclaration =
             type == AssignmentType.DECLARATION
-                && varType != null
                 && !var.isTypeInferred()
-                && var.getNameNode() != null;
+                && var.getNameNode() != null; // implicit vars (like arguments) have no nameNode
 
         // Whether this variable is declared not because it has JSDoc with a declaration, but
         // because it is const and the right-hand-side is easily inferrable.
@@ -1106,6 +1105,7 @@ class TypeInference
         // TypedScopeCreator and this code.
         boolean isTypelessConstDecl =
             isVarDeclaration
+                && var.getNameNode().isName() // ignore redeclarations of implicit globals
                 && NodeUtil.isConstantDeclaration(var.getJSDocInfo(), var.getNameNode())
                 && !(var.getJSDocInfo() != null
                     && var.getJSDocInfo().containsDeclarationExcludingTypelessConst());

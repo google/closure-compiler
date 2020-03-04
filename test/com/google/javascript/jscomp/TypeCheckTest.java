@@ -4296,6 +4296,23 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testInWithThis_narrowsPropertyType() {
+    // TODO(lharker): should we stop doing this narrowing? this code would break under property
+    // renaming.
+    testTypes(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.method = function() {",
+            "  if ('x' in this) {",
+            "    return this.x;", // this access is allowed
+            "  }",
+            "  return this.y;", // this access causes a warning
+            "}"),
+        "Property y never defined on Foo");
+  }
+
+  @Test
   public void testInWithWellKnownSymbol() {
     testTypesWithCommonExterns("Symbol.iterator in Object");
   }

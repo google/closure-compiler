@@ -16,8 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
@@ -47,9 +52,32 @@ public class TypedVar extends AbstractVar<TypedScope, TypedVar>
    */
   private final boolean typeInferred;
 
+  // includes nodes that in plain JS semantics are not 'declarations', but that the type system
+  // & compiler treat as declarations.
+  private static final ImmutableSet<Token> NAME_NODE_TYPES =
+      Sets.immutableEnumSet(
+          Token.NAME,
+          Token.THIS, // `if ('prop' in this) {` creates a TypedVar `this.prop` requiring a node
+          Token.IMPORT_STAR,
+          Token.EXPR_RESULT, // implicit variables from goog.provide
+          Token.EXPORT, // tracks the *default* export
+          Token.GETPROP,
+          Token.FUNCTION,
+          Token.STRING_KEY,
+          Token.SETTER_DEF,
+          Token.GETTER_DEF,
+          Token.MEMBER_FUNCTION_DEF,
+          Token.MODULE_BODY); // for the implicit exports object in a module
+
   TypedVar(boolean inferred, String name, Node nameNode, JSType type,
       TypedScope scope, int index, CompilerInput input) {
     super(name, nameNode, scope, index, input);
+    if (nameNode != null) {
+      checkArgument(
+          NAME_NODE_TYPES.contains(nameNode.getToken()),
+          "Invalid name node token %s",
+          nameNode.getToken());
+    }
     this.type = type;
     this.typeInferred = inferred;
   }
