@@ -827,6 +827,8 @@ public class CompilerOptions implements Serializable {
 
   boolean j2clMinifierEnabled = true;
 
+  @Nullable String j2clMinifierPruningManifest = null;
+
   /** Remove goog.abstractMethod assignments and @abstract methods. */
   boolean removeAbstractMethods;
 
@@ -1888,6 +1890,10 @@ public class CompilerOptions implements Serializable {
 
   public void setJ2clMinifierEnabled(boolean enabled) {
     this.j2clMinifierEnabled = enabled;
+  }
+
+  public void setJ2clMinifierPruningManifest(String j2clMinifierPruningManifest) {
+    this.j2clMinifierPruningManifest = j2clMinifierPruningManifest;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {
@@ -3064,6 +3070,7 @@ public class CompilerOptions implements Serializable {
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
             .add("instrumentBranchCoverage", instrumentBranchCoverage)
             .add("j2clMinifierEnabled", j2clMinifierEnabled)
+            .add("j2clMinifierPruningManifest", j2clMinifierPruningManifest)
             .add("j2clPassMode", j2clPassMode)
             .add("labelRenaming", labelRenaming)
             .add("languageIn", getLanguageIn())
