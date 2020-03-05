@@ -878,12 +878,6 @@ public final class NodeUtil {
   }
 
   static boolean isSimpleOperator(Node n) {
-
-    if (n.isOptionalChain()) {
-      // Complicated because of the need to check for null/undefined.
-      // `x?.prop`, `x?.[expr]`, `x?.()`
-      return false;
-    }
     return isSimpleOperatorType(n.getToken());
   }
 
@@ -4009,26 +4003,11 @@ public final class NodeUtil {
    * @param propAccess The GETPROP or GETELEM being tested.
    */
   static boolean isPropertyTest(AbstractCompiler compiler, Node propAccess) {
-    checkState(NodeUtil.isGet(propAccess), propAccess);
     Node parent = propAccess.getParent();
-    while (parent.isCast()) {
-      // in case of nested cast e.g. /** @type {!Foo} / (/* @type {?} */ (a.b))
-      parent = parent.getParent();
-    }
     switch (parent.getToken()) {
-      case GETPROP:
-      case GETELEM:
-        // `prop.access?.otherProp` or `prop.access?.[expression]`
-        return parent.isOptionalChain();
-
       case CALL:
-        if (propAccess.isFirstChildOf(parent)) {
-          // e.g. prop.access?.() is a property test
-          return parent.isOptionalChain();
-        } else {
-          // e.g. goog.isNull(prop.access) is a property test
-          return compiler.getCodingConvention().isPropertyTestFunction(parent);
-        }
+        return parent.getFirstChild() != propAccess
+            && compiler.getCodingConvention().isPropertyTestFunction(parent);
 
       case IF:
       case WHILE:
@@ -4058,6 +4037,8 @@ public final class NodeUtil {
         return parent.getParent().isOr()
             && parent.getParent().getFirstChild() == parent;
 
+      case CAST:
+        return isPropertyTest(compiler, parent);
       default:
         break;
     }

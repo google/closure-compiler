@@ -225,14 +225,12 @@ public final class AstAnalyzerTest {
           kase().js("i=3").token(ASSIGN).expect(true),
           kase().js("[0, i=3]").token(ARRAYLIT).expect(true),
           kase().js("b()").token(CALL).expect(true),
-          kase().js("b?.()").token(CALL).expect(true),
           kase().js("void b()").token(VOID).expect(true),
           kase().js("[1, b()]").token(ARRAYLIT).expect(true),
           kase().js("b.b=4").token(ASSIGN).expect(true),
           kase().js("b.b--").token(DEC).expect(true),
           kase().js("i--").token(DEC).expect(true),
           kase().js("a[0][i=4]").token(GETELEM).expect(true),
-          kase().js("a?.[b++]").token(GETELEM).expect(true),
           kase().js("a += 3").token(ASSIGN_ADD).expect(true),
           kase().js("a, b, z += 4").token(COMMA).expect(true),
           kase().js("a ? c : d++").token(HOOK).expect(true),
@@ -257,7 +255,6 @@ public final class AstAnalyzerTest {
           kase().js("a + c").token(ADD).expect(false),
           kase().js("'c' + a[0]").token(ADD).expect(false),
           kase().js("a[0][1]").token(GETELEM).expect(false),
-          kase().js("a?.[0]").token(GETELEM).expect(false),
           kase().js("'a' + c").token(ADD).expect(false),
           kase().js("'a' + a.name").token(ADD).expect(false),
           kase().js("1, 2, 3").token(COMMA).expect(false),
@@ -295,12 +292,9 @@ public final class AstAnalyzerTest {
 
           // Getters and setters
           kase().js("x.getter;").token(GETPROP).expect(true),
-          kase().js("x?.getter;").token(GETPROP).expect(true),
           // Overapproximation to avoid inspecting the parent.
           kase().js("x.setter;").token(GETPROP).expect(true),
-          kase().js("x?.setter;").token(GETPROP).expect(true),
           kase().js("x.normal;").token(GETPROP).expect(false),
-          kase().js("x?.normal;").token(GETPROP).expect(false),
           kase().js("const {getter} = x;").token(STRING_KEY).expect(true),
           // Overapproximation to avoid inspecting the parent.
           kase().js("const {setter} = x;").token(STRING_KEY).expect(false),
@@ -538,12 +532,9 @@ public final class AstAnalyzerTest {
 
           // Getter use
           kase().expect(true).token(GETPROP).js("x.getter;"),
-          kase().expect(true).token(GETPROP).js("x?.getter;"),
           // Overapproximation because to avoid inspecting the parent.
           kase().expect(true).token(GETPROP).js("x.setter;"),
-          kase().expect(true).token(GETPROP).js("x?.setter;"),
           kase().expect(false).token(GETPROP).js("x.normal;"),
-          kase().expect(false).token(GETPROP).js("x?.normal;"),
           kase().expect(true).token(STRING_KEY).js("({getter} = foo());"),
           kase().expect(false).token(STRING_KEY).js("({setter} = foo());"),
           kase().expect(false).token(STRING_KEY).js("({normal} = foo());"),
@@ -656,7 +647,6 @@ public final class AstAnalyzerTest {
           //
           // in general function and constructor calls are assumed to have side effects
           kase().js("foo();").token(CALL).expect(true),
-          kase().js("foo?.();").token(CALL).expect(true),
           kase().js("new Foo();").token(NEW).expect(true),
           // Object() is known not to have side-effects, though
           kase().js("Object();").token(CALL).expect(false),
@@ -690,11 +680,8 @@ public final class AstAnalyzerTest {
           kase().js("({...x});").token(OBJECT_SPREAD).expect(true),
           kase().js("const {...x} = y;").token(OBJECT_REST).expect(true),
           kase().js("y.getter;").token(GETPROP).expect(true),
-          kase().js("y?.getter;").token(GETPROP).expect(true),
           kase().js("y.setter;").token(GETPROP).expect(true),
-          kase().js("y?.setter;").token(GETPROP).expect(true),
           kase().js("y.normal;").token(GETPROP).expect(false),
-          kase().js("y?.normal;").token(GETPROP).expect(false),
           kase().js("const {getter} = y;").token(STRING_KEY).expect(true),
           kase().js("const {setter} = y;").token(STRING_KEY).expect(false),
           kase().js("const {normal} = y;").token(STRING_KEY).expect(false),
