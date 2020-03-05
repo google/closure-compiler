@@ -10535,6 +10535,20 @@ chrome.inlineInstallPrivate.install = function(id, opt_callback) {};
  */
 chrome.inputMethodPrivate = {};
 
+/**
+ * @enum {string}
+ */
+chrome.inputMethodPrivate.InputModeType = {
+  NO_KEYBOARD: '',
+  TEXT: '',
+  TEL: '',
+  URL: '',
+  EMAIL: '',
+  NUMERIC: '',
+  DECIMAL: '',
+  SEARCH: '',
+};
+
 
 /**
  * @enum {string}
@@ -10579,6 +10593,8 @@ chrome.inputMethodPrivate.InputContext = function() {};
 /** @type {number} */
 chrome.inputMethodPrivate.InputContext.prototype.contextID;
 
+/** @type {chrome.inputMethodPrivate.InputModeType} */
+chrome.inputMethodPrivate.InputContext.prototype.mode;
 
 /** @type {chrome.inputMethodPrivate.InputContextType} */
 chrome.inputMethodPrivate.InputContext.prototype.type;
