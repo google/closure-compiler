@@ -224,7 +224,7 @@ public final class MaybeReachingVariableUseTest {
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     compiler.initOptions(options);
     SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     src = (async ? "async " : "") + "function _FUNCTION(param1, param2){" + src + "}";
