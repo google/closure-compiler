@@ -1713,6 +1713,201 @@ RTCRtpStreamStats.prototype.sliCount;
 /** @const {number} */
 RTCRtpStreamStats.prototype.qpSum;
 
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#receivedrtpstats-dict*
+ * @interface
+ * @extends {RTCRtpStreamStats}
+ */
+function RTCReceivedRtpStreamStats() {}
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsReceived;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.jitter;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsDiscarded;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsRepaired;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstPacketsLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstPacketsDiscarded;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstLossCount;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstDiscardCount;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstLossRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstDiscardRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.gapLossRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.gapDiscardRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.framesDropped;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.partialFramesLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.fullFramesLost;
+
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#inboundrtpstats-dict*
+ * @interface
+ * @extends {RTCReceivedRtpStreamStats}
+ */
+function RTCInboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.trackId;
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.receiverId;
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.remoteId;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.framesDecoded;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.keyFramesDecoded;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameWidth;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameHeight;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameBitDepth;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.framesPerSecond;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.qpSum;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalDecodeTime;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalInterFrameDelay;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalSquaredInterFrameDelay;
+
+/** @const {boolean} */
+RTCInboundRtpStreamStats.prototype.voiceActivityFlag;
+
+/** @const {?Date|number} */
+RTCInboundRtpStreamStats.prototype.lastPacketReceivedTimestamp;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.averageRtcpInterval;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.headerBytesReceived;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.fecPacketsReceived;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.fecPacketsDiscarded;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.bytesReceived;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.packetsFailedDecryption;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.packetsDuplicated;
+
+/** @const {Object<string, number>} */
+RTCInboundRtpStreamStats.prototype.perDscpPacketsReceived;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.nackCount;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.firCount;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.pliCount;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.sliCount;
+
+/** @const {?Date|number} */
+RTCInboundRtpStreamStats.prototype.estimatedPlayoutTimestamp;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.jitterBufferDelay;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.jitterBufferEmittedCount;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.samplesDecodedWithSilk;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.samplesDecodedWithCelt;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.concealedSamples;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.silentConcealedSamples;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.concealmentEvents;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.insertedSamplesForDeceleration;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.removedSamplesForAcceleration;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.audioLevel;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalAudioEnergy;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalSamplesDuration;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.framesReceived;
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.decoderImplementation;
+
+
+
 /**
  * @interface
  * @extends {Iterable<!Array<string|!RTCStats>>}
