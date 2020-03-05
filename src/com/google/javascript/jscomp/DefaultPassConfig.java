@@ -1798,12 +1798,12 @@ public final class DefaultPassConfig extends PassConfig {
                       checkNotNull(topScope);
                       checkNotNull(getTypedScopeCreator());
 
-                      makeInferJsDocInfo(compiler).process(externs, root);
+                      new InferJSDocInfo(compiler).process(externs, root);
                     }
 
                     @Override
                     public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                      makeInferJsDocInfo(compiler).hotSwapScript(scriptRoot, originalRoot);
+                      new InferJSDocInfo(compiler).hotSwapScript(scriptRoot, originalRoot);
                     }
                   })
           .setFeatureSet(ES_NEXT)
