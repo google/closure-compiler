@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2019_MODU
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT_IN;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TS_UNSUPPORTED;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 
@@ -992,7 +993,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       options.checkSuspiciousCode,
                       options.shouldProtectHiddenSideEffects()))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Removes the "protector" functions that were added by CheckSideEffects. */
@@ -1025,7 +1026,7 @@ public final class DefaultPassConfig extends PassConfig {
 
                 return combineChecks(compiler, sharedCallbacks);
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Verify that all the passes are one-time passes. */
@@ -1196,7 +1197,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkJsDocAndEs6Modules =
       PassFactory.builderForHotSwap()
           .setName("checkJsDocAndEs6Modules")
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .setInternalFactory(
               (compiler) ->
                   combineChecks(
@@ -1302,7 +1303,7 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Closure provide/require rewriting pass. */
@@ -1321,7 +1322,7 @@ public final class DefaultPassConfig extends PassConfig {
                     options.shouldPreservesGoogProvidesAndRequires(),
                     globalTypedScope);
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Process AngularJS-specific annotations. */
@@ -1393,14 +1394,14 @@ public final class DefaultPassConfig extends PassConfig {
                     .setInvalidModuleGetHandling(InvalidModuleGetHandling.DELETE)
                     .build();
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory injectRuntimeLibraries =
       PassFactory.builder()
           .setName("InjectRuntimeLibraries")
           .setInternalFactory(InjectRuntimeLibraries::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Desugars ES6_TYPED features into ES6 code. */
@@ -1417,7 +1418,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new MarkUntranspilableFeaturesAsRemoved(compiler, options.getOutputFeatureSet()))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory convertStaticInheritance =
@@ -1453,14 +1454,14 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.DECLARED_GLOBAL_EXTERNS_ON_WINDOW)
           .setInternalFactory(DeclaredGlobalExternsOnWindow::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory checkTypeImportCodeReferences =
       PassFactory.builder()
           .setName("checkTypeImportCodeReferences")
           .setInternalFactory(CheckTypeImportCodeReferences::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Rewrites goog.defineClass */
@@ -1468,7 +1469,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName(PassNames.CLOSURE_REWRITE_CLASS)
           .setInternalFactory(ClosureRewriteClass::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Checks of correct usage of goog.module */
@@ -1477,7 +1478,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("closureCheckModule")
           .setInternalFactory(
               (compiler) -> new ClosureCheckModule(compiler, compiler.getModuleMetadataMap()))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Rewrites goog.module */
@@ -1496,7 +1497,7 @@ public final class DefaultPassConfig extends PassConfig {
                     moduleRewriteState,
                     globalTypedScope);
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Checks goog.require, goog.forwardDeclare, goog.requireType, and goog.module.get calls */
@@ -1505,7 +1506,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("checkGoogRequires")
           .setInternalFactory(
               (compiler) -> new CheckClosureImports(compiler, compiler.getModuleMetadataMap()))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Rewrites goog.require, goog.forwardDeclare, goog.requireType, and goog.module.get calls */
@@ -1520,7 +1521,7 @@ public final class DefaultPassConfig extends PassConfig {
                       preprocessorSymbolTableFactory.getInstanceOrNull(),
                       // TODO(johnplaisted): Expand the Set of modules to rewrite in.
                       ImmutableSet.of()))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Rewrite imports for Closure Library's goog.js file to global goog references. */
@@ -1533,7 +1534,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       RewriteGoogJsImports.Mode.LINT_AND_REWRITE,
                       compiler.getModuleMap()))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Checks that CSS class names are wrapped in goog.getCssName */
@@ -1571,7 +1572,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.setCssNames(newCssNames);
                     }
                   })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /**
@@ -1692,7 +1693,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName(PassNames.CHECK_VARS)
           .setInternalFactory(VarCheck::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Infers constants. */
@@ -1700,7 +1701,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.INFER_CONSTS)
           .setInternalFactory(InferConsts::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Checks for RegExp references. */
@@ -1719,7 +1720,7 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Checks that references to variables look reasonable. */
@@ -1735,14 +1736,14 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName(PassNames.CHECK_VARIABLE_REFERENCES)
           .setInternalFactory(VariableReferenceCheck::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory checkSuper =
       PassFactory.builderForHotSwap()
           .setName("checkSuper")
           .setInternalFactory(CheckSuper::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Clears the typed scope when we're done. */
@@ -1750,7 +1751,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("clearTypedScopePass")
           .setInternalFactory((compiler) -> new ClearTypedScope())
-          .setFeatureSet(FeatureSet.latest())
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Runs type inference. */
@@ -1784,7 +1785,7 @@ public final class DefaultPassConfig extends PassConfig {
                           getTypedScopeCreator(compiler));
                     }
                   })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory inferJsDocInfo =
@@ -1831,7 +1832,7 @@ public final class DefaultPassConfig extends PassConfig {
                       makeTypeCheck(compiler).check(scriptRoot, false);
                     }
                   })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /**
@@ -1852,7 +1853,7 @@ public final class DefaultPassConfig extends PassConfig {
                 }
                 return combineChecks(compiler, callbacks);
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Checks access controls. Depends on type-inference. */
@@ -1862,7 +1863,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new CheckAccessControls(compiler, options.enforceAccessControlCodingConventions))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory lintChecks =
@@ -1971,7 +1972,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("checkStrictMode")
           .setInternalFactory(StrictModeCheck::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Process goog.tweak.getTweak() calls. */
@@ -2069,7 +2070,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("checkConsts")
           .setInternalFactory(
               (compiler) -> new ConstCheck(compiler, compiler.getModuleMetadataMap()))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Checks that the arguments are constants */
@@ -2852,7 +2853,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("j2clPass")
           .setInternalFactory(J2clPass::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Rewrites J2CL constructs to be more optimizable. */
@@ -2874,14 +2875,14 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("j2clSourceFileChecker")
           .setInternalFactory(J2clSourceFileChecker::new)
-          .setFeatureSet(FeatureSet.latest())
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory j2clChecksPass =
       PassFactory.builder()
           .setName("j2clChecksPass")
           .setInternalFactory(J2clChecksPass::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory checkConformance =
@@ -2891,7 +2892,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new CheckConformance(
                       compiler, ImmutableList.copyOf(options.getConformanceConfigs())))
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Optimizations that output ES6 features. */
@@ -2921,7 +2922,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.REWRITE_SCRIPTS_TO_ES6_MODULES)
           .setInternalFactory(Es6RewriteScriptsToModules::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory gatherModuleMetadataPass =
@@ -2934,7 +2935,7 @@ public final class DefaultPassConfig extends PassConfig {
                 return new GatherModuleMetadata(
                     compiler, options.processCommonJSModules, options.moduleResolutionMode);
               })
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   private final PassFactory createModuleMapPass =
@@ -2950,7 +2951,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.GATHER_GETTERS_AND_SETTERS)
           .setInternalFactory(GatherGetterAndSetterProperties::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   // this pass is just adding script without looking at the AST so it should accept all features
