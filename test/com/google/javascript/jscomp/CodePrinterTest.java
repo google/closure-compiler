@@ -2851,14 +2851,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void optionalChaining() {
-    languageMode = LanguageMode.UNSUPPORTED;
-    assertPrintSame("a.b?.c");
-    assertPrintSame("a.b?.[\"c\"]");
-    assertPrintSame("a.b?.()");
-  }
-
-  @Test
   public void testAsyncFunction() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT;
     assertPrintSame("async function f(){}");

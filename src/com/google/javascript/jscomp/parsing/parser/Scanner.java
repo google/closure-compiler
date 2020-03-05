@@ -471,13 +471,6 @@ public class Scanner {
           nextChar();
           return createToken(TokenType.QUESTION_QUESTION, beginToken);
         }
-        if (peek('.')) { // see ?.
-          if (!isDecimalDigit(peekChar(1))) {
-            nextChar();
-            // a?.1:2 should be a ? 0.1 : 2 not a ?. 1 : 2 (syntax error)
-            return createToken(TokenType.QUESTION_DOT, beginToken);
-          }
-        }
         return createToken(TokenType.QUESTION, beginToken);
       case ':': return createToken(TokenType.COLON, beginToken);
       case '<':

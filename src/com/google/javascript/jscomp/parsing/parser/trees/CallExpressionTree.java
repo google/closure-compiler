@@ -18,29 +18,16 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-/**
- * Creates a CallExpressionTree that represents a call expression. Has an isOptionalChain field to
- * indicate whether it is part of an optional chain e.g. `a.b?.()`
- */
 public class CallExpressionTree extends ParseTree {
 
   public final ParseTree operand;
   public final ArgumentListTree arguments;
-  public final boolean isOptionalChain;
 
-  public CallExpressionTree(
-      SourceRange location,
-      ParseTree operand,
-      ArgumentListTree arguments,
-      boolean isOptionalChain) {
+  public CallExpressionTree(SourceRange location, ParseTree operand, ArgumentListTree arguments) {
     super(ParseTreeType.CALL_EXPRESSION, location);
 
     this.operand = operand;
     this.arguments = arguments;
-    this.isOptionalChain = isOptionalChain;
   }
 
-  public boolean getIsOptionalChain() {
-    return this.isOptionalChain;
-  }
 }
