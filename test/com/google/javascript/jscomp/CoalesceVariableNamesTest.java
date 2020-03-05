@@ -100,53 +100,6 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCoaleseLetAndConst() {
-    inFunction(
-        "let x; const y = 1; x = y + 1; return x",
-        // `let` must become `var`, because we might be coalescing
-        // variables declared in different blocks.
-        // See testLetAndConstDifferentBlock()
-        "var x;       x = 1; x = x + 1; return x");
-  }
-
-  @Test
-  public void testLetAndConstDifferentBlock() {
-    inFunction(
-        "if(1) { const x = 0; x } else { let y = 0; y }",
-        "if(1) {   var x = 0; x } else {     x = 0; x }");
-  }
-
-  @Test
-  public void testCoalesceLetRequiresInitWithinALoop() {
-    inFunction(
-        lines(
-            "", //
-            "for (let i = 0; i < 3; ++i) {",
-            "  let something;",
-            "  if (i == 0) {",
-            "    const x = 'hi';",
-            "    alert(x);",
-            "    something = x + ' there';",
-            "  }",
-            "  alert(something);",
-            "}",
-            ""),
-        lines(
-            "", //
-            "for (let i = 0; i < 3; ++i) {",
-            // we must initialize `something` on each loop iteration
-            "  var something = void 0;",
-            "  if (i == 0) {",
-            "    something = 'hi';",
-            "    alert(something);", // always alerts 'hi'
-            "    something = something + ' there';",
-            "  }",
-            "  alert(something);",
-            "}",
-            ""));
-  }
-
-  @Test
   public void testMergeThreeVarNames() {
     inFunction(
         "var x,y,z; x=1; x; y=1; y; z=1; z",

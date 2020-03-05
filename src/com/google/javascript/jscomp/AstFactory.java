@@ -251,13 +251,6 @@ final class AstFactory {
     return result;
   }
 
-  /** Returns a new Node representing the undefined value. */
-  public Node createUndefinedValue() {
-    // We prefer `void 0` as being shorter than `undefined`.
-    // Also, it's technically possible for malicious code to assign a value to `undefined`.
-    return createVoid(createNumber(0));
-  }
-
   Node createCastToUnknown(Node child, JSDocInfo jsdoc) {
     Node result = IR.cast(child, jsdoc);
     if (isAddingTypes()) {
