@@ -1480,7 +1480,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       Node exprResultNode = assignNode.getParent();
       Node binaryNamespaceName =
           astFactory.createName(currentScript.getBinaryNamespace(), n.getJSType());
-      binaryNamespaceName.setOriginalName("exports");
+      binaryNamespaceName.setOriginalName(currentScript.namespaceId);
       this.declareGlobalVariable(binaryNamespaceName, t);
 
       Node exportsObjectCreationNode = IR.var(binaryNamespaceName, rhs);
