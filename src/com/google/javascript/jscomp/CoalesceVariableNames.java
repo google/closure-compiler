@@ -499,15 +499,68 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   }
 
   /**
-   * Because the code has already been normalized by the time this pass runs, we can safely
+   * Convert `const` or `let` declarations to `var` declarations.
+   *
+   * <p>This method should be called on the first declared variable of a group that are being
+   * coalesced.
+   *
+   * <p>Because the code has already been normalized by the time this pass runs, we can safely
    * redeclare any let and const coalesced variables as vars
    */
-  private static void makeDeclarationVar(Var coalescedName) {
-    if (coalescedName.isLet() || coalescedName.isConst()) {
-      Node declNode =
-          NodeUtil.getEnclosingNode(coalescedName.getParentNode(), NodeUtil::isNameDeclaration);
+  private void makeDeclarationVar(Var coalescedName) {
+    if (coalescedName.isConst() || coalescedName.isLet()) {
+      Node nameNode = checkNotNull(coalescedName.getNameNode(), coalescedName);
+      if (isUninitializedLetNameInLoopBody(nameNode)) {
+        // We need to make sure that within a loop:
+        //
+        // `let x;`
+        // becomes
+        // `var x = void 0;`
+        //
+        // If we don't we won't be correctly resetting the variable to undefined on each loop
+        // iteration once we turn it into a var declaration.
+        //
+        // Note that all other cases will already have an initializer.
+        // const x = 1; // constant requires an initializer
+        // let {x, y} = obj; // destructuring requires an initializer
+        // let [x, y] = iterable; // destructuring requires an initializer
+        Node undefinedValue =
+            compiler.createAstFactory().createUndefinedValue().srcrefTree(nameNode);
+        nameNode.addChildToFront(undefinedValue);
+      }
+      // find the declaration node in a way that works normal and destructuring declarations.
+      Node declNode = NodeUtil.getEnclosingNode(nameNode.getParent(), NodeUtil::isNameDeclaration);
+      // normalization ensures that all variables in a function are uniquely named, so it's OK
+      // to turn a `const` or `let` into a `var`.
       declNode.setToken(Token.VAR);
     }
+  }
+
+  private static boolean isUninitializedLetNameInLoopBody(Node nameNode) {
+    checkState(nameNode.isName(), nameNode);
+    Node letNode = nameNode.getParent();
+    if (!letNode.isLet()) {
+      // We're looking for `let name;`
+      // Note that in the case of destructuring an initializer always exists.
+      // `let {name} = initializerRequiredHere;
+      return false;
+    }
+    if (nameNode.hasOneChild()) {
+      // `let name = child;` has an initializer
+      return false;
+    }
+
+    Node letParent = letNode.getParent();
+    if (NodeUtil.isLoopStructure(letParent)) {
+      // `for (let x; ...`
+      // `for (let x in ...`
+      // `for (let x of ...`
+      // `for await (let x of ...`
+      // In all these cases the variable gets initialized on each loop iteration
+      return false;
+    }
+    // Inside a loop body, but not the loop control node itself
+    return NodeUtil.isWithinLoop(letParent);
   }
 
   private static class LiveRangeChecker {
