@@ -8006,4 +8006,71 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(options, "import.meta", Es6ToEs3Util.CANNOT_CONVERT);
   }
+
+  @Test
+  public void nullishCoalesceSimple() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x = 0; var y = {}; alert(x ?? y)", "alert(0)");
+  }
+
+  @Test
+  public void nullishCoalesceChain() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x, y; alert(x ?? y ?? 'default string')", "alert('default string')");
+  }
+
+  @Test
+  public void nullishCoalesceWithAnd() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x, y, z; alert(x ?? (y && z))", "alert(void 0)");
+  }
+
+  @Test
+  public void nullishCoalesceWithAssign() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x, y; var z = 1; x ?? (y = z); alert(y)", "alert(1)");
+  }
+
+  @Test
+  public void nullishCoalesceTranspiledOutput() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addExtra("var x, y").buildExternsFile("externs"));
+
+    test(options, "x ?? y", "let a; null != (a = x) ? a : y");
+  }
+
+  @Test
+  public void nullishCoalesceChainTranspiledOutput() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("var x, y, z").buildExternsFile("externs"));
+
+    test(options, "x ?? y ?? z", "let a, b; null != (b = null != (a = x) ? a : y) ? b : z");
+  }
 }

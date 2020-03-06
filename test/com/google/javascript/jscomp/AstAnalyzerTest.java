@@ -143,7 +143,7 @@ public final class AstAnalyzerTest {
 
     private void resetCompiler() {
       CompilerOptions options = new CompilerOptions();
-      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
 
       // To allow octal literals such as 0123 to be parsed.
       options.setStrictModeInput(false);

@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT_IN;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -51,7 +52,7 @@ public class TranspilationPasses {
                       preprocessorTableFactory.getInstanceOrNull(),
                       compiler.getTopScope());
                 })
-            .setFeatureSet(ES_NEXT)
+            .setFeatureSet(ES_NEXT_IN)
             .build());
   }
 
@@ -77,6 +78,10 @@ public class TranspilationPasses {
       List<PassFactory> passes, CompilerOptions options) {
     // Note that, for features >ES8 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
+    if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
+      passes.add(rewriteNullishCoalesceOperator);
+    }
+
     if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.add(rewriteCatchWithNoBinding);
     }
@@ -297,7 +302,7 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("es6InjectRuntimeLibraries")
           .setInternalFactory(Es6InjectRuntimeLibraries::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Transpiles REST parameters and SPREAD in both array literals and function calls. */
@@ -351,7 +356,7 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("rewriteNullishCoalesceOperator")
           .setInternalFactory(RewriteNullishCoalesceOperator::new)
-          .setFeatureSet(ES_NEXT.with(Feature.NULL_COALESCE_OP))
+          .setFeatureSet(ES_NEXT_IN)
           // TODO(annieyw) change to ES2020 when avail
           .build();
 
