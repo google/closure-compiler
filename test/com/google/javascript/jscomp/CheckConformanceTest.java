@@ -1611,6 +1611,27 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCustomBanUnknownProp_templateUnion() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testSame(
+        lines(
+            "/** @record @template T */",
+            "class X {",
+            "  constructor() {",
+            "    /** @type {T|!Array<T>} */ this.x;",
+            "    f(this.x);",
+            "  }",
+            "}",
+            "/**",
+            " * @param {T|!Array<T>} value",
+            " * @template T",
+            " */",
+            "function f(value) {}"));
+  }
+
+  @Test
   public void testCustomBanUnknownProp2() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));

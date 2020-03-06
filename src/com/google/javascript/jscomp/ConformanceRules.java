@@ -363,7 +363,14 @@ public final class ConformanceRules {
     }
 
     protected static boolean isTemplateType(Node n) {
-      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      JSType type = n.getJSType();
+      if (type.isUnionType()) {
+        for (JSType member : type.getUnionMembers()) {
+          if (member.isTemplateType()) {
+            return true;
+          }
+        }
+      }
       return type.isTemplateType();
     }
 
