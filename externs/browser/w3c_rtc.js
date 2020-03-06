@@ -1692,6 +1692,13 @@ RTCRtpStreamStats.prototype.ssrc;
 /** @const {string} */
 RTCRtpStreamStats.prototype.kind;
 
+/**
+ * Renamed to 'kind' in Feb 2018, but still used by some code.
+ * https://www.w3.org/TR/webrtc-stats/#dom-rtcrtpstreamstats-mediatype
+ * @const {string|undefined}
+ */
+RTCRtpStreamStats.prototype.mediaType
+
 /** @const {string} */
 RTCRtpStreamStats.prototype.transportId;
 
@@ -2299,3 +2306,584 @@ RTCPeerConnection.prototype.oniceconnectionstatechange;
  * @type {?function(!RTCDataChannelEvent)}
  */
 RTCPeerConnection.prototype.ondatachannel;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcreceivedrtpstreamstats
+ * @interface
+ * @extends {RTCRtpStreamStats}
+ */
+function RTCReceivedRtpStreamStats() {}
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsReceived;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.jitter;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsDiscarded;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsRepaired;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstPacketsLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstPacketsDiscarded;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstLossCount;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstDiscardCount;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstLossRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstDiscardRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.gapLossRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.gapDiscardRate;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcinboundrtpstreamstats
+ * @interface
+ * @extends {RTCReceivedRtpStreamStats}
+ */
+function RTCInboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.trackId;
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.receiverId;
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.remoteId;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.framesDecoded;
+
+/** @const {?Date|number} */
+RTCInboundRtpStreamStats.prototype.lastPacketReceivedTimestamp;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.averageRtcpInterval;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.bytesReceived;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.packetsFailedDecryption;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.packetsDuplicated;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.audioLevel;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameWidth;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameHeight;
+
+/**
+ * Firefox specific value.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.bitrateMean;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.concealedSamples;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.jitterBufferDelay;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.jitterBufferEmittedCount;
+
+/**
+ * Experimental chrome stats under this origin trial:
+ * https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/hE2B1iItPDk
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.jitterBufferFlushes;
+
+/**
+ * Experimental chrome stats under this origin trial:
+ * https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/hE2B1iItPDk
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.delayedPacketOutageSamples;
+
+/**
+ * Safari still reprorting it as inbound-rtp, it supposed to be in remote part.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fractionLost;
+
+/**
+ * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fecPacketsReceived;
+
+/**
+ * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fecPacketsDiscarded;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.concealedSamples;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.silentConcealedSamples;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.insertedSamplesForDeceleration
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.removedSamplesForAcceleration;
+
+/** @const {string|undefined} */
+RTCInboundRtpStreamStats.prototype.decoderImplementation;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteinboundrtpstreamstats
+ * @interface
+ * @extends {RTCReceivedRtpStreamStats}
+ */
+function RTCRemoteInboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCRemoteInboundRtpStreamStats.prototype.localId;
+
+/** @const {number} */
+RTCRemoteInboundRtpStreamStats.prototype.roundTripTime;
+
+/** @const {number} */
+RTCRemoteInboundRtpStreamStats.prototype.fractionLost;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcsentrtpstreamstats
+ * @interface
+ * @extends {RTCRtpStreamStats}
+ */
+function RTCSentRtpStreamStats() {}
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.packetsSent;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.packetsDiscardedOnSend;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.fecPacketsSent;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.bytesSent;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.bytesDiscardedOnSend;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
+ * @interface
+ * @extends {RTCSentRtpStreamStats}
+ */
+function RTCOutboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.trackId;
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.senderId;
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.remoteId;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.lastPacketSentTimestamp;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.targetBitrate;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.framesEncoded;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.totalEncodeTime;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.averageRTCPInterval;
+
+/** @const {number|undefined} */
+RTCOutboundRtpStreamStats.prototype.qualityLimitationResolutionChanges;
+
+/** @const {string|undefined} */
+RTCOutboundRtpStreamStats.prototype.qualityLimitationReason;
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.mediaSourceId;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.frameWidth;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.frameHeight;
+
+/**
+ * Firefox specific value.
+ * @const {number|undefined}
+ */
+RTCOutboundRtpStreamStats.prototype.bitrateMean;
+
+/** @const {string|undefined} */
+RTCOutboundRtpStreamStats.prototype.encoderImplementation;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats
+ * @interface
+ * @extends {RTCSentRtpStreamStats}
+ */
+function RTCRemoteOutboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCRemoteOutboundRtpStreamStats.prototype.localId;
+
+/** @const {?Date|number} */
+RTCRemoteOutboundRtpStreamStats.prototype.remoteTimestamp;
+
+/** @const {string} */
+RTCRemoteOutboundRtpStreamStats.prototype.reportsSent;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtctransportstats
+ * @interface
+ * @extends {RTCStats}
+ */
+function RTCTransportStats() {}
+
+/** @const {number} */
+RTCTransportStats.prototype.packetsSent;
+
+/** @const {number} */
+RTCTransportStats.prototype.packetsReceived;
+
+/** @const {number} */
+RTCTransportStats.prototype.bytesSent;
+
+/** @const {number} */
+RTCTransportStats.prototype.bytesReceived;
+
+/** @const {string} */
+RTCTransportStats.prototype.rtcpTransportStatsId;
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCIceRole
+ */
+RTCTransportStats.prototype.iceRole;
+
+/**
+ * @const {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCIceRole
+ */
+RTCTransportStats.prototype.dtlsState;
+
+/** @const {string} */
+RTCTransportStats.prototype.selectedCandidatePairId;
+
+/** @const {string} */
+RTCTransportStats.prototype.localCertificateId;
+
+/** @const {string} */
+RTCTransportStats.prototype.remoteCertificateId;
+
+/** @const {string} */
+RTCTransportStats.prototype.tlsVersion;
+
+/** @const {string} */
+RTCTransportStats.prototype.dtlsCipher;
+
+/** @const {string} */
+RTCTransportStats.prototype.srtpCipher;
+
+/** @const {string} */
+RTCTransportStats.prototype.tlsGroup;
+
+/** @const {number} */
+RTCTransportStats.prototype.selectedCandidatePairChanges;
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcicecandidatepairstats
+ * @interface
+ * @extends {RTCStats}
+ */
+function RTCIceCandidatePairStats() {}
+
+/** @const {string} */
+RTCIceCandidatePairStats.prototype.transportId;
+
+/** @const {string} */
+RTCIceCandidatePairStats.prototype.localCandidateId;
+
+/** @const {string} */
+RTCIceCandidatePairStats.prototype.remoteCandidateId;
+
+/**
+ * @const {string}
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcstatsicecandidatepairstate
+ */
+RTCIceCandidatePairStats.prototype.state;
+
+/** @const {boolean} */
+RTCIceCandidatePairStats.prototype.nominated;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.packetsSent;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.packetsReceived;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.bytesSent;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.bytesReceived;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.lastPacketSentTimestamp;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.lastPacketReceivedTimestamp;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.firstRequestTimestamp;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.lastRequestTimestamp;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.lastResponseTimestamp;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.totalRoundTripTime;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.currentRoundTripTime;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.availableOutgoingBitrate;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.availableIncomingBitrate;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.circuitBreakerTriggerCount;
+
+/**
+ * Spec doesn't say it is optional, but not all browser have it at this point.
+ * @const {number|undefined}
+ */
+RTCIceCandidatePairStats.prototype.requestsReceived;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.requestsSent;
+
+/**
+ * Spec doesn't say it is optional, but not all browser have it at this point.
+ * @const {number|undefined}
+ */
+RTCIceCandidatePairStats.prototype.responsesReceived;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.responsesSent;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.retransmissionsReceived;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.retransmissionsSent;
+
+/** @const {number} */
+RTCIceCandidatePairStats.prototype.consentRequestsSent;
+
+/**
+ * Spec doesn't say it is optional, but not all browser have it at this point.
+ * @const {number|undefined}
+ */
+RTCIceCandidatePairStats.prototype.consentExpiredTimestamp;
+
+/**
+ * Non standard stat, only supported by Firefox for now.
+ * @const {boolean|undefined}
+ */
+RTCIceCandidatePairStats.prototype.selected;
+
+/**
+ * Non standard stat, only supported by Firefox for now.
+ * @const {boolean|undefined}
+ */
+RTCIceCandidatePairStats.prototype.writable;
+
+/**
+ * Non standard stat, only supported by Firefox for now.
+ * @const {boolean|undefined}
+ */
+RTCIceCandidatePairStats.prototype.readable;
+
+/**
+ * Spec doesn't say it is optional, but not all browser have it at this point.
+ * @const {number|undefined}
+ */
+RTCIceCandidatePairStats.prototype.packetsDiscardedOnSend
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcicecandidatestats
+ * @interface
+ * @extends {RTCStats}
+ */
+function RTCIceCandidateStats() {}
+
+/** @const {string} */
+RTCIceCandidateStats.prototype.transportId;
+
+/** @const {string} */
+RTCIceCandidateStats.prototype.address;
+
+/** @const {number} */
+RTCIceCandidateStats.prototype.port;
+
+/** @const {string} */
+RTCIceCandidateStats.prototype.protocol;
+
+/** @const {string} */
+RTCIceCandidateStats.prototype.relayProtocol;
+
+/** @const {string} */
+RTCIceCandidateStats.prototype.candidateType;
+
+/** @const {number} */
+RTCIceCandidateStats.prototype.priority;
+
+/** @const {string} */
+RTCIceCandidateStats.prototype.url;
+
+/**
+ * Not standard stats, but used by some browsers.
+ * @const {string|undefined}
+ */
+RTCIceCandidateStats.prototype.networkType;
+
+/**
+ * Not standard stats, but used by some browsers.
+ * @const {string|undefined}
+ */
+RTCIceCandidateStats.prototype.ip;
+
+/**
+ * Not standard stats, but used by some browsers.
+ * @const {boolean|undefined}
+ */
+RTCIceCandidateStats.prototype.deleted;
+
+/**
+ * Non standard stat, only supported by Firefox for now.
+ * @const {string|undefined}
+ */
+RTCIceCandidateStats.prototype.ipAddress;
+
+/**
+ * Non standard stat, only supported by Firefox for now.
+ * @const {number|undefined}
+ */
+RTCIceCandidateStats.prototype.portNumber;
+
+/**
+ * @see https://w3c.github.io/webrtc-stats/#dom-rtcmediasourcestats
+ * @interface
+ * @extends {RTCStats}
+ */
+function RTCMediaSourceStats() {}
+
+/** @const {string} */
+RTCMediaSourceStats.prototype.trackIdentifier;
+
+/** @const {string} */
+RTCMediaSourceStats.prototype.kind;
+
+/**
+ * @see https://w3c.github.io/webrtc-stats/#dom-rtcvideosourcestats
+ * @interface
+ * @extends {RTCMediaSourceStats}
+ */
+function RTCVideoSourceStats() {}
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.width;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.height;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.bitDepth;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.frames;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.framesPerSecond;
+
+/**
+ * @see https://w3c.github.io/webrtc-stats/#dom-rtcaudiosourcestats
+ * @interface
+ * @extends {RTCMediaSourceStats}
+ */
+function RTCAudioSourceStats() {}
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.audioLevel;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.totalAudioEnergy;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.totalSamplesDuration;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.echoReturnLoss;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.echoReturnLossEnhancement;
