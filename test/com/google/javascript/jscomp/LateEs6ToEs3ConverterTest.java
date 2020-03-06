@@ -238,29 +238,28 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "tag``",
         lines(
-            "var $jscomp$templatelit$0 = [''];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['']);",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag`${hello} world`",
         lines(
-            "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['', '"
+                + " world']);",
             "tag($jscomp$templatelit$0, hello);"));
 
     test(
         "tag`${hello} ${world}`",
         lines(
-            "var $jscomp$templatelit$0 = ['', ' ', ''];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['', '"
+                + " ', '']);",
             "tag($jscomp$templatelit$0, hello, world);"));
 
     test(
         "tag`\"`",
         lines(
-            "var $jscomp$templatelit$0 = ['\\\"'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "/** @noinline */ var $jscomp$templatelit$0 ="
+                + " $jscomp.createTemplateTagFirstArg(['\"']);",
             "tag($jscomp$templatelit$0);"));
 
     // The cooked string and the raw string are different.
@@ -278,15 +277,15 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "tag`a\\tb`",
         lines(
-            "var $jscomp$templatelit$0 = ['a\\tb'];",
-            "$jscomp$templatelit$0.raw = ['a\\\\tb'];",
+            "/** @noinline */ var $jscomp$templatelit$0 ="
+                + " $jscomp.createTemplateTagFirstArgWithRaw(['a\\tb'],['a\\\\tb']);",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag()`${hello} world`",
         lines(
-            "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['', '"
+                + " world']);",
             "tag()($jscomp$templatelit$0, hello);"));
 
     test(
@@ -294,30 +293,30 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
         srcs("a.b`${hello} world`"),
         expected(
             lines(
-                "var $jscomp$templatelit$0 = ['', ' world'];",
-                "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+                "/** @noinline */ var $jscomp$templatelit$0 ="
+                    + " $jscomp.createTemplateTagFirstArg(['', ' world']);",
                 "a.b($jscomp$templatelit$0, hello);")));
 
     // https://github.com/google/closure-compiler/issues/1299
     test(
         "tag`<p class=\"foo\">${x}</p>`",
         lines(
-            "var $jscomp$templatelit$0 = " + "['<p class=\"foo\">', '</p>'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "/** @noinline */ var $jscomp$templatelit$0 =",
+            "  $jscomp.createTemplateTagFirstArg(['<p class=\"foo\">','</p>']);",
             "tag($jscomp$templatelit$0, x);"));
     test(
         "tag`<p class='foo'>${x}</p>`",
         lines(
-            "var $jscomp$templatelit$0 = " + "['<p class=\\'foo\\'>', '</p>'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            "/** @noinline */ var $jscomp$templatelit$0 =",
+            "  $jscomp.createTemplateTagFirstArg(['<p class=\\'foo\\'>','</p>']);",
             "tag($jscomp$templatelit$0, x);"));
 
     // invalid escape sequences result in undefined cooked string
     test(
         "tag`\\unicode`",
         lines(
-            "var $jscomp$templatelit$0 = [void 0];",
-            "$jscomp$templatelit$0.raw = ['\\\\unicode'];",
+            "/** @noinline */ var $jscomp$templatelit$0 =",
+            "  $jscomp.createTemplateTagFirstArgWithRaw([void 0],['\\\\unicode']);",
             "tag($jscomp$templatelit$0);"));
   }
 

@@ -295,6 +295,16 @@ public class TestExternsBuilder {
           " * @this {*}",
           " */",
           "Array.prototype.concat = function(var_args) {};",
+          "/**",
+          " * @param {?number=} begin Zero-based index at which to begin extraction.",
+          " * @param {?number=} end Zero-based index at which to end extraction.  slice",
+          " *     extracts up to but not including end.",
+          " * @return {!Array<T>}",
+          " * @this {IArrayLike<T>|string}",
+          " * @template T",
+          " * @nosideeffects",
+          " */",
+          "Array.prototype.slice = function(begin, end) {};",
           "");
 
   private static final String ARGUMENTS_EXTERNS =

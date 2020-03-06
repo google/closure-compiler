@@ -67,6 +67,10 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
     // We will need these runtime methods when we transpile, but we want the runtime
     // functions to be have JSType applied to it by the type inferrence.
 
+    if (mustBeCompiledAway.contains(Feature.TEMPLATE_LITERALS)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "createtemplatetagfirstarg");
+    }
+
     if (mustBeCompiledAway.contains(Feature.FOR_OF)) {
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "makeIterator");
     }
