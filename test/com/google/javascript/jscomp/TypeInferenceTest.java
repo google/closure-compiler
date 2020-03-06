@@ -117,7 +117,7 @@ public final class TypeInferenceTest {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     compiler.initOptions(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     registry = compiler.getTypeRegistry();
     assumptions = new HashMap<>();
     returnScope = null;
@@ -527,7 +527,6 @@ public final class TypeInferenceTest {
 
   @Test
   public void testAssert5NullishCoalesce() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     JSType startType = createNullableType(OBJECT_TYPE);
     assuming("x", startType);
     assuming("y", startType);
@@ -1570,7 +1569,6 @@ public final class TypeInferenceTest {
 
   @Test
   public void testShortCircuitingNullishCoalseceNumber() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     assuming("x", NUMBER_TYPE);
     inFunction("var z = x ?? null");
     verify("z", NUMBER_TYPE);
