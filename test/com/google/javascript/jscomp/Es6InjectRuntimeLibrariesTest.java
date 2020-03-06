@@ -90,4 +90,10 @@ public class Es6InjectRuntimeLibrariesTest {
 
     assertThat(injected).containsExactly("es6/execute_async_generator");
   }
+
+  @Test
+  public void testTaggedTemplateFirstArgCreaterInjected() {
+    Set<String> injected = parseAndRunInjectionPass("function tag(...a) {}; tag`hello`;");
+    assertThat(injected).containsExactly("es6/util/createtemplatetagfirstarg");
+  }
 }
