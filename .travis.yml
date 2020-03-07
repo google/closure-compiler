@@ -16,7 +16,10 @@ install: true
 
 script:
   # Builds the compiler and runs tests
-  - mvn -Dstyle.color=always install
+  # The following is a workaround for https://github.com/google/closure-compiler/issues/3568
+  # to avoid build errors due to excessive logging
+  - mvn dependency:go-offline -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B
+  - mvn -Dstyle.color=always install 
   - nvm install 10
   # Install yarn version 1.16 by downloading its install script and executing it in bash
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.16.0
