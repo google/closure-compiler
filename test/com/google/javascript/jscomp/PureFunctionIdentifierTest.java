@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.rhino.Node;
@@ -1363,6 +1364,15 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertCallableExpressionPure(false, "x ? externNsef1 : function() { throw 0; }");
   }
 
+  @Test
+  public void nullishCoalesce_pureAlias() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    assertCallableExpressionPure(true, "externNsef1 ?? externNsef2");
+    assertCallableExpressionPure(true, "externNsef1 ?? function() { }");
+    assertCallableExpressionPure(false, "externNsef1 ?? externSef2");
+    assertCallableExpressionPure(false, "externNsef1 ?? function() { throw 0; }");
+  }
+
   // End pure alias, start pure literal
 
   @Test
@@ -1395,6 +1405,15 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertCallableExpressionPure(false, "function() { } && function() { throw 0; }");
     assertCallableExpressionPure(false, "function() { }, function() { throw 0; }");
     assertCallableExpressionPure(false, "x ? function() { } : function() { throw 0; }");
+  }
+
+  @Test
+  public void nullishCoalesce_pureLiteral() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    assertCallableExpressionPure(true, "function() { } ?? externNsef2");
+    assertCallableExpressionPure(true, "function() { } ?? function() { }");
+    assertCallableExpressionPure(false, "function() { } ?? externSef2");
+    assertCallableExpressionPure(false, "function() { } ?? function() { throw 0; }");
   }
 
   // End pure literal, start impure alias
@@ -1431,6 +1450,15 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertCallableExpressionPure(false, "x ? externSef1 : function() { throw 0; }");
   }
 
+  @Test
+  public void nullishCoalesce_impureAlias() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    assertCallableExpressionPure(false, "externSef1 ?? externNsef2");
+    assertCallableExpressionPure(false, "externSef1 ?? function() { }");
+    assertCallableExpressionPure(false, "externSef1 ?? externSef2");
+    assertCallableExpressionPure(false, "externSef1 ?? function() { throw 0; }");
+  }
+
   // End impure alias, start impure literal
 
   @Test
@@ -1463,6 +1491,15 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertCallableExpressionPure(false, "function() { throw 0; } && function() { throw 0; }");
     assertCallableExpressionPure(false, "function() { throw 0; }, function() { throw 0; }");
     assertCallableExpressionPure(false, "x ? function() { throw 0; } : function() { throw 0; }");
+  }
+
+  @Test
+  public void nullishCoalesce_impureLiteral() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    assertCallableExpressionPure(false, "function() { throw 0; } ?? externNsef2");
+    assertCallableExpressionPure(false, "function() { throw 0; } ?? function() { }");
+    assertCallableExpressionPure(false, "function() { throw 0; } ?? externSef2");
+    assertCallableExpressionPure(false, "function() { throw 0; } ?? function() { throw 0; }");
   }
 
   // End impure literal

@@ -243,6 +243,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       case AND:
       case OR:
+      case COALESCE:
         return collectCallableLeavesInternal(expr.getFirstChild(), results)
             && collectCallableLeavesInternal(expr.getSecondChild(), results);
 
@@ -284,6 +285,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       case COMMA:
       case HOOK:
       case OR:
+      case COALESCE:
         // Function values pass through conditionals.
       case EQ:
       case NOT:
