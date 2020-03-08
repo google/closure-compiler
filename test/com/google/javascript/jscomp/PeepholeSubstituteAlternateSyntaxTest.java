@@ -579,6 +579,12 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   }
 
   @Test
+  public void nullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    test("a ?? (b ?? c);", "(a ?? b) ?? c");
+  }
+
+  @Test
   public void testNoRotateInfiniteLoop() {
     test("1/x * (y/1 * (1/z))", "1/x * (y/1) * (1/z)");
     testSame("1/x * (y/1) * (1/z)");

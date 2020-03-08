@@ -115,6 +115,7 @@ class PeepholeSubstituteAlternateSyntax
       case BITOR:
       case BITXOR:
       case BITAND:
+      case COALESCE:
         return tryRotateAssociativeOperator(node);
 
       default:
