@@ -17,7 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2017;
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT_IN;
 import static com.google.javascript.jscomp.NodeUtil.getFunctionBody;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -49,7 +49,7 @@ public final class FunctionArgumentInjectorTest {
   public void setUp() {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(ECMASCRIPT_2017);
+    options.setLanguageIn(ECMASCRIPT_NEXT_IN);
 
     compiler.initOptions(options);
     functionArgumentInjector = new FunctionArgumentInjector(compiler.getAstAnalyzer());
@@ -589,6 +589,12 @@ public final class FunctionArgumentInjectorTest {
         "function foo(a){do{a;}while(true)}; foo(new Bar());",
         "foo",
         ImmutableSet.of("a"));
+  }
+
+  @Test
+  public void nullishCoalesce() {
+    testNeededTemps(
+        "function foo(...args) {return args ?? x;} foo(1, 2);", "foo", ImmutableSet.of("args"));
   }
 
   @Test

@@ -380,6 +380,7 @@ class FunctionArgumentInjector {
         case AND:
         case OR:
         case HOOK:
+        case COALESCE:
           return true;
         default:
           break;
