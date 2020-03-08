@@ -183,6 +183,8 @@ public final class JsFileRegexParser extends JsFileLineParser {
     requires = new ArrayList<>();
     typeRequires = new ArrayList<>();
     fileHasProvidesOrRequires = false;
+    hasExternsAnnotation = false;
+    hasNoCompileAnnotation = false;
     file = loader.resolve(filePath);
     moduleType = ModuleType.NON_MODULE;
     seenLoadModule = false;
