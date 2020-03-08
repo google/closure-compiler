@@ -402,9 +402,12 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
       case AND:
       case OR:
-        // Try to remove the second operand from a AND or OR operations. Remember that if the second
+      case COALESCE:
+        // Try to remove the second operand from a AND, OR, and COALESCE operations. Remember that
+        // if the second
         // child still exists, the result of the first expression is being used, and so cannot be
         // removed.
+        //    x() ?? f --> x()
         //    x() || f --> x()
         //    x() && f --> x()
 
@@ -492,6 +495,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       case COMMA:
       case HOOK:
       case OR:
+      case COALESCE:
         return true;
       case ARRAYLIT:
       case OBJECTLIT:
@@ -925,15 +929,14 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     return n != null && (n.isIf() || isExprConditional(n));
   }
 
-  /**
-   * @return Whether the node is a rooted with a HOOK, AND, or OR node.
-   */
+  /** @return Whether the node is a rooted with a HOOK, AND, OR, or COALESCE node. */
   private static boolean isExprConditional(Node n) {
     if (n.isExprResult()) {
       switch (n.getFirstChild().getToken()) {
         case HOOK:
         case AND:
         case OR:
+        case COALESCE:
           return true;
         default:
           break;
