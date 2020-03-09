@@ -349,6 +349,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       switch (n.getParent().getToken()) {
         case OR:
         case AND:
+        case COALESCE:
           // If the currently node is the first child of
           // AND/OR, be conservative only consider the READs
           // of the second operand.
@@ -431,11 +432,12 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       // Conditionals
       case OR:
       case AND:
+      case COALESCE:
         VariableLiveness v1 = isVariableReadBeforeKill(
           n.getFirstChild(), variable);
         VariableLiveness v2 = isVariableReadBeforeKill(
           n.getLastChild(), variable);
-        // With a AND/OR the first branch always runs, but the second is
+        // With a AND/OR/COALESCE the first branch always runs, but the second is
         // may not.
         if (v1 != VariableLiveness.MAYBE_LIVE) {
           return v1;
