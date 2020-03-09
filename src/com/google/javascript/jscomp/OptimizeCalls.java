@@ -285,6 +285,7 @@ class OptimizeCalls implements CompilerPass {
           break;
         case OR:
         case AND:
+        case COALESCE:
           addValueFunctionNodes(fns, n.getFirstChild());
           addValueFunctionNodes(fns, n.getLastChild());
           break;

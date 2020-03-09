@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT_IN;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +53,14 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   protected int getNumRepetitions() {
     // run pass once.
     return 1;
+  }
+
+  @Test
+  public void nullishCoalesceReturnRemoved() {
+    setAcceptedLanguage(ECMASCRIPT_NEXT_IN);
+    test(
+        "var f = (function() {return 1}) ?? (function() {return 2}); f();",
+        "var f = function() { return; } ?? function() { return; }; f();");
   }
 
   @Test

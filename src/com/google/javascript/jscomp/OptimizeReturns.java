@@ -163,6 +163,7 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
         return isCandidateFunction(n.getSecondChild()) && isCandidateFunction(n.getLastChild());
       case OR:
       case AND:
+      case COALESCE:
         return isCandidateFunction(n.getFirstChild()) && isCandidateFunction(n.getLastChild());
       default:
         return false;

@@ -450,6 +450,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             && allDefinitionsAreCandidateFunctions(n.getLastChild());
       case OR:
       case AND:
+      case COALESCE:
         return allDefinitionsAreCandidateFunctions(n.getFirstChild())
             && allDefinitionsAreCandidateFunctions(n.getLastChild());
       default:

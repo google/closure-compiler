@@ -17,6 +17,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT_IN;
+
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -192,6 +194,18 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     test(
         "var b=function(c,d){};var b=function(e,f){};b(1,2)",
         "var b=function(){};var b=function(){};b()");
+  }
+
+  @Test
+  public void nullishCoalesce() {
+    setAcceptedLanguage(ECMASCRIPT_NEXT_IN);
+    testSame("var b = function(c) { use(c) } ?? function(c) { use(c) }; b(1)");
+    testSame("var b; b = function(c) { use(c) } ?? function(c) { use(c) }; b(1)");
+    testSame("var b = function(c) { use(c) } ?? function(c) { use(c) }; b(1); b(2);");
+    testSame("var b; b = function(c) { use(c) } ?? function(c) { use(c) }; b(1); b(2);");
+    test(
+        "var f = (function(){ return 1; }) ?? (function(...p2){}); f()",
+        "var f = (function(){ return  ; }) ?? (function(     ){}); f()");
   }
 
   @Test
