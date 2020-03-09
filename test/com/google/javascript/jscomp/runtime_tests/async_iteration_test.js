@@ -31,7 +31,7 @@ function compareResults(expected, actual) {
 /**
  * @param {VALUE} result
  * @param {number} millis
- * @return {Promise<VALUE>}
+ * @return {!Promise<VALUE>}
  * @template VALUE
  */
 function resolveAfterWaiting(result, millis) {
