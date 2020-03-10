@@ -22,7 +22,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -32,9 +31,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
@@ -58,10 +55,8 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
-import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1919,201 +1914,7 @@ class TypeInference
     return currentType;
   }
 
-  /**
-   * @param call A CALL, NEW, or TAGGED_TEMPLATELIT node
-   * @param scope
-   */
-  private Map<TemplateType, JSType> inferTemplateTypesFromParameters(
-      FunctionType fnType, Node call, FlowScope scope) {
-    if (fnType.getTemplateTypeMap().getTemplateKeys().isEmpty()) {
-      return Collections.emptyMap();
-    }
 
-    Map<TemplateType, JSType> resolvedTypes = Maps.newIdentityHashMap();
-    Set<JSType> seenTypes = Sets.newIdentityHashSet();
-
-    Node callTarget = call.getFirstChild();
-    if (NodeUtil.isGet(callTarget)) {
-      Node obj = callTarget.getFirstChild();
-      JSType typeOfThisRequiredByTheFunction = fnType.getTypeOfThis();
-      // The type placed on a SUPER node is the superclass type, which allows us to infer the right
-      // property types for the GETPROP or GETELEM nodes built on it.
-      // However, the type actually passed as `this` when making calls this way is the `this`
-      // of the scope where the `super` appears.
-      JSType typeOfThisProvidedByTheCall = obj.isSuper() ? scope.getTypeOfThis() : getJSType(obj);
-      // We're looking at a call made as `obj['method']()` or `obj.method()` (see enclosing if),
-      // so if the call is successfully made, then the object through which it is made isn't null
-      // or undefined.
-      typeOfThisProvidedByTheCall = typeOfThisProvidedByTheCall.restrictByNotNullOrUndefined();
-      maybeResolveTemplatedType(
-          typeOfThisRequiredByTheFunction, typeOfThisProvidedByTheCall, resolvedTypes, seenTypes);
-    }
-
-    if (call.isTaggedTemplateLit()) {
-      Iterator<Node> fnParameters = fnType.getParameters().iterator();
-      if (!fnParameters.hasNext()) {
-        // TypeCheck will warn if there are too few function parameters
-        return resolvedTypes;
-      }
-      // The first argument to the tag function is an array of strings (typed as ITemplateArray)
-      // but not an actual AST node
-      maybeResolveTemplatedType(
-          fnParameters.next().getJSType(),
-          getNativeType(I_TEMPLATE_ARRAY_TYPE),
-          resolvedTypes,
-          seenTypes);
-
-      // Resolve the remaining template types from the template literal substitutions.
-      maybeResolveTemplateTypeFromNodes(
-          Iterables.skip(fnType.getParameters(), 1),
-          NodeUtil.getInvocationArgsAsIterable(call),
-          resolvedTypes,
-          seenTypes);
-    } else if (call.hasMoreThanOneChild()) {
-      maybeResolveTemplateTypeFromNodes(
-          fnType.getParameters(),
-          NodeUtil.getInvocationArgsAsIterable(call),
-          resolvedTypes,
-          seenTypes);
-    }
-    return resolvedTypes;
-  }
-
-  private void maybeResolveTemplatedType(
-      JSType paramType,
-      JSType argType,
-      Map<TemplateType, JSType> resolvedTypes,
-      Set<JSType> seenTypes) {
-    if (paramType.isTemplateType()) {
-      // Recursive base case.
-      // example: @param {T}
-      resolvedTemplateType(resolvedTypes, paramType.toMaybeTemplateType(), argType);
-      return;
-    }
-
-    // Unpack unions.
-    if (paramType.isUnionType()) {
-      // example: @param {Array.<T>|NodeList|Arguments|{length:number}}
-      UnionType unionType = paramType.toMaybeUnionType();
-      for (JSType alternate : unionType.getAlternates()) {
-        maybeResolveTemplatedType(alternate, argType, resolvedTypes, seenTypes);
-      }
-      return;
-    } else if (argType.isUnionType()) {
-      UnionType unionType = argType.toMaybeUnionType();
-      for (JSType alternate : unionType.getAlternates()) {
-        maybeResolveTemplatedType(paramType, alternate, resolvedTypes, seenTypes);
-      }
-      return;
-    }
-
-    if (paramType.isFunctionType()) {
-      FunctionType paramFunctionType = paramType.toMaybeFunctionType();
-      FunctionType argFunctionType = argType
-          .restrictByNotNullOrUndefined()
-          .collapseUnion()
-          .toMaybeFunctionType();
-      if (argFunctionType != null && argFunctionType.isSubtype(paramType)) {
-        // infer from return type of the function type
-        maybeResolveTemplatedType(
-            paramFunctionType.getTypeOfThis(),
-            argFunctionType.getTypeOfThis(), resolvedTypes, seenTypes);
-        // infer from return type of the function type
-        maybeResolveTemplatedType(
-            paramFunctionType.getReturnType(),
-            argFunctionType.getReturnType(), resolvedTypes, seenTypes);
-        // infer from parameter types of the function type
-        maybeResolveTemplateTypeFromNodes(
-            paramFunctionType.getParameters(),
-            argFunctionType.getParameters(), resolvedTypes, seenTypes);
-      }
-    } else if (paramType.isRecordType() && !paramType.isNominalType()) {
-      // example: @param {{foo:T}}
-      if (seenTypes.add(paramType)) {
-        ObjectType paramRecordType = paramType.toObjectType();
-        ObjectType argObjectType = argType.restrictByNotNullOrUndefined().toObjectType();
-        if (argObjectType != null && !argObjectType.isUnknownType()
-            && !argObjectType.isEmptyType()) {
-          Set<String> names = paramRecordType.getPropertyNames();
-          for (String name : names) {
-            if (paramRecordType.hasOwnProperty(name) && argObjectType.hasProperty(name)) {
-              maybeResolveTemplatedType(paramRecordType.getPropertyType(name),
-                  argObjectType.getPropertyType(name), resolvedTypes, seenTypes);
-            }
-          }
-        }
-        seenTypes.remove(paramType);
-      }
-    } else if (paramType.isTemplatizedType()) {
-      // example: @param {Array<T>}
-      TemplatizedType templatizedParamType = paramType.toMaybeTemplatizedType();
-      int keyCount = templatizedParamType.getTemplateTypes().size();
-      // TODO(johnlenz): determine why we are creating TemplatizedTypes for
-      // types with no type arguments.
-      if (keyCount > 0) {
-        ObjectType referencedParamType = templatizedParamType.getReferencedType();
-        JSType argObjectType = argType
-            .restrictByNotNullOrUndefined()
-            .collapseUnion();
-
-        if (argObjectType.isSubtypeOf(referencedParamType)) {
-          // If the argument type is a subtype of the parameter type, resolve any
-          // template types amongst their templatized types.
-          TemplateTypeMap paramTypeMap = paramType.getTemplateTypeMap();
-
-          ImmutableList<TemplateType> keys = paramTypeMap.getTemplateKeys();
-          TemplateTypeMap argTypeMap = argObjectType.getTemplateTypeMap();
-          for (int index = keys.size() - keyCount; index < keys.size(); index++) {
-            TemplateType key = keys.get(index);
-            maybeResolveTemplatedType(
-                paramTypeMap.getResolvedTemplateType(key),
-                argTypeMap.getResolvedTemplateType(key),
-                resolvedTypes, seenTypes);
-          }
-        }
-      }
-    }
-  }
-
-  private void maybeResolveTemplateTypeFromNodes(
-      Iterable<Node> declParams,
-      Iterable<Node> callParams,
-      Map<TemplateType, JSType> resolvedTypes, Set<JSType> seenTypes) {
-    maybeResolveTemplateTypeFromNodes(
-        declParams.iterator(), callParams.iterator(), resolvedTypes, seenTypes);
-  }
-
-  private void maybeResolveTemplateTypeFromNodes(
-      Iterator<Node> declParams,
-      Iterator<Node> callParams,
-      Map<TemplateType, JSType> resolvedTypes,
-      Set<JSType> seenTypes) {
-    while (declParams.hasNext() && callParams.hasNext()) {
-      Node declParam = declParams.next();
-      maybeResolveTemplatedType(
-          getJSType(declParam),
-          getJSType(callParams.next()),
-          resolvedTypes, seenTypes);
-      if (declParam.isVarArgs()) {
-        while (callParams.hasNext()) {
-          maybeResolveTemplatedType(
-              getJSType(declParam),
-              getJSType(callParams.next()),
-              resolvedTypes, seenTypes);
-        }
-      }
-    }
-  }
-
-  private static void resolvedTemplateType(
-      Map<TemplateType, JSType> map, TemplateType template, JSType resolved) {
-    if (resolved.isUnknownType()) {
-      return;
-    }
-
-    // Don't worry about checking bounds here. We'll validate them once they're all collected.
-    map.merge(template, resolved, (a, b) -> a.getLeastSupertype(b));
-  }
 
   /**
    * Build the type environment where type transformations will be evaluated.
@@ -2175,7 +1976,8 @@ class TypeInference
     }
 
     // Try to infer the template types
-    Map<TemplateType, JSType> bindings = inferTemplateTypesFromParameters(fnType, n, scope);
+    Map<TemplateType, JSType> bindings =
+        new InvocationTemplateTypeMatcher(this.registry, fnType, scope.getTypeOfThis(), n).match();
     Map<TemplateType, JSType> inferred = Maps.newIdentityHashMap();
     for (TemplateType key : keys) {
       inferred.put(key, bindings.getOrDefault(key, unknownType));
@@ -2249,7 +2051,8 @@ class TypeInference
       }
       // If necessary, templatized the instance type based on the the constructor parameters.
       Map<TemplateType, JSType> inferredTypes =
-          inferTemplateTypesFromParameters(ctorFnType, n, scope);
+          new InvocationTemplateTypeMatcher(this.registry, ctorFnType, scope.getTypeOfThis(), n)
+              .match();
       instantiatedType =
           registry
               .createTemplatizedType(instantiatedType, inferredTypes)
