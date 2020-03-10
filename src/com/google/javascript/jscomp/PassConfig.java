@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
@@ -40,8 +39,11 @@ public abstract class PassConfig {
     this.options = options;
   }
 
-  void clearTypedScope() {
+  void clearTypedScopeCreator() {
     typedScopeCreator = null;
+  }
+
+  void clearTopTypedScope() {
     topScope = null;
   }
 
@@ -229,8 +231,13 @@ public abstract class PassConfig {
     }
 
     @Override
-    void clearTypedScope() {
-      delegate.clearTypedScope();
+    void clearTypedScopeCreator() {
+      delegate.clearTypedScopeCreator();
+    }
+
+    @Override
+    void clearTopTypedScope() {
+      delegate.clearTopTypedScope();
     }
   }
 }

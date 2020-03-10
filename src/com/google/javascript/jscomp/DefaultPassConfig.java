@@ -403,6 +403,12 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    // We assume that only clients who are going to re-compile, or do in-depth static analysis,
+    // will need the typed scope creator after the compile job.
+    if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
+      checks.add(clearTypedScopeCreatorPass);
+    }
+
     if (options.shouldRewriteModulesAfterTypechecking()) {
       addModuleRewritingPasses(checks, options);
       if (options.closurePass) {
@@ -413,7 +419,7 @@ public final class DefaultPassConfig extends PassConfig {
     // We assume that only clients who are going to re-compile, or do in-depth static analysis,
     // will need the typed scope creator after the compile job.
     if (!options.preservesDetailedSourceInfo() && !options.allowsHotswapReplaceScript()) {
-      checks.add(clearTypedScopePass);
+      checks.add(clearTopTypedScopePass);
     }
 
     // CheckSuspiciousCode requires type information, so must run after the type checker.
@@ -1746,11 +1752,19 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSet(ES_NEXT_IN)
           .build();
 
-  /** Clears the typed scope when we're done. */
-  private final PassFactory clearTypedScopePass =
+  /** Clears the typed scope creator and all local typed scopes. */
+  private final PassFactory clearTypedScopeCreatorPass =
       PassFactory.builder()
-          .setName("clearTypedScopePass")
-          .setInternalFactory((compiler) -> new ClearTypedScope())
+          .setName("clearTypedScopeCreatorPass")
+          .setInternalFactory((compiler) -> new ClearTypedScopeCreator())
+          .setFeatureSet(ES_NEXT_IN)
+          .build();
+
+  /** Clears the top typed scope when we're done with it. */
+  private final PassFactory clearTopTypedScopePass =
+      PassFactory.builder()
+          .setName("clearTopTypedScopePass")
+          .setInternalFactory((compiler) -> new ClearTopTypedScope())
           .setFeatureSet(ES_NEXT_IN)
           .build();
 
@@ -1937,12 +1951,19 @@ public final class DefaultPassConfig extends PassConfig {
     return new CombinedCompilerPass(compiler, callbacks);
   }
 
-
-  /** A compiler pass that clears the global scope. */
-  class ClearTypedScope implements CompilerPass {
+  /** A compiler pass that clears typed scope creator (and non-global scopes cached there) */
+  class ClearTypedScopeCreator implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
-      clearTypedScope();
+      clearTypedScopeCreator();
+    }
+  }
+
+  /** A compiler pass that clears the global scope. */
+  class ClearTopTypedScope implements CompilerPass {
+    @Override
+    public void process(Node externs, Node root) {
+      clearTopTypedScope();
     }
   }
 
