@@ -1624,11 +1624,30 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "    f(this.x);",
             "  }",
             "}",
+            "",
             "/**",
             " * @param {T|!Array<T>} value",
             " * @template T",
             " */",
             "function f(value) {}"));
+  }
+
+  @Test
+  public void testCustomBanUnknownProp1_es6Class() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testWarning(
+        lines(
+            "class F {",
+            "  constructor() {",
+            "    this.prop;",
+            "  }",
+            "}",
+            "",
+            "alert(new F().prop);"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message\nThe property \"prop\" on type \"F\"");
   }
 
   @Test

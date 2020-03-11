@@ -68,6 +68,16 @@ import javax.annotation.Nullable;
 @GwtIncompatible("java.lang.reflect, java.util.regex")
 public final class ConformanceRules {
 
+  private static final Whitelist ALL_TS_WHITELIST = createTsWhitelist();
+
+  private static Whitelist createTsWhitelist() {
+    try {
+      return new Whitelist(ImmutableList.of(), ImmutableList.of(".*\\.closure\\.js"));
+    } catch (Throwable t) {
+      throw new AssertionError(t);
+    }
+  }
+
   private ConformanceRules() {}
 
   /**
@@ -208,6 +218,10 @@ public final class ConformanceRules {
         whitelistsBuilder.add(new Whitelist(entry));
       }
 
+      if (this.tsIsWhitelisted()) {
+        whitelistsBuilder.add(ALL_TS_WHITELIST);
+      }
+
       if (requirement.getWhitelistCount() > 0 || requirement.getWhitelistRegexpCount() > 0) {
         Whitelist whitelist =
             new Whitelist(requirement.getWhitelistList(), requirement.getWhitelistRegexpList());
@@ -224,6 +238,10 @@ public final class ConformanceRules {
       reportLooseTypeViolations = requirement.getReportLooseTypeViolations();
       typeMatchingStrategy = getTypeMatchingStrategy(requirement);
       this.requirement = requirement;
+    }
+
+    protected boolean tsIsWhitelisted() {
+      return false;
     }
 
     private static TypeMatchingStrategy getTypeMatchingStrategy(Requirement requirement) {
@@ -1526,6 +1544,11 @@ public final class ConformanceRules {
     }
 
     @Override
+    protected boolean tsIsWhitelisted() {
+      return true;
+    }
+
+    @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       Node getprop = n.getParent();
       if (getprop.isGetProp()
@@ -1554,38 +1577,47 @@ public final class ConformanceRules {
 
     private boolean isClassType(Node n) {
       ObjectType type = n.getJSType().restrictByNotNullOrUndefined().toMaybeObjectType();
-      if (type != null && type.isInstanceType()) {
-        FunctionType ctor = type.getConstructor();
-        if (ctor != null) {
-          JSDocInfo info = ctor.getJSDocInfo();
-          if (info != null && info.isConstructorOrInterface()) {
-            return true;
-          }
-        }
+      if (type == null || !type.isInstanceType()) {
+        return false;
       }
-      return false;
+
+      FunctionType ctor = type.getConstructor();
+      if (ctor == null) {
+        return false;
+      }
+
+      JSDocInfo info = ctor.getJSDocInfo();
+      Node source = ctor.getSource();
+
+      return (info != null && info.isConstructorOrInterface())
+          || (source != null && source.isClass());
     }
 
     private boolean isDeclaredUnknown(Node n) {
       Node target = n.getFirstChild();
-      ObjectType targetType = target.getJSType().toMaybeObjectType();
-      if (targetType != null) {
-        JSDocInfo info = targetType.getPropertyJSDocInfo(n.getLastChild().getString());
-        if (info != null && info.hasType()) {
-          JSTypeExpression expr = info.getType();
-          Node typeExprNode = expr.getRoot();
-          if (typeExprNode.getToken() == Token.QMARK && !typeExprNode.hasChildren()) {
+      ObjectType targetType = target.getJSType().restrictByNotNullOrUndefined().toMaybeObjectType();
+      if (targetType == null) {
+        return false;
+      }
+
+      JSDocInfo info = targetType.getPropertyJSDocInfo(n.getLastChild().getString());
+      if (info == null || !info.hasType()) {
+        return false;
+      }
+
+      JSTypeExpression expr = info.getType();
+      Node typeExprNode = expr.getRoot();
+      if (typeExprNode.getToken() == Token.QMARK && !typeExprNode.hasChildren()) {
+        return true;
+      } else if (typeExprNode.getToken() == Token.PIPE) {
+        // Might be a union type including ? that's collapsed during checking.
+        for (Node child : typeExprNode.children()) {
+          if (child.getToken() == Token.QMARK) {
             return true;
-          } else if (typeExprNode.getToken() == Token.PIPE) {
-            // Might be a union type including ? that's collapsed during checking.
-            for (Node child : typeExprNode.children()) {
-              if (child.getToken() == Token.QMARK) {
-                return true;
-              }
-            }
           }
         }
       }
+
       return false;
     }
   }
