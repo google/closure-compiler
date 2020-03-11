@@ -118,6 +118,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case OR:
         return tryFoldAndOr(subtree, left, right);
 
+      case COALESCE:
+        return tryFoldCoalesce(subtree, left, right);
+
       case LSH:
       case RSH:
       case URSH:
@@ -243,6 +246,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       case AND:
       case OR:
       case COMMA:
+      case COALESCE:
         tryConvertToNumber(n.getLastChild());
         return;
       case HOOK:
@@ -610,6 +614,45 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (result != null) {
       // Fold it!
+      n.detachChildren();
+      parent.replaceChild(n, result);
+      reportChangeToEnclosingScope(result);
+      if (dropped != null) {
+        markFunctionsDeleted(dropped);
+      }
+      return result;
+    } else {
+      return n;
+    }
+  }
+
+  /** Try to fold a COALESCE node. */
+  private Node tryFoldCoalesce(Node n, Node left, Node right) {
+    Node parent = n.getParent();
+
+    Node result = null;
+    Node dropped = null;
+
+    TernaryValue leftVal = NodeUtil.getBooleanValue(left);
+
+    if (leftVal != TernaryValue.UNKNOWN) {
+      if (NodeUtil.isNullOrUndefined(left)) {
+        result = right;
+        dropped = left;
+      } else {
+        if (!mayHaveSideEffects(left)) {
+          result = left;
+          dropped = right;
+        } else {
+          n.detachChildren();
+          result = IR.comma(left, right);
+          dropped = null;
+        }
+      }
+    }
+
+    if (result != null) {
+      // Fold!
       n.detachChildren();
       parent.replaceChild(n, result);
       reportChangeToEnclosingScope(result);
