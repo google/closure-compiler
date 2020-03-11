@@ -255,6 +255,16 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testStaticMethodsNotInstalledIfGuardedByNullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    addLibrary("Array.of", "es_next_in", "es5", "es6/array/of");
+
+    testDoesNotInject("!Array.of ?? Array.of();");
+    // NOTE: ?? is not safe by itself.
+    testInjects("Array.of ?? Array.of();", "es6/array/of");
+  }
+
+  @Test
   public void testStaticMethodsNotInstalledIfGuardedByHook() {
     addLibrary("Array.of", "es6", "es5", "es6/array/of");
 
@@ -386,6 +396,16 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     testInjects("x && x.endsWith;", "es6/string/endswith");
     // NOTE: || is not safe by itself.
     testInjects("String.prototype.endsWith || x.endsWith();", "es6/string/endswith");
+  }
+
+  @Test
+  public void testPrototypeMethodsNotInstalledIfGuardedByNullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    addLibrary("String.prototype.endsWith", "es_next_in", "es5", "es6/string/endswith");
+
+    testDoesNotInject("!String.prototype.endsWith ?? x.endsWith();");
+    // NOTE: ?? is not safe by itself.
+    testInjects("String.prototype.endsWith ?? x.endsWith();", "es6/string/endswith");
   }
 
   @Test
