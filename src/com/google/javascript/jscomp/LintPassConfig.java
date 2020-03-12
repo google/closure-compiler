@@ -48,6 +48,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
     return ImmutableList.of(
         gatherModuleMetadataPass,
         earlyLintChecks,
+        checkRequires,
         variableReferenceCheck,
         closureRewriteClass,
         lateLintChecks);
@@ -103,6 +104,16 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
           .setName("variableReferenceCheck")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(VariableReferenceCheck::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
+
+  private final PassFactory checkRequires =
+      PassFactory.builder()
+          .setName("checkMissingAndExtraRequires")
+          .setInternalFactory(
+              (compiler) ->
+                  new CheckMissingAndExtraRequires(
+                      compiler, CheckMissingAndExtraRequires.Mode.SINGLE_FILE))
           .setFeatureSet(FeatureSet.latest())
           .build();
 
