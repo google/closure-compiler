@@ -8073,4 +8073,34 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(options, "x ?? y ?? z", "let a, b; null != (b = null != (a = x) ? a : y) ? b : z");
   }
+
+  @Test
+  public void nullishCoalescePassThroughExterns() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addExtra("var x, y").buildExternsFile("externs"));
+
+    testSame(options, "x ?? y");
+  }
+
+  @Test
+  public void nullishCoalescePassThroughLhsNull() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(options, "var x; var y = 1; x ?? y", "1");
+  }
+
+  @Test
+  public void nullishCoalescePassThroughLhsNonNull() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(options, "var x = 0; var y = 1; x ?? y", "0");
+  }
 }

@@ -5552,7 +5552,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testNullishCoalesce() {
-    mode = LanguageMode.ES_NEXT_IN;
+    mode = LanguageMode.ES_NEXT;
     expectFeatures(Feature.NULL_COALESCE_OP);
 
     Node tree = parse("x??y");
@@ -5566,26 +5566,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.NULL_COALESCE_OP);
 
     parseWarning(
-        "x??y", requiresLanguageModeMessage(LanguageMode.ES_NEXT_IN, Feature.NULL_COALESCE_OP));
+        "x??y", requiresLanguageModeMessage(LanguageMode.ES_NEXT, Feature.NULL_COALESCE_OP));
   }
 
   @Test
   public void testNullishCoalesce_withLogicalAND_shouldFail() {
-    mode = LanguageMode.ES_NEXT_IN;
+    mode = LanguageMode.ES_NEXT;
 
     parseError("x&&y??z", "Logical OR and logical AND require parentheses when used with '??'");
   }
 
   @Test
   public void testNullishCoalesce_withLogicalOR_shouldFail() {
-    mode = LanguageMode.ES_NEXT_IN;
+    mode = LanguageMode.ES_NEXT;
 
     parseError("x??y||z", "Logical OR and logical AND require parentheses when used with '??'");
   }
 
   @Test
   public void testNullishCoalesce_withLogicalANDinParens() {
-    mode = LanguageMode.ES_NEXT_IN;
+    mode = LanguageMode.ES_NEXT;
     expectFeatures(Feature.NULL_COALESCE_OP);
 
     Node tree = parse("(x&&y)??z");
@@ -5595,7 +5595,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testNullishCoalesce_chaining() {
-    mode = LanguageMode.ES_NEXT_IN;
+    mode = LanguageMode.ES_NEXT;
     expectFeatures(Feature.NULL_COALESCE_OP);
 
     Node tree = parse("x??y??z");
