@@ -1446,7 +1446,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("aggressiveInlineAliases")
           .setInternalFactory(AggressiveInlineAliases::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory removeWeakSources =
@@ -1610,7 +1610,7 @@ public final class DefaultPassConfig extends PassConfig {
                 return new PeepholeOptimizationsPass(
                     compiler, "earlyPeepholeOptimizations", peepholeOptimizations);
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory earlyInlineVariables =
@@ -1628,7 +1628,7 @@ public final class DefaultPassConfig extends PassConfig {
                 }
                 return new InlineVariables(compiler, mode, true);
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Various peephole optimizations. */
@@ -1659,7 +1659,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   createPeepholeOptimizationsPass(compiler, PassNames.PEEPHOLE_OPTIMIZATIONS))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Various peephole optimizations. */
@@ -1669,7 +1669,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   createPeepholeOptimizationsPass(compiler, PassNames.PEEPHOLE_OPTIMIZATIONS))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Same as peepholeOptimizations but aggressively merges code together */
@@ -1691,7 +1691,7 @@ public final class DefaultPassConfig extends PassConfig {
                     new PeepholeFoldConstants(late, useTypesForOptimization),
                     new PeepholeReorderConstantExpression());
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Checks that all variables are defined. */
@@ -2162,7 +2162,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.OPTIMIZE_ARGUMENTS_ARRAY)
           .setInternalFactory(OptimizeArgumentsArray::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Remove variables set to goog.abstractMethod. */
@@ -2173,7 +2173,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new ClosureCodeRemoval(
                       compiler, options.removeAbstractMethods, options.removeClosureAsserts))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Special case optimizations for closure functions. */
@@ -2186,7 +2186,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED,
                       compiler.getOptions().getOutputFeatureSet().contains(ES6)))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Puts global symbols into a single object. */
@@ -2208,7 +2208,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.COLLAPSE_PROPERTIES)
           .setInternalFactory(
               (compiler) -> new CollapseProperties(compiler, options.getPropertyCollapseLevel()))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrite properties as variables. */
@@ -2218,7 +2218,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
               (compiler) -> new InlineObjectLiterals(compiler, compiler.getUniqueNameIdSupplier()))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Disambiguate property names based on the coding convention. */
@@ -2262,7 +2262,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .addPass(new DevirtualizeMethods(compiler))
                     .build();
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /**
@@ -2284,7 +2284,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .addPass(new OptimizeParameters(compiler))
                     .build();
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Look for function calls that are pure, and annotate them that way. */
@@ -2292,7 +2292,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("markPureFunctions")
           .setInternalFactory(PureFunctionIdentifier.Driver::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Inlines variables heuristically. */
@@ -2312,7 +2312,7 @@ public final class DefaultPassConfig extends PassConfig {
                 }
                 return new InlineVariables(compiler, mode, true);
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Inlines variables that are marked as constants. */
@@ -2332,7 +2332,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.REMOVE_UNREACHABLE_CODE)
           .setRunInFixedPointLoop(true)
           .setInternalFactory(UnreachableCodeElimination::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Inlines simple methods, like getters */
@@ -2341,7 +2341,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("inlineSimpleMethods")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(InlineSimpleMethods::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Kills dead assignments. */
@@ -2350,7 +2350,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.DEAD_ASSIGNMENT_ELIMINATION)
           .setRunInFixedPointLoop(true)
           .setInternalFactory(DeadAssignmentsElimination::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Kills dead property assignments. */
@@ -2359,7 +2359,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("deadPropertyAssignmentElimination")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(DeadPropertyAssignmentElimination::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Inlines function calls. */
@@ -2376,7 +2376,7 @@ public final class DefaultPassConfig extends PassConfig {
                       options.assumeStrictThis() || options.expectStrictModeInput(),
                       options.assumeClosuresOnlyCaptureReferences,
                       options.maxFunctionSizeAfterInlining))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Inlines constant properties. */
@@ -2410,7 +2410,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .assumeGettersArePure(options.getAssumeGettersArePure())
                     .build();
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory removeUnusedCodeOnce =
@@ -2427,7 +2427,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       compiler.getModuleGraph(),
                       options.parentChunkCanSeeSymbolsDeclaredInChildren))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Move methods to a deeper common module */
@@ -2444,7 +2444,7 @@ public final class DefaultPassConfig extends PassConfig {
                       // them as exports.
                       options.removeUnusedPrototypePropertiesInExterns,
                       options.crossChunkCodeMotionNoStubMethods))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** A data-flow based variable inliner. */
@@ -2452,7 +2452,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.FLOW_SENSITIVE_INLINE_VARIABLES)
           .setInternalFactory(FlowSensitiveInlineVariables::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Uses register-allocation algorithms to use fewer variables. */
@@ -2461,7 +2461,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.COALESCE_VARIABLE_NAMES)
           .setInternalFactory(
               (compiler) -> new CoalesceVariableNames(compiler, options.generatePseudoNames))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Some simple, local collapses (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
@@ -2472,7 +2472,7 @@ public final class DefaultPassConfig extends PassConfig {
               (compiler) ->
                   new PeepholeOptimizationsPass(
                       compiler, PassNames.EXPLOIT_ASSIGN, new ExploitAssigns()))
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Some simple, local collapses (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
@@ -2480,7 +2480,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.COLLAPSE_VARIABLE_DECLARATIONS)
           .setInternalFactory(CollapseVariableDeclarations::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Extracts common sub-expressions. */
@@ -2503,7 +2503,7 @@ public final class DefaultPassConfig extends PassConfig {
 
                 return new ExtractPrototypeMemberDeclarations(compiler, pattern);
               })
-          .setFeatureSet(ES2019)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrites common function definitions to be more compact. */
@@ -2519,7 +2519,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.COLLAPSE_ANONYMOUS_FUNCTIONS)
           .setInternalFactory(CollapseAnonymousFunctions::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Moves function declarations to the top, to simulate actual hoisting. */
@@ -2658,7 +2658,7 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Renames variables. */
@@ -2676,7 +2676,7 @@ public final class DefaultPassConfig extends PassConfig {
                   }
                 };
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private VariableMap runVariableRenaming(
@@ -2714,7 +2714,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("renameLabels")
           .setInternalFactory(RenameLabels::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Convert bracket access to dot access */
@@ -2722,7 +2722,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.CONVERT_TO_DOTTED_PROPERTIES)
           .setInternalFactory(ConvertToDottedProperties::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory checkAstValidity =
@@ -2844,7 +2844,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("j2clConstantHoisterPass")
           .setRunInFixedPointLoop(true)
           .setInternalFactory(J2clConstantHoisterPass::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Optimizes J2CL clinit methods. */
@@ -2858,7 +2858,7 @@ public final class DefaultPassConfig extends PassConfig {
                     compiler.getChangedScopeNodesForPass("j2clClinitPass");
                 return new J2clClinitPrunerPass(compiler, changedScopeNodes);
               })
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrites J2CL constructs to be more optimizable. */
@@ -2866,7 +2866,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("j2clES6Pass")
           .setInternalFactory(J2clPropertyInlinerPass::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   /** Rewrites J2CL constructs to be more optimizable. */
@@ -2882,14 +2882,14 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("j2clUtilGetDefineRewriterPass")
           .setInternalFactory(J2clUtilGetDefineRewriterPass::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory j2clAssertRemovalPass =
       PassFactory.builder()
           .setName("j2clAssertRemovalPass")
           .setInternalFactory(J2clAssertRemovalPass::new)
-          .setFeatureSet(ES2019_MODULES)
+          .setFeatureSet(ES_NEXT)
           .build();
 
   private final PassFactory j2clSourceFileChecker =
