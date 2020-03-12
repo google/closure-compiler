@@ -553,12 +553,19 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup PARTIAL_ALIAS =
       DiagnosticGroups.registerGroup("partialAlias", CollapseProperties.PARTIAL_NAMESPACE_WARNING);
 
+  // This lint is given its own diagnostic group because it's harder to fix than other
+  // lint errors, and we want to discourage users from doing a blanket @suppress {lintChecks}.
+  // This is intentionally not public. It should not be enabled directly; instead enable lintChecks.
+  static final DiagnosticGroup USE_OF_GOOG_PROVIDE =
+      DiagnosticGroups.registerGroup("useOfGoogProvide", ClosureCheckModule.USE_OF_GOOG_PROVIDE);
+
   // Warnings reported by the linter. If you enable these as errors in your build targets,
   // the JS Compiler team will break your build and not rollback.
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup(
           "lintChecks", // undocumented
           CheckJSDocStyle.LINT_DIAGNOSTICS,
+          USE_OF_GOOG_PROVIDE,
           new DiagnosticGroup(
               CheckClosureImports.LET_CLOSURE_IMPORT,
               CheckConstantCaseNames.MISSING_CONST_PROPERTY,
@@ -589,7 +596,6 @@ public class DiagnosticGroups {
               ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE,
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
-              ClosureCheckModule.USE_OF_GOOG_PROVIDE,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
               RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING));
 

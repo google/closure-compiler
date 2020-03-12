@@ -153,7 +153,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
 
   static final DiagnosticType USE_OF_GOOG_PROVIDE =
       DiagnosticType.disabled(
-          "JSC_USE_OF_GOOG_PROVIDE", "goog.provide is deprecated in favor of goog.module.");
+          "JSC_USE_OF_GOOG_PROVIDE",
+          "goog.provide is deprecated in favor of goog.module."
+          );
 
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(
