@@ -181,6 +181,7 @@ public final class ParserRunner {
       case ECMASCRIPT8:
       case ECMASCRIPT_2018:
       case ECMASCRIPT_2019:
+      case ECMASCRIPT_2020:
         parserConfigLanguageMode = Mode.ES8_OR_GREATER;
         break;
       case ES_NEXT:

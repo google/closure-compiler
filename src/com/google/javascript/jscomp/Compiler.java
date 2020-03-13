@@ -2641,6 +2641,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         return Config.LanguageMode.ECMASCRIPT_2018;
       case ECMASCRIPT_2019:
         return Config.LanguageMode.ECMASCRIPT_2019;
+      case ECMASCRIPT_2020:
+        return Config.LanguageMode.ECMASCRIPT_2020;
       case UNSUPPORTED:
         return Config.LanguageMode.UNSUPPORTED;
       case ECMASCRIPT_NEXT:

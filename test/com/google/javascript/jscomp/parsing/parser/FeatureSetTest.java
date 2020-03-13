@@ -51,7 +51,8 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.TYPESCRIPT).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_UNSUPPORTED).contains(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.ES_NEXT_IN).contains(FeatureSet.ES_NEXT);
-    assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2019);
+    assertFS(FeatureSet.ES_NEXT).contains(FeatureSet.ES2020);
+    assertFS(FeatureSet.ES2020).contains(FeatureSet.ES2019);
     assertFS(FeatureSet.ES2019).contains(FeatureSet.ES2018);
     assertFS(FeatureSet.ES2018).contains(FeatureSet.ES8);
     assertFS(FeatureSet.ES8).contains(FeatureSet.ES7);
@@ -63,6 +64,7 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsModuleOrdering() {
+    assertFS(FeatureSet.ES2020_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2020);
     assertFS(FeatureSet.ES2019_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2019);
     assertFS(FeatureSet.ES2018_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.ES8_MODULES.without(Feature.MODULES)).equals(FeatureSet.ES8);
@@ -85,6 +87,10 @@ public final class FeatureSetTest {
     assertThat(FeatureSet.ES2018_MODULES.versionForDebugging()).isEqualTo("es9");
     assertThat(FeatureSet.ES2019.versionForDebugging()).isEqualTo("es_2019");
     assertThat(FeatureSet.ES2019_MODULES.versionForDebugging()).isEqualTo("es_2019");
+    // since there is nothing in ES2020 for now the versionForDebugging will be "es_2019"
+    // this should be changed once a feature is added to ES2020
+    assertThat(FeatureSet.ES2020.versionForDebugging()).isEqualTo("es_2019");
+    assertThat(FeatureSet.ES2020_MODULES.versionForDebugging()).isEqualTo("es_2019");
     assertThat(FeatureSet.TYPESCRIPT.versionForDebugging()).isEqualTo("ts");
   }
 
@@ -131,6 +137,7 @@ public final class FeatureSetTest {
     assertFS(FeatureSet.valueOf("es2018")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es9")).equals(FeatureSet.ES2018);
     assertFS(FeatureSet.valueOf("es_2019")).equals(FeatureSet.ES2019);
+    assertFS(FeatureSet.valueOf("es_2020")).equals(FeatureSet.ES2020);
     assertFS(FeatureSet.valueOf("es_next")).equals(FeatureSet.ES_NEXT);
     assertFS(FeatureSet.valueOf("es_next_in")).equals(FeatureSet.ES_NEXT_IN);
     assertFS(FeatureSet.valueOf("es_unsupported")).equals(FeatureSet.ES_UNSUPPORTED);
