@@ -1776,6 +1776,9 @@ public final class IntegrationTest extends IntegrationTestCase {
           lines(
               "goog.module('a.b.c');",
               "exports = class Foo {",
+              // Reference to static property via inner class name must be changed
+              // to reference via global name (AggressiveInlineAliases), then collapsed
+              // (CollapseProperties) to get full optimization and avoid generating broken code.
               "  method() { return Foo.EventType.E1; }",
               "};",
               "",
@@ -1795,14 +1798,9 @@ public final class IntegrationTest extends IntegrationTestCase {
           "",
           "",
           lines(
-              "", //
-              "use((new class $Foo$$ {",
-              "  $method$() {",
-              // TODO(b/147588398): Definition of EventType should not have been removed.
-              "    return $Foo$$.$EventType$.$E1$;",
-              "  }",
-              "}).$method$());",
-              ""),
+              // TODO(bradfordcsmith): Why is `new class {};` left behind?
+              "new class {};", //
+              "use(1)"),
         });
   }
 

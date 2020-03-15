@@ -816,6 +816,123 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGlobalES5ClassVarWithInnerNameDotPropReference() {
+    test(
+        lines(
+            "", //
+            "/** @constructor */",
+            "var GlobalName = function InnerName() {",
+            "    InnerName.staticMethod();", // replace InnerName with GlobalName
+            "};",
+            "GlobalName.staticMethod = function() {",
+            "  console.log('staticMethod');",
+            "};",
+            ""),
+        lines(
+            "", //
+            "/** @constructor */",
+            "var GlobalName = function InnerName() {",
+            "    GlobalName.staticMethod();",
+            "};",
+            "GlobalName.staticMethod = function() {",
+            "  console.log('staticMethod');",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void testGlobalClassVarWithInnerNameDotPropReference() {
+    test(
+        lines(
+            "", //
+            "const GlobalName = class InnerName {",
+            "  method() {",
+            "    return InnerName.staticMethod();", // replace InnerName with GlobalName
+            "  }",
+            "  static staticMethod() {",
+            "    console.log('staticMethod');",
+            "  }",
+            "};",
+            ""),
+        lines(
+            "", //
+            "const GlobalName = class InnerName {",
+            "  method() {",
+            "    return GlobalName.staticMethod();",
+            "  }",
+            "  static staticMethod() {",
+            "    console.log('staticMethod');",
+            "  }",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void testGlobalClassPropWithInnerNameDotPropReference() {
+    test(
+        lines(
+            "", //
+            "const GlobalName = {};",
+            "GlobalName.prop = class InnerName {",
+            "  method() {",
+            "    return InnerName.staticMethod();", // replace InnerName with GlobalName.prop
+            "  }",
+            "  static staticMethod() {",
+            "    console.log('staticMethod');",
+            "  }",
+            "};",
+            ""),
+        lines(
+            "", //
+            "const GlobalName = {};",
+            "GlobalName.prop = class InnerName {",
+            "  method() {",
+            "    return GlobalName.prop.staticMethod();",
+            "  }",
+            "  static staticMethod() {",
+            "    console.log('staticMethod');",
+            "  }",
+            "};",
+            ""));
+  }
+
+  @Test
+  public void testGlobalClassVarSetTwiceWithInnerNameDotPropReference() {
+    testSame(
+        lines(
+            "", //
+            "let GlobalName = class InnerName {",
+            "  method() {",
+            "    return InnerName.staticMethod();", // replace InnerName with GlobalName
+            "  }",
+            "  static staticMethod() {",
+            "    console.log('staticMethod');",
+            "  }",
+            "};",
+            // second assignment prevents inlining
+            "GlobalName = function SecondValue() {}",
+            ""));
+  }
+
+  @Test
+  public void testGlobalClassPropWithInnerNameInstanceOfReference() {
+    testSame(
+        lines(
+            "", //
+            "const GlobalName = {};",
+            "GlobalName.prop = class InnerName {",
+            "  method() {",
+            // We don't want to inline this use of InnerName.
+            // CollapseProperties won't break this code as it is.
+            // Adding a reference to a global here could prevent
+            // this method from being inlined.
+            "    return this instanceof InnerName;",
+            "  }",
+            "};",
+            ""));
+  }
+
+  @Test
   public void testGlobalAliasWithProperties1() {
     test(
         "var ns = {};"
