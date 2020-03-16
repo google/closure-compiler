@@ -32,7 +32,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -211,10 +210,6 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addModuleRewritingPasses(List<PassFactory> checks, CompilerOptions options) {
-    if (options.closurePass) {
-      checks.add(rewriteClosureImports);
-    }
-
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       checks.add(rewriteGoogJsImports);
       TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
@@ -1152,12 +1147,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     assertPassOrder(
         checks,
-        checkClosureImports,
-        rewriteClosureImports,
-        "Closure imports must be checked before they are rewritten.");
-
-    assertPassOrder(
-        checks,
         j2clPass,
         TranspilationPasses.rewriteGenerators,
         "J2CL normalization should be done before generator re-writing.");
@@ -1515,21 +1504,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("checkGoogRequires")
           .setInternalFactory(
               (compiler) -> new CheckClosureImports(compiler, compiler.getModuleMetadataMap()))
-          .setFeatureSet(ES_NEXT_IN)
-          .build();
-
-  /** Rewrites goog.require, goog.forwardDeclare, goog.requireType, and goog.module.get calls */
-  private final PassFactory rewriteClosureImports =
-      PassFactory.builderForHotSwap()
-          .setName("rewriteClosureImports")
-          .setInternalFactory(
-              (compiler) ->
-                  new RewriteClosureImports(
-                      compiler,
-                      compiler.getModuleMetadataMap(),
-                      preprocessorSymbolTableFactory.getInstanceOrNull(),
-                      // TODO(johnplaisted): Expand the Set of modules to rewrite in.
-                      ImmutableSet.of()))
           .setFeatureSet(ES_NEXT_IN)
           .build();
 

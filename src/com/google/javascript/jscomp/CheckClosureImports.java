@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 
 /**
  * Checks all goog.requires, goog.module.gets, goog.forwardDeclares, and goog.requireTypes in all
- * files. This pass is a guard to {@link RewriteClosureImports}.
+ * files.
  *
  * <p>Checks that these dependency calls both contain a valid Closure namespace and are in an
  * acceptable location (e.g. a goog.require cannot be within a function).
