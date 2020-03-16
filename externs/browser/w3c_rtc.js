@@ -586,7 +586,41 @@ RTCDTMFSender.prototype.toneBuffer;
 
 
 /**
- * @interface
+ * @typedef {{
+ *   mimeType: string,
+ *   clockRate: number,
+ *   channels: (number|undefined),
+ *   sdpFmtpLine: (string|undefined),
+ * }}
+ *
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpcodeccapability
+ */
+var RTCRtpCodecCapability;
+
+
+/**
+ * @typedef {{
+ *   uri: string,
+ * }}
+ *
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpheaderextensioncapability
+ */
+var RTCRtpHeaderExtensionCapability;
+
+
+/**
+ * @typedef {{
+ *   codecs: !Array<!RTCRtpCodecCapability>,
+ *   headerExtensions: !Array<!RTCRtpHeaderExtensionCapability>,
+ * }}
+ *
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpcapabilities
+ */
+var RTCRtpCapabilities;
+
+
+/**
+ * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcrtpsender-interface
  */
 function RTCRtpSender() {}
@@ -626,6 +660,12 @@ RTCRtpSender.prototype.setParameters = function(params) {};
  * @return {!Promise<!RTCStatsReport>}
  */
 RTCRtpSender.prototype.getStats = function() {};
+
+/**
+ * @param {string} kind
+ * @return {?RTCRtpCapabilities}
+ */
+RTCRtpSender.getCapabilities = function(kind) {};
 
 
 /**
@@ -854,6 +894,11 @@ RTCRtpTransceiver.prototype.sender;
  * @const {?RTCRtpReceiver}
  */
 RTCRtpTransceiver.prototype.receiver;
+
+/**
+ * @param {!Array<!RTCRtpCodecCapability>} codecs
+ */
+RTCRtpTransceiver.prototype.setCodecPreferences = function(codecs) {};
 
 /**
  * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-longrange
