@@ -79,4 +79,4 @@ $jscomp.polyfill('String.prototype.matchAll', function(orig) {
     return /**@type {!IteratorIterable<!RegExpResult>}> */ (matchAllIterator);
   };
   return polyfill;
-}, 'es_next', 'es3');
+}, 'es_2020', 'es3');

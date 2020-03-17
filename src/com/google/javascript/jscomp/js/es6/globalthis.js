@@ -23,4 +23,4 @@
 
 $jscomp.polyfill('globalThis', function(orig) {
   return orig || $jscomp.global;
-}, 'es_next', 'es3');
+}, 'es_2020', 'es3');

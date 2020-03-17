@@ -5566,7 +5566,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.NULL_COALESCE_OP);
 
     parseWarning(
-        "x??y", requiresLanguageModeMessage(LanguageMode.ES_NEXT, Feature.NULL_COALESCE_OP));
+        "x??y",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT_2020, Feature.NULL_COALESCE_OP));
   }
 
   @Test

@@ -46,7 +46,7 @@ Object.is es6 es3 es6/object/is
 Object.setPrototypeOf es6 es5 es6/object/setprototypeof
 Object.values es8 es3 es6/object/values
 Promise es6 es3 es6/promise/promise
-Promise.allSettled es_next es3 es6/promise/allSettled
+Promise.allSettled es_2020 es3 es6/promise/allSettled
 Promise.prototype.finally es9 es3 es6/promise/finally
 Proxy es6 es6
 Reflect.apply es6 es3 es6/reflect/apply
@@ -67,7 +67,7 @@ String.fromCodePoint es6 es3 es6/string/fromcodepoint
 String.prototype.codePointAt es6 es3 es6/string/codepointat
 String.prototype.endsWith es6 es3 es6/string/endswith
 String.prototype.includes es6 es3 es6/string/includes
-String.prototype.matchAll es_next es3 es6/string/matchall
+String.prototype.matchAll es_2020 es3 es6/string/matchall
 String.prototype.normalize es6 es6
 String.prototype.padEnd es8 es3 es6/string/padend
 String.prototype.padStart es8 es3 es6/string/padstart
@@ -80,4 +80,4 @@ String.prototype.trimStart es_2019 es3 es6/string/trimstart
 String.raw es6 es6
 WeakMap es6 es3 es6/weakmap
 WeakSet es6 es3 es6/weakset
-globalThis es_next es3 es6/globalthis
+globalThis es_2020 es3 es6/globalthis
