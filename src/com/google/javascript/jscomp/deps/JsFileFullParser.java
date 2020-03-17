@@ -199,8 +199,8 @@ public class JsFileFullParser {
     // anything at all.
     if (module.usesClosure()) {
       info.provides.addAll(module.googNamespaces());
-      info.requires.addAll(module.requiredGoogNamespaces());
-      info.typeRequires.addAll(module.requiredTypes());
+      info.requires.addAll(module.stronglyRequiredGoogNamespaces());
+      info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());
       info.testonly = module.isTestOnly();
     }
     info.importedModules.addAll(module.es6ImportSpecifiers().elementSet());
