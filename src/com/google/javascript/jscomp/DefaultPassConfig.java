@@ -1857,6 +1857,12 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSet(ES_NEXT_IN)
           .build();
 
+  /**
+   * Runs the single-file linter passes
+   *
+   * <p>These is NOT the configuration for the standalone Linter binary. New linter passes must also
+   * be added to {@link LinterPassConfig} as well as this list.
+   */
   private final PassFactory lintChecks =
       PassFactory.builderForHotSwap()
           .setName(PassNames.LINT_CHECKS)
