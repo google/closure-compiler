@@ -1068,7 +1068,7 @@ public final class NodeUtil {
    * @return Whether the call has a local result.
    */
   static boolean callHasLocalResult(Node n) {
-    checkState(n.isCall() || n.isTaggedTemplateLit(), n);
+    checkState(n.isCall() || n.isOptChainCall() || n.isTaggedTemplateLit(), n);
     return n.isLocalResultCall();
   }
 
@@ -4664,9 +4664,12 @@ public final class NodeUtil {
         return isImmutableValue(value);
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
         // There is no information about the locality of object properties.
         return false;
       case CALL:
+      case OPTCHAIN_CALL:
         return callHasLocalResult(value) || isToStringMethodCall(value);
       case TAGGED_TEMPLATELIT:
         return callHasLocalResult(value);
@@ -4843,7 +4846,7 @@ public final class NodeUtil {
 
   private static boolean isToStringMethodCall(Node call) {
     Node getNode = call.getFirstChild();
-    if (isGet(getNode)) {
+    if (isGet(getNode) || isOptChainGet(getNode)) {
       Node propNode = getNode.getLastChild();
       return propNode.isString() && "toString".equals(propNode.getString());
     }

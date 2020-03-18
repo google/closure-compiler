@@ -1557,6 +1557,27 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void localValueOptChainGetProp() {
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.y"))).isFalse();
+    }
+
+    @Test
+    public void localValueOptChainGetElem() {
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.[y]"))).isFalse();
+    }
+
+    @Test
+    public void localValueOptChainCall() {
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.()"))).isFalse();
+    }
+
+    @Test
+    public void localValueOptChainCall_toString() {
+      // the toString() call is an optional call because it is part of an optional chain
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.toString()"))).isTrue();
+    }
+
+    @Test
     public void testGetOctalNumberValue() {
       assertThat(NodeUtil.getNumberValue(parseExpr("022"))).isEqualTo(18.0);
     }
