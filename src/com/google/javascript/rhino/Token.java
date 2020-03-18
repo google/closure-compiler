@@ -78,6 +78,12 @@ public enum Token {
   GETPROP,
   GETELEM,
   CALL,
+
+  // Part of optional chain (?.)
+  OPTCHAIN_GETPROP,
+  OPTCHAIN_GETELEM,
+  OPTCHAIN_CALL,
+
   NAME,
   NUMBER,
   STRING,
@@ -260,6 +266,7 @@ public enum Token {
       case ROOT:
       case BREAK:
       case CALL:
+      case OPTCHAIN_CALL:
       case COLON:
       case CONST:
       case CONTINUE:
@@ -358,6 +365,8 @@ public enum Token {
       case GE:
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
       case GT:
       case IN:
       case INSTANCEOF:

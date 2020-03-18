@@ -247,6 +247,24 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  /**
+   * indicates whether the node we are asserting is the start of an optional chain
+   * e.g. `a?.b` of `a?.b.c`
+   * */
+  public NodeSubject isOptionalChainStart() {
+    check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isTrue();
+    return this;
+  }
+
+  /**
+   * indicates whether the node we are asserting is the start of an optional chain
+   * e.g. `b.c` of `a?.b.c`
+   * */
+  public NodeSubject isNotOptionalChainStart() {
+    check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isFalse();
+    return this;
+  }
+
   public NodeSubject isParamList() {
     hasToken(Token.PARAM_LIST);
     return this;

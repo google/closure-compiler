@@ -4677,6 +4677,240 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void hookWithDecimalNotParsedAsOptionalChaining() {
+    Node n = parse("a?.1:2").getFirstFirstChild();
+
+    assertNode(n).hasType(Token.HOOK);
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
+    assertNode(n.getSecondChild()).isEqualTo(IR.number(0.1));
+    assertNode(n.getLastChild()).isEqualTo(IR.number(2.0));
+  }
+
+  @Test
+  public void optionalChainingGetProp() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node n = parse("a?.b").getFirstFirstChild();
+
+    assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(n).isOptionalChainStart();
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(1);
+    assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
+    assertNode(n.getSecondChild()).isEqualTo(IR.string("b"));
+  }
+
+  @Test
+  public void optionalChainingGetElem() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node n = parse("a?.[1]").getFirstFirstChild();
+
+    assertNode(n).hasType(Token.OPTCHAIN_GETELEM);
+    assertNode(n).isOptionalChainStart();
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(1);
+    assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
+    assertNode(n.getSecondChild()).isEqualTo(IR.number(1.0));
+  }
+
+  @Test
+  public void optionalChainingCall() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node n = parse("a?.()").getFirstFirstChild();
+
+    assertNode(n).hasType(Token.OPTCHAIN_CALL);
+    assertNode(n).isOptionalChainStart();
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(1);
+    assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
+  }
+
+  @Test
+  public void optionalChainingStartOfChain_optGetProp() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node outterGet = parse("a?.b.c").getFirstFirstChild();
+    Node innerGet = outterGet.getFirstChild();
+
+    // `a?.b.c`
+    assertNode(outterGet).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(outterGet).isNotOptionalChainStart();
+    assertNode(outterGet).hasLineno(1);
+    assertNode(outterGet).hasCharno(4);
+    assertNode(outterGet).hasLength(2);
+
+    // `a?.b`
+    assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(innerGet).isOptionalChainStart();
+    assertNode(innerGet).hasLineno(1);
+    assertNode(innerGet).hasCharno(1);
+    assertNode(innerGet).hasLength(3);
+
+    assertNode(outterGet.getSecondChild()).isEqualTo(IR.string("c"));
+  }
+
+  @Test
+  public void optionalChainingStartOfChain_optGetElem() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node outterGet = parse("a?.[b][c]").getFirstFirstChild();
+    Node innerGet = outterGet.getFirstChild();
+
+    // `a?.[b][c]`
+    assertNode(outterGet).hasType(Token.OPTCHAIN_GETELEM);
+    assertNode(outterGet).isNotOptionalChainStart();
+    assertNode(outterGet).hasLineno(1);
+    assertNode(outterGet).hasCharno(6);
+    assertNode(outterGet).hasLength(3);
+    //
+    // // `a?.[b]`
+    assertNode(innerGet).hasType(Token.OPTCHAIN_GETELEM);
+    assertNode(innerGet).isOptionalChainStart();
+    assertNode(innerGet).hasLineno(1);
+    assertNode(innerGet).hasCharno(1);
+    assertNode(innerGet).hasLength(5);
+
+    assertNode(outterGet.getSecondChild()).isEqualTo(IR.name("c"));
+  }
+
+  @Test
+  public void optionalChainingStartOfChain_optCall() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node outterCall = parse("a?.()(b)").getFirstFirstChild();
+    Node innerCall = outterCall.getFirstChild();
+
+    // `a?()(b)`
+    assertNode(outterCall).hasType(Token.OPTCHAIN_CALL);
+    assertNode(outterCall).isNotOptionalChainStart();
+    assertNode(outterCall).hasLineno(1);
+    assertNode(outterCall).hasCharno(5);
+    assertNode(outterCall).hasLength(3);
+
+    // `a?.()`
+    assertNode(innerCall).hasType(Token.OPTCHAIN_CALL);
+    assertNode(innerCall).isOptionalChainStart();
+    assertNode(innerCall).hasLineno(1);
+    assertNode(innerCall).hasCharno(1);
+    assertNode(innerCall).hasLength(4);
+
+    assertNode(outterCall.getSecondChild()).isEqualTo(IR.name("b"));
+  }
+
+  @Test
+  public void optionalChainingParens_optGetProp() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node outterGet = parse("(a?.b).c").getFirstFirstChild();
+    Node innerGet = outterGet.getFirstChild();
+
+    // `(a?.b).c`
+    assertNode(outterGet).hasType(Token.GETPROP);
+    assertNode(outterGet).hasLineno(1);
+    assertNode(outterGet).hasCharno(0);
+    assertNode(outterGet).hasLength(8);
+
+    // `a?.b`
+    assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(innerGet).isOptionalChainStart();
+    assertNode(innerGet).hasLineno(1);
+    assertNode(innerGet).hasCharno(2);
+    assertNode(innerGet).hasLength(3);
+
+    assertNode(outterGet.getSecondChild()).isEqualTo(IR.string("c"));
+  }
+
+  @Test
+  public void callExpressionBeforeOptionalGetProp() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node get = parse("a()?.b").getFirstFirstChild();
+    Node call = get.getFirstChild();
+
+    assertNode(get).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(get).hasLineno(1);
+    assertNode(get).hasCharno(3);
+    assertNode(get).hasLength(3);
+
+    assertNode(call).hasType(Token.CALL);
+    assertNode(get).hasLineno(1);
+    assertNode(get).hasCharno(3);
+    assertNode(get).hasLength(3);
+  }
+
+  @Test
+  public void optionalChainingChain() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parse("a?.b?.c");
+    parse("a.b?.c");
+    parse("a?.b?.[1]");
+    parse("a?.b?.()");
+    parse("a?.[1]?.b");
+    parse("a?.[1]?.b()");
+    parse("a?.b?.c?.d");
+    parse("a?.b?.c?.[1]");
+    parse("a?.b?.c?.()");
+    parse("a?.(c)?.b");
+    parse("a().b?.c");
+  }
+
+  @Test
+  public void optionalChainingAssignError() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parseError("a?.b = c", "invalid assignment target");
+  }
+
+  @Test
+  public void optionalChainingConstructorError() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parseError("new a?.()", "Optional chaining is forbidden in construction contexts.");
+    parseError("new a?.b()", "Optional chaining is forbidden in construction contexts.");
+  }
+
+  @Test
+  public void optionalChainingTemplateLiteralError() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parseError("a?.()?.`hello`", "template literal cannot be used within optional chaining");
+    parseError("a?.`hello`", "template literal cannot be used within optional chaining");
+    parseError("a?.b`hello`", "template literal cannot be used within optional chaining");
+    // https://github.com/tc39/test262/blob/master/test/language/expressions/optional-chaining/early-errors-tail-position-template-string-esi.js
+    // test to prevent automatic semicolon insertion rules
+    parseError("a?.b\n`hello`", "template literal cannot be used within optional chaining");
+  }
+
+  @Test
+  public void optionalChainingMiscErrors() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parseError("super?.()", "Optional chaining is forbidden in super?.");
+    parseError("super?.foo", "Optional chaining is forbidden in super?.");
+    parseError("new?.target", "Optional chaining is forbidden in `new?.target` contexts.");
+    parseError("import?.('foo')", "Optional chaining is forbidden in import?.");
+  }
+
+  @Test
+  public void optionalChainingDeleteValid() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parse("delete a?.b");
+  }
+
+  @Test
+  public void optionalChainingEs2019() {
+    expectFeatures(Feature.OPTIONAL_CHAINING);
+    mode = LanguageMode.ECMASCRIPT_2019;
+
+    parseWarning("a?.b", unsupportedFeatureMessage(Feature.OPTIONAL_CHAINING));
+  }
+
+  @Test
+  public void optionalChainingSyntaxError() {
+    mode = LanguageMode.UNSUPPORTED;
+
+    parseError("a?.{}", "syntax error: { not allowed in optional chain");
+  }
+
+  @Test
   public void testArrow1() {
     expectFeatures(Feature.ARROW_FUNCTIONS);
     mode = LanguageMode.ECMASCRIPT6;

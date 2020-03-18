@@ -1222,6 +1222,9 @@ public final class NodeUtil {
       case CALL:
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
       case NEW_TARGET:
       case IMPORT_META:
         // Data values
@@ -1899,6 +1902,15 @@ public final class NodeUtil {
     return n.isGetProp() || n.isGetElem();
   }
 
+  /** Is this a OPTCHAIN_GETPROP or OPTCHAIN_GETELEM node? */
+  public static boolean isOptChainGet(Node n) {
+    return n.isOptChainGetProp() || n.isOptChainGetElem();
+  }
+
+  /** Is this a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, OPTCHAIN_CALL node? */
+  public static boolean isOptChainNode(Node n) {
+    return n.isOptChainGetProp() || n.isOptChainGetElem() || n.isOptChainCall();
+  }
 
   /**
    * Is this node the name of a block-scoped declaration?

@@ -117,6 +117,7 @@ class PrepareAst implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case CALL:
+        case OPTCHAIN_CALL:
           annotateCalls(n);
           break;
         default:
@@ -129,7 +130,7 @@ class PrepareAst implements CompilerPass {
      * "this" values (what we are call "free" calls) and direct call to eval.
      */
     private static void annotateCalls(Node n) {
-      checkState(n.isCall(), n);
+      checkState(n.isCall() || n.isOptChainCall(), n);
 
       // Keep track of of the "this" context of a call.  A call without an
       // explicit "this" is a free call.
@@ -140,7 +141,7 @@ class PrepareAst implements CompilerPass {
         first = first.getFirstChild();
       }
 
-      if (!NodeUtil.isGet(first)) {
+      if (!(NodeUtil.isGet(first) || NodeUtil.isOptChainGet(first))) {
         n.putBooleanProp(Node.FREE_CALL, true);
       }
 

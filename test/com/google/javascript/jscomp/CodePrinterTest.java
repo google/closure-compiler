@@ -40,6 +40,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
+  public void optionalChaining() {
+    languageMode = LanguageMode.UNSUPPORTED;
+    assertPrintSame("a.b?.c");
+    assertPrintSame("a.b?.[\"c\"]");
+    assertPrintSame("a.b?.()");
+    assertPrintSame("a?.b.c?.d");
+    assertPrintSame("(a?.b).c");
+    assertPrintSame("(a.b?.c.d).e");
+    assertPrintSame("(a?.[b])[c]");
+    assertPrintSame("(a.b?.())()");
+  }
+
+  @Test
   public void testUnescapedUnicodeLineSeparator_2018() {
     languageMode = LanguageMode.ECMASCRIPT_2018;
     assertPrintSame("`\u2028`");
@@ -2149,6 +2162,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     n.getFirstFirstChild().getFirstChild().putBooleanProp(
         Node.DIRECT_EVAL, false);
     assertPrintNode("(0,eval)(\"1\")", n);
+  }
+
+  @Test
+  public void freeCallOptChain() {
+    Node n = parse("(a?.b)()");
+    Node call = n.getFirstFirstChild();
+    assertThat(call.isCall()).isTrue();
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assertPrintNode("(0,a?.b)()", n);
+  }
+
+  @Test
+  public void freeCallOptChainOptCall() {
+    Node n = parse("(a?.b)?.()");
+    Node call = n.getFirstFirstChild();
+    assertThat(call.isOptChainCall()).isTrue();
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assertPrintNode("(0,a?.b)?.()", n);
   }
 
   @Test

@@ -204,6 +204,9 @@ public class Node implements Serializable {
     TYPEDEF_TYPE,
     // Original name of a goog.define call.
     DEFINE_NAME,
+    // Indicate that a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, or OPTCHAIN_CALL is the start of an
+    // optional chain.
+    START_OF_OPT_CHAIN,
   }
 
   /**
@@ -2734,6 +2737,22 @@ public class Node implements Serializable {
   }
 
   /**
+   * Sets whether this node is the start of an optional chain. This method is meaningful only on
+   * {@link Token#OPTCHAIN_GETELEM}, {@link Token#OPTCHAIN_GETPROP}, {@link Token#OPTCHAIN_CALL}
+   */
+  public final void setIsOptionalChainStart(boolean isOptionalChainStart) {
+    checkState(isOptChainGetElem() || isOptChainGetProp() || isOptChainCall());
+    putBooleanProp(Prop.START_OF_OPT_CHAIN, isOptionalChainStart);
+  }
+
+  /**
+   * Returns whether this node is an optional chaining node.
+   */
+  public final boolean isOptionalChainStart() {
+    return getBooleanProp(Prop.START_OF_OPT_CHAIN);
+  }
+
+  /**
    * Sets whether this node is a arrow function node. This
    * method is meaningful only on {@link Token#FUNCTION}
    */
@@ -3426,6 +3445,18 @@ public class Node implements Serializable {
 
   public final boolean isObjectPattern() {
     return this.token == Token.OBJECT_PATTERN;
+  }
+
+  public final boolean isOptChainCall() {
+    return this.token == Token.OPTCHAIN_CALL;
+  }
+
+  public final boolean isOptChainGetElem() {
+    return this.token == Token.OPTCHAIN_GETELEM;
+  }
+
+  public final boolean isOptChainGetProp() {
+    return this.token == Token.OPTCHAIN_GETPROP;
   }
 
   public final boolean isOr() {
