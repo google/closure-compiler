@@ -654,6 +654,13 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void optionalChaining() {
+    // TODO(b/151248857): Calculate the appropriate type here
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/**@type {?} */var x = a?.b;");
+  }
+
+  @Test
   public void testBooleanReduction2() {
     // It's important for the type system to recognize that in no case
     // can the boolean expression evaluate to a boolean value.

@@ -586,6 +586,11 @@ class TypeInference
         scope = traverseName(n, scope);
         break;
 
+      case OPTCHAIN_GETPROP:
+        // TODO(b/151248857) Calculate appropriate type here
+        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        break;
+
       case GETPROP:
         scope = traverseGetProp(n, scope);
         break;
@@ -617,6 +622,11 @@ class TypeInference
       case CALL:
         scope = traverseFunctionInvocation(n, scope);
         scope = tightenTypesAfterAssertions(scope, n);
+        break;
+
+      case OPTCHAIN_CALL:
+        // TODO(b/151248857) Calculate appropriate type here
+        n.setJSType(getNativeType(UNKNOWN_TYPE));
         break;
 
       case NEW:
@@ -713,6 +723,11 @@ class TypeInference
       case IN:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(BOOLEAN_TYPE));
+        break;
+
+      case OPTCHAIN_GETELEM:
+        // TODO(b/151248857) Calculate appropriate type here
+        n.setJSType(getNativeType(UNKNOWN_TYPE));
         break;
 
       case GETELEM:

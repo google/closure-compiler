@@ -375,8 +375,16 @@ public final class AstValidator implements CompilerPass {
         validateGetElem(n);
         return;
 
+      case OPTCHAIN_GETELEM:
+        validateOptChainGetElem(n);
+        return;
+
       case GETPROP:
         validateGetProp(n);
+        return;
+
+      case OPTCHAIN_GETPROP:
+        validateOptChainGetProp(n);
         return;
 
       case ARRAYLIT:
@@ -393,6 +401,10 @@ public final class AstValidator implements CompilerPass {
 
       case CALL:
         validateCall(n);
+        return;
+
+      case OPTCHAIN_CALL:
+        validateOptChainCall(n);
         return;
 
       case NEW:
@@ -1027,6 +1039,17 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
+  private void validateOptChainCall(Node node) {
+    validateFeature(Feature.OPTIONAL_CHAINING, node);
+    validateNodeType(Token.OPTCHAIN_CALL, node);
+    validateMinimumChildCount(node, 1);
+    Node callee = node.getFirstChild();
+    validateExpression(callee);
+    for (Node argument = callee.getNext(); argument != null; argument = argument.getNext()) {
+      validatePseudoExpression(argument, Token.ITER_SPREAD);
+    }
+  }
+
   @SuppressWarnings("RhinoNodeGetGrandparent")
   private void validateSuper(Node superNode) {
     validateFeature(Feature.SUPER, superNode);
@@ -1495,11 +1518,29 @@ public final class AstValidator implements CompilerPass {
     validateExpression(n.getLastChild());
   }
 
+  private void validateOptChainGetElem(Node node) {
+    validateFeature(Feature.OPTIONAL_CHAINING, node);
+    checkArgument(node.isOptChainGetElem(), node);
+    validateChildCount(node, 2);
+    validatePropertyReferenceTarget(node.getFirstChild());
+    validateExpression(node.getLastChild());
+  }
+
   private void validateGetProp(Node n) {
     validateNodeType(Token.GETPROP, n);
     validateChildCount(n);
     validatePropertyReferenceTarget(n.getFirstChild());
     Node prop = n.getLastChild();
+    validateNodeType(Token.STRING, prop);
+    validateNonEmptyString(prop);
+  }
+
+  private void validateOptChainGetProp(Node node) {
+    validateFeature(Feature.OPTIONAL_CHAINING, node);
+    validateNodeType(Token.OPTCHAIN_GETPROP, node);
+    validateChildCount(node);
+    validatePropertyReferenceTarget(node.getFirstChild());
+    Node prop = node.getLastChild();
     validateNodeType(Token.STRING, prop);
     validateNonEmptyString(prop);
   }

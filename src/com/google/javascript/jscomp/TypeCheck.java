@@ -626,12 +626,22 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = !(parent.isAssign() && parent.getFirstChild() == n);
         break;
 
+      case OPTCHAIN_GETPROP:
+        // TODO(b/151248857) Calculate appropriate type here
+        ensureTyped(n);
+        break;
+
       case GETELEM:
         visitGetElem(n);
         // The type of GETELEM is always unknown, so no point counting that.
         // If that unknown leaks elsewhere (say by an assignment to another
         // variable), then it will be counted.
         typeable = false;
+        break;
+
+      case OPTCHAIN_GETELEM:
+        // TODO(b/151248857) Calculate appropriate type here
+        ensureTyped(n);
         break;
 
       case VAR:
@@ -648,6 +658,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case CALL:
         visitCall(t, n);
         typeable = !parent.isExprResult();
+        break;
+
+      case OPTCHAIN_CALL:
+        // TODO(b/151248857) Calculate appropriate type here
+        ensureTyped(n);
         break;
 
       case RETURN:

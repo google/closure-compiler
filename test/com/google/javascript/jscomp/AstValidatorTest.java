@@ -589,6 +589,32 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void superInvalidWithOptionalCall() {
+    Node superNode = IR.superNode();
+    Node optChainCallNode = IR.startOptChainCall(superNode);
+
+    expectInvalid(optChainCallNode, Check.STATEMENT);
+  }
+
+  @Test
+  public void superInvalidWithOptionalGetProp() {
+    Node superNode = IR.superNode();
+    Node propNode = IR.string("prop");
+    Node optChainGetPropNode = IR.startOptChainGetprop(superNode, propNode);
+
+    expectInvalid(optChainGetPropNode, Check.STATEMENT);
+  }
+
+  @Test
+  public void superInvalidWithOptionalGetElem() {
+    Node superNode = IR.superNode();
+    Node exprNode = IR.name("expr");
+    Node optChainGetElemNode = IR.startOptChainGetelem(superNode, exprNode);
+
+    expectInvalid(optChainGetElemNode, Check.STATEMENT);
+  }
+
+  @Test
   public void testSuperInvalidInNonMemberFunction() {
     invalid(
         lines(
@@ -950,6 +976,15 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     testFeatureValidation("x ?? y", Feature.NULL_COALESCE_OP);
     testFeatureValidation("x ?? y ?? z", Feature.NULL_COALESCE_OP);
+  }
+
+  @Test
+  public void testFeatureValidation_optionalChaining() {
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+
+    testFeatureValidation("x?.y", Feature.OPTIONAL_CHAINING);
+    testFeatureValidation("x?.()", Feature.OPTIONAL_CHAINING);
+    testFeatureValidation("x?.[1]", Feature.OPTIONAL_CHAINING);
   }
 
   @Test
