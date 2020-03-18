@@ -320,6 +320,9 @@ PerformanceObserver.prototype.disconnect = function() {};
  */
 PerformanceObserver.prototype.takeRecords = function() {};
 
+/** @const {!Array<string>} */
+PerformanceObserver.prototype.supportedEntryTypes;
+
 /**
  * @record
  */
