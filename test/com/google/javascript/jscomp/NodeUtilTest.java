@@ -34,6 +34,9 @@ import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.MODULE_BODY;
+import static com.google.javascript.rhino.Token.OPTCHAIN_CALL;
+import static com.google.javascript.rhino.Token.OPTCHAIN_GETELEM;
+import static com.google.javascript.rhino.Token.OPTCHAIN_GETPROP;
 import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SUPER;
@@ -4070,6 +4073,11 @@ public final class NodeUtilTest {
             {SUPER, "super.foo()", false},
             {CALL, "super()", true},
             {CALL, "super.foo()", true},
+
+            // OPTCHAIN
+            {OPTCHAIN_CALL, "x?.()", true},
+            {OPTCHAIN_GETPROP, "x?.y", true},
+            {OPTCHAIN_GETELEM, "x?.[y]", true},
           });
     }
 

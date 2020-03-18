@@ -1108,6 +1108,7 @@ public final class NodeUtil {
     switch (n.getToken()) {
       case YIELD:
       case CALL:
+      case OPTCHAIN_CALL:
       case NEW:
         // Function calls or constructor can reference changed values.
         // TODO(johnlenz): Add some mechanism for determining that functions
@@ -1120,6 +1121,8 @@ public final class NodeUtil {
       // Properties on constant NAMEs can still be side-effected.
       case GETPROP:
       case GETELEM:
+      case OPTCHAIN_GETPROP:
+      case OPTCHAIN_GETELEM:
         return true;
 
       case FUNCTION:
