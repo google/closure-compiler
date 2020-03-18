@@ -390,6 +390,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
           "JSCompiler_renameProperty",
           "Map",
           "Math",
+          "NaN",
           "Number",
           "Object",
           "Promise",
