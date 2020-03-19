@@ -39,12 +39,14 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.io.Serializable;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * When parsing a jsdoc, a type-annotation string is parsed to a type AST. Somewhat confusingly, we
@@ -106,23 +108,30 @@ public final class JSTypeExpression implements Serializable {
     return n;
   }
 
-  /** Returns a set of all string names in this type expression */
-  public Set<String> getAllTypeNames() {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    getAllNames(this.root, builder);
+  /** Returns a list of all type nodes in this type expression. */
+  public ImmutableList<Node> getAllTypeNodes() {
+    ImmutableList.Builder<Node> builder = ImmutableList.builder();
+    visitAllTypeNodes(this.root, builder::add);
     return builder.build();
   }
 
-  /** Recursively traverse over the type tree and get all string names */
-  private static void getAllNames(Node n, ImmutableSet.Builder<String> builder) {
+  /** Returns a set of all string names in this type expression */
+  public ImmutableSet<String> getAllTypeNames() {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    visitAllTypeNodes(this.root, (n) -> builder.add(n.getString()));
+    return builder.build();
+  }
+
+  /** Recursively traverse the type tree and visit all type nodes. */
+  private static void visitAllTypeNodes(Node n, Consumer<Node> visitor) {
     if (n == null) {
       return;
     }
     for (Node child : n.children()) {
-      getAllNames(child, builder);
+      visitAllTypeNodes(child, visitor);
     }
     if (n.isString()) {
-      builder.add(n.getString());
+      visitor.accept(n);
     }
   }
 
