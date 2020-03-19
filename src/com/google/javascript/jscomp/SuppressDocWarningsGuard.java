@@ -83,42 +83,71 @@ class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
     if (node == null) {
       node = getScriptNodeForError(error);
     }
-    if (node != null) {
-      for (Node current = node;
-           current != null;
-           current = current.getParent()) {
-        // Search for @suppress tags on nodes introducing symbols:
-        // - class & function declarations
-        // - variables
-        // - assignments
-        // - object literal keys
-        // And on the top level script node.
-        JSDocInfo info = null;
-        if (current.isFunction() || current.isClass()) {
-          info = NodeUtil.getBestJSDocInfo(current);
-        } else if (current.isScript()) {
-          info = current.getJSDocInfo();
-        } else if (NodeUtil.isNameDeclaration(current)
-            || (NodeUtil.isAssignmentOp(current) && current.getParent().isExprResult())
-            || (current.isGetProp() && current.getParent().isExprResult())
-            || NodeUtil.mayBeObjectLitKey(current)
-            || current.isComputedProp()) {
-          info = NodeUtil.getBestJSDocInfo(current);
+    if (node == null) {
+      return null;
+    }
+
+    CheckLevel level = getCheckLevelFromAncestors(error, node);
+    if (level != null) {
+      return level;
+    }
+
+    // Some errors are on nodes that do not have the script as a parent.
+    // Look up the script node by filename.
+    Node scriptNode = getScriptNodeForError(error);
+    if (scriptNode != null) {
+      JSDocInfo info = scriptNode.getJSDocInfo();
+      if (info != null) {
+        return getCheckLevelFromInfo(error, info);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Searches for @suppress tags on nodes introducing symbols:
+   *
+   * <p>class & function declarations, variables, assignments, object literal keys, and the top
+   * level script node.
+   */
+  private CheckLevel getCheckLevelFromAncestors(JSError error, Node node) {
+    for (Node current = node; current != null; current = current.getParent()) {
+      JSDocInfo info = null;
+      if (current.isFunction() || current.isClass()) {
+        info = NodeUtil.getBestJSDocInfo(current);
+      } else if (current.isScript()) {
+        info = current.getJSDocInfo();
+      } else if (NodeUtil.isNameDeclaration(current)
+          || (NodeUtil.isAssignmentOp(current) && current.getParent().isExprResult())
+          || (current.isGetProp() && current.getParent().isExprResult())
+          || NodeUtil.mayBeObjectLitKey(current)
+          || current.isComputedProp()) {
+        info = NodeUtil.getBestJSDocInfo(current);
+      }
+
+      if (info != null) {
+        CheckLevel level = getCheckLevelFromInfo(error, info);
+        if (level != null) {
+          return level;
         }
+      }
+    }
 
-        if (info != null) {
-          for (String suppressor : info.getSuppressions()) {
-            WarningsGuard guard = suppressors.get(suppressor);
+    return null;
+  }
 
-            // Some @suppress tags are for other tools, and
-            // may not have a warnings guard.
-            if (guard != null) {
-              CheckLevel newLevel = guard.level(error);
-              if (newLevel != null) {
-                return newLevel;
-              }
-            }
-          }
+  /** If the given JSDocInfo has an @suppress for the given JSError, returns the new level. */
+  private CheckLevel getCheckLevelFromInfo(JSError error, JSDocInfo info) {
+    for (String suppressor : info.getSuppressions()) {
+      WarningsGuard guard = suppressors.get(suppressor);
+
+      // Some @suppress tags are for other tools, and
+      // may not have a warnings guard.
+      if (guard != null) {
+        CheckLevel newLevel = guard.level(error);
+        if (newLevel != null) {
+          return newLevel;
         }
       }
     }

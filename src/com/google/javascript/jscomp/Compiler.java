@@ -2111,15 +2111,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private Node parseCodeHelper(SourceFile src) {
     CompilerInput input = new CompilerInput(src);
     putCompilerInput(input.getInputId(), input);
-    return checkNotNull(input.getAstRoot(this));
+    Node root = input.getAstRoot(this);
+    scriptNodeByFilename.put(input.getSourceFile().getName(), root);
+    return checkNotNull(root);
   }
 
   private Node parseCodeHelper(List<SourceFile> srcs) {
     Node root = IR.root();
     for (SourceFile src : srcs) {
-      CompilerInput input = new CompilerInput(src);
-      putCompilerInput(input.getInputId(), input);
-      root.addChildToBack(checkNotNull(input.getAstRoot(this)));
+      root.addChildToBack(parseCodeHelper(src));
     }
     return root;
   }
