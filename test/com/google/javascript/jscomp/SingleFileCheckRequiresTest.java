@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING;
 import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -38,7 +37,6 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
-    options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
   }
@@ -137,16 +135,6 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExtraRequire() {
-    testError("goog.require('foo.Bar');", EXTRA_REQUIRE_WARNING);
-  }
-
-  @Test
-  public void testExtraImport() {
-    testError("import z from '/x.y';", EXTRA_REQUIRE_WARNING);
-  }
-
-  @Test
   public void testUnqualifiedRequireUsedInJSDoc() {
     testSame("goog.require('Bar'); /** @type {Bar} */ var x;");
   }
@@ -205,26 +193,6 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFailForwardDeclareInModule() {
-    testError(
-        lines(
-            "goog.module('example');",
-            "",
-            "var Event = goog.forwardDeclare('goog.events.Event');",
-            "var Unused = goog.forwardDeclare('goog.events.Unused');",
-            "",
-            "/**",
-            " * @param {!Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}",
-            "",
-            "exports = listener;"),
-        EXTRA_REQUIRE_WARNING);
-  }
-
-  @Test
   public void testPassForwardDeclare() {
     testSame(
         lines(
@@ -236,21 +204,5 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
             "function listener(event) {",
             "  alert(event);",
             "}"));
-  }
-
-  @Test
-  public void testFailForwardDeclare() {
-    testError(
-        lines(
-            "goog.forwardDeclare('goog.events.Event');",
-            "goog.forwardDeclare('goog.events.Unused');",
-            "",
-            "/**",
-            " * @param {!goog.events.Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}"),
-        EXTRA_REQUIRE_WARNING);
   }
 }
