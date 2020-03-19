@@ -4750,9 +4750,12 @@ public final class NodeUtil {
             && isDefinedValue(value.getLastChild());
       // Assume undefined leaks in this and call results.
       case CALL:
+      case OPTCHAIN_CALL:
       case NEW:
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
       case TAGGED_TEMPLATELIT:
       case THIS:
       case YIELD:

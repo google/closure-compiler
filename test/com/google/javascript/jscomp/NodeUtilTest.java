@@ -196,6 +196,13 @@ public final class NodeUtilTest {
       // could be true but the logic is not refined enough
       assertThat(NodeUtil.isDefinedValue(parseExpr("0 ?? undefined"))).isFalse();
     }
+
+    @Test
+    public void isDefinedValueOptionalChain() {
+      assertThat(NodeUtil.isDefinedValue(parseExpr("x?.y"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("x?.[y]"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("x?.()"))).isFalse();
+    }
   }
 
   /**
