@@ -33,13 +33,11 @@
  */
 $jscomp.getGlobal = function(passedInThis) {
   var possibleGlobals = [
-    // NOTE: ES_2020 includes globalThis, but anywhere that has that will also
-    // have one of the following names for it, so there's no benefit to making
-    // this code larger by looking for it.
-    // Also, if we use `globalThis` here, then that cause RemoveUnusedCode to
-    // keep the polyfill for it even if the code being compiled doesn't refer to
-    // it at all.
-    //
+    // Web Audio Worklets do not have any way to refer to their global object
+    // other than `globalThis`.
+    // This use of `globalThis` does not prevent removal of the `globalThis`
+    // polyfill, because the usage is guarded by a typeof check.
+    'object' == typeof globalThis && globalThis,
     // Browser windows always have `window`
     'object' == typeof window && window,
     // WebWorkers have `self`
