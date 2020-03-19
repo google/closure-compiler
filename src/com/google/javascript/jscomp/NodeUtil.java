@@ -4024,6 +4024,10 @@ public final class NodeUtil {
         return parent.getFirstChild() != propAccess
             && compiler.getCodingConvention().isPropertyTestFunction(parent);
 
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+        return parent.getFirstChild() == propAccess;
+
       case IF:
       case WHILE:
       case DO:
@@ -4036,6 +4040,7 @@ public final class NodeUtil {
       case AND:
       case OR:
       case COALESCE:
+      case OPTCHAIN_GETPROP:
         return true;
 
       case NE:

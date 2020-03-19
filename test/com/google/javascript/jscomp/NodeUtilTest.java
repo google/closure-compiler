@@ -310,6 +310,38 @@ public final class NodeUtilTest {
     }
   }
 
+  @RunWith(JUnit4.class)
+  public static final class IsPropertyTestTests {
+
+    @Test
+    public void optionalChainGetPropIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node getProp = parseExpr("x.y?.z");
+      assertThat(NodeUtil.isPropertyTest(compiler, getProp.getFirstChild())).isTrue();
+    }
+
+    @Test
+    public void optionalChainGetElemIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node getElem = parseExpr("x.y?.[z]");
+      assertThat(NodeUtil.isPropertyTest(compiler, getElem.getFirstChild())).isTrue();
+    }
+
+    @Test
+    public void optionalChainCallIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node call = parseExpr("x.y?.(z)");
+      assertThat(NodeUtil.isPropertyTest(compiler, call.getFirstChild())).isTrue();
+    }
+
+    @Test
+    public void optionalChainNonStartOfChainIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node getProp = parseExpr("x.y?.z.foo.bar");
+      assertThat(NodeUtil.isPropertyTest(compiler, getProp.getFirstChild())).isTrue();
+    }
+  }
+
   /**
    * A nested class to allow the `Enclosed` runner to run these tests since it doesn't run tests in
    * the outer class.
