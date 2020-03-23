@@ -119,6 +119,13 @@ Intl.NumberFormat.supportedLocalesOf = function(locales, opt_options) {};
 Intl.NumberFormat.prototype.format = function(num) {};
 
 /**
+ * @param {number} num
+ * @return {!Array<{type: string, value: string}>}
+ * @see http://www.ecma-international.org/ecma-402/#sec-intl.numberformat.prototype.formattoparts
+ */
+Intl.NumberFormat.prototype.formatToParts = function(num) {};
+
+/**
  * @return {{locale: string, numberingSystem: string, style: string,
  *     currency: (string|undefined), currencyDisplay: (string|undefined),
  *     minimumIntegerDigits: number, minimumFractionDigits: number,
