@@ -579,7 +579,7 @@ public class ErrorToFixMapperTest {
             "goog.require('a');",
             "goog.forwardDeclare('e');",
             useInCode("a", "b"),
-            useInType("c", "d")),
+            useInType("c", "d", "e", "f")),
         fileWithImports(
             "goog.forwardDeclare('e');",
             "goog.forwardDeclare('f');",
@@ -588,7 +588,7 @@ public class ErrorToFixMapperTest {
             "goog.requireType('c');",
             "goog.requireType('d');",
             useInCode("a", "b"),
-            useInType("c", "d")));
+            useInType("c", "d", "e", "f")));
   }
 
   @Test
@@ -603,7 +603,7 @@ public class ErrorToFixMapperTest {
             "const {c} = goog.requireType('c');",
             "goog.forwardDeclare('g');",
             useInCode("a", "d", "f"),
-            useInType("b", "c", "e")),
+            useInType("b", "c", "e", "g")),
         fileWithImports(
             "const e = goog.requireType('e');",
             "const f = goog.require('f');",
@@ -613,7 +613,7 @@ public class ErrorToFixMapperTest {
             "goog.require('b');",
             "goog.requireType('a');",
             useInCode("a", "d", "f"),
-            useInType("b", "c", "e")));
+            useInType("b", "c", "e", "g")));
   }
 
   @Test
@@ -896,14 +896,14 @@ public class ErrorToFixMapperTest {
             "goog.forwardDeclare('c');",
             "goog.forwardDeclare('d');",
             useInCode("a", "b"),
-            useInType("c")),
+            useInType("c", "d")),
         fileWithImports(
             "goog.forwardDeclare('d');",
             "goog.require('a');",
             "goog.require('b');",
             "goog.requireType('c');",
             useInCode("a", "b"),
-            useInType("c")));
+            useInType("c", "d")));
   }
 
   @Test

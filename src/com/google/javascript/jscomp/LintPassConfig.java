@@ -20,6 +20,7 @@ import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
+import com.google.javascript.jscomp.lint.CheckExtraRequires;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
@@ -84,6 +85,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                           new CheckDuplicateCase(compiler),
                           new CheckEmptyStatements(compiler),
                           new CheckEnums(compiler),
+                          new CheckExtraRequires(compiler),
                           new CheckJSDocStyle(compiler),
                           new CheckJSDoc(compiler),
                           new CheckMissingSemicolon(compiler),

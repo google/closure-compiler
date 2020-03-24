@@ -41,6 +41,13 @@ import javax.annotation.Nullable;
  * Walks the AST looking for usages of qualified names, and 'goog.require's of those names. Then,
  * reconciles the two lists, and reports warning for any discrepancies.
  *
+ * <p>This pass is deprecated, and it's functionality is being moved to other passes, such as:
+ *
+ * <ul>
+ *   <li>The {@link com.google.javascript.jscomp.lint.CheckExtraRequires} pass for checking extra
+ *       requires.
+ * </ul>
+ *
  * <p>The rules on when a warning is reported are:
  *
  * <ul>
@@ -50,8 +57,6 @@ import javax.annotation.Nullable;
  *       (missingRequires check fails if it's not there)
  *   <li>Type is referenced in other JsDoc (@type etc) → goog.require is optional (don't warn,
  *       regardless of if it is there)
- *   <li>Type is not referenced at all → goog.require is forbidden (extraRequires check fails if it
- *       is there)
  * </ul>
  */
 public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTraversal.Callback {
@@ -98,10 +103,6 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   // TODO(tbreisacher): Remove this and just use MISSING_REQUIRE_WARNING.
   public static final DiagnosticType MISSING_REQUIRE_STRICT_WARNING =
       DiagnosticType.disabled("JSC_MISSING_REQUIRE_STRICT_WARNING", "missing require: ''{0}''");
-
-  public static final DiagnosticType EXTRA_REQUIRE_WARNING =
-      DiagnosticType.disabled(
-          "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}'' is never referenced in this file");
 
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
       ImmutableSet.of(
@@ -303,16 +304,6 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
         }
       }
     }
-
-    // For every goog.require, check that there is a usage (in either usages or weakUsages)
-    // and warn if there is not.
-    for (Map.Entry<String, Node> entry : requires.entrySet()) {
-      String require = entry.getKey();
-      Node call = entry.getValue();
-      if (!usages.containsKey(require) && !weakUsages.contains(require)) {
-        reportExtraRequireWarning(call, require);
-      }
-    }
   }
 
   /** Returns true if the given namespace is not satisfied by any {@code goog.provide}. */
@@ -364,20 +355,6 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
       }
     }
     return !providedByRequires && !providedByConstructors;
-  }
-
-  private void reportExtraRequireWarning(Node call, String require) {
-    if (DEFAULT_EXTRA_NAMESPACES.contains(require)) {
-      return;
-    }
-    JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(call);
-    if (jsDoc != null && jsDoc.getSuppressions().contains("extraRequire")) {
-      // There is a @suppress {extraRequire} on the call node or its enclosing statement.
-      // This is one of the acceptable places for a @suppress, per
-      // https://github.com/google/closure-compiler/wiki/@suppress-annotations
-      return;
-    }
-    compiler.report(JSError.make(call, EXTRA_REQUIRE_WARNING, require));
   }
 
   /**

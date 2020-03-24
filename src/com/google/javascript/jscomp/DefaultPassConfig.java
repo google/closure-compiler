@@ -50,6 +50,7 @@ import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckEs6ModuleFileStructure;
 import com.google.javascript.jscomp.lint.CheckEs6Modules;
+import com.google.javascript.jscomp.lint.CheckExtraRequires;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
@@ -284,10 +285,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequiresAndProvidesSorted);
     }
 
+    if (options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
+      checks.add(extraRequires);
+    }
+
     if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
-        || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)
-        || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
-      checks.add(checkRequires);
+        || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)) {
+      checks.add(missingRequires);
     }
 
     checks.add(checkVariableReferences);
@@ -1167,10 +1171,18 @@ public final class DefaultPassConfig extends PassConfig {
             + "collectDefines which has side effects.");
   }
 
-  /** Checks that all constructed classes are goog.require()d. */
-  private final PassFactory checkRequires =
+  /** Checks that all goog.require()s are used. */
+  private final PassFactory extraRequires =
       PassFactory.builderForHotSwap()
-          .setName("checkMissingAndExtraRequires")
+          .setName("checkExtraRequires")
+          .setFeatureSet(ES_NEXT)
+          .setInternalFactory((compiler) -> new CheckExtraRequires(compiler))
+          .build();
+
+  /** Checks that all constructed classes are goog.require()d. */
+  private final PassFactory missingRequires =
+      PassFactory.builderForHotSwap()
+          .setName("checkMissingRequires")
           .setFeatureSet(ES_NEXT)
           .setInternalFactory(
               (compiler) ->

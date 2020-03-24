@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckEs6ModuleFileStructure;
 import com.google.javascript.jscomp.lint.CheckEs6Modules;
+import com.google.javascript.jscomp.lint.CheckExtraRequires;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
@@ -450,11 +451,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "legacyGoogScopeRequire",
           CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
+          CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "extraRequire", CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
   @GwtIncompatible("java.util.regex")
   public static final DiagnosticGroup MISSING_GETCSSNAME =
