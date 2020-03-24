@@ -95,7 +95,7 @@ public class DiagnosticGroups {
   }
 
   /** Get the registered diagnostic groups, indexed by name. */
-  public static Map<String, DiagnosticGroup> getRegisteredGroups() {
+  public static ImmutableMap<String, DiagnosticGroup> getRegisteredGroups() {
     return ImmutableMap.copyOf(groupsByName);
   }
 
