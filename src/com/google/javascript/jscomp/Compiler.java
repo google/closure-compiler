@@ -207,6 +207,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** The externs created from the exports.  */
   private String externExports = null;
 
+  private UniqueIdSupplier uniqueIdSupplier = new UniqueIdSupplier();
+
   /**
    * Ids for function inlining so that each declared name remains
    * unique.
@@ -1252,21 +1254,32 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     featureSet = fs;
   }
 
-  /**
-   * Creates a new id for making unique names.
-   */
+  @Override
+  UniqueIdSupplier getUniqueIdSupplier() {
+    return this.uniqueIdSupplier;
+  }
+
+  /** Creates a new id for making unique names. */
+  @Deprecated
   private int nextUniqueNameId() {
     return uniqueNameId++;
   }
 
-  /**
-   * Resets the unique name id counter
-   */
+  /** Resets the unique name id counter */
+  @Deprecated
   @VisibleForTesting
   void resetUniqueNameId() {
     uniqueNameId = 0;
   }
 
+  /**
+   * Legacy supplier for getting unique names.
+   *
+   * @deprecated This is deprecated because this supplier fails to generate unique Ids across input
+   *     files when used for tagged template literal transpilation. Kindly use the new {@code
+   *     UniqueIdSupplier} instead.
+   */
+  @Deprecated
   @Override
   Supplier<String> getUniqueNameIdSupplier() {
     return () -> String.valueOf(Compiler.this.nextUniqueNameId());
@@ -3507,6 +3520,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final ImmutableList<JSError> warnings;
     private final JSModuleGraph moduleGraph;
     private final int uniqueNameId;
+    private final UniqueIdSupplier uniqueIdSupplier;
     private final Set<String> exportedNames;
     private final Map<String, Integer> cssNames;
     private final VariableMap variableMap;
@@ -3542,6 +3556,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.warnings = compiler.errorManager.getWarnings();
       this.moduleGraph = compiler.moduleGraph;
       this.uniqueNameId = compiler.uniqueNameId;
+      this.uniqueIdSupplier = compiler.uniqueIdSupplier;
       this.exportedNames = compiler.exportedNames;
       this.cssNames = compiler.cssNames;
       this.variableMap = compiler.variableMap;
@@ -3639,6 +3654,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externProperties = compilerState.externProperties;
     moduleGraph = compilerState.moduleGraph;
     uniqueNameId = compilerState.uniqueNameId;
+    uniqueIdSupplier = compilerState.uniqueIdSupplier;
     exportedNames.clear();
     exportedNames.addAll(compilerState.exportedNames);
     cssNames = compilerState.cssNames;

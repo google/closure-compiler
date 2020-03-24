@@ -233,34 +233,72 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
   }
 
+  /**
+   * Runs the tagged template literal test by replacing the generic name `TAGGED_TEMPLATE_TMP_VAR`
+   * in the expected test output with the calculated hashString based on the test's input file.
+   */
+  private void taggedTemplateLiteral_TestRunner_withExterns(
+      Externs externs, String input, String expected) {
+
+    SourceFile inputFile = SourceFile.fromCode("tmp", input);
+    int fileHashCode = inputFile.getOriginalPath().hashCode();
+    String fileHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
+    expected = expected.replace("TAGGED_TEMPLATE_TMP_VAR", "$jscomp$templatelit$" + fileHashString);
+
+    Sources sources = srcs(inputFile);
+    Expected exp = expected(expected);
+
+    test(externs, sources, exp);
+  }
+
+  private void taggedTemplateLiteral_TestRunner(String input, String expected) {
+    SourceFile inputFile = SourceFile.fromCode("tmp", input);
+    int fileHashCode = inputFile.getOriginalPath().hashCode();
+    String fileHashString = (fileHashCode < 0) ? ("m" + -fileHashCode) : ("" + fileHashCode);
+    expected = expected.replace("TAGGED_TEMPLATE_TMP_VAR", "$jscomp$templatelit$" + fileHashString);
+
+    Sources sources = srcs(inputFile);
+    Expected exp = expected(expected);
+    test(sources, exp);
+  }
+
+  /**
+   * Tests that the tagged template literals get transpiled correctly.
+   *
+   * <p>The vars created during tagged template literal transpilation have have a filePath based
+   * uniqueID in them. This uniqueID is obfucated by using a generic name `TAGGED_TEMPLATE_TMP_VAR`
+   * here that gets replaced by the uniqueID beore test execution.
+   */
   @Test
   public void testTaggedTemplateLiteral() {
-    test(
+
+    taggedTemplateLiteral_TestRunner(
         "tag``",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['']);",
-            "tag($jscomp$templatelit$0);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0);"));
 
-    test(
+    taggedTemplateLiteral_TestRunner(
         "tag`${hello} world`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['', '"
-                + " world']);",
-            "tag($jscomp$templatelit$0, hello);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['', ' world']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0, hello);"));
 
-    test(
+    taggedTemplateLiteral_TestRunner(
         "tag`${hello} ${world}`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['', '"
-                + " ', '']);",
-            "tag($jscomp$templatelit$0, hello, world);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 = ",
+            "    $jscomp.createTemplateTagFirstArg(['', ' ', '']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0, hello, world);"));
 
-    test(
+    taggedTemplateLiteral_TestRunner(
         "tag`\"`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 ="
-                + " $jscomp.createTemplateTagFirstArg(['\"']);",
-            "tag($jscomp$templatelit$0);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['\"']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0);"));
 
     // The cooked string and the raw string are different.
     // Note that this test is tricky to read, because any escape sequences will be escaped twice.
@@ -274,50 +312,49 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
     //     \\\t      ->   \<tab character>   -> <tab character> (length: 1)
     //     \\\\t     ->   \\t                -> \t              (length: 2)
     //
-    test(
+    taggedTemplateLiteral_TestRunner(
         "tag`a\\tb`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 ="
-                + " $jscomp.createTemplateTagFirstArgWithRaw(['a\\tb'],['a\\\\tb']);",
-            "tag($jscomp$templatelit$0);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArgWithRaw(['a\\tb'],['a\\\\tb']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0);"));
 
-    test(
+    taggedTemplateLiteral_TestRunner(
         "tag()`${hello} world`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 = $jscomp.createTemplateTagFirstArg(['', '"
-                + " world']);",
-            "tag()($jscomp$templatelit$0, hello);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 = ",
+            "    $jscomp.createTemplateTagFirstArg(['', ' world']);",
+            "tag()(TAGGED_TEMPLATE_TMP_VAR$0, hello);"));
 
-    test(
+    taggedTemplateLiteral_TestRunner_withExterns(
         externs("var a = {}; a.b;"),
-        srcs("a.b`${hello} world`"),
-        expected(
-            lines(
-                "/** @noinline */ var $jscomp$templatelit$0 ="
-                    + " $jscomp.createTemplateTagFirstArg(['', ' world']);",
-                "a.b($jscomp$templatelit$0, hello);")));
+        "a.b`${hello} world`",
+        lines(
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['', ' world']);",
+            "a.b(TAGGED_TEMPLATE_TMP_VAR$0, hello);"));
 
     // https://github.com/google/closure-compiler/issues/1299
-    test(
+    taggedTemplateLiteral_TestRunner(
         "tag`<p class=\"foo\">${x}</p>`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 =",
-            "  $jscomp.createTemplateTagFirstArg(['<p class=\"foo\">','</p>']);",
-            "tag($jscomp$templatelit$0, x);"));
-    test(
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR" + "$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['<p class=\"foo\">','</p>']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0, x);"));
+    taggedTemplateLiteral_TestRunner(
         "tag`<p class='foo'>${x}</p>`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 =",
-            "  $jscomp.createTemplateTagFirstArg(['<p class=\\'foo\\'>','</p>']);",
-            "tag($jscomp$templatelit$0, x);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR" + "$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['<p class=\\'foo\\'>','</p>']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0, x);"));
 
     // invalid escape sequences result in undefined cooked string
-    test(
+    taggedTemplateLiteral_TestRunner(
         "tag`\\unicode`",
         lines(
-            "/** @noinline */ var $jscomp$templatelit$0 =",
-            "  $jscomp.createTemplateTagFirstArgWithRaw([void 0],['\\\\unicode']);",
-            "tag($jscomp$templatelit$0);"));
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR" + "$0 =",
+            "    $jscomp.createTemplateTagFirstArgWithRaw([void 0],['\\\\unicode']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0);"));
   }
 
   @Test

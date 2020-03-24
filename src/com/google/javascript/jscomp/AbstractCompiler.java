@@ -305,8 +305,20 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   }
 
   /**
-   * Generates unique ids.
+   * Generates unique String Ids when requested via a compiler instance.
+   *
+   * <p>This supplier provides Ids that are deterministic and unique across all input files given to
+   * the compiler. The generated ID format is: uniqueId = "fileHashCode$counterForThisFile"
    */
+  abstract UniqueIdSupplier getUniqueIdSupplier();
+
+  /**
+   * Generates unique ids.
+   *
+   * @deprecated because the generated names during transpilation are not unique across all input
+   *     files. Use the new supplier by calling {@code getUniqueIdSupplier()}.
+   */
+  @Deprecated
   abstract Supplier<String> getUniqueNameIdSupplier();
 
   /**

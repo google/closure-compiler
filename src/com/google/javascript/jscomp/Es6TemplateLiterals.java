@@ -150,12 +150,12 @@ class Es6TemplateLiterals {
     jsDocInfoBuilder.recordNoInline();
     JSDocInfo info = jsDocInfoBuilder.build();
 
+    CompilerInput input = t.getInput();
+    String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(input);
     // var tagFnFirstArg = $jscomp.createTemplateTagFirstArg...
     Node tagFnFirstArgDeclaration =
         astFactory
-            .createSingleVarNameDeclaration(
-                TEMPLATELIT_VAR + compiler.getUniqueNameIdSupplier().get(),
-                callTemplateTagArgCreator)
+            .createSingleVarNameDeclaration(TEMPLATELIT_VAR + uniqueId, callTemplateTagArgCreator)
             .setJSDocInfo(info)
             .useSourceInfoIfMissingFromForTree(n);
     Node script = NodeUtil.getEnclosingScript(n);
