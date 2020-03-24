@@ -101,7 +101,8 @@ public class AstAnalyzer {
    * @param callNode - function call node
    */
   boolean functionCallHasSideEffects(Node callNode) {
-    checkState(callNode.isCall() || callNode.isTaggedTemplateLit(), callNode);
+    checkState(
+        callNode.isCall() || callNode.isTaggedTemplateLit() || callNode.isOptChainCall(), callNode);
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -119,7 +120,7 @@ public class AstAnalyzer {
       if (BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS.contains(name)) {
         return false;
       }
-    } else if (callee.isGetProp()) {
+    } else if (callee.isGetProp() || callee.isOptChainGetProp()) {
       if (callNode.hasOneChild()
           && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(callee.getLastChild().getString())) {
         return false;
@@ -330,6 +331,7 @@ public class AstAnalyzer {
         return true;
 
       case CALL:
+      case OPTCHAIN_CALL:
         // calls to functions that have no side effects have the no
         // side effect property set.
         if (!functionCallHasSideEffects(n)) {
@@ -387,12 +389,16 @@ public class AstAnalyzer {
         break;
 
       case GETELEM:
-        // Since we can't see what property is accessed we cannot tell whether obj[someProp] will
+      case OPTCHAIN_GETELEM:
+        // Since we can't see what property is accessed we cannot tell whether
+        // obj[someProp]/obj?.[someProp] will
         // trigger a getter or setter, and thus could have side effects.
         // We will assume it does not. This introduces some risk of code breakage, but the code
-        // size cost of assuming all GETELEM nodes have side effects is completely unacceptable.
+        // size cost of assuming all GETELEM/OPTCHAIN_GETELEM nodes have side effects is completely
+        // unacceptable.
         break;
       case GETPROP:
+      case OPTCHAIN_GETPROP:
         if (getPropertyKind(n.getLastChild().getString()).hasGetterOrSetter()) {
           // TODO(b/135640150): Use the parent nodes to determine whether this is a get or set.
           return true;
@@ -507,6 +513,7 @@ public class AstAnalyzer {
       case FOR_OF: // assigns to a loop LHS, runs an iterator
       case FOR_AWAIT_OF: // assigns to a loop LHS, runs an iterator, async operations.
         return true;
+      case OPTCHAIN_CALL:
       case CALL:
       case TAGGED_TEMPLATELIT:
         return functionCallHasSideEffects(n);
@@ -533,6 +540,7 @@ public class AstAnalyzer {
         }
         break;
       case GETPROP:
+      case OPTCHAIN_GETPROP:
         return getPropertyKind(n.getLastChild().getString()).hasGetterOrSetter();
 
       default:
