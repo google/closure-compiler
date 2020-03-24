@@ -117,7 +117,12 @@ public final class CheckConformance implements Callback, CompilerPass {
 
   private static final ImmutableSet<String> EXTENDABLE_FIELDS =
       ImmutableSet.of(
-          "extends", "whitelist", "whitelist_regexp", "only_apply_to", "only_apply_to_regexp");
+          "extends",
+          "only_apply_to",
+          "only_apply_to_regexp",
+          "whitelist",
+          "whitelist_regexp",
+          "value");
 
   /**
    * Gets requirements from all configs. Merges whitelists of requirements with 'extends' equal to
@@ -163,11 +168,18 @@ public final class CheckConformance implements Callback, CompilerPass {
                   "extending rules allow only " + EXTENDABLE_FIELDS);
             }
           }
+          if (requirement.getValueCount() > 0 && !existing.getAllowExtendingValue()) {
+            reportInvalidRequirement(
+                compiler,
+                requirement,
+                "extending rule may not specify 'value' if base rule does not allow it");
+          }
           existing.addAllWhitelist(requirement.getWhitelistList());
           existing.addAllWhitelistRegexp(requirement.getWhitelistRegexpList());
           existing.addAllOnlyApplyTo(requirement.getOnlyApplyToList());
           existing.addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList());
           existing.addAllWhitelistEntry(requirement.getWhitelistEntryList());
+          existing.addAllValue(requirement.getValueList());
         }
       }
     }

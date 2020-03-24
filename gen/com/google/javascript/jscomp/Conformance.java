@@ -38,54 +38,47 @@ public final class Conformance {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\021conformance.proto\022\006jscomp\"=\n\021Conforman"
-          + "ceConfig\022(\n\013requirement\030\001 \003(\0132\023.jscomp.R"
-          + "equirement\"\326\t\n\013Requirement\022\025\n\rerror_mess"
-          + "age\030\001 \001(\t\022\021\n\twhitelist\030\002 \003(\t\022\030\n\020whitelis"
-          + "t_regexp\030\003 \003(\t\022;\n\017whitelist_entry\030\016 \003(\0132"
-          + "\".jscomp.Requirement.WhitelistEntry\022\025\n\ro"
-          + "nly_apply_to\030\004 \003(\t\022\034\n\024only_apply_to_rege"
-          + "xp\030\005 \003(\t\022&\n\004type\030\006 \001(\0162\030.jscomp.Requirem"
-          + "ent.Type\022\r\n\005value\030\007 \003(\t\022O\n\026type_matching"
-          + "_strategy\030\r \001(\0162(.jscomp.Requirement.Typ",
-      "eMatchingStrategy:\005LOOSE\022\022\n\njava_class\030\010"
-          + " \001(\t\022\017\n\007rule_id\030\t \001(\t\022\017\n\007extends\030\n \001(\t\022*"
-          + "\n\034report_loose_type_violations\030\013 \001(\010:\004tr"
-          + "ue\0227\n\010severity\030\014 \001(\0162\034.jscomp.Requiremen"
-          + "t.Severity:\007WARNING\032\341\001\n\016WhitelistEntry\0229"
-          + "\n\006reason\030\001 \001(\0162).jscomp.Requirement.Whit"
-          + "elistEntry.Reason\022\016\n\006prefix\030\002 \003(\t\022\016\n\006reg"
-          + "exp\030\003 \003(\t\022\023\n\013explanation\030\004 \001(\t\022\017\n\007commen"
-          + "t\030\005 \003(\t\"N\n\006Reason\022\017\n\013UNSPECIFIED\020\000\022\n\n\006LE"
-          + "GACY\020\001\022\020\n\014OUT_OF_SCOPE\020\002\022\025\n\021MANUALLY_REV",
-      "IEWED\020\003\"\347\002\n\004Type\022\n\n\006CUSTOM\020\001\022\025\n\021BANNED_D"
-          + "EPENDENCY\020\002\022\033\n\027BANNED_DEPENDENCY_REGEX\020\016"
-          + "\022\017\n\013BANNED_NAME\020\003\022\023\n\017BANNED_PROPERTY\020\004\022\030"
-          + "\n\024BANNED_PROPERTY_READ\020\005\022\031\n\025BANNED_PROPE"
-          + "RTY_WRITE\020\006\022\030\n\024RESTRICTED_NAME_CALL\020\007\022\032\n"
-          + "\026RESTRICTED_METHOD_CALL\020\010\022\027\n\023BANNED_CODE"
-          + "_PATTERN\020\t\022\030\n\024BANNED_PROPERTY_CALL\020\n\022&\n\""
-          + "BANNED_PROPERTY_NON_CONSTANT_WRITE\020\013\022\024\n\020"
-          + "BANNED_NAME_CALL\020\014\022\035\n\031RESTRICTED_PROPERT"
-          + "Y_WRITE\020\r\"_\n\024TypeMatchingStrategy\022\013\n\007UNK",
-      "NOWN\020\000\022\t\n\005LOOSE\020\001\022\026\n\022STRICT_NULLABILITY\020"
-          + "\002\022\014\n\010SUBTYPES\020\003\022\t\n\005EXACT\020\004\"3\n\010Severity\022\017"
-          + "\n\013UNSPECIFIED\020\000\022\013\n\007WARNING\020\001\022\t\n\005ERROR\020\002*"
-          + "\n\010\300\204=\020\200\200\200\200\002B \n\034com.google.javascript.jsc"
-          + "ompP\001"
+      "\n\021conformance.proto\022\006jscomp\"=\n\021Conforman" +
+      "ceConfig\022(\n\013requirement\030\001 \003(\0132\023.jscomp.R" +
+      "equirement\"\222\n\n\013Requirement\022\025\n\rerror_mess" +
+      "age\030\001 \001(\t\022\021\n\twhitelist\030\002 \003(\t\022\030\n\020whitelis" +
+      "t_regexp\030\003 \003(\t\022;\n\017whitelist_entry\030\016 \003(\0132" +
+      "\".jscomp.Requirement.WhitelistEntry\022\025\n\ro" +
+      "nly_apply_to\030\004 \003(\t\022\034\n\024only_apply_to_rege" +
+      "xp\030\005 \003(\t\022&\n\004type\030\006 \001(\0162\030.jscomp.Requirem" +
+      "ent.Type\022\r\n\005value\030\007 \003(\t\022\035\n\025allow_extendi" +
+      "ng_value\030\017 \001(\010\022O\n\026type_matching_strategy" +
+      "\030\r \001(\0162(.jscomp.Requirement.TypeMatching" +
+      "Strategy:\005LOOSE\022\022\n\njava_class\030\010 \001(\t\022\017\n\007r" +
+      "ule_id\030\t \001(\t\022\017\n\007extends\030\n \001(\t\022*\n\034report_" +
+      "loose_type_violations\030\013 \001(\010:\004true\0227\n\010sev" +
+      "erity\030\014 \001(\0162\034.jscomp.Requirement.Severit" +
+      "y:\007WARNING\032\376\001\n\016WhitelistEntry\0229\n\006reason\030" +
+      "\001 \001(\0162).jscomp.Requirement.WhitelistEntr" +
+      "y.Reason\022\016\n\006prefix\030\002 \003(\t\022\016\n\006regexp\030\003 \003(\t" +
+      "\022\023\n\013explanation\030\004 \001(\t\022\017\n\007comment\030\005 \003(\t\022\033" +
+      "\n\023automatically_prune\030\006 \001(\010\"N\n\006Reason\022\017\n" +
+      "\013UNSPECIFIED\020\000\022\n\n\006LEGACY\020\001\022\020\n\014OUT_OF_SCO" +
+      "PE\020\002\022\025\n\021MANUALLY_REVIEWED\020\003\"\347\002\n\004Type\022\n\n\006" +
+      "CUSTOM\020\001\022\025\n\021BANNED_DEPENDENCY\020\002\022\033\n\027BANNE" +
+      "D_DEPENDENCY_REGEX\020\016\022\017\n\013BANNED_NAME\020\003\022\023\n" +
+      "\017BANNED_PROPERTY\020\004\022\030\n\024BANNED_PROPERTY_RE" +
+      "AD\020\005\022\031\n\025BANNED_PROPERTY_WRITE\020\006\022\030\n\024RESTR" +
+      "ICTED_NAME_CALL\020\007\022\032\n\026RESTRICTED_METHOD_C" +
+      "ALL\020\010\022\027\n\023BANNED_CODE_PATTERN\020\t\022\030\n\024BANNED" +
+      "_PROPERTY_CALL\020\n\022&\n\"BANNED_PROPERTY_NON_" +
+      "CONSTANT_WRITE\020\013\022\024\n\020BANNED_NAME_CALL\020\014\022\035" +
+      "\n\031RESTRICTED_PROPERTY_WRITE\020\r\"_\n\024TypeMat" +
+      "chingStrategy\022\013\n\007UNKNOWN\020\000\022\t\n\005LOOSE\020\001\022\026\n" +
+      "\022STRICT_NULLABILITY\020\002\022\014\n\010SUBTYPES\020\003\022\t\n\005E" +
+      "XACT\020\004\"3\n\010Severity\022\017\n\013UNSPECIFIED\020\000\022\013\n\007W" +
+      "ARNING\020\001\022\t\n\005ERROR\020\002*\n\010\300\204=\020\200\200\200\200\002B \n\034com.g" +
+      "oogle.javascript.jscompP\001"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_jscomp_ConformanceConfig_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_jscomp_ConformanceConfig_fieldAccessorTable = new
@@ -97,13 +90,13 @@ public final class Conformance {
     internal_static_jscomp_Requirement_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_jscomp_Requirement_descriptor,
-        new java.lang.String[] { "ErrorMessage", "Whitelist", "WhitelistRegexp", "WhitelistEntry", "OnlyApplyTo", "OnlyApplyToRegexp", "Type", "Value", "TypeMatchingStrategy", "JavaClass", "RuleId", "Extends", "ReportLooseTypeViolations", "Severity", });
+        new java.lang.String[] { "ErrorMessage", "Whitelist", "WhitelistRegexp", "WhitelistEntry", "OnlyApplyTo", "OnlyApplyToRegexp", "Type", "Value", "AllowExtendingValue", "TypeMatchingStrategy", "JavaClass", "RuleId", "Extends", "ReportLooseTypeViolations", "Severity", });
     internal_static_jscomp_Requirement_WhitelistEntry_descriptor =
       internal_static_jscomp_Requirement_descriptor.getNestedTypes().get(0);
     internal_static_jscomp_Requirement_WhitelistEntry_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_jscomp_Requirement_WhitelistEntry_descriptor,
-        new java.lang.String[] { "Reason", "Prefix", "Regexp", "Explanation", "Comment", });
+        new java.lang.String[] { "Reason", "Prefix", "Regexp", "Explanation", "Comment", "AutomaticallyPrune", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

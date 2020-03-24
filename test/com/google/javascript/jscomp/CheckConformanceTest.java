@@ -1783,6 +1783,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCustomBanUnknownProp_mergeConfigWithValue() {
+    configuration =
+        lines(
+            config(
+                rule("BanUnknownTypedClassPropsReferences"),
+                "My message",
+                "  rule_id: 'x'",
+                "  allow_extending_value: true"),
+            "requirement: {",
+            "  extends: 'x'",
+            "  value: 'F'",
+            "}",
+            "");
+
+    testNoWarning(
+        lines(
+            "/** @typedef {?} */ var Unk;",
+            "/** @constructor */ function F() { /** @type {?Unk} */ this.prop = null; };",
+            "F.prototype.method = function() { alert(this.prop); }"));
+  }
+
+  @Test
   public void testCustomBanUnknownInterfaceProp1() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
