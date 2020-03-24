@@ -584,7 +584,8 @@ public final class SuggestedFix {
      *     considers the comment to belong to the next argument.
      */
     public Builder deleteArgument(Node n, int position) {
-      checkArgument(n.isCall(), "deleteArgument is only applicable to function call nodes.");
+      checkArgument(
+          n.isCall() || n.isNew(), "deleteArgument is only applicable to function call nodes.");
 
       // A CALL node's first child is the name of the function being called, and subsequent children
       // are the arguments being passed to that function.
