@@ -1687,6 +1687,12 @@ var RTCIceConnectionState;
 var RTCIceGatheringState;
 
 /**
+ * @see https://www.w3.org/TR/webrtc/#rtcpeerconnectionstate-enum
+ * @typedef {string}
+ */
+var RTCPeerConnectionState;
+
+/**
  * @param {string} type
  * @param {!Object} eventInitDict
  * @constructor
@@ -2201,6 +2207,12 @@ RTCPeerConnection.prototype.iceGatheringState;
 RTCPeerConnection.prototype.iceConnectionState;
 
 /**
+ * @type {!RTCPeerConnectionState}
+ * Read only.
+ */
+RTCPeerConnection.prototype.connectionState;
+
+/**
  * @return {!Array<!MediaStream>}
  */
 RTCPeerConnection.prototype.getLocalStreams = function() {};
@@ -2344,3 +2356,8 @@ RTCPeerConnection.prototype.oniceconnectionstatechange;
  * @type {?function(!RTCDataChannelEvent)}
  */
 RTCPeerConnection.prototype.ondatachannel;
+
+/**
+ * @type {?function(!Event)}
+ */
+RTCPeerConnection.prototype.onconnectionstatechange;
