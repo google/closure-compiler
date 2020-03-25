@@ -615,6 +615,30 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void optChainGetPropInvalidWithNoStartOfChain() {
+    Node innerGetProp = IR.continueOptChainGetprop(IR.name("expr"), IR.string("prop1"));
+    Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+
+    expectInvalid(outterGetProp, Check.STATEMENT);
+  }
+
+  @Test
+  public void optChainGetElemInvalidWithNoStartOfChain() {
+    Node innerGetElem = IR.continueOptChainGetelem(IR.name("expr"), IR.name("prop1"));
+    Node outterGetElem = IR.continueOptChainGetelem(innerGetElem, IR.name("prop2"));
+
+    expectInvalid(outterGetElem, Check.STATEMENT);
+  }
+
+  @Test
+  public void optChainCallInvalidWithNoStartOfChain() {
+    Node innerCall = IR.continueOptChainCall(IR.name("f"), IR.name("arg1"));
+    Node outterCall = IR.continueOptChainCall(innerCall, IR.name("arg2"));
+
+    expectInvalid(outterCall, Check.STATEMENT);
+  }
+
+  @Test
   public void testSuperInvalidInNonMemberFunction() {
     invalid(
         lines(

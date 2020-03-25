@@ -1048,6 +1048,7 @@ public final class AstValidator implements CompilerPass {
     for (Node argument = callee.getNext(); argument != null; argument = argument.getNext()) {
       validatePseudoExpression(argument, Token.ITER_SPREAD);
     }
+    validateFirstNodeOfOptChain(node);
   }
 
   @SuppressWarnings("RhinoNodeGetGrandparent")
@@ -1524,6 +1525,7 @@ public final class AstValidator implements CompilerPass {
     validateChildCount(node, 2);
     validatePropertyReferenceTarget(node.getFirstChild());
     validateExpression(node.getLastChild());
+    validateFirstNodeOfOptChain(node);
   }
 
   private void validateGetProp(Node n) {
@@ -1543,6 +1545,7 @@ public final class AstValidator implements CompilerPass {
     Node prop = node.getLastChild();
     validateNodeType(Token.STRING, prop);
     validateNonEmptyString(prop);
+    validateFirstNodeOfOptChain(node);
   }
 
   private void validatePropertyReferenceTarget(Node objectNode) {
@@ -1892,6 +1895,18 @@ public final class AstValidator implements CompilerPass {
 
   private void violation(String message, Node n) {
     violationHandler.handleViolation(message, n);
+  }
+
+  // the first node of an opt chain must be marked with Prop.START_OF_OPT_CHAIN
+  private void validateFirstNodeOfOptChain(Node n) {
+    if (!NodeUtil.isOptChainNode(n.getFirstChild())) {
+      // if the first child of an opt chain node is not an opt chain node then it is the start of an
+      // opt chain
+      if (!n.isOptionalChainStart()) {
+        violation(
+            "Start of optional chain node " + n.getToken() + " is not marked as the start.", n);
+      }
+    }
   }
 
   private void validateNodeType(Token type, Node n) {
