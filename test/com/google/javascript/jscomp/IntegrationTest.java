@@ -8107,6 +8107,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.STRICT_CHECK_TYPES, CheckLevel.WARNING));
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
     ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
     externsList.addAll(externs);
@@ -8126,7 +8127,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         lines(
             "const array = Array.of('1', '2', '3');",
-            "console.log(array[0] - array[1]);"),
+            "if (array[0] - 1) {}"),
         TypeValidator.INVALID_OPERAND_TYPE);
   }
 }
