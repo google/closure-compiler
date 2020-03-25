@@ -90,6 +90,21 @@ public final class CheckExtraRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testShadowedUnusedImport() {
+    // It would be nice to catch this, but currently the pass is name based and thus misses
+    // the fact that the import is unused.
+    testSame(
+        lines(
+            "goog.module('example');",
+            "",
+            "var Shadowed = goog.forwardDeclare('foo.Shadowed');",
+            "",
+            "function f(Shadowed) {",
+            "  alert(Shadowed);",
+            "}"));
+  }
+
+  @Test
   public void testFailForwardDeclare() {
     testError(
         lines(
