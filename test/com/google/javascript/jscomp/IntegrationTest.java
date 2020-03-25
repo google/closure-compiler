@@ -8101,4 +8101,32 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(options, "var x = 0; var y = 1; x ?? y", "0");
   }
+
+  @Test
+  public void testArrayOfType() {
+    CompilerOptions options = createCompilerOptions();
+    options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
+        DiagnosticGroups.STRICT_CHECK_TYPES, CheckLevel.WARNING));
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "es6.js",
+            lines(
+                "/**",
+                " * @param {...T} var_args",
+                " * @return {!Array<T>}",
+                " * @template T",
+                " */",
+                "Array.of = function(var_args) {};")));
+    externs = externsList.build();
+
+    test(
+        options,
+        lines(
+            "const array = Array.of('1', '2', '3');",
+            "console.log(array[0] - array[1]);"),
+        TypeValidator.INVALID_OPERAND_TYPE);
+  }
 }

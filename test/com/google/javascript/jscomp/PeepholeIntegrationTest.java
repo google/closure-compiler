@@ -48,7 +48,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeRemoveDeadCode(),
             new PeepholeFoldConstants(late, false /* useTypes */),
-            new PeepholeReplaceKnownMethods(late, false /* useTypes */));
+            new PeepholeReplaceKnownMethods(late, false /* useTypes */),
+            new PeepholeReplaceArrayOf());
 
     return peepholePass;
   }
