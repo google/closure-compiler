@@ -56,7 +56,7 @@ class PeepholeReplaceArrayOf extends AbstractPeepholeOptimization {
     return subtree;
   }
 
-  private strictfp Node replaceArrayOf(Node subtree) {
+  private Node replaceArrayOf(Node subtree) {
     subtree.removeFirstChild();
 
     Node arraylit = new Node(Token.ARRAYLIT);

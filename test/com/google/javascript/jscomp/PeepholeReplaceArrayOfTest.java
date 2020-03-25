@@ -73,4 +73,11 @@ public final class PeepholeReplaceArrayOfTest extends CompilerTestCase {
   public void testNoArgs() {
     test("x = Array.of()", "x = []");
   }
+
+  @Test
+  public void testNoChange() {
+    testSame("x = Array.of.apply(window, ['a', 'b', 'c'])");
+    testSame("x = ['a', 'b', 'c']");
+    testSame("x = [Array.of, 'a', 'b', 'c']");
+  }
 }
