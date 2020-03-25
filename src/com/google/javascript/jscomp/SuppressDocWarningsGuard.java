@@ -48,13 +48,17 @@ class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
               CheckLevel.OFF));
     }
 
-    // Hack: Allow "@suppress {missingRequire}" to mean
-    // "@suppress {strictMissingRequire}".
-    // TODO(tbreisacher): Delete this hack when strictMissingRequire is
-    // renamed to missingRequire.
+    // Hack: Allow "@suppress {missingRequire}" to also cover strictMissingRequire,
+    // stricterMissingRequire and stricterMissingRequireType.
+    // TODO(tjgq): Delete this when all of these checks are unified under `missingRequire`.
     suppressors.put(
         "missingRequire",
-        new DiagnosticGroupWarningsGuard(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.OFF));
+        new DiagnosticGroupWarningsGuard(
+            new DiagnosticGroup(
+                DiagnosticGroups.STRICT_MISSING_REQUIRE,
+                DiagnosticGroups.STRICTER_MISSING_REQUIRE,
+                DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE),
+            CheckLevel.OFF));
 
     // Hack: Allow "@suppress {missingProperties}" to mean
     // "@suppress {strictmissingProperties}".

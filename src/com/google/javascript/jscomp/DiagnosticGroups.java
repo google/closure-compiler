@@ -447,6 +447,14 @@ public class DiagnosticGroups {
           CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
           CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING);
 
+  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup(
+          "stricterMissingRequire", CheckMissingRequires.MISSING_REQUIRE);
+
+  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE_TYPE =
+      DiagnosticGroups.registerGroup(
+          "stricterMissingRequireType", CheckMissingRequires.MISSING_REQUIRE_TYPE);
+
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerGroup(
           "legacyGoogScopeRequire",

@@ -291,7 +291,12 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
         || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)) {
-      checks.add(missingRequires);
+      checks.add(missingAndExtraRequires);
+    }
+
+    if (options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE)
+        || options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE)) {
+      checks.add(checkMissingRequires);
     }
 
     checks.add(checkVariableReferences);
@@ -1151,6 +1156,12 @@ public final class DefaultPassConfig extends PassConfig {
 
     assertPassOrder(
         checks,
+        gatherModuleMetadataPass,
+        checkMissingRequires,
+        "Need to gather module information before checking for missing requires.");
+
+    assertPassOrder(
+        checks,
         j2clPass,
         TranspilationPasses.rewriteGenerators,
         "J2CL normalization should be done before generator re-writing.");
@@ -1180,14 +1191,22 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Checks that all constructed classes are goog.require()d. */
-  private final PassFactory missingRequires =
+  private final PassFactory missingAndExtraRequires =
       PassFactory.builderForHotSwap()
-          .setName("checkMissingRequires")
+          .setName("checkMissingAndExtraRequires")
           .setFeatureSet(ES_NEXT)
           .setInternalFactory(
               (compiler) ->
                   new CheckMissingAndExtraRequires(
                       compiler, CheckMissingAndExtraRequires.Mode.FULL_COMPILE))
+          .build();
+
+  private final PassFactory checkMissingRequires =
+      PassFactory.builder()
+          .setName("checkMissingRequires")
+          .setInternalFactory(
+              (compiler) -> new CheckMissingRequires(compiler, compiler.getModuleMetadataMap()))
+          .setFeatureSet(ES2019_MODULES)
           .build();
 
   /** Makes sure @constructor is paired with goog.provides(). */
