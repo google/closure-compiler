@@ -383,6 +383,16 @@ public class IR {
     return call;
   }
 
+  public static Node continueOptChainCall(Node target, Node ... args) {
+    Node call = new Node(Token.OPTCHAIN_CALL, target);
+    for (Node arg : args) {
+      checkState(mayBeExpression(arg) || arg.isSpread(), arg);
+      call.addChildToBack(arg);
+    }
+    call.setIsOptionalChainStart(false);
+    return call;
+  }
+
   public static Node newNode(Node target, Node ... args) {
     Node newcall = new Node(Token.NEW, target);
     for (Node arg : args) {
@@ -399,10 +409,18 @@ public class IR {
   }
 
   public static Node startOptChainGetprop(Node target, Node prop) {
-    checkState(mayBeExpression(target));
-    checkState(prop.isString());
+    checkState(mayBeExpression(target), target);
+    checkState(prop.isString(), prop);
     Node optChainGetProp = new Node(Token.OPTCHAIN_GETPROP, target, prop);
     optChainGetProp.setIsOptionalChainStart(true);
+    return optChainGetProp;
+  }
+
+  public static Node continueOptChainGetprop(Node target, Node prop) {
+    checkState(mayBeExpression(target), target);
+    checkState(prop.isString(), prop);
+    Node optChainGetProp = new Node(Token.OPTCHAIN_GETPROP, target, prop);
+    optChainGetProp.setIsOptionalChainStart(false);
     return optChainGetProp;
   }
 
@@ -433,10 +451,18 @@ public class IR {
   }
 
   public static Node startOptChainGetelem(Node target, Node elem) {
-    checkState(mayBeExpression(target));
-    checkState(mayBeExpression(elem));
+    checkState(mayBeExpression(target), target);
+    checkState(mayBeExpression(elem), elem);
     Node optChainGetElem = new Node(Token.OPTCHAIN_GETELEM, target, elem);
     optChainGetElem.setIsOptionalChainStart(true);
+    return optChainGetElem;
+  }
+
+  public static Node continueOptChainGetelem(Node target, Node elem) {
+    checkState(mayBeExpression(target), target);
+    checkState(mayBeExpression(elem), elem);
+    Node optChainGetElem = new Node(Token.OPTCHAIN_GETELEM, target, elem);
+    optChainGetElem.setIsOptionalChainStart(false);
     return optChainGetElem;
   }
 
@@ -864,6 +890,9 @@ public class IR {
       case NUMBER:
       case NULL:
       case OBJECTLIT:
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
       case OR:
       case POS:
       case REGEXP:
