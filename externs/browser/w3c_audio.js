@@ -107,7 +107,6 @@ BaseAudioContext.prototype.createBiquadFilter = function() {};
 BaseAudioContext.prototype.createWaveShaper = function() {};
 
 /**
- * @deprecated Use BaseAudioContext#createSpatialPanner or BaseAudioContext#createStereoPanner
  * @return {!PannerNode}
  */
 BaseAudioContext.prototype.createPanner = function() {};
