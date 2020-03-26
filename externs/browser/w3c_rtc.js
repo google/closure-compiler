@@ -1764,6 +1764,54 @@ RTCRtpStreamStats.prototype.sliCount;
 /** @const {number} */
 RTCRtpStreamStats.prototype.qpSum;
 
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcreceivedrtpstreamstats
+ * @interface
+ * @extends {RTCRtpStreamStats}
+ */
+function RTCReceivedRtpStreamStats() {}
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsReceived;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.jitter;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsDiscarded;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.packetsRepaired;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstPacketsLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstPacketsDiscarded;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstLossCount;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstDiscardCount;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstLossRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.burstDiscardRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.gapLossRate;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.gapDiscardRate;
+
+
 /**
  * @interface
  * @extends {Iterable<!Array<string|!RTCStats>>}
