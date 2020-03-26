@@ -1916,8 +1916,23 @@ public final class NodeUtil {
   }
 
   /**
-   * Is this node the name of a block-scoped declaration?
-   * Checks for let, const, class, or block-scoped function declarations.
+   * Find the start of the optional chain. E.g Find the `a?. ...` node in `a?.b.c.d` given any other
+   * node
+   *
+   * @param n A node in an optional chain
+   * @return The start of the optional chain that `n` is part of.
+   */
+  public static Node getStartOfOptChain(Node n) {
+    checkState(NodeUtil.isOptChainNode(n), n);
+    if (n.isOptionalChainStart()) {
+      return n;
+    }
+    return getStartOfOptChain(n.getFirstChild());
+  }
+
+  /**
+   * Is this node the name of a block-scoped declaration? Checks for let, const, class, or
+   * block-scoped function declarations.
    *
    * @param n The node
    * @return True if {@code n} is the NAME of a block-scoped declaration.

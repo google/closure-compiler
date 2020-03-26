@@ -3709,6 +3709,40 @@ public final class NodeUtilTest {
   }
 
   @RunWith(JUnit4.class)
+  public static class GetStartOfOptChainTests {
+
+    @Test
+    public void isStartOfChain() {
+      // `expr?.prop`
+      Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
+
+      assertThat(NodeUtil.getStartOfOptChain(optChainGet)).isEqualTo(optChainGet);
+    }
+
+    @Test
+    public void shortChain() {
+      // `expr?.prop1.prop2`
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
+      Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+
+      assertThat(NodeUtil.getStartOfOptChain(outterGetProp)).isEqualTo(innerGetProp);
+    }
+
+    @Test
+    public void mixedChain() {
+      // `expr().prop1?.prop2()[prop3]`
+      Node call = IR.call(IR.name("expr"));
+      Node getProp = IR.getprop(call, IR.string("prop1"));
+      Node optGetProp = IR.startOptChainGetprop(getProp, IR.string("prop2"));
+      Node optCall = IR.continueOptChainCall(optGetProp);
+      Node optGetElem = IR.continueOptChainGetelem(optCall, IR.name("prop3"));
+
+      assertThat(NodeUtil.getStartOfOptChain(optGetElem)).isEqualTo(optGetProp);
+      assertThat(NodeUtil.getStartOfOptChain(optCall)).isEqualTo(optGetProp);
+    }
+  }
+
+  @RunWith(JUnit4.class)
   public static class NodeTraversalTests {
 
     @Test
