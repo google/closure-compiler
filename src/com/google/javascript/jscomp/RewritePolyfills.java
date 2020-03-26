@@ -289,7 +289,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
   }
 
   private static final ImmutableSet<String> GLOBAL_NAMES =
-      ImmutableSet.of("goog.global.", "window.");
+      ImmutableSet.of("goog.global.", "window.", "globalThis.");
 
   private boolean languageOutIsAtLeast(LanguageMode mode) {
     return compiler.getOptions().getOutputFeatureSet().contains(mode.toFeatureSet());
@@ -299,6 +299,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     switch (features.version()) {
       case "ts":
         return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6_TYPED);
+      case "es_2020":
+        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2020);
       case "es_2019":
         return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2019);
       case "es9":

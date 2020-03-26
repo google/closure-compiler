@@ -34,6 +34,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class RewritePolyfillsTest extends CompilerTestCase {
 
+  private static final LanguageMode ES_2020 = LanguageMode.ECMASCRIPT_2020;
   private static final LanguageMode ES6 = LanguageMode.ECMASCRIPT_2015;
   private static final LanguageMode ES5 = LanguageMode.ECMASCRIPT5_STRICT;
   private static final LanguageMode ES3 = LanguageMode.ECMASCRIPT3;
@@ -172,6 +173,25 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES6, ES3);
     testInjects("new Map();", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR, "es6/map");
+  }
+
+  @Test
+  public void testGlobalThisInjected() {
+    addLibrary("globalThis", "es_2020", "es3", "es6/globalThis");
+    addLibrary("Map", "es6", "es5", "es6/map");
+
+    testInjects("globalThis.String", "es6/globalThis");
+    testInjects("var m = new globalThis.Map();", "es6/globalThis", "es6/map");
+  }
+
+  @Test
+  public void testGlobalThisInjectedNotInjectedGivenSufficientLanguageOut() {
+    addLibrary("globalThis", "es_2020", "es3", "es6/globalThis");
+    addLibrary("Map", "es6", "es5", "es6/map");
+
+    setLanguage(ES_2020, ES_2020);
+    testDoesNotInject("globalThis.String");
+    testDoesNotInject("var m = new globalThis.Map();");
   }
 
   @Test
