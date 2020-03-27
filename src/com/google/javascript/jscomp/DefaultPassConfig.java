@@ -1195,10 +1195,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName("checkMissingAndExtraRequires")
           .setFeatureSet(ES_NEXT)
-          .setInternalFactory(
-              (compiler) ->
-                  new CheckMissingAndExtraRequires(
-                      compiler, CheckMissingAndExtraRequires.Mode.FULL_COMPILE))
+          .setInternalFactory((compiler) -> new CheckMissingAndExtraRequires(compiler))
           .build();
 
   private final PassFactory checkMissingRequires =
