@@ -1812,6 +1812,134 @@ RTCReceivedRtpStreamStats.prototype.gapLossRate;
 RTCReceivedRtpStreamStats.prototype.gapDiscardRate;
 
 
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcinboundrtpstreamstats
+ * @interface
+ * @extends {RTCReceivedRtpStreamStats}
+ */
+function RTCInboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.trackId;
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.receiverId;
+
+/** @const {string} */
+RTCInboundRtpStreamStats.prototype.remoteId;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.framesDecoded;
+
+/** @const {?Date|number} */
+RTCInboundRtpStreamStats.prototype.lastPacketReceivedTimestamp;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.averageRtcpInterval;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.bytesReceived;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.packetsFailedDecryption;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.packetsDuplicated;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.audioLevel;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameWidth;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameHeight;
+
+/**
+ * Firefox specific value.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.bitrateMean;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.concealedSamples;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.jitterBufferDelay;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.jitterBufferEmittedCount;
+
+/**
+ * Experimental chrome stats under this origin trial:
+ * https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/hE2B1iItPDk
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.jitterBufferFlushes;
+
+/**
+ * Experimental chrome stats under this origin trial:
+ * https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/hE2B1iItPDk
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.delayedPacketOutageSamples;
+
+/**
+ * Safari still reprorting it as inbound-rtp, it supposed to be in remote part.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fractionLost;
+
+/**
+ * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fecPacketsReceived;
+
+/**
+ * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fecPacketsDiscarded;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.concealedSamples;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.silentConcealedSamples;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.insertedSamplesForDeceleration
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.removedSamplesForAcceleration;
+
+/** @const {string|undefined} */
+RTCInboundRtpStreamStats.prototype.decoderImplementation;
+
+
 /**
  * @interface
  * @extends {Iterable<!Array<string|!RTCStats>>}
