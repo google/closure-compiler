@@ -63,7 +63,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequire_inNonModule() throws Exception {
+  public void testNoWarning_missingRequire_inProvide() throws Exception {
     checkNoWarning(
         lines(
             "goog.module('foo.Bar');",
@@ -72,6 +72,45 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
             "exports = function() {};"),
         lines(
             "goog.provide('test');", //
+            "let x = new foo.Bar();"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequire_inScript() throws Exception {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.Bar');",
+            "goog.module.declareLegacyNamespace();",
+            "/** @constructor */",
+            "exports = function() {};"),
+        lines(
+            "goog.provide('test');", //
+            "let x = new foo.Bar();"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequire_inEsModuleExport() throws Exception {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.Bar');",
+            "goog.module.declareLegacyNamespace();",
+            "/** @constructor */",
+            "exports = function() {};"),
+        lines(
+            "let x = new foo.Bar();", //
+            "export default 42;"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequire_inEsModuleImport() throws Exception {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.Bar');",
+            "goog.module.declareLegacyNamespace();",
+            "/** @constructor */",
+            "exports = function() {};"),
+        lines(
+            "import * as quux from './quux.js';", //
             "let x = new foo.Bar();"));
   }
 
@@ -174,7 +213,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequireType_inNonModule() throws Exception {
+  public void testNoWarning_missingRequireType_inProvide() throws Exception {
     checkNoWarning(
         lines(
             "goog.module('foo.Bar');",
@@ -183,6 +222,47 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
             "exports = function() {};"),
         lines(
             "goog.provide('test');", //
+            "/** @type {!foo.Bar} */",
+            "let x;"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequireType_inScript() throws Exception {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.Bar');",
+            "goog.module.declareLegacyNamespace();",
+            "/** @constructor */",
+            "exports = function() {};"),
+        lines(
+            "/** @type {!foo.Bar} */", //
+            "let x;"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequireType_inEsModuleExport() throws Exception {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.Bar');",
+            "goog.module.declareLegacyNamespace();",
+            "/** @constructor */",
+            "exports = function() {};"),
+        lines(
+            "/** @type {!foo.Bar} */", //
+            "let x;",
+            "export default 42;"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequireType_inEsModuleImport() throws Exception {
+    checkNoWarning(
+        lines(
+            "goog.module('foo.Bar');",
+            "goog.module.declareLegacyNamespace();",
+            "/** @constructor */",
+            "exports = function() {};"),
+        lines(
+            "import * as quux from './quux.js';", //
             "/** @type {!foo.Bar} */",
             "let x;"));
   }

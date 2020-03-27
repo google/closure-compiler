@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.JSDocInfo;
@@ -27,7 +30,7 @@ import java.util.HashSet;
 import javax.annotation.Nullable;
 
 /** A pass to detect references to fully qualified Closure namespaces. */
-public class CheckMissingRequires implements NodeTraversal.Callback, CompilerPass {
+public class CheckMissingRequires extends AbstractModuleCallback implements CompilerPass {
 
   public static final DiagnosticType MISSING_REQUIRE =
       DiagnosticType.warning(
@@ -49,13 +52,8 @@ public class CheckMissingRequires implements NodeTraversal.Callback, CompilerPas
   /** The mapping from Closure namespace into the module that provides it. */
   private final ImmutableMap<String, ModuleMetadata> moduleByNamespace;
 
-  /** The script node currently being traversed. */
-  @Nullable private Node currentScript = null;
-
-  private final AbstractCompiler compiler;
-
   public CheckMissingRequires(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
-    this.compiler = compiler;
+    super(compiler, moduleMetadataMap);
     this.moduleByNamespace = moduleMetadataMap.getModulesByGoogNamespace();
   }
 
@@ -65,90 +63,103 @@ public class CheckMissingRequires implements NodeTraversal.Callback, CompilerPas
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (parent != null && parent.isScript() && !n.isModuleBody()) {
+  public boolean shouldTraverse(
+      NodeTraversal t, Node n, @Nullable ModuleMetadata currentModule, Node scopeRoot) {
+    if (currentModule == null) {
+      return true;
+    }
+    if (n == currentModule.rootNode() && !currentModule.isGoogModule()) {
       // Only check inside goog.module files.
+      // TODO(tjgq): Extend the check to ES modules that interop with Closure.
       return false;
     }
-    if (n.isScript()) {
-      currentScript = n;
-    }
     // Traverse nodes in preorder to collect `@template` parameter names before their use.
-    visitNode(t, n, parent);
+    visitNode(t, n, checkNotNull(currentModule));
     return true;
   }
 
   @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isScript()) {
+  public void visit(
+      NodeTraversal t, Node n, @Nullable ModuleMetadata currentModule, @Nullable Node scopeRoot) {
+    if (currentModule != null && n == currentModule.rootNode()) {
       // For this pass, template parameter names are only meaningful inside the file defining them.
       templateParamNames.clear();
-      currentScript = null;
     }
   }
 
-  private void visitNode(NodeTraversal t, Node n, Node parent) {
+  private void visitNode(NodeTraversal t, Node n, ModuleMetadata currentModule) {
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {
-      visitJsDocInfo(t, info);
+      visitJsDocInfo(t, currentModule, info);
     }
-    if (n.isQualifiedName() && !parent.isGetProp()) {
+    if (n.isQualifiedName() && !n.getParent().isGetProp()) {
       QualifiedName qualifiedName = n.getQualifiedNameObject();
       String root = qualifiedName.getRoot();
       if (root.equals("this") || root.equals("super")) {
         return;
       }
-      visitQualifiedName(t, n, n.getQualifiedNameObject(), /* isStrongReference= */ true);
+      visitQualifiedName(
+          t, n, currentModule, n.getQualifiedNameObject(), /* isStrongReference= */ true);
     }
   }
 
-  private void visitJsDocInfo(NodeTraversal t, JSDocInfo info) {
+  private void visitJsDocInfo(NodeTraversal t, ModuleMetadata currentModule, JSDocInfo info) {
     // Collect template parameter names before checking, so that annotations on the same node that
     // reference the name are excluded from the check.
     templateParamNames.addAll(info.getTemplateTypeNames());
     templateParamNames.addAll(info.getTypeTransformations().keySet());
     if (info.hasType()) {
-      visitJsDocExpr(t, info.getType(), /* isStrongReference */ false);
+      visitJsDocExpr(t, currentModule, info.getType(), /* isStrongReference */ false);
     }
     for (String param : info.getParameterNames()) {
       if (info.hasParameterType(param)) {
-        visitJsDocExpr(t, info.getParameterType(param), /* isStrongReference=*/ false);
+        visitJsDocExpr(
+            t, currentModule, info.getParameterType(param), /* isStrongReference=*/ false);
       }
     }
     if (info.hasReturnType()) {
-      visitJsDocExpr(t, info.getReturnType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getReturnType(), /* isStrongReference=*/ false);
     }
     if (info.hasEnumParameterType()) {
-      visitJsDocExpr(t, info.getEnumParameterType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getEnumParameterType(), /* isStrongReference=*/ false);
     }
     if (info.hasTypedefType()) {
-      visitJsDocExpr(t, info.getTypedefType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getTypedefType(), /* isStrongReference=*/ false);
     }
     if (info.hasThisType()) {
-      visitJsDocExpr(t, info.getThisType(), /* isStrongReference=*/ false);
+      visitJsDocExpr(t, currentModule, info.getThisType(), /* isStrongReference=*/ false);
     }
     if (info.hasBaseType()) {
       // Note that `@extends` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, info.getBaseType(), /* isStrongReference=*/ true);
+      visitJsDocExpr(t, currentModule, info.getBaseType(), /* isStrongReference=*/ true);
     }
     for (JSTypeExpression expr : info.getExtendedInterfaces()) {
       // Note that `@extends` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, expr, /* isStrongReference=*/ true);
+      visitJsDocExpr(t, currentModule, expr, /* isStrongReference=*/ true);
     }
     for (JSTypeExpression expr : info.getImplementedInterfaces()) {
       // Note that `@implements` requires a goog.require, not a goog.requireType.
-      visitJsDocExpr(t, expr, /* isStrongReference=*/ true);
+      visitJsDocExpr(t, currentModule, expr, /* isStrongReference=*/ true);
     }
   }
 
-  private void visitJsDocExpr(NodeTraversal t, JSTypeExpression expr, boolean isStrongReference) {
+  private void visitJsDocExpr(
+      NodeTraversal t,
+      ModuleMetadata currentModule,
+      JSTypeExpression expr,
+      boolean isStrongReference) {
     for (Node typeNode : expr.getAllTypeNodes()) {
-      visitQualifiedName(t, typeNode, QualifiedName.of(typeNode.getString()), isStrongReference);
+      visitQualifiedName(
+          t, typeNode, currentModule, QualifiedName.of(typeNode.getString()), isStrongReference);
     }
   }
 
   private void visitQualifiedName(
-      NodeTraversal t, Node n, QualifiedName qualifiedName, boolean isStrongReference) {
+      NodeTraversal t,
+      Node n,
+      ModuleMetadata currentModule,
+      QualifiedName qualifiedName,
+      boolean isStrongReference) {
     if (qualifiedName.isSimple() && templateParamNames.contains(qualifiedName.getRoot())) {
       // This will produce a false negative when the same name is used in both template and
       // non-template capacity in the same file, and a false positive when the `@template` does not
@@ -175,7 +186,7 @@ public class CheckMissingRequires implements NodeTraversal.Callback, CompilerPas
         // Do not report references to a namespace provided in the same file, but do not recurse
         // into parent namespaces either.
         // TODO(tjgq): Also check for these references.
-        if (module.rootNode() != currentScript) {
+        if (module.rootNode() != currentModule.rootNode()) {
           t.report(n, isStrongReference ? MISSING_REQUIRE : MISSING_REQUIRE_TYPE, namespace);
         }
         return;
