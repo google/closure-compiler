@@ -19,7 +19,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.RewritePolyfills.Polyfills;
+import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -343,6 +343,18 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES5, ES5);
     testDoesNotInject("x.forEach();");
+  }
+
+  @Test
+  public void testPrototypeMethodsDontWarnIfInsufficientVersionNumber() {
+    addLibrary("String.prototype.normalize", "es6", "es6", null);
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+    addLibrary("Array.prototype.fill", "es6", "es3", "es6/array/fill");
+
+    setLanguage(ES6, ES3);
+    testDoesNotInject("x.normalize();");
+    testInjects("x.endsWith();", "es6/string/endswith");
+    testInjects("x.fill(y);", "es6/array/fill");
   }
 
   @Test
