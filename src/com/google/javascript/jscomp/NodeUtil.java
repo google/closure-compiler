@@ -5712,11 +5712,11 @@ public final class NodeUtil {
 
   /** Represents a goog.require'd namespace and property inside a module. */
   @AutoValue
-  abstract static class GoogRequire {
-    abstract String namespace(); // The Closure namespace inside the require call
+  public abstract static class GoogRequire {
+    public abstract String namespace(); // The Closure namespace inside the require call
 
     @Nullable
-    abstract String property(); // Non-null for destructuring requires.
+    public abstract String property(); // Non-null for destructuring requires.
 
     static GoogRequire fromNamespace(String namespace) {
       return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null);
@@ -5728,7 +5728,7 @@ public final class NodeUtil {
   }
 
   @Nullable
-  static GoogRequire getGoogRequireInfo(String name, Scope scope) {
+  public static GoogRequire getGoogRequireInfo(String name, Scope scope) {
     Var var = scope.getVar(name);
     if (var == null || !var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
       return null;
