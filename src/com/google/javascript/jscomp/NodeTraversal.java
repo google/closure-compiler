@@ -91,22 +91,38 @@ public class NodeTraversal {
    */
   public interface Callback {
     /**
-     * <p>Visits a node in pre order (before visiting its children) and decides
-     * whether this node's children should be traversed. If children are
-     * traversed, they will be visited by
-     * {@link #visit(NodeTraversal, Node, Node)} in postorder.</p>
-     * <p>Implementations can have side effects (e.g. modifying the parse
-     * tree).</p>
+     * Visits a node in preorder (before its children) and decides whether its children should be
+     * traversed. If the children should be traversed, they will be visited by {@link
+     * #shouldTraverse(NodeTraversal, Node, Node)} in preorder and by {@link #visit(NodeTraversal,
+     * Node, Node)} in postorder.
+     *
+     * <p>Siblings are always visited left-to-right.
+     *
+     * <p>Implementations can have side-effects (e.g. modify the parse tree). Removing the current
+     * node is legal, but removing or reordering nodes above the current node may cause nodes to be
+     * visited twice or not at all.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param parent The parent of the current node.
      * @return whether the children of this node should be visited
      */
-    boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent);
+    boolean shouldTraverse(NodeTraversal t, Node n, Node parent);
 
     /**
-     * <p>Visits a node in postorder (after its children have been visited).
-     * A node is visited only if all its parents should be traversed
-     * ({@link #shouldTraverse(NodeTraversal, Node, Node)}).</p>
-     * <p>Implementations can have side effects (e.g. modifying the parse
-     * tree).</p>
+     * Visits a node in postorder (after its children). A node is visited in postorder iff {@link
+     * #shouldTraverse(NodeTraversal, Node, Node)} returned true for its parent. In particular, the
+     * root node is never visited in postorder.
+     *
+     * <p>Siblings are always visited left-to-right.
+     *
+     * <p>Implementations can have side-effects (e.g. modify the parse tree). Removing the current
+     * node is legal, but removing or reordering nodes above the current node may cause nodes to be
+     * visited twice or not at all.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param parent The parent of the current node.
      */
     void visit(NodeTraversal t, Node n, Node parent);
   }
@@ -220,15 +236,16 @@ public class NodeTraversal {
   }
 
   /**
-   * Abstract callback that knows when goog.provide, goog.module, and ES modules are entered and
-   * exited. This includes both whole file modules and bundled modules.
+   * Abstract callback that knows when a global script, goog.provide file, goog.module,
+   * goog.loadModule, ES module or CommonJS module is entered or exited. This includes both whole
+   * file modules and bundled modules, as well as files in the global scope.
    */
   public abstract static class AbstractModuleCallback implements Callback {
     protected final AbstractCompiler compiler;
     private final ModuleMetadataMap moduleMetadataMap;
 
-    private ModuleMetadata currentModule;
-    private Node scopeRoot;
+    @Nullable private ModuleMetadata currentModule;
+    @Nullable private Node scopeRoot;
     private boolean inLoadModule;
 
     AbstractModuleCallback(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
@@ -236,8 +253,20 @@ public class NodeTraversal {
       this.moduleMetadataMap = moduleMetadataMap;
     }
 
+    /**
+     * Called when the traversal enters a global file or module.
+     *
+     * @param currentModule The entered global file or module.
+     * @param moduleScopeRoot The root scope for the entered module or SCRIPT for global files.
+     */
     protected void enterModule(ModuleMetadata currentModule, Node moduleScopeRoot) {}
 
+    /**
+     * Called when the traversal exits a global file or module.
+     *
+     * @param oldModule The exited global file or module.
+     * @param moduleScopeRoot The root scope for the exited module or SCRIPT for global files.
+     */
     protected void exitModule(ModuleMetadata oldModule, Node moduleScopeRoot) {}
 
     @Override
@@ -275,6 +304,16 @@ public class NodeTraversal {
       return shouldTraverse(t, n, currentModule, scopeRoot);
     }
 
+    /**
+     * See {@link Callback#shouldTraverse}.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param currentModule The current module, or null if not inside a module (e.g. AST root).
+     * @param moduleScopeRoot The root scope for the current module, or null if not inside a module
+     *     (e.g. AST root).
+     * @return whether the children of this node should be visited
+     */
     protected boolean shouldTraverse(
         NodeTraversal t,
         Node n,
@@ -310,6 +349,15 @@ public class NodeTraversal {
       visit(t, n, currentModule, scopeRoot);
     }
 
+    /**
+     * See {@link Callback#visit}.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param currentModule The current module, or null if not inside a module (e.g. AST root).
+     * @param moduleScopeRoot The root scope for the current module, or null if not inside a module
+     *     (e.g. AST root).
+     */
     protected void visit(
         NodeTraversal t,
         Node n,
