@@ -538,12 +538,12 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
+    passes.add(removeWeakSources);
+
     // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
     if (!options.allowsHotswapReplaceScript()) {
       passes.add(inlineTypeAliases);
     }
-
-    passes.add(removeWeakSources);
 
     passes.add(garbageCollectChecks);
 

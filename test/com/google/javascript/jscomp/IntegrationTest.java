@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.Map;
@@ -1755,6 +1756,78 @@ public final class IntegrationTest extends IntegrationTestCase {
         // Just making sure that typechecking ran and didn't crash.  It would be reasonable
         // for there also to be other type errors in this code before the final null assignment.
         TYPE_MISMATCH_WARNING);
+  }
+
+  @Test
+  public void testWeakSymbols_arentInlinedIntoStrongCode() {
+    SourceFile extern =
+        SourceFile.fromCode(
+            "extern.js",
+            lines(
+                "/** @fileoverview @externs */", //
+                "",
+                "function alert(x) {}"));
+
+    SourceFile aa =
+        SourceFile.fromCode(
+            "A.js",
+            lines(
+                "goog.module('a.A');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "class A { };",
+                "",
+                "exports = A;"),
+            SourceKind.WEAK);
+
+    SourceFile ab =
+        SourceFile.fromCode(
+            "B.js",
+            lines(
+                "goog.module('a.B');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "class B { };",
+                "",
+                "exports = B;"),
+            SourceKind.STRONG);
+
+    SourceFile entryPoint =
+        SourceFile.fromCode(
+            "C.js",
+            lines(
+                "goog.module('a.C');", //
+                "",
+                "const A = goog.requireType('a.A');",
+                "const B = goog.require('a.B');",
+                "",
+                "alert(new B());",
+                // Note how `a` is declared by any strong legacy module rooted on "a" (`a.B`).
+                "alert(new a.A());"),
+            SourceKind.STRONG);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("a.C"))));
+
+    Compiler compiler = new Compiler();
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(entryPoint, aa, ab), options);
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.toSource())
+        .isEqualTo(
+            "var a={};"
+                + "class module$contents$a$B_B{}"
+                + "a.B=module$contents$a$B_B;"
+                + ""
+                + "var module$exports$a$C={};"
+                + "alert(new module$contents$a$B_B);"
+                + "alert(new a.A);");
   }
 
   @Test
