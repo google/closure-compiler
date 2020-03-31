@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -37,19 +38,22 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
   private final Polyfills polyfills;
+  private final boolean isolatePolyfills;
   private Set<String> libraries;
 
-  public RewritePolyfills(AbstractCompiler compiler) {
+  public RewritePolyfills(AbstractCompiler compiler, boolean isolatePolyfills) {
     this(
         compiler,
         Polyfills.fromTable(
-            ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")));
+            ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")),
+        isolatePolyfills);
   }
 
   @VisibleForTesting
-  RewritePolyfills(AbstractCompiler compiler, Polyfills polyfills) {
+  RewritePolyfills(AbstractCompiler compiler, Polyfills polyfills, boolean isolatePolyfills) {
     this.compiler = compiler;
     this.polyfills = polyfills;
+    this.isolatePolyfills = isolatePolyfills;
   }
 
   @Override
@@ -57,16 +61,29 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     this.libraries = new LinkedHashSet<>();
     new PolyfillFindingCallback(compiler, polyfills).traverse(scriptRoot, this::inject);
 
-    if (!libraries.isEmpty()) {
-      Node lastNode = null;
-      for (String library : libraries) {
-        lastNode = compiler.ensureLibraryInjected(library, false);
-      }
-      if (lastNode != null) {
-        Node parent = lastNode.getParent();
-        removeUnneededPolyfills(parent, lastNode.getNext());
-        compiler.reportChangeToEnclosingScope(parent);
-      }
+    if (this.isolatePolyfills) {
+      // Polyfill isolation requires a pass to run near the end of optimizations. That pass may call
+      // into a library method injected in this pass. Adding an externs declaration of that library
+      // method prevents it from being dead-code-elimiated before polyfill isolation runs.
+      Node jscompLookupMethodDecl = IR.var(IR.name("$jscomp$lookupPolyfilledValue"));
+      compiler
+          .getSynthesizedExternsInputAtEnd()
+          .getAstRoot(compiler)
+          .addChildToBack(jscompLookupMethodDecl);
+    }
+
+    if (libraries.isEmpty()) {
+      return;
+    }
+
+    Node lastNode = null;
+    for (String library : libraries) {
+      lastNode = compiler.ensureLibraryInjected(library, false);
+    }
+    if (lastNode != null) {
+      Node parent = lastNode.getParent();
+      removeUnneededPolyfills(parent, lastNode.getNext());
+      compiler.reportChangeToEnclosingScope(parent);
     }
   }
 

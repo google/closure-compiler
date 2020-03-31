@@ -31,11 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Detects all potential usages of polyfilled classes or methods
- *
- * <p>The entry point is {@link traverse(Node, Consumer<PolyfillUsage>)}.
- */
+/** Detects all potential usages of polyfilled classes or methods */
 final class PolyfillFindingCallback {
 
   /**
@@ -161,8 +157,12 @@ final class PolyfillFindingCallback {
 
     abstract String name();
 
-    private static PolyfillUsage create(Polyfill polyfill, Node node, String name) {
-      return new AutoValue_PolyfillFindingCallback_PolyfillUsage(polyfill, node, name);
+    abstract boolean isExplicitGlobal();
+
+    private static PolyfillUsage create(
+        Polyfill polyfill, Node node, String name, boolean isExplicitGlobal) {
+      return new AutoValue_PolyfillFindingCallback_PolyfillUsage(
+          polyfill, node, name, isExplicitGlobal);
     }
   }
 
@@ -213,31 +213,31 @@ final class PolyfillFindingCallback {
         }
 
         if (polyfill != null && !isGuarded(name)) {
-          emit(polyfill, node, name);
-          // Bail out because the isGetProp case overlaps below
+          emit(polyfill, node, name, isExplicitGlobal);
+          // Bail out because isGetProp overlaps below
           return;
         }
       }
 
       // Inject anything that *might* match method calls - these may be removed later.
       if (node.isGetProp()) {
-        String name = node.getLastChild().getString();
-        Collection<Polyfill> methods = polyfills.methods.get(name);
-        if (!methods.isEmpty() && !isGuarded("." + name)) {
+        String methodName = node.getLastChild().getString();
+        Collection<Polyfill> methods = polyfills.methods.get(methodName);
+        if (!methods.isEmpty() && !isGuarded("." + methodName)) {
           for (Polyfill polyfill : methods) {
-            emit(polyfill, node, name);
+            emit(polyfill, node, methodName, /* rootIsKnownGlobal= */ false);
           }
         }
       }
     }
 
-    private void emit(Polyfill polyfill, Node node, String name) {
-      this.polyfillConsumer.accept(PolyfillUsage.create(polyfill, node, name));
+    private void emit(Polyfill polyfill, Node node, String name, boolean rootIsKnownGlobal) {
+      this.polyfillConsumer.accept(PolyfillUsage.create(polyfill, node, name, rootIsKnownGlobal));
     }
   }
 
   private static final ImmutableSet<String> GLOBAL_NAMES =
-      ImmutableSet.of("goog.global.", "window.", "globalThis.");
+      ImmutableSet.of("goog.global.", "window.", "goog$global.", "globalThis.");
 
   private static boolean languageOutIsAtLeast(LanguageMode mode, FeatureSet outputFeatureSet) {
     return outputFeatureSet.contains(mode.toFeatureSet());

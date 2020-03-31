@@ -279,7 +279,10 @@ public class TranspilationPasses {
   static final PassFactory rewritePolyfills =
       PassFactory.builderForHotSwap()
           .setName("RewritePolyfills")
-          .setInternalFactory(RewritePolyfills::new)
+          .setInternalFactory(
+              (compiler) ->
+                  // TODO(lharker): replace `false` with the actual CompilerOption once it's added.
+                  new RewritePolyfills(compiler, /* isolatePolyfills= */ false))
           .setFeatureSet(FeatureSet.latest())
           .build();
 
