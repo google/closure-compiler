@@ -929,8 +929,11 @@ public class CompilerOptions implements Serializable {
   /** CommonJS module prefix. */
   List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
-  /** Rewrite polyfills. */
+  /** Inject polyfills */
   boolean rewritePolyfills = false;
+
+  /** Isolates injected polyfills from the global scope. */
+  private boolean isolatePolyfills = false;
 
   /** Runtime libraries to always inject. */
   List<String> forceLibraryInjection = ImmutableList.of();
@@ -2846,6 +2849,18 @@ public class CompilerOptions implements Serializable {
     return this.rewritePolyfills;
   }
 
+  /** Sets whether to isolate polyfills from the global scope. */
+  public void setIsolatePolyfills(boolean isolatePolyfills) {
+    this.isolatePolyfills = isolatePolyfills;
+    if (this.isolatePolyfills) {
+      this.setDefineToBooleanLiteral("$jscomp.ISOLATE_POLYFILLS", isolatePolyfills);
+    }
+  }
+
+  public boolean getIsolatePolyfills() {
+    return this.isolatePolyfills;
+  }
+
   /**
    * Sets list of libraries to always inject, even if not needed.
    */
@@ -3069,6 +3084,7 @@ public class CompilerOptions implements Serializable {
             .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
             .add("instrumentBranchCoverage", instrumentBranchCoverage)
+            .add("isolatePolyfills", isolatePolyfills)
             .add("j2clMinifierEnabled", j2clMinifierEnabled)
             .add("j2clMinifierPruningManifest", j2clMinifierPruningManifest)
             .add("j2clPassMode", j2clPassMode)

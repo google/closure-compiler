@@ -281,8 +281,7 @@ public class TranspilationPasses {
           .setName("RewritePolyfills")
           .setInternalFactory(
               (compiler) ->
-                  // TODO(lharker): replace `false` with the actual CompilerOption once it's added.
-                  new RewritePolyfills(compiler, /* isolatePolyfills= */ false))
+                  new RewritePolyfills(compiler, compiler.getOptions().getIsolatePolyfills()))
           .setFeatureSet(FeatureSet.latest())
           .build();
 
