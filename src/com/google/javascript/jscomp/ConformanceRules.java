@@ -205,7 +205,12 @@ public final class ConformanceRules {
         throw new InvalidRequirementSpec("missing message");
       }
       this.compiler = compiler;
-      message = requirement.getErrorMessage();
+      String message = requirement.getErrorMessage();
+      if (requirement.getConfigFileCount() > 0) {
+        message +=
+            "\n  defined in " + Joiner.on("\n  extended by ").join(requirement.getConfigFileList());
+      }
+      this.message = message;
       if (requirement.getSeverity() == Severity.UNSPECIFIED) {
         severity = Severity.WARNING;
       } else {

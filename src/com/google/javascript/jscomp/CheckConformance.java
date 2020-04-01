@@ -117,6 +117,7 @@ public final class CheckConformance implements Callback, CompilerPass {
 
   private static final ImmutableSet<String> EXTENDABLE_FIELDS =
       ImmutableSet.of(
+          "config_file",
           "extends",
           "only_apply_to",
           "only_apply_to_regexp",
@@ -180,6 +181,7 @@ public final class CheckConformance implements Callback, CompilerPass {
           existing.addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList());
           existing.addAllWhitelistEntry(requirement.getWhitelistEntryList());
           existing.addAllValue(requirement.getValueList());
+          existing.addAllConfigFile(requirement.getConfigFileList());
         }
       }
     }

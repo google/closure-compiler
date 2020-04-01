@@ -30,7 +30,7 @@ message ConformanceConfig {
 }
 
 // A specification of code requirements
-// NEXT ID: 16
+// NEXT ID: 17
 message Requirement {
   // Required: The message to report when a requirement is violated. This should
   // reference a document describing the reasoning for the requirement
@@ -231,6 +231,11 @@ message Requirement {
   }
 
   optional Severity severity = 12 [default = WARNING];
+
+  // The file(s) that defined this requirement.  If the requirement is extended,
+  // then all extending files are included as well.  These will be printed in
+  // the error message.
+  repeated string config_file = 16;
 
   // CUSTOM requirements may use extensions, each extension should use
   // a CL number as a unique identifier.

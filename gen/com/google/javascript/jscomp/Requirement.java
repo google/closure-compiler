@@ -6,7 +6,7 @@ package com.google.javascript.jscomp;
 /**
  * <pre>
  * A specification of code requirements
- * NEXT ID: 16
+ * NEXT ID: 17
  * </pre>
  *
  * Protobuf type {@code jscomp.Requirement}
@@ -36,6 +36,7 @@ private static final long serialVersionUID = 0L;
     extends_ = "";
     reportLooseTypeViolations_ = true;
     severity_ = 1;
+    configFile_ = com.google.protobuf.LazyStringArrayList.EMPTY;
   }
 
   @java.lang.Override
@@ -193,6 +194,15 @@ private static final long serialVersionUID = 0L;
             allowExtendingValue_ = input.readBool();
             break;
           }
+          case 130: {
+            com.google.protobuf.ByteString bs = input.readBytes();
+            if (!((mutable_bitField0_ & 0x00008000) != 0)) {
+              configFile_ = new com.google.protobuf.LazyStringArrayList();
+              mutable_bitField0_ |= 0x00008000;
+            }
+            configFile_.add(bs);
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -225,6 +235,9 @@ private static final long serialVersionUID = 0L;
       }
       if (((mutable_bitField0_ & 0x00000008) != 0)) {
         whitelistEntry_ = java.util.Collections.unmodifiableList(whitelistEntry_);
+      }
+      if (((mutable_bitField0_ & 0x00008000) != 0)) {
+        configFile_ = configFile_.getUnmodifiableView();
       }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
@@ -3425,6 +3438,65 @@ private static final long serialVersionUID = 0L;
     return result == null ? com.google.javascript.jscomp.Requirement.Severity.WARNING : result;
   }
 
+  public static final int CONFIG_FILE_FIELD_NUMBER = 16;
+  private com.google.protobuf.LazyStringList configFile_;
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @return A list containing the configFile.
+   */
+  public com.google.protobuf.ProtocolStringList
+      getConfigFileList() {
+    return configFile_;
+  }
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @return The count of configFile.
+   */
+  public int getConfigFileCount() {
+    return configFile_.size();
+  }
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @param index The index of the element to return.
+   * @return The configFile at the given index.
+   */
+  public java.lang.String getConfigFile(int index) {
+    return configFile_.get(index);
+  }
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the configFile at the given index.
+   */
+  public com.google.protobuf.ByteString
+      getConfigFileBytes(int index) {
+    return configFile_.getByteString(index);
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -3490,6 +3562,9 @@ private static final long serialVersionUID = 0L;
     }
     if (((bitField0_ & 0x00000004) != 0)) {
       output.writeBool(15, allowExtendingValue_);
+    }
+    for (int i = 0; i < configFile_.size(); i++) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 16, configFile_.getRaw(i));
     }
     extensionWriter.writeUntil(536870912, output);
     unknownFields.writeTo(output);
@@ -3577,6 +3652,14 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(15, allowExtendingValue_);
     }
+    {
+      int dataSize = 0;
+      for (int i = 0; i < configFile_.size(); i++) {
+        dataSize += computeStringSizeNoTag(configFile_.getRaw(i));
+      }
+      size += dataSize;
+      size += 2 * getConfigFileList().size();
+    }
     size += extensionsSerializedSize();
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -3647,6 +3730,8 @@ private static final long serialVersionUID = 0L;
     if (hasSeverity()) {
       if (severity_ != other.severity_) return false;
     }
+    if (!getConfigFileList()
+        .equals(other.getConfigFileList())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     if (!getExtensionFields().equals(other.getExtensionFields()))
       return false;
@@ -3721,6 +3806,10 @@ private static final long serialVersionUID = 0L;
     if (hasSeverity()) {
       hash = (37 * hash) + SEVERITY_FIELD_NUMBER;
       hash = (53 * hash) + severity_;
+    }
+    if (getConfigFileCount() > 0) {
+      hash = (37 * hash) + CONFIG_FILE_FIELD_NUMBER;
+      hash = (53 * hash) + getConfigFileList().hashCode();
     }
     hash = hashFields(hash, getExtensionFields());
     hash = (29 * hash) + unknownFields.hashCode();
@@ -3821,7 +3910,7 @@ private static final long serialVersionUID = 0L;
   /**
    * <pre>
    * A specification of code requirements
-   * NEXT ID: 16
+   * NEXT ID: 17
    * </pre>
    *
    * Protobuf type {@code jscomp.Requirement}
@@ -3897,6 +3986,8 @@ private static final long serialVersionUID = 0L;
       bitField0_ = (bitField0_ & ~0x00002000);
       severity_ = 1;
       bitField0_ = (bitField0_ & ~0x00004000);
+      configFile_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00008000);
       return this;
     }
 
@@ -3995,6 +4086,11 @@ private static final long serialVersionUID = 0L;
         to_bitField0_ |= 0x00000100;
       }
       result.severity_ = severity_;
+      if (((bitField0_ & 0x00008000) != 0)) {
+        configFile_ = configFile_.getUnmodifiableView();
+        bitField0_ = (bitField0_ & ~0x00008000);
+      }
+      result.configFile_ = configFile_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -4181,6 +4277,16 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasSeverity()) {
         setSeverity(other.getSeverity());
+      }
+      if (!other.configFile_.isEmpty()) {
+        if (configFile_.isEmpty()) {
+          configFile_ = other.configFile_;
+          bitField0_ = (bitField0_ & ~0x00008000);
+        } else {
+          ensureConfigFileIsMutable();
+          configFile_.addAll(other.configFile_);
+        }
+        onChanged();
       }
       this.mergeExtensionFields(other);
       this.mergeUnknownFields(other.unknownFields);
@@ -6007,6 +6113,169 @@ private static final long serialVersionUID = 0L;
     public Builder clearSeverity() {
       bitField0_ = (bitField0_ & ~0x00004000);
       severity_ = 1;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.LazyStringList configFile_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    private void ensureConfigFileIsMutable() {
+      if (!((bitField0_ & 0x00008000) != 0)) {
+        configFile_ = new com.google.protobuf.LazyStringArrayList(configFile_);
+        bitField0_ |= 0x00008000;
+       }
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @return A list containing the configFile.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getConfigFileList() {
+      return configFile_.getUnmodifiableView();
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @return The count of configFile.
+     */
+    public int getConfigFileCount() {
+      return configFile_.size();
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @param index The index of the element to return.
+     * @return The configFile at the given index.
+     */
+    public java.lang.String getConfigFile(int index) {
+      return configFile_.get(index);
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the configFile at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getConfigFileBytes(int index) {
+      return configFile_.getByteString(index);
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @param index The index to set the value at.
+     * @param value The configFile to set.
+     * @return This builder for chaining.
+     */
+    public Builder setConfigFile(
+        int index, java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureConfigFileIsMutable();
+      configFile_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @param value The configFile to add.
+     * @return This builder for chaining.
+     */
+    public Builder addConfigFile(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureConfigFileIsMutable();
+      configFile_.add(value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @param values The configFile to add.
+     * @return This builder for chaining.
+     */
+    public Builder addAllConfigFile(
+        java.lang.Iterable<java.lang.String> values) {
+      ensureConfigFileIsMutable();
+      com.google.protobuf.AbstractMessageLite.Builder.addAll(
+          values, configFile_);
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearConfigFile() {
+      configFile_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00008000);
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * The file(s) that defined this requirement.  If the requirement is extended,
+     * then all extending files are included as well.  These will be printed in
+     * the error message.
+     * </pre>
+     *
+     * <code>repeated string config_file = 16;</code>
+     * @param value The bytes of the configFile to add.
+     * @return This builder for chaining.
+     */
+    public Builder addConfigFileBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureConfigFileIsMutable();
+      configFile_.add(value);
       onChanged();
       return this;
     }

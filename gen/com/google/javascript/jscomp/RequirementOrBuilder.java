@@ -503,4 +503,53 @@ public interface RequirementOrBuilder extends
    * @return The severity.
    */
   com.google.javascript.jscomp.Requirement.Severity getSeverity();
+
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @return A list containing the configFile.
+   */
+  java.util.List<java.lang.String>
+      getConfigFileList();
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @return The count of configFile.
+   */
+  int getConfigFileCount();
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @param index The index of the element to return.
+   * @return The configFile at the given index.
+   */
+  java.lang.String getConfigFile(int index);
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the configFile at the given index.
+   */
+  com.google.protobuf.ByteString
+      getConfigFileBytes(int index);
 }

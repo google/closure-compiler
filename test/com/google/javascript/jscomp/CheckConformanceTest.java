@@ -130,6 +130,24 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConfigFile() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  config_file: 'foo_conformance_proto.txt'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "}";
+
+    testWarning("eval()", CheckConformance.CONFORMANCE_VIOLATION);
+
+    testWarning(
+        "Function.prototype.name; eval.name.length",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: eval is not allowed\n  defined in foo_conformance_proto.txt");
+  }
+
+  @Test
   public void testNotViolation1() {
     testNoWarning(
         "/** @constructor */ function Foo() { this.callee = 'string'; }\n" +
