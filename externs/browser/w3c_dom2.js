@@ -947,6 +947,20 @@ HTMLOptionElement.prototype.text;
  */
 HTMLOptionElement.prototype.value;
 
+
+
+/**
+ * @constructor
+ * @extends {HTMLOptionElement}
+ * @param {*=} opt_text
+ * @param {*=} opt_value
+ * @param {*=} opt_defaultSelected
+ * @param {*=} opt_selected
+ */
+function Option(opt_text, opt_value, opt_defaultSelected, opt_selected) {}
+
+
+
 /**
  * @constructor
  * @extends {HTMLElement}

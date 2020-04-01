@@ -29,16 +29,6 @@ opera.version = function() {};
 /** @constructor */
 function XSLTProcessor() {}
 
-/**
- * @constructor
- * @extends {HTMLOptionElement}
- * @param {*=} opt_text
- * @param {*=} opt_value
- * @param {*=} opt_defaultSelected
- * @param {*=} opt_selected
- */
-function Option(opt_text, opt_value, opt_defaultSelected, opt_selected) {}
-
 
 // The "methods" object is a place to hang arbitrary external
 // properties. It is a throwback to pre-typed days, and should
