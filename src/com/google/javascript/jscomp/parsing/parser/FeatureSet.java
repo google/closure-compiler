@@ -201,9 +201,9 @@ public final class FeatureSet implements Serializable {
 
     // Stage 3 proposals likely to be part of ES2020
     DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
-    IMPORT_META("import.meta", LangVersion.ES_NEXT),
 
     // ES 2020 Stage 4
+    IMPORT_META("import.meta", LangVersion.ES2020),
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
     OPTIONAL_CHAINING("Optional chaining", LangVersion.ES_UNSUPPORTED),
 

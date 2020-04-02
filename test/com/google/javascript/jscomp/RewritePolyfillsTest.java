@@ -283,6 +283,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     testDoesNotInject("!Array.of ?? Array.of();");
     // NOTE: ?? is not safe by itself.
+    setLanguage(ES_2020, ES5);
     testInjects("Array.of ?? Array.of();", "es6/array/of");
   }
 
@@ -439,6 +440,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     testDoesNotInject("!String.prototype.endsWith ?? x.endsWith();");
     // NOTE: ?? is not safe by itself.
+    setLanguage(ES_2020, ES5);
     testInjects("String.prototype.endsWith ?? x.endsWith();", "es6/string/endswith");
   }
 

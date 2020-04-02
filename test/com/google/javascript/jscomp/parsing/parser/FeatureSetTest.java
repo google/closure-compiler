@@ -94,13 +94,13 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsNext() {
-    // ES_NEXT currently has more features than ES_2020, so that is what
+    // ES_NEXT currently has no features so es_2020
     // will be returned by versionForDebugging().
     // This will change when new features are added to ES_NEXT/ES_2020, so this test case will
     // then have to change.
     // This is on purpose so the test case serves as documentation that we intentionally
     // have ES_NEXT the same as or different from the latest supported ES version.
-    assertThat(FeatureSet.ES_NEXT.versionForDebugging()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_NEXT.versionForDebugging()).isEqualTo("es_2020");
   }
 
   @Test
