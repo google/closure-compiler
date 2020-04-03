@@ -1630,6 +1630,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testInlineNonJSDocComments_FunctionArgsAndBody() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn = parse("function f(x /* first */ ) { /* second */ let y;}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node bodyNode = fn.getLastChild();
+    Node yNode = bodyNode.getFirstChild();
+
+    // TODO(rishipal): Fix this test so that the first comment gets attached to `x` instead of the
+    // function body node
+    assertThat(bodyNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(yNode.getNonJSDocCommentString()).contains("/* second */");
+  }
+
+  @Test
   public void testInlineJSDocAttachment2() {
     Node fn = parse(
         "function f(/** ? */ x) {}").getFirstChild();
