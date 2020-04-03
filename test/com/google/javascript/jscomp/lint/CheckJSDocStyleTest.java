@@ -17,6 +17,7 @@ package com.google.javascript.jscomp.lint;
 
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.CLASS_DISALLOWED_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_ANNOTATION_ON_GETTER_SETTER;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAMETER_JSDOC;
@@ -200,6 +201,17 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
     testSame("class Foo { /** @return {number} */ get twentyone() { return 21; } }");
     testSame("class Foo { /** @param {string} s */ set someString(s) { this.someString_ = s; } }");
+  }
+
+  @Test
+  public void testTypeAnnotationOnGetterSetter() {
+    testWarning(
+        "class Foo { /** @type {number} */ get twentyone() { return 21; } }",
+        INCORRECT_ANNOTATION_ON_GETTER_SETTER);
+    testWarning(
+        "class Foo { /** @type {string} s */ set someString(s) { this.someString_ = s; } }",
+        INCORRECT_ANNOTATION_ON_GETTER_SETTER);
+    testNoWarning("class Foo { set someString( /** string */ s) { this.someString_ = s; } }");
   }
 
   @Test

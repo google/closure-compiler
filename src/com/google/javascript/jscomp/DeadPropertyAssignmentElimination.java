@@ -336,6 +336,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
         case AND:
         case OR:
         case HOOK:
+        case COALESCE:
           return true;
         default:
           return false;

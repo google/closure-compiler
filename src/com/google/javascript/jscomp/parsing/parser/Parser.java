@@ -90,6 +90,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpression
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectRestTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectSpreadTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalCallExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParameterizedTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
@@ -230,6 +233,7 @@ public class Parser {
       ES6_OR_ES7,
       ES8_OR_GREATER,
       ES_NEXT,
+      ES_NEXT_IN,
       UNSUPPORTED,
       TYPESCRIPT,
     }
@@ -2315,6 +2319,9 @@ public class Parser {
   private SuperExpressionTree parseSuperExpression() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SUPER);
+    if (peek(TokenType.QUESTION_DOT)) { // super?.() not allowed
+      reportError("Optional chaining is forbidden in super?.");
+    }
     return new SuperExpressionTree(getTreeLocation(start));
   }
 
@@ -2328,6 +2335,9 @@ public class Parser {
   private DynamicImportTree parseDynamicImportExpression() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.IMPORT);
+    if (peek(TokenType.QUESTION_DOT)) { // import?.() not allowed
+      reportError("Optional chaining is forbidden in import?.");
+    }
     eat(TokenType.OPEN_PAREN);
     ParseTree argument = parseAssignmentExpression();
     eat(TokenType.CLOSE_PAREN);
@@ -3549,19 +3559,37 @@ public class Parser {
     return peek(TokenType.IMPORT) && peek(1, TokenType.PERIOD);
   }
 
-  // 11.2 Left hand side expression
-  //
-  // Also inlines the call expression productions
+  /** Parse LeftHandSideExpression. */
   @SuppressWarnings("incomplete-switch")
   private ParseTree parseLeftHandSideExpression() {
     SourcePosition start = getTreeStartLocation();
+    // We have these possible productions.
+    // LeftHandSideExpression -> NewExpression
+    //                        -> CallExpression
+    //                        -> MemberExpression
+    //                        -> OptionalExpression
+    //
+    // NewExpression -> new NewExpression
+    //               -> MemberExpression
+    //
+    // CallExpression -> MemberExpression Arguments
+    //                -> CallExpression ... see below
+    //
+    // OptionalExpression -> MemberExpression OptionalChain
+    //                    -> CallExpression OptionalChain
+    //                    -> OptionalExpression OptionalChain
+    //
+    // We try parsing a NewExpression, here, because that will include parsing MemberExpression.
+    // If what we really have is a CallExpression or OptionalExpression, then the MemberExpression
+    // we get back from parseNewExpression will be the first part of it, and we'll build the
+    // rest later.
     ParseTree operand = parseNewExpression();
 
     // this test is equivalent to is member expression
     if (!(operand instanceof NewExpressionTree)
         || ((NewExpressionTree) operand).arguments != null) {
-
-      // The Call expression productions
+      // We have a MemberExpression, but it may actually be just the first part of a CallExpression
+      // Attempt to gather the rest of the CallExpression, if so.
       while (peekCallSuffix()) {
         switch (peekType()) {
           case OPEN_PAREN:
@@ -3587,6 +3615,7 @@ public class Parser {
             throw new AssertionError("unexpected case: " + peekType());
         }
       }
+      operand = maybeParseOptionalExpression(operand);
     }
     return operand;
   }
@@ -3597,6 +3626,117 @@ public class Parser {
         || peek(TokenType.PERIOD)
         || peek(TokenType.NO_SUBSTITUTION_TEMPLATE)
         || peek(TokenType.TEMPLATE_HEAD);
+  }
+
+  /**
+   * Tries to parse the expression as an optional expression.
+   *
+   * <p>`operand?.identifier` or `operand?.[expression]` or `operand?.(arg1, arg2)`
+   *
+   * <p>returns parse tree after trying to parse it as an optional expression
+   */
+  private ParseTree maybeParseOptionalExpression(ParseTree operand) {
+    SourcePosition start = getTreeStartLocation();
+
+    while (peek(TokenType.QUESTION_DOT)) {
+      eat(TokenType.QUESTION_DOT);
+      switch (peekType()) {
+        case OPEN_PAREN:
+          ArgumentListTree arguments = parseArguments();
+          operand =
+              new OptionalCallExpressionTree(
+                  getTreeLocation(start), operand, arguments, /* isStartOfOptionalChain = */ true);
+          break;
+        case OPEN_SQUARE:
+          eat(TokenType.OPEN_SQUARE);
+          ParseTree member = parseExpression();
+          eat(TokenType.CLOSE_SQUARE);
+          operand =
+              new OptionalMemberLookupExpressionTree(
+                  getTreeLocation(start), operand, member, /* isStartOfOptionalChain = */ true);
+          break;
+        case IDENTIFIER:
+          IdentifierToken id = eatIdOrKeywordAsId();
+          operand =
+              new OptionalMemberExpressionTree(
+                  getTreeLocation(start), operand, id, /* isStartOfOptionalChain = */ true);
+          break;
+        case NO_SUBSTITUTION_TEMPLATE:
+        case TEMPLATE_HEAD:
+          reportError("template literal cannot be used within optional chaining");
+          break;
+        default:
+          reportError("syntax error: %s not allowed in optional chain", peekType());
+      }
+      operand = parseOptionalChain(operand);
+    }
+    return operand;
+  }
+
+  /**
+   * Parse the next component of an optional chain.
+   *
+   * <p>`optionalExpression.identifier`, `optionalExpression[expression]`, `optionalExpression(arg1,
+   * arg2)`, or `optionalExpression?.optionalExpression`
+   *
+   * <p>returns parse tree after trying to parse it as an optional chain
+   */
+  private ParseTree parseOptionalChain(ParseTree optionalExpression) {
+    SourcePosition start = getTreeStartLocation();
+    while (peekOptionalChainSuffix()) {
+      if (peekType() == TokenType.NO_SUBSTITUTION_TEMPLATE
+          || peekType() == TokenType.TEMPLATE_HEAD) {
+        reportError("template literal cannot be used within optional chaining");
+        break;
+      }
+      switch (peekType()) {
+        case PERIOD:
+          eat(TokenType.PERIOD);
+          IdentifierToken id = eatIdOrKeywordAsId();
+          optionalExpression =
+              new OptionalMemberExpressionTree(
+                  getTreeLocation(start),
+                  optionalExpression,
+                  id,
+                  /*isStartOfOptionalChain=*/ false);
+          break;
+        case OPEN_PAREN:
+          ArgumentListTree arguments = parseArguments();
+          optionalExpression =
+              new OptionalCallExpressionTree(
+                  getTreeLocation(start),
+                  optionalExpression,
+                  arguments,
+                  /* isStartOfOptionalChain = */ false);
+          break;
+        case OPEN_SQUARE:
+          eat(TokenType.OPEN_SQUARE);
+          ParseTree member = parseExpression();
+          eat(TokenType.CLOSE_SQUARE);
+          optionalExpression =
+              new OptionalMemberLookupExpressionTree(
+                  getTreeLocation(start),
+                  optionalExpression,
+                  member,
+                  /* isStartOfOptionalChain = */ false);
+          break;
+        default:
+          throw new AssertionError("unexpected case: " + peekType());
+      }
+    }
+    return optionalExpression;
+  }
+
+  /** Tokens that indicate continuation of an optional chain. */
+  private boolean peekOptionalChainSuffix() {
+    return peek(TokenType.OPEN_PAREN) // a?.b( ...
+        || peek(TokenType.OPEN_SQUARE) // a?.b[ ...
+        || peek(TokenType.PERIOD) // a?.b. ...
+        // TEMPLATE_HEAD and NO_SUBSTITUTION_TEMPLATE are actually not allowed within optional
+        // chaining and leads to an early error as dictated by the spec.
+        // https://tc39.es/proposal-optional-chaining/#sec-left-hand-side-expressions-static-semantics-early-errors
+        || peek(TokenType.NO_SUBSTITUTION_TEMPLATE) // a?.b`text`
+        || peek(TokenType.TEMPLATE_HEAD); // a?.b`text ${substitution} text`
   }
 
   private static final String ASYNC = "async";
@@ -3653,7 +3793,13 @@ public class Parser {
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.NEW);
+      if (peek(TokenType.QUESTION_DOT)) { // new?.target not allowed
+        reportError("Optional chaining is forbidden in `new?.target` contexts.");
+      }
       ParseTree operand = parseNewExpression();
+      if (peek(TokenType.QUESTION_DOT)) { // new a?.() not allowed
+        reportError("Optional chaining is forbidden in construction contexts.");
+      }
       ArgumentListTree arguments = null;
       if (peek(TokenType.OPEN_PAREN)) {
         arguments = parseArguments();

@@ -17,6 +17,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT_IN;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +46,14 @@ public final class OptimizeParametersTest extends CompilerTestCase {
     super.setUp();
     enableNormalize();
     enableGatherExternProperties();
+  }
+
+  @Test
+  public void nullishCoalesce() {
+    setAcceptedLanguage(ECMASCRIPT_NEXT_IN);
+    test(
+        "var f = (function(...p1){            }) ?? (function(...p2){           }); f()",
+        "var f = (function(     ){ var p1 = []}) ?? (function(     ){var p2 = []}); f()");
   }
 
   @Test

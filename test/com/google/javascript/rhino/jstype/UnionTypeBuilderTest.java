@@ -42,6 +42,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import org.junit.Before;
@@ -62,20 +63,20 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
   private ObjectType base;
   private ObjectType sub;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
-    FunctionType baseCtor =
-        FunctionType.builder(registry).forConstructor().withName("Base").build();
-    this.base = baseCtor.getInstanceType();
-    FunctionType subCtor =
-        FunctionType.builder(registry)
-            .forConstructor()
-            .withName("Sub")
-            .withPrototypeBasedOn(base)
-            .build();
-    this.sub = subCtor.getInstanceType();
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      FunctionType baseCtor =
+          FunctionType.builder(registry).forConstructor().withName("Base").build();
+      this.base = baseCtor.getInstanceType();
+      FunctionType subCtor =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Sub")
+              .withPrototypeBasedOn(base)
+              .build();
+      this.sub = subCtor.getInstanceType();
+    }
   }
 
   @Test
@@ -144,10 +145,6 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
 
   @Test
   public void testUnknownTypes() {
-    JSType unresolvedNameA1 = registry.createNamedType(EMPTY_SCOPE, "not.resolved.A", null, -1, -1);
-    JSType unresolvedNameA2 = registry.createNamedType(EMPTY_SCOPE, "not.resolved.A", null, -1, -1);
-    JSType unresolvedNameB = registry.createNamedType(EMPTY_SCOPE, "not.resolved.B", null, -1, -1);
-
     assertUnion("?", UNKNOWN_TYPE);
     assertUnion("?", UNKNOWN_TYPE, UNKNOWN_TYPE);
     assertUnion("(?|undefined)", UNKNOWN_TYPE, VOID_TYPE);
@@ -155,13 +152,26 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
     assertUnion("(?|undefined)", VOID_TYPE, NUMBER_TYPE, UNKNOWN_TYPE);
 
     assertUnion("(*|undefined)", ALL_TYPE, VOID_TYPE, NULL_TYPE);
+  }
 
-    // NOTE: "(?)" means there are multiple unknown types in the union.
-    assertUnion("?", UNKNOWN_TYPE, unresolvedNameA1);
-    assertUnion("not.resolved.A", unresolvedNameA1, unresolvedNameA2);
-    assertUnion("(not.resolved.A|not.resolved.B)",
-        unresolvedNameA1, unresolvedNameB);
-    assertUnion("(Object|not.resolved.A)", unresolvedNameA1, OBJECT_TYPE);
+  @Test
+  public void testUnresolvedNamedTypes() {
+    errorReporter.expectAllWarnings(
+        "Bad type annotation. Unknown type not.resolved.A",
+        "Bad type annotation. Unknown type not.resolved.A",
+        "Bad type annotation. Unknown type not.resolved.B");
+
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      JSType unresolvedNameA1 = registry.createNamedType(EMPTY_SCOPE, "not.resolved.A", "", -1, -1);
+      JSType unresolvedNameA2 = registry.createNamedType(EMPTY_SCOPE, "not.resolved.A", "", -1, -1);
+      JSType unresolvedNameB = registry.createNamedType(EMPTY_SCOPE, "not.resolved.B", "", -1, -1);
+
+      // NOTE: "(?)" means there are multiple unknown types in the union.
+      assertUnion("?", UNKNOWN_TYPE, unresolvedNameA1);
+      assertUnion("(not.resolved.A)", unresolvedNameA1, unresolvedNameA2);
+      assertUnion("(not.resolved.A|not.resolved.B)", unresolvedNameA1, unresolvedNameB);
+      assertUnion("(Object|not.resolved.A)", unresolvedNameA1, OBJECT_TYPE);
+    }
   }
 
   @Test
@@ -191,6 +201,35 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
             sub,
             createFunctionWithReturn(base));
     assertThat(union.toString()).isEqualTo("(Base|function(): Base)");
+  }
+
+  @Test
+  public void testRemovalOfIdenticalRecordTypes_beforeResolution() {
+    UnionType recordUnion;
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      // Create two identical anonymous record types
+      JSType type = registry.createRecordType(ImmutableMap.of("prop", STRING_TYPE));
+
+      recordUnion = (UnionType) registry.createUnionType(type, type, NULL_TYPE);
+
+      // drop the identical references to 'type'
+      assertThat(recordUnion.getAlternates()).hasSize(2);
+    }
+  }
+
+  @Test
+  public void testRemovalOfDuplicateRecordTypes_deferredUntilResolution() {
+    UnionType recordUnion;
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      // Create two identical anonymous record types
+      JSType typeA = registry.createRecordType(ImmutableMap.of("prop", STRING_TYPE));
+      JSType typeB = registry.createRecordType(ImmutableMap.of("prop", STRING_TYPE));
+
+      recordUnion = (UnionType) registry.createUnionType(typeA, typeB);
+
+      assertThat(recordUnion.getAlternates()).hasSize(2);
+    }
+    assertThat(recordUnion.getAlternates()).hasSize(1);
   }
 
   @Test

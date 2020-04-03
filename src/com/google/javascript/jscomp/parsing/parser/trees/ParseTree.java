@@ -58,6 +58,11 @@ public class ParseTree {
   public BlockTree asBlock() { return (BlockTree) this; }
   public BreakStatementTree asBreakStatement() { return (BreakStatementTree) this; }
   public CallExpressionTree asCallExpression() { return (CallExpressionTree) this; }
+
+  public OptionalCallExpressionTree asOptionalCallExpression() {
+    return (OptionalCallExpressionTree) this;
+  }
+
   public CaseClauseTree asCaseClause() { return (CaseClauseTree) this; }
   public CatchTree asCatch() { return (CatchTree) this; }
   public ClassDeclarationTree asClassDeclaration() { return (ClassDeclarationTree) this; }
@@ -110,8 +115,18 @@ public class ParseTree {
   public LabelledStatementTree asLabelledStatement() { return (LabelledStatementTree) this; }
   public LiteralExpressionTree asLiteralExpression() { return (LiteralExpressionTree) this; }
   public MemberExpressionTree asMemberExpression() { return (MemberExpressionTree) this; }
+
+  public OptionalMemberExpressionTree asOptionalMemberExpression() {
+    return (OptionalMemberExpressionTree) this;
+  }
+
   public MemberLookupExpressionTree asMemberLookupExpression() {
     return (MemberLookupExpressionTree) this; }
+
+  public OptionalMemberLookupExpressionTree asOptionalMemberLookupExpression() {
+    return (OptionalMemberLookupExpressionTree) this;
+  }
+
   public MemberVariableTree asMemberVariable() { return (MemberVariableTree) this; }
   public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
     return (MissingPrimaryExpressionTree) this; }

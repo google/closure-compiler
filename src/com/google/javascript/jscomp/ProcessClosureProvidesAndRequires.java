@@ -73,17 +73,24 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   private boolean hasRewritingOccurred = false;
   private final Set<Node> forwardDeclaresToRemove = new HashSet<>();
   private final Set<Node> previouslyProvidedDefinitions = new HashSet<>();
+  private final TypedScope globalTypedScope;
+  private final AstFactory astFactory;
 
   ProcessClosureProvidesAndRequires(
       AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       CheckLevel requiresLevel,
-      boolean preserveGoogProvidesAndRequires) {
+      boolean preserveGoogProvidesAndRequires,
+      @Nullable TypedScope globalTypedScope) {
+    checkArgument(globalTypedScope == null || globalTypedScope.isGlobal());
+
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.moduleGraph = compiler.getModuleGraph();
     this.requiresLevel = requiresLevel;
     this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
+    this.globalTypedScope = globalTypedScope;
+    this.astFactory = compiler.createAstFactory();
   }
 
   /** When invoked as compiler pass, we rewrite all provides and requires. */
@@ -788,13 +795,14 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
             if (hasAChildNamespace) {
               createNamespaceInitialization(
                   createDeclarationNode(
-                      IR.cast(IR.objectlit(), createUnknownTypeJsDocInfo(exprNode))));
+                      astFactory.createCastToUnknown(
+                          astFactory.createObjectLit(), createUnknownTypeJsDocInfo(exprNode))));
             }
           }
         }
       } else {
         // Handle the case where there's not an existing definition.
-        createNamespaceInitialization(createDeclarationNode(IR.objectlit()));
+        createNamespaceInitialization(createDeclarationNode(astFactory.createObjectLit()));
       }
 
       // Remove the `goog.provide('a.b.c');` call.
@@ -869,6 +877,11 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
       Node name = IR.name(namespace);
       name.addChildToFront(value);
 
+      if (globalTypedScope != null) {
+        TypedVar typedVar = checkNotNull(globalTypedScope.getVar(namespace), namespace);
+        name.setJSType(typedVar.getType());
+      }
+
       Node decl = IR.var(name);
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
 
@@ -886,13 +899,8 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 
     /** Creates a dotted namespace assignment expression (e.g. <code>foo.bar = {};</code>). */
     private Node makeAssignmentExprNode(Node value) {
-      Node lhs =
-          NodeUtil.newQName(
-              compiler,
-              namespace,
-              firstNode /* real source info will be filled in below */,
-              namespace);
-      Node decl = IR.exprResult(IR.assign(lhs, value));
+      Node lhs = astFactory.createQName(globalTypedScope, namespace).srcrefTree(firstNode);
+      Node decl = IR.exprResult(astFactory.createAssign(lhs, value));
       decl.putBooleanProp(Node.IS_NAMESPACE, true);
       if (!hasCandidateDefinitionNotFromPreviousPass()) {
         decl.getFirstChild().setJSDocInfo(NodeUtil.createConstantJsDoc());
@@ -934,7 +942,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
     }
 
     private Node getProvideStringNode() {
-      return (firstNode.getFirstChild() != null && NodeUtil.isExprCall(firstNode))
+      return (firstNode.hasChildren() && NodeUtil.isExprCall(firstNode))
           ? firstNode.getFirstChild().getLastChild()
           : null;
     }

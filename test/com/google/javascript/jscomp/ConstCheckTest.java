@@ -35,6 +35,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    enableCreateModuleMap();
   }
 
   @Override
@@ -42,7 +43,7 @@ public final class ConstCheckTest extends CompilerTestCase {
     return (Node externs, Node root) -> {
       new Normalize.PropagateConstantAnnotationsOverVars(compiler, /* forbidChanges= */ false)
           .process(externs, root);
-      new ConstCheck(compiler).process(externs, root);
+      new ConstCheck(compiler, compiler.getModuleMetadataMap()).process(externs, root);
     };
   }
 
@@ -282,7 +283,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   public void testConstNameInExterns() {
     String externs = "/** @const */ var FOO;";
     String js = "FOO = 1;";
-    testWarning(externs, js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+    testWarning(externs(externs), srcs(js), warning(ConstCheck.CONST_REASSIGNED_VALUE_ERROR));
   }
 
   @Test
@@ -293,6 +294,25 @@ public final class ConstCheckTest extends CompilerTestCase {
   @Test
   public void testGoogModuleExportsReassigned() {
     testWarning("goog.module('m'); exports = class {}; exports = class {};");
+  }
+
+  @Test
+  public void testGoogProvide_rootNamespaceExplicitlyDeclared() {
+    testSame("goog.provide('a'); var a = {};");
+    testSame("goog.provide('a'); var a = {}; a = 1;");
+    testWarning(
+        "goog.provide('a'); /** @const */ var a = {}; a = 1;",
+        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+  }
+
+  @Test
+  public void testGoogProvide_rootNamespaceImplicitlyDeclared() {
+    testSame("goog.provide('a'); a = {};");
+    testSame("goog.provide('a'); a = {}; a = 1;");
+    testSame("goog.provide('a'); a.B = class {};");
+    testSame("goog.provide('a.b.c'); a = class {};");
+    testSame(srcs("goog.provide('a.b');", "goog.provide('a.c');"));
+    testSame("goog.provide('a'); a = 0; a++;");
   }
 
   private void testError(String js) {

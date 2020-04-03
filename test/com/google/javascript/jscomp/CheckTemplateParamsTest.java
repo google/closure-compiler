@@ -123,4 +123,16 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
         warning(TOO_MANY_TEMPLATE_PARAMS));
   }
 
+  @Test
+  public void testReferenceToNonObjectType() {
+    test(srcs("/** @type {string<null>} */ var x;"), warning(TOO_MANY_TEMPLATE_PARAMS));
+    test(srcs("/** @type {string<null, null>} */ var x;"), warning(TOO_MANY_TEMPLATE_PARAMS));
+    // TODO(b/287880204): this should warn TOO_MANY_TEMPLATE_PARAMS
+    test(
+        srcs(
+            lines(
+                "/** @type {NumberType<null>} */ var x;", //
+                "/** @typedef {number} */",
+                "let NumberType;")));
+  }
 }

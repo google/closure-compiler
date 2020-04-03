@@ -124,8 +124,8 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(getReferenceName());
+  void appendTo(TypeStringBuilder sb) {
+    sb.append(getReferenceName());
   }
 
   @Override

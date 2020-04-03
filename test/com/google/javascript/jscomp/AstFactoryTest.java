@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
@@ -24,6 +26,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -37,6 +42,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public class AstFactoryTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
@@ -73,6 +79,7 @@ public class AstFactoryTest {
         options);
     compiler.parseInputs();
 
+    assertWithMessage("parse error").that(compiler.getErrors()).isEmpty();
     return compiler.getJsRoot();
   }
 
@@ -151,6 +158,21 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateCastToUnknown() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node numberNode = astFactory.createNumber(0);
+    JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
+    infoBuilder.recordType(new JSTypeExpression(new Node(Token.QMARK), "test.js"));
+    JSDocInfo info = infoBuilder.build();
+    Node castNode = astFactory.createCastToUnknown(numberNode, info);
+
+    assertNode(castNode).hasType(Token.CAST);
+    assertNode(castNode).hasJSTypeThat().isUnknown();
+    assertThat(castNode.getJSDocInfo()).isEqualTo(info);
+  }
+
+  @Test
   public void testNotExpression() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -170,6 +192,30 @@ public class AstFactoryTest {
     Node argumentsNode = astFactory.createArgumentsReference();
     assertNode(argumentsNode).matchesName("arguments");
     assertType(argumentsNode.getJSType()).isEqualTo(getRegistry().getGlobalType("Arguments"));
+  }
+
+  @Test
+  public void testCreateSingleVarNameDeclaration() {
+    AstFactory astFactory = createTestAstFactory();
+
+    final Node valueNode = astFactory.createBoolean(true);
+    Node constNode = astFactory.createSingleVarNameDeclaration("myTrue", valueNode);
+    assertNode(constNode).isVar().hasOneChildThat().isName("myTrue");
+    Node nameNode = constNode.getOnlyChild();
+    assertNode(nameNode).hasOneChildThat().isEqualTo(valueNode);
+    assertNode(nameNode).hasJSTypeThat().isEqualTo(valueNode.getJSType());
+  }
+
+  @Test
+  public void testCreateSingleConstNameDeclaration() {
+    AstFactory astFactory = createTestAstFactory();
+
+    final Node valueNode = astFactory.createBoolean(true);
+    Node constNode = astFactory.createSingleConstNameDeclaration("myTrue", valueNode);
+    assertNode(constNode).isConst().hasOneChildThat().isName("myTrue");
+    Node nameNode = constNode.getOnlyChild();
+    assertNode(nameNode).hasOneChildThat().isEqualTo(valueNode);
+    assertNode(nameNode).hasJSTypeThat().isEqualTo(valueNode.getJSType());
   }
 
   @Test
@@ -468,6 +514,37 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateGetterDef() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node valueNode = astFactory.createString("value");
+    Node getterNode = astFactory.createGetterDef("name", valueNode);
+
+    assertNode(getterNode) //
+        .hasToken(Token.GETTER_DEF)
+        .hasStringThat()
+        .isEqualTo("name");
+    assertNode(getterNode) //
+        .hasOneChildThat()
+        .isFunction()
+        .hasXChildren(3);
+    Node getterFunctionNode = getterNode.getOnlyChild();
+    // The first child is an empty string representing that the function has no name
+    assertNode(getterFunctionNode).hasFirstChildThat().isName("");
+    // the second child is the parameter list, which should be empty.
+    assertNode(getterFunctionNode) //
+        .hasSecondChildThat()
+        .isParamList()
+        .hasNoChildren();
+    Node getterFunctionBody = getterFunctionNode.getLastChild();
+    assertNode(getterFunctionBody) //
+        .hasOneChildThat()
+        .hasToken(Token.RETURN)
+        .hasOneChildThat()
+        .isEqualTo(valueNode);
+  }
+
+  @Test
   public void testCreateGetElem() {
     AstFactory astFactory = createTestAstFactory();
 
@@ -736,6 +813,169 @@ public class AstFactoryTest {
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isFalse();
     assertThat(callNode.children()).containsExactly(callee, nullNode, arg1, arg2).inOrder();
     assertType(callNode.getJSType()).isString();
+  }
+
+  @Test
+  public void testCreateQNameFromString() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "", //
+                "const obj = {",
+                "  inner: {",
+                "    str: 'hi',",
+                "  }",
+                "};",
+                ""));
+    Scope scope = getScope(root);
+
+    Node objDotInnerDotStr = astFactory.createQName(scope, "obj.inner.str");
+
+    assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
+    Node objDotInner = objDotInnerDotStr.getFirstChild();
+    Node obj = objDotInner.getFirstChild();
+
+    assertNode(obj).hasJSTypeThat().toStringIsEqualTo("{inner: {str: string}}");
+    assertNode(objDotInner).hasJSTypeThat().toStringIsEqualTo("{str: string}");
+    assertNode(objDotInnerDotStr).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testCreateQNameFromStringIterable() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "", //
+                "const obj = {",
+                "  inner: {",
+                "    str: 'hi',",
+                "  }",
+                "};",
+                ""));
+    Scope scope = getScope(root);
+
+    Node objDotInnerDotStr = astFactory.createQName(scope, ImmutableList.of("obj", "inner", "str"));
+
+    assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
+    Node objDotInner = objDotInnerDotStr.getFirstChild();
+    Node obj = objDotInner.getFirstChild();
+
+    assertNode(obj).hasJSTypeThat().toStringIsEqualTo("{inner: {str: string}}");
+    assertNode(objDotInner).hasJSTypeThat().toStringIsEqualTo("{str: string}");
+    assertNode(objDotInnerDotStr).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testCreateQNameFromBaseNamePlusStringIterable() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "", //
+                "const obj = {",
+                "  inner: {",
+                "    str: 'hi',",
+                "  }",
+                "};",
+                ""));
+    Scope scope = getScope(root);
+
+    Node objDotInnerDotStr = astFactory.createQName(scope, "obj", ImmutableList.of("inner", "str"));
+
+    assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
+    Node objDotInner = objDotInnerDotStr.getFirstChild();
+    Node obj = objDotInner.getFirstChild();
+
+    assertNode(obj).hasJSTypeThat().toStringIsEqualTo("{inner: {str: string}}");
+    assertNode(objDotInner).hasJSTypeThat().toStringIsEqualTo("{str: string}");
+    assertNode(objDotInnerDotStr).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testCreateQNameFromStringVarArgs() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root =
+        parseAndAddTypes(
+            lines(
+                "", //
+                "const obj = {",
+                "  inner: {",
+                "    str: 'hi',",
+                "  }",
+                "};",
+                ""));
+    Scope scope = getScope(root);
+
+    Node objDotInnerDotStr = astFactory.createQName(scope, "obj", "inner", "str");
+
+    assertNode(objDotInnerDotStr).matchesQualifiedName("obj.inner.str");
+    Node objDotInner = objDotInnerDotStr.getFirstChild();
+    Node obj = objDotInner.getFirstChild();
+
+    assertNode(obj).hasJSTypeThat().toStringIsEqualTo("{inner: {str: string}}");
+    assertNode(objDotInner).hasJSTypeThat().toStringIsEqualTo("{str: string}");
+    assertNode(objDotInnerDotStr).hasJSTypeThat().isString();
+  }
+
+  @Test
+  public void testCreateQNameFromSimpleStringAndTypedScope() {
+    AstFactory astFactory = createTestAstFactory();
+
+    TypedScope scope = TypedScope.createGlobalScope(IR.root());
+    scope.declare("x", IR.name("x"), getNativeType(JSTypeNative.NUMBER_TYPE), null, true);
+
+    Node name = astFactory.createQName(scope, "x");
+
+    assertNode(name).hasStringThat().isEqualTo("x");
+    assertNode(name).hasJSTypeThat().isNumber();
+  }
+
+  @Test
+  public void testCreateQNameFromDottedStringAndTypedScope() {
+    AstFactory astFactory = createTestAstFactory();
+
+    TypedScope scope = TypedScope.createGlobalScope(IR.root());
+    // Declare a global "x" with the type "{y: number}".
+    ObjectType objectWithYProp = getRegistry().createAnonymousObjectType(null);
+    objectWithYProp.defineDeclaredProperty("y", getNativeType(JSTypeNative.NUMBER_TYPE), null);
+    scope.declare("x", IR.name("x"), objectWithYProp, null, true);
+
+    Node name = astFactory.createQName(scope, "x.y");
+
+    assertNode(name).matchesQualifiedName("x.y");
+    assertNode(name).hasJSTypeThat().isNumber();
+    assertNode(name.getFirstChild()).hasJSTypeThat().isObjectTypeWithProperty("y");
+  }
+
+  @Test
+  public void testCreateQNameFromStringAndTypedScope_crashesGivenMissingName() {
+    AstFactory astFactory = createTestAstFactory();
+
+    TypedScope scope = TypedScope.createGlobalScope(IR.root());
+
+    assertThrows(Exception.class, () -> astFactory.createQName(scope, "x"));
+  }
+
+  @Test
+  public void testCreateQNameFromStringAndTypedScope_crashesGivenLocalScope() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node root = IR.root();
+    Node block = IR.block();
+    root.addChildToFront(IR.script(block));
+
+    TypedScope globalScope = TypedScope.createGlobalScope(root);
+    globalScope.declare("x", IR.name("x"), getNativeType(JSTypeNative.NUMBER_TYPE), null, true);
+    TypedScope localScope = new TypedScope(globalScope, block);
+
+    astFactory.createQName(globalScope, "x");
+    assertThrows(IllegalArgumentException.class, () -> astFactory.createQName(localScope, "x"));
   }
 
   @Test
@@ -1031,6 +1271,24 @@ public class AstFactoryTest {
 
     assertNode(objectLit.getFirstChild()).isSameInstanceAs(spread);
     assertNode(objectLit.getSecondChild()).isSameInstanceAs(stringKey);
+  }
+
+  @Test
+  public void testCreateObjectLit_withElementsAndType() {
+    AstFactory astFactory = createTestAstFactory();
+
+    // Try creating an object literal that implements Thenable and type it as one.
+    final JSType thenableType = getRegistry().getNativeType(JSTypeNative.THENABLE_TYPE);
+    Node thenStringKey =
+        IR.stringKey(
+            "then",
+            astFactory.createZeroArgArrowFunctionForExpression(astFactory.createString("hi")));
+
+    Node objectLit = astFactory.createObjectLit(thenableType, thenStringKey);
+
+    assertThat(objectLit.getJSType()).isEqualTo(thenableType);
+    assertNode(objectLit).hasToken(Token.OBJECTLIT);
+    assertNode(objectLit).hasOneChildThat().isSameInstanceAs(thenStringKey);
   }
 
   @Test

@@ -39,10 +39,8 @@ import org.junit.runners.JUnit4;
 public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   private Config.LanguageMode mode;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     mode = LanguageMode.ECMASCRIPT3;
   }
 
@@ -938,7 +936,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   }
 
   private Node parse(String source, String... warnings) {
-    TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
+    TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     Config config =
         ParserRunner.createConfig(
             mode,
@@ -953,8 +951,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
             .ast;
 
     // verifying that all warnings were seen
-    testErrorReporter.assertHasEncounteredAllErrors();
-    testErrorReporter.assertHasEncounteredAllWarnings();
+    testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
 
     return script;
   }

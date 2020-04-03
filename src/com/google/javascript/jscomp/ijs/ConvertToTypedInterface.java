@@ -85,20 +85,33 @@ public class ConvertToTypedInterface implements CompilerPass {
     this.compiler = compiler;
   }
 
+  private static void maybeReport(
+      AbstractCompiler compiler, Node node, DiagnosticType diagnostic, String... fillers) {
+    String sourceName = NodeUtil.getSourceName(node);
+    if (sourceName.endsWith("_test.js") || sourceName.endsWith("_test.closure.js")) {
+      // Allow _test.js files and their tsickle generated
+      // equivalents to avoid emitting errors at .i.js generation time.
+      // We expect these files to not be consumed by any other downstream libraries.
+      return;
+    }
+    compiler.report(JSError.make(node, diagnostic, fillers));
+  }
+
   private static void maybeWarnForConstWithoutExplicitType(
       AbstractCompiler compiler, PotentialDeclaration decl) {
     if (decl.isConstToBeInferred()
         && !decl.getLhs().isFromExterns()
         && !JsdocUtil.isPrivate(decl.getJsDoc())) {
+
       Node nameNode = decl.getLhs();
       if (nameNode.getJSType() == null) {
-        compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
+        maybeReport(compiler, nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE);
       } else {
-        compiler.report(
-            JSError.make(
-                nameNode,
-                CONSTANT_WITH_SUGGESTED_TYPE,
-                nameNode.getJSType().toAnnotationString(Nullability.EXPLICIT)));
+        maybeReport(
+            compiler,
+            nameNode,
+            CONSTANT_WITH_SUGGESTED_TYPE,
+            nameNode.getJSType().toAnnotationString(Nullability.EXPLICIT));
       }
     }
   }
@@ -112,7 +125,8 @@ public class ConvertToTypedInterface implements CompilerPass {
 
   private void processFile(Node scriptNode) {
     checkArgument(scriptNode.isScript());
-    if (AbstractCompiler.isFillFileName(scriptNode.getSourceFileName())) {
+    String sourceFileName = scriptNode.getSourceFileName();
+    if (AbstractCompiler.isFillFileName(sourceFileName)) {
       scriptNode.detach();
       return;
     }
@@ -479,7 +493,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         // and should not be depended on.
         if (decl.getRhs() != null && decl.getRhs().isClass()
             || decl.getJsDoc() != null && decl.getJsDoc().containsTypeDefinition()) {
-          compiler.report(JSError.make(decl.getLhs(), GOOG_SCOPE_HIDDEN_TYPE));
+          maybeReport(compiler, decl.getLhs(), GOOG_SCOPE_HIDDEN_TYPE);
         }
         return true;
       }

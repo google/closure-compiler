@@ -59,8 +59,7 @@ public final class JSCompCorrespondences {
     Node exprRoot =
         COMPILER_FOR_PARSING
             .parse(SourceFile.fromCode("expr", "(" + expr + ")")) // SCRIPT
-            .getFirstChild() // EXPR_RESULT
-            .getFirstChild(); // expr
+            .getFirstFirstChild(); // EXPR_RESULT > expr
     return checkNotNull(exprRoot, "Failed to parse expression");
   }
 

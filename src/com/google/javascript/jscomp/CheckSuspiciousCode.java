@@ -69,6 +69,12 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
           "JSC_SUSPICIOUS_NEGATED_LEFT_OPERAND_OF_IN_OPERATOR",
           "Suspicious negated left operand of 'in' operator.");
 
+  static final DiagnosticType SUSPICIOUS_BREAKING_OUT_OF_OPTIONAL_CHAIN =
+      DiagnosticType.warning(
+          "SUSPICIOUS_BREAKING_OUT_OF_OPTIONAL_CHAIN",
+          "Suspicious breaking out of optional chain. May result in TypeError if optional chain is"
+              + " undefined.");
+
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     checkMissingSemicolon(t, n);
@@ -77,6 +83,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     checkNonObjectInstanceOf(t, n);
     checkNegatedLeftOperandOfInOperator(t, n);
     checkLeftOperandOfLogicalOperator(t, n);
+    checkSuspiciousBreakingOutOfOptionalChain(t, n);
   }
 
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
@@ -178,6 +185,20 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
       if (v != TernaryValue.UNKNOWN) {
         String result = v == TernaryValue.TRUE ? "truthy" : "falsy";
         t.report(n, SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR, operator, result);
+      }
+    }
+  }
+
+  /**
+   * Checks for breaking out of optional chain. (e.g. `(a?.b).c)` There is no reason to break out of
+   * optional chains and doing so may cause a TypeError is `a` is nullish. Using `a?.b.c` is safer
+   * and will have the same effect when `a` is not nullish.
+   */
+  private static void checkSuspiciousBreakingOutOfOptionalChain(NodeTraversal t, Node n) {
+    if (n.isOptChainGetElem() || n.isOptChainGetProp() || n.isOptChainCall()) {
+      Node parent = n.getParent();
+      if (parent.isGetProp() || parent.isGetElem() || parent.isCall()) {
+        t.report(n, SUSPICIOUS_BREAKING_OUT_OF_OPTIONAL_CHAIN);
       }
     }
   }

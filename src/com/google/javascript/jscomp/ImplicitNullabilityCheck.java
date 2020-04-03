@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -30,9 +32,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.List;
 
-/**
- * Warn about types in JSDoc that are implicitly nullable.
- */
+/** Warn about types in JSDoc that are implicitly nullable. */
 public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     implements CompilerPass {
 
@@ -72,17 +72,55 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
   }
 
   /**
-   * Crawls the JSDoc of the given node to find any names in JSDoc
-   * that are implicitly null.
+   * Represents the types of implicit nullability errors caught by this pass: a) implicitly nonnull
+   * (missing a "!"), and b) implicitly nullable (missing a "?").
    */
-  @Override
-  public void visit(final NodeTraversal t, final Node n, final Node p) {
-    final JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      return;
-    }
-    final JSTypeRegistry registry = compiler.getTypeRegistry();
+  public enum Nullability {
+    NONNULL,
+    NULLABLE;
 
+    public boolean isNullable() {
+      return this == Nullability.NULLABLE;
+    }
+  }
+
+  /**
+   * Information to represent a single "implicit nullability result", including the JSDoc string
+   * node that needs a "!" or "?" to be explicit, as well as an enum indicating which of the two
+   * nullability cases were found ("!" or "?").
+   */
+  public static class Result {
+    final Node node;
+    final Nullability nullability;
+
+    private Result(Node node, Nullability nullability) {
+      checkArgument(node.isString());
+      this.node = node;
+      this.nullability = nullability;
+    }
+
+    static Result create(Node node, Nullability nullability) {
+      return new Result(node, nullability);
+    }
+
+    public Nullability getNullability() {
+      return nullability;
+    }
+
+    public Node getNode() {
+      return node;
+    }
+  }
+
+  /**
+   * Finds and returns all the JSDoc nodes inside the given JSDoc object whose nullability is not
+   * explict, using the NodeTraversal the necessary state (current scope, etc.)
+   */
+  public static ImmutableList<Result> findImplicitNullabilityResults(
+      final JSDocInfo info, final NodeTraversal t) {
+    if (info == null) {
+      return ImmutableList.of();
+    }
     final List<Node> thrownTypes =
         transform(
             info.getThrownTypes(),
@@ -93,7 +131,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
               }
             });
 
-    final Scope scope = t.getScope();
+    final ImmutableList.Builder<Result> builder = ImmutableList.builder();
     for (Node typeRoot : info.getTypeNodes()) {
       NodeUtil.visitPreOrder(
           typeRoot,
@@ -137,18 +175,30 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
               if (NULLABILITY_OMITTED_TYPES.contains(typeName)) {
                 return;
               }
-              if (registry.getType(scope, typeName) == null) {
+              JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
+              if (registry.getType(t.getScope(), typeName) == null) {
                 return;
               }
               JSType type = registry.createTypeFromCommentNode(node);
-              if (type.isNullable()) {
-                compiler.report(JSError.make(node, IMPLICITLY_NULLABLE_JSDOC, typeName));
-              } else {
-                compiler.report(JSError.make(node, IMPLICITLY_NONNULL_JSDOC, typeName));
-              }
+              Nullability nullability =
+                  type.isNullable() ? Nullability.NULLABLE : Nullability.NONNULL;
+              builder.add(Result.create(node, nullability));
             }
           },
           Predicates.alwaysTrue());
+    }
+    return builder.build();
+  }
+
+  /** Crawls the JSDoc of the given node to find any names in JSDoc that are implicitly null. */
+  @Override
+  public void visit(final NodeTraversal t, final Node n, final Node p) {
+    final JSDocInfo info = n.getJSDocInfo();
+    for (Result r : findImplicitNullabilityResults(info, t)) {
+      Node stringNode = r.getNode();
+      DiagnosticType dt =
+          r.getNullability().isNullable() ? IMPLICITLY_NULLABLE_JSDOC : IMPLICITLY_NONNULL_JSDOC;
+      compiler.report(JSError.make(stringNode, dt, stringNode.getString()));
     }
   }
 }

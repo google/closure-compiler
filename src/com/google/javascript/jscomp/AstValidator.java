@@ -64,15 +64,6 @@ public final class AstValidator implements CompilerPass {
     this.isScriptFeatureValidationEnabled = validateScriptFeatures;
   }
 
-  /**
-   * Deprecated - use the three-argument constructor instead to specify validateScriptFeatures.
-   * TODO(lharker): remove this constructor after the next external release.
-   */
-  @Deprecated
-  public AstValidator(AbstractCompiler compiler, ViolationHandler handler) {
-    this(compiler, handler, false);
-  }
-
   public AstValidator(AbstractCompiler compiler) {
     this(compiler, /* validateScriptFeatures= */ false);
   }
@@ -349,6 +340,10 @@ public final class AstValidator implements CompilerPass {
         validateFeature(Feature.EXPONENT_OP, n);
         validateBinaryOp(n);
         return;
+      case COALESCE:
+        validateFeature(Feature.NULL_COALESCE_OP, n);
+        validateBinaryOp(n);
+        return;
       case COMMA:
       case OR:
       case AND:
@@ -380,8 +375,16 @@ public final class AstValidator implements CompilerPass {
         validateGetElem(n);
         return;
 
+      case OPTCHAIN_GETELEM:
+        validateOptChainGetElem(n);
+        return;
+
       case GETPROP:
         validateGetProp(n);
+        return;
+
+      case OPTCHAIN_GETPROP:
+        validateOptChainGetProp(n);
         return;
 
       case ARRAYLIT:
@@ -398,6 +401,10 @@ public final class AstValidator implements CompilerPass {
 
       case CALL:
         validateCall(n);
+        return;
+
+      case OPTCHAIN_CALL:
+        validateOptChainCall(n);
         return;
 
       case NEW:
@@ -1032,6 +1039,19 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
+  private void validateOptChainCall(Node node) {
+    validateFeature(Feature.OPTIONAL_CHAINING, node);
+    validateNodeType(Token.OPTCHAIN_CALL, node);
+    validateMinimumChildCount(node, 1);
+    Node callee = node.getFirstChild();
+    validateExpression(callee);
+    for (Node argument = callee.getNext(); argument != null; argument = argument.getNext()) {
+      validatePseudoExpression(argument, Token.ITER_SPREAD);
+    }
+    validateFirstNodeOfOptChain(node);
+  }
+
+  @SuppressWarnings("RhinoNodeGetGrandparent")
   private void validateSuper(Node superNode) {
     validateFeature(Feature.SUPER, superNode);
     validateChildless(superNode);
@@ -1499,6 +1519,15 @@ public final class AstValidator implements CompilerPass {
     validateExpression(n.getLastChild());
   }
 
+  private void validateOptChainGetElem(Node node) {
+    validateFeature(Feature.OPTIONAL_CHAINING, node);
+    checkArgument(node.isOptChainGetElem(), node);
+    validateChildCount(node, 2);
+    validatePropertyReferenceTarget(node.getFirstChild());
+    validateExpression(node.getLastChild());
+    validateFirstNodeOfOptChain(node);
+  }
+
   private void validateGetProp(Node n) {
     validateNodeType(Token.GETPROP, n);
     validateChildCount(n);
@@ -1506,6 +1535,17 @@ public final class AstValidator implements CompilerPass {
     Node prop = n.getLastChild();
     validateNodeType(Token.STRING, prop);
     validateNonEmptyString(prop);
+  }
+
+  private void validateOptChainGetProp(Node node) {
+    validateFeature(Feature.OPTIONAL_CHAINING, node);
+    validateNodeType(Token.OPTCHAIN_GETPROP, node);
+    validateChildCount(node);
+    validatePropertyReferenceTarget(node.getFirstChild());
+    Node prop = node.getLastChild();
+    validateNodeType(Token.STRING, prop);
+    validateNonEmptyString(prop);
+    validateFirstNodeOfOptChain(node);
   }
 
   private void validatePropertyReferenceTarget(Node objectNode) {
@@ -1855,6 +1895,18 @@ public final class AstValidator implements CompilerPass {
 
   private void violation(String message, Node n) {
     violationHandler.handleViolation(message, n);
+  }
+
+  // the first node of an opt chain must be marked with Prop.START_OF_OPT_CHAIN
+  private void validateFirstNodeOfOptChain(Node n) {
+    if (!NodeUtil.isOptChainNode(n.getFirstChild())) {
+      // if the first child of an opt chain node is not an opt chain node then it is the start of an
+      // opt chain
+      if (!n.isOptionalChainStart()) {
+        violation(
+            "Start of optional chain node " + n.getToken() + " is not marked as the start.", n);
+      }
+    }
   }
 
   private void validateNodeType(Token type, Node n) {

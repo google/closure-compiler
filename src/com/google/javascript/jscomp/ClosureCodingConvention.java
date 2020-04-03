@@ -27,7 +27,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -262,21 +261,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public List<String> identifyTypeDeclarationCall(Node n) {
     Node callName = n.getFirstChild();
-    if (callName.matchesQualifiedName("goog.addDependency") &&
-        n.getChildCount() >= 3) {
-      Node typeArray = callName.getNext().getNext();
-      if (typeArray.isArrayLit()) {
-        List<String> typeNames = new ArrayList<>();
-        for (Node name = typeArray.getFirstChild(); name != null;
-             name = name.getNext()) {
-          if (name.isString()) {
-            typeNames.add(name.getString());
-          }
-        }
-        return typeNames;
-      }
-    }
-
     // Identify forward declaration of form goog.forwardDeclare('foo.bar')
     if (callName.matchesQualifiedName("goog.forwardDeclare") && n.hasTwoChildren()) {
       Node typeDeclaration = n.getSecondChild();

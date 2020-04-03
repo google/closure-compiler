@@ -57,7 +57,7 @@ public class J2clChecksPass extends AbstractPostOrderCallback implements Compile
     if (n.getToken() == Token.SHEQ
         || n.getToken() == Token.EQ
         || n.getToken() == Token.SHNE
-        || n.getToken() == Token.NE) {
+        || n.isNE()) {
       JSType firstJsType = n.getFirstChild().getJSType();
       JSType lastJsType = n.getLastChild().getJSType();
       boolean hasType = isType(firstJsType, fileName) || isType(lastJsType, fileName);

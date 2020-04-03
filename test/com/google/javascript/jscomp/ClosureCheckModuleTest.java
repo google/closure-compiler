@@ -28,6 +28,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAM
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
+import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_ARGUMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
@@ -37,6 +38,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_FULLY
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_MODULE_GLOBAL_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REQUIRE_NOT_AT_TOP_LEVEL;
+import static com.google.javascript.jscomp.ClosureCheckModule.USE_OF_GOOG_PROVIDE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRUCTURING_FORWARD_DECLARE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 
@@ -241,59 +243,65 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
 
   @Test
   public void testBundledGoogModulesAndProvides() {
-    testSame(
-        lines(
-            "goog.provide('first.provide');",
-            "first.provide = 0;",
-            "",
-            "goog.provide('second.provide');",
-            "second.provide = 0;",
-            "",
-            "goog.loadModule(function(exports){",
-            "  'use strict';",
-            "  goog.module('Xyz');",
-            "  const first = goog.require('first.provide');",
-            "  exports = class {}",
-            "  return exports;",
-            "});",
-            "",
-            "goog.loadModule(function(exports){",
-            "  goog.module('abc');",
-            "  const Foo = goog.require('Xyz');",
-            "  const second = goog.require('second.provide');",
-            "  var x = new Foo;",
-            "  return exports;",
-            "});"));
+    test(
+        srcs(
+            lines(
+                "goog.provide('first.provide');",
+                "first.provide = 0;",
+                "",
+                "goog.provide('second.provide');",
+                "second.provide = 0;",
+                "",
+                "goog.loadModule(function(exports){",
+                "  'use strict';",
+                "  goog.module('Xyz');",
+                "  const first = goog.require('first.provide');",
+                "  exports = class {}",
+                "  return exports;",
+                "});",
+                "",
+                "goog.loadModule(function(exports){",
+                "  goog.module('abc');",
+                "  const Foo = goog.require('Xyz');",
+                "  const second = goog.require('second.provide');",
+                "  var x = new Foo;",
+                "  return exports;",
+                "});")),
+        error(USE_OF_GOOG_PROVIDE),
+        error(USE_OF_GOOG_PROVIDE));
   }
 
   @Test
   public void testBundledGoogModulesAndProvidesWithGoog() {
-    testSame(
-        lines(
-            "/** @provideGoog */",
-            "var goog = {};",
-            "",
-            "goog.provide('first.provide');",
-            "first.provide = 0;",
-            "",
-            "goog.provide('second.provide');",
-            "second.provide = 0;",
-            "",
-            "goog.loadModule(function(exports){",
-            "  'use strict';",
-            "  goog.module('Xyz');",
-            "  const first = goog.require('first.provide');",
-            "  exports = class {}",
-            "  return exports;",
-            "});",
-            "",
-            "goog.loadModule(function(exports){",
-            "  goog.module('abc');",
-            "  const Foo = goog.require('Xyz');",
-            "  const second = goog.require('second.provide');",
-            "  var x = new Foo;",
-            "  return exports;",
-            "});"));
+    test(
+        srcs(
+            lines(
+                "/** @provideGoog */",
+                "var goog = {};",
+                "",
+                "goog.provide('first.provide');",
+                "first.provide = 0;",
+                "",
+                "goog.provide('second.provide');",
+                "second.provide = 0;",
+                "",
+                "goog.loadModule(function(exports){",
+                "  'use strict';",
+                "  goog.module('Xyz');",
+                "  const first = goog.require('first.provide');",
+                "  exports = class {}",
+                "  return exports;",
+                "});",
+                "",
+                "goog.loadModule(function(exports){",
+                "  goog.module('abc');",
+                "  const Foo = goog.require('Xyz');",
+                "  const second = goog.require('second.provide');",
+                "  var x = new Foo;",
+                "  return exports;",
+                "});")),
+        error(USE_OF_GOOG_PROVIDE),
+        error(USE_OF_GOOG_PROVIDE));
   }
 
   @Test
@@ -457,11 +465,13 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
 
   @Test
   public void testIllegalDeclareLegacyNamespace() {
-    testError(
-        lines(
-            "goog.provide('a.provided.namespace');", //
-            "goog.module.declareLegacyNamespace();"),
-        DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
+    test(
+        srcs(
+            lines(
+                "goog.provide('a.provided.namespace');", //
+                "goog.module.declareLegacyNamespace();")),
+        error(DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE),
+        error(USE_OF_GOOG_PROVIDE));
 
     testError(
         lines(
@@ -493,6 +503,12 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "  return exports",
             "});"),
         LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
+
+    testError(
+        lines(
+            "goog.module('my.mod');", //
+            "goog.module.declareLegacyNamespace('some comment');"),
+        LEGACY_NAMESPACE_ARGUMENT);
   }
 
   @Test
@@ -903,5 +919,15 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "goog.module('foo');",
             "",
             "var a = goog.require('abc.');"));
+  }
+
+  @Test
+  public void testAllowGoogProvideDeclaration() {
+    testSame("const goog = {}; goog.provide = function(ns) {};");
+  }
+
+  @Test
+  public void testWarnOnGoogProvideCall() {
+    testError("goog.provide('foo.bar');", ClosureCheckModule.USE_OF_GOOG_PROVIDE);
   }
 }

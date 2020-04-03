@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
+import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 import static com.google.javascript.rhino.Token.AWAIT;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
@@ -33,6 +34,9 @@ import static com.google.javascript.rhino.Token.ITER_REST;
 import static com.google.javascript.rhino.Token.ITER_SPREAD;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.MODULE_BODY;
+import static com.google.javascript.rhino.Token.OPTCHAIN_CALL;
+import static com.google.javascript.rhino.Token.OPTCHAIN_GETELEM;
+import static com.google.javascript.rhino.Token.OPTCHAIN_GETPROP;
 import static com.google.javascript.rhino.Token.SCRIPT;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
 import static com.google.javascript.rhino.Token.SUPER;
@@ -51,6 +55,7 @@ import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -88,6 +93,7 @@ import org.mockito.Mockito;
  * runner.
  */
 @RunWith(Enclosed.class)
+@SuppressWarnings("RhinoNodeGetFirstFirstChild")
 public final class NodeUtilTest {
 
   /** Provides methods for parsing and accessing the compiler used for the parsing. */
@@ -96,7 +102,7 @@ public final class NodeUtilTest {
 
     private Node parse(String js) {
       CompilerOptions options = new CompilerOptions();
-      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+      options.setLanguageIn(LanguageMode.UNSUPPORTED);
 
       // To allow octal literals such as 0123 to be parsed.
       options.setStrictModeInput(false);
@@ -175,6 +181,28 @@ public final class NodeUtilTest {
       }
     }
     return null;
+  }
+
+  @RunWith(JUnit4.class)
+  public static final class IsDefinedValueTests {
+    @Test
+    public void testIsDefinedValue() {
+      // while "null" is "defined" for the purposes of this method, it triggers the RHS.
+      assertThat(NodeUtil.isDefinedValue(parseExpr("null ?? undefined"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("null ?? null"))).isTrue();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("undefined ?? undefined"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("undefined ?? null"))).isTrue();
+
+      // could be true but the logic is not refined enough
+      assertThat(NodeUtil.isDefinedValue(parseExpr("0 ?? undefined"))).isFalse();
+    }
+
+    @Test
+    public void isDefinedValueOptionalChain() {
+      assertThat(NodeUtil.isDefinedValue(parseExpr("x?.y"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("x?.[y]"))).isFalse();
+      assertThat(NodeUtil.isDefinedValue(parseExpr("x?.()"))).isFalse();
+    }
   }
 
   /**
@@ -273,12 +301,51 @@ public final class NodeUtilTest {
             {"a?false:false", TernaryValue.FALSE},
             {"a?true:false", TernaryValue.UNKNOWN},
             {"a?true:foo()", TernaryValue.UNKNOWN},
+
+            // coalesce returns LHS if LHS is truthy or if LHS and RHS have same boolean value
+            {"null??false", TernaryValue.FALSE}, // both false
+            {"2??[]", TernaryValue.TRUE}, // both true
+            {"{}??false", TernaryValue.TRUE}, // LHS is true
+            {"undefined??[]", TernaryValue.UNKNOWN},
+            {"foo()??true", TernaryValue.UNKNOWN},
           });
     }
 
     @Test
     public void getBooleanValue() {
       assertThat(NodeUtil.getBooleanValue(parseExpr(jsExpression))).isEqualTo(expectedResult);
+    }
+  }
+
+  @RunWith(JUnit4.class)
+  public static final class IsPropertyTestTests {
+
+    @Test
+    public void optionalChainGetPropIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node getProp = parseExpr("x.y?.z");
+      assertThat(NodeUtil.isPropertyTest(compiler, getProp.getFirstChild())).isTrue();
+    }
+
+    @Test
+    public void optionalChainGetElemIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node getElem = parseExpr("x.y?.[z]");
+      assertThat(NodeUtil.isPropertyTest(compiler, getElem.getFirstChild())).isTrue();
+    }
+
+    @Test
+    public void optionalChainCallIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node call = parseExpr("x.y?.(z)");
+      assertThat(NodeUtil.isPropertyTest(compiler, call.getFirstChild())).isTrue();
+    }
+
+    @Test
+    public void optionalChainNonStartOfChainIsPropertyTest() {
+      Compiler compiler = new Compiler();
+      Node getProp = parseExpr("x.y?.z.foo.bar");
+      assertThat(NodeUtil.isPropertyTest(compiler, getProp.getFirstChild())).isTrue();
     }
   }
 
@@ -1526,6 +1593,27 @@ public final class NodeUtilTest {
 
       expr = parseFirst(YIELD, "function *f() { yield 'something'; }");
       assertThat(NodeUtil.evaluatesToLocalValue(expr)).isFalse();
+    }
+
+    @Test
+    public void localValueOptChainGetProp() {
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.y"))).isFalse();
+    }
+
+    @Test
+    public void localValueOptChainGetElem() {
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.[y]"))).isFalse();
+    }
+
+    @Test
+    public void localValueOptChainCall() {
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.()"))).isFalse();
+    }
+
+    @Test
+    public void localValueOptChainCall_toString() {
+      // the toString() call is an optional call because it is part of an optional chain
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("x?.toString()"))).isTrue();
     }
 
     @Test
@@ -3621,6 +3709,40 @@ public final class NodeUtilTest {
   }
 
   @RunWith(JUnit4.class)
+  public static class GetStartOfOptChainTests {
+
+    @Test
+    public void isStartOfChain() {
+      // `expr?.prop`
+      Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
+
+      assertThat(NodeUtil.getStartOfOptChain(optChainGet)).isEqualTo(optChainGet);
+    }
+
+    @Test
+    public void shortChain() {
+      // `expr?.prop1.prop2`
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
+      Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+
+      assertThat(NodeUtil.getStartOfOptChain(outterGetProp)).isEqualTo(innerGetProp);
+    }
+
+    @Test
+    public void mixedChain() {
+      // `expr().prop1?.prop2()[prop3]`
+      Node call = IR.call(IR.name("expr"));
+      Node getProp = IR.getprop(call, IR.string("prop1"));
+      Node optGetProp = IR.startOptChainGetprop(getProp, IR.string("prop2"));
+      Node optCall = IR.continueOptChainCall(optGetProp);
+      Node optGetElem = IR.continueOptChainGetelem(optCall, IR.name("prop3"));
+
+      assertThat(NodeUtil.getStartOfOptChain(optGetElem)).isEqualTo(optGetProp);
+      assertThat(NodeUtil.getStartOfOptChain(optCall)).isEqualTo(optGetProp);
+    }
+  }
+
+  @RunWith(JUnit4.class)
   public static class NodeTraversalTests {
 
     @Test
@@ -3660,6 +3782,18 @@ public final class NodeUtilTest {
               .collect(Collectors.toList());
 
       assertThat(nodeNames).containsExactly("A", "B", "C", "D", "E").inOrder();
+    }
+
+    @Test
+    public void addFeatureToScriptUpdatesCompilerFeatureSet() {
+      Node scriptNode = parse("");
+      Compiler compiler = new Compiler();
+      compiler.setFeatureSet(FeatureSet.BARE_MINIMUM);
+      NodeUtil.addFeatureToScript(scriptNode, Feature.MODULES, compiler);
+
+      assertThat(NodeUtil.getFeatureSetOfScript(scriptNode))
+          .isEqualTo(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
+      assertFS(compiler.getFeatureSet()).equals(FeatureSet.BARE_MINIMUM.with(Feature.MODULES));
     }
 
     /**
@@ -4033,6 +4167,11 @@ public final class NodeUtilTest {
             {SUPER, "super.foo()", false},
             {CALL, "super()", true},
             {CALL, "super.foo()", true},
+
+            // OPTCHAIN
+            {OPTCHAIN_CALL, "x?.()", true},
+            {OPTCHAIN_GETPROP, "x?.y", true},
+            {OPTCHAIN_GETELEM, "x?.[y]", true},
           });
     }
 

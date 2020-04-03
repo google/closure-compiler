@@ -121,22 +121,25 @@ final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+  void appendTo(TypeStringBuilder sb) {
     if (!constructor.hasReferenceName()) {
-      return super.appendTo(sb, forAnnotations);
-    } else if (forAnnotations) {
-      return sb.append(constructor.getNormalizedReferenceName());
+      super.appendTo(sb);
+      return;
+    } else if (sb.isForAnnotations()) {
+      sb.append(constructor.getNormalizedReferenceName());
+      return;
     }
+
     String name = constructor.getReferenceName();
     if (name.isEmpty()) {
       Node n = constructor.getSource();
-      return sb.append("<anonymous@")
+      sb.append("<anonymous@")
           .append(n != null ? n.getSourceFileName() : "unknown")
           .append(":")
-          .append(n != null ? n.getLineno() : 0)
+          .append(Integer.toString(n != null ? n.getLineno() : 0))
           .append(">");
     }
-    return sb.append(name);
+    sb.append(name);
   }
 
   @Override

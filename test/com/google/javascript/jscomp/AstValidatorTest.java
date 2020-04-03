@@ -589,6 +589,56 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void superInvalidWithOptionalCall() {
+    Node superNode = IR.superNode();
+    Node optChainCallNode = IR.startOptChainCall(superNode);
+
+    expectInvalid(optChainCallNode, Check.STATEMENT);
+  }
+
+  @Test
+  public void superInvalidWithOptionalGetProp() {
+    Node superNode = IR.superNode();
+    Node propNode = IR.string("prop");
+    Node optChainGetPropNode = IR.startOptChainGetprop(superNode, propNode);
+
+    expectInvalid(optChainGetPropNode, Check.STATEMENT);
+  }
+
+  @Test
+  public void superInvalidWithOptionalGetElem() {
+    Node superNode = IR.superNode();
+    Node exprNode = IR.name("expr");
+    Node optChainGetElemNode = IR.startOptChainGetelem(superNode, exprNode);
+
+    expectInvalid(optChainGetElemNode, Check.STATEMENT);
+  }
+
+  @Test
+  public void optChainGetPropInvalidWithNoStartOfChain() {
+    Node innerGetProp = IR.continueOptChainGetprop(IR.name("expr"), IR.string("prop1"));
+    Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+
+    expectInvalid(outterGetProp, Check.STATEMENT);
+  }
+
+  @Test
+  public void optChainGetElemInvalidWithNoStartOfChain() {
+    Node innerGetElem = IR.continueOptChainGetelem(IR.name("expr"), IR.name("prop1"));
+    Node outterGetElem = IR.continueOptChainGetelem(innerGetElem, IR.name("prop2"));
+
+    expectInvalid(outterGetElem, Check.STATEMENT);
+  }
+
+  @Test
+  public void optChainCallInvalidWithNoStartOfChain() {
+    Node innerCall = IR.continueOptChainCall(IR.name("f"), IR.name("arg1"));
+    Node outterCall = IR.continueOptChainCall(innerCall, IR.name("arg2"));
+
+    expectInvalid(outterCall, Check.STATEMENT);
+  }
+
+  @Test
   public void testSuperInvalidInNonMemberFunction() {
     invalid(
         lines(
@@ -942,6 +992,23 @@ public final class AstValidatorTest extends CompilerTestCase {
   public void testFeatureValidation_exponentOp() {
     testFeatureValidation("2 ** 3", Feature.EXPONENT_OP);
     testFeatureValidation("x **= 3;", Feature.EXPONENT_OP);
+  }
+
+  @Test
+  public void testFeatureValidation_nullishCoalesceOp() {
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+
+    testFeatureValidation("x ?? y", Feature.NULL_COALESCE_OP);
+    testFeatureValidation("x ?? y ?? z", Feature.NULL_COALESCE_OP);
+  }
+
+  @Test
+  public void testFeatureValidation_optionalChaining() {
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+
+    testFeatureValidation("x?.y", Feature.OPTIONAL_CHAINING);
+    testFeatureValidation("x?.()", Feature.OPTIONAL_CHAINING);
+    testFeatureValidation("x?.[1]", Feature.OPTIONAL_CHAINING);
   }
 
   @Test

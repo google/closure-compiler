@@ -55,7 +55,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
-import org.junit.Before;
+import org.junit.After;
 
 /** A base class for tests on {@code JSType}s. */
 public abstract class BaseJSTypeTestCase {
@@ -63,7 +63,7 @@ public abstract class BaseJSTypeTestCase {
 
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
-  protected final TestErrorReporter errorReporter = new TestErrorReporter(null, null);
+  protected final TestErrorReporter errorReporter = new TestErrorReporter();
   protected final JSTypeRegistry registry;
 
   protected JSType ALL_TYPE;
@@ -101,8 +101,7 @@ public abstract class BaseJSTypeTestCase {
   protected JSType STRING_TYPE;
   protected ObjectType SYMBOL_OBJECT_TYPE;
   protected JSType SYMBOL_TYPE;
-  protected FunctionType U2U_CONSTRUCTOR_TYPE;
-  protected FunctionType U2U_FUNCTION_TYPE;
+  protected FunctionType FUNCTION_TYPE;
   protected ObjectType UNKNOWN_TYPE;
   protected JSType VOID_TYPE;
 
@@ -120,10 +119,9 @@ public abstract class BaseJSTypeTestCase {
     initTypes();
   }
 
-  @Before
-  @SuppressWarnings({"MustBeClosedChecker"})
-  public void setUp() throws Exception {
-    this.registry.getResolver().openForDefinition();
+  @After
+  public void validateWarningsAndErrors() {
+    errorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
   protected void initTypes() {
@@ -141,6 +139,7 @@ public abstract class BaseJSTypeTestCase {
     DATE_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.DATE_FUNCTION_TYPE);
     DATE_TYPE = registry.getNativeObjectType(JSTypeNative.DATE_TYPE);
     FUNCTION_FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
+    FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.FUNCTION_TYPE);
     FUNCTION_PROTOTYPE = registry.getNativeObjectType(JSTypeNative.FUNCTION_PROTOTYPE);
     GREATEST_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.GREATEST_FUNCTION_TYPE);
     LEAST_FUNCTION_TYPE = registry.getNativeType(JSTypeNative.LEAST_FUNCTION_TYPE);
@@ -161,8 +160,6 @@ public abstract class BaseJSTypeTestCase {
     STRING_TYPE = registry.getNativeType(JSTypeNative.STRING_TYPE);
     SYMBOL_OBJECT_TYPE = registry.getNativeObjectType(JSTypeNative.SYMBOL_OBJECT_TYPE);
     SYMBOL_TYPE = registry.getNativeType(JSTypeNative.SYMBOL_TYPE);
-    U2U_CONSTRUCTOR_TYPE = registry.getNativeFunctionType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
-    U2U_FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.U2U_FUNCTION_TYPE);
     UNKNOWN_TYPE = registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     VOID_TYPE = registry.getNativeType(JSTypeNative.VOID_TYPE);
 
@@ -382,18 +379,18 @@ public abstract class BaseJSTypeTestCase {
   }
 
   protected final void assertTypeEquals(JSType a, JSType b) {
-    assertType(b).isStructurallyEqualTo(a);
+    assertType(b).isEqualTo(a);
   }
 
   protected final void assertTypeEquals(String msg, JSType a, JSType b) {
-    assertWithMessage(msg).about(types()).that(b).isStructurallyEqualTo(a);
+    assertWithMessage(msg).about(types()).that(b).isEqualTo(a);
   }
 
   /**
    * Resolves a type expression, expecting the given warnings.
    */
   protected JSType resolve(JSTypeExpression n, String... warnings) {
-    errorReporter.setWarnings(warnings);
+    errorReporter.expectAllWarnings(warnings);
     return n.evaluate(null, registry);
   }
 
@@ -557,3 +554,4 @@ public abstract class BaseJSTypeTestCase {
     return LINE_JOINER.join(lines);
   }
 }
+

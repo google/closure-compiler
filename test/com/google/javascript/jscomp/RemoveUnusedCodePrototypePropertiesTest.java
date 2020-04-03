@@ -39,7 +39,11 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
           "externFunction.prototype.externPropName;",
           "var mExtern;",
           "mExtern.bExtern;",
-          "mExtern['cExtern'];");
+          "mExtern['cExtern'];",
+          "",
+          "/** @const */",
+          "var goog = {};",
+          "goog.reflect.objectProperty = function(name) { };");
 
   private boolean keepLocals = true;
   private boolean keepGlobals = false;
@@ -1058,5 +1062,53 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
 
     testSame("import { square, diag } from '/lib';");
     testSame("import * as lib from '/lib';");
+  }
+
+  @Test
+  public void testReflection_reflectProperty_pinsReflectedName() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.handle = function(x, y) { alert(y); };",
+            "",
+            "goog.reflect.objectProperty('handle');",
+            "alert(new Foo());"));
+  }
+
+  @Test
+  public void testReflection_reflectProperty_onlyPinsReflectedName() {
+    test(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.handle = function(x, y) { alert(y); };",
+            "",
+            "goog.reflect.objectProperty('not_handle');",
+            "alert(new Foo());"),
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
+            "goog.reflect.objectProperty('not_handle');",
+            "alert(new Foo());"));
+  }
+
+  @Test
+  public void testReflection_reflectProperty_onlyPinsReflectedName_whenNameMissing() {
+    test(
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.handle = function(x, y) { alert(y); };",
+            "",
+            "goog.reflect.objectProperty();",
+            "alert(new Foo());"),
+        lines(
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
+            "goog.reflect.objectProperty();",
+            "alert(new Foo());"));
   }
 }

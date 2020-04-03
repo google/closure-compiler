@@ -450,6 +450,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             && allDefinitionsAreCandidateFunctions(n.getLastChild());
       case OR:
       case AND:
+      case COALESCE:
         return allDefinitionsAreCandidateFunctions(n.getFirstChild())
             && allDefinitionsAreCandidateFunctions(n.getLastChild());
       default:
@@ -566,7 +567,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
     // Found something to do, move the values from the call sites to the function definitions.
     for (Node n : refs) {
-      if (ReferenceMap.isCallOrNewTarget(n) && !alreadyRemoved(n)) {
+      if (!alreadyRemoved(n) && ReferenceMap.isCallOrNewTarget(n)) {
         optimizeCallSite(parameters, n);
       }
     }
@@ -859,7 +860,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             // Drop the default value as we should only get here if the default value isn't going
             // to be used.
             checkState(!parameter.mayBeUndefined);
-            formalParam = formalParam.getFirstChild().detach();
+            formalParam = formalParam.removeFirstChild();
           }
         }
 
@@ -1000,10 +1001,10 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       Node stmt;
       if (formal.isRest()) {
         checkState(formal.getNext() == null);
-        stmt = NodeUtil.newVarNode(formal.getFirstChild().detach(), IR.arraylit().srcref(formal));
+        stmt = NodeUtil.newVarNode(formal.removeFirstChild(), IR.arraylit().srcref(formal));
       } else {
         if (formal.isDefaultValue()) {
-          Node lhs = formal.getFirstChild().detach();
+          Node lhs = formal.removeFirstChild();
           Node value = formal.getLastChild().detach();
           stmt = NodeUtil.newVarNode(lhs, value);
         } else {

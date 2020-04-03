@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckEs6ModuleFileStructure;
 import com.google.javascript.jscomp.lint.CheckEs6Modules;
+import com.google.javascript.jscomp.lint.CheckExtraRequires;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
@@ -94,7 +95,7 @@ public class DiagnosticGroups {
   }
 
   /** Get the registered diagnostic groups, indexed by name. */
-  public static Map<String, DiagnosticGroup> getRegisteredGroups() {
+  public static ImmutableMap<String, DiagnosticGroup> getRegisteredGroups() {
     return ImmutableMap.copyOf(groupsByName);
   }
 
@@ -153,7 +154,6 @@ public class DiagnosticGroups {
           + "unknownDefines, "
           + "unusedLocalVariables, "
           + "unusedPrivateMembers, "
-          + "useOfGoogBase, "
           + "uselessCode, "
           + "untranspilableFeatures,"
           + "visibility";
@@ -447,15 +447,22 @@ public class DiagnosticGroups {
           CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
           CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING);
 
+  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup(
+          "stricterMissingRequire", CheckMissingRequires.MISSING_REQUIRE);
+
+  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE_TYPE =
+      DiagnosticGroups.registerGroup(
+          "stricterMissingRequireType", CheckMissingRequires.MISSING_REQUIRE_TYPE);
+
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerGroup(
           "legacyGoogScopeRequire",
           CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
+          CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "extraRequire", CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
   @GwtIncompatible("java.util.regex")
   public static final DiagnosticGroup MISSING_GETCSSNAME =
@@ -554,12 +561,19 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup PARTIAL_ALIAS =
       DiagnosticGroups.registerGroup("partialAlias", CollapseProperties.PARTIAL_NAMESPACE_WARNING);
 
+  // This lint is given its own diagnostic group because it's harder to fix than other
+  // lint errors, and we want to discourage users from doing a blanket @suppress {lintChecks}.
+  // This is intentionally not public. It should not be enabled directly; instead enable lintChecks.
+  static final DiagnosticGroup USE_OF_GOOG_PROVIDE =
+      DiagnosticGroups.registerGroup("useOfGoogProvide", ClosureCheckModule.USE_OF_GOOG_PROVIDE);
+
   // Warnings reported by the linter. If you enable these as errors in your build targets,
   // the JS Compiler team will break your build and not rollback.
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup(
           "lintChecks", // undocumented
           CheckJSDocStyle.LINT_DIAGNOSTICS,
+          USE_OF_GOOG_PROVIDE,
           new DiagnosticGroup(
               CheckClosureImports.LET_CLOSURE_IMPORT,
               CheckConstantCaseNames.MISSING_CONST_PROPERTY,
@@ -625,9 +639,6 @@ public class DiagnosticGroups {
           ANALYZER_CHECKS_INTERNAL,
           UNUSED_PRIVATE_PROPERTY,
           MISSING_CONST_PROPERTY);
-
-  public static final DiagnosticGroup USE_OF_GOOG_BASE =
-      DiagnosticGroups.registerGroup("useOfGoogBase", ProcessClosurePrimitives.USE_OF_GOOG_BASE);
 
   public static final DiagnosticGroup CLOSURE_DEP_METHOD_USAGE_CHECKS =
       DiagnosticGroups.registerGroup(

@@ -16,6 +16,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string error_message = 1;</code>
+   * @return Whether the errorMessage field is set.
    */
   boolean hasErrorMessage();
   /**
@@ -26,6 +27,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string error_message = 1;</code>
+   * @return The errorMessage.
    */
   java.lang.String getErrorMessage();
   /**
@@ -36,6 +38,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string error_message = 1;</code>
+   * @return The bytes for errorMessage.
    */
   com.google.protobuf.ByteString
       getErrorMessageBytes();
@@ -47,6 +50,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist = 2;</code>
+   * @return A list containing the whitelist.
    */
   java.util.List<java.lang.String>
       getWhitelistList();
@@ -57,6 +61,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist = 2;</code>
+   * @return The count of whitelist.
    */
   int getWhitelistCount();
   /**
@@ -66,6 +71,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist = 2;</code>
+   * @param index The index of the element to return.
+   * @return The whitelist at the given index.
    */
   java.lang.String getWhitelist(int index);
   /**
@@ -75,6 +82,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist = 2;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the whitelist at the given index.
    */
   com.google.protobuf.ByteString
       getWhitelistBytes(int index);
@@ -86,6 +95,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist_regexp = 3;</code>
+   * @return A list containing the whitelistRegexp.
    */
   java.util.List<java.lang.String>
       getWhitelistRegexpList();
@@ -96,6 +106,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist_regexp = 3;</code>
+   * @return The count of whitelistRegexp.
    */
   int getWhitelistRegexpCount();
   /**
@@ -105,6 +116,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist_regexp = 3;</code>
+   * @param index The index of the element to return.
+   * @return The whitelistRegexp at the given index.
    */
   java.lang.String getWhitelistRegexp(int index);
   /**
@@ -114,6 +127,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string whitelist_regexp = 3;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the whitelistRegexp at the given index.
    */
   com.google.protobuf.ByteString
       getWhitelistRegexpBytes(int index);
@@ -149,6 +164,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to = 4;</code>
+   * @return A list containing the onlyApplyTo.
    */
   java.util.List<java.lang.String>
       getOnlyApplyToList();
@@ -159,6 +175,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to = 4;</code>
+   * @return The count of onlyApplyTo.
    */
   int getOnlyApplyToCount();
   /**
@@ -168,6 +185,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to = 4;</code>
+   * @param index The index of the element to return.
+   * @return The onlyApplyTo at the given index.
    */
   java.lang.String getOnlyApplyTo(int index);
   /**
@@ -177,6 +196,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to = 4;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the onlyApplyTo at the given index.
    */
   com.google.protobuf.ByteString
       getOnlyApplyToBytes(int index);
@@ -188,6 +209,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to_regexp = 5;</code>
+   * @return A list containing the onlyApplyToRegexp.
    */
   java.util.List<java.lang.String>
       getOnlyApplyToRegexpList();
@@ -198,6 +220,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to_regexp = 5;</code>
+   * @return The count of onlyApplyToRegexp.
    */
   int getOnlyApplyToRegexpCount();
   /**
@@ -207,6 +230,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to_regexp = 5;</code>
+   * @param index The index of the element to return.
+   * @return The onlyApplyToRegexp at the given index.
    */
   java.lang.String getOnlyApplyToRegexp(int index);
   /**
@@ -216,6 +241,8 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>repeated string only_apply_to_regexp = 5;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the onlyApplyToRegexp at the given index.
    */
   com.google.protobuf.ByteString
       getOnlyApplyToRegexpBytes(int index);
@@ -226,6 +253,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional .jscomp.Requirement.Type type = 6;</code>
+   * @return Whether the type field is set.
    */
   boolean hasType();
   /**
@@ -234,43 +262,81 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional .jscomp.Requirement.Type type = 6;</code>
+   * @return The type.
    */
   com.google.javascript.jscomp.Requirement.Type getType();
 
   /**
    * <pre>
-   * The value banned, optional for "custom" requirements.
+   * The value banned, optional for "custom" requirements.  Some custom
+   * requirements repurpose this for different purposes, such as for whitelists
+   * of types.
    * </pre>
    *
    * <code>repeated string value = 7;</code>
+   * @return A list containing the value.
    */
   java.util.List<java.lang.String>
       getValueList();
   /**
    * <pre>
-   * The value banned, optional for "custom" requirements.
+   * The value banned, optional for "custom" requirements.  Some custom
+   * requirements repurpose this for different purposes, such as for whitelists
+   * of types.
    * </pre>
    *
    * <code>repeated string value = 7;</code>
+   * @return The count of value.
    */
   int getValueCount();
   /**
    * <pre>
-   * The value banned, optional for "custom" requirements.
+   * The value banned, optional for "custom" requirements.  Some custom
+   * requirements repurpose this for different purposes, such as for whitelists
+   * of types.
    * </pre>
    *
    * <code>repeated string value = 7;</code>
+   * @param index The index of the element to return.
+   * @return The value at the given index.
    */
   java.lang.String getValue(int index);
   /**
    * <pre>
-   * The value banned, optional for "custom" requirements.
+   * The value banned, optional for "custom" requirements.  Some custom
+   * requirements repurpose this for different purposes, such as for whitelists
+   * of types.
    * </pre>
    *
    * <code>repeated string value = 7;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the value at the given index.
    */
   com.google.protobuf.ByteString
       getValueBytes(int index);
+
+  /**
+   * <pre>
+   * Whether to allow subconfigs to extend the "value" field.  This does not
+   * make sense for banning values, but when the value is used as a whitelist,
+   * it becomes important.
+   * </pre>
+   *
+   * <code>optional bool allow_extending_value = 15;</code>
+   * @return Whether the allowExtendingValue field is set.
+   */
+  boolean hasAllowExtendingValue();
+  /**
+   * <pre>
+   * Whether to allow subconfigs to extend the "value" field.  This does not
+   * make sense for banning values, but when the value is used as a whitelist,
+   * it becomes important.
+   * </pre>
+   *
+   * <code>optional bool allow_extending_value = 15;</code>
+   * @return The allowExtendingValue.
+   */
+  boolean getAllowExtendingValue();
 
   /**
    * <pre>
@@ -279,6 +345,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional .jscomp.Requirement.TypeMatchingStrategy type_matching_strategy = 13 [default = LOOSE];</code>
+   * @return Whether the typeMatchingStrategy field is set.
    */
   boolean hasTypeMatchingStrategy();
   /**
@@ -288,6 +355,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional .jscomp.Requirement.TypeMatchingStrategy type_matching_strategy = 13 [default = LOOSE];</code>
+   * @return The typeMatchingStrategy.
    */
   com.google.javascript.jscomp.Requirement.TypeMatchingStrategy getTypeMatchingStrategy();
 
@@ -298,6 +366,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string java_class = 8;</code>
+   * @return Whether the javaClass field is set.
    */
   boolean hasJavaClass();
   /**
@@ -307,6 +376,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string java_class = 8;</code>
+   * @return The javaClass.
    */
   java.lang.String getJavaClass();
   /**
@@ -316,6 +386,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string java_class = 8;</code>
+   * @return The bytes for javaClass.
    */
   com.google.protobuf.ByteString
       getJavaClassBytes();
@@ -327,6 +398,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string rule_id = 9;</code>
+   * @return Whether the ruleId field is set.
    */
   boolean hasRuleId();
   /**
@@ -336,6 +408,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string rule_id = 9;</code>
+   * @return The ruleId.
    */
   java.lang.String getRuleId();
   /**
@@ -345,6 +418,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string rule_id = 9;</code>
+   * @return The bytes for ruleId.
    */
   com.google.protobuf.ByteString
       getRuleIdBytes();
@@ -357,6 +431,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string extends = 10;</code>
+   * @return Whether the extends field is set.
    */
   boolean hasExtends();
   /**
@@ -367,6 +442,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string extends = 10;</code>
+   * @return The extends.
    */
   java.lang.String getExtends();
   /**
@@ -377,6 +453,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional string extends = 10;</code>
+   * @return The bytes for extends.
    */
   com.google.protobuf.ByteString
       getExtendsBytes();
@@ -395,6 +472,7 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional bool report_loose_type_violations = 11 [default = true];</code>
+   * @return Whether the reportLooseTypeViolations field is set.
    */
   boolean hasReportLooseTypeViolations();
   /**
@@ -411,15 +489,67 @@ public interface RequirementOrBuilder extends
    * </pre>
    *
    * <code>optional bool report_loose_type_violations = 11 [default = true];</code>
+   * @return The reportLooseTypeViolations.
    */
   boolean getReportLooseTypeViolations();
 
   /**
    * <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code>
+   * @return Whether the severity field is set.
    */
   boolean hasSeverity();
   /**
    * <code>optional .jscomp.Requirement.Severity severity = 12 [default = WARNING];</code>
+   * @return The severity.
    */
   com.google.javascript.jscomp.Requirement.Severity getSeverity();
+
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @return A list containing the configFile.
+   */
+  java.util.List<java.lang.String>
+      getConfigFileList();
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @return The count of configFile.
+   */
+  int getConfigFileCount();
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @param index The index of the element to return.
+   * @return The configFile at the given index.
+   */
+  java.lang.String getConfigFile(int index);
+  /**
+   * <pre>
+   * The file(s) that defined this requirement.  If the requirement is extended,
+   * then all extending files are included as well.  These will be printed in
+   * the error message.
+   * </pre>
+   *
+   * <code>repeated string config_file = 16;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the configFile at the given index.
+   */
+  com.google.protobuf.ByteString
+      getConfigFileBytes(int index);
 }

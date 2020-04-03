@@ -385,14 +385,17 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
           currentModule
               .metadataBuilder
-              .requiredGoogNamespacesBuilder()
+              .stronglyRequiredGoogNamespacesBuilder()
               .add(n.getLastChild().getString());
         } else {
           t.report(n, INVALID_REQUIRE_NAMESPACE);
         }
       } else if (getprop.matchesQualifiedName(GOOG_REQUIRE_TYPE)) {
         if (n.hasTwoChildren() && n.getLastChild().isString()) {
-          currentModule.metadataBuilder.requiredTypesBuilder().add(n.getLastChild().getString());
+          currentModule
+              .metadataBuilder
+              .weaklyRequiredGoogNamespacesBuilder()
+              .add(n.getLastChild().getString());
         } else {
           t.report(n, INVALID_REQUIRE_TYPE);
         }

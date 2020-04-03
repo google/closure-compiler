@@ -63,11 +63,6 @@ public class SyntacticScopeCreator implements ScopeCreator {
     this.scopeFactory = scopeFactory;
   }
 
-  @Override
-  public boolean hasBlockScope() {
-    return true;
-  }
-
   /** A simple API for injecting the use of alternative Scope classes */
   public interface ScopeFactory {
     Scope create(Scope parent, Node n);

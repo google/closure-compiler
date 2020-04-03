@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT_IN;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -48,9 +49,10 @@ public class TranspilationPasses {
                       compiler,
                       compiler.getModuleMetadataMap(),
                       compiler.getModuleMap(),
-                      preprocessorTableFactory.getInstanceOrNull());
+                      preprocessorTableFactory.getInstanceOrNull(),
+                      compiler.getTopScope());
                 })
-            .setFeatureSet(ES_NEXT)
+            .setFeatureSet(ES_NEXT_IN)
             .build());
   }
 
@@ -74,12 +76,23 @@ public class TranspilationPasses {
   /** Adds transpilation passes that should run after all checks are done. */
   public static void addPostCheckTranspilationPasses(
       List<PassFactory> passes, CompilerOptions options) {
-    if (options.needsTranspilationFrom(FeatureSet.ES2019)) {
+    // Note that, for features >ES8 we detect feature by feature rather than by yearly languages
+    // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
+    if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
+      passes.add(rewriteNullishCoalesceOperator);
+    }
+
+    if (options.needsTranspilationOf(Feature.OPTIONAL_CATCH_BINDING)) {
       passes.add(rewriteCatchWithNoBinding);
     }
 
-    if (options.needsTranspilationFrom(ES2018)) {
+    if (options.needsTranspilationOf(Feature.FOR_AWAIT_OF)
+        || options.needsTranspilationOf(Feature.ASYNC_GENERATORS)) {
       passes.add(rewriteAsyncIteration);
+    }
+
+    if (options.needsTranspilationOf(Feature.OBJECT_LITERALS_WITH_SPREAD)
+        || options.needsTranspilationOf(Feature.OBJECT_PATTERN_REST)) {
       passes.add(rewriteObjectSpread);
     }
 
@@ -266,7 +279,9 @@ public class TranspilationPasses {
   static final PassFactory rewritePolyfills =
       PassFactory.builderForHotSwap()
           .setName("RewritePolyfills")
-          .setInternalFactory(RewritePolyfills::new)
+          .setInternalFactory(
+              (compiler) ->
+                  new RewritePolyfills(compiler, compiler.getOptions().getIsolatePolyfills()))
           .setFeatureSet(FeatureSet.latest())
           .build();
 
@@ -289,7 +304,7 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("es6InjectRuntimeLibraries")
           .setInternalFactory(Es6InjectRuntimeLibraries::new)
-          .setFeatureSet(ES_NEXT)
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   /** Transpiles REST parameters and SPREAD in both array literals and function calls. */
@@ -337,6 +352,14 @@ public class TranspilationPasses {
           .setName("rewriteGenerators")
           .setInternalFactory(Es6RewriteGenerators::new)
           .setFeatureSet(ES8)
+          .build();
+
+  static final PassFactory rewriteNullishCoalesceOperator =
+      PassFactory.builderForHotSwap()
+          .setName("rewriteNullishCoalesceOperator")
+          .setInternalFactory(RewriteNullishCoalesceOperator::new)
+          .setFeatureSet(ES_NEXT_IN)
+          // TODO(annieyw) change to ES2020 when avail
           .build();
 
   /**

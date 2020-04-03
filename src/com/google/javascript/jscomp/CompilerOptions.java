@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
@@ -148,12 +147,10 @@ public class CompilerOptions implements Serializable {
     }
 
     public void setDependentValuesFromYear() {
-      this.setLanguageOutFromYear();
-    }
-
-    private void setLanguageOutFromYear() {
       if (year != 0) {
-        if (year == 2019) {
+        if (year == 2020) {
+          CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2020);
+        } else if (year == 2019) {
           CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
         } else if (year == 2012) {
           CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
@@ -176,9 +173,10 @@ public class CompilerOptions implements Serializable {
    */
   public void validateBrowserFeaturesetYearOption(Integer inputYear) {
     checkState(
-        inputYear == 2019 || inputYear == 2012,
+        inputYear == 2020 || inputYear == 2019 || inputYear == 2012,
         SimpleFormat.format(
-            "Illegal browser_featureset_year=%d. We support values 2012 and 2019 only", inputYear));
+            "Illegal browser_featureset_year=%d. We support values 2012, 2019, and 2020 only",
+            inputYear));
   }
 
   public void setBrowserFeaturesetYear(Integer year) {
@@ -704,6 +702,14 @@ public class CompilerOptions implements Serializable {
    */
   private boolean disambiguateProperties;
 
+  /**
+   * Use the graph based disambiguator.
+   *
+   * <p>This is a transitional option while the graph based disambiguator becomes the default. This
+   * option has no effect if disambiguation is disabled.
+   */
+  private boolean useGraphBasedDisambiguator = false;
+
   /** Rename unrelated properties to the same name to reduce code size. */
   private boolean ambiguateProperties;
 
@@ -821,6 +827,8 @@ public class CompilerOptions implements Serializable {
 
   boolean j2clMinifierEnabled = true;
 
+  @Nullable String j2clMinifierPruningManifest = null;
+
   /** Remove goog.abstractMethod assignments and @abstract methods. */
   boolean removeAbstractMethods;
 
@@ -921,8 +929,11 @@ public class CompilerOptions implements Serializable {
   /** CommonJS module prefix. */
   List<String> moduleRoots = ImmutableList.of(ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
-  /** Rewrite polyfills. */
+  /** Inject polyfills */
   boolean rewritePolyfills = false;
+
+  /** Isolates injected polyfills from the global scope. */
+  private boolean isolatePolyfills = false;
 
   /** Runtime libraries to always inject. */
   List<String> forceLibraryInjection = ImmutableList.of();
@@ -1884,6 +1895,10 @@ public class CompilerOptions implements Serializable {
     this.j2clMinifierEnabled = enabled;
   }
 
+  public void setJ2clMinifierPruningManifest(String j2clMinifierPruningManifest) {
+    this.j2clMinifierPruningManifest = j2clMinifierPruningManifest;
+  }
+
   public void setCodingConvention(CodingConvention codingConvention) {
     this.codingConvention = codingConvention;
   }
@@ -1950,7 +1965,6 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguage(LanguageMode language) {
     checkState(language != LanguageMode.NO_TRANSPILE);
-    checkState(language != LanguageMode.UNSUPPORTED);
     this.setLanguageIn(language);
     this.setLanguageOut(language);
   }
@@ -1961,19 +1975,7 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     checkState(languageIn != LanguageMode.NO_TRANSPILE);
-    checkState(languageIn != LanguageMode.UNSUPPORTED);
     this.languageIn = languageIn == LanguageMode.STABLE ? LanguageMode.STABLE_IN : languageIn;
-  }
-
-  /**
-   * Sets the ECMAScript version to the unsupported features that can be parsed but are not
-   * understood by the rest of the compiler.
-   *
-   * <p>Should not be used outside tests!
-   */
-  @VisibleForTesting()
-  public void setLanguageInToUnsupported() {
-    this.languageIn = LanguageMode.UNSUPPORTED;
   }
 
   public LanguageMode getLanguageIn() {
@@ -1989,7 +1991,6 @@ public class CompilerOptions implements Serializable {
    * #setOutputFeatureSet.
    */
   public void setLanguageOut(LanguageMode languageOut) {
-    checkState(languageOut != LanguageMode.UNSUPPORTED);
     if (languageOut == LanguageMode.NO_TRANSPILE) {
       languageOutIsDefaultStrict = Optional.absent();
       outputFeatureSet = Optional.absent();
@@ -2492,6 +2493,14 @@ public class CompilerOptions implements Serializable {
     return this.disambiguateProperties;
   }
 
+  public void setUseGraphBasedDisambiguator(boolean x) {
+    this.useGraphBasedDisambiguator = x;
+  }
+
+  public boolean shouldUseGraphBasedDisambiguator() {
+    return this.useGraphBasedDisambiguator;
+  }
+
   public void setAmbiguateProperties(boolean ambiguateProperties) {
     this.ambiguateProperties = ambiguateProperties;
   }
@@ -2840,6 +2849,18 @@ public class CompilerOptions implements Serializable {
     return this.rewritePolyfills;
   }
 
+  /** Sets whether to isolate polyfills from the global scope. */
+  public void setIsolatePolyfills(boolean isolatePolyfills) {
+    this.isolatePolyfills = isolatePolyfills;
+    if (this.isolatePolyfills) {
+      this.setDefineToBooleanLiteral("$jscomp.ISOLATE_POLYFILLS", isolatePolyfills);
+    }
+  }
+
+  public boolean getIsolatePolyfills() {
+    return this.isolatePolyfills;
+  }
+
   /**
    * Sets list of libraries to always inject, even if not needed.
    */
@@ -3063,7 +3084,9 @@ public class CompilerOptions implements Serializable {
             .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
             .add("instrumentBranchCoverage", instrumentBranchCoverage)
+            .add("isolatePolyfills", isolatePolyfills)
             .add("j2clMinifierEnabled", j2clMinifierEnabled)
+            .add("j2clMinifierPruningManifest", j2clMinifierPruningManifest)
             .add("j2clPassMode", j2clPassMode)
             .add("labelRenaming", labelRenaming)
             .add("languageIn", getLanguageIn())
@@ -3215,8 +3238,17 @@ public class CompilerOptions implements Serializable {
     /** ECMAScript standard approved in 2019. Adds catch blocks with no error binding. */
     ECMASCRIPT_2019,
 
+    /** ECMAScript standard approved in 2020. */
+    ECMASCRIPT_2020,
+
     /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
+
+    /**
+     * ECMAScript latest draft standard. Transpiled but no pass through. Should ONLY be used for
+     * language_in
+     */
+    ECMASCRIPT_NEXT_IN,
 
     /** Use stable features. */
     STABLE,
@@ -3280,9 +3312,13 @@ public class CompilerOptions implements Serializable {
           return FeatureSet.ES2018_MODULES;
         case ECMASCRIPT_2019:
           return FeatureSet.ES2019_MODULES;
+        case ECMASCRIPT_2020:
+          return FeatureSet.ES2020_MODULES;
         case ECMASCRIPT_NEXT:
         case NO_TRANSPILE:
           return FeatureSet.ES_NEXT;
+        case ECMASCRIPT_NEXT_IN:
+          return FeatureSet.ES_NEXT_IN;
         case UNSUPPORTED:
           return FeatureSet.ES_UNSUPPORTED;
         case ECMASCRIPT6_TYPED:

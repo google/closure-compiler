@@ -53,42 +53,43 @@ import org.junit.runners.JUnit4;
 public class UnionTypeTest extends BaseJSTypeTestCase {
   private static final MapBasedScope EMPTY_SCOPE = MapBasedScope.emptyScope();
 
-  private NamedType unresolvedNamedType;
   private ObjectType base;
   private ObjectType sub1;
   private ObjectType sub2;
   private ObjectType sub3;
 
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
-    unresolvedNamedType =
-        registry.createNamedType(EMPTY_SCOPE, "not.resolved.named.type", null, -1, -1);
 
-    this.base =
-        FunctionType.builder(registry).forConstructor().withName("Base").build().getInstanceType();
-    this.sub1 =
-        FunctionType.builder(registry)
-            .forConstructor()
-            .withName("Sub1")
-            .withPrototypeBasedOn(base)
-            .build()
-            .getInstanceType();
-    this.sub2 =
-        FunctionType.builder(registry)
-            .forConstructor()
-            .withName("Sub2")
-            .withPrototypeBasedOn(base)
-            .build()
-            .getInstanceType();
-    this.sub3 =
-        FunctionType.builder(registry)
-            .forConstructor()
-            .withName("Sub3")
-            .withPrototypeBasedOn(base)
-            .build()
-            .getInstanceType();
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      this.base =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Base")
+              .build()
+              .getInstanceType();
+      this.sub1 =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Sub1")
+              .withPrototypeBasedOn(base)
+              .build()
+              .getInstanceType();
+      this.sub2 =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Sub2")
+              .withPrototypeBasedOn(base)
+              .build()
+              .getInstanceType();
+      this.sub3 =
+          FunctionType.builder(registry)
+              .forConstructor()
+              .withName("Sub3")
+              .withPrototypeBasedOn(base)
+              .build()
+              .getInstanceType();
+    }
   }
 
   /**
@@ -107,8 +108,8 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType stringOrNull =
         (UnionType) createUnionType(STRING_OBJECT_TYPE, NULL_TYPE);
 
-    assertType(stringOrNull).isStructurallyEqualTo(nullOrString);
-    assertType(nullOrString).isStructurallyEqualTo(stringOrNull);
+    assertType(stringOrNull).isEqualTo(nullOrString);
+    assertType(nullOrString).isEqualTo(stringOrNull);
 
     assertTypeCanAssignToItself(createUnionType(VOID_TYPE, NUMBER_TYPE));
     assertTypeCanAssignToItself(
@@ -116,13 +117,24 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertTypeCanAssignToItself(createUnionType(NUMBER_TYPE, BOOLEAN_TYPE));
     assertTypeCanAssignToItself(createUnionType(VOID_TYPE));
 
-    UnionType nullOrUnknown =
-        (UnionType) createUnionType(NULL_TYPE, unresolvedNamedType);
+    // findPropertyType
+    assertType(nullOrString.findPropertyType("length")).isEqualTo(NUMBER_TYPE);
+    assertThat(nullOrString.findPropertyType("lengthx")).isNull();
+
+    Asserts.assertResolvesToSame(nullOrString);
+  }
+
+  @Test
+  public void testUnionOfNullAndUnresolvedNamedType() {
+    errorReporter.expectAllWarnings("Bad type annotation. Unknown type not.resolved.named.type");
+    NamedType unresolvedNamedType =
+        registry.createNamedType(EMPTY_SCOPE, "not.resolved.named.type", "", -1, -1);
+    UnionType nullOrUnknown = (UnionType) createUnionType(NULL_TYPE, unresolvedNamedType);
     assertThat(nullOrUnknown.isUnknownType()).isTrue();
-    assertType(NULL_TYPE.getLeastSupertype(nullOrUnknown)).isStructurallyEqualTo(nullOrUnknown);
-    assertType(nullOrUnknown.getLeastSupertype(NULL_TYPE)).isStructurallyEqualTo(nullOrUnknown);
-    assertType(NULL_TYPE.getGreatestSubtype(nullOrUnknown)).isStructurallyEqualTo(UNKNOWN_TYPE);
-    assertType(nullOrUnknown.getGreatestSubtype(NULL_TYPE)).isStructurallyEqualTo(UNKNOWN_TYPE);
+    assertType(NULL_TYPE.getLeastSupertype(nullOrUnknown)).isEqualTo(nullOrUnknown);
+    assertType(nullOrUnknown.getLeastSupertype(NULL_TYPE)).isEqualTo(nullOrUnknown);
+    assertType(NULL_TYPE.getGreatestSubtype(nullOrUnknown)).isEqualTo(UNKNOWN_TYPE);
+    assertType(nullOrUnknown.getGreatestSubtype(NULL_TYPE)).isEqualTo(UNKNOWN_TYPE);
 
     assertThat(NULL_TYPE.differsFrom(nullOrUnknown)).isTrue();
     assertThat(nullOrUnknown.differsFrom(NULL_TYPE)).isTrue();
@@ -133,20 +145,14 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertThat(nullOrUnknown.isSubtype(NULL_TYPE)).isTrue();
 
     assertType(nullOrUnknown.restrictByNotNullOrUndefined())
-        .isStructurallyEqualTo(unresolvedNamedType);
-
-    // findPropertyType
-    assertType(nullOrString.findPropertyType("length")).isStructurallyEqualTo(NUMBER_TYPE);
-    assertThat(nullOrString.findPropertyType("lengthx")).isNull();
-
-    Asserts.assertResolvesToSame(nullOrString);
+        .isEqualTo(unresolvedNamedType);
   }
 
   /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
   @Test
   public void testGreatestSubtypeUnionTypes1() {
     assertType(createNullableType(STRING_TYPE).getGreatestSubtype(createNullableType(NUMBER_TYPE)))
-        .isStructurallyEqualTo(NULL_TYPE);
+        .isEqualTo(NULL_TYPE);
   }
 
   /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
@@ -154,7 +160,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testGreatestSubtypeUnionTypes2() {
     UnionType subUnion = (UnionType) createUnionType(sub1, sub2);
-    assertType(subUnion.getGreatestSubtype(base)).isStructurallyEqualTo(subUnion);
+    assertType(subUnion.getGreatestSubtype(base)).isEqualTo(subUnion);
   }
 
   /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
@@ -168,16 +174,16 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     UnionType nullUndefined =
         (UnionType) createUnionType(VOID_TYPE, NULL_TYPE);
     assertType(nullUndefined.getGreatestSubtype(nullableOptionalNumber))
-        .isStructurallyEqualTo(nullUndefined);
+        .isEqualTo(nullUndefined);
     assertType(nullableOptionalNumber.getGreatestSubtype(nullUndefined))
-        .isStructurallyEqualTo(nullUndefined);
+        .isEqualTo(nullUndefined);
   }
 
   /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
   @Test
   public void testGreatestSubtypeUnionTypes4() {
     UnionType union = (UnionType) createUnionType(NULL_TYPE, sub1, sub2);
-    assertType(union.getGreatestSubtype(base)).isStructurallyEqualTo(createUnionType(sub1, sub2));
+    assertType(union.getGreatestSubtype(base)).isEqualTo(createUnionType(sub1, sub2));
   }
 
   /** Tests {@link JSType#getGreatestSubtype(JSType)} on union types. */
@@ -185,7 +191,7 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   public void testGreatestSubtypeUnionTypes5() {
     JSType subUnion = createUnionType(sub1, sub2);
     assertType(subUnion.getGreatestSubtype(STRING_OBJECT_TYPE))
-        .isStructurallyEqualTo(NO_OBJECT_TYPE);
+        .isEqualTo(NO_OBJECT_TYPE);
   }
 
   /** Tests subtyping of union types. */
@@ -301,20 +307,20 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   @Test
   public void testGetRestrictedUnion1() {
     UnionType numStr = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
-    assertType(numStr.getRestrictedUnion(NUMBER_TYPE)).isStructurallyEqualTo(STRING_TYPE);
+    assertType(numStr.getRestrictedUnion(NUMBER_TYPE)).isEqualTo(STRING_TYPE);
   }
 
   @Test
   public void testGetRestrictedUnion2() {
     UnionType numStr = (UnionType) createUnionType(NULL_TYPE, sub1, sub2);
-    assertType(numStr.getRestrictedUnion(base)).isStructurallyEqualTo(NULL_TYPE);
+    assertType(numStr.getRestrictedUnion(base)).isEqualTo(NULL_TYPE);
   }
 
   @Test
-  public void testIsEquivalentTo() {
+  public void testEquals() {
     UnionType type = (UnionType) createUnionType(NUMBER_TYPE, STRING_TYPE);
     assertThat(type.equals(null)).isFalse();
-    assertThat(type.isEquivalentTo(type)).isTrue();
+    assertThat(type.equals(type)).isTrue();
   }
 
   @Test

@@ -132,60 +132,109 @@ jasmine.Matchers.prototype.not;
 jasmine.Matchers.prototype.actual;
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toBe = function(value) {};
-
-
 /** @return {void} */
-jasmine.Matchers.prototype.toBeDefined = function() {};
+jasmine.Matchers.prototype.nothing = function() {};
 
 
-/** @return {void} */
-jasmine.Matchers.prototype.toBeFalsy = function() {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toBe = function(value, expectationFailOutput) {};
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toBeGreaterThan = function(value) {};
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toBeDefined = function(expectationFailOutput) {};
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toBeLessThan = function(value) {};
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toBeFalsy = function(expectationFailOutput) {};
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toBeGreaterThanOrEqual = function(value) {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toBeGreaterThan = function(
+    value, expectationFailOutput) {};
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toBeLessThanOrEqual = function(value) {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toBeLessThan = function(
+    value, expectationFailOutput) {};
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toBeCloseTo = function(value, precision) {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toBeGreaterThanOrEqual = function(
+    value, expectationFailOutput) {};
 
 
-/** @return {void} */
-jasmine.Matchers.prototype.toBeNull = function() {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toBeLessThanOrEqual = function(
+    value, expectationFailOutput) {};
 
 
-/** @return {void} */
-jasmine.Matchers.prototype.toBeTruthy = function() {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toBeCloseTo = function(
+    value, precision, expectationFailOutput) {};
 
 
-/** @return {void} */
-jasmine.Matchers.prototype.toBeUndefined = function() {};
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toBeNull = function(expectationFailOutput) {};
+
+
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toBeTruthy = function(expectationFailOutput) {};
+
+
+/**
+ * @param {*=} expectationFailOutput
+ * @return {void}
+ */
+jasmine.Matchers.prototype.toBeUndefined = function(expectationFailOutput) {};
 
 
 /** @return {void} */
 jasmine.Matchers.prototype.toBeNaN = function() {};
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toContain = function(value) {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toContain = function(
+    value, expectationFailOutput) {};
 
 
-/** @param {*} value */
-jasmine.Matchers.prototype.toEqual = function(value) {};
+/**
+ * @param {*} value
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toEqual = function(value, expectationFailOutput) {};
 
 
 /** @return {void} */
@@ -204,8 +253,12 @@ jasmine.Matchers.prototype.toHaveBeenCalledWith = function(var_args) {};
 /** @param {number} num */
 jasmine.Matchers.prototype.toHaveBeenCalledTimes = function(num) {};
 
-/** @param {(string|RegExp)} pattern */
-jasmine.Matchers.prototype.toMatch = function(pattern) {};
+/**
+ * @param {(string|RegExp)} pattern
+ * @param {*=} expectationFailOutput
+ */
+jasmine.Matchers.prototype.toMatch = function(
+    pattern, expectationFailOutput) {};
 
 
 /** @param {!Object=} opt_expected */
@@ -542,10 +595,10 @@ function expectAsync(expectedValue) {}
 
 
 /**
- * @param {*} expectedValue
+ * @param {*=} expectedValue
  * @return {!jasmine.Matchers} matcher
  */
-function expect(expectedValue) {}
+function expect(expectedValue = undefined) {}
 
 /** @typedef {function()} */
 var DoneFunc;
@@ -591,6 +644,13 @@ function spyOn(spiedOnObject, methodName) {}
  */
 function spyOnAllFunctions(spiedOnObject) {}
 
+/**
+ * @param {!Object} spiedOnObject
+ * @param {string} propertyName
+ * @param {string=} accessType
+ * @return {!jasmine.Spy}
+ */
+function spyOnProperty(spiedOnObject, propertyName, accessType) {}
 
 /**
  * @param {string} description

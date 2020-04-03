@@ -58,7 +58,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
   private final JSType concatFnType;
   private final JSType nullType;
   private final JSType numberType;
-  private final JSType u2uFunctionType;
   private final JSType functionFunctionType;
 
   public Es6RewriteRestAndSpread(AbstractCompiler compiler) {
@@ -71,7 +70,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       this.concatFnType = arrayType.findPropertyType("concat");
       this.nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
       this.numberType = registry.getNativeType(JSTypeNative.NUMBER_TYPE);
-      this.u2uFunctionType = registry.getNativeType(JSTypeNative.U2U_FUNCTION_TYPE);
       this.functionFunctionType = registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE);
     } else {
       this.arrayType = null;
@@ -79,7 +77,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       this.concatFnType = null;
       this.nullType = null;
       this.numberType = null;
-      this.u2uFunctionType = null;
       this.functionFunctionType = null;
     }
   }
@@ -163,7 +160,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     Node name = IR.name(paramName);
     Node let = IR.let(name, newArrayName).useSourceInfoIfMissingFromForTree(functionBody);
     newBlock.addChildToFront(let);
-    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS);
+    NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
 
     for (Node child : functionBody.children()) {
       newBlock.addChildToBack(child.detach());
@@ -359,14 +356,16 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     // Must remove callee before extracting argument groups.
     spreadParent.removeChild(callee);
 
+    while (callee.isCast()) {
+      // Drop any CAST nodes. They're not needed anymore since this pass runs at the end of
+      // the checks phase, and they complicate detecting GETPROP/GETELEM callees.
+      callee = callee.removeFirstChild();
+    }
     final Node joinedGroups;
     if (spreadParent.hasOneChild() && isSpreadOfArguments(spreadParent.getOnlyChild())) {
       // Check for special case of `foo(...arguments)` and pass `arguments` directly to
       // `foo.apply(null, arguments)`. We want to avoid calling $jscomp.arrayFromIterable(arguments)
       // for this case, because it can have side effects, which prevents code removal.
-      //
-      // TODO(b/74074478): Generalize this to avoid ever calling $jscomp.arrayFromIterable() for
-      // `arguments`.
       joinedGroups = spreadParent.removeFirstChild().removeFirstChild();
     } else {
       List<Node> groups = extractSpreadGroups(spreadParent);
@@ -485,11 +484,10 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     //      function(function(new:[spreadParent], ...?), !Array<?>):function(new:[spreadParent])
     Node bindApply =
         getpropInferringJSType(
-            IR.getprop(
-                    getpropInferringJSType(
-                        IR.name("Function").setJSType(functionFunctionType), "prototype"),
-                    "bind")
-                .setJSType(u2uFunctionType),
+            getpropInferringJSType(
+                getpropInferringJSType(
+                    IR.name("Function").setJSType(functionFunctionType), "prototype"),
+                "bind"),
             "apply");
     Node result =
         IR.newNode(
@@ -523,7 +521,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       getpropType = ((FunctionType) receiverType).getPropertyType(propName);
     }
 
-    return getprop.setJSType(JSType.nullSafeResolveOrThrow(getpropType));
+    return getprop.setJSType(getpropType);
   }
 
   private Node callInferringJSType(Node callee, Node... args) {
@@ -535,6 +533,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     }
 
     JSType returnType = ((FunctionType) calleeType).getReturnType();
-    return call.setJSType(JSType.nullSafeResolveOrThrow(returnType));
+    return call.setJSType(returnType);
   }
 }

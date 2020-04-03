@@ -151,7 +151,7 @@ class MinimizedCondition {
       }
       case AND:
       case OR: {
-        Node complementNode = new Node(n.getToken() == Token.AND ? Token.OR : Token.AND).srcref(n);
+          Node complementNode = new Node(n.isAnd() ? Token.OR : Token.AND).srcref(n);
         MinimizedCondition leftSubtree = computeMinimizedCondition(n.getFirstChild());
         MinimizedCondition rightSubtree = computeMinimizedCondition(n.getLastChild());
         MeasuredNode positive = pickBest(

@@ -42,7 +42,8 @@ public class CheckConstantCaseNames extends AbstractPostOrderCallback
   public static final DiagnosticType MISSING_CONST_PROPERTY =
       DiagnosticType.disabled(
           "JSC_MISSING_CONST_ON_CONSTANT_CASE",
-          "CONSTANT_CASE {0} is constant-by-convention, so must be explicitly `const` or @const");
+          "CONSTANT_CASE name \"{0}\" is constant-by-convention, so must be explicitly `const` or"
+              + " @const");
 
   private final AbstractCompiler compiler;
   private final CodingConvention convention;

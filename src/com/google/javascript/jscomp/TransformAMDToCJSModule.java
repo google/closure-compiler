@@ -81,9 +81,10 @@ public final class TransformAMDToCJSModule implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall() && n.getFirstChild() != null &&
-          n.getFirstChild().isName() &&
-          "define".equals(n.getFirstChild().getString())) {
+      if (n.isCall()
+          && n.hasChildren()
+          && n.getFirstChild().isName()
+          && "define".equals(n.getFirstChild().getString())) {
         Var define = t.getScope().getVar(n.getFirstChild().
             getString());
         if (define != null && !define.isGlobal()) {

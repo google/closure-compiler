@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.lint.CheckExtraRequires.EXTRA_REQUIRE_WARNING;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.SourceFile;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,8 +34,8 @@ import org.junit.runners.JUnit4;
 
 /** Tests for the "extra requires" check in {@link CheckMissingAndExtraRequires}. */
 @RunWith(JUnit4.class)
-public final class ExtraRequireTest extends CompilerTestCase {
-  public ExtraRequireTest() {
+public final class CheckExtraRequiresTest extends CompilerTestCase {
+  public CheckExtraRequiresTest() {
     super();
   }
 
@@ -49,8 +56,68 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckMissingAndExtraRequires(
-        compiler, CheckMissingAndExtraRequires.Mode.FULL_COMPILE);
+    return new CheckExtraRequires(compiler);
+  }
+
+  @Test
+  public void testExtraRequire() {
+    testError("goog.require('foo.Bar');", EXTRA_REQUIRE_WARNING);
+  }
+
+  @Test
+  public void testExtraImport() {
+    testError("import z from '/x.y';", EXTRA_REQUIRE_WARNING);
+  }
+
+  @Test
+  public void testFailForwardDeclareInModule() {
+    testError(
+        lines(
+            "goog.module('example');",
+            "",
+            "var Event = goog.forwardDeclare('goog.events.Event');",
+            "var Unused = goog.forwardDeclare('goog.events.Unused');",
+            "",
+            "/**",
+            " * @param {!Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}",
+            "",
+            "exports = listener;"),
+        EXTRA_REQUIRE_WARNING);
+  }
+
+  @Test
+  public void testShadowedUnusedImport() {
+    // It would be nice to catch this, but currently the pass is name based and thus misses
+    // the fact that the import is unused.
+    testSame(
+        lines(
+            "goog.module('example');",
+            "",
+            "var Shadowed = goog.forwardDeclare('foo.Shadowed');",
+            "",
+            "function f(Shadowed) {",
+            "  alert(Shadowed);",
+            "}"));
+  }
+
+  @Test
+  public void testFailForwardDeclare() {
+    testError(
+        lines(
+            "goog.forwardDeclare('goog.events.Event');",
+            "goog.forwardDeclare('goog.events.Unused');",
+            "",
+            "/**",
+            " * @param {!goog.events.Event} event",
+            " */",
+            "function listener(event) {",
+            "  alert(event);",
+            "}"),
+        EXTRA_REQUIRE_WARNING);
   }
 
   @Test
@@ -228,46 +295,10 @@ public final class ExtraRequireTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnusedForwardDeclareInModule() {
-    // Reports extra require warning, but only in single-file mode.
-    testSame(
-        lines(
-            "goog.module('example');",
-            "",
-            "var Event = goog.forwardDeclare('goog.events.Event');",
-            "var Unused = goog.forwardDeclare('goog.events.Unused');",
-            "",
-            "/**",
-            " * @param {!Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}",
-            "",
-            "exports = listener;"));
-  }
-
-  @Test
   public void testPassForwardDeclare() {
     testSame(
         lines(
             "goog.forwardDeclare('goog.events.Event');",
-            "",
-            "/**",
-            " * @param {!goog.events.Event} event",
-            " */",
-            "function listener(event) {",
-            "  alert(event);",
-            "}"));
-  }
-
-  @Test
-  public void testFailForwardDeclare() {
-    // Reports extra require warning, but only in single-file mode.
-    testSame(
-        lines(
-            "goog.forwardDeclare('goog.events.Event');",
-            "goog.forwardDeclare('goog.events.Unused');",
             "",
             "/**",
             " * @param {!goog.events.Event} event",

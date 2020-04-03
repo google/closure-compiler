@@ -150,7 +150,7 @@ public final class ReferenceCollectingCallback
 
   @Override
   public Scope getScope(Var var) {
-    return var.scope;
+    return var.getScope();
   }
 
   /**
@@ -167,7 +167,7 @@ public final class ReferenceCollectingCallback
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || n.isImportStar() || (n.isStringKey() && !n.hasChildren())) {
+    if (n.isName() || n.isImportStar()) {
       if ((parent.isImportSpec() && n != parent.getLastChild())
           || (parent.isExportSpec() && n != parent.getFirstChild())) {
         // The n in `import {n as x}` or `export {x as n}` are not references, even though
@@ -336,6 +336,7 @@ public final class ReferenceCollectingCallback
         case IF:
         case OR:
         case SWITCH:
+        case COALESCE:
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();

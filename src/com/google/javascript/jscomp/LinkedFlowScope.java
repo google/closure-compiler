@@ -152,13 +152,13 @@ class LinkedFlowScope implements FlowScope {
         if (declaredType == null
             || !inferredType.isSubtypeOf(declaredType)
             || declaredType.isSubtypeOf(inferredType)
-            || inferredType.isEquivalentTo(declaredType)) {
+            || inferredType.equals(declaredType)) {
           return this;
         }
       } else if (declaredType != null && !inferredType.isSubtypeOf(declaredType)) {
         // If this inferred type is incompatible with another type previously
         // inferred and stored on the scope, then update the scope.
-        v.setType(v.getType().getLeastSupertype(inferredType).resolveOrThrow());
+        v.setType(v.getType().getLeastSupertype(inferredType));
       }
     }
     return inferSlotType(symbol, inferredType);
@@ -384,8 +384,7 @@ class LinkedFlowScope implements FlowScope {
                           JSType fnSlotType = fnSlot != null ? fnSlot.getType() : null;
                           if (fnSlotType != null && fnSlotType != slotA.getType()) {
                             // Case #3
-                            JSType joinedType =
-                                slotA.getType().getLeastSupertype(fnSlotType).resolveOrThrow();
+                            JSType joinedType = slotA.getType().getLeastSupertype(fnSlotType);
                             return joinedType != slotA.getType()
                                 ? new OverlaySlot(name, joinedType)
                                 : slotA;
@@ -398,8 +397,7 @@ class LinkedFlowScope implements FlowScope {
                           JSType fnSlotType = fnSlot != null ? fnSlot.getType() : null;
                           if (fnSlotType != null && fnSlotType != slotB.getType()) {
                             // Case #4
-                            JSType joinedType =
-                                slotB.getType().getLeastSupertype(fnSlotType).resolveOrThrow();
+                            JSType joinedType = slotB.getType().getLeastSupertype(fnSlotType);
                             return joinedType != slotB.getType()
                                 ? new OverlaySlot(name, joinedType)
                                 : slotB;
@@ -412,8 +410,7 @@ class LinkedFlowScope implements FlowScope {
                         if (slotA.getType() == slotB.getType()) {
                           return slotA;
                         }
-                        JSType joinedType =
-                            slotA.getType().getLeastSupertype(slotB.getType()).resolveOrThrow();
+                        JSType joinedType = slotA.getType().getLeastSupertype(slotB.getType());
                         return joinedType != slotA.getType()
                             ? new OverlaySlot(name, joinedType)
                             : slotA;

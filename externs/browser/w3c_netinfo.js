@@ -43,6 +43,9 @@ NetworkInformation.prototype.rtt;
 /** @type {?function(Event)} */
 NetworkInformation.prototype.onchange;
 
+/** @type {boolean} */
+NetworkInformation.prototype.saveData;
+
 /**
  * @typedef {number}
  */

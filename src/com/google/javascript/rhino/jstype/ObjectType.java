@@ -47,6 +47,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -55,7 +56,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 /**
@@ -200,7 +200,7 @@ public abstract class ObjectType extends JSType implements Serializable {
    *
    * <p>Returning an empty string means something different than returning null. An empty string may
    * indicate an anonymous constructor, which we treat differently than a literal type without a
-   * reference name. e.g. in {@link InstanceObjectType#appendTo(StringBuilder, boolean)}
+   * reference name. e.g. in {@link InstanceObjectType#appendTo(TypeStringBuilder)}
    *
    * @return the object's name or {@code null} if this is an anonymous object
    */
@@ -610,21 +610,9 @@ public abstract class ObjectType extends JSType implements Serializable {
     return getPropertyMap().getPropertiesCount();
   }
 
-  /**
-   * Returns a list of properties defined or inferred on this type and any of
-   * its supertypes.
-   */
-  public final Set<String> getPropertyNames() {
-    Set<String> props = new TreeSet<>();
-    collectPropertyNames(props);
-    return props;
-  }
-
-  /**
-   * Adds any properties defined on this type or its supertypes to the set.
-   */
-  final void collectPropertyNames(Set<String> props) {
-    getPropertyMap().collectPropertyNames(props);
+  /** Returns a list of properties defined or inferred on this type and any of its supertypes. */
+  public final ImmutableSortedSet<String> getPropertyNames() {
+    return getPropertyMap().keySet();
   }
 
   @Override
@@ -648,7 +636,7 @@ public abstract class ObjectType extends JSType implements Serializable {
         other != null;
         other = deeplyUnwrap(other.getImplicitPrototype())) {
       // The prototype should match exactly.
-      // NOTE: the use of "==" here rather than isEquivalentTo is deliberate.  This method
+      // NOTE: the use of "==" here rather than equals is deliberate.  This method
       // is very hot in the type checker and relying on identity improves performance of both
       // type checking/type inferrence and property disambiguation.
       if (JSType.areIdentical(unwrappedThis, other)) {

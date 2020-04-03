@@ -32,7 +32,7 @@ var GetterSetter = class {
 
 function testGetter() {
   let gs = new GetterSetter();
-  assertEquals('foo', gs.foo);
+  assertEquals('foo', /** @type {?} */ (gs.foo));
 }
 
 function testSetter() {
@@ -68,7 +68,7 @@ var Sub = class extends Base {
 
 function testSubclassGetter() {
   let s = new Sub();
-  assertEquals('sub', s.foo);
+  assertEquals('sub', /** @type {?} */ (s.foo));
   assertEquals(0, s.counter);
   s.foo = 'new value';
   assertEquals(1, s.counter);
@@ -83,7 +83,7 @@ class FooWithSuffix extends Sub {
   /** @return {string} */
   get foo() {
     // Invoke super class getter
-    return super.foo + '-' + this.foo_;
+    return /** @type {?} */ (super.foo) + '-' + /** @type {?} */ (this.foo_);
   }
 
   /** @param {string} val */
@@ -114,6 +114,94 @@ var Multiple = class {
 
 function testMultiple() {
   let s =  new Multiple();
-  assertEquals('foo', s.foo);
-  assertEquals('bar', s.bar);
+  assertEquals('foo', /** @type {?} */ (s.foo));
+  assertEquals('bar', /** @type {?} */ (s.bar));
+}
+
+/**
+ * @param {string} str
+ * @return {string}
+ */
+const identity = str => str;
+
+/** @unrestricted */
+var ComputedGetterSetter = class {
+  constructor() {
+    this.counter = 0;
+  }
+
+  get[identity('foo')]() {
+    return 'foo';
+  }
+
+  set[identity('fo') + 'o'](val) {
+    this.counter++;
+  }
+};
+
+function testComputedGetter() {
+  let gs = new ComputedGetterSetter();
+  assertEquals('foo', gs['foo']);
+}
+
+function testComputedSetter() {
+  let gs = new ComputedGetterSetter();
+  gs['foo'] = 'bar';
+  assertEquals(1, gs.counter);
+}
+
+const /** !Array<number> */ numbers = [];
+/**
+ * @param {number} n
+ * @return {number}
+ */
+const append = function(n) {
+  numbers.push(n);
+  return n;
+};
+
+/** @unrestricted */
+var ComputedGetterSetterSideEffects = class {
+  get[append(1)]() {}
+  set[append(1)](x) {}
+  set[append(2)](x) {}
+  [append(3)]() {}
+  static[append(4)]() {}
+  get[append(5)]() {}
+  set[append(5)](y) {}
+};
+
+function testComputedSideEffectOrdering() {
+  new ComputedGetterSetterSideEffects();
+  assertArrayEquals(numbers, [1, 1, 2, 3, 4, 5, 5]);
+}
+
+const one = 1;
+const alsoOne = 1;
+
+/** @unrestricted */
+var ComputedGetterSetterKeyOverride = class {
+  constructor() {
+    this.counter = 0;
+  }
+
+  get[one]() {
+    return 1;
+  }
+
+  set[alsoOne](val) {
+    this.counter++;
+  }
+};
+
+function testComputedGetter_getterNotOverridenBySetter() {
+  let gs = new ComputedGetterSetterKeyOverride();
+  assertEquals(1, gs[1]);
+}
+
+function testComputedSetter_setterCanFollowGetter() {
+  let gs = new ComputedGetterSetterKeyOverride();
+  assertEquals(0, gs.counter);
+  gs[1] = 2;
+  assertEquals(1, gs.counter);
 }

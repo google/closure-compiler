@@ -658,7 +658,7 @@ class FunctionInjector {
         // Remove the call from the name node.
         Node firstChild = parent.removeFirstChild();
         NodeUtil.markFunctionsDeleted(firstChild, compiler);
-        Preconditions.checkState(parent.getFirstChild() == null);
+        Preconditions.checkState(!parent.hasChildren());
         // Add the call, after the VAR.
         greatGrandParent.addChildAfter(newBlock, grandParent);
         break;

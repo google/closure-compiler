@@ -240,9 +240,35 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   private void validateTypedefs(Node n, JSDocInfo info) {
-    if (info != null && info.hasTypedefType() && isClassDecl(n)) {
-      reportMisplaced(n, "typedef", "@typedef does not make sense on a class declaration.");
+    if (info == null || !info.hasTypedefType()) {
+      return;
     }
+    if (isClassDecl(n)) {
+      reportMisplaced(n, "typedef", "@typedef is not allowed on a class declaration.");
+      return;
+    }
+    Node lvalue = NodeUtil.isNameDeclaration(n) || n.isAssign() ? n.getFirstChild() : n;
+    // Static properties for goog.defineClass are rewritten to qualified names before typechecking
+    // runs and are valid as @typedefs.
+    if (!lvalue.isQualifiedName() && !isGoogDefineClassStatic(lvalue)) {
+      reportMisplaced(
+          n,
+          "typedef",
+          "@typedef is only allowed on qualified name declarations. Did you mean @type?");
+    } else if (isPrototypeOrInstanceDecl(lvalue)) {
+      reportMisplaced(
+          n,
+          "typedef",
+          "@typedef is not allowed on instance or prototype properties. Did you mean @type?");
+    }
+  }
+
+  /** Whether this is a property in this object: {@code goog.defineClass(superClass, {statics: {} */
+  private boolean isGoogDefineClassStatic(Node n) {
+    return n.isStringKey()
+        && n.getParent().isObjectLit()
+        && n.getGrandparent().isStringKey()
+        && n.getGrandparent().getString().equals("statics");
   }
 
   private void validateTemplates(Node n, JSDocInfo info) {
@@ -263,7 +289,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
    *     specified node, no null if no such function exists.
    */
   @Nullable
-  private Node getFunctionDecl(Node n) {
+  private static Node getFunctionDecl(Node n) {
     if (n.isFunction()) {
       return n;
     }
@@ -311,6 +337,17 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   private boolean isClass(Node n) {
     return n.isClass()
         || (n.isCall() && compiler.getCodingConvention().isClassFactoryCall(n));
+  }
+
+  private static boolean isPrototypeOrInstanceDecl(Node n) {
+    if (n.isStringKey()) {
+      return false;
+    }
+    if (NodeUtil.isPrototypeProperty(n)) {
+      return true;
+    }
+    Node receiver = NodeUtil.getRootOfQualifiedName(n);
+    return receiver.isThis() || receiver.isSuper();
   }
 
   /**
@@ -384,7 +421,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     }
   }
 
-  private boolean hasClassLevelJsDoc(JSDocInfo info) {
+  private static boolean hasClassLevelJsDoc(JSDocInfo info) {
     return info.isConstructorOrInterface()
         || info.hasBaseType()
         || info.getImplementedInterfaceCount() != 0
@@ -526,7 +563,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   /** Returns whether of not the given name is valid target for the result of goog.getMsg */
-  private boolean isValidMsgName(Node nameNode) {
+  private static boolean isValidMsgName(Node nameNode) {
     if (nameNode.isName() || nameNode.isStringKey()) {
       return nameNode.getString().startsWith("MSG_");
     } else if (nameNode.isQualifiedName()) {
@@ -600,10 +637,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     }
   }
 
-  /**
-   * Is it valid to have a type annotation on the given NAME node?
-   */
-  private boolean isTypeAnnotationAllowedForName(Node n) {
+  /** Is it valid to have a type annotation on the given NAME node? */
+  private static boolean isTypeAnnotationAllowedForName(Node n) {
     checkState(n.isName(), n);
     // Only allow type annotations on nodes used as an lvalue.
     if (!NodeUtil.isLValue(n)) {
@@ -713,8 +748,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (!n.isReturn() || info == null) {
       return;
     }
-    // @type is handled in validateTypeAnnotations method.
-    if (info.containsDeclaration() && !info.hasType()) {
+    // @type and @typedef are handled separately
+    if (info.containsDeclaration() && !info.hasType() && !info.hasTypedefType()) {
       report(n, JSDOC_ON_RETURN);
     }
   }

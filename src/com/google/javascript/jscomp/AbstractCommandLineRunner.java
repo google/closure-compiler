@@ -193,6 +193,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   private Map<String, String> parsedModuleWrappers = null;
 
   @GwtIncompatible("Unnecessary")
+  private Map<String, String> parsedModuleOutputFiles = null;
+
+  @GwtIncompatible("Unnecessary")
   private final Gson gson;
 
   static final String OUTPUT_MARKER = "%output%";
@@ -500,43 +503,46 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @GwtIncompatible("Unnecessary")
   public static List<SourceFile> getBuiltinExterns(CompilerOptions.Environment env)
       throws IOException {
-    InputStream input = AbstractCommandLineRunner.class.getResourceAsStream(
-        "/externs.zip");
+    try (InputStream input = getExternsInput()) {
+      ZipInputStream zip = new ZipInputStream(input);
+      String envPrefix = Ascii.toLowerCase(env.toString()) + "/";
+      Map<String, SourceFile> mapFromExternsZip = new HashMap<>();
+      for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
+        String filename = entry.getName();
+
+        // Always load externs in the root folder.
+        // If the non-core-JS externs are organized in subfolders, only load
+        // the ones in a subfolder matching the specified environment. Strip the subfolder.
+        if (filename.contains("/")) {
+          if (!filename.startsWith(envPrefix)) {
+            continue;
+          }
+          filename = filename.substring(envPrefix.length()); // remove envPrefix, including '/'
+        }
+
+        BufferedInputStream entryStream =
+            new BufferedInputStream(ByteStreams.limit(zip, entry.getSize()));
+        mapFromExternsZip.put(
+            filename,
+            SourceFile.fromInputStream(
+                // Give the files an odd prefix, so that they do not conflict
+                // with the user's files.
+                "externs.zip//" + filename, entryStream, UTF_8));
+      }
+      return DefaultExterns.prepareExterns(env, mapFromExternsZip);
+    }
+  }
+
+  @GwtIncompatible("Unnecessary")
+  private static InputStream getExternsInput() {
+    InputStream input = AbstractCommandLineRunner.class.getResourceAsStream("/externs.zip");
     if (input == null) {
       // In some environments, the externs.zip is relative to this class.
       input = AbstractCommandLineRunner.class.getResourceAsStream("externs.zip");
     }
     checkNotNull(input);
-
-    ZipInputStream zip = new ZipInputStream(input);
-    String envPrefix = Ascii.toLowerCase(env.toString()) + "/";
-    Map<String, SourceFile> mapFromExternsZip = new HashMap<>();
-    for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
-      String filename = entry.getName();
-
-      // Always load externs in the root folder.
-      // If the non-core-JS externs are organized in subfolders, only load
-      // the ones in a subfolder matching the specified environment. Strip the subfolder.
-      if (filename.contains("/")) {
-        if (!filename.startsWith(envPrefix)) {
-          continue;
-        }
-        filename = filename.substring(envPrefix.length());  // remove envPrefix, including '/'
-      }
-
-      BufferedInputStream entryStream = new BufferedInputStream(
-          ByteStreams.limit(zip, entry.getSize()));
-      mapFromExternsZip.put(filename,
-          SourceFile.fromInputStream(
-              // Give the files an odd prefix, so that they do not conflict
-              // with the user's files.
-              "externs.zip//" + filename,
-              entryStream,
-              UTF_8));
-    }
-
-    return DefaultExterns.prepareExterns(env, mapFromExternsZip);
- }
+    return input;
+  }
 
   /** Runs the Compiler and calls System.exit() with the exit status of the compiler. */
   @GwtIncompatible("Unnecessary")
@@ -967,8 +973,51 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return wrappers;
   }
 
+  /**
+   * Parses module output name specifications.
+   *
+   * @param specs A list of module output name specifications, not null. The spec format is: {@code
+   *     name:output_file}.
+   * @return A map from module name to module output file name, if declared. Modules with no
+   *     predeclared output file name will have no entry in this map.
+   */
+  private static ImmutableMap<String, String> parseModuleOutputFiles(List<String> specs) {
+    checkArgument(specs != null);
+
+    ImmutableMap.Builder<String, String> outputFilesBuilder = ImmutableMap.builder();
+
+    for (String spec : specs) {
+      // Format is "<name>:<output_file>".
+      int pos = spec.indexOf(':');
+      if (pos == -1) {
+        throw new FlagUsageException(
+            "Expected chunk_output_file to have " + "<name>:<output_file> format: " + spec);
+      }
+
+      String name = spec.substring(0, pos);
+      String filename = spec.substring(pos + 1);
+      outputFilesBuilder.put(name, filename);
+    }
+    return outputFilesBuilder.build();
+  }
+
+  /**
+   * Returns the output file name for a chunk.
+   *
+   * <p>For chunks with predeclared output file names specified using {@code --chunk_output_file},
+   * the the output file name is {@code <outputPathPrefix>/<output_file>}
+   *
+   * <p>Otherwise, the output file name is {@code <outputPathPrefix>/<chunkName>.js}
+   */
   @GwtIncompatible("Unnecessary")
   private String getModuleOutputFileName(JSModule m) {
+    if (parsedModuleOutputFiles == null) {
+      parsedModuleOutputFiles = parseModuleOutputFiles(config.moduleOutputFiles);
+    }
+    String outputFile = parsedModuleOutputFiles.get(m.getName());
+    if (outputFile != null) {
+      return config.moduleOutputPathPrefix + outputFile;
+    }
     return config.moduleOutputPathPrefix + m.getName() + ".js";
   }
 
@@ -983,6 +1032,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     String fileName = getModuleOutputFileName(m);
+    maybeCreateDirsForPath(fileName);
     String baseName = new File(fileName).getName();
     writeOutput(out, compiler, m,
         parsedModuleWrappers.get(m.getName()).replace("%basename%", baseName),
@@ -1514,6 +1564,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         }
 
         String moduleFilename = getModuleOutputFileName(m);
+        maybeCreateDirsForPath(moduleFilename);
         try (Writer writer = fileNameToLegacyOutputWriter(moduleFilename)) {
           if (options.sourceMapOutputPath != null) {
             compiler.resetAndIntitializeSourceMap();
@@ -1625,7 +1676,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * variable.
    */
   @GwtIncompatible("Unnecessary")
-  private boolean shouldGenerateMapPerModule(B options) {
+  protected boolean shouldGenerateMapPerModule(B options) {
     return options.sourceMapOutputPath != null
         && options.sourceMapOutputPath.contains("%outname%");
   }
@@ -1670,7 +1721,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   private String expandCommandLinePath(String path, JSModule forModule) {
     String sub;
     if (forModule != null) {
-      sub = config.moduleOutputPathPrefix + forModule.getName() + ".js";
+      sub = getModuleOutputFileName(forModule);
     } else if (!config.module.isEmpty()) {
       sub = config.moduleOutputPathPrefix;
     } else {
@@ -2427,6 +2478,18 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     public CommandLineConfig setModuleOutputPathPrefix(String moduleOutputPathPrefix) {
       this.moduleOutputPathPrefix = moduleOutputPathPrefix;
+      return this;
+    }
+
+    private final List<String> moduleOutputFiles = new ArrayList<>();
+
+    /**
+     * The output file name for a JavaScript chunk (optional). See the flag description for
+     * formatting requirements.
+     */
+    public CommandLineConfig setModuleOutputFiles(List<String> moduleOutputFiles) {
+      this.moduleOutputFiles.clear();
+      this.moduleOutputFiles.addAll(moduleOutputFiles);
       return this;
     }
 

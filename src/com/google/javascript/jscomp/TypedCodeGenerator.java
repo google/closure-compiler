@@ -137,7 +137,7 @@ class TypedCodeGenerator extends CodeGenerator {
     }
 
     FunctionType funType = type.toMaybeFunctionType();
-    if (type.equals(registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE))) {
+    if (type.equals(registry.getNativeType(JSTypeNative.FUNCTION_TYPE))) {
       return "/** @type {!Function} */\n";
     }
     StringBuilder sb = new StringBuilder("/**\n");

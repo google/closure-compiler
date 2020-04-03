@@ -113,7 +113,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
       return false;
     }
     Var v = t.getScope().getVar(varname);
-    return v == null || v.isExtern() || (v.scope.isGlobal() && this.externNames.contains(varname));
+    return v == null
+        || v.isExtern()
+        || (v.getScope().isGlobal() && this.externNames.contains(varname));
   }
 
   private void addExternForGlobalSymbolNamespace() {
@@ -471,8 +473,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
      */
     void declareModuleGlobals() {
       for (ModuleGlobal global : preDeclarations) {
-        if (global.root.getFirstChild() != null
-            && global.root.getFirstChild().isVar()) {
+        if (global.root.hasChildren() && global.root.getFirstChild().isVar()) {
           global.root.getFirstChild().addChildToBack(global.name);
         } else {
           global.root.addChildToFront(IR.var(global.name).srcref(global.name));

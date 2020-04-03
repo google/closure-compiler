@@ -16,19 +16,15 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfill;
+import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
+import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -40,146 +36,54 @@ public class RewritePolyfills implements HotSwapCompilerPass {
       "JSC_INSUFFICIENT_OUTPUT_VERSION",
       "Built-in ''{0}'' not supported in output version {1}");
 
-  /**
-   * Represents a single polyfill: specifically, for a native symbol
-   * (not part of this object, but stored as the key to the map
-   * containing the Polyfill instance), a set of native and polyfill
-   * versions, and a library to ensure is injected if the output version
-   * is less than the native version.  This is a simple value type.
-   */
-  private static class Polyfill {
-    /**
-     * The language version at (or above) which the native symbol is
-     * available and sufficient.  If the language out flag is at least
-     * as high as {@code nativeVersion} then no rewriting will happen.
-     */
-    final FeatureSet nativeVersion;
-
-    /**
-     * The required language version for the polyfill to work.  This
-     * should not be higher than {@code nativeVersion}, but may be the same
-     * in cases where there is no polyfill provided.  This is used to
-     * emit a warning if the language out flag is too low.
-     */
-    final FeatureSet polyfillVersion;
-
-    /**
-     * Runtime library to inject for the polyfill, e.g. "es6/map".
-     */
-    final String library;
-
-    Polyfill(FeatureSet nativeVersion, FeatureSet polyfillVersion, String library) {
-      this.nativeVersion = nativeVersion;
-      this.polyfillVersion = polyfillVersion;
-      this.library = library;
-    }
-  }
-
-  /**
-   * Describes all the available polyfills, including native and
-   * required versions, and how to use them.
-   */
-  static class Polyfills {
-    // Map of method polyfills, keyed by native method name.
-    private final ImmutableMultimap<String, Polyfill> methods;
-    // Map of static polyfills, keyed by fully-qualified native name.
-    private final ImmutableMap<String, Polyfill> statics;
-    // Set of suffixes of qualified names.
-    private final ImmutableSet<String> suffixes;
-
-    private Polyfills(
-        ImmutableMultimap<String, Polyfill> methods, ImmutableMap<String, Polyfill> statics) {
-      this.methods = methods;
-      this.statics = statics;
-      this.suffixes = ImmutableSet.copyOf(Iterables.transform(statics.keySet(), EXTRACT_SUFFIX));
-    }
-
-    /**
-     * Builds a Polyfills instance from a polyfill table, which is a simple
-     * text file with lines containing space-separated tokens:
-     *   [NATIVE_SYMBOL] [NATIVE_VERSION] [POLYFILL_VERSION] [LIBRARY]
-     * For example,
-     *   Array.prototype.fill es6 es3 es6/array/fill
-     *   Map es6 es3 es6/map
-     *   WeakMap es6 es6
-     * The last line, WeakMap, does not have a polyfill available, so the
-     * library token is empty.
-     */
-    static Polyfills fromTable(String table) {
-      ImmutableMultimap.Builder<String, Polyfill> methods = ImmutableMultimap.builder();
-      ImmutableMap.Builder<String, Polyfill> statics = ImmutableMap.builder();
-      for (String line : Splitter.on('\n').omitEmptyStrings().split(table)) {
-        List<String> tokens = Splitter.on(' ').omitEmptyStrings().splitToList(line.trim());
-        if (tokens.size() == 1 && tokens.get(0).isEmpty()) {
-          continue;
-        } else if (tokens.size() < 3) {
-          throw new IllegalArgumentException("Invalid table: too few tokens on line: " + line);
-        }
-        String symbol = tokens.get(0);
-        Polyfill polyfill =
-            new Polyfill(
-                FeatureSet.valueOf(tokens.get(1)),
-                FeatureSet.valueOf(tokens.get(2)),
-                tokens.size() > 3 ? tokens.get(3) : "");
-        if (symbol.contains(".prototype.")) {
-          methods.put(symbol.replaceAll(".*\\.prototype\\.", ""), polyfill);
-        } else {
-          statics.put(symbol, polyfill);
-        }
-      }
-      return new Polyfills(methods.build(), statics.build());
-    }
-
-    /**
-     * Given a qualified name {@code node}, checks whether the suffix
-     * of the name could possibly match a static polyfill.
-     */
-    boolean checkSuffix(Node node) {
-      return node.isGetProp() ? suffixes.contains(node.getLastChild().getString())
-          : node.isName() ? suffixes.contains(node.getString())
-          : false;
-    }
-
-    private static final Function<String, String> EXTRACT_SUFFIX =
-        new Function<String, String>() {
-          @Override
-          public String apply(String arg) {
-            return arg.substring(arg.lastIndexOf('.') + 1);
-          }
-        };
-  }
-
   private final AbstractCompiler compiler;
   private final Polyfills polyfills;
+  private final boolean isolatePolyfills;
+  private Set<String> libraries;
 
-  public RewritePolyfills(AbstractCompiler compiler) {
+  public RewritePolyfills(AbstractCompiler compiler, boolean isolatePolyfills) {
     this(
         compiler,
         Polyfills.fromTable(
-            ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")));
+            ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")),
+        isolatePolyfills);
   }
 
-  // Visible for testing
-  RewritePolyfills(AbstractCompiler compiler, Polyfills polyfills) {
+  @VisibleForTesting
+  RewritePolyfills(AbstractCompiler compiler, Polyfills polyfills, boolean isolatePolyfills) {
     this.compiler = compiler;
     this.polyfills = polyfills;
+    this.isolatePolyfills = isolatePolyfills;
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    Traverser traverser = new Traverser();
-    NodeTraversal.traverse(compiler, scriptRoot, traverser);
+    this.libraries = new LinkedHashSet<>();
+    new PolyfillFindingCallback(compiler, polyfills).traverse(scriptRoot, this::inject);
 
-    if (!traverser.libraries.isEmpty()) {
-      Node lastNode = null;
-      for (String library : traverser.libraries) {
-        lastNode = compiler.ensureLibraryInjected(library, false);
-      }
-      if (lastNode != null) {
-        Node parent = lastNode.getParent();
-        removeUnneededPolyfills(parent, lastNode.getNext());
-        compiler.reportChangeToEnclosingScope(parent);
-      }
+    if (this.isolatePolyfills) {
+      // Polyfill isolation requires a pass to run near the end of optimizations. That pass may call
+      // into a library method injected in this pass. Adding an externs declaration of that library
+      // method prevents it from being dead-code-elimiated before polyfill isolation runs.
+      Node jscompLookupMethodDecl = IR.var(IR.name("$jscomp$lookupPolyfilledValue"));
+      compiler
+          .getSynthesizedExternsInputAtEnd()
+          .getAstRoot(compiler)
+          .addChildToBack(jscompLookupMethodDecl);
+    }
+
+    if (libraries.isEmpty()) {
+      return;
+    }
+
+    Node lastNode = null;
+    for (String library : libraries) {
+      lastNode = compiler.ensureLibraryInjected(library, false);
+    }
+    if (lastNode != null) {
+      Node parent = lastNode.getParent();
+      removeUnneededPolyfills(parent, lastNode.getNext());
+      compiler.reportChangeToEnclosingScope(parent);
     }
   }
 
@@ -209,118 +113,25 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     hotSwapScript(root, null);
   }
 
-  private class Traverser extends GuardedCallback<String> {
-
-    final Set<String> libraries = new LinkedHashSet<>();
-
-    Traverser() {
-      super(compiler);
+  private void inject(PolyfillUsage polyfillUsage) {
+    Polyfill polyfill = polyfillUsage.polyfill();
+    if (polyfill.kind.equals(Polyfill.Kind.STATIC)
+        && !languageOutIsAtLeast(polyfill.polyfillVersion)) {
+      compiler.report(
+          JSError.make(
+              polyfillUsage.node(),
+              INSUFFICIENT_OUTPUT_VERSION_ERROR,
+              polyfillUsage.name(),
+              compiler.getOptions().getOutputFeatureSet().version()));
     }
 
-    @Override
-    public void visitGuarded(NodeTraversal traversal, Node node, Node parent) {
-      // Find qualified names that match static calls
-      if (node.isQualifiedName() && polyfills.checkSuffix(node)) {
-        String name = node.getQualifiedName();
-
-        // TODO(sdh): We could reduce some work here by combining the global names
-        // check with the root-in-scope check but it's not clear how to do so and
-        // still keep the var lookup *after* the polyfill-existence check.
-        boolean isExplicitGlobal = false;
-        for (String global : GLOBAL_NAMES) {
-          if (name.startsWith(global)) {
-            name = name.substring(global.length());
-            isExplicitGlobal = true;
-            break;
-          }
-        }
-
-        // If the name is known, then make sure it's either explicitly or implicitly global.
-        Polyfill polyfill = polyfills.statics.get(name);
-        if (polyfill != null && !isExplicitGlobal && isRootInScope(node, traversal)) {
-          polyfill = null;
-        }
-
-        if (polyfill != null && !isGuarded(name)) {
-          if (!languageOutIsAtLeast(polyfill.polyfillVersion)) {
-            traversal.report(
-                node,
-                INSUFFICIENT_OUTPUT_VERSION_ERROR,
-                name,
-                compiler.getOptions().getOutputFeatureSet().version());
-          }
-          inject(polyfill);
-
-          // TODO(sdh): consider warning if language_in is too low?  it's not really any
-          // harm, and we can't do it consistently for the prototype methods, so maybe
-          // it's not worth doing here, either.
-
-          return; // isGetProp (below) overlaps, so just bail out now
-        }
-      }
-
-      // Inject anything that *might* match method calls - these may be removed later.
-      if (node.isGetProp() && node.getLastChild().isString()) {
-        String name = node.getLastChild().getString();
-        Collection<Polyfill> methods = polyfills.methods.get(name);
-        if (!methods.isEmpty() && !isGuarded("." + name)) {
-          for (Polyfill polyfill : methods) {
-            inject(polyfill);
-          }
-          // NOTE(sdh): To correctly support IE8, we would need to rewrite the call site to
-          // e.g. $jscomp.method(foo, 'bar').call or $jscomp.call(foo, 'bar', ...args),
-          // which would be defined in the runtime to first check for existence (note that
-          // this means we can't rename that property) and then fall back on a map of
-          // polyfills populated by $jscomp.polyfill.  This means we'd need a later
-          // version of this compiler pass, since the rewrite should ideally happen after
-          // typechecking (so that the rewrite doesn't mess it up, and we can also optionally
-          // not do it).  For now we will pass on this, until we see concrete need.  Note that
-          // this will not work at all in uncompiled mode, so this may be a non-starter.
-        }
-      }
-      return;
-    }
-
-    private void inject(Polyfill polyfill) {
-      if (!languageOutIsAtLeast(polyfill.nativeVersion) && !polyfill.library.isEmpty()) {
-        libraries.add(polyfill.library);
-      }
+    if (!languageOutIsAtLeast(polyfill.nativeVersion) && !polyfill.library.isEmpty()) {
+      libraries.add(polyfill.library);
     }
   }
 
-  private static final ImmutableSet<String> GLOBAL_NAMES =
-      ImmutableSet.of("goog.global.", "window.");
-
-  private boolean languageOutIsAtLeast(LanguageMode mode) {
-    return compiler.getOptions().getOutputFeatureSet().contains(mode.toFeatureSet());
-  }
-
-  private boolean languageOutIsAtLeast(FeatureSet features) {
-    switch (features.version()) {
-      case "ts":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6_TYPED);
-      case "es_2019":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2019);
-      case "es9":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2018);
-      case "es8":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2017);
-      case "es7":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2016);
-      case "es6":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2015);
-      case "es5":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT5);
-      case "es3":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT3);
-      default:
-        return false;
-    }
-  }
-
-  private static boolean isRootInScope(Node node, NodeTraversal traversal) {
-    Node root = NodeUtil.getRootOfQualifiedName(node);
-    // NOTE: `this` and `super` are always considered "in scope" and thus shouldn't be polyfilled.
-    return !root.isName() || traversal.getScope().getVar(root.getString()) != null;
+  private boolean languageOutIsAtLeast(FeatureSet featureSet) {
+    return PolyfillFindingCallback.languageOutIsAtLeast(
+        featureSet, compiler.getOptions().getOutputFeatureSet());
   }
 }

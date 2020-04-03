@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -78,7 +77,6 @@ public class NodeTraversal {
 
   /** The scope creator */
   private final ScopeCreator scopeCreator;
-  private final boolean useBlockScope;
 
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
@@ -93,22 +91,38 @@ public class NodeTraversal {
    */
   public interface Callback {
     /**
-     * <p>Visits a node in pre order (before visiting its children) and decides
-     * whether this node's children should be traversed. If children are
-     * traversed, they will be visited by
-     * {@link #visit(NodeTraversal, Node, Node)} in postorder.</p>
-     * <p>Implementations can have side effects (e.g. modifying the parse
-     * tree).</p>
+     * Visits a node in preorder (before its children) and decides whether its children should be
+     * traversed. If the children should be traversed, they will be visited by {@link
+     * #shouldTraverse(NodeTraversal, Node, Node)} in preorder and by {@link #visit(NodeTraversal,
+     * Node, Node)} in postorder.
+     *
+     * <p>Siblings are always visited left-to-right.
+     *
+     * <p>Implementations can have side-effects (e.g. modify the parse tree). Removing the current
+     * node is legal, but removing or reordering nodes above the current node may cause nodes to be
+     * visited twice or not at all.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param parent The parent of the current node.
      * @return whether the children of this node should be visited
      */
-    boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent);
+    boolean shouldTraverse(NodeTraversal t, Node n, Node parent);
 
     /**
-     * <p>Visits a node in postorder (after its children have been visited).
-     * A node is visited only if all its parents should be traversed
-     * ({@link #shouldTraverse(NodeTraversal, Node, Node)}).</p>
-     * <p>Implementations can have side effects (e.g. modifying the parse
-     * tree).</p>
+     * Visits a node in postorder (after its children). A node is visited in postorder iff {@link
+     * #shouldTraverse(NodeTraversal, Node, Node)} returned true for its parent. In particular, the
+     * root node is never visited in postorder.
+     *
+     * <p>Siblings are always visited left-to-right.
+     *
+     * <p>Implementations can have side-effects (e.g. modify the parse tree). Removing the current
+     * node is legal, but removing or reordering nodes above the current node may cause nodes to be
+     * visited twice or not at all.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param parent The parent of the current node.
      */
     void visit(NodeTraversal t, Node n, Node parent);
   }
@@ -222,15 +236,16 @@ public class NodeTraversal {
   }
 
   /**
-   * Abstract callback that knows when goog.provide, goog.module, and ES modules are entered and
-   * exited. This includes both whole file modules and bundled modules.
+   * Abstract callback that knows when a global script, goog.provide file, goog.module,
+   * goog.loadModule, ES module or CommonJS module is entered or exited. This includes both whole
+   * file modules and bundled modules, as well as files in the global scope.
    */
   public abstract static class AbstractModuleCallback implements Callback {
     protected final AbstractCompiler compiler;
     private final ModuleMetadataMap moduleMetadataMap;
 
-    private ModuleMetadata currentModule;
-    private Node scopeRoot;
+    @Nullable private ModuleMetadata currentModule;
+    @Nullable private Node scopeRoot;
     private boolean inLoadModule;
 
     AbstractModuleCallback(AbstractCompiler compiler, ModuleMetadataMap moduleMetadataMap) {
@@ -238,8 +253,20 @@ public class NodeTraversal {
       this.moduleMetadataMap = moduleMetadataMap;
     }
 
+    /**
+     * Called when the traversal enters a global file or module.
+     *
+     * @param currentModule The entered global file or module.
+     * @param moduleScopeRoot The root scope for the entered module or SCRIPT for global files.
+     */
     protected void enterModule(ModuleMetadata currentModule, Node moduleScopeRoot) {}
 
+    /**
+     * Called when the traversal exits a global file or module.
+     *
+     * @param oldModule The exited global file or module.
+     * @param moduleScopeRoot The root scope for the exited module or SCRIPT for global files.
+     */
     protected void exitModule(ModuleMetadata oldModule, Node moduleScopeRoot) {}
 
     @Override
@@ -277,6 +304,16 @@ public class NodeTraversal {
       return shouldTraverse(t, n, currentModule, scopeRoot);
     }
 
+    /**
+     * See {@link Callback#shouldTraverse}.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param currentModule The current module, or null if not inside a module (e.g. AST root).
+     * @param moduleScopeRoot The root scope for the current module, or null if not inside a module
+     *     (e.g. AST root).
+     * @return whether the children of this node should be visited
+     */
     protected boolean shouldTraverse(
         NodeTraversal t,
         Node n,
@@ -312,6 +349,15 @@ public class NodeTraversal {
       visit(t, n, currentModule, scopeRoot);
     }
 
+    /**
+     * See {@link Callback#visit}.
+     *
+     * @param t The current traversal.
+     * @param n The current node.
+     * @param currentModule The current module, or null if not inside a module (e.g. AST root).
+     * @param moduleScopeRoot The root scope for the current module, or null if not inside a module
+     *     (e.g. AST root).
+     */
     protected void visit(
         NodeTraversal t,
         Node n,
@@ -330,7 +376,6 @@ public class NodeTraversal {
     }
     this.compiler = compiler;
     this.scopeCreator = scopeCreator;
-    this.useBlockScope = scopeCreator.hasBlockScope();
   }
 
   private void throwUnexpectedException(Throwable unexpectedException) {
@@ -494,7 +539,7 @@ public class NodeTraversal {
           traverseBranch(className, n);
         }
         // Omit the extends node, which is in the outer scope. Computed property keys are already
-        // excluded by traverseClassMembers.
+        // excluded by handleClassMembers.
         traverseBranch(body, n);
 
         popScope();
@@ -512,9 +557,6 @@ public class NodeTraversal {
       }
     } else if (NodeUtil.isAnyFor(n)) {
       if (callback.shouldTraverse(this, n, null)) {
-        // ES6 Creates a separate for scope and for-body scope
-        checkState(scopeCreator.hasBlockScope());
-
         pushScope(s);
 
         Node forAssignmentParam = n.getFirstChild();
@@ -529,9 +571,6 @@ public class NodeTraversal {
       }
     } else if (n.isSwitch()) {
       if (callback.shouldTraverse(this, n, null)) {
-        // ES6 creates a separate switch scope with cases
-        checkState(scopeCreator.hasBlockScope());
-
         pushScope(s);
 
         traverseChildren(n);
@@ -843,21 +882,25 @@ public class NodeTraversal {
       case MODULE_BODY:
         handleModule(n, parent);
         return;
+      case CLASS:
+        handleClass(n, parent);
+        return;
+      case CLASS_MEMBERS:
+        handleClassMembers(n, parent);
+        return;
       default:
         break;
     }
+
     curNode = n;
     if (!callback.shouldTraverse(this, n, parent)) {
       return;
     }
 
-    Token type = n.getToken();
-    if (type == Token.CLASS) {
-      traverseClass(n);
-    } else if (type == Token.CLASS_MEMBERS) {
-      traverseClassMembers(n);
-    } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
-      traverseBlockScope(n);
+    if (NodeUtil.createsBlockScope(n)) {
+      pushScope(n);
+      traverseChildren(n);
+      popScope();
     } else {
       traverseChildren(n);
     }
@@ -908,14 +951,19 @@ public class NodeTraversal {
   }
 
   /**
-   * Traverses a class.  Note that we traverse some of the child nodes slightly out of order to
-   * ensure children are visited in the correct scope.  The following children are in the outer
+   * Traverses a class. Note that we traverse some of the child nodes slightly out of order to
+   * ensure children are visited in the correct scope. The following children are in the outer
    * scope: (1) the 'extends' clause, (2) any computed method keys, (3) the class name for class
-   * declarations only (class expression names are traversed in the class scope).  This requires
-   * that we visit the extends node (second child) and any computed member keys (grandchildren of
-   * the last, body, child) before visiting the name (first child) or body (last child).
+   * declarations only (class expression names are traversed in the class scope). This requires that
+   * we visit the extends node (second child) and any computed member keys (grandchildren of the
+   * last, body, child) before visiting the name (first child) or body (last child).
    */
-  private void traverseClass(Node n) {
+  private void handleClass(Node n, Node parent) {
+    this.curNode = n;
+    if (!callback.shouldTraverse(this, n, parent)) {
+      return;
+    }
+
     final Node className = n.getFirstChild();
     final Node extendsClause = className.getNext();
     final Node body = extendsClause.getNext();
@@ -950,10 +998,18 @@ public class NodeTraversal {
     traverseBranch(body, n);
 
     popScope();
+
+    this.curNode = n;
+    callback.visit(this, n, parent);
   }
 
   /** Traverse class members, excluding keys of computed props. */
-  private void traverseClassMembers(Node n) {
+  private void handleClassMembers(Node n, Node parent) {
+    this.curNode = n;
+    if (!callback.shouldTraverse(this, n, parent)) {
+      return;
+    }
+
     for (Node child = n.getFirstChild(); child != null;) {
       Node next = child.getNext(); // see traverseChildren
       if (child.isComputedProp()) {
@@ -968,6 +1024,9 @@ public class NodeTraversal {
       }
       child = next;
     }
+
+    this.curNode = n;
+    callback.visit(this, n, parent);
   }
 
   private void traverseChildren(Node n) {
@@ -978,13 +1037,6 @@ public class NodeTraversal {
       traverseBranch(child, n);
       child = next;
     }
-  }
-
-  /** Traverses a non-function block. */
-  private void traverseBlockScope(Node n) {
-    pushScope(n);
-    traverseChildren(n);
-    popScope();
   }
 
   /** Examines the functions stack for the last instance of a function node. When possible, prefer
@@ -1327,7 +1379,7 @@ public class NodeTraversal {
       return true;
     } else if (n.isFunction()) {
       return true;
-    } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
+    } else if (NodeUtil.createsBlockScope(n)) {
       return true;
     }
     return false;

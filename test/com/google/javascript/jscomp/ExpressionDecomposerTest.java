@@ -59,9 +59,6 @@ public final class ExpressionDecomposerTest {
     allowMethodCallDecomposing = false;
     knownConstants.clear();
     times = 1;
-    // Tests using ES6+ features not in the typechecker should set this option to false
-    // TODO(lharker): stop setting this flag to false, since the typechecker should now understand
-    // all features in ES2017
     shouldTestTypes = true;
   }
 
@@ -123,6 +120,21 @@ public final class ExpressionDecomposerTest {
     helperCanExposeExpression(
         DecompositionType.MOVABLE,
         "function f(){ throw foo();}", "foo");
+  }
+
+  @Test
+  public void nullishCoalesceMovable() {
+    helperCanExposeExpression(DecompositionType.MOVABLE, "x = foo() ?? 1", "foo");
+  }
+
+  @Test
+  public void nullishCoalesceDecomposable() {
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "var x = null ?? foo()", "foo");
+  }
+
+  @Test
+  public void nullishCoalesceUnDecomposable() {
+    helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "while(x = goo()??foo()){}", "foo");
   }
 
   @Test
@@ -383,7 +395,6 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testCanExposeExpression12() {
     // Test destructuring rhs is evaluated before the lhs
-    shouldTestTypes = false;
     helperCanExposeExpression(DecompositionType.MOVABLE, "const {a, b = goo()} = foo();", "foo");
 
     helperCanExposeExpression(DecompositionType.MOVABLE, "const [a, b = goo()] = foo();", "foo");
@@ -446,7 +457,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveExpression4() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "const x = foo()",
         "foo",
@@ -455,7 +465,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveExpression5() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "let x = foo()",
         "foo",
@@ -519,8 +528,13 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testMoveExpressionNullishCoalesce() {
+    helperMoveExpression(
+        "x = foo() ?? 0", "foo", "var result$jscomp$0 = foo(); x = result$jscomp$0 ?? 0");
+  }
+
+  @Test
   public void testMoveExpression13() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "const {a, b} = foo();",
         "foo",
@@ -529,7 +543,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveExpression14() {
-    shouldTestTypes = false;
     helperMoveExpression(
         "({a, b} = foo());",
         "foo",
@@ -565,7 +578,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression4() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "const x = 1 ? foo() : 0",
         "foo",
@@ -575,7 +587,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression5() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "let x = 1 ? foo() : 0",
         "foo",
@@ -592,11 +603,33 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void exposeExpressionNullishCoalesceNoResult() {
+    helperExposeExpression(
+        "goo() ?? foo()",
+        "foo",
+        lines(
+            "var temp$jscomp$1;", //
+            "if((temp$jscomp$1 = goo()) != null) temp$jscomp$1;", //
+            "else foo()"));
+  }
+
+  @Test
   public void testExposeExpression7() {
     helperExposeExpression(
         "x = goo() && foo()",
         "foo",
         "var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo(); x = temp$jscomp$0;");
+  }
+
+  @Test
+  public void exposeExpressionNullishCoalesce() {
+    helperExposeExpression(
+        "x = goo() ?? foo()",
+        "foo",
+        lines(
+            "var temp$jscomp$1;var temp$jscomp$0;",
+            "if((temp$jscomp$1 = goo()) != null) temp$jscomp$0 = temp$jscomp$1;",
+            "else temp$jscomp$0=foo(); x = temp$jscomp$0;"));
   }
 
   @Test
@@ -610,7 +643,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression9() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "const x = 1 + (goo() && foo())",
         "foo",
@@ -620,7 +652,6 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression10() {
-    shouldTestTypes = false;
     helperExposeExpression(
         "let x = 1 + (goo() && foo())",
         "foo",
@@ -648,6 +679,17 @@ public final class ExpressionDecomposerTest {
             "var temp$jscomp$0;",
             "if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();",
             "switch(temp$jscomp$0){}"));
+  }
+
+  @Test
+  public void exposeExpressionNullishCoalesceSwitch() {
+    helperExposeExpression(
+        "switch(goo() ?? foo()){}",
+        "foo",
+        lines(
+            "var temp$jscomp$1;var temp$jscomp$0;",
+            "if((temp$jscomp$1 = goo()) != null) temp$jscomp$0 = temp$jscomp$1;",
+            "else temp$jscomp$0 = foo(); switch(temp$jscomp$0){}"));
   }
 
   @Test
@@ -752,7 +794,6 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testExposeExpression18() {
     allowMethodCallDecomposing = true;
-    shouldTestTypes = false;
     helperExposeExpression(
         lines(
             "const {a, b, c} = condition ?",
@@ -772,6 +813,8 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testMoveClass1() {
     shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperMoveExpression(
         "alert(class X {});",
         ExpressionDecomposerTest::findClass,
@@ -781,6 +824,8 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testMoveClass2() {
     shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperMoveExpression(
         "console.log(1, 2, class X {});",
         ExpressionDecomposerTest::findClass,
@@ -1013,7 +1058,9 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveSpread_siblingOfCall_outOfArrayLiteral_usesTempArray() {
-    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperExposeExpression(
         "[...x, foo()];",
         "foo",
@@ -1024,7 +1071,9 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveSpread_siblingOfCall_outOfObjectLiteral_usesTempObject() {
-    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperExposeExpression(
         "({...x, y: foo()});",
         "foo",
@@ -1035,7 +1084,9 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testMoveSpread_siblingOfCall_outOfFunctionCall_usesTempArray() {
-    shouldTestTypes = false; // TODO(nickreid): Enable this when tests support typed `AstFactory`.
+    shouldTestTypes = false;
+    // types don't come out quite the same before and after decomposition
+    // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperExposeExpression(
         lines(
             "function f() { }", //
@@ -1254,24 +1305,55 @@ public final class ExpressionDecomposerTest {
     helperExposeExpression(code, tree -> findCall(tree, fnName), expectedResult);
   }
 
+  private Node helperExposeExpressionThenTypeCheck(String code, Function<Node, Node> nodeFinder) {
+    Compiler compiler = getCompiler();
+    Node tree = parse(compiler, code);
+    assertThat(tree).isNotNull();
+
+    ExpressionDecomposer decomposer =
+        new ExpressionDecomposer(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
+    decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
+
+    Node expr = nodeFinder.apply(tree);
+
+    compiler.resetUniqueNameId();
+    for (int i = 0; i < times; i++) {
+      decomposer.exposeExpression(expr);
+    }
+    processForTypecheck(compiler, tree);
+
+    return tree;
+  }
+
   private void helperExposeExpression(
       String code,
       Function<Node, Node> nodeFinder,
       String expectedResult) {
     Compiler compiler = getCompiler();
-    ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope(), allowMethodCallDecomposing);
-    decomposer.setTempNamePrefix("temp");
-    decomposer.setResultNamePrefix("result");
+
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
-    Node originalTree = tree.cloneTree();
     assertThat(tree).isNotNull();
 
     if (shouldTestTypes) {
       processForTypecheck(compiler, tree);
     }
+
+    ExpressionDecomposer decomposer =
+        new ExpressionDecomposer(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
+    decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
 
     Node expr = nodeFinder.apply(tree);
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
@@ -1287,15 +1369,8 @@ public final class ExpressionDecomposerTest {
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
 
     if (shouldTestTypes) {
-      Node trueExpr = nodeFinder.apply(originalTree);
-
-      compiler.resetUniqueNameId();
-      for (int i = 0; i < times; i++) {
-        decomposer.exposeExpression(trueExpr);
-      }
-      processForTypecheck(compiler, originalTree);
-
-      checkTypeStringsEqualAsTree(originalTree, tree);
+      Node decomposeThenTypeCheck = helperExposeExpressionThenTypeCheck(code, nodeFinder);
+      checkTypeStringsEqualAsTree(decomposeThenTypeCheck, tree);
     }
   }
 
@@ -1312,11 +1387,6 @@ public final class ExpressionDecomposerTest {
       String expectedResult) {
     Compiler compiler = getCompiler();
 
-    ExpressionDecomposer decomposer = new ExpressionDecomposer(
-        compiler, compiler.getUniqueNameIdSupplier(),
-        knownConstants, newScope(), allowMethodCallDecomposing);
-    decomposer.setTempNamePrefix("temp");
-    decomposer.setResultNamePrefix("result");
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
     Node originalTree = tree.cloneTree();
@@ -1325,6 +1395,16 @@ public final class ExpressionDecomposerTest {
     if (shouldTestTypes) {
       processForTypecheck(compiler, tree);
     }
+
+    ExpressionDecomposer decomposer =
+        new ExpressionDecomposer(
+            compiler,
+            compiler.getUniqueNameIdSupplier(),
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
+    decomposer.setTempNamePrefix("temp");
+    decomposer.setResultNamePrefix("result");
 
     Node expr = nodeFinder.apply(tree);
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
@@ -1346,6 +1426,10 @@ public final class ExpressionDecomposerTest {
       }
       processForTypecheck(compiler, originalTree);
 
+      // TODO(bradfordcsmith): Don't assume type check + decompose gives the same results as
+      // decompose + type check.
+      // There are legitimate cases where the types will be different from one order to another,
+      // but not actually wrong.
       checkTypeStringsEqualAsTree(originalTree, tree);
     }
   }
@@ -1380,7 +1464,7 @@ public final class ExpressionDecomposerTest {
   private Compiler getCompiler() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
     return compiler;

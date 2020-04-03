@@ -420,7 +420,7 @@ class TypeTransformation {
     JSType type = params[0];
     switch (keyword) {
       case EQ:
-        return type.isEquivalentTo(params[1]);
+        return type.equals(params[1]);
       case SUB:
         return type.isSubtypeOf(params[1]);
       case ISCTOR:
@@ -627,7 +627,7 @@ class TypeTransformation {
         return getUnknownType();
       }
       JSType recType = this.registry.buildRecordTypeFromObject(objType);
-      if (!recType.isEquivalentTo(getObjectType())) {
+      if (!recType.equals(getObjectType())) {
         recTypesBuilder.add(recType.toMaybeObjectType());
       }
     }
@@ -684,7 +684,7 @@ class TypeTransformation {
     JSType type = evalInternal(recordNode, nameResolver);
 
     // If it is an empty record type (Object) then return
-    if (type.isEquivalentTo(getObjectType())) {
+    if (type.equals(getObjectType())) {
       return getObjectType();
     }
 
@@ -731,7 +731,7 @@ class TypeTransformation {
 
       // Skip the property when the body evaluates to NO_TYPE
       // or the empty record (Object)
-      if (body.isEmptyType() || body.isEquivalentTo(getObjectType())) {
+      if (body.isEmptyType() || body.equals(getObjectType())) {
         continue;
       }
 

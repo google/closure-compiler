@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.Map;
@@ -164,6 +165,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         ImmutableList.of(
             new TestExternsBuilder()
                 .addConsole()
+                .addArray()
                 .addExtra(
                     "var goog;",
                     "",
@@ -179,6 +181,11 @@ public final class IntegrationTest extends IntegrationTestCase {
                     " * @return {string}",
                     " */",
                     "function $localize(template_args){}",
+                    "/**",
+                    " * @constructor",
+                    " * @extends {Array<string>}",
+                    " */",
+                    "var ITemplateArray = function() {};",
                     "")
                 .buildExternsFile("externs.js"));
     test(
@@ -199,9 +206,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "console.log(i18n_7);",
             ""),
         lines(
-            // TODO(b/141326511): The template literal assignment should be removed.
-            "var $jscomp$templatelit$0 = ['...'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
+            // Tagged template literal was correctly removed.
             "console.log(goog.getMsg('test'));"));
   }
 
@@ -717,13 +722,13 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "var goog = {};"
-        + "function F() {}"
-        + "/** @export */ function G() { goog.base(this); } "
-        + "goog.inherits(G, F);",
+            + "function F() {}"
+            + "/** @export */ function G() { G.base(this, 'constructor'); } "
+            + "goog.inherits(G, F);",
         "var goog = {};"
-        + "function F() {}"
-        + "function G() { F.call(this); } "
-        + "goog.inherits(G, F); goog.exportSymbol('G', G);");
+            + "function F() {}"
+            + "function G() { F.call(this); } "
+            + "goog.inherits(G, F); goog.exportSymbol('G', G);");
   }
 
   @Test
@@ -1754,6 +1759,125 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testWeakSymbols_arentInlinedIntoStrongCode() {
+    SourceFile extern =
+        SourceFile.fromCode(
+            "extern.js",
+            lines(
+                "/** @fileoverview @externs */", //
+                "",
+                "function alert(x) {}"));
+
+    SourceFile aa =
+        SourceFile.fromCode(
+            "A.js",
+            lines(
+                "goog.module('a.A');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "class A { };",
+                "",
+                "exports = A;"),
+            SourceKind.WEAK);
+
+    SourceFile ab =
+        SourceFile.fromCode(
+            "B.js",
+            lines(
+                "goog.module('a.B');",
+                "goog.module.declareLegacyNamespace();",
+                "",
+                "class B { };",
+                "",
+                "exports = B;"),
+            SourceKind.STRONG);
+
+    SourceFile entryPoint =
+        SourceFile.fromCode(
+            "C.js",
+            lines(
+                "goog.module('a.C');", //
+                "",
+                "const A = goog.requireType('a.A');",
+                "const B = goog.require('a.B');",
+                "",
+                "alert(new B());",
+                // Note how `a` is declared by any strong legacy module rooted on "a" (`a.B`).
+                "alert(new a.A());"),
+            SourceKind.STRONG);
+
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    options.setClosurePass(true);
+    options.setDependencyOptions(
+        DependencyOptions.pruneForEntryPoints(
+            ImmutableList.of(ModuleIdentifier.forClosure("a.C"))));
+
+    Compiler compiler = new Compiler();
+    compiler.init(ImmutableList.of(extern), ImmutableList.of(entryPoint, aa, ab), options);
+    compiler.parse();
+    compiler.check();
+    compiler.performOptimizations();
+
+    assertThat(compiler.toSource())
+        .isEqualTo(
+            "var a={};"
+                + "class module$contents$a$B_B{}"
+                + "a.B=module$contents$a$B_B;"
+                + ""
+                + "var module$exports$a$C={};"
+                + "alert(new module$contents$a$B_B);"
+                + "alert(new a.A);");
+  }
+
+  @Test
+  public void testReferenceToInternalClassName() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setEmitUseStrict(false); // 'use strict'; is just noise here
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("function use(x) {}").buildExternsFile("externs"));
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('a.b.c');",
+              "exports = class Foo {",
+              // Reference to static property via inner class name must be changed
+              // to reference via global name (AggressiveInlineAliases), then collapsed
+              // (CollapseProperties) to get full optimization and avoid generating broken code.
+              "  method() { return Foo.EventType.E1; }",
+              "};",
+              "",
+              "/** @enum {number} */",
+              "exports.EventType = {",
+              "  E1: 1,",
+              "};",
+              ""),
+          lines(
+              "", //
+              "goog.module('a.b.d');",
+              "const Foo = goog.require('a.b.c');",
+              "use(new Foo().method());",
+              "")
+        },
+        new String[] {
+          "",
+          "",
+          lines(
+              // TODO(bradfordcsmith): Why is `new class {};` left behind?
+              "new class {};", //
+              "use(1)"),
+        });
+  }
+
+  @Test
   public void testPreservedForwardDeclare() {
     CompilerOptions options = createCompilerOptions();
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
@@ -1775,8 +1899,6 @@ public final class IntegrationTest extends IntegrationTestCase {
               "/** @type {!fwd.declared.Type} */",
               "var y;"),
         });
-    assertThat(lastCompiler.getResult().errors).isEmpty();
-    assertThat(lastCompiler.getResult().warnings).isEmpty();
   }
 
   @Test
@@ -3446,27 +3568,32 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setPrettyPrint(true);
+
+    useNoninjectingCompiler = true;
     test(
         options,
         LINE_JOINER.join(
+            // hack replacement for compiler injected code
+            "var $jscomp = { global: window };",
+            // hack replacement for closure library code
             "var goog = {};",
             "goog.exportSymbol = function(path, symbol) {};",
             "",
-            "/** @export */",
             "class C {",
             "  /** @export @param {number} x */ static set exportedName(x) {}",
             "};",
             "C.exportedName = 0;"),
-        EMPTY_JOINER.join(
-            // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
-            "var a = 'undefined' != typeof window&& window === this ? this",
-            "           : 'undefined' != typeof global && null != global ? global : this;",
+        LINE_JOINER.join(
+            "var a = window;",
             "function b() {}",
             "b.exportedName;",
-            "a.Object.defineProperties(b, {",
-            "  exportedName : {configurable : !0, enumerable : !0, set : function(){}}",
-            "});",
-            "b.exportedName = 0"));
+            "a.Object.defineProperties(",
+            "    b,",
+            "    {",
+            "      exportedName: { configurable:!0, enumerable:!0, set:function() {} }",
+            "    });",
+            "b.exportedName = 0;"));
   }
 
   @Test
@@ -4660,7 +4787,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "};",
             // TODO(bradfordcsmith): Es6InjectRuntimeLibraries should traverse even if no Es6
             // features are present
-            // "$jscomp.initSymbol();",
             // "$jscomp.initSymbolIterator();",
             "itr[Symbol.iterator] = function() { return itr; }"));
   }
@@ -4686,7 +4812,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var itr = {",
             "  next: function() { return { value: 1234, done: false }; },",
             "};",
-            "$jscomp.initSymbol();",
             "$jscomp.initSymbolIterator();",
             "itr[Symbol.iterator] = function() { return itr; }"));
   }
@@ -5743,7 +5868,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testLegacyGoogModuleExport() {
+  public void testLegacyGoogModuleExport1() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
@@ -5753,10 +5878,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('foo.example.ClassName');",
               "goog.module.declareLegacyNamespace();",
               "",
@@ -5766,24 +5891,34 @@ public final class IntegrationTest extends IntegrationTestCase {
               "exports = ClassName;"),
         },
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "var foo = {};",
               "foo.example = {};",
               "function module$contents$foo$example$ClassName_ClassName() {}",
               "foo.example.ClassName = module$contents$foo$example$ClassName_ClassName;",
-              "goog.exportSymbol('foo.example.ClassName', foo.example.ClassName);"),
+              "goog.exportSymbol('foo.example.ClassName',"
+                  + " module$contents$foo$example$ClassName_ClassName);"),
         });
+  }
+
+  @Test
+  public void testLegacyGoogModuleExport2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setCodingConvention(new ClosureCodingConvention());
+    options.setGenerateExports(true);
 
     test(
         options,
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('foo.ns');",
               "goog.module.declareLegacyNamespace();",
               "",
@@ -5793,15 +5928,15 @@ public final class IntegrationTest extends IntegrationTestCase {
               "exports.ExportedName = ClassName;"),
         },
         new String[] {
-          LINE_JOINER.join(
-              "var goog = {};",
+          lines(
+              "var goog = {};", //
               "goog.exportSymbol = function(path, symbol) {};"),
-          LINE_JOINER.join(
+          lines(
               "var foo = {};",
               "foo.ns = {};",
               "function module$contents$foo$ns_ClassName() {}",
               "foo.ns.ExportedName = module$contents$foo$ns_ClassName;",
-              "goog.exportSymbol('foo.ns.ExportedName', foo.ns.ExportedName);"),
+              "goog.exportSymbol('foo.ns.ExportedName', module$contents$foo$ns_ClassName);"),
         });
   }
 
@@ -6613,7 +6748,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    test(options,
+    test(
+        options,
         LINE_JOINER.join(
             "var goog = {}",
             "goog.inherits = function(childCtor, parentCtor) {",
@@ -6636,7 +6772,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "goog.inherits(Bar, Foo);",
             "/** @override */",
             "Bar.prototype.resize = function(width, height) {",
-            "  goog.base(this, 'resize', width);",
+            "  Bar.base(this, 'resize', width);",
             "};",
             "(new Bar).resize(100, 200);"),
         LINE_JOINER.join(
@@ -7100,6 +7236,21 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testQuotedDestructuringNotRenamed() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
+
+    test(options, "const {'x': x} = window; alert(x);", "const {x:a} = window; alert(a);");
+    test(
+        options,
+        "const {x: {'log': y}} = window; alert(y);",
+        "const {a: {log: a}} = window; alert(a);");
+  }
+
+  @Test
   public void testDestructuringRest() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
@@ -7176,7 +7327,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
     options.setAssumeGettersArePure(false);
-    options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
     return options;
   }
 
@@ -7474,9 +7624,11 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
+    options.setPrettyPrint(true);
+    options.setGeneratePseudoNames(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
-    // This is just a melunge of various global namespace operations. The exact squence of values
+    // This is just a melange of various global namespace operations. The exact sequence of values
     // aren't important so much as trying out lots of combinations.
     test(
         options,
@@ -7501,21 +7653,21 @@ public final class IntegrationTest extends IntegrationTestCase {
             "alert(d.acc);"),
         lines(
             "const a = {",
-            "  a: 2,",
-            "  d: 'hello',",
+            "  $aa$: 2,",
+            "  $ab$: 'hello',",
             "};",
             "",
-            "a.b = {",
-            "  e: !0,",
+            "a.$ac$ = {",
+            "  $aca$: !0,",
             "  ...a,",
-            "  f: !1,",
+            "  $acb$: !1,",
             "};",
             "",
-            "const {b,...c} = a;",
+            "const {$ab$: $ab$$, $ac$: $ac$$, ...$c$$} = a;",
             "",
-            "({a: b.c} = a);",
+            "({$aa$: $ac$$.$acc$} = a);",
             "",
-            "alert(b.c);"));
+            "alert($ac$$.$acc$);"));
   }
 
   @Test
@@ -7806,5 +7958,218 @@ public final class IntegrationTest extends IntegrationTestCase {
         test(options, new String[] {firstNs.getKey(), secondNs.getKey()}, expectedError);
       }
     }
+  }
+
+  @Test
+  public void testNoSpuriousWarningsOnGeneratedTypedef() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.ERROR);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    testNoWarnings(options, "/** @typedef {number} */ export let Foo;");
+  }
+
+  @Test
+  public void testBrowserFeaturesetYear2020() {
+    CompilerOptions options = createCompilerOptions();
+    options.setBrowserFeaturesetYear(2020);
+
+    // async generators and for await ... of are emitted untranspiled.
+    test(
+        options,
+        lines(
+            "async function* foo() {yield 1; await 0; yield 2;}",
+            "async function bar() {",
+            "  for await (const val of foo()) {",
+            "    console.log(val);",
+            "  }",
+            "}",
+            "bar();"),
+        "async function*foo(){yield 1;await 0;yield 2}async function bar(){for await(const val of"
+            + " foo())console.log(val)}bar()");
+
+    // So is object rest and spread.
+    test(
+        options,
+        lines(
+            "const {foo, ...bar} = {foo: 10, bar: 20, ...{baz: 30}};",
+            "console.log(foo);",
+            "console.log(bar);"),
+        "const {foo,...bar}={foo:10,bar:20,...{baz:30}};console.log(foo);console.log(bar)");
+
+    // But we won't emit ES 2018 regexp features.
+    DiagnosticType untranspilable =
+        MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
+    test(options, "/foo/s", untranspilable);
+    test(options, "/(?<foo>.)/", untranspilable);
+    test(options, "/(?<=foo)/", untranspilable);
+    test(options, "/(?<!foo)/", untranspilable);
+    test(options, "/\\p{Number}/u", untranspilable);
+  }
+
+  @Test
+  public void testAccessControlsChecks_esClosureInterop_destructuringRequireModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.VISIBILITY, CheckLevel.WARNING);
+    options.setCheckTypes(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setChecksOnly(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('my.Foo');", //
+              "/** @private */",
+              "exports.fn = function() {}"),
+          lines(
+              "const {fn} = goog.require('my.Foo');", //
+              "fn();",
+              "export {};")
+        },
+        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  @Test
+  public void testAccessControlsChecks_esClosureInterop_requireModule() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.VISIBILITY, CheckLevel.WARNING);
+    options.setCheckTypes(true);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setChecksOnly(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
+
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('my.Foo');", //
+              "class Foo {",
+              "  /** @private */",
+              "  static build() {}",
+              "}",
+              "exports = Foo;"),
+          lines(
+              "const Foo = goog.require('my.Foo');", //
+              "Foo.build();",
+              "export {};")
+        },
+        CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
+  @Test
+  public void testImportMeta() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(options, "import.meta", Es6ToEs3Util.CANNOT_CONVERT);
+  }
+
+  @Test
+  public void nullishCoalesceSimple() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x = 0; var y = {}; alert(x ?? y)", "alert(0)");
+  }
+
+  @Test
+  public void nullishCoalesceChain() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x, y; alert(x ?? y ?? 'default string')", "alert('default string')");
+  }
+
+  @Test
+  public void nullishCoalesceWithAnd() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x, y, z; alert(x ?? (y && z))", "alert(void 0)");
+  }
+
+  @Test
+  public void nullishCoalesceWithAssign() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    test(options, "var x, y; var z = 1; x ?? (y = z); alert(y)", "alert(1)");
+  }
+
+  @Test
+  public void nullishCoalesceTranspiledOutput() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addExtra("var x, y").buildExternsFile("externs"));
+
+    test(options, "x ?? y", "let a; null != (a = x) ? a : y");
+  }
+
+  @Test
+  public void nullishCoalesceChainTranspiledOutput() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addExtra("var x, y, z").buildExternsFile("externs"));
+
+    test(options, "x ?? y ?? z", "let a, b; null != (b = null != (a = x) ? a : y) ? b : z");
+  }
+
+  @Test
+  public void nullishCoalescePassThroughExterns() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addExtra("var x, y").buildExternsFile("externs"));
+
+    testSame(options, "x ?? y");
+  }
+
+  @Test
+  public void nullishCoalescePassThroughLhsNull() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(options, "var x; var y = 1; x ?? y", "1");
+  }
+
+  @Test
+  public void nullishCoalescePassThroughLhsNonNull() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    test(options, "var x = 0; var y = 1; x ?? y", "0");
   }
 }

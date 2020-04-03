@@ -1864,6 +1864,12 @@ HTMLIFrameElement.prototype.srcdoc;
 HTMLIFrameElement.prototype.sandbox;
 
 /**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-allow
+ */
+HTMLIFrameElement.prototype.allow;
+
+/**
  * @type {Window}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/contentWindow
  */
@@ -4127,7 +4133,7 @@ FullscreenOptions.prototype.navigationUI;
 /**
  * @see https://fullscreen.spec.whatwg.org/#dom-element-requestfullscreen
  * @param {!FullscreenOptions=} options
- * @return {undefined}
+ * @return {!Promise<undefined>}
  */
 Element.prototype.requestFullscreen = function(options) {};
 

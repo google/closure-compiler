@@ -112,7 +112,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         compiler.reportChangeToEnclosingScope(objectLit);
         if (!objectLit.hasChildren()) {
           // Remove the whole Object.defineProperties call if there are no properties left.
-          objectLit.getParent().getParent().detach();
+          objectLit.getGrandparent().detach();
         }
       }
     }
@@ -146,7 +146,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
      * </pre>
      */
     private boolean matchesJ2clGetKeySignature(String className, Node getKey) {
-      if (!getKey.hasChildren() || !getKey.getFirstChild().isFunction()) {
+      if (!getKey.getFirstChild().isFunction()) {
         return false;
       }
       Node getFunction = getKey.getFirstChild();
@@ -186,7 +186,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
      * </pre>
      */
     private boolean matchesJ2clSetKeySignature(String className, Node setKey) {
-      if (!setKey.hasChildren() || !setKey.getFirstChild().isFunction()) {
+      if (!setKey.getFirstChild().isFunction()) {
         return false;
       }
       Node setFunction = setKey.getFirstChild();

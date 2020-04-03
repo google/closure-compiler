@@ -661,17 +661,18 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       return;
     }
 
-    JSType type = ctor.getJSType().toMaybeFunctionType();
-    if (type != null && type.isConstructor()) {
-      JSType finalParentClass = getSuperClassInstanceIfFinal(bestInstanceTypeForMethodOrCtor(ctor));
-      if (finalParentClass != null) {
-        compiler.report(
-            JSError.make(
-                ctor,
-                EXTEND_FINAL_CLASS,
-                type.getDisplayName(),
-                finalParentClass.getDisplayName()));
-      }
+    FunctionType ctorType = ctor.getJSType().toMaybeFunctionType();
+    if (ctorType == null || !ctorType.isConstructor()) {
+      return;
+    }
+    ObjectType finalParentClass = getSuperClassInstanceIfFinal(ctorType);
+    if (finalParentClass != null) {
+      compiler.report(
+          JSError.make(
+              ctor,
+              EXTEND_FINAL_CLASS,
+              ctorType.getDisplayName(),
+              finalParentClass.getDisplayName()));
     }
   }
 
@@ -1190,17 +1191,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     return null;
   }
 
-  /**
-   * If the superclass is final, this method returns an instance of the superclass.
-   */
+  /** If the superclass is final, this method returns an instance of the superclass. */
   @Nullable
-  private static ObjectType getSuperClassInstanceIfFinal(@Nullable JSType type) {
-    if (type == null) {
-      return null;
-    }
-
-    ObjectType obj = type.toObjectType();
-    FunctionType ctor = (obj == null) ? null : obj.getSuperClassConstructor();
+  private static ObjectType getSuperClassInstanceIfFinal(FunctionType subCtor) {
+    FunctionType ctor = subCtor.getSuperClassConstructor();
     JSDocInfo doc = (ctor == null) ? null : ctor.getJSDocInfo();
     if (doc != null && doc.isFinal()) {
       return ctor.getInstanceType();

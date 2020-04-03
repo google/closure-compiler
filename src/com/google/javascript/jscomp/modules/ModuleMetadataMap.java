@@ -149,21 +149,20 @@ public final class ModuleMetadataMap {
     public abstract ImmutableMultiset<String> googNamespaces();
 
     /**
-     * Closure namespaces this file requires. e.g. all arguments to goog.require calls.
+     * Closure namespaces this file strongly requires, i.e., arguments to goog.require calls.
      *
      * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
      * that information with this multiset.
      */
-    public abstract ImmutableMultiset<String> requiredGoogNamespaces();
+    public abstract ImmutableMultiset<String> stronglyRequiredGoogNamespaces();
 
     /**
-     * Closure namespaces this file has weak dependencies on. e.g. all arguments to goog.requireType
-     * calls.
+     * Closure namespaces this file weakly requires, i.e., arguments to goog.requireType calls.
      *
      * <p>This is a multiset as it does not warn on duplicate namespaces, but will still encapsulate
      * that information with this multiset.
      */
-    public abstract ImmutableMultiset<String> requiredTypes();
+    public abstract ImmutableMultiset<String> weaklyRequiredGoogNamespaces();
 
     /** Raw text of all ES6 import specifiers (includes "export from" as well). */
     public abstract ImmutableMultiset<String> es6ImportSpecifiers();
@@ -202,9 +201,9 @@ public final class ModuleMetadataMap {
         return this;
       }
 
-      public abstract ImmutableMultiset.Builder<String> requiredGoogNamespacesBuilder();
+      public abstract ImmutableMultiset.Builder<String> stronglyRequiredGoogNamespacesBuilder();
 
-      public abstract ImmutableMultiset.Builder<String> requiredTypesBuilder();
+      public abstract ImmutableMultiset.Builder<String> weaklyRequiredGoogNamespacesBuilder();
 
       public abstract ImmutableMultiset.Builder<String> es6ImportSpecifiersBuilder();
 

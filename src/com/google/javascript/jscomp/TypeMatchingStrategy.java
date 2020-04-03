@@ -84,7 +84,7 @@ public enum TypeMatchingStrategy {
       return MatchResult.NO_MATCH;
     }
 
-    return type.isEquivalentTo(templateType) ? MatchResult.MATCH : MatchResult.NO_MATCH;
+    return type.equals(templateType) ? MatchResult.MATCH : MatchResult.NO_MATCH;
   }
 
   /**

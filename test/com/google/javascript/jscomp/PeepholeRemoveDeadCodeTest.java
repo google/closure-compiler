@@ -979,6 +979,24 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoRemoveCall4NullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    testSame("a() ?? b()");
+  }
+
+  @Test
+  public void testNoRemoveCall5NullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    test("a() ?? 1", "a()");
+  }
+
+  @Test
+  public void testNoRemoveCall6NullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    testSame("1 ?? a()");
+  }
+
+  @Test
   public void testNoRemoveCall5() {
     test("a() || 1", "a()");
   }
@@ -1071,6 +1089,24 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   @Test
   public void testShortCircuit1() {
     testSame("1 && a()");
+  }
+
+  @Test
+  public void testShortCircuit2NullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    test("1 ?? a() ?? 2", "1 ?? a()");
+  }
+
+  @Test
+  public void testShortCircuit3NullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    test("a() ?? 1 ?? 2", "a()");
+  }
+
+  @Test
+  public void testShortCircuit4NullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    testSame("a() ?? 1 ?? b()");
   }
 
   @Test

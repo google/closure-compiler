@@ -774,6 +774,17 @@ public class CodeGenerator {
         Preconditions.checkState(childCount == 0, n);
         break;
 
+      case OPTCHAIN_GETPROP:
+        {
+          checkState(
+              childCount == 2, "Bad OPTCHAIN_GETPROP: expected 2 children, but got %s", childCount);
+          checkState(last.isString(), "Bad OPTCHAIN_GETPROP: RHS should be STRING");
+          addExpr(first, NodeUtil.precedence(type), context);
+          add(n.isOptionalChainStart() ? "?." : ".");
+          addIdentifier(last.getString());
+          break;
+        }
+
       case GETPROP:
         {
           // This attempts to convert rewritten aliased code back to the original code,
@@ -789,10 +800,10 @@ public class CodeGenerator {
             addIdentifier(n.getOriginalName());
             break;
           }
-          Preconditions.checkState(
-              childCount == 2, "Bad GETPROP: expected 2 children, but got %s", childCount);
+          checkState(childCount == 2, "Bad GETPROP: expected 2 children, but got %s", childCount);
           checkState(last.isString(), "Bad GETPROP: RHS should be STRING");
-          boolean needsParens = (first.isNumber());
+          boolean breakOutOfOptionalChain = NodeUtil.isOptChainNode(first);
+          boolean needsParens = first.isNumber() || breakOutOfOptionalChain;
           if (needsParens) {
             add("(");
           }
@@ -811,17 +822,43 @@ public class CodeGenerator {
           break;
         }
 
+      case OPTCHAIN_GETELEM:
+        {
+          checkState(
+              childCount == 2,
+              "Bad GETELEM node: Expected 2 children but got %s. For node: %s",
+              childCount,
+              n);
+          addExpr(first, NodeUtil.precedence(type), context);
+          if (n.isOptionalChainStart()) {
+            add("?.");
+          }
+          add("[");
+          add(first.getNext());
+          add("]");
+          break;
+        }
+
       case GETELEM:
-        Preconditions.checkState(
-            childCount == 2,
-            "Bad GETELEM node: Expected 2 children but got %s. For node: %s",
-            childCount,
-            n);
-        addExpr(first, NodeUtil.precedence(type), context);
-        add("[");
-        add(first.getNext());
-        add("]");
-        break;
+        {
+          checkState(
+              childCount == 2,
+              "Bad GETELEM node: Expected 2 children but got %s. For node: %s",
+              childCount,
+              n);
+          boolean needsParens = NodeUtil.isOptChainNode(first);
+          if (needsParens) {
+            add("(");
+          }
+          addExpr(first, NodeUtil.precedence(type), context);
+          if (needsParens) {
+            add(")");
+          }
+          add("[");
+          add(first.getNext());
+          add("]");
+          break;
+        }
 
       case WITH:
         Preconditions.checkState(childCount == 2, n);
@@ -847,6 +884,36 @@ public class CodeGenerator {
           break;
         }
 
+      case OPTCHAIN_CALL:
+        {
+          // We have two special cases here:
+          // 1) If the left hand side of the call is a direct reference to eval,
+          // then it must have a DIRECT_EVAL annotation. If it does not, then
+          // that means it was originally an indirect call to eval, and that
+          // indirectness must be preserved.
+          // 2) If the left hand side of the call is a property reference,
+          // then the call must not a FREE_CALL annotation. If it does, then
+          // that means it was originally an call without an explicit this and
+          // that must be preserved.
+          if (isIndirectEval(first)
+              || (n.getBooleanProp(Node.FREE_CALL)
+                  && (NodeUtil.isGet(first) || NodeUtil.isOptChainGet(first)))) {
+            add("(0,");
+            addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
+            add(")");
+          } else {
+            addExpr(first, NodeUtil.precedence(type), context);
+          }
+          Node args = first.getNext();
+          if (n.isOptionalChainStart()) {
+            add("?.");
+          }
+          add("(");
+          addList(args);
+          add(")");
+          break;
+        }
+
       case CALL:
         // We have two special cases here:
         // 1) If the left hand side of the call is a direct reference to eval,
@@ -857,18 +924,30 @@ public class CodeGenerator {
         // then the call must not a FREE_CALL annotation. If it does, then
         // that means it was originally an call without an explicit this and
         // that must be preserved.
-        if (isIndirectEval(first) || (n.getBooleanProp(Node.FREE_CALL) && NodeUtil.isGet(first))) {
-          add("(0,");
+        {
+          boolean needsParens = NodeUtil.isOptChainNode(first);
+          if (isIndirectEval(first)
+              || (n.getBooleanProp(Node.FREE_CALL)
+                  && (NodeUtil.isGet(first) || NodeUtil.isOptChainGet(first)))) {
+            add("(0,");
           addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
           add(")");
         } else {
-          addExpr(first, NodeUtil.precedence(type), context);
+            if (needsParens) {
+              add("(");
+            }
+            addExpr(first, NodeUtil.precedence(type), context);
+            if (needsParens) {
+              add(")");
+            }
         }
+
         Node args = first.getNext();
         add("(");
         addList(args);
         add(")");
         break;
+        }
 
       case IF:
         Preconditions.checkState(childCount == 2 || childCount == 3, n);
@@ -1629,9 +1708,27 @@ public class CodeGenerator {
       // ExponentiationExpression cannot expand to
       //     UnaryExpression ** ExponentiationExpression
       return true;
+    } else if (isLogicalANDorLogicalORChildOfNullishCoalesce(n)
+        || isNullishCoalesceChildOfLogicalANDorLogicalOR(n)) {
+      // precedence is not enough here since using && or || with ?? without parentheses
+      // is a syntax error as ?? expands directly to |
+      return true;
     } else {
       return precedence(n) < minPrecedence;
     }
+  }
+
+  private static boolean isLogicalANDorLogicalORChildOfNullishCoalesce(Node n) {
+    Node parent = n.getParent();
+    boolean logicalANDorLogicalOR = n.isAnd() || n.isOr();
+    boolean childOfNullishCoalesce = parent != null && parent.isNullishCoalesce();
+    return logicalANDorLogicalOR && childOfNullishCoalesce;
+  }
+
+  private static boolean isNullishCoalesceChildOfLogicalANDorLogicalOR(Node n) {
+    Node parent = n.getParent();
+    boolean childOfLogicalANDorLogicalOR = parent != null && (parent.isAnd() || parent.isOr());
+    return n.isNullishCoalesce() && childOfLogicalANDorLogicalOR;
   }
 
   private boolean isFirstOperandOfExponentiationExpression(Node n) {

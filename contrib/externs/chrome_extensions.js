@@ -2324,6 +2324,62 @@ chrome.enterprise.reportingPrivate.uploadChromeDesktopReport = function(
 chrome.enterprise.reportingPrivate.getDeviceId = function(callback) {};
 
 /**
+ * Returns a random secret stored in a platform specific storage.
+ * @param {(function(!ArrayBuffer): void)=} callback Called with the result.
+ */
+chrome.enterprise.reportingPrivate.getPersistentSecret = function(callback) {};
+
+/**
+ * Returns byte string associated with the data item stored in a platform
+ * specific storage.
+ * @param {!string} item Item name (can have containers separated by '/').
+ * @param {(function(!ArrayBuffer): void)=} callback Called back with the
+ *     response.
+ */
+chrome.enterprise.reportingPrivate.getDeviceData = function(item, callback) {};
+
+/**
+ * Stores byte string associated with the data item in a platform
+ * specific storage.
+ * @param {!string} item Item name (can have containers separated by '/').
+ * @param {!ArrayBuffer} data Byte string to associate with the data item.
+ * @param {(function(): void)=} callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.setDeviceData = function(
+    item, data, callback) {};
+
+/**
+ * Represents a device info property type.
+ * @enum {string}
+ */
+chrome.enterprise.reportingPrivate.SettingValue = {
+  UNKNOWN: '',
+  DISABLED: '',
+  ENABLED: '',
+};
+
+/**
+ * Type of the object returned by getDeviceInfo.
+ * @typedef {?{
+ *   osName: string,
+ *   osVersion: string,
+ *   deviceHostName: string,
+ *   deviceModel: string,
+ *   serialNumber: string,
+ *   screenLockSecured: chrome.enterprise.reportingPrivate.SettingValue,
+ *   diskEncrypted: chrome.enterprise.reportingPrivate.SettingValue,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.DeviceInfo;
+
+/**
+ * Returns the device information object.
+ * @param {(function(!chrome.enterprise.reportingPrivate.DeviceInfo): void)=}
+ *     callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.getDeviceInfo = function(callback) {};
+
+/**
  * @see https://developer.chrome.com/extensions/extension.html
  * @const
  */
@@ -4028,7 +4084,7 @@ chrome.management.InstallOptions;
 /**
  * @param {function(!Array<!ExtensionInfo>): void=} opt_callback Optional
  *     callback function.
- * @return {!Array<!ExtensionInfo>}
+ * @return {undefined}
  */
 chrome.management.getAll = function(opt_callback) {};
 
@@ -4135,6 +4191,15 @@ chrome.management.setLaunchType = function(id, launchType, opt_callback) {};
  * @return {undefined}
  */
 chrome.management.generateAppForLink = function(url, title, opt_callback) {};
+
+
+
+/**
+ * Event whose listeners take an ExtensionInfo parameter.
+ * @interface
+ * @extends {ChromeBaseEvent<function(!ExtensionInfo)>}
+ */
+function ChromeExtensionInfoEvent() {};
 
 
 /** @type {!ChromeExtensionInfoEvent} */
@@ -7330,15 +7395,6 @@ ChromeWindow.prototype.state;
 ChromeWindow.prototype.alwaysOnTop;
 
 
-
-/**
- * Event whose listeners take an ExtensionInfo parameter.
- * @interface
- * @extends {ChromeBaseEvent<function(!ExtensionInfo)>}
- */
-function ChromeExtensionInfoEvent() {}
-
-
 /**
  * @see http://developer.chrome.com/extensions/pushMessaging.html
  * @const
@@ -10479,6 +10535,20 @@ chrome.inlineInstallPrivate.install = function(id, opt_callback) {};
  */
 chrome.inputMethodPrivate = {};
 
+/**
+ * @enum {string}
+ */
+chrome.inputMethodPrivate.InputModeType = {
+  NO_KEYBOARD: '',
+  TEXT: '',
+  TEL: '',
+  URL: '',
+  EMAIL: '',
+  NUMERIC: '',
+  DECIMAL: '',
+  SEARCH: '',
+};
+
 
 /**
  * @enum {string}
@@ -10523,6 +10593,8 @@ chrome.inputMethodPrivate.InputContext = function() {};
 /** @type {number} */
 chrome.inputMethodPrivate.InputContext.prototype.contextID;
 
+/** @type {chrome.inputMethodPrivate.InputModeType} */
+chrome.inputMethodPrivate.InputContext.prototype.mode;
 
 /** @type {chrome.inputMethodPrivate.InputContextType} */
 chrome.inputMethodPrivate.InputContext.prototype.type;
@@ -10566,6 +10638,12 @@ chrome.inputMethodPrivate.InputContext.prototype.hasBeenPassword;
  */
 chrome.inputMethodPrivate.finishComposingText = function(
     parameters, callback) {};
+
+
+/**
+ * Resets the current engine to its initial state. Fires an OnReset event.
+ */
+chrome.inputMethodPrivate.reset = function() {};
 
 
 /**

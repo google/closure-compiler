@@ -14,7 +14,18 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.gson;
 
-/** GWT compatible no-op replacement for {@code FunctionInfo} */
-public final class FunctionInfo {}
+/**
+ * A minimal supersource API for the real `Gson` class.
+ *
+ * <p>This class is not intended to really work. Methods are added as needed.
+ */
+public final class Gson {
+
+  public Gson() {}
+
+  public String toJson(Object x) {
+    throw new UnsupportedOperationException();
+  }
+}

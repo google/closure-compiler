@@ -548,14 +548,14 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   public void testRequireType() {
     testSame("goog.requireType('my.Type');");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
-    assertThat(m.requiredTypes()).containsExactly("my.Type");
+    assertThat(m.weaklyRequiredGoogNamespaces()).containsExactly("my.Type");
   }
 
   @Test
   public void testRequiredClosureNamespaces() {
     testSame("goog.require('my.Type');");
     ModuleMetadata m = metadataMap().getModulesByPath().get("testcode");
-    assertThat(m.requiredGoogNamespaces()).containsExactly("my.Type");
+    assertThat(m.stronglyRequiredGoogNamespaces()).containsExactly("my.Type");
   }
 
   @Test

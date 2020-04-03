@@ -30,81 +30,79 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * An AST traverser that keeps track of whether access to a generic resource
- * are "guarded" or not.  A guarded use is one that will not cause runtime
- * errors if the resource does not exist.  The resource (type {@code T} in
- * the signature) is any value type computable from a node, such as a qualified
- * name or property name.  It is up to the subclass to map the currently
- * visited token to the {@code T} in order to call {@link #isGuarded}, which
- * depends entirely on the context from ancestor nodes and previous calls to
- * {@code #isGuarded} for the same resource.
+ * An AST traverser that keeps track of whether access to a generic resource are "guarded" or not. A
+ * guarded use is one that will not cause runtime errors if the resource does not exist. The
+ * resource (type {@code T} in the signature) is any value type computable from a node, such as a
+ * qualified name or property name. It is up to the subclass to map the currently visited token to
+ * the {@code T} in order to call {@link #isGuarded}, which depends entirely on the context from
+ * ancestor nodes and previous calls to {@code #isGuarded} for the same resource.
  *
- * <p>More precisely, a resource may be guarded either <i>intrinsically</i>
- * or <i>conditionally</i>, as follows.  A use is intrinsically guarded if
- * it occurs in a context where its specific value is immediately discarded,
- * such as coersion to boolean or string.  A use is conditionally guarded if
- * it occurs in a context conditioned on an intrinsically guarded use (such
- * as the "then" or "else" block of an "if", the second or third argument of
- * a ternary operator, right-hand arguments of logical operators, or later in
- * a block in which an unconditional "throw" or "return" was found in a guarded
- * context).
+ * <p>More precisely, a resource may be guarded either <i>intrinsically</i> or <i>conditionally</i>,
+ * as follows. A use is intrinsically guarded if it occurs in a context where its specific value is
+ * immediately discarded, such as coercion to boolean or string. A use is conditionally guarded if
+ * it occurs in a context conditioned on an intrinsically guarded use (such as the "then" or "else"
+ * block of an "if", the second or third argument of a ternary operator, right-hand arguments of
+ * logical operators, or later in a block in which an unconditional "throw" or "return" was found in
+ * a guarded context).
  *
- * For example, the following are all intrinsically guarded uses of {@code x}:
- * <pre>   {@code
- *   // Coerced to boolean:
- *   if (x);
- *   x ? y : z;
- *   x &amp;&amp; y;
- *   Boolean(x);
- *   !x;
- *   x == y; x != y; x === y; x !== y;
- *   x instanceof Foo;
- *   typeof x === 'string';
+ * <p>For example, the following are all intrinsically guarded uses of {@code x}:
  *
- *   // Coerced to string:
- *   String(x);
- *   typeof x;
+ * <pre>{@code
+ * // Coerced to boolean:
+ * if (x);
+ * x ? y : z;
+ * x &amp;&amp; y;
+ * Boolean(x);
+ * !x;
+ * x == y; x != y; x === y; x !== y;
+ * x instanceof Foo;
+ * typeof x === 'string';
  *
- *   // Immediately discarded (but doesn't make much sense in my contexts):
- *   x = y;
+ * // Coerced to string:
+ * String(x);
+ * typeof x;
+ *
+ * // Immediately discarded (but doesn't make much sense in my contexts):
+ * x = y;
  * }</pre>
  *
  * <p>The following uses of {@code x} are conditionally guarded:
- * <pre>   {@code
- *   if (x) x();
- *   !x ? null : x;
- *   typeof x == 'function' ? x : () => {};
- *   x &amp;&amp; x.y;
- *   !x || x.y;
- *   if (!x) return; x();
- * }</pre>
- * Note that there is no logic to determine <i>which</i> branch is guarded,
- * so any usages in either branch will pass after such a check.  As such, the
- * following are also considered guarded, though a human can easily see that
- * this is spurious:
- * <pre>   {@code
- *   if (!x) x();
- *   if (x) { } else x();
- *   !x &amp;&amp; x();
- *   var y = x != null ? null : x;
- * }</pre>
- * Note also that the call or propery access is not necessary to make a use
- * unguarded: the final example immediately above would be unguarded if it
- * weren't for the {@code x != null} condition, since it allows the value
- * of {@code x} to leak out in an uncontrolled way.
  *
- * <p>This class overrides the {@link Callback} API methods with final
- * methods of its own, and defines the template method {@link #visitGuarded}
- * to perform the normal work for individual nodes.  The only other API is
- * {@link #isGuarded}, which allows checking if a {@code T} in the current
- * node's context is guarded, either intrinsically or conditionally.  If it
- * is intrinsically guarded, then it may be recorded as a condition for the
- * purpose of guarding future contexts.
+ * <pre>{@code
+ * if (x) x();
+ * !x ? null : x;
+ * typeof x == 'function' ? x : () => {};
+ * x &amp;&amp; x.y;
+ * !x || x.y;
+ * if (!x) return; x();
+ * x ?? x = 3;
+ * }</pre>
+ *
+ * Note that there is no logic to determine <i>which</i> branch is guarded, so any usages in either
+ * branch will pass after such a check. As such, the following are also considered guarded, though a
+ * human can easily see that this is spurious:
+ *
+ * <pre>{@code
+ * if (!x) x();
+ * if (x) { } else x();
+ * !x &amp;&amp; x();
+ * var y = x != null ? null : x;
+ * }</pre>
+ *
+ * Note also that the call or property access is not necessary to make a use unguarded: the final
+ * example immediately above would be unguarded if it weren't for the {@code x != null} condition,
+ * since it allows the value of {@code x} to leak out in an uncontrolled way.
+ *
+ * <p>This class overrides the {@link Callback} API methods with final methods of its own, and
+ * defines the template method {@link #visitGuarded} to perform the normal work for individual
+ * nodes. The only other API is {@link #isGuarded}, which allows checking if a {@code T} in the
+ * current node's context is guarded, either intrinsically or conditionally. If it is intrinsically
+ * guarded, then it may be recorded as a condition for the purpose of guarding future contexts.
  */
 abstract class GuardedCallback<T> implements Callback {
   // Compiler is needed for coding convention (isPropertyTestFunction).
   private final AbstractCompiler compiler;
-  // Map from short-circuiting conditional nodes (AND, OR, IF, and HOOK) to
+  // Map from short-circuiting conditional nodes (AND, OR, COALESCE, IF, and HOOK) to
   // the set of resources each node guards.  This is saved separately from
   // just `guarded` because the guard must not go into effect until after
   // traversal of the first child is complete.  Before traversing the second
@@ -146,7 +144,7 @@ abstract class GuardedCallback<T> implements Callback {
     // 2. shouldTraverse(`x`):
     //    a. parent is `if`, so pushes Context(`if`, true); guards is empty.
     // 3. visit(`x`)
-    //    a. guarded and installedGuards are both empty, so nothng is removed.
+    //    a. guarded and installedGuards are both empty, so nothing is removed.
     //    b. visitGuarded(`x`) will call isGuarded("x"), which looks at the top
     //       of the stack and sees that the context is safe (true) and that
     //       there is a linked conditional node (the `if`); adds {`if`: "x"}
@@ -318,8 +316,12 @@ abstract class GuardedCallback<T> implements Callback {
           // `whatever && Promise` may return Promise, so return outer context.
           return first ? link(parent, true) : this;
         case OR:
-          // `Promise || whatever` may return Promise (unsafe), but is itself a conditional.
-          // `whatever || Promise` is same as outer context.
+        case COALESCE:
+          // throw new RuntimeException("beeeeep");
+          // `Promise || whatever` and `Promise ?? whatever`
+          // may return Promise (unsafe), but is itself a conditional.
+          // `whatever || Promise` and `whatever ?? Promise`
+          // is same as outer context.
           return first ? link(parent, false) : this;
         case HOOK:
           // `Promise ? whatever : whatever` is a safe conditional.
@@ -376,6 +378,7 @@ abstract class GuardedCallback<T> implements Callback {
 
   // Tokens that are allowed to have guards on them (no point doing a hash lookup on
   // any other type of node).
-  private static final ImmutableSet<Token> CAN_HAVE_GUARDS = Sets.immutableEnumSet(
-      Token.AND, Token.OR, Token.HOOK, Token.IF, Token.BLOCK, Token.SCRIPT);
+  private static final ImmutableSet<Token> CAN_HAVE_GUARDS =
+      Sets.immutableEnumSet(
+          Token.AND, Token.OR, Token.COALESCE, Token.HOOK, Token.IF, Token.BLOCK, Token.SCRIPT);
 }

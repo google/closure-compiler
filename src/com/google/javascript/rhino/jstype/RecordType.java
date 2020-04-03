@@ -145,7 +145,9 @@ public class RecordType extends PrototypeObjectType {
         if (thatRecord.hasProperty(property)) {
           JSType thatPropertyType = thatRecord.getPropertyType(property);
           propType = thisPropertyType.getGreatestSubtype(thatPropertyType);
-          if (propType.isEquivalentTo(noType)) { return noType; }
+          if (propType.equals(noType)) {
+            return noType;
+          }
         } else {
           propType = thisPropertyType;
         }
@@ -179,7 +181,7 @@ public class RecordType extends PrototypeObjectType {
         for (ObjectType alt : registry.getEachReferenceTypeWithProperty(propName)) {
           JSType altPropType = alt.getPropertyType(propName);
           if (altPropType != null
-              && !alt.isEquivalentTo(this)
+              && !alt.equals(this)
               && alt.isSubtypeOf(that)
               && altPropType.isSubtypeOf(propType)) {
             builder.addAlternate(alt);

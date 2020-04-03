@@ -32,6 +32,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     CompilerOptions options = super.getDefaultOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    options.setWarningLevel(DiagnosticGroups.TOO_MANY_TYPE_PARAMS, CheckLevel.WARNING);
     return options;
   }
 
@@ -893,11 +894,10 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @const */ alias.foo = 42",
             "/** @type {alias.MyNumber} */ const x = 'str';",
             ""),
-        // TODO(sdh): should be non-nullable number, but we get nullability wrong.
         lines(
             "initializing variable", // preserve newlines
             "found   : string",
-            "required: (null|number)"));
+            "required: number"));
   }
 
   @Test
@@ -913,28 +913,24 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @const */ alias.foo = 42",
             "  /** @type {alias.MyNumber} */ const x = 'str';",
             "}"),
-        // TODO(sdh): should be non-nullable number, but we get nullability wrong.
         lines(
             "initializing variable", // preserve newlines
             "found   : string",
-            "required: (null|number)"));
+            "required: number"));
   }
 
   @Test
-  public void testTypedefOnClassSideInheritedSubtype() {
-    // Class-side inheritance should carry over any typedefs nested on the class.
+  public void testTypedefOnClassSideInheritedSubtypeInaccessible() {
+    // Class-side inheritance should not carry over any types nested on the class.
     testTypes(
         lines(
             "class Base {}",
             "/** @typedef {number} */", // preserve newlines
             "Base.MyNumber;",
             "class Sub extends Base {}",
-            "/** @type {Sub.MyNumber} */ const x = 'str';",
+            "/** @type {Sub.MyNumber} */ let x;",
             ""),
-        lines(
-            "initializing variable", // preserve newlines
-            "found   : string",
-            "required: (null|number)"));
+        "Bad type annotation. Unknown type Sub.MyNumber");
   }
 
   @Test
@@ -2474,29 +2470,28 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassTooManyTypeParameters() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "class Foo {}", //
             "var /** !Foo<number> */ x = new Foo();",
-            "var /** !Foo<string> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
   public void testClassWithTemplatizedConstructorTooManyTypeParameters() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "class Foo {",
             "  /** @template T */ constructor() {}",
             "}", //
             "var /** !Foo<number> */ x = new Foo();",
-            "var /** !Foo<string> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
   public void testClassWithTemplatizedClassAndConstructorTooManyTypeParameters() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "/** @template T */",
@@ -2504,7 +2499,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  /** @template U */ constructor() {}",
             "}", //
             "var /** !Foo<number, number> */ x = new Foo();",
-            "var /** !Foo<number, string> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
@@ -3267,7 +3263,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassConstructorTypeParametersNotIncludedOnClass() {
-    // TODO(sdh): This should give a warning about too many type parameters.
     testTypes(
         lines(
             "/** @template T */",
@@ -3276,7 +3271,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  constructor() {}",
             "}",
             "var /** !Foo<string, string> */ x = new Foo();",
-            "var /** !Foo<string, number> */ y = x;"));
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
   }
 
   @Test
@@ -6262,10 +6258,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "outer.inner = alias;",
             "const /** outer.inner.child.MyNumber */ x = '';"),
         lines(
-            "initializing variable",
+            "initializing variable", //
             "found   : string",
-            // TODO(sdh): this should not be nullable
-            "required: (null|number)"));
+            "required: number"));
   }
 
   @Test
@@ -7010,6 +7005,50 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testJsdocCanReferToGoogModuleType_withoutNamedType() {
+    testTypes(
+        lines(
+            CLOSURE_DEFS,
+            "goog.loadModule(function(exports) {",
+            "  goog.module('a');",
+            "  exports.Foo = class {};",
+            "  return exports;",
+            "});",
+            "/** @type {!a.Foo<number>} */",
+            "let x;",
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+  }
+
+  @Test
+  public void testJsdocCanReferToFunctionDeclarationType_withoutNamedType() {
+    testTypes(
+        lines(
+            CLOSURE_DEFS,
+            // file1
+            "goog.provide('a.Foo');",
+            "/** @constructor */",
+            "a.Foo = function() {};",
+            "",
+            // file2
+            "goog.loadModule(function(exports) {",
+            "  goog.module('b.Bar');",
+            "",
+            "  const Foo = goog.require('a.Foo');",
+            "  /** @constructor @extends {Foo} */",
+            "  function Bar() {}",
+            "  exports = Bar;",
+            "  return exports;",
+            "});",
+            "",
+            // file3
+            "/** @type {!b.Bar<number>} */",
+            "let x;",
+            ""),
+        RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+  }
+
+  @Test
   public void testTypeCheckingEsModule_exportSpecs() {
     testTypes("const x = 0; export {x};");
   }
@@ -7103,5 +7142,35 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
                 + " declared the property, make sure to give it a type.)",
             "Cannot do '[]' access on a struct",
             "Cannot do '[]' access on a struct"));
+  }
+
+  @Test
+  public void testUnion_forwardEnumRefAndNumber() {
+    testTypes(
+        lines(
+            "/** @enum {Type} */",
+            "const Enum = {A: 'a'};",
+            "/** @typedef {string} */ let Type;",
+            "const /** !Enum|number */ n = null;"),
+        lines(
+            "initializing variable",
+            "found   : null",
+            "required: (Enum<string>|number)" // Verify this doesn't drop Enum<string>
+            ));
+  }
+
+  @Test
+  public void testUnion_numberAndForwardEnumRef() {
+    testTypes(
+        lines(
+            "/** @enum {Type} */",
+            "const Enum = {A: 'a'};",
+            "/** @typedef {string} */ let Type;",
+            "const /** number|!Enum */ n = null;"),
+        lines(
+            "initializing variable",
+            "found   : null",
+            "required: (Enum<string>|number)" // Verify this doesn't drop Enum<string>
+            ));
   }
 }

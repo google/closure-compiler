@@ -661,13 +661,8 @@ class GlobalNamespace
      * Gets the type of a value or simple expression.
      *
      * @param n An r-value in an assignment or variable declaration (not null)
-     * @return A {@link NameType}
      */
     NameType getValueType(Node n) {
-      // Shorthand assignment of extended object literal
-      if (n == null) {
-        return NameType.OTHER;
-      }
       switch (n.getToken()) {
         case CLASS:
           return NameType.CLASS;
@@ -870,7 +865,8 @@ class GlobalNamespace
           break;
         case OR:
         case AND:
-          // This node is x or y in (x||y) or (x&&y). We only know that an
+        case COALESCE:
+          // This node is x or y in (x||y), (x&&y), or (x??y). We only know that an
           // alias is not getting created for this name if the result is used
           // in a boolean context or assigned to the same name
           // (e.g. var a = a || {}).

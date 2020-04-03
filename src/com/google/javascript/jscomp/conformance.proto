@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// MOE:begin_strip
+// NOTE: When touching this file, please see go/updating-protos for instructions
+// on updating the checked-in compiled versions in
+//   //third_party/java_src/jscomp/opensource
+// MOE:end_strip
 syntax = "proto2";
 
 package jscomp;
@@ -25,7 +30,7 @@ message ConformanceConfig {
 }
 
 // A specification of code requirements
-// NEXT ID: 15
+// NEXT ID: 17
 message Requirement {
   // Required: The message to report when a requirement is violated. This should
   // reference a document describing the reasoning for the requirement
@@ -174,8 +179,15 @@ message Requirement {
   // Required: The type of requirement.
   optional Type type = 6;
 
-  // The value banned, optional for "custom" requirements.
+  // The value banned, optional for "custom" requirements.  Some custom
+  // requirements repurpose this for different purposes, such as for whitelists
+  // of types.
   repeated string value = 7;
+
+  // Whether to allow subconfigs to extend the "value" field.  This does not
+  // make sense for banning values, but when the value is used as a whitelist,
+  // it becomes important.
+  optional bool allow_extending_value = 15;
 
   // Strategy to use for matching types in the value parameter (e.g. for
   // BANNED_CODE_PATTERN checks).
@@ -219,6 +231,11 @@ message Requirement {
   }
 
   optional Severity severity = 12 [default = WARNING];
+
+  // The file(s) that defined this requirement.  If the requirement is extended,
+  // then all extending files are included as well.  These will be printed in
+  // the error message.
+  repeated string config_file = 16;
 
   // CUSTOM requirements may use extensions, each extension should use
   // a CL number as a unique identifier.

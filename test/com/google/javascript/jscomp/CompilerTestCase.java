@@ -589,20 +589,27 @@ public abstract class CompilerTestCase {
           "function ITemplateArray() {}",
           ACTIVE_X_OBJECT_DEF);
 
-  protected static final String CLOSURE_DEFS =
+  protected static final String CLOSURE_DEFS_WITHOUT_GOOG =
       lines(
-          "/** @const */ var goog = {};",
           "goog.module = function(ns) {};",
           "goog.module.declareLegacyNamespace = function() {};",
+          "/** @return {?} */",
           "goog.module.get = function(ns) {};",
           "goog.provide = function(ns) {};",
+          "/** @return {?} */",
           "goog.require = function(ns) {};",
+          "/** @return {?} */",
           "goog.requireType = function(ns) {};",
           "goog.loadModule = function(ns) {};",
+          "/** @return {?} */",
           "goog.forwardDeclare = function(ns) {};",
           "goog.setTestOnly = function() {};",
           "goog.scope = function(fn) {};",
-          "goog.defineClass = function(superClass, clazz) {};");
+          "goog.defineClass = function(superClass, clazz) {};",
+          "goog.declareModuleId = function(ns) {};");
+
+  protected static final String CLOSURE_DEFS =
+      "/** @const */ var goog = {};" + CLOSURE_DEFS_WITHOUT_GOOG;
 
   /**
    * Constructs a test.
@@ -936,8 +943,7 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Perform AST normalization before running the test pass, and anti-normalize
-   * after running it.
+   * Perform AST normalization before running the test pass
    *
    * @see Normalize
    */
@@ -1202,17 +1208,6 @@ public abstract class CompilerTestCase {
   protected void testWarning(Externs externs, Sources srcs, Diagnostic warning) {
     assertThat(warning.level).isEqualTo(CheckLevel.WARNING);
     test(externs, srcs, warning);
-  }
-
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
-   *
-   * @param js Input
-   * @param warning Expected warning
-   */
-  protected void testWarning(String externs, String js, DiagnosticType warning) {
-    assertThat(warning).isNotNull();
-    test(externs(externs), srcs(js), warning(warning));
   }
 
   /**
@@ -1569,7 +1564,7 @@ public abstract class CompilerTestCase {
           new CheckClosureImports(compiler, compiler.getModuleMetadataMap())
               .process(externsRoot, mainRoot);
           new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
-          new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
+          new ClosureRewriteModule(compiler, null, null, null).process(externsRoot, mainRoot);
           ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1578,7 +1573,7 @@ public abstract class CompilerTestCase {
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler, null).process(externsRoot, mainRoot);
-          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+          new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false, null)
               .process(externsRoot, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1959,13 +1954,13 @@ public abstract class CompilerTestCase {
 
     if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
       new ProcessClosurePrimitives(compiler, null).process(externsRoot, mainRoot);
-      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false)
+      new ProcessClosureProvidesAndRequires(compiler, null, CheckLevel.ERROR, false, null)
           .process(externsRoot, mainRoot);
     }
 
     if (rewriteClosureCode) {
       new ClosureRewriteClass(compiler).process(externsRoot, mainRoot);
-      new ClosureRewriteModule(compiler, null, null).process(externsRoot, mainRoot);
+      new ClosureRewriteModule(compiler, null, null, null).process(externsRoot, mainRoot);
       ScopedAliases.builder(compiler).build().process(externsRoot, mainRoot);
     }
 

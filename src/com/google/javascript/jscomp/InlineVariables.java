@@ -297,10 +297,10 @@ class InlineVariables implements CompilerPass {
       //    have a good way to update the reference. Just punt on it.
       // 3) Don't inline the special property rename functions.
       return var.isExtern()
-          || compiler.getCodingConvention().isExported(var.name)
+          || compiler.getCodingConvention().isExported(var.getName())
           || compiler
               .getCodingConvention()
-              .isPropertyRenameFunction(var.nameNode.getOriginalQualifiedName())
+              .isPropertyRenameFunction(var.getNameNode().getOriginalQualifiedName())
           || staleVars.contains(var)
           || hasNoInlineAnnotation(var);
     }
@@ -399,7 +399,7 @@ class InlineVariables implements CompilerPass {
       } else {
         replaceChildPreserveCast(ref.getParent(), ref.getNode(), value);
       }
-      blacklistVarReferencesInTree(value, v.scope);
+      blacklistVarReferencesInTree(value, v.getScope());
     }
 
     private void replaceChildPreserveCast(Node parent, Node child, Node replacement) {
@@ -617,7 +617,7 @@ class InlineVariables implements CompilerPass {
         // The reference is a FUNCTION declaration or normal VAR declaration
         // with a value.
         if (!NodeUtil.isFunctionDeclaration(initialization.getParent())
-            && initialization.getNode().getFirstChild() == null) {
+            && !initialization.getNode().hasChildren()) {
           return false;
         }
       } else {

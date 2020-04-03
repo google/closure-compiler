@@ -200,6 +200,12 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  public NodeSubject isString(String value) {
+    check("getToken()").that(actual.getToken()).isEqualTo(Token.STRING);
+    check("getString()").that(actual.getString()).isEqualTo(value);
+    return this;
+  }
+
   public NodeSubject isName(String name) {
     check("isName()").that(actual.isName()).isTrue();
     check("getString()").that(actual.getString()).isEqualTo(name);
@@ -231,13 +237,56 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  public NodeSubject isFunction() {
+    hasToken(Token.FUNCTION);
+    return this;
+  }
+
   public NodeSubject isArrowFunction() {
     check("isArrowFunction()").that(actual.isArrowFunction()).isTrue();
     return this;
   }
 
+  /**
+   * indicates whether the node we are asserting is the start of an optional chain
+   * e.g. `a?.b` of `a?.b.c`
+   * */
+  public NodeSubject isOptionalChainStart() {
+    check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isTrue();
+    return this;
+  }
+
+  /**
+   * indicates whether the node we are asserting is the start of an optional chain
+   * e.g. `b.c` of `a?.b.c`
+   * */
+  public NodeSubject isNotOptionalChainStart() {
+    check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isFalse();
+    return this;
+  }
+
+  public NodeSubject isParamList() {
+    hasToken(Token.PARAM_LIST);
+    return this;
+  }
+
   public NodeSubject isCall() {
     check("isCall()").that(actual.isCall()).isTrue();
+    return this;
+  }
+
+  public NodeSubject isConst() {
+    check("isConst()").that(actual.isConst()).isTrue();
+    return this;
+  }
+
+  public NodeSubject isVar() {
+    check("isVar()").that(actual.isVar()).isTrue();
+    return this;
+  }
+
+  public NodeSubject isGetProp() {
+    check("isGetProp()").that(actual.isGetProp()).isTrue();
     return this;
   }
 
@@ -288,6 +337,39 @@ public final class NodeSubject extends Subject {
 
   public NodeSubject hasChildren(boolean hasChildren) {
     check("hasChildren()").that(actual.hasChildren()).isEqualTo(hasChildren);
+    return this;
+  }
+
+  public NodeSubject hasXChildren(int numChildren) {
+    check("getChildCount()").that(actual.getChildCount()).isEqualTo(numChildren);
+    return this;
+  }
+
+  public NodeSubject hasNoChildren() {
+    return hasXChildren(0);
+  }
+
+  public NodeSubject hasOneChild() {
+    return hasXChildren(1);
+  }
+
+  public NodeSubject hasOneChildThat() {
+    hasOneChild();
+    return assertNode(actual.getOnlyChild());
+  }
+
+  public NodeSubject hasFirstChildThat() {
+    hasChildren(true);
+    return assertNode(actual.getFirstChild());
+  }
+
+  public NodeSubject hasSecondChildThat() {
+    check("getChildCount()").that(actual.getChildCount()).isAtLeast(2);
+    return assertNode(actual.getSecondChild());
+  }
+
+  public NodeSubject isFromExterns() {
+    check("isFromExterns()").that(actual.isFromExterns()).isTrue();
     return this;
   }
 

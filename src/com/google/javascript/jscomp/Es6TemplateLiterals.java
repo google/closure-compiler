@@ -21,6 +21,8 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -90,15 +92,26 @@ class Es6TemplateLiterals {
   }
 
   /**
-   * Converts tag`a\tb${bar}` to:
+   * Converts a tagged template into a call to the tag.
+   *
+   * <p>If the cooked and raw strings of the template literal are same, this will create a call to
+   * createtemplatetagfirstarg that simply calls slice() on the cooked array at runtime to make the
+   * raw array a copy of the cooked array, and returns the cooked array. For example, tag`ab${bar}`
+   * will change to:
    *
    * <p><code>
-   *   // A global (module) scoped variable
-   *   var $jscomp$templatelit$0 = ["a\tb"];   // cooked string array
-   *   $jscomp$templatelit$0.raw = ["a\\tb"];  // raw string array
-   *   ...
-   *   // A call to the tagging function
-   *   tag($jscomp$templatelit$0, bar);
+   *    // A call to the tagging function:
+   *    tag($jscomp$templatelit$createTemplateTagFirstArg(['ab'], bar);
+   * </code>
+   *
+   * <p>If the cooked and raw strings of the template literal are not same, this will construct the
+   * raw strings array, and call {@code createtemplatetagfirstargwithraw} with it, which assigns the
+   * raw strings array to the property 'raw' of the cooked array at runtime, and returns the cooked
+   * array. For example, tag`a\tb${bar}` will change to:
+   *
+   * <p><code>
+   *   // A call to the tagging function:
+   *   tag($jscomp$templatelit$createTemplateTagFirstArgWithRaw(['a\tb'] /, ['a\\tb']), bar);
    * </code>
    *
    * <p>See template_literal_test.js for more examples.
@@ -113,44 +126,45 @@ class Es6TemplateLiterals {
 
     Node templateLit = n.getLastChild();
     Node cooked = createCookedStringArray(templateLit, templateArrayType);
-
     Node siteObject = withType(cooked, templateArrayType);
 
-    // Create a variable representing the template literal.
-    Node callsiteId =
-        astFactory.createName(
-            TEMPLATELIT_VAR + compiler.getUniqueNameIdSupplier().get(), templateArrayType);
-    Node var = IR.var(callsiteId, siteObject).useSourceInfoIfMissingFromForTree(n);
-    Node script = NodeUtil.getEnclosingScript(n);
-    script.addChildToFront(var);
-    t.reportCodeChange(var);
-
-    // Define the "raw" property on the introduced variable.
-    Node defineRaw;
+    // Node holding the function call to the runtime injected function
+    Node callTemplateTagArgCreator;
     if (cookedAndRawStringsSame(templateLit)) {
       // The cooked and raw versions of the array are the same, so just call slice() on the
       // cooked array at runtime to make the raw array a copy of the cooked array.
-      defineRaw =
-          IR.exprResult(
-                  astFactory.createAssign(
-                      astFactory.createGetProp(callsiteId.cloneNode(), "raw"),
-                      astFactory.createCall(
-                          astFactory.createGetProp(callsiteId.cloneNode(), "slice"))))
-              .useSourceInfoIfMissingFromForTree(n);
+      callTemplateTagArgCreator =
+          astFactory.createCall(
+              astFactory.createQName(t.getScope(), "$jscomp.createTemplateTagFirstArg"),
+              siteObject.cloneTree());
     } else {
       // The raw string array is different, so we need to construct it.
       Node raw = createRawStringArray(templateLit, arrayType);
-      defineRaw =
-          IR.exprResult(
-                  astFactory.createAssign(
-                      astFactory.createGetProp(callsiteId.cloneNode(), "raw"), raw))
-              .useSourceInfoIfMissingFromForTree(n);
+      callTemplateTagArgCreator =
+          astFactory.createCall(
+              astFactory.createQName(t.getScope(), "$jscomp.createTemplateTagFirstArgWithRaw"),
+              siteObject.cloneTree(),
+              raw);
     }
+    JSDocInfoBuilder jsDocInfoBuilder = new JSDocInfoBuilder(false);
+    jsDocInfoBuilder.recordNoInline();
+    JSDocInfo info = jsDocInfoBuilder.build();
 
-    script.addChildAfter(defineRaw, var);
+    CompilerInput input = t.getInput();
+    String uniqueId = compiler.getUniqueIdSupplier().getUniqueId(input);
+    // var tagFnFirstArg = $jscomp.createTemplateTagFirstArg...
+    Node tagFnFirstArgDeclaration =
+        astFactory
+            .createSingleVarNameDeclaration(TEMPLATELIT_VAR + uniqueId, callTemplateTagArgCreator)
+            .setJSDocInfo(info)
+            .useSourceInfoIfMissingFromForTree(n);
+    Node script = NodeUtil.getEnclosingScript(n);
+    script.addChildToFront(tagFnFirstArgDeclaration);
+    t.reportCodeChange(tagFnFirstArgDeclaration);
 
     // Generate the call expression.
-    Node call = withType(IR.call(n.removeFirstChild(), callsiteId.cloneNode()), n.getJSType());
+    Node tagFnFirstArg = tagFnFirstArgDeclaration.getFirstChild().cloneNode();
+    Node call = withType(IR.call(n.removeFirstChild(), tagFnFirstArg), n.getJSType());
     for (Node child = templateLit.getFirstChild(); child != null; child = child.getNext()) {
       if (!child.isTemplateLitString()) {
         call.addChildToBack(child.removeFirstChild());

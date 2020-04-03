@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorWithLevel;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenUtil;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -69,6 +70,10 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
         jsonWriter.name("source").value(sourceName);
         jsonWriter.name("line").value(lineNumber);
         jsonWriter.name("column").value(charno);
+        Node node = message.error.getNode();
+        if (node != null) {
+          jsonWriter.name("length").value(node.getLength());
+        }
 
         // extract source excerpt
         String sourceExcerpt =

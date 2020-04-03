@@ -203,7 +203,7 @@ function IteratorIterable() {}
 
 /**
  * @interface
- * @template KEY1, VALUE1
+ * @template IOBJECT_KEY, IOBJECT_VALUE
  */
 function IObject() {}
 
@@ -620,7 +620,7 @@ Function.prototype.toString = function() {};
  * @implements {IArrayLike<T>}
  * @implements {Iterable<T>}
  * @param {...*} var_args
- * @return {!Array<?>}
+ * @return {!Array}
  * @nosideeffects
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array

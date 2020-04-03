@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import org.junit.Test;
@@ -216,7 +217,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     testClosureFunction(
         "goog.isFunction",
         getNativeObjectNumberStringBooleanType(),
-        getNativeU2UConstructorType(),
+        getNativeFunctionType(),
         getNativeObjectNumberStringBooleanType());
   }
 
@@ -225,7 +226,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     testClosureFunction(
         "goog.isFunction",
         getNativeObjectNumberStringBooleanSymbolType(),
-        getNativeU2UConstructorType(),
+        getNativeFunctionType(),
         getNativeObjectNumberStringBooleanSymbolType());
   }
 
@@ -233,14 +234,14 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
   public void testGoogIsFunction3() {
     testClosureFunction(
         "goog.isFunction",
-        createUnionType(getNativeU2UConstructorType(), getNativeNumberStringBooleanType()),
-        getNativeU2UConstructorType(),
+        createUnionType(getNativeFunctionType(), getNativeNumberStringBooleanType()),
+        getNativeFunctionType(),
         getNativeNumberStringBooleanType());
   }
 
   @Test
   public void testGoogIsFunctionOnNull() {
-    testClosureFunction("goog.isFunction", null, getNativeU2UConstructorType(), null);
+    testClosureFunction("goog.isFunction", null, getNativeFunctionType(), null);
   }
 
   @Test
@@ -362,18 +363,20 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
 
     // trueScope
     assertType(
-            rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, true)
+            rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, Outcome.TRUE)
                 .getSlot("a")
                 .getType())
-        .isStructurallyEqualTo(trueType);
+        .isEqualTo(trueType);
 
     // falseScope
-    JSType aType = rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, false)
-        .getSlot("a").getType();
+    JSType aType =
+        rai.getPreciserScopeKnowingConditionOutcome(call, flowScope, Outcome.FALSE)
+            .getSlot("a")
+            .getType();
     if (falseType == null) {
       assertThat(aType).isNull();
     } else {
-      assertType(aType).isStructurallyEqualTo(falseType);
+      assertType(aType).isEqualTo(falseType);
     }
   }
 }

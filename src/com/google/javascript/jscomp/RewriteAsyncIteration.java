@@ -319,7 +319,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
         checkNotNull(ctx.function);
         checkState(ctx.function.isAsyncFunction());
         replaceForAwaitOf(t, ctx, n);
-        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
+        NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
         break;
 
         // Maintaining references to this/arguments/super
@@ -745,7 +745,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
           astFactory.createZeroArgArrowFunctionForExpression(
               astFactory.createGetProp(superReference, replacedMethodName));
       compiler.reportChangeToChangeScope(arrowFunction);
-      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.ARROW_FUNCTIONS, compiler);
       String superReplacementName = superPropGetterPrefix + replacedMethodName;
       prefixBlock.addChildToBack(
           astFactory.createSingleConstNameDeclaration(superReplacementName, arrowFunction));
@@ -762,7 +762,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
         || thisSuperArgsCtx.usedArguments
         || !thisSuperArgsCtx.usedSuperProperties.isEmpty()) {
       compiler.reportChangeToChangeScope(function);
-      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
     }
   }
 }

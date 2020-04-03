@@ -131,12 +131,12 @@ public class EnumType extends PrototypeObjectType {
     if (result != null) {
       return result;
     }
-    return this.isEquivalentTo(that) ? TRUE : FALSE;
+    return this.equals(that) ? TRUE : FALSE;
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(forAnnotations ? "!Object" : getReferenceName());
+  void appendTo(TypeStringBuilder sb) {
+    sb.append(sb.isForAnnotations() ? "!Object" : getReferenceName());
   }
 
   @Override

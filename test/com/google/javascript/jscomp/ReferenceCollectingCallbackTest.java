@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.UNSUPPORTED;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.truth.Correspondence;
@@ -401,6 +402,26 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
               assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
               assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
               assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
+            }
+          }
+        });
+  }
+
+  @Test
+  public void nullishCoalesce() {
+    setLanguage(UNSUPPORTED, UNSUPPORTED);
+    testBehavior(
+        "var x = 0; var y = x ?? (x = 1)",
+        new Behavior() {
+          @Override
+          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
+            if (t.getScope().isGlobal()) {
+              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+              assertThat(x.references).hasSize(3);
+              assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
+              assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
+              // first child of ?? is not a boundary, but the second child is.
+              assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.ASSIGN);
             }
           }
         });

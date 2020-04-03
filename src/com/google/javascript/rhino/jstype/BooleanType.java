@@ -99,11 +99,6 @@ public class BooleanType extends ValueType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(getDisplayName());
-  }
-
-  @Override
   public String getDisplayName() {
     return "boolean";
   }

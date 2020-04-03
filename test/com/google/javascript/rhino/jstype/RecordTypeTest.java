@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.Nullability;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
@@ -72,7 +73,7 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testLongToString() {
+  public void testToString_largeRecord() {
     JSType record = new RecordTypeBuilder(registry)
         .addProperty("a01", NUMBER_TYPE, null)
         .addProperty("a02", NUMBER_TYPE, null)
@@ -86,6 +87,7 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
         .addProperty("a10", NUMBER_TYPE, null)
         .addProperty("a11", NUMBER_TYPE, null)
         .build();
+
     assertThat(record.toString())
         .isEqualTo(
             LINE_JOINER.join(
@@ -99,12 +101,117 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
                 "  a07: number,",
                 "  a08: number,",
                 "  a09: number,",
-                "  a10: number, ...",
+                "  a10: number,",
+                "  ...",
                 "}"));
+
     assertThat(record.toAnnotationString(Nullability.EXPLICIT))
         .isEqualTo(
             "{a01: number, a02: number, a03: number, a04: number, a05: number, a06: number,"
                 + " a07: number, a08: number, a09: number, a10: number, a11: number}");
+  }
+
+  @Test
+  public void testToString_nestedRecordIndentation() {
+    JSType record =
+        new RecordTypeBuilder(registry)
+            .addProperty(
+                "a",
+                new RecordTypeBuilder(registry)
+                    .addProperty(
+                        "aa",
+                        new RecordTypeBuilder(registry)
+                            .addProperty("aaa", NUMBER_TYPE, null)
+                            .addProperty("aab", NUMBER_TYPE, null)
+                            .addProperty("aac", NUMBER_TYPE, null)
+                            .build(),
+                        null)
+                    .addProperty("ab", NUMBER_TYPE, null)
+                    .build(),
+                null)
+            .addProperty("b", NUMBER_TYPE, null)
+            .build();
+
+    assertThat(record.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a: {",
+                "    aa: {",
+                "      aaa: number,",
+                "      aab: number,",
+                "      aac: number",
+                "    },",
+                "    ab: number",
+                "  },",
+                "  b: number",
+                "}"));
+
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{a: {aa: {aaa: number, aab: number, aac: number}, ab: number}, b: number}");
+  }
+
+  @Test
+  public void testToString_nestedRecordIndentation_throughUnion() {
+    JSType record =
+        new RecordTypeBuilder(registry)
+            .addProperty("a", NUMBER_TYPE, null)
+            .addProperty(
+                "b",
+                registry.createUnionType(
+                    NUMBER_TYPE,
+                    new RecordTypeBuilder(registry)
+                        .addProperty("ba", NUMBER_TYPE, null)
+                        .addProperty("bb", NUMBER_TYPE, null)
+                        .build()),
+                null)
+            .build();
+
+    assertThat(record.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a: number,",
+                "  b: (number|{",
+                "    ba: number,",
+                "    bb: number",
+                "  })",
+                "}"));
+
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{a: number, b: (number|{ba: number, bb: number})}");
+  }
+
+  @Test
+  public void testToString_nestedRecordIndentation_throughTemplateParam() {
+    JSType record =
+        new RecordTypeBuilder(registry)
+            .addProperty("a", NUMBER_TYPE, null)
+            .addProperty(
+                "b",
+                registry.createTemplatizedType(
+                    ARRAY_TYPE,
+                    ImmutableList.of(
+                        new RecordTypeBuilder(registry)
+                            .addProperty("ba", NUMBER_TYPE, null)
+                            .addProperty("bb", NUMBER_TYPE, null)
+                            .build())),
+                null)
+            .build();
+
+    assertThat(record.toString())
+        .isEqualTo(
+            LINE_JOINER.join(
+                "{",
+                "  a: number,",
+                "  b: Array<{",
+                "    ba: number,",
+                "    bb: number",
+                "  }>",
+                "}"));
+
+    assertThat(record.toAnnotationString(Nullability.EXPLICIT))
+        .isEqualTo("{a: number, b: !Array<{ba: number, bb: number}>}");
   }
 
   @Test
@@ -128,11 +235,11 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
 
     JSType aSupC = registry.createUnionType(recordA, recordC);
 
-    assertType(recordA.getGreatestSubtype(recordC)).isStructurallyEqualTo(aInfC);
-    assertType(recordA.getLeastSupertype(recordC)).isStructurallyEqualTo(aSupC);
+    assertType(recordA.getGreatestSubtype(recordC)).isEqualTo(aInfC);
+    assertType(recordA.getLeastSupertype(recordC)).isEqualTo(aSupC);
 
-    assertType(proxyRecordA.getGreatestSubtype(proxyRecordC)).isStructurallyEqualTo(aInfC);
-    assertType(proxyRecordA.getLeastSupertype(proxyRecordC)).isStructurallyEqualTo(aSupC);
+    assertType(proxyRecordA.getGreatestSubtype(proxyRecordC)).isEqualTo(aInfC);
+    assertType(proxyRecordA.getLeastSupertype(proxyRecordC)).isEqualTo(aSupC);
   }
 
   @Test
@@ -199,5 +306,23 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     assertThat(recordC.isSubtypeOf(recordB)).isFalse();
     assertThat(recordB.isSubtypeOf(recordC)).isTrue();
     assertThat(recordA.isSubtypeOf(recordC)).isTrue();
+  }
+
+  @Test
+  public void testEquality_onlyCompares_ownProperties() {
+    // Given
+    RecordType recordA = //
+        (RecordType) new RecordTypeBuilder(registry).addProperty("a", NUMBER_TYPE, null).build();
+    RecordType recordB =
+        (RecordType)
+            new RecordTypeBuilder(registry)
+                .addProperty("a", NUMBER_TYPE, null)
+                .addProperty("toString", OBJECT_TYPE.getPropertyType("toString"), null)
+                .build();
+
+    assertType(recordA.getPropertyType("toString")).isEqualTo(recordB.getPropertyType("toString"));
+
+    // Then
+    assertType(recordA).isNotEqualTo(recordB);
   }
 }

@@ -212,6 +212,37 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSpreadVariableIntoMethodParameterListInCast() {
+    test(
+        externs(
+            lines(
+                "/**",
+                " * @constructor",
+                // Skipping @struct here to allow for string access.
+                " */",
+                "function TestClass() { }",
+                "",
+                "/** @param {...string} args */",
+                "TestClass.prototype.testMethod = function(args) { }",
+                "",
+                "/** @return {!TestClass} */",
+                "function testClassFactory() { }")),
+        srcs(
+            lines(
+                "var obj = new TestClass();",
+                "(/** @type {?} */ (obj.testMethod))(...arr);",
+                "(/** @type {?} */ (/** @type {?} */ (obj.testMethod)))(...arr);",
+                "(/** @type {?} */ (obj['testMethod']))(...arr);")),
+        expected(
+            lines(
+                "var obj = new TestClass();",
+                "obj.testMethod.apply(obj, $jscomp.arrayFromIterable(arr));",
+                "obj.testMethod.apply(obj, $jscomp.arrayFromIterable(arr));",
+                "obj['testMethod'].apply(obj, $jscomp.arrayFromIterable(arr));")));
+    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
+  }
+
+  @Test
   public void testSpreadVariableIntoDeepMethodParameterList() {
     test(
         externs(
@@ -379,6 +410,39 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
 
   @Test
   public void
+      testSpreadVariableIntoMethodParameterListOnConditionalRecieverWithSideEffectsInCast() {
+    test(
+        externs(
+            MINIMAL_EXTERNS
+                + lines(
+                    "/**",
+                    " * @constructor",
+                    " * @struct",
+                    " */",
+                    "function TestClass() { }",
+                    "",
+                    "/** @param {...string} args */",
+                    "TestClass.prototype.testMethod = function(args) { }",
+                    "",
+                    "/** @return {!TestClass} */",
+                    "function testClassFactory() { }",
+                    "",
+                    "/** @type {!Iterable<string>} */ var stringIterable;")),
+        srcs(
+            lines(
+                "var x = b ?",
+                "    /** @type {?} */ (testClassFactory().testMethod)(...stringIterable) :",
+                "    null;")),
+        expected(
+            lines(
+                "var $jscomp$spread$args0;",
+                "var x = b ? ($jscomp$spread$args0 = testClassFactory()).testMethod.apply(",
+                "    $jscomp$spread$args0, $jscomp.arrayFromIterable(stringIterable))",
+                "        : null;")));
+  }
+
+  @Test
+  public void
       testSpreadVariableIntoMethodParameterListOnRecieversWithSideEffectsMultipleTimesInOneScope() {
     test(
         externs(
@@ -446,8 +510,19 @@ public final class Es6RewriteRestAndSpreadTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
-        "new F(...args);",
-        "new (Function.prototype.bind.apply(F, [null].concat($jscomp.arrayFromIterable(args))));");
+        externs(
+            lines(
+                "/**",
+                " * @param {?Object|undefined} selfObj",
+                " * @param {...*} var_args",
+                " * @return {!Function}",
+                " */",
+                "Function.prototype.bind = function(selfObj, var_args) {};")),
+        srcs("new F(...args);"),
+        expected(
+            "new (Function.prototype.bind.apply(F,"
+                + " [null].concat($jscomp.arrayFromIterable(args))));"));
+
     assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
   }
 

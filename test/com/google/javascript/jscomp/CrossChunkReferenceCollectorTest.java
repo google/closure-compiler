@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT_IN;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -156,6 +157,20 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
     assertNode(xRefs.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
     assertNode(xRefs.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
     assertNode(xRefs.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
+  }
+
+  @Test
+  public void nullishCoalesce() {
+    setAcceptedLanguage(ECMASCRIPT_NEXT_IN);
+    testSame("var x = 0; var y = x ?? (x = 1)");
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    Var xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    ReferenceCollection xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.references).hasSize(3);
+    assertNode(xRefs.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
+    assertNode(xRefs.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
+    assertNode(xRefs.references.get(2).getBasicBlock().getRoot()).hasType(Token.ASSIGN);
   }
 
   @Test

@@ -25,7 +25,9 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -35,6 +37,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import java.util.Arrays;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -48,6 +51,8 @@ import javax.annotation.Nullable;
  * determine the correct type information from already existing AST nodes and the current scope.
  */
 final class AstFactory {
+
+  private static final Splitter DOT_SPLITTER = Splitter.on(".");
 
   @Nullable private final JSTypeRegistry registry;
   // We need the unknown type so frequently, it's worth caching it.
@@ -98,7 +103,7 @@ final class AstFactory {
    * AstFactory} to create new nodes.
    */
   Node exprResult(Node expr) {
-    return IR.exprResult(expr);
+    return IR.exprResult(expr).srcref(expr);
   }
 
   /**
@@ -246,6 +251,21 @@ final class AstFactory {
     return result;
   }
 
+  /** Returns a new Node representing the undefined value. */
+  public Node createUndefinedValue() {
+    // We prefer `void 0` as being shorter than `undefined`.
+    // Also, it's technically possible for malicious code to assign a value to `undefined`.
+    return createVoid(createNumber(0));
+  }
+
+  Node createCastToUnknown(Node child, JSDocInfo jsdoc) {
+    Node result = IR.cast(child, jsdoc);
+    if (isAddingTypes()) {
+      result.setJSType(getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    }
+    return result;
+  }
+
   Node createNot(Node child) {
     Node result = IR.not(child);
     if (isAddingTypes()) {
@@ -342,6 +362,36 @@ final class AstFactory {
   }
 
   /**
+   * Creates a new `let` declaration with a type but no value.
+   *
+   * <p>e.g. `let variableName`
+   */
+  Node declareSingleLet(String variableName, JSType type) {
+    return IR.let(createName(variableName, type));
+  }
+
+  /**
+   * Creates a new `var` declaration statement for a single variable name with void type and no
+   * JSDoc.
+   *
+   * <p>e.g. `const variableName`
+   */
+  Node createSingleVarNameDeclaration(String variableName) {
+    return IR.var(createName(variableName, JSTypeNative.VOID_TYPE));
+  }
+
+  /**
+   * Creates a new `var` declaration statement for a single variable name.
+   *
+   * <p>Takes the type for the variable name from the value node.
+   *
+   * <p>e.g. `const variableName = value;`
+   */
+  Node createSingleVarNameDeclaration(String variableName, Node value) {
+    return IR.var(createName(variableName, value.getJSType()), value);
+  }
+
+  /**
    * Creates a new `const` declaration statement for a single variable name.
    *
    * <p>Takes the type for the variable name from the value node.
@@ -402,18 +452,48 @@ final class AstFactory {
   }
 
   Node createQName(Scope scope, String qname) {
-    return createQName(scope, Splitter.on(".").split(qname));
+    return createQName(scope, DOT_SPLITTER.split(qname));
   }
 
-  private Node createQName(Scope scope, Iterable<String> names) {
+  /**
+   * Looks up the type of a name from a {@link TypedScope} created from typechecking
+   *
+   * @param globalTypedScope Must be the top, global scope.
+   */
+  Node createQName(TypedScope globalTypedScope, String qname) {
+    checkArgument(globalTypedScope == null || globalTypedScope.isGlobal(), globalTypedScope);
+    List<String> nameParts = DOT_SPLITTER.splitToList(qname);
+    checkState(!nameParts.isEmpty());
+
+    String receiverPart = nameParts.get(0);
+    Node receiver = IR.name(receiverPart);
+    if (this.isAddingTypes()) {
+      TypedVar var = checkNotNull(globalTypedScope.getVar(receiverPart), receiverPart);
+      receiver.setJSType(checkNotNull(var.getType(), var));
+    }
+
+    List<String> otherParts = nameParts.subList(1, nameParts.size());
+    return this.createGetProps(receiver, otherParts);
+  }
+
+  Node createQName(Scope scope, Iterable<String> names) {
     String baseName = checkNotNull(Iterables.getFirst(names, null));
     Iterable<String> propertyNames = Iterables.skip(names, 1);
+    return createQName(scope, baseName, propertyNames);
+  }
+
+  Node createQName(Scope scope, String baseName, String... propertyNames) {
+    checkNotNull(baseName);
+    return createQName(scope, baseName, Arrays.asList(propertyNames));
+  }
+
+  Node createQName(Scope scope, String baseName, Iterable<String> propertyNames) {
     Node baseNameNode = createName(scope, baseName);
     return createGetProps(baseNameNode, propertyNames);
   }
 
   Node createGetProp(Node receiver, String propertyName) {
-    Node result = IR.getprop(receiver, IR.string(propertyName));
+    Node result = IR.getprop(receiver, createString(propertyName));
     if (isAddingTypes()) {
       result.setJSType(getJsTypeForProperty(receiver, propertyName));
     }
@@ -421,7 +501,7 @@ final class AstFactory {
   }
 
   /** Creates a tree of nodes representing `receiver.name1.name2.etc`. */
-  private Node createGetProps(Node receiver, Iterable<String> propertyNames) {
+  Node createGetProps(Node receiver, Iterable<String> propertyNames) {
     Node result = receiver;
     for (String propertyName : propertyNames) {
       result = createGetProp(result, propertyName);
@@ -471,6 +551,21 @@ final class AstFactory {
       result.setJSType(value.getJSType());
     }
     return result;
+  }
+
+  /**
+   * Create a getter definition to be inserted into either a class body or object literal.
+   *
+   * <p>{@code get name() { return value; }}
+   */
+  Node createGetterDef(String name, Node value) {
+    JSType returnType = value.getJSType();
+    // Name is stored on the GETTER_DEF node. The function has no name.
+    Node functionNode =
+        createZeroArgFunction(/* name= */ "", IR.block(createReturn(value)), returnType);
+    Node getterNode = Node.newString(Token.GETTER_DEF, name);
+    getterNode.addChildToFront(functionNode);
+    return getterNode;
   }
 
   Node createIn(Node left, Node right) {
@@ -594,12 +689,10 @@ final class AstFactory {
       // Make a unique function type that returns the exact type we've inferred it to be.
       // Object.assign in the externs just returns !Object, which loses type information.
       JSType objAssignType =
-          registry
-              .createFunctionTypeWithVarArgs(
-                  returnType,
-                  registry.getNativeType(JSTypeNative.OBJECT_TYPE),
-                  registry.createUnionType(JSTypeNative.OBJECT_TYPE, JSTypeNative.NULL_TYPE))
-              .resolveOrThrow();
+          registry.createFunctionTypeWithVarArgs(
+              returnType,
+              registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+              registry.createUnionType(JSTypeNative.OBJECT_TYPE, JSTypeNative.NULL_TYPE));
       objAssign.setJSType(objAssignType);
       result.setJSType(returnType);
     }
@@ -633,9 +726,7 @@ final class AstFactory {
       // Return type of the function needs to match that of the entire expression. getPrototypeOf
       // normally returns !Object.
       objectGetPrototypeOf.setJSType(
-          registry
-              .createFunctionType(returnedType, getNativeType(JSTypeNative.OBJECT_TYPE))
-              .resolveOrThrow());
+          registry.createFunctionType(returnedType, getNativeType(JSTypeNative.OBJECT_TYPE)));
     }
     return result;
   }
@@ -691,7 +782,16 @@ final class AstFactory {
   Node createObjectLit(Node... elements) {
     Node result = IR.objectlit(elements);
     if (isAddingTypes()) {
-      result.setJSType(registry.createAnonymousObjectType(null).resolveOrThrow());
+      result.setJSType(registry.createAnonymousObjectType(null));
+    }
+    return result;
+  }
+
+  /** Creates an object-literal with zero or more elements and a specific type. */
+  Node createObjectLit(@Nullable JSType jsType, Node... elements) {
+    Node result = IR.objectlit(elements);
+    if (isAddingTypes()) {
+      result.setJSType(checkNotNull(jsType));
     }
     return result;
   }
@@ -739,9 +839,7 @@ final class AstFactory {
 
   Node createZeroArgFunction(String name, Node body, @Nullable JSType returnType) {
     FunctionType functionType =
-        isAddingTypes()
-            ? registry.createFunctionType(returnType).resolveOrThrow().toMaybeFunctionType()
-            : null;
+        isAddingTypes() ? registry.createFunctionType(returnType).toMaybeFunctionType() : null;
     return createFunction(name, IR.paramList(), body, functionType);
   }
 
@@ -788,11 +886,18 @@ final class AstFactory {
     return result;
   }
 
+  Node createNe(Node expr1, Node expr2) {
+    Node result = IR.ne(expr1, expr2);
+    if (isAddingTypes()) {
+      result.setJSType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+    }
+    return result;
+  }
+
   Node createHook(Node condition, Node expr1, Node expr2) {
     Node result = IR.hook(condition, expr1, expr2);
     if (isAddingTypes()) {
-      result.setJSType(
-          registry.createUnionType(expr1.getJSType(), expr2.getJSType()).resolveOrThrow());
+      result.setJSType(registry.createUnionType(expr1.getJSType(), expr2.getJSType()));
     }
     return result;
   }
@@ -805,12 +910,10 @@ final class AstFactory {
     Node result = IR.arraylit(elements);
     if (isAddingTypes()) {
       result.setJSType(
-          registry
-              .createTemplatizedType(
-                  registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
-                  // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
-                  getNativeType(JSTypeNative.UNKNOWN_TYPE))
-              .resolveOrThrow());
+          registry.createTemplatizedType(
+              registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE),
+              // TODO(nickreid): Use a reasonable template type. Remeber to consider SPREAD.
+              getNativeType(JSTypeNative.UNKNOWN_TYPE)));
     }
     return result;
   }
@@ -859,8 +962,7 @@ final class AstFactory {
       //   function(Iterator<T>): Array<T>
       // with
       //   function(Iterator<number>): Array<number>
-      makeIteratorName.setJSType(
-          replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)).resolveOrThrow());
+      makeIteratorName.setJSType(replaceTemplate(makeIteratorType, ImmutableList.of(iterableType)));
     }
     return createCall(makeIteratorName, iterator);
   }
@@ -907,7 +1009,7 @@ final class AstFactory {
             .getEmptyTemplateTypeMap()
             .copyWithExtension(templatedType.getTemplateTypeMap().getTemplateKeys(), templateTypes);
     TemplateTypeReplacer replacer = TemplateTypeReplacer.forPartialReplacement(registry, typeMap);
-    return templatedType.visit(replacer).resolveOrThrow();
+    return templatedType.visit(replacer);
   }
 
   /**
@@ -956,17 +1058,15 @@ final class AstFactory {
       if (asyncGeneratorWrapperType.isUnknownType()) {
         // Not injecting libraries?
         generatorType =
-            registry
-                .createFunctionType(
-                    replaceTemplate(
-                        getNativeType(JSTypeNative.GENERATOR_TYPE), ImmutableList.of(unknownType)))
-                .resolveOrThrow();
+            registry.createFunctionType(
+                replaceTemplate(
+                    getNativeType(JSTypeNative.GENERATOR_TYPE), ImmutableList.of(unknownType)));
       } else {
         // Generator<$jscomp.AsyncGeneratorWrapper$ActionRecord<number>>
         JSType innerFunctionReturnType =
             Iterables.getOnlyElement(
                 asyncGeneratorWrapperType.toMaybeFunctionType().getParameterTypes());
-        generatorType = registry.createFunctionType(innerFunctionReturnType).resolveOrThrow();
+        generatorType = registry.createFunctionType(innerFunctionReturnType);
       }
     }
 
@@ -1039,6 +1139,6 @@ final class AstFactory {
         && receiver.matchesName("$jscomp")) {
       getpropType = getNativeType(JSTypeNative.GLOBAL_THIS);
     }
-    return getpropType.resolveOrThrow();
+    return getpropType;
   }
 }

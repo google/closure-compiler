@@ -165,7 +165,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
       Var oldVar = scope.getVar(oldName);
       scope.undeclare(oldVar);
-      hoistScope.declare(newName, nameNode, oldVar.input);
+      hoistScope.declare(newName, nameNode, oldVar.getInput());
     }
   }
 
@@ -348,7 +348,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
 
     private String createUniquePropertyName(Var var) {
-      return LOOP_OBJECT_PROPERTY_NAME + var.name + "$" + uniqueNameIdSupplier.get();
+      return LOOP_OBJECT_PROPERTY_NAME + var.getName() + "$" + uniqueNameIdSupplier.get();
     }
 
     private void transformLoopClosure() {

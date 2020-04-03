@@ -822,7 +822,7 @@ public final class NodeTraversalTest {
     public void enterScope(NodeTraversal t) {
       assertNode(t.getCurrentNode()).isEqualTo(node);
       assertNode(t.getScopeRoot()).isEqualTo(scopeRoot);
-      if (t.getScopeCreator().hasBlockScope() && (node.isForIn() || node.isForOf())) {
+      if (node.isForIn() || node.isForOf()) {
         node = node.getLastChild();
         scopeRoot = scopeRoot.getLastChild();
       }

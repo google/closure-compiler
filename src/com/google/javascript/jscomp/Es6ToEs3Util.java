@@ -68,8 +68,7 @@ public final class Es6ToEs3Util {
 
     Node call =
         callEs6RuntimeFunction(compiler, iterable, "arrayFromIterable").setJSType(arrayType);
-    call.getFirstChild()
-        .setJSType(registry.createFunctionTypeWithVarArgs(arrayType).resolveOrThrow());
+    call.getFirstChild().setJSType(registry.createFunctionTypeWithVarArgs(arrayType));
     return call;
   }
 
@@ -115,8 +114,6 @@ public final class Es6ToEs3Util {
     }
     ObjectType genericType = (ObjectType) (registry.getNativeType(typeName));
     ObjectType uninstantiated = genericType.getRawType();
-    return registry
-        .createTemplatizedType(uninstantiated, ImmutableList.of(typeArg))
-        .resolveOrThrow();
+    return registry.createTemplatizedType(uninstantiated, ImmutableList.of(typeArg));
   }
 }

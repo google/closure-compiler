@@ -68,7 +68,7 @@ final class JsFlumeCallback implements Callback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    NodeMetadata metadata = new NodeMetadata(t.getCompiler());
+    NodeMetadata metadata = NodeMetadata.fromTraversal(t);
     if (scanner.matches(n, metadata)) {
       Match match = new Match(n, metadata);
       fixes.addAll(scanner.processMatch(match));

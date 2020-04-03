@@ -49,6 +49,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 
@@ -182,30 +183,25 @@ final class SubtypeChecker {
    * this behaviour should be integrated into the main body of subtyping logic.
    */
   private boolean isSubtypeDispatching(JSType subtype, JSType supertype) {
-    if (subtype instanceof ArrowType) {
-      return this.isArrowTypeSubtype((ArrowType) subtype, supertype);
-    } else if (subtype instanceof EnumElementType) {
-      return this.isEnumElementSubtype((EnumElementType) subtype, supertype);
-    } else if (subtype instanceof EnumType) {
-      return this.isEnumSubtype((EnumType) subtype, supertype);
-    } else if (subtype instanceof FunctionType) {
-      if (subtype instanceof NoObjectType) {
+    switch (subtype.getTypeClass()) {
+      case ARROW:
+        return this.isArrowTypeSubtype((ArrowType) subtype, supertype);
+      case ENUM_ELEMENT:
+        return this.isEnumElementSubtype((EnumElementType) subtype, supertype);
+      case ENUM:
+        return this.isEnumSubtype((EnumType) subtype, supertype);
+      case NO_OBJECT:
+      case NO:
+      case NO_RESOLVED:
         return this.isVariousBottomsSubtype(subtype, supertype);
-      } else {
+      case FUNCTION:
         return this.isFunctionSubtype((FunctionType) subtype, supertype);
-      }
-    } else if (subtype instanceof ProxyObjectType) {
-      if (subtype instanceof TemplatizedType) {
-        return this.isSubtypeHelper(subtype, supertype);
-      } else if (subtype instanceof TemplateType) {
+      case TEMPLATE:
         return this.isTemplateSubtype((TemplateType) subtype, supertype);
-      } else {
+      case PROXY_OBJECT:
         return this.isProxyObjectSubtype((ProxyObjectType) subtype, supertype);
-      }
-    } else if (subtype instanceof RecordType) {
-      return this.isRecordSubtype((RecordType) subtype, supertype);
-    } else {
-      return this.isSubtypeHelper(subtype, supertype);
+      default:
+        return this.isSubtypeHelper(subtype, supertype);
     }
   }
 
@@ -226,7 +222,7 @@ final class SubtypeChecker {
     }
 
     // Reflexive case.
-    if (this.areEqual(subtype, supertype)) {
+    if (Objects.equals(subtype, supertype)) {
       return true;
     }
 
@@ -287,15 +283,22 @@ final class SubtypeChecker {
       bivarantMatch = true;
     }
 
-    // If the super type is a structural type, then we can't safely remove a templatized type
-    // (since it might affect the types of the properties)
     if (this.isUsingStructuralTyping && supertype.isStructuralType()) {
+      /**
+       * Do this before considering templatization in general.
+       *
+       * <p>If the super type is a structural type, then we can't safely unwrap any templatized
+       * types. The templates might affect the types of the properties.
+       */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.VOIDABLE_PROPS_ARE_OPTIONAL);
     } else if (supertype.isRecordType()) {
-      // Anonymous record types are always considered for structural typing because that's the only
-      // kind of typing they support. However, we limit to the case where the supertype is the
-      // record, because records shouldn't be subtypes of nominal types.
+      /**
+       * Anonymous record types are always considered structurally when supertypes.
+       *
+       * <p>Structural typing is the only kind of typing they support. However, we limit to the case
+       * where the supertype is the record, because records shouldn't be subtypes of nominal types.
+       */
       return this.isStructuralSubtypeHelper(
           subtype, supertype, PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
     }
@@ -421,7 +424,7 @@ final class SubtypeChecker {
     // Section 3.4.7: Subtyping Function Types.
 
     // this.returnType <: that.returnType (covariant)
-    if (!this.isSubtypeCaching(subtype.returnType, supertype.returnType)) {
+    if (!this.isSubtypeCaching(subtype.getReturnType(), supertype.getReturnType())) {
       return false;
     }
 
@@ -501,8 +504,8 @@ final class SubtypeChecker {
   }
 
   private boolean isEnumSubtype(EnumType subtype, JSType supertype) {
-    return supertype.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_TYPE))
-        || subtype.isEquivalentTo(registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE))
+    return supertype.equals(registry.getNativeType(JSTypeNative.OBJECT_TYPE))
+        || subtype.equals(registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE))
         || this.isSubtypeHelper(subtype, supertype);
   }
 
@@ -546,27 +549,6 @@ final class SubtypeChecker {
     } else {
       return this.isProxyObjectSubtype(subtype, supertype);
     }
-  }
-
-  private boolean isRecordSubtype(RecordType subtype, JSType supertype) {
-    if (this.isSubtypeHelper(subtype, supertype)) {
-      return true;
-    }
-
-    // Top of the record types is the empty record, or OBJECT_TYPE.
-    if (this.isSubtypeCaching(registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE), supertype)) {
-      return true;
-    }
-
-    // A type is a subtype of a record type if it itself is a record
-    // type and it has at least the same members as the parent record type
-    // with the same types.
-    if (!supertype.isRecordType()) {
-      return false;
-    }
-
-    return this.isStructuralSubtypeHelper(
-        subtype, supertype.toMaybeRecordType(), PropertyOptionality.ALL_PROPS_ARE_REQUIRED);
   }
 
   private boolean isTypeMapSubmap(ObjectType subtype, ObjectType supertype) {
@@ -720,10 +702,6 @@ final class SubtypeChecker {
     return unwrapped != null && unwrapped.isNativeObjectType() ? unwrapped : null;
   }
 
-  private boolean areEqual(JSType left, JSType right) {
-    return left.isEquivalentTo(right, this.isUsingStructuralTyping);
-  }
-
   /** How to treat explicitly voidable properties for structural subtype checking. */
   private enum PropertyOptionality {
     /** Explicitly voidable properties are treated as optional. */
@@ -771,7 +749,7 @@ final class SubtypeChecker {
        * insufficient in the case of recursive parameterized types because new equivalent copies of
        * the type are generated on-the-fly to compute the types of various properties.
        */
-      return areEqual(this.left, that.left) && areEqual(this.right, that.right);
+      return Objects.equals(this.left, that.left) && Objects.equals(this.right, that.right);
     }
 
     CacheKey(JSType left, JSType right) {

@@ -83,6 +83,28 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void nullishCoalesce() {
+    GlobalNamespace namespace = parse("var a = a ?? {};", LanguageMode.ECMASCRIPT_NEXT_IN);
+    Name a = namespace.getSlot("a");
+
+    assertThat(a).isNotNull();
+    assertThat(a.getRefs()).hasSize(2);
+    assertThat(a.getLocalSets()).isEqualTo(0);
+    assertThat(a.getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void hook() {
+    GlobalNamespace namespace = parse("var a = a ? a : {}");
+    Name a = namespace.getSlot("a");
+
+    assertThat(a).isNotNull();
+    assertThat(a.getRefs()).hasSize(3);
+    assertThat(a.getLocalSets()).isEqualTo(0);
+    assertThat(a.getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
   public void localAssignmentWillNotBeConsideredADeclaration() {
     GlobalNamespace namespace = parse("");
     Name n = namespace.createNameForTesting("a");
@@ -1090,12 +1112,12 @@ public final class GlobalNamespaceTest {
 
   private boolean assumeStaticInheritanceRequired = false;
 
-  private GlobalNamespace parse(String js) {
+  private GlobalNamespace parse(String js, LanguageMode languageModeIn) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setSkipNonTranspilationPasses(true);
     options.setWrapGoogModulesForWhitespaceOnly(false);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageIn(languageModeIn);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     options.setAssumeStaticInheritanceRequired(assumeStaticInheritanceRequired);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
@@ -1107,5 +1129,9 @@ public final class GlobalNamespaceTest {
     this.lastCompiler = compiler;
 
     return new GlobalNamespace(compiler, compiler.getRoot());
+  }
+
+  private GlobalNamespace parse(String js) {
+    return parse(js, LanguageMode.ECMASCRIPT_NEXT);
   }
 }

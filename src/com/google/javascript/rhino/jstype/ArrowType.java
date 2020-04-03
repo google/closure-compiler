@@ -46,9 +46,10 @@ import com.google.javascript.rhino.Node;
 import java.util.Objects;
 
 /**
- * The arrow type models a "bare" function type: from some parameter types to
- * a return type. JavaScript functions include more things like properties, type
- * of THIS, etc, and are modeled by {@link FunctionType}.
+ * Models a "bare" function type: from some parameter types to a return type.
+ *
+ * <p>JavaScript functions include more things like properties, type of THIS, etc, and are modeled
+ * by {@link FunctionType}.
  */
 final class ArrowType extends JSType {
   private static final long serialVersionUID = 1L;
@@ -56,7 +57,7 @@ final class ArrowType extends JSType {
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.ARROW;
 
   final Node parameters;
-  JSType returnType;
+  private JSType returnType;
 
   // Whether the return type is inferred.
   final boolean returnTypeInferred;
@@ -95,6 +96,10 @@ final class ArrowType extends JSType {
       }
     }
     return hashCode;
+  }
+
+  public JSType getReturnType() {
+    return this.returnType;
   }
 
   @Override
@@ -152,8 +157,8 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append("[ArrowType]");
+  void appendTo(TypeStringBuilder sb) {
+    sb.append("[ArrowType]");
   }
 
   @Override

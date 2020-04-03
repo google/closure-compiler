@@ -22,6 +22,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import java.util.Map;
@@ -597,6 +598,41 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("x = function(){} && x", "x = x");
     fold("x = true && function(){}", "x = function(){}");
     fold("x = [(function(){alert(x)})()] && x", "x = ([(function(){alert(x)})()],x)");
+  }
+
+  @Test
+  public void testFoldNullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    // fold if left is null/undefined
+    fold("null ?? 1", "1");
+    fold("undefined ?? false", "false");
+
+    fold("x = [foo()] ?? x", "x = ([foo()],x)");
+
+    // short circuit on all non nullish LHS
+    fold("x = false ?? x", "x = false");
+    fold("x = true ?? x", "x = true");
+    fold("x = 0 ?? x", "x = 0");
+    fold("x = 3 ?? x", "x = 3");
+
+    // unfoldable, because the right-side may be the result
+    foldSame("a = x ?? true");
+    foldSame("a = x ?? false");
+    foldSame("a = x ?? 3");
+    foldSame("a = b ? c : x ?? false");
+    foldSame("a = b ? x ?? false : c");
+
+    // folded, but not here.
+    foldSame("a = x ?? false ? b : c");
+    foldSame("a = x ?? true ? b : c");
+
+    foldSame("x = foo() ?? true ?? bar()");
+    ;
+    fold("x = foo() ?? (true && bar())", "x = foo() ?? bar()");
+    foldSame("x = (foo() || false) ?? bar()");
+
+    fold("a() ?? (1 ?? b())", "a() ?? 1");
+    fold("(a() ?? 1) ?? b()", "a() ?? 1 ?? b()");
   }
 
   @Test

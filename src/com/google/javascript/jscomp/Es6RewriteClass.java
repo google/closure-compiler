@@ -188,9 +188,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
               && (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
           || (member.isGetterDef() || member.isSetterDef())) {
-        visitNonMethodMember(member, metadata);
+        visitNonMethodMember(member, metadata, t.getScope());
       } else if (NodeUtil.isEs6ConstructorMemberFunctionDef(member)) {
-        constructor = member.getFirstChild().detach().setJSType(classNode.getJSType());
+        constructor = member.removeFirstChild().setJSType(classNode.getJSType());
         constructor.setJSTypeBeforeCast(classNode.getJSTypeBeforeCast());
         if (!metadata.isAnonymous()) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
@@ -274,7 +274,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       Node ctorVar = IR.let(metadata.getClassNameNode().cloneNode(), constructor);
       ctorVar.useSourceInfoIfMissingFromForTree(classNode);
       parent.replaceChild(classNode, ctorVar);
-      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS);
+      NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
     } else {
       parent.replaceChild(classNode, constructor);
     }
@@ -313,57 +313,75 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     return astFactory.createQName(scope, "$jscomp.global.Object.defineProperties");
   }
 
-  /**
-   * @param member A getter or setter, or a computed property that is a getter/setter.
-   */
+  private Node createObjectDotDefineProperty(Scope scope) {
+    return astFactory.createQName(scope, "$jscomp.global.Object.defineProperty");
+  }
+
+  /** @param member A getter or setter */
   private void addToDefinePropertiesObject(ClassDeclarationMetadata metadata, Node member) {
+    Preconditions.checkArgument(!member.isComputedProp());
     Node obj =
         member.isStaticMember()
             ? metadata.getDefinePropertiesObjForClass()
             : metadata.getDefinePropertiesObjForPrototype();
-    Node prop =
-        member.isComputedProp()
-            ? NodeUtil.getFirstComputedPropMatchingKey(obj, member.getFirstChild())
-            : NodeUtil.getFirstPropMatchingKey(obj, member.getString());
+    Node prop = NodeUtil.getFirstPropMatchingKey(obj, member.getString());
     if (prop == null) {
       prop = createPropertyDescriptor();
-      if (member.isComputedProp()) {
-        obj.addChildToBack(
-            astFactory.createComputedProperty(member.getFirstChild().cloneTree(), prop));
-      } else {
-        Node stringKey = astFactory.createStringKey(member.getString(), prop);
-        if (member.isQuotedString()) {
-          stringKey.putBooleanProp(Node.QUOTED_PROP, true);
-        }
-        obj.addChildToBack(stringKey);
+      Node stringKey = astFactory.createStringKey(member.getString(), prop);
+      if (member.isQuotedString()) {
+        stringKey.putBooleanProp(Node.QUOTED_PROP, true);
       }
+      obj.addChildToBack(stringKey);
     }
 
     Node function = member.getLastChild();
     JSDocInfo info = NodeUtil.getBestJSDocInfo(function);
 
     Node stringKey =
-        astFactory.createStringKey(
-            (member.isGetterDef() || member.getBooleanProp(Node.COMPUTED_PROP_GETTER))
-                ? "get"
-                : "set",
-            function.detach());
+        astFactory.createStringKey(member.isGetterDef() ? "get" : "set", function.detach());
     stringKey.setJSDocInfo(info);
     prop.addChildToBack(stringKey);
     prop.useSourceInfoIfMissingFromForTree(member);
   }
 
+  /** Appends an Object.defineProperty call defining the given computed getter or setter */
+  private void extractComputedProperty(
+      Node computedMember, ClassDeclarationMetadata metadata, Scope scope) {
+    Node owner =
+        computedMember.isStaticMember()
+            ? metadata.getFullClassNameNode()
+            : metadata.getClassPrototypeNode();
+    Node property = computedMember.removeFirstChild();
+    Node propertyValue = computedMember.removeFirstChild();
+
+    Node propertyDescriptor = createPropertyDescriptor();
+    Node stringKey =
+        astFactory.createStringKey(
+            computedMember.getBooleanProp(Node.COMPUTED_PROP_GETTER) ? "get" : "set",
+            propertyValue);
+    propertyDescriptor.addChildToBack(stringKey);
+
+    Node objectDefinePropertyCall =
+        astFactory.createCall(
+            createObjectDotDefineProperty(scope), owner.cloneTree(), property, propertyDescriptor);
+
+    metadata.insertNodeAndAdvance(
+        IR.exprResult(objectDefinePropertyCall).useSourceInfoIfMissingFromForTree(computedMember));
+  }
+
   /**
-   * Visits class members other than simple methods: Getters, setters, and computed properties.
+   * Visits getters and setters, including both static and instance properties, and computed and
+   * non-computed properties.
+   *
+   * <p>Non-computed getters and setters are aggregated into two Object.defineProperties calls. One
+   * defines static members and the other instance members. This is just an optimization; it's just
+   * as sound to append a single Object.defineProperty definition for each here.
+   *
+   * <p>Computed getters and setters are defined in individual Object.defineProperty calls
    */
-  private void visitNonMethodMember(Node member, ClassDeclarationMetadata metadata) {
-    if (member.isComputedProp() && member.isStaticMember()) {
-      cannotConvertYet(compiler, member, "Static computed property");
-      return;
-    }
-    if (member.isComputedProp() && !member.getFirstChild().isQualifiedName()) {
-      cannotConvert(
-          compiler, member.getFirstChild(), "Computed property with non-qualified-name key");
+  private void visitNonMethodMember(Node member, ClassDeclarationMetadata metadata, Scope scope) {
+    if (member.isComputedProp()) {
+      extractComputedProperty(member.detach(), metadata, scope);
       return;
     }
 

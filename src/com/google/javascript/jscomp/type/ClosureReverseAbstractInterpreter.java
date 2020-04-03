@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -147,8 +148,8 @@ public final class ClosureReverseAbstractInterpreter
   }
 
   @Override
-  public FlowScope getPreciserScopeKnowingConditionOutcome(Node condition,
-      FlowScope blindScope, boolean outcome) {
+  public FlowScope getPreciserScopeKnowingConditionOutcome(
+      Node condition, FlowScope blindScope, Outcome outcome) {
     if (condition.isCall() && condition.hasTwoChildren()) {
       Node callee = condition.getFirstChild();
       Node param = condition.getLastChild();
@@ -161,8 +162,7 @@ public final class ClosureReverseAbstractInterpreter
           Function<TypeRestriction, JSType> restricter =
               restricters.get(right.getString());
           if (restricter != null) {
-            return restrictParameter(param, paramType, blindScope, restricter,
-                outcome);
+            return restrictParameter(param, paramType, blindScope, restricter, outcome.isTruthy());
           }
         }
       }
@@ -179,7 +179,7 @@ public final class ClosureReverseAbstractInterpreter
       Function<TypeRestriction, JSType> restriction,
       boolean outcome) {
     // restricting
-    type = JSType.nullSafeResolveOrThrow(restriction.apply(new TypeRestriction(type, outcome)));
+    type = restriction.apply(new TypeRestriction(type, outcome));
 
     // changing the scope
     if (type != null) {

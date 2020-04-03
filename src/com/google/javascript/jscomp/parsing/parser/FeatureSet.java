@@ -26,16 +26,12 @@ import java.util.Set;
 /**
  * Represents various aspects of language version and support.
  *
- * <p>This is somewhat redundant with LanguageMode, but is separate
- * for two reasons: (1) it's used for parsing, which cannot
- * depend on LanguageMode, and (2) it's concerned with slightly
- * different nuances: implemented features and modules rather
- * than strictness.
+ * <p>This is somewhat redundant with LanguageMode, but is separate for two reasons: (1) it's used
+ * for parsing, which cannot depend on LanguageMode, and (2) it's concerned with slightly different
+ * nuances: implemented features and modules rather than strictness.
  *
- * <p>In the long term, it would be good to disentangle all these
- * concerns and pull out a single LanguageSyntax enum with a
- * separate strict mode flag, and then these could possibly be
- * unified.
+ * <p>In the long term, it would be good to disentangle all these concerns and pull out a single
+ * LanguageSyntax enum with a separate strict mode flag, and then these could possibly be unified.
  *
  * <p>Instances of this class are immutable.
  */
@@ -75,14 +71,33 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet ES2019 = ES2019_MODULES.without(Feature.MODULES);
 
-  public static final FeatureSet ES_NEXT = ES2019_MODULES.with(LangVersion.ES_NEXT.features());
+  public static final FeatureSet ES2020_MODULES =
+      ES2019_MODULES.with(LangVersion.ES2020.features());
+
+  public static final FeatureSet ES2020 = ES2020_MODULES.without(Feature.MODULES);
+
+  // "highest" output level
+  public static final FeatureSet ES_NEXT = ES2020_MODULES.with(LangVersion.ES_NEXT.features());
+
+  // "highest" input level; for features that can be transpiled but lack optimization/pass through
+  public static final FeatureSet ES_NEXT_IN = ES_NEXT.with(LangVersion.ES_NEXT_IN.features());
 
   public static final FeatureSet ES_UNSUPPORTED =
-      ES_NEXT.with(LangVersion.ES_UNSUPPORTED.features());
+      ES_NEXT_IN.with(LangVersion.ES_UNSUPPORTED.features());
 
-  public static final FeatureSet TYPESCRIPT = ES_NEXT.with(LangVersion.TYPESCRIPT.features());
+  public static final FeatureSet TYPESCRIPT = ES_NEXT_IN.with(LangVersion.TYPESCRIPT.features());
 
-  public static final FeatureSet TYPE_CHECK_SUPPORTED = ES2019_MODULES;
+  public static final FeatureSet BROWSER_2020 =
+      ES2019_MODULES.without(
+          // https://kangax.github.io/compat-table/es2016plus/
+          // All four of these are missing in Firefox 71 and lookbehind is missing in Safari 13.
+          Feature.REGEXP_FLAG_S,
+          Feature.REGEXP_LOOKBEHIND,
+          Feature.REGEXP_NAMED_GROUPS,
+          Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
+
+  public static final FeatureSet TS_UNSUPPORTED =
+      TYPESCRIPT.with(LangVersion.ES_UNSUPPORTED.features());
 
   private enum LangVersion {
     ES3,
@@ -92,9 +107,13 @@ public final class FeatureSet implements Serializable {
     ES8,
     ES2018,
     ES2019,
+    ES2020,
+    ES_NEXT_IN,
     ES_NEXT,
     ES_UNSUPPORTED,
-    TYPESCRIPT;
+    TYPESCRIPT,
+    TS_UNSUPPORTED,
+    ;
 
     private EnumSet<Feature> features() {
       EnumSet<Feature> set = EnumSet.noneOf(Feature.class);
@@ -182,10 +201,11 @@ public final class FeatureSet implements Serializable {
 
     // Stage 3 proposals likely to be part of ES2020
     DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
-    IMPORT_META("import.meta", LangVersion.ES_UNSUPPORTED),
+    IMPORT_META("import.meta", LangVersion.ES_NEXT),
 
     // ES 2020 Stage 4
-    NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES_UNSUPPORTED),
+    NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
+    OPTIONAL_CHAINING("Optional chaining", LangVersion.ES_UNSUPPORTED),
 
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
@@ -245,14 +265,23 @@ public final class FeatureSet implements Serializable {
     if (ES2019_MODULES.contains(this)) {
       return "es_2019";
     }
+    if (ES2020_MODULES.contains(this)) {
+      return "es_2020";
+    }
     if (ES_NEXT.contains(this)) {
       return "es_next";
+    }
+    if (ES_NEXT_IN.contains(this)) {
+      return "es_next_in";
     }
     if (ES_UNSUPPORTED.contains(this)) {
       return "es_unsupported";
     }
     if (TYPESCRIPT.contains(this)) {
       return "ts";
+    }
+    if (TS_UNSUPPORTED.contains(this)) {
+      return "ts_unsupported";
     }
     throw new IllegalStateException(this.toString());
   }
@@ -270,9 +299,6 @@ public final class FeatureSet implements Serializable {
     if (ES5.contains(this)) {
       return "es5";
     }
-    if (TYPE_CHECK_SUPPORTED.contains(this)) {
-      return "typeCheckSupported";
-    }
     if (ES6_MODULES.contains(this)) {
       return "es6";
     }
@@ -288,14 +314,24 @@ public final class FeatureSet implements Serializable {
     if (ES2019_MODULES.contains(this)) {
       return "es_2019";
     }
+    if (ES2020_MODULES.contains(this)) {
+      return "es_2020";
+    }
+    // Note that this method will not return "es_next" when ES_NEXT contains only features that
+    // are part of an official ES spec release. It will return the name of that release instead.
     if (ES_NEXT.contains(this)) {
       return "es_next";
     }
+    // Note that this method will not return "es_unsupported" when ES_UNSUPPORTED
+    // contains the same features as ES_NEXT. It will return es_next.
     if (ES_UNSUPPORTED.contains(this)) {
       return "es_unsupported";
     }
     if (TYPESCRIPT.contains(this)) {
       return "ts";
+    }
+    if (TS_UNSUPPORTED.contains(this)) {
+      return "ts_unsupported";
     }
     throw new IllegalStateException(this.toString());
   }
@@ -420,8 +456,6 @@ public final class FeatureSet implements Serializable {
         return ES5;
       case "es6":
         return ES6;
-      case "typeCheckSupported":
-        return TYPE_CHECK_SUPPORTED;
       case "es7":
         return ES7;
       case "es8":
@@ -431,17 +465,32 @@ public final class FeatureSet implements Serializable {
         return ES2018;
       case "es_2019":
         return ES2019;
+      case "es_2020":
+        return ES2020;
       case "es_next":
         return ES_NEXT;
+      case "es_next_in":
+        return ES_NEXT_IN;
+      case "es_unsupported":
+        return ES_UNSUPPORTED;
       case "ts":
         return TYPESCRIPT;
+      case "ts_unsupported":
+        return TS_UNSUPPORTED;
       default:
         throw new IllegalArgumentException("No such FeatureSet: " + name);
     }
   }
 
+  /**
+   * Returns a {@code FeatureSet} containing all known features.
+   *
+   * <p>NOTE: {@code PassFactory} classes that claim to support {@code FeatureSet.everything()}
+   * should be only those that cannot be broken by new features being added to the language. Mainly
+   * these are passes that don't have to actually look at the AST at all, like empty marker passes.
+   */
   public static FeatureSet all() {
-    return TYPESCRIPT;
+    return TS_UNSUPPORTED;
   }
 
   public static FeatureSet latest() {

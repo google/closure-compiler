@@ -153,7 +153,7 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
       grandparent.setToken(Token.LET);
       Node scriptNode = traversal.getCurrentScript();
       if (scriptNode != null) {
-        NodeUtil.addFeatureToScript(scriptNode, Feature.LET_DECLARATIONS);
+        NodeUtil.addFeatureToScript(scriptNode, Feature.LET_DECLARATIONS, compiler);
       }
       traversal.reportCodeChange();
     }

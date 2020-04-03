@@ -87,7 +87,7 @@ class UnitTestingJSType extends JSType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder builder, boolean forAnnotation) {
+  void appendTo(TypeStringBuilder sb) {
     throw new UnsupportedOperationException();
   }
 }

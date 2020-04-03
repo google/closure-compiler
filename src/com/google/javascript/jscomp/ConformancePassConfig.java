@@ -22,12 +22,12 @@ import java.util.List;
 /**
  * Runs only the user-supplied conformance checks and any earlier passes required by conformance.
  */
-public class ConformancePassConfig extends PassConfig {
+public class ConformancePassConfig extends PassConfig.PassConfigDelegate {
 
   private final PassConfig delegate;
 
-  public ConformancePassConfig(CompilerOptions options, PassConfig delegate) {
-    super(options);
+  public ConformancePassConfig(PassConfig delegate) {
+    super(delegate);
     this.delegate = delegate;
   }
 
@@ -42,7 +42,9 @@ public class ConformancePassConfig extends PassConfig {
       }
     }
     // Return every check up to and including the "checkConformance" check. Return empty list if
-    // "checkConformance" not found.
+    // "checkConformance" not found. This list may include some unnecessary checks that run before
+    // conformance. However, there's no other reliable way to find a list of all the passes
+    // that conformance depends on.
     return fromDelegate.subList(0, conformanceIndex + 1);
   }
 

@@ -19,7 +19,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.RewritePolyfills.Polyfills;
+import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,12 +34,14 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class RewritePolyfillsTest extends CompilerTestCase {
 
+  private static final LanguageMode ES_2020 = LanguageMode.ECMASCRIPT_2020;
   private static final LanguageMode ES6 = LanguageMode.ECMASCRIPT_2015;
   private static final LanguageMode ES5 = LanguageMode.ECMASCRIPT5_STRICT;
   private static final LanguageMode ES3 = LanguageMode.ECMASCRIPT3;
 
   private final Map<String, String> injectableLibraries = new HashMap<>();
   private final List<String> polyfillTable = new ArrayList<>();
+  private boolean isolatePolyfills = false;
 
   private void addLibrary(String name, String from, String to, String library) {
     if (library != null) {
@@ -60,7 +62,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewritePolyfills(compiler, Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)));
+    return new RewritePolyfills(
+        compiler, Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)), isolatePolyfills);
   }
 
   @Override
@@ -175,6 +178,25 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGlobalThisInjected() {
+    addLibrary("globalThis", "es_2020", "es3", "es6/globalThis");
+    addLibrary("Map", "es6", "es5", "es6/map");
+
+    testInjects("globalThis.String", "es6/globalThis");
+    testInjects("var m = new globalThis.Map();", "es6/globalThis", "es6/map");
+  }
+
+  @Test
+  public void testGlobalThisInjectedNotInjectedGivenSufficientLanguageOut() {
+    addLibrary("globalThis", "es_2020", "es3", "es6/globalThis");
+    addLibrary("Map", "es6", "es5", "es6/map");
+
+    setLanguage(ES_2020, ES_2020);
+    testDoesNotInject("globalThis.String");
+    testDoesNotInject("var m = new globalThis.Map();");
+  }
+
+  @Test
   public void testStaticMethodsInjected() {
     addLibrary("Math.clz32", "es6", "es5", "es6/math/clz32");
     addLibrary("Array.of", "es6", "es3", "es6/array/of");
@@ -255,6 +277,16 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testStaticMethodsNotInstalledIfGuardedByNullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    addLibrary("Array.of", "es_next_in", "es5", "es6/array/of");
+
+    testDoesNotInject("!Array.of ?? Array.of();");
+    // NOTE: ?? is not safe by itself.
+    testInjects("Array.of ?? Array.of();", "es6/array/of");
+  }
+
+  @Test
   public void testStaticMethodsNotInstalledIfGuardedByHook() {
     addLibrary("Array.of", "es6", "es5", "es6/array/of");
 
@@ -313,6 +345,18 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES5, ES5);
     testDoesNotInject("x.forEach();");
+  }
+
+  @Test
+  public void testPrototypeMethodsDontWarnIfInsufficientVersionNumber() {
+    addLibrary("String.prototype.normalize", "es6", "es6", null);
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+    addLibrary("Array.prototype.fill", "es6", "es3", "es6/array/fill");
+
+    setLanguage(ES6, ES3);
+    testDoesNotInject("x.normalize();");
+    testInjects("x.endsWith();", "es6/string/endswith");
+    testInjects("x.fill(y);", "es6/array/fill");
   }
 
   @Test
@@ -389,6 +433,16 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPrototypeMethodsNotInstalledIfGuardedByNullishCoalesce() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
+    addLibrary("String.prototype.endsWith", "es_next_in", "es5", "es6/string/endswith");
+
+    testDoesNotInject("!String.prototype.endsWith ?? x.endsWith();");
+    // NOTE: ?? is not safe by itself.
+    testInjects("String.prototype.endsWith ?? x.endsWith();", "es6/string/endswith");
+  }
+
+  @Test
   public void testPrototypeMethodsNotInstalledIfGuardedByHook() {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
@@ -436,5 +490,13 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
         "var set = new Set();",
         "$jscomp.polyfill('Set', '', 'es6', 'es3'); $jscomp.polyfill('Map', '', 'es5', 'es3');"
             + "var set = new Set();");
+  }
+
+  @Test
+  public void testAddsPolyfillMethodToExterns() {
+    isolatePolyfills = true;
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
+    testExternChanges("", "var $jscomp$lookupPolyfilledValue");
   }
 }

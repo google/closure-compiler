@@ -18,11 +18,13 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
 
@@ -100,13 +102,22 @@ class TypeInferencePass {
 
       new NodeTraversal(compiler, new FirstScopeBuildingCallback(), scopeCreator)
           .traverseWithScope(inferenceRoot, this.topScope);
-
-      scopeCreator.finishScopes();
+      scopeCreator.resolveWeakImportsPreResolution();
     }
+    scopeCreator.undoTypeAliasChains();
 
-    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
-      new NodeTraversal(compiler, new SecondScopeBuildingCallback(), scopeCreator)
-          .traverseWithScope(inferenceRoot, this.topScope);
+    new NodeTraversal(compiler, new SecondScopeBuildingCallback(), scopeCreator)
+        .traverseWithScope(inferenceRoot, this.topScope);
+
+    // Normalize TypedVars to have the '?' type instead of null after inference is complete. This
+    // currently cannot be done any earlier because it breaks inference of variables assigned in
+    // local scopes.
+    // TODO(b/149843534): this should be a crash instead.
+    final JSType unknownType = this.registry.getNativeType(UNKNOWN_TYPE);
+    for (TypedVar var : this.scopeCreator.getAllSymbols()) {
+      if (var.getType() == null) {
+        var.setType(unknownType);
+      }
     }
 
     return this.topScope;

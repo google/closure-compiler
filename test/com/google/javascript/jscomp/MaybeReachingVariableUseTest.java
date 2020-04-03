@@ -88,6 +88,27 @@ public final class MaybeReachingVariableUseTest {
   }
 
   @Test
+  public void nullishCoalesce() {
+    // LHS always executed
+    assertMatch("var x=0; var y; D:(x=1)??y; U:x");
+    assertMatch("var x=0; var y=0; D:(x=1)??(y=0); U:x");
+
+    // y is undefined so RHS is executed
+    assertMatch("var x=0; var y; D:y??(x=1); U:x");
+
+    // one of the paths will reach the definition
+    assertMatch("var x=0; var y=0; D:(y=0)??(x=1); U:x");
+
+    // x is redefined because LHS is always executed
+    assertNotMatch("D: var x=0; var y=0; (x=1)??(y=0); U:x");
+
+    // RHS not always executed due to short circuiting
+    assertMatch("D: var x=0; var y=0; (y=1)??((y=2)||(x=1)); U:x");
+    assertMatch("D: var x=0; var y=0; (y=1)&&((y=2)??(x=1)); U:x");
+    assertMatch("D: var x=0; var y=0; (y=0)??(x=1); U:x");
+  }
+
+  @Test
   public void testUseAndDefInSameInstruction() {
     assertNotMatch("D:var x=0; U:x=1,x");
     assertMatch("D:var x=0; U:x,x=1");
@@ -203,7 +224,7 @@ public final class MaybeReachingVariableUseTest {
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     compiler.initOptions(options);
     SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     src = (async ? "async " : "") + "function _FUNCTION(param1, param2){" + src + "}";

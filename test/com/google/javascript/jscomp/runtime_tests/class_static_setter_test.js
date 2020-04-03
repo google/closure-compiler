@@ -52,3 +52,33 @@ function testSetterInheritance() {
   //  assertEquals(1, baseCounter);
   assertEquals(1, sub2counter);
 }
+
+/** @unrestricted */
+var Computed = class {
+  static get['foo']() {
+    return 'computed';
+  }
+};
+
+
+function testGetStaticGetter() {
+  assertEquals(Computed['foo'], 'computed');
+}
+
+let setterCounter = 0;
+/** @unrestricted */
+var ComputedGetterSetter = class {
+  static get['foo']() {
+    return 'computed';
+  }
+  static set['foo'](val) {
+    setterCounter++;
+  }
+};
+
+
+function testGetComputedStaticGetterSetter() {
+  assertEquals('computed', ComputedGetterSetter['foo']);
+  ComputedGetterSetter['foo'] = 0;
+  assertEquals(1, setterCounter);
+}

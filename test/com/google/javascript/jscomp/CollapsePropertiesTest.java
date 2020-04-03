@@ -155,17 +155,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             // reference via method
             "alert(C.getP());",
             ""),
-        lines(
-            "class C {",
-            "  /** @return {number} */",
-            "  static getP() { return this.p_; }",
-            "}",
-            // declaration and initialization of private static field
-            "/** @private {number} */",
-            "C.p_ = 1;",
-            // reference via method
-            "alert(C.getP());",
-            ""),
         // TODO(b/117437011): should recognize type of `this` in a static method
         UNSAFE_THIS);
   }
@@ -173,18 +162,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void doNotCollapseAStaticPropertyAssignedInAStaticMethod() {
     testWarning(
-        lines(
-            "class C {",
-            "  /** @param {number} v */",
-            "  static setP(v) { this.p_ = v; }",
-            "}",
-            // declaration and initialization of private static field
-            "/** @private {number} */",
-            "C.p_ = 0;",
-            // changing private static field through method
-            "C.setP(1);",
-            "alert(C.p_);",
-            ""),
         lines(
             "class C {",
             "  /** @param {number} v */",
@@ -1339,18 +1316,24 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // Note: Google's JavaScript Style Guide says to avoid using the 'this'
     // keyword in a static function.
     test(
-        "var a = {}; a.b = function() {this.c}; var d = 1; d = a.b;",
-        "var a$b = function() {this.c}; var d = 1; d = a$b;",
+        "var a = {}; a.b = function() {this.c};",
+        "var a$b = function() {this.c}; ",
         warning(CollapseProperties.UNSAFE_THIS));
   }
 
   @Test
   public void testStaticFunctionReferencingThis2() {
-    // This gives no warning, because "this" is in a scope whose name is not
+    // This gives no warning, because `this` is in a scope whose name is not
     // getting collapsed.
-    test("var a = {}; "
-         + "a.b = function() { return function(){ return this; }; };",
-         "var a$b = function() { return function(){ return this; }; };");
+    test(
+        "var a = {}; a.b = function() { return function(){ return this; }; };",
+        "var a$b = function() { return function(){ return this; }; };");
+  }
+
+  @Test
+  public void testPropAssignedToFunctionReferencingThis() {
+    // This gives no warning, because `this` is in a scope whose name is not getting collapsed.
+    testNoWarning("var a = {}; var b = function() { this.c;}; a.b=b;");
   }
 
   @Test
@@ -2591,6 +2574,29 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "Bar.baz();"));
+  }
+
+  @Test
+  public void testDontCollapseLateAddedClassStaticMemberReferencedByInnerName() {
+    // TODO(b/147588398): We should back off of collapsing here
+    test(
+        lines(
+            "const Bar = class BarInternal {",
+            "  method() {",
+            "    return BarInternal.Enum.E1;", // ref via inner name
+            "  }",
+            "}",
+            "/** @enum {number} */",
+            "Bar.Enum = { E1: 1 };", // added after class definition
+            ""),
+        lines(
+            "const Bar = class BarInternal {", //
+            "  method() {",
+            "    return BarInternal.Enum.E1;", // no longer exists!
+            "  }",
+            "};",
+            "var Bar$Enum$E1 = 1;",
+            ""));
   }
 
   @Test

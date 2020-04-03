@@ -130,6 +130,24 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConfigFile() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  config_file: 'foo_conformance_proto.txt'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "}";
+
+    testWarning("eval()", CheckConformance.CONFORMANCE_VIOLATION);
+
+    testWarning(
+        "Function.prototype.name; eval.name.length",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: eval is not allowed\n  defined in foo_conformance_proto.txt");
+  }
+
+  @Test
   public void testNotViolation1() {
     testNoWarning(
         "/** @constructor */ function Foo() { this.callee = 'string'; }\n" +
@@ -813,6 +831,34 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBannedProperty_destructuring() {
+    configuration =
+        lines(
+            "requirement: {",
+            "  type: BANNED_PROPERTY",
+            "  value: 'C.prototype.p'",
+            "  error_message: 'C.p is not allowed'",
+            "  whitelist: 'SRC1'",
+            "}");
+
+    String declarations =
+        lines(
+            "/** @constructor */",
+            "var C = function() {}",
+            "/** @type {string} */",
+            "C.prototype.p;",
+            "/** @type {number} */",
+            "C.prototype.m");
+
+    testConformance(declarations, "var {m} = new C();");
+
+    testConformance(declarations, "var {p} = new C();", CheckConformance.CONFORMANCE_VIOLATION);
+
+    testConformance(
+        declarations, "var {['p']: x} = new C();", CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
+  @Test
   public void testBannedPropertyWrite() {
     configuration =
         "requirement: {\n" +
@@ -860,14 +906,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "/** @type {string} @implicitCast */\n" +
         "Element.prototype.innerHTML;\n";
 
-    testWarning(externs, "var e = new Element(); e.innerHTML = '<boo>';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        externs(externs),
+        srcs("var e = new Element(); e.innerHTML = '<boo>';"),
+        warning(CheckConformance.CONFORMANCE_VIOLATION));
 
-    testWarning(externs, "var e = new Element(); e.innerHTML = 'foo';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        externs(externs),
+        srcs("var e = new Element(); e.innerHTML = 'foo';"),
+        warning(CheckConformance.CONFORMANCE_VIOLATION));
 
-    testWarning(externs, "var e = new Element(); e['innerHTML'] = 'foo';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        externs(externs),
+        srcs("var e = new Element(); e['innerHTML'] = 'foo';"),
+        warning(CheckConformance.CONFORMANCE_VIOLATION));
   }
 
   @Test
@@ -1577,6 +1629,46 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCustomBanUnknownProp_templateUnion() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testSame(
+        lines(
+            "/** @record @template T */",
+            "class X {",
+            "  constructor() {",
+            "    /** @type {T|!Array<T>} */ this.x;",
+            "    f(this.x);",
+            "  }",
+            "}",
+            "",
+            "/**",
+            " * @param {T|!Array<T>} value",
+            " * @template T",
+            " */",
+            "function f(value) {}"));
+  }
+
+  @Test
+  public void testCustomBanUnknownProp1_es6Class() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testWarning(
+        lines(
+            "class F {",
+            "  constructor() {",
+            "    this.prop;",
+            "  }",
+            "}",
+            "",
+            "alert(new F().prop);"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message\nThe property \"prop\" on type \"F\"");
+  }
+
+  @Test
   public void testCustomBanUnknownProp2() {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
@@ -1706,6 +1798,28 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "function f() {",
             "  return new Foo().prop;",
             "}"));
+  }
+
+  @Test
+  public void testCustomBanUnknownProp_mergeConfigWithValue() {
+    configuration =
+        lines(
+            config(
+                rule("BanUnknownTypedClassPropsReferences"),
+                "My message",
+                "  rule_id: 'x'",
+                "  allow_extending_value: true"),
+            "requirement: {",
+            "  extends: 'x'",
+            "  value: 'F'",
+            "}",
+            "");
+
+    testNoWarning(
+        lines(
+            "/** @typedef {?} */ var Unk;",
+            "/** @constructor */ function F() { /** @type {?Unk} */ this.prop = null; };",
+            "F.prototype.method = function() { alert(this.prop); }"));
   }
 
   @Test

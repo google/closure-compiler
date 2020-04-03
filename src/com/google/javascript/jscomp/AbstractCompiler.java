@@ -234,17 +234,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract TypeValidator getTypeValidator();
 
-  /**
-   * Gets the central registry of type violations.
-   */
-  abstract Iterable<TypeMismatch> getTypeMismatches();
+  /** Gets the central registry of type violations. */
+  public abstract Iterable<TypeMismatch> getTypeMismatches();
 
   /**
-   * Gets all types that are used implicitly as a
-   * matching interface type. These are
-   * recorded as TypeMismatchs only for convenience
+   * Gets all types that are used implicitly as a matching interface type. These are recorded as
+   * TypeMismatchs only for convenience
    */
-  abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
+  public abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
 
   abstract void setExternExports(String externExports);
 
@@ -308,8 +305,20 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   }
 
   /**
-   * Generates unique ids.
+   * Generates unique String Ids when requested via a compiler instance.
+   *
+   * <p>This supplier provides Ids that are deterministic and unique across all input files given to
+   * the compiler. The generated ID format is: uniqueId = "fileHashCode$counterForThisFile"
    */
+  abstract UniqueIdSupplier getUniqueIdSupplier();
+
+  /**
+   * Generates unique ids.
+   *
+   * @deprecated because the generated names during transpilation are not unique across all input
+   *     files. Use the new supplier by calling {@code getUniqueIdSupplier()}.
+   */
+  @Deprecated
   abstract Supplier<String> getUniqueNameIdSupplier();
 
   /**

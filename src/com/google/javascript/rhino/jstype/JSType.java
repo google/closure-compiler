@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import java.io.Serializable;
 import javax.annotation.Nullable;
@@ -71,7 +72,7 @@ public abstract class JSType implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @SuppressWarnings("ReferenceEquality")
-  static final boolean areIdentical(JSType a, JSType b) {
+  public static final boolean areIdentical(JSType a, JSType b) {
     return a == b;
   }
 
@@ -495,10 +496,6 @@ public abstract class JSType implements Serializable {
     return toMaybeTemplateType() != null;
   }
 
-  public final boolean isTypeVariable() {
-    return isTemplateType();
-  }
-
   /**
    * Downcasts this to a TemplateType, or returns null if this is not
    * a function.
@@ -677,24 +674,9 @@ public abstract class JSType implements Serializable {
   }
 
   @Override
-  public boolean equals(@Nullable Object jsType) {
-    return (jsType instanceof JSType) && this.isEquivalentTo((JSType) jsType);
-  }
-
-  /** Checks if two types are equivalent. */
-  public final boolean isEquivalentTo(@Nullable JSType that) {
-    return this.isEquivalentTo(that, false);
-  }
-
-  public final boolean isEquivalentTo(@Nullable JSType that, boolean isStructural) {
-    return new EqualityChecker()
-        .setEqMethod(EqMethod.IDENTITY)
-        .setUsingStructuralEquality(isStructural)
-        .check(this, that);
-  }
-
-  public static final boolean isEquivalent(@Nullable JSType typeA, @Nullable JSType typeB) {
-    return (typeA == null) ? (typeB == null) : typeA.isEquivalentTo(typeB);
+  public final boolean equals(@Nullable Object other) {
+    return (other instanceof JSType)
+        && new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this, (JSType) other);
   }
 
   /**
@@ -707,7 +689,6 @@ public abstract class JSType implements Serializable {
   public final boolean differsFrom(JSType that) {
     return !new EqualityChecker()
         .setEqMethod(EqMethod.DATA_FLOW)
-        .setUsingStructuralEquality(true)
         .check(this, that);
   }
 
@@ -1079,7 +1060,7 @@ public abstract class JSType implements Serializable {
    */
   @SuppressWarnings("AmbiguousMethodReference")
   static JSType getLeastSupertype(JSType thisType, JSType thatType) {
-    boolean areEquivalent = thisType.isEquivalentTo(thatType);
+    boolean areEquivalent = thisType.equals(thatType);
     return areEquivalent ? thisType :
         filterNoResolvedType(
             thisType.registry.createUnionType(thisType, thatType));
@@ -1118,13 +1099,14 @@ public abstract class JSType implements Serializable {
       // See the comment in supAndInfHelper for more info on this.
       return thisType.toMaybeFunctionType().supAndInfHelper(
           thatType.toMaybeFunctionType(), false);
-    } else if (thisType.isEquivalentTo(thatType)) {
+    } else if (thisType.equals(thatType)) {
       return thisType;
     } else if (thisType.isUnknownType() || thatType.isUnknownType()) {
       // The greatest subtype with any unknown type is the universal
       // unknown type, unless the two types are equal.
-      return thisType.isEquivalentTo(thatType) ? thisType :
-          thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      return thisType.equals(thatType)
+          ? thisType
+          : thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else if (thisType.isUnionType()) {
       return UnionType.getGreatestSubtype(thisType.toMaybeUnionType(), thatType);
     } else if (thatType.isUnionType()) {
@@ -1218,13 +1200,26 @@ public abstract class JSType implements Serializable {
    * TODO(user): Move this method to the SemanticRAI and use the visit
    * method of types to get the restricted type.
    */
-  public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
-    if (outcome && areIdentical(this, getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
+  public JSType getRestrictedTypeGivenOutcome(
+      Outcome outcome) {
+    if (outcome.isTruthy() && areIdentical(this, getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
       return getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
     }
 
+    // Only `NULL_TYPE` and `VOID_TYPE` can really be nullish,
+    // so the result for any other non-union type must be NO_TYPE.
+    // Note that the UnionType class is responsible for handling the union case.
+    if (outcome.isNullish().toBoolean(false)) {
+      if (areIdentical(this, getNativeType(JSTypeNative.VOID_TYPE))
+          || areIdentical(this, getNativeType(JSTypeNative.NULL_TYPE))) {
+        return this;
+      } else {
+        return getNativeType(JSTypeNative.NO_TYPE);
+      }
+    }
+
     BooleanLiteralSet literals = getPossibleToBooleanOutcomes();
-    if (literals.contains(outcome)) {
+    if (literals.contains(outcome.isTruthy())) {
       return this;
     } else {
       return getNativeType(JSTypeNative.NO_TYPE);
@@ -1476,17 +1471,16 @@ public abstract class JSType implements Serializable {
   /**
    * Resolve this type in the given scope.
    *
-   * The returned value must be equal to {@code this}, as defined by
-   * {@link #isEquivalentTo}. It may or may not be the same object. This method
-   * may modify the internal state of {@code this}, as long as it does
-   * so in a way that preserves Object equality.
+   * <p>The returned value must be equal to {@code this}, as defined by {@link #equals}. It may or
+   * may not be the same object. This method may modify the internal state of {@code this}, as long
+   * as it does so in a way that preserves Object equality.
    *
-   * For efficiency, we should only resolve a type once per compilation job.
-   * For incremental compilations, one compilation job may need the
-   * artifacts from a previous generation, so we will eventually need
-   * a generational flag instead of a boolean one.
+   * <p>For efficiency, we should only resolve a type once per compilation job. For incremental
+   * compilations, one compilation job may need the artifacts from a previous generation, so we will
+   * eventually need a generational flag instead of a boolean one.
    */
   public final JSType resolve(ErrorReporter reporter) {
+    registry.getResolver().assertLegalToResolveTypes();
     if (!this.isResolved()) {
       /**
        * Prevent infinite recursion in cyclically defined types.
@@ -1501,21 +1495,6 @@ public abstract class JSType implements Serializable {
       checkState(this.isResolved());
     }
     return resolveResult;
-  }
-
-  /**
-   * Finishes resolution and throws an Exception if there are any warnings or errors.
-   *
-   * <p>Call this when creating new types after the main type resolution step, where any failures in
-   * resolution are not the fault of the user.
-   */
-  public final JSType resolveOrThrow() {
-    return resolve(ErrorReporter.ALWAYS_THROWS_INSTANCE);
-  }
-
-  /** Null-safe version of {@link #resolveOrThrow()} */
-  public static JSType nullSafeResolveOrThrow(JSType type) {
-    return type == null ? null : type.resolveOrThrow();
   }
 
   /** @see #resolve */
@@ -1590,31 +1569,19 @@ public abstract class JSType implements Serializable {
    */
   @Override
   public String toString() {
-    return appendTo(new StringBuilder(), false).toString();
+    return new TypeStringBuilder(false).append(this).build();
   }
 
   // Don't call from this package; use appendAsNonNull instead.
   public final String toAnnotationString(Nullability nullability) {
-    return nullability == Nullability.EXPLICIT
-        ? appendAsNonNull(new StringBuilder(), true).toString()
-        : appendTo(new StringBuilder(), true).toString();
+    TypeStringBuilder builder = new TypeStringBuilder(true);
+    return (nullability == Nullability.EXPLICIT
+            ? builder.appendNonNull(this)
+            : builder.append(this))
+        .build();
   }
 
-  final StringBuilder appendAsNonNull(StringBuilder sb, boolean forAnnotations) {
-    if (forAnnotations
-        && isObject()
-        && !isUnknownType()
-        && !isTemplateType()
-        && !isRecordType()
-        && !isFunctionType()
-        && !isUnionType()
-        && !isLiteralObject()) {
-      sb.append("!");
-    }
-    return appendTo(sb, forAnnotations);
-  }
-
-  abstract StringBuilder appendTo(StringBuilder sb, boolean forAnnotations);
+  abstract void appendTo(TypeStringBuilder sb);
 
   /**
    * Modify this type so that it matches the specified type.

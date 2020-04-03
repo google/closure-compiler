@@ -291,8 +291,8 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return referencedType.appendTo(sb, forAnnotations);
+  void appendTo(TypeStringBuilder sb) {
+    referencedType.appendTo(sb);
   }
 
   @Override

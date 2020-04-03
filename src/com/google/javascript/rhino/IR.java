@@ -177,6 +177,10 @@ public class IR {
     return declaration(lhs, value, Token.LET);
   }
 
+  public static Node let(Node lhs) {
+    return declaration(lhs, Token.LET);
+  }
+
   public static Node constNode(Node lhs, Node value) {
     return declaration(lhs, value, Token.CONST);
   }
@@ -369,6 +373,26 @@ public class IR {
     return call;
   }
 
+  public static Node startOptChainCall(Node target, Node ... args) {
+    Node call = new Node(Token.OPTCHAIN_CALL, target);
+    for (Node arg : args) {
+      checkState(mayBeExpression(arg) || arg.isSpread(), arg);
+      call.addChildToBack(arg);
+    }
+    call.setIsOptionalChainStart(true);
+    return call;
+  }
+
+  public static Node continueOptChainCall(Node target, Node ... args) {
+    Node call = new Node(Token.OPTCHAIN_CALL, target);
+    for (Node arg : args) {
+      checkState(mayBeExpression(arg) || arg.isSpread(), arg);
+      call.addChildToBack(arg);
+    }
+    call.setIsOptionalChainStart(false);
+    return call;
+  }
+
   public static Node newNode(Node target, Node ... args) {
     Node newcall = new Node(Token.NEW, target);
     for (Node arg : args) {
@@ -382,6 +406,22 @@ public class IR {
     Preconditions.checkState(name.indexOf('.') == -1,
         "Invalid name '%s'. Did you mean to use NodeUtil.newQName?", name);
     return Node.newString(Token.NAME, name);
+  }
+
+  public static Node startOptChainGetprop(Node target, Node prop) {
+    checkState(mayBeExpression(target), target);
+    checkState(prop.isString(), prop);
+    Node optChainGetProp = new Node(Token.OPTCHAIN_GETPROP, target, prop);
+    optChainGetProp.setIsOptionalChainStart(true);
+    return optChainGetProp;
+  }
+
+  public static Node continueOptChainGetprop(Node target, Node prop) {
+    checkState(mayBeExpression(target), target);
+    checkState(prop.isString(), prop);
+    Node optChainGetProp = new Node(Token.OPTCHAIN_GETPROP, target, prop);
+    optChainGetProp.setIsOptionalChainStart(false);
+    return optChainGetProp;
   }
 
   public static Node getprop(Node target, Node prop) {
@@ -408,6 +448,22 @@ public class IR {
       result = new Node(Token.GETPROP, result, IR.string(moreProp));
     }
     return result;
+  }
+
+  public static Node startOptChainGetelem(Node target, Node elem) {
+    checkState(mayBeExpression(target), target);
+    checkState(mayBeExpression(elem), elem);
+    Node optChainGetElem = new Node(Token.OPTCHAIN_GETELEM, target, elem);
+    optChainGetElem.setIsOptionalChainStart(true);
+    return optChainGetElem;
+  }
+
+  public static Node continueOptChainGetelem(Node target, Node elem) {
+    checkState(mayBeExpression(target), target);
+    checkState(mayBeExpression(elem), elem);
+    Node optChainGetElem = new Node(Token.OPTCHAIN_GETELEM, target, elem);
+    optChainGetElem.setIsOptionalChainStart(false);
+    return optChainGetElem;
   }
 
   public static Node getelem(Node target, Node elem) {
@@ -834,6 +890,9 @@ public class IR {
       case NUMBER:
       case NULL:
       case OBJECTLIT:
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
       case OR:
       case POS:
       case REGEXP:

@@ -244,7 +244,7 @@ final class RenameVars implements CompilerPass {
       boolean local =
           var != null
               && var.isLocal()
-              && (var.scope.getParent().isLocal() || !var.isBleedingFunction());
+              && (var.getScope().getParent().isLocal() || !var.isBleedingFunction());
 
       // Never rename references to the arguments array
       if (var != null && var.isArguments()) {
@@ -570,8 +570,8 @@ final class RenameVars implements CompilerPass {
    * a = 0, b = 1, c = 2, d = 3
    */
   private int getLocalVarIndex(Var v) {
-    int num = v.index;
-    Scope s = v.scope.getParent();
+    int num = v.getIndex();
+    Scope s = v.getScope().getParent();
     if (s == null) {
       throw new IllegalArgumentException("Var is not local");
     }

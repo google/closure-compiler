@@ -71,7 +71,7 @@ Event.prototype.propertyName;
 /** @type {string} */
 Event.prototype.qualifier;
 
-/** @type {number} */
+/** @type {?} */
 Event.prototype.reason;
 
 /** @type {Object<*>} */

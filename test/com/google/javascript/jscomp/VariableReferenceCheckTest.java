@@ -23,10 +23,8 @@ import static com.google.javascript.jscomp.VariableReferenceCheck.EARLY_REFERENC
 import static com.google.javascript.jscomp.VariableReferenceCheck.REASSIGNED_CONSTANT;
 import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE;
 import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE_ERROR;
-import static com.google.javascript.jscomp.VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,29 +43,18 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   private static final String VARIABLE_RUN =
       "var a = 1; var b = 2; var c = a + b, d = c;";
 
-  private boolean enableUnusedLocalAssignmentCheck;
-
-  @Override
-  public CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
-    if (enableUnusedLocalAssignmentCheck) {
-      options.setWarningLevel(DiagnosticGroups.UNUSED_LOCAL_VARIABLE, CheckLevel.WARNING);
-    }
-    return options;
-  }
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     // Treats bad reads as errors, and reports bad write warnings.
     return new VariableReferenceCheck(compiler);
   }
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-    enableUnusedLocalAssignmentCheck = false;
+  @Test
+  public void testWithImportMeta() {
+    // just to confirm that presence of import.meta does not cause a compiler crash
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+
+    testSame("export function g() { return import.meta; }");
   }
 
   @Test
@@ -461,256 +448,8 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   @Test
-  public void testUnusedLocalVar() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("function f() { var a; }");
-    assertUnused("function f() { var a = 2; }");
-    assertUnused("function f() { var a; a = 2; }");
-  }
-
-  @Test
-  public void testUnusedLocalVar_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("export function f() { var a; }");
-  }
-
-  @Test
-  public void testUnusedTypedefInModule() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("goog.module('m'); var x;");
-    assertUnused("goog.module('m'); let x;");
-
-    testSame("goog.module('m'); /** @typedef {string} */ var x;");
-    testSame("goog.module('m'); /** @typedef {string} */ let x;");
-  }
-
-  @Test
-  public void testUnusedTypedefInES6Module() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("import 'm'; var x;");
-    assertUnused("import 'm'; let x;");
-
-    testSame("import 'm'; /** @typedef {string} */ var x;");
-  }
-
-  @Test
   public void testImportStar() {
     testSame("import * as ns from './foo.js'");
-  }
-
-  @Test
-  public void testAliasInModule() {
-    enableUnusedLocalAssignmentCheck = true;
-    testSame(
-        lines(
-            "goog.module('m');",
-            "const x = goog.require('x');",
-            "const y = x.y;",
-            "/** @type {y} */ var z;",
-            "alert(z);"));
-  }
-
-  @Test
-  public void testAliasInES6Module() {
-    enableUnusedLocalAssignmentCheck = true;
-    testSame(
-        lines(
-            "import 'm';",
-            "import x from 'x';",
-            "export const y = x.y;",
-            "export /** @type {y} */ var z;",
-            "alert(z);"));
-  }
-
-  @Test
-  public void testUnusedImport() {
-    enableUnusedLocalAssignmentCheck = true;
-    // TODO(b/64566470): This test should give an UNUSED_LOCAL_ASSIGNMENT error for x.
-    testSame("import x from 'Foo';");
-  }
-
-  @Test
-  public void testExportedType() {
-    enableUnusedLocalAssignmentCheck = true;
-    testSame(lines("export class Foo {}", "export /** @type {Foo} */ var y;"));
-  }
-
-  /** Inside a goog.scope, don't warn because the alias might be used in a type annotation. */
-  @Test
-  public void testUnusedLocalVarInGoogScope() {
-    enableUnusedLocalAssignmentCheck = true;
-    testSame("goog.scope(function f() { var a; });");
-    testSame("goog.scope(function f() { /** @typedef {some.long.name} */ var a; });");
-    testSame("goog.scope(function f() { var a = some.long.name; });");
-  }
-
-  @Test
-  public void testUnusedLocalLet() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("function f() { let a; }");
-    assertUnused("function f() { let a = 2; }");
-    assertUnused("function f() { let a; a = 2; }");
-  }
-
-  @Test
-  public void testUnusedLocalLet_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("export function f() { let a; }");
-  }
-
-  @Test
-  public void testUnusedLocalConst() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("function f() { const a = 2; }");
-  }
-
-  @Test
-  public void testUnusedLocalConst_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("export function f() { const a = 2; }");
-  }
-
-  @Test
-  public void testUnusedLocalArgNoWarning() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("function f(a) {}");
-  }
-
-  @Test
-  public void testUnusedLocalArgNoWarning_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("export function f(a) {}");
-  }
-
-  @Test
-  public void testUnusedGlobalNoWarning() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("var a = 2;");
-  }
-
-  @Test
-  public void testUnusedGlobalNoWarning_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("export var a = 2;");
-  }
-
-  @Test
-  public void testUnusedGlobalInBlockNoWarning() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("if (true) { var a = 2; }");
-  }
-
-  @Test
-  public void testUnusedLocalInBlock() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("if (true) { let a = 2; }");
-    assertUnused("if (true) { const a = 2; }");
-  }
-
-  @Test
-  public void testUnusedAssignedInInnerFunction() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("function f() { var x = 1; function g() { x = 2; } }");
-  }
-
-  @Test
-  public void testUnusedAssignedInInnerFunction_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertUnused("export function f() { var x = 1; function g() { x = 2; } }");
-  }
-
-  @Test
-  public void testIncrementDecrementResultUsed() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("function f() { var x = 5; while (x-- > 0) {} }");
-    assertNoWarning("function f() { var x = -5; while (x++ < 0) {} }");
-    assertNoWarning("function f() { var x = 5; while (--x > 0) {} }");
-    assertNoWarning("function f() { var x = -5; while (++x < 0) {} }");
-  }
-
-  @Test
-  public void testIncrementDecrementResultUsed_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("export function f() { var x = 5; while (x-- > 0) {} }");
-  }
-
-  @Test
-  public void testUsedInInnerFunction() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("function f() { var x = 1; function g() { use(x); } }");
-  }
-
-  @Test
-  public void testUsedInInnerFunction_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("export function f() { var x = 1; function g() { use(x); } }");
-  }
-
-  @Test
-  public void testUsedInShorthandObjLit() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertEarlyReferenceWarning("var z = {x}; z(); var x;");
-    testSame("var {x} = foo();");
-    testSame("var {x} = {};"); // TODO(moz): Maybe add a warning for this case
-    testSame("function f() { var x = 1; return {x}; }");
-  }
-
-  @Test
-  public void testUsedInShorthandObjLit_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertEarlyReferenceWarning("export var z = {x}; z(); var x;");
-    testSame("export var {x} = foo();");
-  }
-
-  @Test
-  public void testUnusedCatch() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("function f() { try {} catch (x) {} }");
-  }
-
-  @Test
-  public void testUnusedCatch_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("export function f() { try {} catch (x) {} }");
-  }
-
-  @Test
-  public void testIncrementCountsAsUse() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("var a = 2; var b = []; b[a++] = 1;");
-  }
-
-  @Test
-  public void testIncrementCountsAsUse_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("export var a = 2; var b = []; b[a++] = 1;");
-  }
-
-  @Test
-  public void testForIn() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("for (var prop in obj) {}");
-    assertNoWarning("for (prop in obj) {}");
-    assertNoWarning("var prop; for (prop in obj) {}");
-  }
-
-  @Test
-  public void testUnusedCompoundAssign() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("var x = 0; function f() { return x += 1; }");
-    assertNoWarning("var x = 0; var f = () => x += 1;");
-    assertNoWarning(
-        lines(
-            "function f(elapsed) {",
-            "  let fakeMs = 0;",
-            "  stubs.replace(goog, 'now', () => fakeMs += elapsed);",
-            "}"));
-    assertNoWarning(
-        lines(
-            "function f(elapsed) {",
-            "  let fakeMs = 0;",
-            "  stubs.replace(goog, 'now', () => fakeMs -= elapsed);",
-            "}"));
   }
 
   @Test
@@ -721,116 +460,6 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "  let fakeMs = 0;",
             "  stubs.replace(goog, 'now', () => fakeMs -= elapsed);",
             "}"));
-  }
-
-  @Test
-  public void testChainedAssign() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("var a, b = 0, c; a = b = c; alert(a);");
-    assertUnused(
-        lines(
-            "function foo() {",
-            "  var a, b = 0, c;",
-            "  a = b = c;",
-            "  alert(a); ",
-            "}",
-            "foo();"));
-  }
-
-  @Test
-  public void testChainedAssign_withES6Modules() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("export var a, b = 0, c; a = b = c; alert(a);");
-  }
-
-  @Test
-  public void testGoogModule() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("goog.module('example'); var X = 3; use(X);");
-    assertUnused("goog.module('example'); var X = 3;");
-  }
-
-  @Test
-  public void testES6Module() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("import 'example'; var X = 3; use(X);");
-    assertUnused("import 'example'; var X = 3;");
-  }
-
-  @Test
-  public void testGoogModule_bundled() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("goog.loadModule(function(exports) { 'use strict';"
-                    + "goog.module('example'); var X = 3; use(X);"
-                    + "return exports; });");
-    assertUnused("goog.loadModule(function(exports) { 'use strict';"
-                 + "goog.module('example'); var X = 3;"
-                 + "return exports; });");
-  }
-
-  @Test
-  public void testGoogModule_destructuring() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("goog.module('example'); var {x} = goog.require('y'); use(x);");
-    // We could warn here, but it's already caught by the extra require check.
-    assertNoWarning("goog.module('example'); var {x} = goog.require('y');");
-  }
-
-  @Test
-  public void testES6Module_destructuring() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("import 'example'; import {x} from 'y'; use(x);");
-    assertNoWarning("import 'example'; import {x as x} from 'y'; use(x);");
-    assertNoWarning("import 'example'; import {y as x} from 'y'; use(x);");
-  }
-
-  @Test
-  public void testGoogModule_require() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("goog.module('example'); var X = goog.require('foo.X'); use(X);");
-    // We could warn here, but it's already caught by the extra require check.
-    assertNoWarning("goog.module('example'); var X = goog.require('foo.X');");
-  }
-
-  @Test
-  public void testES6Module_import() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("import 'example'; import X from 'foo.X'; use(X);");
-  }
-
-  @Test
-  public void testGoogModule_forwardDeclare() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning(
-        lines(
-            "goog.module('example');",
-            "",
-            "var X = goog.forwardDeclare('foo.X');",
-            "",
-            "/** @type {X} */ var x = 0;",
-            "alert(x);"));
-
-    assertNoWarning("goog.module('example'); var X = goog.forwardDeclare('foo.X');");
-  }
-
-  @Test
-  public void testGoogModule_requireType() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning("goog.module('example'); var X = goog.requireType('foo.X');");
-  }
-
-  @Test
-  public void testGoogModule_usedInTypeAnnotation() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning(
-        "goog.module('example'); var X = goog.require('foo.X'); /** @type {X} */ var y; use(y);");
-  }
-
-  @Test
-  public void testES6Module_usedInTypeAnnotation() {
-    enableUnusedLocalAssignmentCheck = true;
-    assertNoWarning(
-        "import 'example'; import X from 'foo.X'; export /** @type {X} */ var y; use(y);");
   }
 
   @Test
@@ -1472,13 +1101,6 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   private void assertEarlyReferenceError(String js) {
     testError(js, EARLY_REFERENCE_ERROR);
-  }
-
-  /**
-   * Expects the JS to generate one unused local error.
-   */
-  private void assertUnused(String js) {
-    testWarning(js, UNUSED_LOCAL_ASSIGNMENT);
   }
 
   /**

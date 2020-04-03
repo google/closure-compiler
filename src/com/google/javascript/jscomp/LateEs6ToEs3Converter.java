@@ -133,7 +133,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   private void visitMemberFunctionDefInObjectLit(Node n, Node parent) {
     String name = n.getString();
     Node nameNode = n.getFirstFirstChild();
-    Node stringKey = astFactory.createStringKey(name, n.getFirstChild().detach());
+    Node stringKey = astFactory.createStringKey(name, n.removeFirstChild());
     stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
     stringKey.useSourceInfoFrom(nameNode);

@@ -65,12 +65,12 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     assertThat(arrOfNumber.isSubtype(ARRAY_TYPE)).isTrue();
     assertThat(ARRAY_TYPE.isSubtypeOf(arrOfNumber)).isTrue();
 
-    assertThat(arrOfString.isEquivalentTo(createTemplatizedType(ARRAY_TYPE, STRING_TYPE))).isTrue();
+    assertThat(arrOfString.equals(createTemplatizedType(ARRAY_TYPE, STRING_TYPE))).isTrue();
 
-    assertThat(arrOfString.isEquivalentTo(ARRAY_TYPE)).isFalse();
-    assertThat(arrOfString.isEquivalentTo(ARRAY_TYPE)).isFalse();
-    assertThat(arrOfString.isEquivalentTo(arrOfNumber)).isFalse();
-    assertThat(arrOfNumber.isEquivalentTo(arrOfString)).isFalse();
+    assertThat(arrOfString.equals(ARRAY_TYPE)).isFalse();
+    assertThat(arrOfString.equals(ARRAY_TYPE)).isFalse();
+    assertThat(arrOfString.equals(arrOfNumber)).isFalse();
+    assertThat(arrOfNumber.equals(arrOfString)).isFalse();
   }
 
   @Test
@@ -154,39 +154,48 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testGetPropertyTypeOnTemplatizedType() {
-    TemplateType templateT = registry.createTemplateType("T");
-    FunctionType ctor = // function<T>(new:Foo<T>)
-        registry.createConstructorType("Foo", null, null, null, ImmutableList.of(templateT), false);
-    ObjectType rawType = ctor.getInstanceType(); // Foo<T> == Foo
-    rawType.defineDeclaredProperty("property", templateT, null);
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      TemplateType templateT = registry.createTemplateType("T");
+      FunctionType ctor = // function<T>(new:Foo<T>)
+          registry.createConstructorType(
+              "Foo", null, null, null, ImmutableList.of(templateT), false);
+      ObjectType rawType = ctor.getInstanceType(); // Foo<T> == Foo
+      rawType.defineDeclaredProperty("property", templateT, null);
 
-    JSType templatizedNumber = registry.createTemplatizedType(rawType, NUMBER_TYPE);
-    assertType(templatizedNumber.toObjectType().getPropertyType("property")).isEqualTo(NUMBER_TYPE);
+      JSType templatizedNumber = registry.createTemplatizedType(rawType, NUMBER_TYPE);
+      assertType(templatizedNumber.toObjectType().getPropertyType("property"))
+          .isEqualTo(NUMBER_TYPE);
+    }
   }
 
   @Test
   public void testFindPropertyTypeOnTemplatizedType() {
-    TemplateType templateT = registry.createTemplateType("T");
-    FunctionType ctor = // function<T>(new:Foo<T>)
-        registry.createConstructorType("Foo", null, null, null, ImmutableList.of(templateT), false);
-    ObjectType rawType = ctor.getInstanceType(); // Foo<T> == Foo
-    rawType.defineDeclaredProperty("property", templateT, null);
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      TemplateType templateT = registry.createTemplateType("T");
+      FunctionType ctor = // function<T>(new:Foo<T>)
+          registry.createConstructorType(
+              "Foo", null, null, null, ImmutableList.of(templateT), false);
+      ObjectType rawType = ctor.getInstanceType(); // Foo<T> == Foo
+      rawType.defineDeclaredProperty("property", templateT, null);
 
-    JSType templatizedNumber = registry.createTemplatizedType(rawType, NUMBER_TYPE);
-    assertType(templatizedNumber.findPropertyType("property")).isEqualTo(NUMBER_TYPE);
+      JSType templatizedNumber = registry.createTemplatizedType(rawType, NUMBER_TYPE);
+      assertType(templatizedNumber.findPropertyType("property")).isEqualTo(NUMBER_TYPE);
+    }
   }
 
   /** Returns an unspecialized type with the provided name and two type parameters. */
   private ObjectType createCustomTemplatizedType(String rawName) {
-    FunctionType ctor = // function<T,U>(new:Foo<T,U>)
-        registry.createConstructorType(
-            rawName,
-            null,
-            null,
-            null,
-            ImmutableList.of(registry.createTemplateType("T"), registry.createTemplateType("U")),
-            false);
-    return ctor.getInstanceType(); // Foo<T, U> == Foo
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      FunctionType ctor = // function<T,U>(new:Foo<T,U>)
+          registry.createConstructorType(
+              rawName,
+              null,
+              null,
+              null,
+              ImmutableList.of(registry.createTemplateType("T"), registry.createTemplateType("U")),
+              false);
+      return ctor.getInstanceType(); // Foo<T, U> == Foo
+    }
   }
 
   /** Assert that a type can assign to itself. */

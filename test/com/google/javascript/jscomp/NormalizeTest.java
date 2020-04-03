@@ -66,6 +66,25 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNullishCoalesce() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    test("var a = x ?? y, b = foo()", "var a = x ?? y; var b = foo()");
+    test(
+        lines(
+            "let x = a ?? b;",
+            "{ let x = a ?? b; }",
+            "{ let x = a ?? b; }",
+            "{ let x = a ?? b; }",
+            "{ let x = a ?? b; }"),
+        lines(
+            "let x = a ?? b;",
+            "{ let x$jscomp$1 = a ?? b; }",
+            "{ let x$jscomp$2 = a ?? b; }",
+            "{ let x$jscomp$3 = a ?? b; }",
+            "{ let x$jscomp$4 = a ?? b; }"));
+  }
+
+  @Test
   public void testSplitVar() {
     testSame("var a");
     test("var a, b",

@@ -151,6 +151,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback
               "Reference to fully qualified import name ''{0}'' in JSDoc."
                   + " Please use the short name ''{1}'' instead.");
 
+  static final DiagnosticType USE_OF_GOOG_PROVIDE =
+      DiagnosticType.disabled(
+          "JSC_USE_OF_GOOG_PROVIDE",
+          "goog.provide is deprecated in favor of goog.module."
+          );
+
   static final DiagnosticType REQUIRE_NOT_AT_TOP_LEVEL =
       DiagnosticType.error(
           "JSC_REQUIRE_NOT_AT_TOP_LEVEL", "goog.require() must be called at file scope.");
@@ -165,6 +171,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "JSC_LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL",
           "goog.module.declareLegacyNamespace() must be immediately after the"
               + " goog.module('...'); call");
+
+  static final DiagnosticType LEGACY_NAMESPACE_ARGUMENT =
+      DiagnosticType.error(
+          "JSC_LEGACY_NAMESPACE_ARGUMENT",
+          "goog.module.declareLegacyNamespace() takes no arguments");
 
   private static class ModuleInfo {
     // Name of the module in question (i.e. the argument to goog.module)
@@ -227,6 +238,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         t.report(n, GOOG_MODULE_IN_NON_MODULE);
       } else if (NodeUtil.isGoogModuleDeclareLegacyNamespaceCall(n)) {
         t.report(n, DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE);
+      } else if (NodeUtil.isCallTo(n, "goog.provide")) {
+        // This error is reported here, rather than in a provide-specific pass, because it
+        // must be reported prior to ClosureRewriteModule converting legacy goog.modules into
+        // goog.provides.
+        t.report(n, USE_OF_GOOG_PROVIDE);
       }
       return;
     }
@@ -310,16 +326,6 @@ public final class ClosureCheckModule extends AbstractModuleCallback
               Node objPattern = importLhs.getFirstChild();
               checkState(objPattern.isObjectPattern(), objPattern);
               for (Node strKey : objPattern.children()) {
-                // const {foo} = goog.require('ns.bar');
-                // Should use the short name "foo" instead of "ns.bar.foo".
-                if (!strKey.hasChildren() && strKey.getString().equals(shortName)) {
-                  t.report(
-                      parent,
-                      REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                      parent.getQualifiedName(),
-                      shortName);
-                  return;
-                }
                 // const {foo: barFoo} = goog.require('ns.bar');
                 // Should use the short name "barFoo" instead of "ns.bar.foo".
                 if (strKey.hasOneChild() && strKey.getString().equals(shortName)) {
@@ -508,8 +514,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     for (Node stringKey : objectPattern.children()) {
       if (!stringKey.isStringKey()) {
         return false;
-      }
-      if (stringKey.hasChildren() && !stringKey.getFirstChild().isName()) {
+      } else if (!stringKey.getFirstChild().isName()) {
         return false;
       }
     }
@@ -519,6 +524,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   /** Validates the position of a goog.module.declareLegacyNamespace(); call */
   private static void checkLegacyNamespaceCall(NodeTraversal t, Node callNode, Node parent) {
     checkArgument(callNode.isCall());
+    if (callNode.getChildCount() > 1) {
+      t.report(callNode, LEGACY_NAMESPACE_ARGUMENT);
+    }
     if (!parent.isExprResult()) {
       t.report(callNode, LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL);
       return;

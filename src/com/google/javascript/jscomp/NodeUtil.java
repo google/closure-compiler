@@ -164,7 +164,16 @@ public final class NodeUtil {
             return TernaryValue.UNKNOWN;
           }
         }
-
+      case COALESCE:
+        {
+          TernaryValue lhs = getBooleanValue(n.getFirstChild());
+          TernaryValue rhs = getBooleanValue(n.getLastChild());
+          if (lhs.equals(TernaryValue.TRUE) || lhs.equals(rhs)) {
+            return lhs;
+          } else {
+            return TernaryValue.UNKNOWN;
+          }
+        }
       default:
         return TernaryValue.UNKNOWN;
     }
@@ -799,6 +808,7 @@ public final class NodeUtil {
     switch (type) {
       case OR:
       case AND:
+      case COALESCE:
       case BITOR:
       case BITXOR:
       case BITAND:
@@ -1058,7 +1068,7 @@ public final class NodeUtil {
    * @return Whether the call has a local result.
    */
   static boolean callHasLocalResult(Node n) {
-    checkState(n.isCall() || n.isTaggedTemplateLit(), n);
+    checkState(n.isCall() || n.isOptChainCall() || n.isTaggedTemplateLit(), n);
     return n.isLocalResultCall();
   }
 
@@ -1098,6 +1108,7 @@ public final class NodeUtil {
     switch (n.getToken()) {
       case YIELD:
       case CALL:
+      case OPTCHAIN_CALL:
       case NEW:
         // Function calls or constructor can reference changed values.
         // TODO(johnlenz): Add some mechanism for determining that functions
@@ -1110,6 +1121,8 @@ public final class NodeUtil {
       // Properties on constant NAMEs can still be side-effected.
       case GETPROP:
       case GETELEM:
+      case OPTCHAIN_GETPROP:
+      case OPTCHAIN_GETELEM:
         return true;
 
       case FUNCTION:
@@ -1159,31 +1172,40 @@ public final class NodeUtil {
       case HOOK:   return 3;  // ?: operator
       case OR:     return 4;
       case AND:    return 5;
-      case BITOR:  return 6;
-      case BITXOR: return 7;
-      case BITAND: return 8;
+      case COALESCE:
+        return 6;
+      case BITOR:
+        return 7;
+      case BITXOR:
+        return 8;
+      case BITAND:
+        return 9;
       case EQ:
       case NE:
       case SHEQ:
-      case SHNE:   return 9;
+      case SHNE:
+        return 10;
       case LT:
       case GT:
       case LE:
       case GE:
       case INSTANCEOF:
-      case IN:     return 10;
+      case IN:
+        return 11;
       case LSH:
       case RSH:
-      case URSH:   return 11;
+      case URSH:
+        return 12;
       case SUB:
-      case ADD:    return 12;
+      case ADD:
+        return 13;
       case MUL:
       case MOD:
       case DIV:
-        return 13;
+        return 14;
 
       case EXPONENT:
-        return 14;
+        return 15;
 
       case AWAIT:
       case NEW:
@@ -1194,15 +1216,18 @@ public final class NodeUtil {
       case BITNOT:
       case POS:
       case NEG:
-        return 15; // Unary operators
+        return 16; // Unary operators
 
       case INC:
       case DEC:
-        return 16; // Update operators
+        return 17; // Update operators
 
       case CALL:
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
       case NEW_TARGET:
       case IMPORT_META:
         // Data values
@@ -1238,12 +1263,12 @@ public final class NodeUtil {
       case DYNAMIC_IMPORT:
         // Tokens from the type declaration AST
       case UNION_TYPE:
-        return 17;
-      case FUNCTION_TYPE:
         return 18;
+      case FUNCTION_TYPE:
+        return 19;
       case ARRAY_TYPE:
       case PARAMETERIZED_TYPE:
-        return 19;
+        return 20;
       case STRING_TYPE:
       case NUMBER_TYPE:
       case BOOLEAN_TYPE:
@@ -1253,9 +1278,9 @@ public final class NodeUtil {
       case NAMED_TYPE:
       case UNDEFINED_TYPE:
       case GENERIC_TYPE:
-        return 20;
-      case CAST:
         return 21;
+      case CAST:
+        return 22;
 
       default:
         checkArgument(type != Token.TEMPLATELIT_STRING);
@@ -1292,6 +1317,7 @@ public final class NodeUtil {
         return allResultsMatch(n.getLastChild(), p);
       case AND:
       case OR:
+      case COALESCE:
         return allResultsMatch(n.getFirstChild(), p)
             && allResultsMatch(n.getLastChild(), p);
       case HOOK:
@@ -1326,6 +1352,7 @@ public final class NodeUtil {
         return getKnownValueType(n.getLastChild());
       case AND:
       case OR:
+      case COALESCE:
         return and(
             getKnownValueType(n.getFirstChild()),
             getKnownValueType(n.getLastChild()));
@@ -1570,6 +1597,7 @@ public final class NodeUtil {
       case MUL:
       case AND:
       case OR:
+      case COALESCE:
       case BITOR:
       case BITXOR:
       case BITAND:
@@ -1877,10 +1905,34 @@ public final class NodeUtil {
     return n.isGetProp() || n.isGetElem();
   }
 
+  /** Is this a OPTCHAIN_GETPROP or OPTCHAIN_GETELEM node? */
+  public static boolean isOptChainGet(Node n) {
+    return n.isOptChainGetProp() || n.isOptChainGetElem();
+  }
+
+  /** Is this a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, OPTCHAIN_CALL node? */
+  public static boolean isOptChainNode(Node n) {
+    return n.isOptChainGetProp() || n.isOptChainGetElem() || n.isOptChainCall();
+  }
 
   /**
-   * Is this node the name of a block-scoped declaration?
-   * Checks for let, const, class, or block-scoped function declarations.
+   * Find the start of the optional chain. E.g Find the `a?. ...` node in `a?.b.c.d` given any other
+   * node
+   *
+   * @param n A node in an optional chain
+   * @return The start of the optional chain that `n` is part of.
+   */
+  public static Node getStartOfOptChain(Node n) {
+    checkState(NodeUtil.isOptChainNode(n), n);
+    if (n.isOptionalChainStart()) {
+      return n;
+    }
+    return getStartOfOptChain(n.getFirstChild());
+  }
+
+  /**
+   * Is this node the name of a block-scoped declaration? Checks for let, const, class, or
+   * block-scoped function declarations.
    *
    * @param n The node
    * @return True if {@code n} is the NAME of a block-scoped declaration.
@@ -3306,6 +3358,8 @@ public final class NodeUtil {
    */
   public static String opToStr(Token operator) {
     switch (operator) {
+      case COALESCE:
+        return "??";
       case BITOR:
         return "|";
       case OR:
@@ -3623,16 +3677,23 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * Gets the root node of a qualified name. Must be either NAME, THIS or SUPER.
-   */
-  static Node getRootOfQualifiedName(Node qName) {
+  /** Gets the root node of a qualified name. Must be either NAME, THIS or SUPER. */
+  public static Node getRootOfQualifiedName(Node qName) {
     for (Node current = qName; true; current = current.getFirstChild()) {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
       }
       checkState(current.isGetProp(), "Not a getprop node: ", current);
     }
+  }
+
+  /** Gets the root node of a string representing a qualified name. */
+  static String getRootOfQualifiedName(String qName) {
+    int dot = qName.indexOf('.');
+    if (dot == -1) {
+      return qName;
+    }
+    return qName.substring(0, dot);
   }
 
   static int getLengthOfQname(Node qname) {
@@ -3976,6 +4037,10 @@ public final class NodeUtil {
         return parent.getFirstChild() != propAccess
             && compiler.getCodingConvention().isPropertyTestFunction(parent);
 
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+        return parent.getFirstChild() == propAccess;
+
       case IF:
       case WHILE:
       case DO:
@@ -3987,6 +4052,8 @@ public final class NodeUtil {
       case TYPEOF:
       case AND:
       case OR:
+      case COALESCE:
+      case OPTCHAIN_GETPROP:
         return true;
 
       case NE:
@@ -4602,6 +4669,7 @@ public final class NodeUtil {
         return evaluatesToLocalValue(value.getLastChild());
       case AND:
       case OR:
+      case COALESCE:
         return evaluatesToLocalValue(value.getFirstChild())
             && evaluatesToLocalValue(value.getLastChild());
       case HOOK:
@@ -4614,9 +4682,12 @@ public final class NodeUtil {
         return isImmutableValue(value);
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
         // There is no information about the locality of object properties.
         return false;
       case CALL:
+      case OPTCHAIN_CALL:
         return callHasLocalResult(value) || isToStringMethodCall(value);
       case TAGGED_TEMPLATELIT:
         return callHasLocalResult(value);
@@ -4678,6 +4749,11 @@ public final class NodeUtil {
       case CAST:
       case COMMA:
         return isDefinedValue(value.getLastChild());
+      case COALESCE:
+        // 'null' is a "defined" value so we can only trust the RHS.
+        // NOTE: consider creating and using a "isDefinedAndNotNull" that would allow us to
+        // trust the tested value.
+        return isDefinedValue(value.getSecondChild());
       case AND:
       case OR:
         return isDefinedValue(value.getFirstChild())
@@ -4687,9 +4763,12 @@ public final class NodeUtil {
             && isDefinedValue(value.getLastChild());
       // Assume undefined leaks in this and call results.
       case CALL:
+      case OPTCHAIN_CALL:
       case NEW:
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
       case TAGGED_TEMPLATELIT:
       case THIS:
       case YIELD:
@@ -4788,7 +4867,7 @@ public final class NodeUtil {
 
   private static boolean isToStringMethodCall(Node call) {
     Node getNode = call.getFirstChild();
-    if (isGet(getNode)) {
+    if (isGet(getNode) || isOptChainGet(getNode)) {
       Node propNode = getNode.getLastChild();
       return propNode.isString() && "toString".equals(propNode.getString());
     }
@@ -4994,6 +5073,7 @@ public final class NodeUtil {
       case HOOK:
       case AND:
       case OR:
+      case COALESCE:
         return (expr == parent.getFirstChild()) || isExpressionResultUsed(parent);
       case COMMA:
         Node grandparent = parent.getParent();
@@ -5034,6 +5114,7 @@ public final class NodeUtil {
         case HOOK:
         case AND:
         case OR:
+        case COALESCE:
           if (parent.getFirstChild() != n) {
             return false;
           }
@@ -5608,8 +5689,12 @@ public final class NodeUtil {
     return (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
   }
 
-  /** Adds the given features to a SCRIPT node's FeatureSet property. */
-  static void addFeatureToScript(Node scriptNode, Feature feature) {
+  /**
+   * Adds the given features to a SCRIPT node's FeatureSet property.
+   *
+   * <p>Also updates the compiler's FeatureSet.
+   */
+  static void addFeatureToScript(Node scriptNode, Feature feature, AbstractCompiler compiler) {
     checkState(scriptNode.isScript(), scriptNode);
     FeatureSet currentFeatures = getFeatureSetOfScript(scriptNode);
     FeatureSet newFeatures =
@@ -5617,6 +5702,7 @@ public final class NodeUtil {
             ? currentFeatures.with(feature)
             : FeatureSet.BARE_MINIMUM.with(feature);
     scriptNode.putProp(Node.FEATURE_SET, newFeatures);
+    compiler.setFeatureSet(compiler.getFeatureSet().with(feature));
   }
 
   /** Calls {@code cb} with all NAMEs declared in a PARAM_LIST or destructuring pattern. */
@@ -5626,11 +5712,11 @@ public final class NodeUtil {
 
   /** Represents a goog.require'd namespace and property inside a module. */
   @AutoValue
-  abstract static class GoogRequire {
-    abstract String namespace(); // The Closure namespace inside the require call
+  public abstract static class GoogRequire {
+    public abstract String namespace(); // The Closure namespace inside the require call
 
     @Nullable
-    abstract String property(); // Non-null for destructuring requires.
+    public abstract String property(); // Non-null for destructuring requires.
 
     static GoogRequire fromNamespace(String namespace) {
       return new AutoValue_NodeUtil_GoogRequire(namespace, /* property= */ null);
@@ -5642,7 +5728,7 @@ public final class NodeUtil {
   }
 
   @Nullable
-  static GoogRequire getGoogRequireInfo(String name, Scope scope) {
+  public static GoogRequire getGoogRequireInfo(String name, Scope scope) {
     Var var = scope.getVar(name);
     if (var == null || !var.getScopeRoot().isModuleBody() || var.getNameNode() == null) {
       return null;

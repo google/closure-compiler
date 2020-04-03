@@ -579,8 +579,8 @@ class RemoveUnusedCode implements CompilerPass {
 
     if (callee.isQualifiedName()
         && codingConvention.isPropertyRenameFunction(callee.getOriginalQualifiedName())) {
-      Node propertyNameNode = checkNotNull(callee.getNext());
-      if (propertyNameNode.isString()) {
+      Node propertyNameNode = callee.getNext();
+      if (propertyNameNode != null && propertyNameNode.isString()) {
         markPropertyNameAsPinned(propertyNameNode.getString());
       }
       traverseChildren(callNode, scope);
@@ -1531,7 +1531,7 @@ class RemoveUnusedCode implements CompilerPass {
       // to other unreferenced variables.
       varInfo.removeAllRemovables();
 
-      Node nameNode = var.nameNode;
+      Node nameNode = var.getNameNode();
       Node toRemove = nameNode.getParent();
       if (toRemove == null || alreadyRemoved(toRemove)) {
         // assignedVarInfo.removeAllRemovables () already removed it

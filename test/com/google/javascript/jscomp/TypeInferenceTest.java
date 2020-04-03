@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_RESOLVED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
@@ -33,7 +34,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -117,7 +117,7 @@ public final class TypeInferenceTest {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     compiler.initOptions(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     registry = compiler.getTypeRegistry();
     assumptions = new HashMap<>();
     returnScope = null;
@@ -183,9 +183,10 @@ public final class TypeInferenceTest {
   private void parseAndRunTypeInference(Node root, Node cfgRoot) {
     this.closer.close();
 
+    TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
+    TypedScope assumedScope;
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
       // Create the scope with the assumptions.
-      TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
       // Also populate a map allowing us to look up labeled statements later.
       labeledStatementMap = new HashMap<>();
       new NodeTraversal(
@@ -208,11 +209,13 @@ public final class TypeInferenceTest {
               },
               scopeCreator)
           .traverse(root);
-      TypedScope assumedScope = scopeCreator.createScope(cfgRoot);
+      assumedScope = scopeCreator.createScope(cfgRoot);
       for (Map.Entry<String, JSType> entry : assumptions.entrySet()) {
         assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);
       }
-      scopeCreator.finishScopes();
+      scopeCreator.resolveWeakImportsPreResolution();
+    }
+    scopeCreator.undoTypeAliasChains();
       // Create the control graph.
       ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
       cfa.process(null, cfgRoot);
@@ -235,7 +238,6 @@ public final class TypeInferenceTest {
       } else {
         returnScope = rtnState.getIn();
       }
-    }
 
     this.closer = this.registry.getResolver().openForDefinition();
   }
@@ -296,10 +298,7 @@ public final class TypeInferenceTest {
   }
 
   private void verify(String name, JSType type) {
-    assertWithMessage("Mismatch for " + name)
-        .about(types())
-        .that(getType(name))
-        .isStructurallyEqualTo(type);
+    assertWithMessage("Mismatch for " + name).about(types()).that(getType(name)).isEqualTo(type);
   }
 
   private void verify(String name, JSTypeNative type) {
@@ -411,6 +410,20 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testNullishCoalesceNullableObject() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("let z = x ?? {}");
+    verify("z", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testNullishCoalesceNullableUnion() {
+    assuming("x", createNullableType(createUnionType(OBJECT_TYPE, STRING_TYPE)));
+    inFunction("let z = x ?? {}");
+    verify("z", createUnionType(STRING_TYPE, OBJECT_TYPE));
+  }
+
+  @Test
   public void testIf2() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("var y = x; if (x) { y = x; } else { y = {}; }");
@@ -508,6 +521,16 @@ public final class TypeInferenceTest {
     assuming("x", startType);
     assuming("y", startType);
     inFunction("goog.asserts.assert(x || y); out1 = x; out2 = y;");
+    verify("out1", startType);
+    verify("out2", startType);
+  }
+
+  @Test
+  public void testAssert5NullishCoalesce() {
+    JSType startType = createNullableType(OBJECT_TYPE);
+    assuming("x", startType);
+    assuming("y", startType);
+    inFunction("goog.asserts.assert(x ?? y); out1 = x; out2 = y;");
     verify("out1", startType);
     verify("out2", startType);
   }
@@ -695,13 +718,13 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertFunction_narrowsAllTypeToFunction() {
     JSType startType = createNullableType(ALL_TYPE);
-    includeGoogAssertionFn("assertFunction", getNativeType(U2U_CONSTRUCTOR_TYPE));
+    includeGoogAssertionFn("assertFunction", getNativeType(FUNCTION_TYPE));
     assuming("x", startType);
 
     inFunction("out1 = x; goog.asserts.assertFunction(x); out2 = x;");
 
     verify("out1", startType);
-    verifySubtypeOf("out2", U2U_CONSTRUCTOR_TYPE);
+    verifySubtypeOf("out2", FUNCTION_TYPE);
   }
 
   @Test
@@ -1135,9 +1158,7 @@ public final class TypeInferenceTest {
 
   @Test
   public void testNew1() {
-    assuming("x",
-        createNullableType(
-            registry.getNativeType(JSTypeNative.U2U_CONSTRUCTOR_TYPE)));
+    assuming("x", createNullableType(registry.getNativeType(JSTypeNative.FUNCTION_TYPE)));
     inFunction("var y = new x();");
     verify("y", UNKNOWN_TYPE);
   }
@@ -1526,10 +1547,69 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testShortCircuitingNullishCoalesce() {
+    assuming("x", NUMBER_TYPE);
+    inFunction("var y = null; if (x ?? (y = 3)) { }");
+    verify("y", NULL_TYPE);
+  }
+
+  @Test
+  public void testShortCircuitingNullishCoalesceIf() {
+    assuming("x", NUMBER_TYPE);
+    inFunction("var y = null; var z = 5; if (x ?? (y = 3)) { z = y }");
+    verify("y", NULL_TYPE);
+  }
+
+  @Test
   public void testShortCircuitingOr2() {
     assuming("x", NUMBER_TYPE);
     inFunction("var y = null; var z = 4; if (x || (y = 3)) { z = y; }");
     verify("z", createNullableType(NUMBER_TYPE));
+  }
+
+  @Test
+  public void testShortCircuitingNullishCoalseceNumber() {
+    assuming("x", NUMBER_TYPE);
+    inFunction("var z = x ?? null");
+    verify("z", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testNullishCoalesce() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("var y = 1; x ?? (y = x);");
+    verify("y", createNullableType(NUMBER_TYPE));
+  }
+
+  @Test
+  public void nullishCoalesceWithHook() {
+    assuming("x", createNullableType(OBJECT_TYPE));
+    inFunction("var z = (x) ?? (x ? 'hi' : false)");
+    // Looks like x should be (object|boolean) but hook always traverses both branches
+    verify("z", createMultiParamUnionType(OBJECT_TYPE, BOOLEAN_TYPE, STRING_TYPE));
+  }
+
+  @Test
+  public void nullishCoalesceRemoveNull() {
+    assuming("x", createNullableType(NUMBER_TYPE));
+    inFunction("x = x ?? 3");
+    verify("x", NUMBER_TYPE); // nullability removed by ?? operation
+  }
+
+  @Test
+  public void nullishCoalesceZeroIsValid() {
+    // Making sure that ?? does not execute RHS (even if x is 0)
+    assuming("x", createNullableType(NUMBER_TYPE));
+    inFunction("var y = ''; if (x ?? (y = x)) { }");
+    verify("y", createNullableType(STRING_TYPE));
+  }
+
+  @Test
+  public void nullishCoalesceFalseIsValid() {
+    // Making sure that ?? does not execute RHS (even if x is false)
+    assuming("x", createNullableType(BOOLEAN_TYPE));
+    inFunction("var y = ''; x ?? (y = x)");
+    verify("y", createNullableType(STRING_TYPE));
   }
 
   @Test
@@ -1774,7 +1854,7 @@ public final class TypeInferenceTest {
         "var out = {};" +
         "f(out);");
     assertThat(getType("out").toString())
-        .isEqualTo("{a: (boolean|undefined), b: (string|undefined)}");
+        .isEqualTo("{\n  a: (boolean|undefined),\n  b: (string|undefined)\n}");
   }
 
   @Test

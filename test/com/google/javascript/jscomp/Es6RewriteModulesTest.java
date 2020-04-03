@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
-import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,7 +79,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     enableCreateModuleMap();
-    enableTypeCheck();
     enableTypeInfoValidation();
     disableScriptFeatureValidation();
   }
@@ -88,6 +89,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     // ECMASCRIPT5 to Trigger module processing after parsing.
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
+    options.setPrettyPrint(true);
 
     if (moduleRoots != null) {
       options.setModuleRoots(moduleRoots);
@@ -99,15 +101,19 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (externs, root) -> {
-      new GatherModuleMetadata(
-              compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
-          .process(externs, root);
-      new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()).process(externs, root);
+      ReverseAbstractInterpreter rai =
+          new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+      compiler.setTypeCheckingHasRun(true);
+      TypedScope globalTypedScope =
+          checkNotNull(
+              new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                  .processForTesting(externs, root));
       new Es6RewriteModules(
               compiler,
               compiler.getModuleMetadataMap(),
               compiler.getModuleMap(),
-              /* preprocessorSymbolTable= */ null)
+              /* preprocessorSymbolTable= */ null,
+              globalTypedScope)
           .process(externs, root);
     };
   }
@@ -357,8 +363,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  b$$module$testcode++",
             "}",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get a() { return a$$module$testcode; },",
-            "  /** @return {?} */ get b() { return b$$module$testcode; },",
+            "  get a() { return a$$module$testcode; },",
+            "  get b() { return b$$module$testcode; },",
             "};"));
 
     testModules(
@@ -375,8 +381,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  b$$module$testcode++",
             "};",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get A() { return a$$module$testcode; },",
-            "  /** @return {?} */ get B() { return b$$module$testcode; },",
+            "  get A() { return a$$module$testcode; },",
+            "  get B() { return b$$module$testcode; },",
             "};"));
 
     testModules(
@@ -391,7 +397,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  f$$module$testcode = function() {};",
             "}",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get f() { return f$$module$testcode; },",
+            "  get f() { return f$$module$testcode; },",
             "};"));
 
     testModules(
@@ -406,7 +412,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  f$$module$testcode = function() {};",
             "}",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get default() { return f$$module$testcode; },",
+            "  get default() { return f$$module$testcode; },",
             "};"));
 
     testModules(
@@ -421,7 +427,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  C$$module$testcode = class {};",
             "}",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get C() { return C$$module$testcode; },",
+            "  get C() { return C$$module$testcode; },",
             "};"));
 
     testModules(
@@ -436,7 +442,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  C$$module$testcode = class {};",
             "}",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get default() { return C$$module$testcode; },",
+            "  get default() { return C$$module$testcode; },",
             "};"));
 
     testModules(
@@ -453,8 +459,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  for (OF$$module$testcode of []);",
             "}",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get IN() { return IN$$module$testcode; },",
-            "  /** @return {?} */ get OF() { return OF$$module$testcode; },",
+            "  get IN() { return IN$$module$testcode; },",
+            "  get OF() { return OF$$module$testcode; },",
             "};"));
 
     testModules(
@@ -473,8 +479,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  var x = {UNCHANGED: 0};",
             "}",
             "/** @const */ var module$testcode = {",
-            "  /** @return {?} */ get ARRAY() { return ARRAY$$module$testcode; },",
-            "  /** @return {?} */ get OBJ() { return OBJ$$module$testcode; },",
+            "  get ARRAY() { return ARRAY$$module$testcode; },",
+            "  get OBJ() { return OBJ$$module$testcode; },",
             "};",
             "/** @const */ module$testcode.UNCHANGED = UNCHANGED$$module$testcode"));
   }
@@ -1198,8 +1204,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Test
   public void testMutableTransitiveImport() {
-    // TODO(b/144059297): Make this test pass when type checking runs first.
-    enableRunTypeCheckAfterProcessing();
     test(
         srcs(
             SourceFile.fromCode("a.js", "export let A = class {}; () => (A = class {});"),
@@ -1216,14 +1220,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
                     "let A$$module$a = class {};",
                     "()=>A$$module$a = class {};",
                     "/** @const */ var module$a = {",
-                    "  /** @return {?} */ get A() { return A$$module$a; },",
+                    "  get A() { return A$$module$a; },",
                     "};")),
             SourceFile.fromCode(
                 "b.js",
                 lines(
-                    "/** @const */ var module$b = {",
-                    "  /** @return {?} */ get A() { return A$$module$a; },",
-                    "};")),
+                    "/** @const */ var module$b = {", "  get A() { return A$$module$a; },", "};")),
             SourceFile.fromCode(
                 "c.js",
                 lines(
@@ -1245,14 +1247,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
                     "let A$$module$a = class {};",
                     "()=>A$$module$a = class {};",
                     "/** @const */ var module$a = {",
-                    "  /** @return {?} */ get A() { return A$$module$a; },",
+                    "  get A() { return A$$module$a; },",
                     "};")),
             SourceFile.fromCode(
                 "b.js",
                 lines(
-                    "/** @const */ var module$b = {",
-                    "  /** @return {?} */ get B() { return A$$module$a; },",
-                    "};")),
+                    "/** @const */ var module$b = {", "  get B() { return A$$module$a; },", "};")),
             SourceFile.fromCode(
                 "c.js",
                 lines(
@@ -1298,11 +1298,10 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Test
   public void testRewritePropsWhenNotModuleReference() {
-    // TODO(b/144059297): Make this test pass when type checking runs first.
-    enableRunTypeCheckAfterProcessing();
     test(
         srcs(
-            SourceFile.fromCode("other.js", lines("export let name = {}, a = { Type: class {} };")),
+            SourceFile.fromCode(
+                "other.js", lines("export const name = {}, a = { Type: class {} };")),
             SourceFile.fromCode(
                 "testcode",
                 lines(
@@ -1312,7 +1311,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             SourceFile.fromCode(
                 "other.js",
                 lines(
-                    "let name$$module$other = {}, a$$module$other = { Type: class {} };",
+                    "const name$$module$other = {}, a$$module$other = { Type: class {} };",
                     "/** @const */ var module$other = {};",
                     "/** @const */ module$other.a = a$$module$other;",
                     "/** @const */ module$other.name = name$$module$other;")),
@@ -1333,5 +1332,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         srcs("typeof exports; export {};"),
         // Regression test; compiler used to rewrite `exports` to `exports$$module$testcode`.
         expected("typeof exports; /** @const */ var module$testcode = {};"));
+  }
+
+  @Test
+  public void testImportMeta() {
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT_NEXT);
+
+    testError("import.meta", Es6ToEs3Util.CANNOT_CONVERT);
   }
 }

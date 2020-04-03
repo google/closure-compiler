@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,10 +35,15 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     options.setWarningLevel(DiagnosticGroups.MODULE_LOAD, CheckLevel.OFF);
     return options;
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
   }
 
   @Test
@@ -59,6 +65,21 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
             "class Foo {",
             "  constructor() {",
             "    this.x = 5;",
+            "  }",
+            "}",
+            "",
+            "exports = Foo;"));
+  }
+
+  // just here to make sure import.meta doesn't break anything
+  @Test
+  public void testImportMeta() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    testSame(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    this.url = import.meta.url",
             "  }",
             "}",
             "",

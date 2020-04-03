@@ -627,7 +627,7 @@ class InlineFunctions implements CompilerPass {
       Node fnNode = functionState.getSafeFnNode();
 
       Node newExpr = injector.inline(ref, fnName, fnNode);
-      if (!newExpr.isEquivalentTo(ref.callNode)) {
+      if (!newExpr.equals(ref.callNode)) {
         t.getCompiler().reportChangeToEnclosingScope(newExpr);
       }
     }

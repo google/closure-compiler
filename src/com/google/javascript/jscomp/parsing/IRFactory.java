@@ -112,6 +112,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectSpreadTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalCallExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParameterizedTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
@@ -1400,6 +1403,17 @@ class IRFactory {
           transform(getNode.memberExpression));
     }
 
+    Node processOptChainElementGet(OptionalMemberLookupExpressionTree getNode) {
+      maybeWarnForFeature(getNode, Feature.OPTIONAL_CHAINING);
+      Node getElem =
+          newNode(
+              Token.OPTCHAIN_GETELEM,
+              transform(getNode.operand),
+              transform(getNode.memberExpression));
+      getElem.setIsOptionalChainStart(getNode.isStartOfOptionalChain);
+      return getElem;
+    }
+
     /**
      * @param exprNode unused
      */
@@ -1474,6 +1488,16 @@ class IRFactory {
       for (ParseTree child : callNode.arguments.arguments) {
         node.addChildToBack(transform(child));
       }
+      return node;
+    }
+
+    Node processOptChainFunctionCall(OptionalCallExpressionTree callNode) {
+      maybeWarnForFeature(callNode, Feature.OPTIONAL_CHAINING);
+      Node node = newNode(Token.OPTCHAIN_CALL, transform(callNode.operand));
+      for (ParseTree child : callNode.arguments.arguments) {
+        node.addChildToBack(transform(child));
+      }
+      node.setIsOptionalChainStart(callNode.isStartOfOptionalChain);
       return node;
     }
 
@@ -2060,6 +2084,19 @@ class IRFactory {
       return newNode(Token.GETPROP, leftChild, rightChild);
     }
 
+    Node processOptChainPropertyGet(OptionalMemberExpressionTree getNode) {
+      maybeWarnForFeature(getNode, Feature.OPTIONAL_CHAINING);
+      Node leftChild = transform(getNode.operand);
+      IdentifierToken nodeProp = getNode.memberName;
+      Node rightChild = processObjectLitKeyAsString(nodeProp);
+      if (!rightChild.isQuotedString() && !currentFileIsExterns) {
+        maybeWarnKeywordProperty(rightChild);
+      }
+      Node getProp = newNode(Token.OPTCHAIN_GETPROP, leftChild, rightChild);
+      getProp.setIsOptionalChainStart(getNode.isStartOfOptionalChain);
+      return getProp;
+    }
+
     Node processRegExpLiteral(LiteralExpressionTree literalTree) {
       LiteralToken token = literalTree.literalToken.asLiteral();
       Node literalStringNode = newStringNode(normalizeRegex(token));
@@ -2264,7 +2301,9 @@ class IRFactory {
         if (type == Token.DELPROP
             && !(operand.isGetProp()
                 || operand.isGetElem()
-                || operand.isName())) {
+                || operand.isName()
+                || operand.isOptChainGetProp()
+                || operand.isOptChainGetElem())) {
           String msg =
               "Invalid delete operand. Only properties can be deleted.";
           errorReporter.error(
@@ -3109,6 +3148,8 @@ class IRFactory {
           return processBreakStatement(node.asBreakStatement());
         case CALL_EXPRESSION:
           return processFunctionCall(node.asCallExpression());
+        case OPT_CHAIN__CALL_EXPRESSION:
+          return processOptChainFunctionCall(node.asOptionalCallExpression());
         case CASE_CLAUSE:
           return processSwitchCase(node.asCaseClause());
         case DEFAULT_CLAUSE:
@@ -3135,8 +3176,12 @@ class IRFactory {
           return processFunction(node.asFunctionDeclaration());
         case MEMBER_LOOKUP_EXPRESSION:
           return processElementGet(node.asMemberLookupExpression());
+        case OPT_CHAIN_MEMBER_LOOKUP_EXPRESSION:
+          return processOptChainElementGet(node.asOptionalMemberLookupExpression());
         case MEMBER_EXPRESSION:
           return processPropertyGet(node.asMemberExpression());
+        case OPT_CHAIN_MEMBER_EXPRESSION:
+          return processOptChainPropertyGet(node.asOptionalMemberExpression());
         case CONDITIONAL_EXPRESSION:
           return processConditionalExpression(node.asConditionalExpression());
         case IF_STATEMENT:

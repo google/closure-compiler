@@ -15,9 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.DUPLICATE_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_FORWARD_DECLARE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_NAMESPACE;
+import static com.google.javascript.jscomp.ClosureRewriteModule.ILLEGAL_MODULE_RENAMING_CONFLICT;
 import static com.google.javascript.jscomp.ClosureRewriteModule.IMPORT_INLINING_SHADOWS_VAR;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
@@ -27,6 +29,8 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +54,17 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ClosureRewriteModule(compiler, null, null);
+    return (externs, main) -> {
+      ReverseAbstractInterpreter rai =
+          new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
+      compiler.setTypeCheckingHasRun(true);
+      TypedScope globalTypedScope =
+          checkNotNull(
+              new TypeCheck(compiler, rai, compiler.getTypeRegistry())
+                  .processForTesting(externs, main));
+
+      new ClosureRewriteModule(compiler, null, null, globalTypedScope).process(externs, main);
+    };
   }
 
   @Override
@@ -60,7 +74,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     preserveClosurePrimitives = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableCreateModuleMap();
-    enableTypeCheck();
     enableTypeInfoValidation();
   }
 
@@ -107,6 +120,30 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
           "/** @const */ var module$exports$ns$b = {};",
           "/** @const */ var module$exports$ns$c = {};",
           "/** @const */ var module$exports$ns$a = {};"
+        });
+  }
+
+  @Test
+  public void testOutOfOrderRequireType() {
+    test(
+        new String[] {
+          lines(
+              "goog.module('ns.a');",
+              "var b = goog.requireType('ns.b');",
+              "/** @type {b.Foo} */",
+              "let a;",
+              ""),
+          lines("goog.module('ns.b');", "exports.Foo = class {}", ""),
+        },
+        new String[] {
+          lines(
+              "/** @const */ var module$exports$ns$a = {};",
+              "/** @type {module$exports$ns$b.Foo} */ let module$contents$ns$a_a;",
+              ""),
+          lines(
+              "/** @const */ var module$exports$ns$b = {};",
+              "/** @const */ module$exports$ns$b.Foo = class {};",
+              ""),
         });
   }
 
@@ -653,6 +690,16 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
           lines("goog.module('modB');", "", "var {Foo} = goog.requireType('modA');")
         },
         DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
+  }
+
+  @Test
+  public void testDontUseTheMangledModuleNameInCode() {
+    testError(
+        new String[] {
+          "/** @const */ var module$exports$modA = class {};", //
+          "goog.module('modA');",
+        },
+        ILLEGAL_MODULE_RENAMING_CONFLICT);
   }
 
   @Test
@@ -2144,8 +2191,24 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Test
   public void testDuplicateModuleDoesntCrash() {
-    // The compiler emits a warning elsewhere for this code
-    testError(new String[] {"goog.module('ns.a');", "goog.module('ns.a');"}, DUPLICATE_MODULE);
+    ignoreWarnings(DUPLICATE_MODULE, ILLEGAL_MODULE_RENAMING_CONFLICT);
+    test(
+        srcs("goog.module('ns.a');", "goog.module('ns.a');"),
+        expected(
+            "/** @const */ var module$exports$ns$a = {};",
+            "/** @const */ var module$exports$ns$a = {};"));
+  }
+
+  @Test
+  public void testDuplicateBundledModuleDoesntCrash() {
+    ignoreWarnings(DUPLICATE_MODULE, ILLEGAL_MODULE_RENAMING_CONFLICT);
+    String bundledModule =
+        "goog.loadModule(function(exports) { goog.module('ns.a'); return exports; });";
+    test(
+        srcs(bundledModule, bundledModule),
+        expected(
+            "/** @const */ var module$exports$ns$a = {};",
+            "/** @const */ var module$exports$ns$a = {};"));
   }
 
   @Test
@@ -3146,7 +3209,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             (node) -> node.matchesQualifiedName("module$exports$mod$one.Bar"),
             Predicates.alwaysTrue());
 
-    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("exports.Bar");
+    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("mod.one.Bar");
   }
 
   @Test
@@ -3179,7 +3242,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             (node) -> node.matchesQualifiedName("mod.one.Bar"),
             Predicates.alwaysTrue());
 
-    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("exports.Bar");
+    assertNode(moduleExportsDotBar).hasJSTypeThat().getReferenceNameIsEqualTo("mod.one.Bar");
   }
 
   @Test

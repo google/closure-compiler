@@ -48,7 +48,7 @@ class PeepholeReorderConstantExpression extends AbstractPeepholeOptimization {
         }
 
         // swap them
-        Node firstNode = subtree.getFirstChild().detach();
+        Node firstNode = subtree.removeFirstChild();
         Node lastNode = subtree.getLastChild().detach();
 
         subtree.addChildToFront(lastNode);

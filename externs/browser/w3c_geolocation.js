@@ -74,13 +74,13 @@ GeolocationCoordinates.prototype.latitude;
 GeolocationCoordinates.prototype.longitude;
 /** @type {number} */
 GeolocationCoordinates.prototype.accuracy;
-/** @type {number} */
+/** @type {number|null} */
 GeolocationCoordinates.prototype.altitude;
-/** @type {number} */
+/** @type {number|null} */
 GeolocationCoordinates.prototype.altitudeAccuracy;
-/** @type {number} */
+/** @type {number|null} */
 GeolocationCoordinates.prototype.heading;
-/** @type {number} */
+/** @type {number|null} */
 GeolocationCoordinates.prototype.speed;
 
 

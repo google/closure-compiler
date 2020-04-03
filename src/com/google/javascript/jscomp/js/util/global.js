@@ -16,23 +16,65 @@
 
 /**
  * @fileoverview Runtime code to store the global object.
+ * @suppress {uselessCode}
  */
 'require base';
 
-
 /**
- * @param {!Object} maybeGlobal
+ * Locate and return a reference to the global object.
+ *
+ * NOTE: This method is marked with `noinline`, because `RemoveUnusedCode` has
+ * trouble removing the loop it contains if it gets inlined into the global
+ * scope.
+ * @param {?Object} passedInThis
  * @return {!Global} The global object.
  * @suppress {undefinedVars|reportUnknownTypes}
+ * @noinline
  */
-$jscomp.getGlobal = function(maybeGlobal) {
-  // TODO(b/144860612): This logic could be improved to work in more
-  // environments https://mathiasbynens.be/notes/globalthis
-  return (typeof window != 'undefined' && window === maybeGlobal) ?
-      /** @type {!Global} */ (maybeGlobal) :
-      (typeof global != 'undefined' && global != null) ?
-      /** @type {!Global} */ (global) :
-      /** @type {!Global} */ (maybeGlobal);
+$jscomp.getGlobal = function(passedInThis) {
+  var possibleGlobals = [
+    // Web Audio Worklets do not have any way to refer to their global object
+    // other than `globalThis`.
+    // This use of `globalThis` does not prevent removal of the `globalThis`
+    // polyfill, because the usage is guarded by a typeof check.
+    'object' == typeof globalThis && globalThis,
+    // Browser windows always have `window`
+    'object' == typeof window && window,
+    // WebWorkers have `self`
+    'object' == typeof self && self,
+    // NodeJS has `global`
+    'object' == typeof global && global,
+    // Rhino (used by older Google Docs Script projects) has none of the above,
+    // but `this` from the global scope is the global object.
+    // NOTE: If the compiler's output is wrapped in a strict-mode function,
+    // this file's code won't actually be executing in global scope, so this
+    // value will be undefined.
+    passedInThis
+  ];
+  for (var i = 0; i < possibleGlobals.length; ++i) {
+    var maybeGlobal = possibleGlobals[i];
+    // It can happen that an environment has, for example, both `global` and
+    // `window` defined in the global scope, but one of them isn't actually
+    // the global object, so check that it really seems to be the global object.
+    // We use `Math` to check for this because it's only 4 characters long,
+    // exists in all possible JS environments, and doesn't have the problematic
+    // equality behavior of `NaN`.
+    if (maybeGlobal && maybeGlobal['Math'] == Math) {
+      return /** @type {!Global} */ (maybeGlobal);
+    }
+  }
+  // Throw an exception if we cannot find the global object.
+  // We have to be sneaky about it, otherwise the compiler will think this code
+  // has a side effect (throwing an exception) that prevents it from being
+  // removed, even when all usages of `$jscomp.global` get removed.
+  // Casting through unknown is necessary to keep the compiler from rejecting
+  // this code.
+  return /** @type {!Global} */ (
+      /** @type {?} */ ({
+        valueOf: function() {
+          throw new Error('Cannot find global object');
+        }
+      }.valueOf()));
 };
 
 

@@ -298,56 +298,64 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
+  void appendTo(TypeStringBuilder sb) {
     if (hasReferenceName()) {
-      return sb.append(forAnnotations ? getNormalizedReferenceName() : getReferenceName());
+      sb.append(sb.isForAnnotations() ? getNormalizedReferenceName() : getReferenceName());
+      return;
     }
-    if (!prettyPrint) {
-      return sb.append(forAnnotations ? "?" : "{...}");
+
+    if (!this.prettyPrint) {
+      sb.append(sb.isForAnnotations() ? "?" : "{...}");
+      return;
     }
-    // Don't pretty print recursively.
-    prettyPrint = false;
 
     // Use a tree set so that the properties are sorted.
     Set<String> propertyNames = new TreeSet<>();
-    for (ObjectType current = this;
-        current != null && !current.isNativeObjectType()
-            && propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;
-        current = current.getImplicitPrototype()) {
+    for (ObjectType current = this; current != null; current = current.getImplicitPrototype()) {
+      if (current.isNativeObjectType() || propertyNames.size() > MAX_PRETTY_PRINTED_PROPERTIES) {
+        break;
+      }
+
       propertyNames.addAll(current.getOwnPropertyNames());
     }
 
-    sb.append("{");
-    boolean useNewlines = !forAnnotations && propertyNames.size() > 2;
+    // Don't pretty print recursively. It would cause infinite recursion.
+    this.prettyPrint = false;
 
-    int i = 0;
-    for (String property : propertyNames) {
-      if (i > 0) {
-        sb.append(",");
-      }
-      if (useNewlines) {
-        sb.append("\n  ");
-      } else if (i > 0) {
-        sb.append(" ");
-      }
+    boolean multiline = !sb.isForAnnotations() && propertyNames.size() > 1;
+    sb.append("{")
+        .indent(
+            () -> {
+              if (multiline) {
+                sb.breakLineAndIndent();
+              }
 
-      sb.append(property).append(": ");
-      getPropertyType(property).appendAsNonNull(sb, forAnnotations);
+              int i = 0;
+              for (String property : propertyNames) {
+                i++;
 
-      ++i;
-      if (!forAnnotations && i == MAX_PRETTY_PRINTED_PROPERTIES) {
-        sb.append(", ...");
-        break;
-      }
+                if (!sb.isForAnnotations() && i > MAX_PRETTY_PRINTED_PROPERTIES) {
+                  sb.append("...");
+                  break;
+                }
+
+                sb.append(property).append(": ").appendNonNull(this.getPropertyType(property));
+                if (i < propertyNames.size()) {
+                  sb.append(",");
+                  if (multiline) {
+                    sb.breakLineAndIndent();
+                  } else {
+                    sb.append(" ");
+                  }
+                }
+              }
+            });
+    if (multiline) {
+      sb.breakLineAndIndent();
     }
-    if (useNewlines) {
-      sb.append("\n");
-    }
-
     sb.append("}");
 
-    prettyPrint = true;
-    return sb;
+    this.prettyPrint = true;
   }
 
   void setPrettyPrint(boolean prettyPrint) {

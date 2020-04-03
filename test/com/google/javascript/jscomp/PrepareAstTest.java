@@ -59,4 +59,29 @@ public final class PrepareAstTest extends CompilerTestCase {
 
     assertThat(call.getBooleanProp(Node.FREE_CALL)).isFalse();
   }
+
+  @Test
+  public void optionalFreeCall1() {
+    Node root = parseExpectedJs("foo?.();");
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    checkState(call.isOptChainCall());
+
+    assertThat(call.getBooleanProp(Node.FREE_CALL)).isTrue();
+  }
+
+  @Test
+  public void optionalChainFreeCall() {
+    Node root = parseExpectedJs("x?.foo();");
+    Node script = root.getFirstChild();
+    checkState(script.isScript());
+    Node firstExpr = script.getFirstChild();
+    Node call = firstExpr.getFirstChild();
+    checkState(call.isOptChainCall());
+
+    assertThat(call.getBooleanProp(Node.FREE_CALL)).isFalse();
+  }
 }
+

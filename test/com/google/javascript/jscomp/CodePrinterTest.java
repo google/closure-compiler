@@ -40,6 +40,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
+  public void optionalChaining() {
+    languageMode = LanguageMode.UNSUPPORTED;
+    assertPrintSame("a.b?.c");
+    assertPrintSame("a.b?.[\"c\"]");
+    assertPrintSame("a.b?.()");
+    assertPrintSame("a?.b.c?.d");
+    assertPrintSame("(a?.b).c");
+    assertPrintSame("(a.b?.c.d).e");
+    assertPrintSame("(a?.[b])[c]");
+    assertPrintSame("(a.b?.())()");
+  }
+
+  @Test
   public void testUnescapedUnicodeLineSeparator_2018() {
     languageMode = LanguageMode.ECMASCRIPT_2018;
     assertPrintSame("`\u2028`");
@@ -94,7 +107,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testOptionalCatchBlock() {
-    useUnsupportedFeatures = true;
     assertPrintSame("try{}catch{}");
     assertPrintSame("try{}catch{}finally{}");
   }
@@ -124,6 +136,32 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testExponentiationAssignmentOperator() {
     languageMode = LanguageMode.ECMASCRIPT_2016;
     assertPrintSame("x**=y");
+  }
+
+  @Test
+  public void testNullishCoalesceOperator() {
+    assertPrintSame("x??y??z");
+    // Nullish coalesce is left associative
+    assertPrintSame("x??(y??z)");
+    assertPrint("(x??y)??z", "x??y??z");
+    // // parens are kept because logical AND and logical OR must be separated from '??'
+    assertPrintSame("(x&&y)??z");
+    assertPrintSame("(x??y)||z");
+    assertPrintSame("x??(y||z)");
+    // NOTE: "x&&y??z" is a syntax error tested in ParserTest
+  }
+
+  @Test
+  public void testNullishCoalesceOperator2() {
+    // | has higher precedence than ??
+    assertPrint("(a|b)??c", "a|b??c");
+    assertPrintSame("(a??b)|c");
+    assertPrintSame("a|(b??c)");
+    assertPrint("a??(b|c)", "a??b|c");
+    // ?? has higher precedence than : ? (conditional)
+    assertPrint("(a??b)?(c??d):(e??f)", "a??b?c??d:e??f");
+    assertPrintSame("a??(b?c:d)");
+    assertPrintSame("(a?b:c)??d");
   }
 
   @Test
@@ -2127,6 +2165,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void freeCallOptChain() {
+    Node n = parse("(a?.b)()");
+    Node call = n.getFirstFirstChild();
+    assertThat(call.isCall()).isTrue();
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assertPrintNode("(0,a?.b)()", n);
+  }
+
+  @Test
+  public void freeCallOptChainOptCall() {
+    Node n = parse("(a?.b)?.()");
+    Node call = n.getFirstFirstChild();
+    assertThat(call.isOptChainCall()).isTrue();
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assertPrintNode("(0,a?.b)?.()", n);
+  }
+
+  @Test
   public void testFreeCall1() {
     assertPrint("foo(a);", "foo(a)");
     assertPrint("x.foo(a);", "x.foo(a)");
@@ -2748,7 +2804,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   @Test
   public void testImportMeta() {
-    useUnsupportedFeatures = true;
     assertPrintSame("import.meta");
     assertPrintSame("import.meta.url");
     assertPrintSame("console.log(import.meta.url)");

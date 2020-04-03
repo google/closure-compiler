@@ -312,36 +312,6 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   }
 
   @Test
-  public void testCheckRequires() {
-    CompilerOptions options = getOptions();
-    options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
-    // Note it needs declaration of ns to throw the error because closurePass
-    // which replaces goog.provide happens afterwards (see checkRequires pass).
-    String source0 = "var ns = {};\n goog.provide('ns.Bar');\n"
-        + "/** @constructor */ ns.Bar = function() {};";
-    String source1 = "var a = new ns.Bar();";
-    Result result =
-        runReplaceScript(options, ImmutableList.of(source0, source1), 1, 0, source1, 1, true)
-            .getResult();
-    // TODO(joeltine): Change back to asserting an error when b/28869281
-    // is fixed.
-    assertThat(result.success).isTrue();
-  }
-
-  @Test
-  public void testCheckRequiresWithNewVar() {
-    CompilerOptions options = getOptions();
-    options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
-    String src = "";
-    String modifiedSrc = src + "\n(function() { var a = new ns.Bar(); })();";
-    Result result = runReplaceScript(options,
-        ImmutableList.of(src), 0, 0, modifiedSrc, 0, false).getResult();
-    // TODO(joeltine): Change back to asserting an error when b/28869281
-    // is fixed.
-    assertThat(result.success).isTrue();
-  }
-
-  @Test
   public void testCheckProvides() {
     CompilerOptions options = getOptions();
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.ERROR);

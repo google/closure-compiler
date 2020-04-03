@@ -79,6 +79,14 @@ public final class MustBeReachingVariableDefTest {
   }
 
   @Test
+  public void nullishCoalesce() {
+    // LHS is always executed so the definition of  x = 1 must be reached
+    assertMatch("var x=0,y; D:(x=1)??y; U:x");
+    // definitions in RHS are not always executed
+    assertNotMatch("var x=0,y; D:y??(x=1); U:x");
+  }
+
+  @Test
   public void testUseAndDefInSameInstruction() {
     assertMatch("D:var x=0; U:x=1,x");
     assertMatch("D:var x=0; U:x,x=1");
@@ -234,8 +242,8 @@ public final class MustBeReachingVariableDefTest {
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
-    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT_NEXT_IN);
     SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node script = compiler.parseTestCode(src);

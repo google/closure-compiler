@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.DeadPropertyAssignmentElimination.ASSUME_CONSTRUCTORS_HAVENT_ESCAPED;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +32,13 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    return options;
   }
 
   @Test
@@ -398,6 +406,15 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         lines(
             "function f(x) {",
             "  return (x.p = 0) && (x.p = 3);", // Second assignment will never execute.
+            "}"));
+  }
+
+  @Test
+  public void nullishCoalesce() {
+    testSame(
+        lines(
+            "function f(x) {",
+            "  return (x.p = 2) ?? (x.p = 3);", // Second assignment will never execute.
             "}"));
   }
 

@@ -47,7 +47,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -62,6 +61,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
@@ -204,6 +204,9 @@ public class Node implements Serializable {
     TYPEDEF_TYPE,
     // Original name of a goog.define call.
     DEFINE_NAME,
+    // Indicate that a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, or OPTCHAIN_CALL is the start of an
+    // optional chain.
+    START_OF_OPT_CHAIN,
   }
 
   /**
@@ -503,7 +506,7 @@ public class Node implements Serializable {
       // '==' rather than 'equals' here to avoid doing unnecessary string equalities.
       return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
           && this.raw == ((TemplateLiteralSubstringNode) node).raw
-          && Objects.equal(this.cooked, ((TemplateLiteralSubstringNode) node).cooked));
+          && Objects.equals(this.cooked, ((TemplateLiteralSubstringNode) node).cooked));
     }
 
     @Override
@@ -1952,7 +1955,7 @@ public class Node implements Serializable {
       return false;
     }
 
-    if (compareType && !JSType.isEquivalent(getJSType(), node.getJSType())) {
+    if (compareType && !Objects.equals(getJSType(), node.getJSType())) {
       return false;
     }
 
@@ -1970,7 +1973,7 @@ public class Node implements Serializable {
     }
 
     for (Function<Node, Object> getter : PROP_GETTERS_FOR_EQUALITY) {
-      if (!Objects.equal(getter.apply(this), getter.apply(node))) {
+      if (!Objects.equals(getter.apply(this), getter.apply(node))) {
         return false;
       }
     }
@@ -2375,7 +2378,7 @@ public class Node implements Serializable {
     if (cloneTypeExprs) {
       JSDocInfo info = this.getJSDocInfo();
       if (info != null) {
-        this.setJSDocInfo(info.clone(true));
+        dst.setJSDocInfo(info.clone(true));
       }
     }
     return dst;
@@ -2731,6 +2734,22 @@ public class Node implements Serializable {
    */
   public final boolean isGeneratorSafe() {
     return getBooleanProp(Prop.IS_GENERATOR_SAFE);
+  }
+
+  /**
+   * Sets whether this node is the start of an optional chain. This method is meaningful only on
+   * {@link Token#OPTCHAIN_GETELEM}, {@link Token#OPTCHAIN_GETPROP}, {@link Token#OPTCHAIN_CALL}
+   */
+  public final void setIsOptionalChainStart(boolean isOptionalChainStart) {
+    checkState(isOptChainGetElem() || isOptChainGetProp() || isOptChainCall());
+    putBooleanProp(Prop.START_OF_OPT_CHAIN, isOptionalChainStart);
+  }
+
+  /**
+   * Returns whether this node is an optional chaining node.
+   */
+  public final boolean isOptionalChainStart() {
+    return getBooleanProp(Prop.START_OF_OPT_CHAIN);
   }
 
   /**
@@ -3324,6 +3343,10 @@ public class Node implements Serializable {
     return this.token == Token.IMPORT;
   }
 
+  public final boolean isImportMeta() {
+    return this.token == Token.IMPORT_META;
+  }
+
   public final boolean isImportStar() {
     return this.token == Token.IMPORT_STAR;
   }
@@ -3408,6 +3431,10 @@ public class Node implements Serializable {
     return this.token == Token.NULL;
   }
 
+  public final boolean isNullishCoalesce() {
+    return this.token == Token.COALESCE;
+  }
+
   public final boolean isNumber() {
     return this.token == Token.NUMBER;
   }
@@ -3418,6 +3445,18 @@ public class Node implements Serializable {
 
   public final boolean isObjectPattern() {
     return this.token == Token.OBJECT_PATTERN;
+  }
+
+  public final boolean isOptChainCall() {
+    return this.token == Token.OPTCHAIN_CALL;
+  }
+
+  public final boolean isOptChainGetElem() {
+    return this.token == Token.OPTCHAIN_GETELEM;
+  }
+
+  public final boolean isOptChainGetProp() {
+    return this.token == Token.OPTCHAIN_GETPROP;
   }
 
   public final boolean isOr() {
@@ -3434,6 +3473,10 @@ public class Node implements Serializable {
 
   public final boolean isRest() {
     return this.token == Token.ITER_REST || this.token == Token.OBJECT_REST;
+  }
+
+  public final boolean isObjectRest() {
+    return this.token == Token.OBJECT_REST;
   }
 
   public final boolean isReturn() {

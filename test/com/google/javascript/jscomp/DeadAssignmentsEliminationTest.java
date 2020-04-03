@@ -44,7 +44,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     return options;
   }
 
@@ -118,6 +118,17 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
     inFunction("var x,y; if( (x=1)+(y=2) > 3){}",
         "var x,y; if( 1+2 > 3){}");
+  }
+
+  @Test
+  public void nullishCoalesce() {
+    inFunction("var x; if(x=1==4??1){}", "var x; if(1==4??1) {}");
+    inFunction("var x; if(0??(x=1)){}", "var x; if(0??1){}");
+    inFunction("var x; if((x=2)??(x=1)){}", "var x; if(2??1){}");
+    inFunction("var x; x=2; if(0??(x=1)){}; x");
+    inFunction("var a, b; if ((a = 1) ?? (b = a)) {b}");
+    inFunction("var a, b; if ((b = a) ?? (a = 1)) {b}", "var a, b; if ((b = a) ?? (1)) {b}");
+    inFunction("var a; (a = 1) ?? (a = 2)", "var a; 1 ?? 2");
   }
 
   @Test

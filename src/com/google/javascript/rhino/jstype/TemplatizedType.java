@@ -116,19 +116,11 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    super.appendTo(sb, forAnnotations);
+  void appendTo(TypeStringBuilder sb) {
+    super.appendTo(sb);
     if (!this.templateTypes.isEmpty()) {
-      sb.append("<");
-      int lastIndex = this.templateTypes.size() - 1;
-      for (int i = 0; i < lastIndex; i++) {
-        this.templateTypes.get(i).appendTo(sb, forAnnotations);
-        sb.append(",");
-      }
-      this.templateTypes.get(lastIndex).appendTo(sb, forAnnotations);
-      sb.append(">");
+      sb.append("<").appendAll(this.templateTypes, ",").append(">");
     }
-    return sb;
   }
 
   @Override
@@ -169,7 +161,7 @@ public final class TemplatizedType extends ProxyObjectType {
 
   boolean wrapsSameRawType(JSType that) {
     return that.isTemplatizedType() && this.getReferencedTypeInternal()
-        .isEquivalentTo(
+        .equals(
             that.toMaybeTemplatizedType().getReferencedTypeInternal());
   }
 
@@ -197,7 +189,7 @@ public final class TemplatizedType extends ProxyObjectType {
     TemplatizedType that = rawThat.toMaybeTemplatizedType();
     checkNotNull(that);
 
-    if (this.isEquivalentTo(that)) {
+    if (this.equals(that)) {
       return this;
     }
 

@@ -39,22 +39,23 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.Property.OwnedProperty;
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import javax.annotation.Nullable;
 
-/**
- * Representation for a collection of properties on an object.
- * @author nicksantos@google.com (Nick Santos)
- */
-class PropertyMap implements Serializable {
+/** Representation for a collection of properties on an object. */
+final class PropertyMap implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private static final PropertyMap EMPTY_MAP = new PropertyMap(
@@ -69,6 +70,24 @@ class PropertyMap implements Serializable {
   // The map of our own properties.
   private final Map<String, Property> properties;
 
+  /**
+   * The set of keys for this map and its ancestors.
+   *
+   * <p>Collecting the set of properties turns out to be expensive for some high volume callers
+   * (e.g. structural type equality). Since the results don't change often, this cache eliminates
+   * most of the cost.
+   */
+  @Nullable private ImmutableSortedSet<String> cachedKeySet = null;
+
+  /**
+   * A "timestamp" for map mutations to validate {@link #cachedKeySet}.
+   *
+   * <p>If this value is less than the counter in any ancestor map, the cache is invalid. The update
+   * algorithm is similar to using a global counter, but uses a distributed approach that prevents
+   * the need for a single source of truth.
+   */
+  private int cachedKeySetCounter = 0;
+
   PropertyMap() {
     this(new TreeMap<>());
   }
@@ -82,9 +101,12 @@ class PropertyMap implements Serializable {
   }
 
   void setParentSource(ObjectType ownerType) {
-    if (this != EMPTY_MAP) {
-      this.parentSource = ownerType;
+    if (this == EMPTY_MAP) {
+      return;
     }
+
+    this.parentSource = ownerType;
+    this.incrementCachedKeySetCounter();
   }
 
   /** Returns the direct parent of this property map. */
@@ -174,52 +196,87 @@ class PropertyMap implements Serializable {
     if (primaryParent == null) {
       return this.properties.size();
     }
-    Set<String> props = new HashSet<>();
-    collectPropertyNames(props);
-    return props.size();
+
+    return this.keySet().size();
   }
 
   Set<String> getOwnPropertyNames() {
     return properties.keySet();
   }
 
-  void collectPropertyNames(Set<String> props) {
-    Set<PropertyMap> identitySet = Sets.newIdentityHashSet();
-    collectPropertyNamesHelper(props, identitySet);
+  ImmutableSortedSet<String> keySet() {
+    Set<PropertyMap> ancestors = Sets.newIdentityHashSet();
+    this.collectAllAncestors(ancestors);
+
+    int maxAncestorCounter = 0;
+    for (PropertyMap ancestor : ancestors) {
+      if (ancestor.cachedKeySetCounter > maxAncestorCounter) {
+        maxAncestorCounter = ancestor.cachedKeySetCounter;
+      }
+    }
+
+    /**
+     * If any counter is greater than this counter, there has been a mutation and the cache must be
+     * rebuilt.
+     */
+    if (maxAncestorCounter != this.cachedKeySetCounter || this.cachedKeySet == null) {
+      TreeSet<String> keys = new TreeSet<>();
+      for (PropertyMap ancestor : ancestors) {
+        /**
+         * Update the counters in all ancestors.
+         *
+         * <p>This update scheme is convergent. As long as there are no mutations, calls {@link
+         * #keySet} will eventually set stable caches on all maps.
+         */
+        ancestor.cachedKeySetCounter = maxAncestorCounter;
+        ancestor.cachedKeySet = null;
+
+        keys.addAll(ancestor.getOwnPropertyNames());
+      }
+      this.cachedKeySet = ImmutableSortedSet.copyOfSorted(keys);
+    }
+
+    return this.cachedKeySet;
   }
 
-  // The interface inheritance chain can have cycles.
-  // Use cache to avoid stack overflow.
-  private void collectPropertyNamesHelper(
-      Set<String> props, Set<PropertyMap> cache) {
-    if (!cache.add(this)) {
+  private void collectAllAncestors(Set<PropertyMap> ancestors) {
+    if (!ancestors.add(this)) {
       return;
     }
-    props.addAll(properties.keySet());
-    PropertyMap primaryParent = getPrimaryParent();
+
+    PropertyMap primaryParent = this.getPrimaryParent();
     if (primaryParent != null) {
-      primaryParent.collectPropertyNamesHelper(props, cache);
+      primaryParent.collectAllAncestors(ancestors);
     }
-    for (ObjectType o : getSecondaryParentObjects()) {
-      PropertyMap p = o.getPropertyMap();
-      if (p != null) {
-        p.collectPropertyNamesHelper(props, cache);
+
+    for (ObjectType parentType : this.getSecondaryParentObjects()) {
+      PropertyMap parentMap = parentType.getPropertyMap();
+      if (parentMap != null) {
+        parentMap.collectAllAncestors(ancestors);
       }
     }
   }
 
-
   boolean removeProperty(String name) {
-    return properties.remove(name) != null;
+    if (properties.remove(name) == null) {
+      return false;
+    }
+
+    this.incrementCachedKeySetCounter();
+    return true;
   }
 
   void putProperty(String name, Property newProp) {
     Property oldProp = properties.get(name);
-    if (oldProp != null) {
-      // This is to keep previously inferred JsDoc info, e.g., in a
-      // replaceScript scenario.
+
+    if (oldProp == null) {
+      // The cache is only invalidated if this is a new property name.
+      this.incrementCachedKeySetCounter();
+    } else {
+      // This is to keep previously inferred JsDoc info, e.g., in a replaceScript scenario.
       newProp.setJSDocInfo(oldProp.getJSDocInfo());
     }
+
     properties.put(name, newProp);
   }
 
@@ -233,5 +290,12 @@ class PropertyMap implements Serializable {
     // Otherwise we can get into an infinite loop because the ObjectType hashCode
     // method calls this one.
     return Objects.hashCode(properties.keySet());
+  }
+
+  private void incrementCachedKeySetCounter() {
+    this.cachedKeySetCounter++;
+    this.cachedKeySet = null;
+
+    checkState(this.cachedKeySetCounter >= 0);
   }
 }

@@ -135,11 +135,6 @@ class IncrementalScopeCreator implements ScopeCreator {
     return scope;
   }
 
-  @Override
-  public boolean hasBlockScope() {
-    return delegate.hasBlockScope();
-  }
-
   /**
    * A subclass of the traditional Scope class that knows about its children,
    * and has methods for updating the scope heirarchy.

@@ -1817,7 +1817,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testInitSymbol() {
-    test("let a = alert(Symbol.thimble);", "$jscomp.initSymbol(); var a = alert(Symbol.thimble)");
+    test("let a = alert(Symbol.thimble);", "var a = alert(Symbol.thimble)");
     assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
 
     test(
@@ -1829,7 +1829,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "function f() {",
             "  var x = 1;",
-            "  $jscomp.initSymbol();",
             "  var y = Symbol('nimble');",
             "}"));
     test(
@@ -1845,7 +1844,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "  if (true) {",
             "     var Symbol$0 = function() {};",
             "  }",
-            "  $jscomp.initSymbol();",
             "  alert(Symbol.ism)",
             "}"));
 
@@ -1876,101 +1874,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var x = {[Symbol.iterator]: function() { return this; }};",
         lines(
-            "$jscomp.initSymbol();",
             "$jscomp.initSymbolIterator();",
             "var $jscomp$compprop0 = {};",
             "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
             "         $jscomp$compprop0)"));
-  }
-
-  @Test
-  public void testClassComputedPropGetter() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test(
-        "/** @unrestricted */ class C { /** @return {number} */ get [foo]() { return 4; }}",
-        lines(
-            "/** @constructor @unrestricted */",
-            "var C = function() {};",
-            "var $jscomp$compprop0 = {};",
-            "$jscomp.global.Object.defineProperties(",
-            "  C.prototype,",
-            "  ($jscomp$compprop0[foo] = {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    /**",
-            "     * @return {number}",
-            "     */",
-            "    get: function() { return 4; }",
-            "  }, $jscomp$compprop0));"));
-    assertThat(getLastCompiler().injected).containsExactly("util/global");
-
-    testError("class C { get [add + expr]() {} }", CANNOT_CONVERT);
-  }
-
-  @Test
-  public void testClassComputedPropSetter() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test(
-        "/** @unrestricted */ class C { /** @param {string} val */ set [foo](val) {}}",
-        lines(
-            "/** @constructor @unrestricted */",
-            "var C = function() {};",
-            "var $jscomp$compprop0={};",
-            "$jscomp.global.Object.defineProperties(",
-            "  C.prototype,",
-            "  ($jscomp$compprop0[foo] = {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    /**",
-            "     * @param {string} val",
-            "     */",
-            "    set: function(val) {}",
-            "  }, $jscomp$compprop0));"));
-
-    testError("class C { get [sub - expr]() {} }", CANNOT_CONVERT);
-  }
-
-  @Test
-  public void testClassStaticComputedProps() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    testError("/** @unrestricted */ class C { static set [foo](val) {}}", CANNOT_CONVERT_YET);
-    testError("/** @unrestricted */ class C { static get [foo]() {}}", CANNOT_CONVERT_YET);
-  }
-
-  @Test
-  public void testClassComputedPropGetterAndSetter() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test(
-        lines(
-            "/** @unrestricted */",
-            "class C {",
-            "  /** @return {boolean} */",
-            "  get [foo]() {}",
-            "  /** @param {boolean} val */",
-            "  set [foo](val) {}",
-            "}"),
-        lines(
-            "/** @constructor @unrestricted */",
-            "var C = function() {};",
-            "var $jscomp$compprop0={};",
-            "$jscomp.global.Object.defineProperties(",
-            "  C.prototype,",
-            "  ($jscomp$compprop0[foo] = {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    /**",
-            "     * @return {boolean}",
-            "     */",
-            "    get: function() {},",
-            "    /**",
-            "     * @param {boolean} val",
-            "     */",
-            "    set: function(val) {},",
-            "  }, $jscomp$compprop0));"));
   }
 
   /** ES5 getters and setters should report an error if the languageOut is ES3. */
@@ -2219,84 +2126,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test("`hello ${a + b}`", "'hello ' + (a + b)");
     test("`hello ${a, b, c}`", "'hello ' + (a, b, c)");
     test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
-  }
-
-  @Test
-  public void testTaggedTemplateLiteral() {
-    test(
-        "tag``",
-        lines(
-            "var $jscomp$templatelit$0 = [''];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "tag($jscomp$templatelit$0);"));
-
-    test(
-        "tag`${hello} world`",
-        lines(
-            "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "tag($jscomp$templatelit$0, hello);"));
-
-    test(
-        "tag`${hello} ${world}`",
-        lines(
-            "var $jscomp$templatelit$0 = ['', ' ', ''];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "tag($jscomp$templatelit$0, hello, world);"));
-
-    test(
-        "tag`\"`",
-        lines(
-            "var $jscomp$templatelit$0 = ['\\\"'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "tag($jscomp$templatelit$0);"));
-
-    // The cooked string and the raw string are different.
-    // Note that this test is tricky to read, because any escape sequences will be escaped twice.
-    // This table is helpful:
-    //
-    //     Java String    JavaScript String      JavaScript Value
-    //
-    //     ----------------------------------------------------------------
-    //     \t        ->   <tab character>    -> <tab character> (length: 1)
-    //     \\t       ->   \t                 -> <tab character> (length: 1)
-    //     \\\t      ->   \<tab character>   -> <tab character> (length: 1)
-    //     \\\\t     ->   \\t                -> \t              (length: 2)
-    //
-    test(
-        "tag`a\\tb`",
-        lines(
-            "var $jscomp$templatelit$0 = ['a\\tb'];",
-            "$jscomp$templatelit$0.raw = ['a\\\\tb'];",
-            "tag($jscomp$templatelit$0);"));
-
-    test(
-        "tag()`${hello} world`",
-        lines(
-            "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "tag()($jscomp$templatelit$0, hello);"));
-
-    test(
-        "a.b`${hello} world`",
-        lines(
-            "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "a.b($jscomp$templatelit$0, hello);"));
-
-    // https://github.com/google/closure-compiler/issues/1299
-    test(
-        "tag`<p class=\"foo\">${x}</p>`",
-        lines(
-            "var $jscomp$templatelit$0 = ['<p class=\"foo\">', '</p>'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "tag($jscomp$templatelit$0, x);"));
-    test(
-        "tag`<p class='foo'>${x}</p>`",
-        lines(
-            "var $jscomp$templatelit$0 = ['<p class=\\'foo\\'>', '</p>'];",
-            "$jscomp$templatelit$0.raw = $jscomp$templatelit$0.slice();",
-            "tag($jscomp$templatelit$0, x);"));
   }
 
   @Test

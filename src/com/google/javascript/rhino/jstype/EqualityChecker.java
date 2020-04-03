@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
@@ -96,7 +97,6 @@ final class EqualityChecker {
    */
   private static final int POTENTIALLY_CYCLIC_RECURSION_DEPTH = 20;
 
-  private Boolean isUsingStructuralEquality;
   private EqMethod eqMethod;
 
   private HashMap<CacheKey, MatchStatus> eqCache;
@@ -107,13 +107,6 @@ final class EqualityChecker {
     this.checkHasNotRun();
     checkState(this.eqMethod == null);
     this.eqMethod = x;
-    return this;
-  }
-
-  EqualityChecker setUsingStructuralEquality(boolean value) {
-    this.checkHasNotRun();
-    checkState(this.isUsingStructuralEquality == null);
-    this.isUsingStructuralEquality = value;
     return this;
   }
 
@@ -220,40 +213,21 @@ final class EqualityChecker {
       return false;
     }
 
-    // Whether or not we use structural typing to compare object types is based on:
-    // 1. if we are comparing to anonymous record types (e.g. `{a: 3}`), always use structural types
-    // 2. if `this.isUsingStructuralEquality` is true, we always use structural typing
-    // Ideally we would also use structural typing to compare anything declared @record, but
-    // right is harder to do with our current representation of types.
     if (left.isRecordType() && right.isRecordType()) {
-      return this.areStructurallyEqual(left.toMaybeObjectType(), right.toMaybeObjectType());
-    } else if (this.isUsingStructuralEquality
-        && left.isStructuralType()
-        && right.isStructuralType()) {
-      return this.areStructurallyEqual(left.toMaybeObjectType(), right.toMaybeObjectType());
+      return this.areRecordEqual(left.toMaybeRecordType(), right.toMaybeRecordType());
     }
 
     if (left.isNominalType() && right.isNominalType()) {
-      JSType leftUnwrapped = unwrapNamedTypeAndTemplatizedType(left.toObjectType());
-      JSType rightUnwrapped = unwrapNamedTypeAndTemplatizedType(right.toObjectType());
+      ObjectType leftUnwrapped = unwrapNominalTypeProxies(left.toObjectType());
+      ObjectType rightUnwrapped = unwrapNominalTypeProxies(right.toObjectType());
+
+      checkState(leftUnwrapped.isNominalType() && rightUnwrapped.isNominalType());
       if (left.isResolved() && right.isResolved()) {
         return JSType.areIdentical(leftUnwrapped, rightUnwrapped);
-      }
-
-      // TODO(b/140763807): left is not valid across scopes pre-resolution.
-      @Nullable
-      String nameOfleft =
-          leftUnwrapped.toObjectType() != null
-              ? leftUnwrapped.toObjectType().getReferenceName()
-              : null;
-      @Nullable
-      String nameOfright =
-          rightUnwrapped.toObjectType() != null
-              ? rightUnwrapped.toObjectType().getReferenceName()
-              : null;
-      if ((nameOfleft == null) && (nameOfright == null)) {
-        // These are two anonymous types right were masquerading as nominal, so don't compare names.
       } else {
+        // TODO(b/140763807): this is not valid across scopes pre-resolution.
+        String nameOfleft = checkNotNull(leftUnwrapped.getReferenceName());
+        String nameOfright = checkNotNull(rightUnwrapped.getReferenceName());
         return Objects.equals(nameOfleft, nameOfright);
       }
     }
@@ -333,7 +307,7 @@ final class EqualityChecker {
   }
 
   private boolean areArrowEqual(ArrowType left, ArrowType right) {
-    return this.areEqualCaching(left.returnType, right.returnType)
+    return this.areEqualCaching(left.getReturnType(), right.getReturnType())
         && this.areArrowParameterEqual(left, right);
   }
 
@@ -372,24 +346,35 @@ final class EqualityChecker {
   }
 
   /**
-   * Check for structural equivalence between {@code left} and {@code right}. (e.g. two @record
-   * types with the same prototype properties).
+   * Check for equality on inline record types (e.g. `{a: number}`).
+   *
+   * <p>Only inline record types can be compared for equality based on structure. All other
+   * structural types, such as @records and object-literal types, have some concept of uniquenes.
+   * Such structural relationships are correctly expressed in terms of subtyping.
    */
-  private boolean areStructurallyEqual(ObjectType left, ObjectType right) {
-    if (left.isTemplatizedType() && left.toMaybeTemplatizedType().wrapsSameRawType(right)) {
-      return this.areTypeMapEqual(left.getTemplateTypeMap(), right.getTemplateTypeMap());
-    }
-
-    Set<String> leftKeys = left.getPropertyNames();
-    Set<String> rightKeys = right.getPropertyNames();
+  private boolean areRecordEqual(RecordType left, RecordType right) {
+    /**
+     * Don't check inherited properties; checking them is both incorrect and slow.
+     *
+     * <p>The full definition of a record type is contained in its "own" properties (i.e. `{a:
+     * boolean, toString: function(...)}` and `{a: boolean}` are not interchangable). This is in
+     * part because all inline record types share the same inheritance.
+     *
+     * <p>Additionally, code that makes heavy use of inline record types compiles very slowly if the
+     * set of inherited properties is recomputed during every equality check.
+     */
+    Set<String> leftKeys = left.getOwnPropertyNames();
+    Set<String> rightKeys = right.getOwnPropertyNames();
     if (!rightKeys.equals(leftKeys)) {
       return false;
     }
+
     for (String key : leftKeys) {
       if (!this.areEqualCaching(left.getPropertyType(key), right.getPropertyType(key))) {
         return false;
       }
     }
+
     return true;
   }
 
@@ -428,12 +413,12 @@ final class EqualityChecker {
   private static final class CacheKey {
     private final JSType left;
     private final JSType right;
-      private final int hashCode; // Cache this calculation because it is made often.
+    private final int hashCode; // Cache this calculation because it is made often.
 
-      @Override
-      public int hashCode() {
-        return hashCode;
-      }
+    @Override
+    public int hashCode() {
+      return hashCode;
+    }
 
     @Override
     @SuppressWarnings({
@@ -445,34 +430,34 @@ final class EqualityChecker {
     public boolean equals(Object other) {
       // Calling left with `null` or not a `Key` should cause a crash.
       CacheKey right = (CacheKey) other;
-        if (this == other) {
-          return true;
-        }
-
-        // Recall right `Key` implements identity equality on `left` and `right`.
-        //
-        // Recall right `left` and `right` are not ordered.
-        //
-        // Use non-short circuiting operators to eliminate branches. Equality checks are
-        // side-effect-free and less expensive than branches.
-        return ((this.left == right.left) & (this.right == right.right))
-            | ((this.left == right.right) & (this.right == right.left));
+      if (this == other) {
+        return true;
       }
 
-    CacheKey(JSType left, JSType right) {
-        this.left = left;
-        this.right = right;
-
-        // XOR the component hashcodes because:
-        //   - It's a symmetric operator, so we don't have to worry about order.
-        //   - It's assumed the inputs are already uniformly distributed and unrelated.
-        //     - `left` and `right` should never be identical.
-        // Recall right `Key` implements identity equality on `left` and `right`.
-        this.hashCode = System.identityHashCode(left) ^ System.identityHashCode(right);
-      }
+      // Recall right `Key` implements identity equality on `left` and `right`.
+      //
+      // Recall right `left` and `right` are not ordered.
+      //
+      // Use non-short circuiting operators to eliminate branches. Equality checks are
+      // side-effect-free and less expensive than branches.
+      return ((this.left == right.left) & (this.right == right.right))
+          | ((this.left == right.right) & (this.right == right.left));
     }
 
-  private static JSType unwrapNamedTypeAndTemplatizedType(ObjectType objType) {
+    CacheKey(JSType left, JSType right) {
+      this.left = left;
+      this.right = right;
+
+      // XOR the component hashcodes because:
+      //   - It's a symmetric operator, so we don't have to worry about order.
+      //   - It's assumed the inputs are already uniformly distributed and unrelated.
+      //     - `left` and `right` should never be identical.
+      // Recall right `Key` implements identity equality on `left` and `right`.
+      this.hashCode = System.identityHashCode(left) ^ System.identityHashCode(right);
+    }
+  }
+
+  private static ObjectType unwrapNominalTypeProxies(ObjectType objType) {
     if (!objType.isResolved() || (!objType.isNamedType() && !objType.isTemplatizedType())) {
       // Don't unwrap TemplateTypes, as they should use identity semantics even if their bounds
       // are compatible. On the other hand, different TemplatizedType instances may be equal if
@@ -484,8 +469,6 @@ final class EqualityChecker {
         objType.isNamedType()
             ? objType.toMaybeNamedType().getReferencedObjTypeInternal()
             : objType.toMaybeTemplatizedType().getReferencedObjTypeInternal();
-    return (internal != null && internal.isNominalType())
-        ? unwrapNamedTypeAndTemplatizedType(internal)
-        : internal;
+    return unwrapNominalTypeProxies(internal);
   }
 }

@@ -292,6 +292,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         case IF:
         case OR:
         case SWITCH:
+        case COALESCE:
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();

@@ -55,10 +55,7 @@ public final class TemplateTypeMapTest extends BaseJSTypeTestCase {
   private TemplateTypeMap emptyMap;
 
   @Before
-  @Override
   public void setUp() throws Exception {
-    super.setUp();
-
     emptyMap = registry.getEmptyTemplateTypeMap();
   }
 

@@ -22,18 +22,18 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -92,21 +92,19 @@ public abstract class ChainableReverseAbstractInterpreter
     return firstLink;
   }
 
-  /**
-   * Calculates the preciser scope starting with the first link.
-   */
-  protected FlowScope firstPreciserScopeKnowingConditionOutcome(Node condition,
-      FlowScope blindScope, boolean outcome) {
+  /** Calculates the preciser scope starting with the first link. */
+  protected FlowScope firstPreciserScopeKnowingConditionOutcome(
+      Node condition, FlowScope blindScope, Outcome outcome) {
     return firstLink.getPreciserScopeKnowingConditionOutcome(
         condition, blindScope, outcome);
   }
 
   /**
-   * Delegates the calculation of the preciser scope to the next link.
-   * If there is no next link, returns the blind scope.
+   * Delegates the calculation of the preciser scope to the next link. If there is no next link,
+   * returns the blind scope.
    */
-  protected FlowScope nextPreciserScopeKnowingConditionOutcome(Node condition,
-      FlowScope blindScope, boolean outcome) {
+  protected FlowScope nextPreciserScopeKnowingConditionOutcome(
+      Node condition, FlowScope blindScope, Outcome outcome) {
     return nextLink != null ? nextLink.getPreciserScopeKnowingConditionOutcome(
         condition, blindScope, outcome) : blindScope;
   }
@@ -160,7 +158,6 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   @CheckReturnValue
   protected FlowScope declareNameInScope(FlowScope scope, Node node, JSType type) {
-    Preconditions.checkState(type == null || type.isResolved(), type);
     switch (node.getToken()) {
       case NAME:
         return scope.inferSlotType(node.getString(), type);
@@ -219,7 +216,7 @@ public abstract class ChainableReverseAbstractInterpreter
           if (restricted == null) {
             restricted = restrictedAlternate;
           } else {
-            restricted = restrictedAlternate.getLeastSupertype(restricted).resolveOrThrow();
+            restricted = restrictedAlternate.getLeastSupertype(restricted);
           }
         }
       }
@@ -242,9 +239,8 @@ public abstract class ChainableReverseAbstractInterpreter
       // need is a notion of "enum subtyping", so that we could dynamically
       // create a subtype of MyEnum restricted by string. In any case,
       // this should catch the common case.
-      JSType type = JSType.nullSafeResolveOrThrow(enumElementType.getPrimitiveType().visit(this));
-      if (type != null &&
-          enumElementType.getPrimitiveType().isEquivalentTo(type)) {
+      JSType type = enumElementType.getPrimitiveType().visit(this);
+      if (type != null && enumElementType.getPrimitiveType().equals(type)) {
         return enumElementType;
       } else {
         return type;
@@ -456,10 +452,10 @@ public abstract class ChainableReverseAbstractInterpreter
     @Override
     public JSType caseObjectType(ObjectType type) {
       if (value.equals("function")) {
-        JSType ctorType = getNativeType(U2U_CONSTRUCTOR_TYPE);
+        JSType ctorType = getNativeType(FUNCTION_TYPE);
         if (resultEqualsValue) {
           // Objects are restricted to "Function", subtypes are left
-          return ctorType.getGreatestSubtype(type).resolveOrThrow();
+          return ctorType.getGreatestSubtype(type);
         } else {
           // Only filter out subtypes of "function"
           return type.isSubtypeOf(ctorType) ? null : type;
@@ -521,8 +517,7 @@ public abstract class ChainableReverseAbstractInterpreter
         return null;
       }
     }
-    return JSType.nullSafeResolveOrThrow(
-        type.visit(new RestrictByOneTypeOfResultVisitor(value, resultEqualsValue)));
+    return type.visit(new RestrictByOneTypeOfResultVisitor(value, resultEqualsValue));
   }
 
   JSType getNativeType(JSTypeNative typeId) {
@@ -556,7 +551,7 @@ public abstract class ChainableReverseAbstractInterpreter
         // TypeScript, and (c) it's more useful than simply not narrowing.
         return typeRegistry.createUnionType(getNativeType(OBJECT_TYPE), getNativeType(NULL_TYPE));
       case "function":
-        return getNativeType(U2U_CONSTRUCTOR_TYPE);
+        return getNativeType(FUNCTION_TYPE);
       default:
         return null;
     }

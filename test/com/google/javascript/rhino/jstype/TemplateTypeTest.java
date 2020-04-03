@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
+import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,13 +85,17 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
 
     TemplateType t1 = new TemplateType(registry, "T", fooType);
     TemplateType t2 = new TemplateType(registry, "T", fooType);
-    NamedType t1Proxy = registry.createNamedType(null, "T", "", -1, -1);
-    NamedType t2Proxy = registry.createNamedType(null, "T", "", -1, -1);
 
-    t1Proxy.setReferencedType(t1);
-    t2Proxy.setReferencedType(t2);
-    t1Proxy.resolve(registry.getErrorReporter());
-    t2Proxy.resolve(registry.getErrorReporter());
+    NamedType t1Proxy =
+        NamedType.builder(registry, "T")
+            .setResolutionKind(ResolutionKind.NONE)
+            .setReferencedType(t1)
+            .build();
+    NamedType t2Proxy =
+        NamedType.builder(registry, "T")
+            .setResolutionKind(ResolutionKind.NONE)
+            .setReferencedType(t2)
+            .build();
 
     assertType(t1Proxy).isNotEqualTo(t2Proxy);
     assertType(t1Proxy).isNotSubtypeOf(t2Proxy);
@@ -100,7 +105,6 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
   public void templateTypes_areNotEqualToUnknown() {
     // Given
     TemplateType t = new TemplateType(registry, "T");
-    t.resolveOrThrow();
     assertThat(t.isUnknownType()).isTrue();
 
     // Then
@@ -112,7 +116,6 @@ public final class TemplateTypeTest extends BaseJSTypeTestCase {
   public void templateTypes_withBound_areNotEqualToBound() {
     // Given
     TemplateType t = new TemplateType(registry, "T", NUMBER_TYPE);
-    t.resolveOrThrow();
 
     // Then
     assertType(t).isNotEqualTo(NUMBER_TYPE);

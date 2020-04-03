@@ -97,6 +97,25 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDoNotRemoveUnusedVarDeclaredInObjectPatternUsingRest() {
+    testSame(
+        lines(
+            "const data = {",
+            "  hello: 'abc',",
+            "  world: 'def',",
+            "}",
+            "",
+            "const {",
+            // If `hello` were removed, then `rest` could end up getting a `hello` property.
+            "  hello,",
+            "  ...rest",
+            "} = data",
+            "",
+            "console.log(rest);",
+            ""));
+  }
+
+  @Test
   public void testUnusedPrototypeFieldReference() {
     // Simply mentioning a prototype property without using it doesn't count as a reference.
     test("function C() {} C.prototype.x;", "");

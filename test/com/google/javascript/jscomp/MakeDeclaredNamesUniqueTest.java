@@ -120,6 +120,17 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMakeDeclaredNamesUniqueNullishCoalesce() {
+    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
+    this.useDefaultRenamer = true;
+
+    test(
+        "var foo; var x = function foo(){var foo = false ?? {};}",
+        "var foo; var x = function foo$jscomp$1(){var foo$jscomp$2 = false ?? {}}");
+    testSameWithInversion("var a = b ?? c;");
+  }
+
+  @Test
   public void testShadowedBleedingName() {
     this.useDefaultRenamer = true;
 

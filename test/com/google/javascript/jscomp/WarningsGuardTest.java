@@ -458,6 +458,20 @@ public final class WarningsGuardTest {
   }
 
   @Test
+  public void testSuppressGuard_onDetachedNode() {
+    Compiler compiler = new Compiler();
+    WarningsGuard guard =
+        new SuppressDocWarningsGuard(
+            compiler, ImmutableMap.of("deprecated", new DiagnosticGroup(BAR_WARNING)));
+
+    Node code = compiler.parseTestCode("/** @fileoverview @suppress {deprecated} */\n\nvar x;");
+    // Create an error that has the right source file, but no parents.
+    // This is the state of JSDoc nodes.
+    JSError error = makeError(code.getSourceFileName());
+    assertThat(guard.level(error)).isEqualTo(OFF);
+  }
+
+  @Test
   public void testComposeGuardCycle() {
     ComposeWarningsGuard guard = new ComposeWarningsGuard(
         visibilityOff, visibilityWarning);

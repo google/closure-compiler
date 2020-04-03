@@ -103,7 +103,7 @@ public final class NoResolvedType extends NoType {
   }
 
   @Override
-  StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(forAnnotations ? "?" : "NoResolvedType");
+  void appendTo(TypeStringBuilder sb) {
+   sb.append(sb.isForAnnotations() ? "?" : "NoResolvedType");
   }
 }
