@@ -29,6 +29,19 @@ opera.version = function() {};
 /** @constructor */
 function XSLTProcessor() {}
 
+/**
+ * @param {Node} styleSheet
+ * @return {undefined}
+ * @deprecated
+ */
+XSLTProcessor.importStylesheet = function(styleSheet) {};
+
+/**
+ * @param {Node} source
+ * @return {Document}
+ * @deprecated
+ */
+XSLTProcessor.transformToDocument = function(source) {};
 
 // The "methods" object is a place to hang arbitrary external
 // properties. It is a throwback to pre-typed days, and should
