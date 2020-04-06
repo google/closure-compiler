@@ -458,6 +458,12 @@ WritableStream.prototype.locked;
 WritableStream.prototype.abort = function(reason) {};
 
 /**
+ * @return {!Promise<undefined>}
+ * @see https://streams.spec.whatwg.org/#ws-close
+ */
+WritableStream.prototype.close = function() {};
+
+/**
  * @return {!WritableStreamDefaultWriter}
  * @see https://streams.spec.whatwg.org/#ws-get-writer
  */
