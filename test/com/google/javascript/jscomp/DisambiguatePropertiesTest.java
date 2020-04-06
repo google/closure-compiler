@@ -2694,11 +2694,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   @Test
   public void testMismatchForbiddenInvalidation() {
     test(
-        srcs(lines(
-            "/** @constructor */ function F() {}",
-            "/** @type {number} */ F.prototype.foobar = 3;",
-            "/** @return {number} */ function g() { return new F(); }")),
-        error(INVALIDATION).withMessageContaining("Consider fixing errors"));
+        srcs(
+            lines(
+                "/** @constructor */ function F() {}",
+                "/** @type {number} */ F.prototype.foobar = 3;",
+                "/** @return {number} */ function g() { return new F(); }")),
+        error(INVALIDATION).withMessageContaining("required to be disambiguated"));
   }
 
   @Test
@@ -3805,7 +3806,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testObjectPattern_withUnknownType_stringKey_emitsInvalidationError_aboutName() {
+  public void testObjectPattern_withUnknownType_stringKey_emitsInvalidationError_aboutProp() {
     testError(
         srcs(
             lines(
@@ -3819,7 +3820,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "Foo.foobar = 'static property!';",
                 // because unknownName is of the unknown type '?', we can't disambiguate foobar
                 "const {foobar: someRandomName} = unknownName;")),
-        error(INVALIDATION).withMessageContaining("someRandomName"));
+        error(INVALIDATION).withMessageContaining("foobar"));
   }
 
   @Test

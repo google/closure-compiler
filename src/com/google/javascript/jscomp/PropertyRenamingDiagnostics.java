@@ -21,8 +21,11 @@ public final class PropertyRenamingDiagnostics {
   public static final DiagnosticType INVALIDATION =
       DiagnosticType.disabled(
           "JSC_INVALIDATION",
-          "Property disambiguator skipping all instances of property {0} "
-              + "because of type {1} node {2}. {3}");
+          ""
+              + "Property ''{0}'' was required to be disambiguated but was invalidated. This is due"
+              + " to an access on type ''{1}''. It became invalidating due to mismatches or"
+              + " structural matches at the following locations:\n"
+              + "{2}");
 
   public static final DiagnosticType INVALIDATION_ON_TYPE =
       DiagnosticType.disabled(

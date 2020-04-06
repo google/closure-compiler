@@ -19,8 +19,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -475,6 +473,45 @@ class DisambiguateProperties implements CompilerPass {
     }
   }
 
+  private void reportInvalidation(Node location, String propName, JSType receiver) {
+    CheckLevel level = propertiesToErrorFor.getOrDefault(propName, CheckLevel.OFF);
+    if (level.equals(CheckLevel.OFF)) {
+      return;
+    }
+
+    ArrayList<String> locations = new ArrayList<>();
+    printErrorLocations(locations, receiver);
+    String locationsMsg =
+        locations.isEmpty() ? "This type is inherently invalidating" : String.join("\n", locations);
+
+    compiler.report(
+        JSError.make(
+            location,
+            level,
+            PropertyRenamingDiagnostics.INVALIDATION,
+            propName,
+            receiver.toString(),
+            locationsMsg));
+  }
+
+  private void printErrorLocations(List<String> locations, JSType t) {
+    if (!t.isObjectType() || t.isAllType()) {
+      return;
+    }
+
+    if (t.isUnionType()) {
+      for (JSType alt : t.getUnionMembers()) {
+        printErrorLocations(locations, alt);
+      }
+      return;
+    }
+
+    invalidationMap.get(t).stream()
+        .limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY)
+        .map((l) -> l.getSourceFileName() + ":" + l.getLineno() + ":" + l.getCharno())
+        .forEachOrdered(locations::add);
+  }
+
   /**
    * Traverses the tree, building a map from field names to Nodes for all fields that can be
    * renamed.
@@ -499,33 +536,8 @@ class DisambiguateProperties implements CompilerPass {
       String name = n.getLastChild().getString();
       JSType type = getType(n.getFirstChild());
       Property prop = getProperty(name);
-      if (!prop.scheduleRenaming(n.getLastChild(), type)
-          && propertiesToErrorFor.containsKey(name)) {
-        String suggestion = "";
-        if (type.isAllType() || type.isUnknownType()) {
-          if (n.getFirstChild().isThis()) {
-            suggestion = "The \"this\" object is unknown in the function, consider using @this";
-          } else {
-            String qName = n.getFirstChild().getQualifiedName();
-            suggestion = "Consider casting " + qName + " if you know its type.";
-          }
-        } else {
-          List<String> errors = new ArrayList<>();
-          printErrorLocations(errors, type);
-          if (!errors.isEmpty()) {
-            suggestion = "Consider fixing errors for the following types:\n";
-            suggestion += Joiner.on("\n").join(errors);
-          }
-        }
-        compiler.report(
-            JSError.make(
-                n,
-                propertiesToErrorFor.get(name),
-                PropertyRenamingDiagnostics.INVALIDATION,
-                name,
-                String.valueOf(type),
-                n.toString(),
-                suggestion));
+      if (!prop.scheduleRenaming(n.getLastChild(), type)) {
+        reportInvalidation(n, name, type);
       }
     }
 
@@ -559,19 +571,7 @@ class DisambiguateProperties implements CompilerPass {
             JSType objlitType = getType(n);
             Property prop = getProperty(name);
             if (!prop.scheduleRenaming(child, objlitType)) {
-              // TODO(user): It doesn't look like the user can do much in this
-              // case right now.
-              if (propertiesToErrorFor.containsKey(name)) {
-                compiler.report(
-                    JSError.make(
-                        child,
-                        propertiesToErrorFor.get(name),
-                        PropertyRenamingDiagnostics.INVALIDATION,
-                        name,
-                        String.valueOf(objlitType),
-                        n.toString(),
-                        ""));
-              }
+              reportInvalidation(n, name, objlitType);
             }
             break;
 
@@ -620,23 +620,8 @@ class DisambiguateProperties implements CompilerPass {
         Property prop = getProperty(name);
         JSType ownerType = member.isStaticMember() ? classType : classInstanceType;
 
-        if (!prop.scheduleRenaming(member, ownerType) && propertiesToErrorFor.containsKey(name)) {
-          String suggestion = "";
-          List<String> errors = new ArrayList<>();
-          printErrorLocations(errors, ownerType);
-          if (!errors.isEmpty()) {
-            suggestion = "Consider fixing errors for the following types:\n";
-            suggestion += Joiner.on("\n").join(errors);
-          }
-          compiler.report(
-              JSError.make(
-                  member,
-                  propertiesToErrorFor.get(name),
-                  PropertyRenamingDiagnostics.INVALIDATION,
-                  name,
-                  String.valueOf(ownerType),
-                  member.toString(),
-                  suggestion));
+        if (!prop.scheduleRenaming(member, ownerType)) {
+          reportInvalidation(classNode, name, ownerType);
         }
       }
     }
@@ -660,33 +645,8 @@ class DisambiguateProperties implements CompilerPass {
         }
         String name = stringKey.getString();
         Property prop = getProperty(name);
-        if (!prop.scheduleRenaming(stringKey, objectPatternType)
-            && propertiesToErrorFor.containsKey(name)) {
-          String suggestion = "";
-          if (objectPatternType.isAllType() || objectPatternType.isUnknownType()) {
-            String qName = target.getNode().getQualifiedName();
-            if (qName != null) {
-              suggestion = "Consider tightening the type assigned to " + qName;
-            } else {
-              suggestion = "Consider tightening the type assigned to " + target.getNode();
-            }
-          } else {
-            List<String> errors = new ArrayList<>();
-            printErrorLocations(errors, objectPatternType);
-            if (!errors.isEmpty()) {
-              suggestion = "Consider fixing errors for the following types:\n";
-              suggestion += Joiner.on("\n").join(errors);
-            }
-          }
-          compiler.report(
-              JSError.make(
-                  stringKey,
-                  propertiesToErrorFor.get(name),
-                  PropertyRenamingDiagnostics.INVALIDATION,
-                  name,
-                  String.valueOf(objectPatternType),
-                  stringKey.toString(),
-                  suggestion));
+        if (!prop.scheduleRenaming(stringKey, objectPatternType)) {
+          reportInvalidation(stringKey, name, objectPatternType);
         }
       }
     }
@@ -728,34 +688,8 @@ class DisambiguateProperties implements CompilerPass {
       Node obj = call.getChildAtIndex(2);
       JSType type = getType(obj);
       Property prop = getProperty(propName);
-      if (!prop.scheduleRenaming(call.getSecondChild(), type)
-          && propertiesToErrorFor.containsKey(propName)) {
-        String suggestion = "";
-        if (type.isAllType() || type.isUnknownType()) {
-          if (obj.isThis()) {
-            suggestion = "The \"this\" object is unknown in the function, consider using @this";
-          } else {
-            String qName = obj.getQualifiedName();
-            suggestion = "Consider casting " + qName + " if you know its type.";
-          }
-        } else {
-          List<String> errors = new ArrayList<>();
-          printErrorLocations(errors, type);
-          if (!errors.isEmpty()) {
-            suggestion = "Consider fixing errors for the following types:\n";
-            suggestion += Joiner.on("\n").join(errors);
-          }
-        }
-
-        compiler.report(
-            JSError.make(
-                call,
-                propertiesToErrorFor.get(propName),
-                PropertyRenamingDiagnostics.INVALIDATION,
-                propName,
-                String.valueOf(type),
-                renameFunctionName,
-                suggestion));
+      if (!prop.scheduleRenaming(call.getSecondChild(), type)) {
+        reportInvalidation(obj, propName, type);
       }
     }
 
@@ -786,25 +720,6 @@ class DisambiguateProperties implements CompilerPass {
           default:
             throw new IllegalStateException("Unrecognized child of object lit " + key);
         }
-      }
-    }
-
-    private void printErrorLocations(List<String> errors, JSType t) {
-      if (!t.isObjectType() || t.isAllType()) {
-        return;
-      }
-
-      if (t.isUnionType()) {
-        for (JSType alt : t.getUnionMembers()) {
-          printErrorLocations(errors, alt);
-        }
-        return;
-      }
-
-      Iterable<Node> invalidations =
-          FluentIterable.from(invalidationMap.get(t)).limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY);
-      for (Node location : invalidations) {
-        errors.add(t + " at " + location.getSourceFileName() + ":" + location.getLineno());
       }
     }
   }
