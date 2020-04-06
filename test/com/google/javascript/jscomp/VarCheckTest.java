@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -1063,6 +1064,87 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogModule_cannotBeReferencedInExterns() {
     testWarning(
         externs("goog.module('a.b');"), srcs("var goog;"), warning(UNDEFINED_EXTERN_VAR_ERROR));
+  }
+
+  @Test
+  public void testReferenceToWeakVar_fromStrongFile() {
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSModule strongModule = new JSModule(JSModule.STRONG_MODULE_NAME);
+    weakModule.addDependency(strongModule);
+
+    weakModule.add(SourceFile.fromCode("weak.js", lines("var weakVar = 0;"), SourceKind.WEAK));
+
+    strongModule.add(SourceFile.fromCode("strong.js", lines("weakVar();"), SourceKind.STRONG));
+
+    test(
+        srcs(
+            new JSModule[] {
+              strongModule, weakModule,
+            }),
+        error(VarCheck.VIOLATED_MODULE_DEP_ERROR),
+        error(VarCheck.UNDEFINED_VAR_ERROR));
+  }
+
+  @Test
+  public void testReferenceToWeakVar_fromWeakFile() {
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    weakModule.add(
+        SourceFile.fromCode(
+            "weak.js",
+            lines(
+                "var weakVar = 0;", //
+                "weakVar();"),
+            SourceKind.WEAK));
+
+    testSame(
+        new JSModule[] {
+          weakModule,
+        });
+  }
+
+  @Test
+  public void testReferenceToWeakNamespaceRoot_fromStrongFile() {
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSModule strongModule = new JSModule(JSModule.STRONG_MODULE_NAME);
+    weakModule.addDependency(strongModule);
+
+    weakModule.add(
+        SourceFile.fromCode(
+            "weak.js",
+            lines(
+                CLOSURE_DEFS, //
+                "goog.provide('foo.bar');"),
+            SourceKind.WEAK));
+
+    strongModule.add(SourceFile.fromCode("strong.js", lines("foo();"), SourceKind.STRONG));
+
+    test(
+        srcs(
+            new JSModule[] {
+              strongModule, weakModule,
+            }),
+        error(VarCheck.UNDEFINED_VAR_ERROR));
+  }
+
+  @Test
+  public void testReferenceToStrongNamespaceRoot_withAdditionalWeakProvide_fromStrongFile() {
+    JSModule weakModule = new JSModule(JSModule.WEAK_MODULE_NAME);
+    JSModule strongModule = new JSModule(JSModule.STRONG_MODULE_NAME);
+    weakModule.addDependency(strongModule);
+
+    weakModule.add(
+        SourceFile.fromCode("weak.js", lines("goog.provide('foo.bar');"), SourceKind.WEAK));
+
+    strongModule.add(
+        SourceFile.fromCode(
+            "strong0.js", lines(CLOSURE_DEFS, "goog.provide('foo.qux');"), SourceKind.STRONG));
+    strongModule.add(SourceFile.fromCode("strong1.js", lines("foo();"), SourceKind.STRONG));
+
+    testSame(
+        srcs(
+            new JSModule[] {
+              strongModule, weakModule,
+            }));
   }
 
   private static final class VariableTestCheck implements CompilerPass {

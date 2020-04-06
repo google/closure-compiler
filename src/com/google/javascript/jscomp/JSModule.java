@@ -293,6 +293,10 @@ public final class JSModule extends DependencyInfo.Base implements Serializable 
     return name.equals(STRONG_MODULE_NAME) || name.equals(WEAK_MODULE_NAME);
   }
 
+  public boolean isWeak() {
+    return name.equals(WEAK_MODULE_NAME);
+  }
+
   /** Returns the module name (primarily for debugging). */
   @Override
   public String toString() {
