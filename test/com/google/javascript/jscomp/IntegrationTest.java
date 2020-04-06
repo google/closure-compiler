@@ -4787,6 +4787,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "};",
             // TODO(bradfordcsmith): Es6InjectRuntimeLibraries should traverse even if no Es6
             // features are present
+            // "$jscomp.initSymbol();",
             // "$jscomp.initSymbolIterator();",
             "itr[Symbol.iterator] = function() { return itr; }"));
   }
@@ -4812,6 +4813,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var itr = {",
             "  next: function() { return { value: 1234, done: false }; },",
             "};",
+            "$jscomp.initSymbol();",
             "$jscomp.initSymbolIterator();",
             "itr[Symbol.iterator] = function() { return itr; }"));
   }

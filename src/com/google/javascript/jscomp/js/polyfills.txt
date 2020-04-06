@@ -78,7 +78,6 @@ String.prototype.trimLeft es_2019 es3 es6/string/trimstart
 String.prototype.trimRight es_2019 es3 es6/string/trimend
 String.prototype.trimStart es_2019 es3 es6/string/trimstart
 String.raw es6 es6
-Symbol es6 es3 es6/symbol
 WeakMap es6 es3 es6/weakmap
 WeakSet es6 es3 es6/weakset
 globalThis es_2020 es3 es6/globalthis

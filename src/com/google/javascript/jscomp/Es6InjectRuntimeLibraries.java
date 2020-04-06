@@ -129,6 +129,13 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
+      case NAME:
+        if (!n.isFromExterns() && isGlobalSymbol(t, n)) {
+          initSymbolBefore(n);
+        }
+        break;
+
       case GETPROP:
         if (!n.isFromExterns()) {
           visitGetprop(t, n);
@@ -155,6 +162,15 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
     }
     Var var = t.getScope().getVar("Symbol");
     return var == null || var.isGlobal();
+  }
+
+  /** Inserts a call to $jscomp.initSymbol() before {@code n}. */
+  private void initSymbolBefore(Node n) {
+    compiler.ensureLibraryInjected("es6/symbol", false);
+    Node statement = NodeUtil.getEnclosingStatement(n);
+    Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
+    statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
+    compiler.reportChangeToEnclosingScope(initSymbol);
   }
 
   // TODO(tbreisacher): Do this for all well-known symbols.
