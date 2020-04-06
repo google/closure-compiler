@@ -17,7 +17,6 @@ package com.google.javascript.refactoring;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.refactoring.SuggestedFix.getShortNameForRequire;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -347,7 +346,8 @@ public final class ErrorToFixMapper {
       }
 
       if (nodeToReplace != null && nodeToReplace.matchesQualifiedName(namespaceToRequire)) {
-        String shortName = getShortNameForRequire(namespaceToRequire);
+        Node script = NodeUtil.getEnclosingScript(error.getNode());
+        String shortName = RequireNameShortener.shorten(namespaceToRequire, script);
         fix.replace(nodeToReplace, IR.name(shortName), compiler);
       }
     }

@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -125,43 +124,8 @@ public final class SuggestedFix {
     return sb.toString();
   }
 
-  // TODO(bangert): Find a non-conflicting name.
-  static String getShortNameForRequire(String namespace) {
-    int lastDot = namespace.lastIndexOf('.');
-    if (lastDot == -1) {
-      return namespace;
-    }
-
-    // A few special cases so that we don't end up with code like
-    // "const string = goog.require('goog.string');" which would shadow the built-in string type.
-    String rightmostName = namespace.substring(lastDot + 1);
-    switch (Ascii.toUpperCase(rightmostName)) {
-      case "ARRAY":
-      case "MAP":
-      case "MATH":
-      case "OBJECT":
-      case "PROMISE":
-      case "SET":
-      case "STRING":
-        int secondToLastDot = namespace.lastIndexOf('.', lastDot - 1);
-        String secondToLastName = namespace.substring(secondToLastDot + 1, lastDot);
-        boolean capitalize = Character.isUpperCase(rightmostName.charAt(0));
-        if (capitalize) {
-          secondToLastName = upperCaseFirstLetter(secondToLastName);
-        }
-        return secondToLastName + upperCaseFirstLetter(rightmostName);
-      default:
-        return rightmostName;
-    }
-  }
-
-  static String upperCaseFirstLetter(String w) {
-    return Character.toUpperCase(w.charAt(0)) + w.substring(1);
-  }
-
   /**
-   * Builder class for {@link SuggestedFix} that contains helper functions to
-   * manipulate JS nodes.
+   * Builder class for {@link SuggestedFix} that contains helper functions to manipulate JS nodes.
    */
   public static final class Builder {
     private MatchedNodeInfo matchedNodeInfo = null;
@@ -642,7 +606,9 @@ public final class SuggestedFix {
       checkState(existingNode.isExprResult(), existingNode);
       checkState(existingNode.getFirstChild().isCall(), existingNode.getFirstChild());
 
-      String shortName = getShortNameForRequire(namespace);
+      Node script = NodeUtil.getEnclosingScript(existingNode);
+      String shortName = RequireNameShortener.shorten(namespace, script);
+
       Node newNode = IR.constNode(IR.name(shortName), existingNode.getFirstChild().cloneTree());
       replace(existingNode, newNode, m.getMetadata().getCompiler());
       return this;
@@ -672,7 +638,7 @@ public final class SuggestedFix {
           IR.getprop(IR.name("goog"), IR.string("require")),
           IR.string(namespace));
 
-      String shortName = getShortNameForRequire(namespace);
+      String shortName = RequireNameShortener.shorten(namespace, script);
       boolean useAliasedRequire = usesConstGoogRequires(metadata, script);
       if (useAliasedRequire) {
         googRequireNode = IR.constNode(IR.name(shortName), googRequireNode);
@@ -770,7 +736,7 @@ public final class SuggestedFix {
       Node script = NodeUtil.getEnclosingScript(m.getNode());
 
       if (script != null && usesConstGoogRequires(m.getMetadata(), script)) {
-        return getShortNameForRequire(namespace);
+        return RequireNameShortener.shorten(namespace, script);
       }
       return namespace;
     }

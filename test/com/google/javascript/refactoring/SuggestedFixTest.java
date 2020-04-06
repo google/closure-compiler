@@ -17,7 +17,6 @@
 package com.google.javascript.refactoring;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.refactoring.SuggestedFix.getShortNameForRequire;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertChanges;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertReplacement;
 import static org.junit.Assert.assertEquals;
@@ -1300,17 +1299,6 @@ public class SuggestedFixTest {
         options);
     compiler.parse();
     return compiler;
-  }
-
-  @Test
-  public void testShortName() {
-    assertThat(getShortNameForRequire("goog.array")).isEqualTo("googArray");
-    assertThat(getShortNameForRequire("goog.string")).isEqualTo("googString");
-    assertThat(getShortNameForRequire("goog.object")).isEqualTo("googObject");
-    assertThat(getShortNameForRequire("goog.structs.Map")).isEqualTo("StructsMap");
-
-    assertThat(getShortNameForRequire("array")).isEqualTo("array");
-    assertThat(getShortNameForRequire("Array")).isEqualTo("Array");
   }
 
   private String lines(String... lines) {
