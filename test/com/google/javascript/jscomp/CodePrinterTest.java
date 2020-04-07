@@ -757,6 +757,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testForIn() {
+    assertPrintSame("for(a in b)c");
+    assertPrintSame("for(var a in b)c");
+    assertPrintSame("for(var a in b=c)d");
+    assertPrintSame("for(var a in b,c)d");
+  }
+
+  @Test
   public void testPrintInOperatorInForLoop() {
     // Check for in expression in for's init expression.
     // Check alone, with + (higher precedence), with ?: (lower precedence),
@@ -802,6 +810,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testForOf() {
     assertPrintSame("for(a of b)c");
     assertPrintSame("for(var a of b)c");
+    assertPrintSame("for(var a of b=c)d");
+    assertPrintSame("for(var a of(b,c))d");
   }
 
   // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.
@@ -818,6 +828,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     assertPrintSame("for await(a of b)c");
     assertPrintSame("for await(var a of b)c");
+    assertPrintSame("for await(var a of b=c)d");
+    assertPrintSame("for await(var a of(b,c))d");
   }
 
   // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.

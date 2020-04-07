@@ -728,7 +728,8 @@ public class CodeGenerator {
         cc.maybeInsertSpace();
         add("of");
         cc.maybeInsertSpace();
-        add(first.getNext());
+        // the iterable must be an AssignmentExpression
+        addExpr(first.getNext(), NodeUtil.precedence(Token.ASSIGN), Context.OTHER);
         add(")");
         addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         break;
@@ -742,7 +743,8 @@ public class CodeGenerator {
         cc.maybeInsertSpace();
         add("of");
         cc.maybeInsertSpace();
-        add(first.getNext());
+        // the iterable must be an AssignmentExpression
+        addExpr(first.getNext(), NodeUtil.precedence(Token.ASSIGN), Context.OTHER);
         add(")");
         addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         break;
