@@ -497,13 +497,13 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
 
-    checks.add(removeSyntheticScript);
-
-    if (!options.checksOnly && options.j2clPassMode.shouldAddJ2clPasses()) {
-      checks.add(j2clPass);
-    }
-
-    if (!options.checksOnly) {
+    if (options.checksOnly) {
+      checks.add(removeSyntheticScript);
+    } else if (!options.checksOnly) {
+      checks.add(mergeSyntheticScript);
+      if (options.j2clPassMode.shouldAddJ2clPasses()) {
+        checks.add(j2clPass);
+      }
       // At this point all checks have been done.
       if (options.exportTestFunctions) {
         checks.add(exportTestFunctions);
@@ -3000,5 +3000,12 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("REMOVE_SYNTHETIC_SCRIPT")
           .setFeatureSet(FeatureSet.all())
           .setInternalFactory((compiler) -> (externs, js) -> compiler.removeSyntheticCodeInput())
+          .build();
+
+  private final PassFactory mergeSyntheticScript =
+      PassFactory.builder()
+          .setName("REMOVE_SYNTHETIC_SCRIPT")
+          .setFeatureSet(FeatureSet.all())
+          .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
           .build();
 }

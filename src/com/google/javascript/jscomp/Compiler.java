@@ -3185,11 +3185,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   void removeSyntheticCodeInput() {
+    this.removeSyntheticCodeInput(/* mergeContentIntoFirstInput= */ false);
+  }
+
+  @Override
+  void mergeSyntheticCodeInput() {
+    this.removeSyntheticCodeInput(/* mergeContentIntoFirstInput= */ true);
+  }
+
+  /**
+   * Deletes the synthesized code input and optionally moves all its subtree contents into the first
+   * non-synthetic input
+   */
+  private void removeSyntheticCodeInput(boolean mergeContentIntoFirstInput) {
     checkNotNull(synthesizedCodeInput, "Never initialized the synthetic input");
     CompilerInput input = synthesizedCodeInput;
     Node astRoot = input.getAstRoot(this);
     checkState(astRoot.isFirstChildOf(jsRoot));
-    if (astRoot.hasChildren()) {
+    if (mergeContentIntoFirstInput && astRoot.hasChildren()) {
       // If we've inserted anything into the synthetic AST, move it into the top of the next script.
       Node next = astRoot.getNext();
       checkNotNull(next, "Must provide at least one source");

@@ -3338,7 +3338,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setClosurePass(true);
     compilerOptions.setPreserveDetailedSourceInfo(true);
-    compilerOptions.setChecksOnly(true);
     compilerOptions.setContinueAfterErrors(true);
     Compiler compiler = new Compiler();
     compiler.disableThreads();
@@ -3442,7 +3441,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.setClosurePass(true);
     compilerOptions.setPreserveDetailedSourceInfo(true);
-    compilerOptions.setChecksOnly(true);
     compilerOptions.setCheckTypes(true);
     compilerOptions.setContinueAfterErrors(true);
     compilerOptions.setPreserveClosurePrimitives(true);

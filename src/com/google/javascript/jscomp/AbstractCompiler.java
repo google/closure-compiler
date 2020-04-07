@@ -696,4 +696,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /** Removes the script added by {@link #initializeSyntheticCodeInput} */
   abstract void removeSyntheticCodeInput();
+
+  /**
+   * Merges all code in the script added by {@link #initializeSyntheticCodeInput} into the first
+   * non-synthetic script. Will crash if the first non-synthetic script is a module and module
+   * rewriting has not occurred.
+   */
+  abstract void mergeSyntheticCodeInput();
 }

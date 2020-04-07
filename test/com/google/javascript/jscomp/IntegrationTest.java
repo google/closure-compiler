@@ -71,7 +71,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    options.setChecksOnly(true);
     options.setDefineToBooleanLiteral("USE", false);
     test(
         options,
@@ -89,7 +88,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    options.setChecksOnly(true);
     options.setDefineToBooleanLiteral("MY_USE", false);
     test(
         options,
@@ -109,7 +107,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setChecksOnly(true);
 
-    test(
+    testNoWarnings(
         options,
         new String[] {
           lines(
@@ -147,8 +145,7 @@ public final class IntegrationTest extends IntegrationTestCase {
               "  console.log(something);",
               "}",
               ""),
-        },
-        (String[]) null);
+        });
   }
 
   @Test
@@ -1089,7 +1086,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     addPolymerExterns();
 
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
-    options.setChecksOnly(true);
 
     String[] srcs =
         new String[] {
@@ -1715,7 +1711,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
     options.setEnableModuleRewriting(false);
-    options.setChecksOnly(true);
     options.setCheckTypes(true);
 
     test(
@@ -1728,6 +1723,27 @@ public final class IntegrationTest extends IntegrationTestCase {
             "goog.module('foo.Outer');", //
             "function Outer(){}",
             "exports = Outer;"));
+  }
+
+  @Test
+  public void testDisableModuleRewriting_doesntCrashWhenFirstInputIsModule() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setClosurePass(true);
+    options.setCodingConvention(new ClosureCodingConvention());
+    options.setEnableModuleRewriting(false);
+    options.setCheckTypes(true);
+    options.setChecksOnly(true);
+
+    testNoWarnings(
+        options,
+        new String[] {
+          "goog.module('foo.bar');",
+          lines(
+              "goog.scope(function() {;", //
+              "  /** @constructor */ function Outer() {}",
+              "});")
+        });
   }
 
   @Test
