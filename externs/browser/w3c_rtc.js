@@ -1940,6 +1940,46 @@ RTCInboundRtpStreamStats.prototype.removedSamplesForAcceleration;
 RTCInboundRtpStreamStats.prototype.decoderImplementation;
 
 
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteinboundrtpstreamstats
+ * @interface
+ * @extends {RTCReceivedRtpStreamStats}
+ */
+function RTCRemoteInboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCRemoteInboundRtpStreamStats.prototype.localId;
+
+/** @const {number} */
+RTCRemoteInboundRtpStreamStats.prototype.roundTripTime;
+
+/** @const {number} */
+RTCRemoteInboundRtpStreamStats.prototype.fractionLost;
+
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcsentrtpstreamstats
+ * @interface
+ * @extends {RTCRtpStreamStats}
+ */
+function RTCSentRtpStreamStats() {}
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.packetsSent;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.packetsDiscardedOnSend;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.fecPacketsSent;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.bytesSent;
+
+/** @const {number} */
+RTCSentRtpStreamStats.prototype.bytesDiscardedOnSend;
+
 /**
  * @interface
  * @extends {Iterable<!Array<string|!RTCStats>>}
