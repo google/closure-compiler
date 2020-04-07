@@ -91,6 +91,13 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
   /** Tries to evaluate a method on the Math object */
   private strictfp Node tryFoldKnownMathMethods(Node subtree, Node callTarget) {
+    checkArgument(NodeUtil.isGet(callTarget), callTarget);
+    Node methodNode = callTarget.getLastChild();
+    // Method node might not be a string if callTarget is a GETELEM.
+    // e.g. Math[something]()
+    if (!methodNode.isString()) {
+      return subtree;
+    }
     // first collect the arguments, if they are all numbers then we proceed
     List<Double> args = ImmutableList.of();
     for (Node arg = callTarget.getNext(); arg != null; arg = arg.getNext()) {
@@ -106,7 +113,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       }
     }
     Double replacement = null;
-    String methodName = callTarget.getFirstChild().getNext().getString();
+    String methodName = methodNode.getString();
     // NOTE: the standard does not define precision for these methods, but we are conservative, so
     // for now we only implement the methods that are guaranteed to not increase the size of the
     // numeric constants.

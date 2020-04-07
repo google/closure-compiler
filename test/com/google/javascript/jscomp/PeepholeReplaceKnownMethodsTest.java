@@ -378,12 +378,19 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldMathFunctionsBug() {
+    enableNormalize();
+    foldSame("Math[0]()");
+  }
+
+  @Test
   public void testFoldMathFunctions_abs() {
     enableNormalize();
     foldSame("Math.abs(Math.random())");
 
     fold("Math.abs('-1')", "1");
     fold("Math.abs(-2)", "2");
+    fold("Math['abs']('-3')", "3");
     fold("Math.abs(null)", "0");
     fold("Math.abs('')", "0");
     fold("Math.abs([])", "0");
