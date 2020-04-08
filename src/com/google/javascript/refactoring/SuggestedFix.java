@@ -603,7 +603,11 @@ public final class SuggestedFix {
 
     public Builder addLhsToGoogRequire(Match m, String namespace, String shortName) {
       Node existingNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
-      checkState(existingNode.isExprResult(), existingNode);
+      if (existingNode == null || !existingNode.isExprResult()) {
+        // TODO(b/139953612): Destructured goog.requires are not supported.
+        return this;
+      }
+
       checkState(existingNode.getFirstChild().isCall(), existingNode.getFirstChild());
 
       Node newNode = IR.constNode(IR.name(shortName), existingNode.getFirstChild().cloneTree());
@@ -772,7 +776,7 @@ public final class SuggestedFix {
      */
     @Nullable
     private static Node findGoogRequireNode(Node n, NodeMetadata metadata, String namespace) {
-      Node script = NodeUtil.getEnclosingScript(n);
+      Node script = metadata.getCompiler().getScriptNode(n.getSourceFileName());
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();
       }

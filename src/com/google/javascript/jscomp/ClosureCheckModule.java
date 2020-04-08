@@ -248,7 +248,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     }
     JSDocInfo jsDoc = n.getJSDocInfo();
     if (jsDoc != null) {
-      checkJSDoc(t, jsDoc);
+      checkJSDoc(jsDoc);
     }
     switch (n.getToken()) {
       case CALL:
@@ -307,42 +307,13 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       case GETPROP:
         if (n.matchesQualifiedName(currentModuleInfo.name)) {
           t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
-        } else if (currentModuleInfo.importsByLongRequiredName.containsKey(n.getQualifiedName())) {
-          Node importLhs = currentModuleInfo.importsByLongRequiredName.get(n.getQualifiedName());
-          if (importLhs == null) {
-            t.report(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, n.getQualifiedName());
-          } else if (importLhs.isName()) {
-            t.report(
-                n,
-                REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                n.getQualifiedName(),
-                importLhs.getString());
-          } else if (importLhs.isDestructuringLhs()) {
-            if (parent.isGetProp()) {
-              String shortName =
-                  parent
-                      .getQualifiedName()
-                      .substring(parent.getQualifiedName().lastIndexOf('.') + 1);
-              Node objPattern = importLhs.getFirstChild();
-              checkState(objPattern.isObjectPattern(), objPattern);
-              for (Node strKey : objPattern.children()) {
-                // const {foo: barFoo} = goog.require('ns.bar');
-                // Should use the short name "barFoo" instead of "ns.bar.foo".
-                if (strKey.hasOneChild() && strKey.getString().equals(shortName)) {
-                  t.report(
-                      parent,
-                      REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                      parent.getQualifiedName(),
-                      strKey.getFirstChild().getString());
-                  return;
-                }
-              }
-            }
-            t.report(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, n.getQualifiedName());
-          } else {
-            checkState(importLhs.isExprResult(), importLhs);
-            t.report(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, n.getQualifiedName());
-          }
+        } else {
+          checkImproperReferenceToImport(
+              n,
+              n.getQualifiedName(),
+              parent.isGetProp() ? parent.getSecondChild().getString() : null,
+              REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+              REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
         }
         break;
       default:
@@ -350,13 +321,13 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     }
   }
 
-  private void checkJSDoc(NodeTraversal t, JSDocInfo jsDoc) {
+  private void checkJSDoc(JSDocInfo jsDoc) {
     for (Node typeNode : jsDoc.getTypeNodes()) {
-      checkTypeExpression(t, typeNode);
+      checkTypeExpression(typeNode);
     }
   }
 
-  private void checkTypeExpression(final NodeTraversal t, Node typeNode) {
+  private void checkTypeExpression(Node typeNode) {
     NodeUtil.visitPreOrder(
         typeNode,
         new NodeUtil.Visitor() {
@@ -365,28 +336,72 @@ public final class ClosureCheckModule extends AbstractModuleCallback
             if (!node.isString()) {
               return;
             }
-            String type = node.getString();
+
+            String qname = node.getString();
+            String nextQnamePart = null;
+
             while (true) {
-              if (currentModuleInfo.importsByLongRequiredName.containsKey(type)) {
-                Node importLhs = currentModuleInfo.importsByLongRequiredName.get(type);
-                if (importLhs == null || !importLhs.isName()) {
-                  t.report(node, JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, type);
-                } else if (!importLhs.getString().equals(type)) {
-                  t.report(
-                      node,
-                      JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                      type,
-                      importLhs.getString());
-                }
+              int lastDot = qname.lastIndexOf('.');
+              if (lastDot < 0) {
+                return; // Don't check simple names.
               }
-              if (type.contains(".")) {
-                type = type.substring(0, type.lastIndexOf('.'));
-              } else {
-                return;
-              }
+
+              checkImproperReferenceToImport(
+                  node,
+                  qname,
+                  nextQnamePart,
+                  JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+                  JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
+
+              nextQnamePart = qname.substring(lastDot + 1);
+              qname = qname.substring(0, lastDot);
             }
           }
         });
+  }
+
+  private void checkImproperReferenceToImport(
+      Node n,
+      String qname,
+      String nextQnamePart,
+      DiagnosticType referenceToShortImportByLongNameIncludingShortName,
+      DiagnosticType referenceToFullyQualifiedImportName) {
+    if (qname == null) {
+      return;
+    }
+    checkState(qname.contains("."), qname); // Don't check simple names.
+
+    if (!currentModuleInfo.importsByLongRequiredName.containsKey(qname)) {
+      return;
+    }
+
+    Node importLhs = currentModuleInfo.importsByLongRequiredName.get(qname);
+    if (importLhs == null) {
+      // Fall through.
+    } else if (importLhs.isName()) {
+      this.compiler.report(
+          JSError.make(
+              n, referenceToShortImportByLongNameIncludingShortName, qname, importLhs.getString()));
+      return;
+    } else if (importLhs.isDestructuringLhs() && nextQnamePart != null) {
+      Node objPattern = importLhs.getFirstChild();
+      checkState(objPattern.isObjectPattern(), objPattern);
+      for (Node strKey : objPattern.children()) {
+        // const {foo: barFoo} = goog.require('ns.bar');
+        // Should use the short name "barFoo" instead of "ns.bar.foo".
+        if (strKey.hasOneChild() && strKey.getString().equals(nextQnamePart)) {
+          this.compiler.report(
+              JSError.make(
+                  n.getParent().isGetProp() ? n.getParent() : n,
+                  referenceToShortImportByLongNameIncludingShortName,
+                  qname + "." + nextQnamePart,
+                  strKey.getFirstChild().getString()));
+          return;
+        }
+      }
+    }
+
+    this.compiler.report(JSError.make(n, referenceToFullyQualifiedImportName, qname));
   }
 
   /** Is this the LHS of a goog.module export? i.e. Either "exports" or "exports.name" */
@@ -489,19 +504,19 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   }
 
   private static void checkShortName(NodeTraversal t, Node shortNameNode, String namespace) {
-    String shortName = shortNameNode.getString();
+    String nextQnamePart = shortNameNode.getString();
     String lastSegment = namespace.substring(namespace.lastIndexOf('.') + 1);
-    if (shortName.equals(lastSegment) || lastSegment.isEmpty()) {
+    if (nextQnamePart.equals(lastSegment) || lastSegment.isEmpty()) {
       return;
     }
 
-    if (isUpperCase(shortName.charAt(0)) != isUpperCase(lastSegment.charAt(0))) {
+    if (isUpperCase(nextQnamePart.charAt(0)) != isUpperCase(lastSegment.charAt(0))) {
       char newStartChar =
-          isUpperCase(shortName.charAt(0))
-              ? toLowerCase(shortName.charAt(0))
-              : toUpperCase(shortName.charAt(0));
-      String correctedName = newStartChar + shortName.substring(1);
-      t.report(shortNameNode, INCORRECT_SHORTNAME_CAPITALIZATION, shortName, correctedName);
+          isUpperCase(nextQnamePart.charAt(0))
+              ? toLowerCase(nextQnamePart.charAt(0))
+              : toUpperCase(nextQnamePart.charAt(0));
+      String correctedName = newStartChar + nextQnamePart.substring(1);
+      t.report(shortNameNode, INCORRECT_SHORTNAME_CAPITALIZATION, nextQnamePart, correctedName);
     }
   }
 

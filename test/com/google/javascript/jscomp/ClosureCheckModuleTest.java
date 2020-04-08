@@ -744,9 +744,9 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
         lines(
             "goog.module('x.y.z');",
             "",
-            "goog.requireType('foo');",
+            "goog.requireType('foo.Bar');",
             "",
-            "/** @type {foo.Foo} */ var foo;"),
+            "/** @type {foo.Bar} */ var foo;"),
         JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 

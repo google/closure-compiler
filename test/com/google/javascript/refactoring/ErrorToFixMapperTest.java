@@ -1442,15 +1442,20 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testAddLhsToGoogRequire_jsdoc() {
-    // TODO(tbreisacher): Add "const Animal = " before the goog.require and change
-    // world.util.Animal to Animal
-    assertNoChanges(
+    assertChanges(
         lines(
             "goog.module('m');",
             "",
             "goog.require('world.util.Animal');",
             "",
             "/** @type {!world.util.Animal} */",
+            "var cat;"),
+        lines(
+            "goog.module('m');",
+            "",
+            "const Animal = goog.require('world.util.Animal');",
+            "",
+            "/** @type {!Animal} */",
             "var cat;"));
   }
 
