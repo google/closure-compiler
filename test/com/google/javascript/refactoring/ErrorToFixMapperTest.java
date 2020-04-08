@@ -1384,6 +1384,27 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testAddLhsToGoogRequire_conflictingName() {
+    assertChanges(
+        lines(
+            "goog.module('m');",
+            "",
+            "goog.require('world.util.Animal');",
+            "",
+            "const Animal = null;",
+            "",
+            "class Cat extends world.util.Animal {}"),
+        lines(
+            "goog.module('m');",
+            "",
+            "const UtilAnimal = goog.require('world.util.Animal');",
+            "",
+            "const Animal = null;",
+            "",
+            "class Cat extends UtilAnimal {}"));
+  }
+
+  @Test
   public void testAddLhsToGoogRequire_new() {
     assertChanges(
         lines(

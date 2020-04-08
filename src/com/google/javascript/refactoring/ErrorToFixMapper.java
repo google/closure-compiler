@@ -220,8 +220,9 @@ public final class ErrorToFixMapper {
     if (shortNameMatcher.matches()) {
       shortName = shortNameMatcher.group(1);
     } else {
-      shortName = fullName.substring(fullName.lastIndexOf('.') + 1);
-      fix.addLhsToGoogRequire(match, fullName);
+      Node script = NodeUtil.getEnclosingScript(error.getNode());
+      shortName = RequireNameShortener.shorten(fullName, script);
+      fix.addLhsToGoogRequire(match, fullName, shortName);
     }
 
     String oldName =

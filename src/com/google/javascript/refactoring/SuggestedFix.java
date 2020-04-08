@@ -601,13 +601,10 @@ public final class SuggestedFix {
       return this;
     }
 
-    public Builder addLhsToGoogRequire(Match m, String namespace) {
+    public Builder addLhsToGoogRequire(Match m, String namespace, String shortName) {
       Node existingNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
       checkState(existingNode.isExprResult(), existingNode);
       checkState(existingNode.getFirstChild().isCall(), existingNode.getFirstChild());
-
-      Node script = NodeUtil.getEnclosingScript(existingNode);
-      String shortName = RequireNameShortener.shorten(namespace, script);
 
       Node newNode = IR.constNode(IR.name(shortName), existingNode.getFirstChild().cloneTree());
       replace(existingNode, newNode, m.getMetadata().getCompiler());
