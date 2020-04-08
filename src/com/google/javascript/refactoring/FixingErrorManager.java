@@ -18,7 +18,6 @@ package com.google.javascript.refactoring;
 
 import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING;
 import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING;
-import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.lint.CheckExtraRequires.EXTRA_REQUIRE_WARNING;
 
@@ -77,14 +76,12 @@ public class FixingErrorManager extends BasicErrorManager {
 
   private boolean containsFixableShorthandModuleWarning() {
     for (JSError error : sureFixes.keySet()) {
-      if (error.getType().equals(JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)
-          || error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
+      if (error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
         return true;
       }
     }
     for (JSError error : multiFixes.keySet()) {
-      if (error.getType().equals(JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)
-          || error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
+      if (error.getType().equals(REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME)) {
         return true;
       }
     }

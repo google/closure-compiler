@@ -612,8 +612,6 @@ public class DiagnosticGroups {
           "strictModuleChecks",
           ClosureCheckModule.AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE,
           ClosureCheckModule.LET_GOOG_REQUIRE,
-          ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME,
-          ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
           ClosureCheckModule.REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME,
           ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 

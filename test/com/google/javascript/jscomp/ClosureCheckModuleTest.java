@@ -26,8 +26,6 @@ import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERE
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
-import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME;
-import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_ARGUMENT;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE;
 import static com.google.javascript.jscomp.ClosureCheckModule.LEGACY_NAMESPACE_NOT_AT_TOP_LEVEL;
@@ -607,7 +605,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var A = goog.require('foo.A');",
             "",
             "/** @constructor @implements {foo.A} */ function B() {}"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 
     testError(
         lines(
@@ -616,7 +614,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var A = goog.requireType('foo.A');",
             "",
             "/** @constructor @implements {foo.A} */ function B() {}"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 
     testError(
         lines(
@@ -625,7 +623,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var A = goog.require('foo.A');",
             "",
             "/** @type {foo.A} */ var a;"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 
     testError(
         lines(
@@ -634,7 +632,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var A = goog.requireType('foo.A');",
             "",
             "/** @type {foo.A} */ var a;"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 
     testSame(
         lines(
@@ -675,7 +673,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var ns = goog.require('some.namespace');",
             "",
             "/** @type {some.namespace.Foo} */ var foo;"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 
     testError(
         lines(
@@ -684,7 +682,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var ns = goog.requireType('some.namespace');",
             "",
             "/** @type {some.namespace.Foo} */ var foo;"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 
     testError(
         lines(
@@ -693,7 +691,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var ns = goog.require('some.namespace');",
             "",
             "/** @type {Array<some.namespace.Foo>} */ var foos;"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
 
     testError(
         lines(
@@ -702,7 +700,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var ns = goog.requireType('some.namespace');",
             "",
             "/** @type {Array<some.namespace.Foo>} */ var foos;"),
-        JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
   }
 
   @Test
@@ -747,7 +745,7 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "goog.requireType('foo.Bar');",
             "",
             "/** @type {foo.Bar} */ var foo;"),
-        JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
+        REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
   }
 
   // TODO(johnlenz): Re-enable these tests (they are a bit tricky).

@@ -137,20 +137,6 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "Reference to fully qualified import name ''{0}''."
               + " Please use the short name ''{1}'' instead.");
 
-  static final DiagnosticType JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME =
-      DiagnosticType.disabled(
-          "JSC_JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME",
-          "Reference to fully qualified import name ''{0}'' in JSDoc."
-              + " Imports in goog.module should use the return value of"
-              + " goog.require / goog.forwardDeclare instead.");
-
-  public static final DiagnosticType
-      JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
-          DiagnosticType.disabled(
-              "JSC_JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME",
-              "Reference to fully qualified import name ''{0}'' in JSDoc."
-                  + " Please use the short name ''{1}'' instead.");
-
   static final DiagnosticType USE_OF_GOOG_PROVIDE =
       DiagnosticType.disabled(
           "JSC_USE_OF_GOOG_PROVIDE",
@@ -311,9 +297,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           checkImproperReferenceToImport(
               n,
               n.getQualifiedName(),
-              parent.isGetProp() ? parent.getSecondChild().getString() : null,
-              REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-              REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
+              parent.isGetProp() ? parent.getSecondChild().getString() : null);
         }
         break;
       default:
@@ -346,12 +330,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
                 return; // Don't check simple names.
               }
 
-              checkImproperReferenceToImport(
-                  node,
-                  qname,
-                  nextQnamePart,
-                  JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                  JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
+              checkImproperReferenceToImport(node, qname, nextQnamePart);
 
               nextQnamePart = qname.substring(lastDot + 1);
               qname = qname.substring(0, lastDot);
@@ -360,12 +339,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         });
   }
 
-  private void checkImproperReferenceToImport(
-      Node n,
-      String qname,
-      String nextQnamePart,
-      DiagnosticType referenceToShortImportByLongNameIncludingShortName,
-      DiagnosticType referenceToFullyQualifiedImportName) {
+  private void checkImproperReferenceToImport(Node n, String qname, String nextQnamePart) {
     if (qname == null) {
       return;
     }
@@ -381,7 +355,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     } else if (importLhs.isName()) {
       this.compiler.report(
           JSError.make(
-              n, referenceToShortImportByLongNameIncludingShortName, qname, importLhs.getString()));
+              n,
+              REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+              qname,
+              importLhs.getString()));
       return;
     } else if (importLhs.isDestructuringLhs() && nextQnamePart != null) {
       Node objPattern = importLhs.getFirstChild();
@@ -393,7 +370,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           this.compiler.report(
               JSError.make(
                   n.getParent().isGetProp() ? n.getParent() : n,
-                  referenceToShortImportByLongNameIncludingShortName,
+                  REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
                   qname + "." + nextQnamePart,
                   strKey.getFirstChild().getString()));
           return;
@@ -401,7 +378,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       }
     }
 
-    this.compiler.report(JSError.make(n, referenceToFullyQualifiedImportName, qname));
+    this.compiler.report(JSError.make(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, qname));
   }
 
   /** Is this the LHS of a goog.module export? i.e. Either "exports" or "exports.name" */
