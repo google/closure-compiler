@@ -1980,6 +1980,78 @@ RTCSentRtpStreamStats.prototype.bytesSent;
 /** @const {number} */
 RTCSentRtpStreamStats.prototype.bytesDiscardedOnSend;
 
+
+/**
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
+ * @interface
+ * @extends {RTCSentRtpStreamStats}
+ */
+function RTCOutboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.trackId;
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.senderId;
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.remoteId;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.lastPacketSentTimestamp;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.targetBitrate;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.framesEncoded;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.totalEncodeTime;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.averageRTCPInterval;
+
+/** @const {number|undefined} */
+RTCOutboundRtpStreamStats.prototype.qualityLimitationResolutionChanges;
+
+/** @const {string|undefined} */
+RTCOutboundRtpStreamStats.prototype.qualityLimitationReason;
+
+/** @const {string} */
+RTCOutboundRtpStreamStats.prototype.mediaSourceId;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.frameWidth;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.frameHeight;
+
+/**
+ * Firefox specific value.
+ * @const {number|undefined}
+ */
+RTCOutboundRtpStreamStats.prototype.bitrateMean;
+
+/** @const {string|undefined} */
+RTCOutboundRtpStreamStats.prototype.encoderImplementation;
+
+
+/**
+ * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcremoteoutboundrtpstreamstats
+ * @interface
+ * @extends {RTCSentRtpStreamStats}
+ */
+function RTCRemoteOutboundRtpStreamStats() {}
+
+/** @const {string} */
+RTCRemoteOutboundRtpStreamStats.prototype.localId;
+
+/** @const {?Date|number} */
+RTCRemoteOutboundRtpStreamStats.prototype.remoteTimestamp;
+
+
 /**
  * @interface
  * @extends {Iterable<!Array<string|!RTCStats>>}
