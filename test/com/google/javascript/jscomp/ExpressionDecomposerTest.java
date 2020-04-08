@@ -138,6 +138,30 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void optionalChainingMovable() {
+    helperCanExposeExpression(DecompositionType.MOVABLE, "foo()?.x", "foo");
+    helperCanExposeExpression(DecompositionType.MOVABLE, "foo()?.[x]", "foo");
+    helperCanExposeExpression(DecompositionType.MOVABLE, "foo()?.()", "foo");
+  }
+
+  @Test
+  public void optionalChainingDecomposable() {
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "x?.[foo()]", "foo");
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "x?.(foo())", "foo");
+  }
+
+  @Test
+  public void optionalChainingAllowMethodCallDecomposable() {
+    allowMethodCallDecomposing = true;
+    helperCanExposeExpression(DecompositionType.DECOMPOSABLE, "x?.y(foo())", "foo");
+  }
+
+  @Test
+  public void optionalChainingUnDecomposable() {
+    helperCanExposeExpression(DecompositionType.UNDECOMPOSABLE, "while(x = y?.[foo()]){}", "foo");
+  }
+
+  @Test
   public void testCanExposeExpression3() {
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "x = 0 && foo()", "foo");
@@ -534,6 +558,11 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
+  public void testMoveExpressionOptionalChain() {
+    helperMoveExpression("foo()?.x", "foo", "var result$jscomp$0 = foo(); result$jscomp$0?.x");
+  }
+
+  @Test
   public void testMoveExpression13() {
     helperMoveExpression(
         "const {a, b} = foo();",
@@ -611,6 +640,280 @@ public final class ExpressionDecomposerTest {
             "var temp$jscomp$1;", //
             "if((temp$jscomp$1 = goo()) != null) temp$jscomp$1;", //
             "else foo()"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetElem() {
+    helperExposeExpression(
+        "a = x?.[foo()]",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1[foo()];",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalCallChain() {
+    helperExposeExpression(
+        "a = x?.(a).y.z[foo()]",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1(a).y.z[foo()];",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalCallChainNoResult() {
+    helperExposeExpression(
+        "x?.(a)[y].z[foo()]",
+        "foo",
+        lines(
+            "var temp$jscomp$0 = x;",
+            "if (temp$jscomp$0 != null) {",
+            "    temp$jscomp$0(a)[y].z[foo()];",
+            "}"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetPropChain() {
+    helperExposeExpression(
+        "a = x?.y.z[foo()]",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.y.z[foo()];",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetPropChainNoResult() {
+    helperExposeExpression(
+        "x?.y.z[foo()]",
+        "foo",
+        lines(
+            "var temp$jscomp$0 = x;",
+            "if (temp$jscomp$0 != null) {",
+            "    temp$jscomp$0.y.z[foo()];",
+            "}"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetElemChain() {
+    helperExposeExpression(
+        "a = x?.[y].z[foo()]",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1[y].z[foo()];",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetElemChainNoResult() {
+    helperExposeExpression(
+        "x?.[y].z[foo()]",
+        "foo",
+        lines(
+            "var temp$jscomp$0 = x;",
+            "if (temp$jscomp$0 != null) {",
+            "    temp$jscomp$0[y].z[foo()];",
+            "}"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetElemWithCall() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x.y?.[z](foo())",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x.y;",
+            "if (temp$jscomp$1 != null) {",
+            "  var temp$jscomp$0 = temp$jscomp$1[z](foo())",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetElemWithCallTwiceRewriteCall() {
+    allowMethodCallDecomposing = true;
+
+    // 2 calls to exposeExpression() are needed to get full exposure
+    String originalSource = "a = x.y?.[z](foo())";
+    String firstTimeExpose =
+        lines(
+            "var temp$jscomp$1 = x.y;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1[z](foo())",
+            "}",
+            "a = temp$jscomp$0");
+    String secondTimeExpose =
+        lines(
+            "var temp$jscomp$1 = x.y;",
+            "if (temp$jscomp$1 != null) {",
+            "  var temp_const$jscomp$3 = temp$jscomp$1;",
+            "  var temp_const$jscomp$2 = temp_const$jscomp$3[z];",
+            "  var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo());",
+            "}",
+            "a = temp$jscomp$0");
+
+    helperExposeExpression(originalSource, "foo", firstTimeExpose);
+
+    times = 2;
+    helperExposeExpression(originalSource, "foo", secondTimeExpose);
+  }
+
+  @Test
+  public void exposeExpressionGetElemWithOptionalCall() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x.y[z]?.(foo(), d)",
+        "foo",
+        lines(
+            "var temp$jscomp$2 = x.y;",
+            "var temp$jscomp$1 = temp$jscomp$2[z];",
+            "if(temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.call(temp$jscomp$2, foo(), d);",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetPropWithCall() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x.y?.z(foo(1))",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x.y;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.z(foo(1));",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionOptionalGetPropWithCallTwiceRewriteCall() {
+    allowMethodCallDecomposing = true;
+
+    // 2 calls to exposeExpression() are needed to get full exposure
+    String originalSource = "a = x.y?.z(foo(1))";
+    String firstTimeExpose =
+        lines(
+            "var temp$jscomp$1 = x.y;",
+            "if (temp$jscomp$1 != null) {",
+            "  var temp$jscomp$0 = temp$jscomp$1.z(foo(1));",
+            "}",
+            "a = temp$jscomp$0");
+    String secondTimeExpose =
+        lines(
+            "var temp$jscomp$1 = x.y;",
+            "if (temp$jscomp$1 != null) {",
+            "  var temp_const$jscomp$3 = temp$jscomp$1;",
+            "  var temp_const$jscomp$2 = temp_const$jscomp$3.z;",
+            "  var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo(1));",
+            "}",
+            "a = temp$jscomp$0");
+
+    helperExposeExpression(originalSource, "foo", firstTimeExpose);
+
+    times = 2;
+    helperExposeExpression(originalSource, "foo", secondTimeExpose);
+  }
+
+  @Test
+  public void exposeExpressionGetPropWithOptionalCall() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x.y.z?.(foo())",
+        "foo",
+        lines(
+            "var temp$jscomp$2 = x.y;",
+            "var temp$jscomp$1 = temp$jscomp$2.z;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.call(temp$jscomp$2, foo())",
+            "}",
+            "a = temp$jscomp$0"));
+  }
+
+  @Test
+  public void exposeExpressionNewOptChainAfterRewriteCall() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x?.y(foo())?.z.q",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.y(foo())",
+            "}",
+            "a = temp$jscomp$0?.z.q"));
+  }
+
+  @Test
+  public void exposeExpressionNewOptChainAfter() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x?.y[foo()]?.z.q",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.y[foo()]",
+            "}",
+            "a = temp$jscomp$0?.z.q"));
+  }
+
+  @Test
+  public void exposeExpressionNotImmediatelyFollowedByNewChain() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x?.y[foo()].z.q?.b.c",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.y[foo()].z.q",
+            "}",
+            "a = temp$jscomp$0?.b.c"));
+  }
+
+  @Test
+  public void exposeExpressionBreakingOutOfOptionalChain() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = (x?.y[foo()]).z.q",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.y[foo()]",
+            "}",
+            "a = temp$jscomp$0.z.q"));
+  }
+
+  @Test
+  public void exposeExpressionAfterTwoOptionalChains() {
+    allowMethodCallDecomposing = true;
+    helperExposeExpression(
+        "a = x?.y.z?.q(foo());",
+        "foo",
+        lines(
+            "var temp$jscomp$1 = x?.y.z;",
+            "if (temp$jscomp$1 != null) {",
+            "    var temp$jscomp$0 = temp$jscomp$1.q(foo());",
+            "}",
+            "a = temp$jscomp$0"));
   }
 
   @Test
@@ -1466,6 +1769,7 @@ public final class ExpressionDecomposerTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setCodingConvention(new GoogleCodingConvention());
+    options.setPrettyPrint(true);
     compiler.initOptions(options);
     return compiler;
   }

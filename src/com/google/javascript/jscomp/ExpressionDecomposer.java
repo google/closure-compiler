@@ -34,20 +34,20 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Partially or fully decomposes an expression with respect to some sub-expresison. Initially this
+ * Partially or fully decomposes an expression with respect to some sub-expression. Initially this
  * is intended to expand the locations where inlining can occur, but has other uses as well.
  *
  * <p>For example: `var x = y() + z();` becomes `var a = y(); var b = z(); var x = a + b;`.
  *
  * <p>Decomposing, in this context does not mean full decomposition to "atomic" expressions. While
- * it is possible to iteratively apply docomposition to get statements with at most one side-effect,
+ * it is possible to iteratively apply decomposition to get statements with at most one side-effect,
  * that isn't the intended purpose of this class. The focus is on decomposing "just enough" to
  * "free" a <em>particular</em> subexpression. For example:
  *
  * <ul>
  *   <li>Given: `return (alert() + alert()) + z();`
  *   <li>Exposing: `z()`
- *   <li>Sufficent decomposition: `var temp = alert() + alert(); return temp + z();`
+ *   <li>Sufficient decomposition: `var temp = alert() + alert(); return temp + z();`
  * </ul>
  */
 class ExpressionDecomposer {
@@ -66,7 +66,6 @@ class ExpressionDecomposer {
   private final Set<String> knownConstants;
   private final Scope scope;
   private final JSType unknownType;
-  private final JSType voidType;
   private final JSType stringType;
 
   /**
@@ -92,7 +91,6 @@ class ExpressionDecomposer {
     this.scope = scope;
     this.allowMethodCallDecomposing = allowMethodCallDecomposing;
     this.unknownType = compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    this.voidType = compiler.getTypeRegistry().getNativeType(JSTypeNative.VOID_TYPE);
     this.stringType = compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE);
   }
 
@@ -155,18 +153,18 @@ class ExpressionDecomposer {
    * <ul>
    *   <li>expressionRoot: The top-level node, before which the any extracted expressions should be
    *       placed.
-   *   <li>nonconditionalExpr: The node that will be extracted either from expression.
+   *   <li>nodeWithNonconditionalParent: The node that will be extracted.
    * </ul>
    *
    * @param expressionRoot The root of the subtree within which to expose {@code subExpression}.
-   * @param subExpression A descendent of {@code expressionRoot} to be exposed.
+   * @param subExpression A descendant of {@code expressionRoot} to be exposed.
    */
   private void exposeExpression(Node expressionRoot, Node subExpression) {
-    Node nonconditionalExpr = findNonconditionalParent(subExpression, expressionRoot);
+    Node nodeWithNonconditionalParent = findNonconditionalParent(subExpression, expressionRoot);
     // Before extraction, record whether there are side-effect
-    boolean hasFollowingSideEffects = astAnalyzer.mayHaveSideEffects(nonconditionalExpr);
+    boolean hasFollowingSideEffects = astAnalyzer.mayHaveSideEffects(nodeWithNonconditionalParent);
 
-    Node exprInjectionPoint = findInjectionPoint(nonconditionalExpr);
+    Node exprInjectionPoint = findInjectionPoint(nodeWithNonconditionalParent);
     DecompositionState state = new DecompositionState();
     state.sideEffects = hasFollowingSideEffects;
     state.extractBeforeStatement = exprInjectionPoint;
@@ -174,7 +172,7 @@ class ExpressionDecomposer {
     // Extract expressions in the reverse order of their evaluation. This is roughly, traverse up
     // the AST extracting any preceding expressions that may have side-effects or be side-effected.
     Node lastExposedSubexpression = null;
-    Node expressionToExpose = nonconditionalExpr;
+    Node expressionToExpose = nodeWithNonconditionalParent;
     Node expressionParent = expressionToExpose.getParent();
     while (expressionParent != expressionRoot) {
       checkState(
@@ -237,15 +235,22 @@ class ExpressionDecomposer {
     // this have been extracted, so add the expression statement after the
     // other extracted expressions and the original statement (or replace
     // the original statement.
-    if (nonconditionalExpr == subExpression) {
+    if (nodeWithNonconditionalParent == subExpression) {
       // Don't extract the call, as that introduces an extra constant VAR
       // that will simply need to be inlined back.  It will be handled as
       // an EXPRESSION call site type.
       // Node extractedCall = extractExpression(decomposition, expressionRoot);
     } else {
-      Node parent = nonconditionalExpr.getParent();
-      boolean needResult = !parent.isExprResult();
-      extractConditional(nonconditionalExpr, exprInjectionPoint, needResult);
+      if (NodeUtil.isOptChainNode(nodeWithNonconditionalParent)) {
+        //  e.g. for `result = x.y?.z.p?.q(foo());` exposing foo()
+        //  `x.y?.z.p?.q(foo())` will be nodeWithNonConditionalParent
+        //  the actual node to be extracted is its first child, `x.y?.z.p?.q`.
+        extractOptionalChain(nodeWithNonconditionalParent, exprInjectionPoint);
+      } else {
+        Node parent = nodeWithNonconditionalParent.getParent();
+        boolean needResult = !parent.isExprResult();
+        extractConditional(nodeWithNonconditionalParent, exprInjectionPoint, needResult);
+      }
     }
   }
 
@@ -281,8 +286,37 @@ class ExpressionDecomposer {
   }
 
   /**
-   * @return "expression" or the node closest to "expression", that does not have a conditional
-   *     ancestor.
+   * Returns the enclosing expression to decompose
+   *
+   * <p>The intention is to indicate the top-most node that could be rewritten as an if-statement in
+   * order to better expose subExpression for inlining.
+   *
+   * <p>Examples:
+   *
+   * <pre>{@code
+   * a = (x() && y()) && subExpression; // result is (x() && y()) && subExpression
+   * a = x() && (y() && subExpression); // result is x() && (y() && subExpression)
+   * a = (x() && subExpression) && y(); // result is x() && subExpression
+   * a = x() && (subExpression && y()); // result is x() && (subExpression && y())
+   * a = (subExpression && x()) && y(); // result is subExpression
+   * a = subExpression && (x() && y()); // result is subExpression
+   * }</pre>
+   *
+   * <p>When subExpression is contained within an optional chain, we want to treat everything after
+   * a `?.` up until the next `?.` as a single conditional operation.
+   *
+   * <p>Examples:
+   *
+   * <pre>
+   * a = subExpression.x?.y.z();          // result is subExpression
+   * a = x()?.[subExpression].y;          // result is x()?.[subExpression].y
+   * a = x()?.y.z?.p(subExpression).q?.r; // result is x()?.y.z?.p(subExpression).q
+   * a
+   * </pre>
+   *
+   * @param subExpression the expression to consider entire chains
+   * @param expressionRoot a node containing subExpression. The returned node will be a descendent
+   *     of this one.
    */
   private static Node findNonconditionalParent(Node subExpression, Node expressionRoot) {
     Node result = subExpression;
@@ -291,10 +325,19 @@ class ExpressionDecomposer {
         parent != expressionRoot;
         child = parent, parent = child.getParent()) {
       if (isConditionalOp(parent) && !child.isFirstChildOf(parent)) {
-        // Only the first child is always executed, if the function may never
-        // be called, don't inline it.
+        // subExpression is not part of the first child (which is always executed), so
+        // parent decides whether subExpression will be executed or not
         result = parent;
       }
+    }
+    if (NodeUtil.isOptChainNode(result)) {
+      // the loop above may have left result pointing into the middle of an optional chain for
+      // a case like this.
+      // `x?.y.z(subExpression).p.q?.r.s`
+      // result is currently `x?.y.z(subExpression)`, but we want it to be the full sub-chain
+      // containing subExpression
+      // `x?.y.z(subExpression).p.q`
+      result = NodeUtil.getEndOfOptChain(result);
     }
 
     return result;
@@ -382,8 +425,125 @@ class ExpressionDecomposer {
   }
 
   /**
+   * Replaces an expression with a new temporary variable containing its value.
+   *
+   * <p>Replaces expr with a reference to the temporary variable. Then inserts a declaration of the
+   * variable, with expr as its value.
+   *
+   * @param tempVarName name to use for the temporary variable
+   * @param expr original expression to replace
+   * @param injectionPoint declaration will be inserted before this node
+   * @return the new statement declaring the temporary variable
+   */
+  private Node extractToTempVar(String tempVarName, Node expr, Node injectionPoint) {
+    Node exprReplacement = astFactory.createName(tempVarName, expr.getJSType());
+    expr.replaceWith(exprReplacement);
+    Node tempVarNodeDeclaration =
+        astFactory
+            .createSingleVarNameDeclaration(tempVarName, expr)
+            .useSourceInfoIfMissingFromForTree(expr);
+    insertBefore(injectionPoint, tempVarNodeDeclaration);
+    return tempVarNodeDeclaration;
+  }
+
+  /**
+   * Extract the conditional in optional chain expressions into IF statements.
+   *
+   * @param optChainNode The end of the optional chain to extract.
+   * @param injectionPoint The node before which the extracted expression would be injected.
+   */
+  private void extractOptionalChain(Node optChainNode, Node injectionPoint) {
+    checkState(NodeUtil.isOptChainNode(optChainNode), optChainNode);
+
+    // find the start of the chain & convert it to non-optional
+    final Node optChainStart = NodeUtil.getStartOfOptChain(optChainNode);
+    optionalToNonOptionalChain(optChainStart);
+
+    // Identify or create the statement that will need to go into the if-statement body
+    final Node ifBodyStatement;
+    final Node optChainParent = optChainNode.getParent();
+    if (optChainParent.isExprResult()) {
+      // optional chain is a statement unto itself, so just put that statement into the
+      // if-statement body
+      ifBodyStatement = optChainParent;
+    } else {
+      // We need to replace the chain with a temporary holding its value.
+      // ```
+      // var tmpResult = optChain;
+      // originalExpression(tmpResult)
+      // ```
+      // It is the tmpResult assignment that will need to go
+      final String tmpResultName = getTempValueName();
+      ifBodyStatement = extractToTempVar(tmpResultName, optChainNode, injectionPoint);
+    }
+
+    // Extract the value to be tested into a temporary variable
+    // to get something like this.
+    // ```
+    // var tmpReceiver = receiverExpression;
+    // tmpReceiver.rest.of.opt.chain; // ifBodyStatement
+    // ```
+    final Node receiverNode = optChainStart.getFirstChild();
+    final String tmpReceiverName = getTempValueName();
+    final Node receiverDeclaration =
+        extractToTempVar(tmpReceiverName, receiverNode, ifBodyStatement);
+
+    // If we've rewritten a call of one of these forms
+    // obj.method?.() or obj[methodExpr]?.()
+    // we must rewrite using 'call' and supply the correct value for `this`
+    if (optChainStart.isCall() && NodeUtil.isGet(receiverNode)) {
+      final Node callNode = optChainNode; // for readability
+      // break call receiver off from tmpReceiver that was created above
+      // var tmpCallReceiver = callReceiver;
+      // var tmpReceiver = callReceiver.method; (or callReceiver[methodExpression])
+      final Node callReceiver = receiverNode.getFirstChild();
+      final String tmpCallReceiverName = getTempValueName();
+      extractToTempVar(tmpCallReceiverName, callReceiver, receiverDeclaration);
+      // now rewrite the call
+      // tmpReceiver(arg1, arg2).rest.of.chain
+      // to
+      // tmpReceiver.call(tmpCallReceiver, arg1, arg2).rest.of.chain
+      final Node originalCallee = callNode.getFirstChild();
+      originalCallee.detach();
+      final Node newCallee =
+          astFactory
+              .createGetProp(originalCallee, "call")
+              .useSourceInfoIfMissingFromForTree(originalCallee);
+      final Node thisArgument =
+          astFactory.createName(tmpCallReceiverName, callReceiver.getJSType()).srcref(callReceiver);
+      callNode.addChildToFront(thisArgument);
+      callNode.addChildToFront(newCallee);
+    }
+
+    // Wrap ifBodyStatement with the null check condition
+    // ```
+    // if (tmpReceiver != null) {
+    //   tmpReceiver.rest.of.chain; // ifBodyStatement
+    // }
+    // ```
+    // create detached `tmpReceiver != null`
+    final Node nullCheck =
+        astFactory
+            .createNe(
+                astFactory.createName(tmpReceiverName, receiverNode.getJSType()),
+                astFactory.createNull())
+            .srcrefTree(receiverNode);
+    // ifBody is initially empty, since we'll want to inject the if-statement before
+    // ifBodyStatement, then move ifBodyStatement into it.
+    final Node ifBody = astFactory.createBlock().srcref(ifBodyStatement);
+    final Node ifStatement = astFactory.createIf(nullCheck, ifBody).srcref(optChainNode);
+    insertBefore(ifBodyStatement, ifStatement);
+    ifBody.addChildToFront(ifBodyStatement.detach());
+  }
+
+  private static void insertBefore(Node injectionPoint, Node newNode) {
+    final Node injectionParent = injectionPoint.getParent();
+    injectionParent.addChildBefore(newNode, injectionPoint);
+  }
+
+  /**
    * @param expr The conditional expression to extract.
-   * @param injectionPoint The before which extracted expression, would be injected.
+   * @param injectionPoint The node before which the extracted expression would be injected.
    * @param needResult Whether the result of the expression is required.
    * @return The node that contains the logic of the expression after extraction.
    */
@@ -605,8 +765,7 @@ class ExpressionDecomposer {
     Node tempVarNode = NodeUtil.newVarNode(tempName, tempNameValue);
     tempVarNode.getFirstChild().setJSType(tempNameValue.getJSType());
 
-    Node injectionPointParent = injectionPoint.getParent();
-    injectionPointParent.addChildBefore(tempVarNode, injectionPoint);
+    insertBefore(injectionPoint, tempVarNode);
 
     if (firstExtractedNode == null) {
       firstExtractedNode = tempVarNode;
@@ -762,6 +921,9 @@ class ExpressionDecomposer {
       case AND:
       case OR:
       case COALESCE:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
+      case OPTCHAIN_CALL:
         return true;
       default:
         return false;
@@ -886,7 +1048,7 @@ class ExpressionDecomposer {
     return DecompositionType.UNDECOMPOSABLE;
   }
 
-  /** @see {@link #canDecomposeExpression} */
+  /** @see {@link #canExposeExpression(Node subExpression)} */
   private DecompositionType isSubexpressionMovable(Node expressionRoot, Node subExpression) {
     boolean requiresDecomposition = false;
     boolean seenSideEffects = astAnalyzer.mayHaveSideEffects(subExpression);
@@ -1104,6 +1266,31 @@ class ExpressionDecomposer {
       // The function called doesn't have side-effects but check to see if there
       // are side-effects that that may affect it.
       return astAnalyzer.mayHaveSideEffects(tree);
+    }
+  }
+
+  /** Given a the start node of an optional chain, change the whole chain to non-optional. */
+  private static void optionalToNonOptionalChain(Node optChainStart) {
+    checkState(optChainStart.isOptionalChainStart(), optChainStart);
+    optChainStart.setIsOptionalChainStart(false);
+    for (Node n = optChainStart;
+        // Stop when we hit top, a non-chain node, or the start of a new chain
+        n != null && NodeUtil.isOptChainNode(n) && !n.isOptionalChainStart();
+        n = n.getParent()) {
+      switch (n.getToken()) {
+        case OPTCHAIN_CALL:
+          n.setToken(Token.CALL);
+          break;
+        case OPTCHAIN_GETELEM:
+          n.setToken(Token.GETELEM);
+          break;
+        case OPTCHAIN_GETPROP:
+          n.setToken(Token.GETPROP);
+          break;
+        default:
+          throw new IllegalStateException(
+              "Should be an OPTCHAIN node. Unexpected expression: " + n);
+      }
     }
   }
 }
