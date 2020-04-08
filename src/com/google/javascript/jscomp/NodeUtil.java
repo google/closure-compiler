@@ -1922,12 +1922,35 @@ public final class NodeUtil {
    * @param n A node in an optional chain
    * @return The start of the optional chain that `n` is part of.
    */
-  public static Node getStartOfOptChain(Node n) {
+  static Node getStartOfOptChain(Node n) {
     checkState(NodeUtil.isOptChainNode(n), n);
     if (n.isOptionalChainStart()) {
       return n;
     }
     return getStartOfOptChain(n.getFirstChild());
+  }
+
+  /**
+   * Find the end of the optional chain.
+   *
+   * <p>Examples
+   *
+   * <pre>
+   *   a?.b.c.d   // end is b.c
+   *   a?.b.c?.d  // given a?.b end is b.c
+   *   (a?.b.c).d // given a?.b end is b.c
+   * </pre>
+   *
+   * @param n A node in an optional chain
+   * @return The end of the optional chain that `n` is part of.
+   */
+  static Node getEndOfOptChain(Node n) {
+    checkState(NodeUtil.isOptChainNode(n), n);
+    Node parent = n.getParent();
+    if (parent == null || !NodeUtil.isOptChainNode(parent) || parent.isOptionalChainStart()) {
+      return n;
+    }
+    return getEndOfOptChain(parent);
   }
 
   /**

@@ -3743,6 +3743,49 @@ public final class NodeUtilTest {
   }
 
   @RunWith(JUnit4.class)
+  public static class GetEndOfOptChainTests {
+
+    @Test
+    public void isEndOfChain() {
+      // `expr?.prop`
+      Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
+
+      assertThat(NodeUtil.getEndOfOptChain(optChainGet)).isEqualTo(optChainGet);
+    }
+
+    @Test
+    public void shortChain() {
+      // `expr?.prop1.prop2`
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
+      Node outerGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+
+      assertThat(NodeUtil.getEndOfOptChain(innerGetProp)).isEqualTo(outerGetProp);
+    }
+
+    @Test
+    public void twoChains() {
+      // `expr()?.prop1.prop2()?.[prop3]`
+      Node call = IR.call(IR.name("expr"));
+      Node startOptGetProp = IR.startOptChainGetprop(call, IR.string("prop1"));
+      Node optGetProp = IR.continueOptChainGetprop(startOptGetProp, IR.string("prop2"));
+      Node optCall = IR.continueOptChainCall(optGetProp);
+      IR.startOptChainGetelem(optCall, IR.name("prop3"));
+
+      assertThat(NodeUtil.getEndOfOptChain(startOptGetProp)).isEqualTo(optCall);
+    }
+
+    @Test
+    public void breakingOutOfOptChain() {
+      // `(expr?.prop1.prop2).prop3`
+      Node startOptGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop1"));
+      Node optGetProp = IR.continueOptChainGetprop(startOptGetProp, IR.string("prop2"));
+      IR.getprop(optGetProp, IR.string("prop3"));
+
+      assertThat(NodeUtil.getEndOfOptChain(startOptGetProp)).isEqualTo(optGetProp);
+    }
+  }
+
+  @RunWith(JUnit4.class)
   public static class NodeTraversalTests {
 
     @Test
