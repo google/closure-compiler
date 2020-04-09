@@ -436,6 +436,7 @@ KeyboardEventInit.prototype.char;
 KeyboardEventInit.prototype.locale;
 
 /**
+ * @see https://w3c.github.io/uievents/#idl-keyboardevent
  * @constructor
  * @extends {UIEvent}
  * @param {string} type
@@ -457,6 +458,18 @@ KeyboardEvent.prototype.altKey;
 
 /** @type {boolean} */
 KeyboardEvent.prototype.metaKey;
+
+/** @type {number} */
+KeyboardEvent.DOM_KEY_LOCATION_STANDARD;
+
+/** @type {number} */
+KeyboardEvent.DOM_KEY_LOCATION_LEFT;
+
+/** @type {number} */
+KeyboardEvent.DOM_KEY_LOCATION_RIGHT;
+
+/** @type {number} */
+KeyboardEvent.DOM_KEY_LOCATION_NUMPAD;
 
 /**
  * @param {string} keyIdentifierArg
