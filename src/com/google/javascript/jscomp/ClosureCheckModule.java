@@ -367,9 +367,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         // const {foo: barFoo} = goog.require('ns.bar');
         // Should use the short name "barFoo" instead of "ns.bar.foo".
         if (strKey.hasOneChild() && strKey.getString().equals(nextQnamePart)) {
+          Node parent = n.getParent();
           this.compiler.report(
               JSError.make(
-                  n.getParent().isGetProp() ? n.getParent() : n,
+                  (parent != null && parent.isGetProp()) ? parent : n,
                   REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
                   qname + "." + nextQnamePart,
                   strKey.getFirstChild().getString()));
