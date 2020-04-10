@@ -62,7 +62,8 @@ public class RewritePolyfills implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     this.libraries = new LinkedHashSet<>();
-    new PolyfillFindingCallback(compiler, polyfills).traverse(scriptRoot, this::inject);
+    new PolyfillFindingCallback(compiler, polyfills)
+        .traverseExcludingGuarded(scriptRoot, this::inject);
 
     if (this.isolatePolyfills) {
       // Polyfill isolation requires a pass to run near the end of optimizations. That pass may call

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfill;
 import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
@@ -29,6 +30,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Rewrites potential polyfill usages to use the hidden JSCompiler polyfills instead of the global.
@@ -83,17 +85,27 @@ class IsolatePolyfills implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    // Calculate the set of polyfills that are actually present in the AST. It may be a subset of
+    // the potential polyfills which PolyfillFindingCallback finds (it's fine if it's a superset.)
+    Set<String> injectedPolyfills = findAllInjectedPolyfills();
+
     List<PolyfillUsage> polyfillUsages = new ArrayList<>();
-    new PolyfillFindingCallback(compiler, this.polyfills).traverse(root, polyfillUsages::add);
+    new PolyfillFindingCallback(compiler, this.polyfills)
+        .traverseIncludingGuarded(root, polyfillUsages::add);
 
     LinkedHashSet<Node> visitedNodes = new LinkedHashSet<>();
     for (PolyfillUsage usage : polyfillUsages) {
+      if (
       // Some nodes map to more than one polyfill usage. For example, `x.includes` maps to both
       // Array.prototype.includes and String.prototype.includes, but only needs to be isolated once.
-      // Also skip visiting nodes whose 'polyfill.library' is empty. This is true for language
-      // features like `Proxy` and `String.raw` that have no associated polyfill, and hence are
-      // unnecessary to isolate.
-      if (visitedNodes.contains(usage.node()) || usage.polyfill().library.isEmpty()) {
+      visitedNodes.contains(usage.node())
+          // Skip visiting nodes whose 'polyfill.library' is empty. This is true for language
+          // features like `Proxy` and `String.raw` that have no associated polyfill, and hence are
+          // unnecessary to isolate.
+          || usage.polyfill().library.isEmpty()
+          // The PolyfillFindingCallback may detect possible polyfill usages that are not
+          // in fact injected. (possibly because RemoveUnusedCode deleted the polyfill.)
+          || !injectedPolyfills.contains(usage.polyfill().nativeSymbol)) {
         continue;
       }
       this.rewritePolyfill(usage);
@@ -101,6 +113,53 @@ class IsolatePolyfills implements CompilerPass {
     }
 
     cleanUpJscompLookupPolyfilledValue();
+  }
+
+  /**
+   * Searches the AST for all calls to $jscomp.polyfill and returns the polyfilled symbol names.
+   *
+   * <p>At the moment we don't track anywhere the set of all polyfills that have been injected. That
+   * set may be modified by RewritePolyfills, Es6InjectRuntimeLibraries, and RemoveUnusedCode. If
+   * desired, we could delete this method by making any passes that add/remove polyfill calls
+   * responsible for tracking their presence.
+   *
+   * <p>Note: this set cannot be injected into the constructor because it is not known until the
+   * polyfill injection pass actually runs.
+   */
+  private ImmutableSet<String> findAllInjectedPolyfills() {
+    ImmutableSet.Builder<String> actualPolyfills = ImmutableSet.builder();
+
+    Node lastInjectedNode = compiler.getNodeForCodeInsertion(null);
+
+    NodeTraversal.traverse(
+        compiler,
+        lastInjectedNode,
+        new NodeTraversal.AbstractShallowCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (isJSCompPolyfillCall(n)) {
+              // CALL
+              //  GETPROP/NAME $jscomp.polyfill
+              //  STRING NativeSymbol.prototype.method
+              //  [...]
+              String polyfilledSymbol = n.getSecondChild().getString();
+              actualPolyfills.add(polyfilledSymbol);
+            }
+          }
+        });
+
+    return actualPolyfills.build();
+  }
+
+  private boolean isJSCompPolyfillCall(Node call) {
+    if (!call.isCall()) {
+      return false;
+    }
+    String jscompPolyfillName =
+        compiler.getOptions().getPropertyCollapseLevel().equals(PropertyCollapseLevel.ALL)
+            ? "$jscomp$polyfill"
+            : "$jscomp.polyfill";
+    return call.getFirstChild().matchesQualifiedName(jscompPolyfillName);
   }
 
   /**

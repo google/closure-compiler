@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfill.Kind;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
@@ -35,12 +34,14 @@ import java.util.stream.Collectors;
 final class PolyfillFindingCallback {
 
   /**
-   * Represents a single polyfill: specifically, for a native symbol (not part of this object, but
-   * stored as the key to the map containing the Polyfill instance), a set of native and polyfill
+   * Represents a single polyfill: specifically, for a native symbol, a set of native and polyfill
    * versions, and a library to ensure is injected if the output version is less than the native
-   * version. This is a simple value type.
+   * version.
    */
-  static class Polyfill {
+  static final class Polyfill {
+    /** The full name of the polyfill, e.g `Map` or `String.prototype.includes` */
+    final String nativeSymbol;
+
     /**
      * The language version at (or above) which the native symbol is
      * available and sufficient.  If the language out flag is at least
@@ -68,7 +69,13 @@ final class PolyfillFindingCallback {
       METHOD // String.prototype.includes
     }
 
-    Polyfill(FeatureSet nativeVersion, FeatureSet polyfillVersion, String library, Kind kind) {
+    Polyfill(
+        String nativeSymbol,
+        FeatureSet nativeVersion,
+        FeatureSet polyfillVersion,
+        String library,
+        Kind kind) {
+      this.nativeSymbol = nativeSymbol;
       this.nativeVersion = nativeVersion;
       this.polyfillVersion = polyfillVersion;
       this.library = library;
@@ -76,11 +83,8 @@ final class PolyfillFindingCallback {
     }
   }
 
-  /**
-   * Describes all the available polyfills, including native and
-   * required versions, and how to use them.
-   */
-  static class Polyfills {
+  /** Maps from polyfill names to the actual Polyfill object. */
+  static final class Polyfills {
     // Map of method polyfills, keyed by native method name.
     private final ImmutableMultimap<String, Polyfill> methods;
     // Map of static polyfills, keyed by fully-qualified native name.
@@ -122,10 +126,11 @@ final class PolyfillFindingCallback {
         boolean isPrototypeMethod = symbol.contains(".prototype.");
         Polyfill polyfill =
             new Polyfill(
+                symbol,
                 FeatureSet.valueOf(tokens.get(1)),
                 FeatureSet.valueOf(tokens.get(2)),
                 tokens.size() > 3 ? tokens.get(3) : "",
-                isPrototypeMethod ? Kind.METHOD : Kind.STATIC);
+                isPrototypeMethod ? Polyfill.Kind.METHOD : Polyfill.Kind.STATIC);
         if (isPrototypeMethod) {
           methods.put(symbol.replaceAll(".*\\.prototype\\.", ""), polyfill);
         } else {
@@ -174,18 +179,39 @@ final class PolyfillFindingCallback {
     this.compiler = compiler;
   }
 
-  /** Passes all polyfill usages found, in postorder, to the given polyfillConsumer */
-  void traverse(Node root, Consumer<PolyfillUsage> polyfillConsumer) {
-    NodeTraversal.traverse(compiler, root, new Traverser(this.compiler, polyfillConsumer));
+  /**
+   * Passes all polyfill usages found, in postorder, to the given polyfillConsumer
+   *
+   * <p>Excludes polyfill usages behind a guard, like {@code if (Promise) return
+   * Promise.resolve('ok');}
+   */
+  void traverseExcludingGuarded(Node root, Consumer<PolyfillUsage> polyfillConsumer) {
+    NodeTraversal.traverse(compiler, root, new Traverser(this.compiler, polyfillConsumer, false));
+  }
+
+  /**
+   * Passes all polyfill usages found, in postorder, to the given polyfillConsumer
+   *
+   * <p>Includes polyfill usages that are behind a guard, like {@code if (Promise) return
+   * Promise.resolve('ok');}
+   */
+  void traverseIncludingGuarded(Node root, Consumer<PolyfillUsage> polyfillConsumer) {
+    NodeTraversal.traverse(compiler, root, new Traverser(this.compiler, polyfillConsumer, true));
   }
 
   private class Traverser extends GuardedCallback<String> {
 
     private final Consumer<PolyfillUsage> polyfillConsumer;
+    // Whether to emit usages like Promise in `if (Promise) return Promise.resolve('ok');}`
+    private final boolean includeGuardedUsages;
 
-    Traverser(AbstractCompiler compiler, Consumer<PolyfillUsage> polyfillConsumer) {
+    Traverser(
+        AbstractCompiler compiler,
+        Consumer<PolyfillUsage> polyfillConsumer,
+        boolean includeGuardedUsages) {
       super(compiler);
       this.polyfillConsumer = polyfillConsumer;
+      this.includeGuardedUsages = includeGuardedUsages;
     }
 
     @Override
@@ -212,7 +238,7 @@ final class PolyfillFindingCallback {
           polyfill = null;
         }
 
-        if (polyfill != null && !isGuarded(name)) {
+        if (polyfill != null && (includeGuardedUsages || !isGuarded(name))) {
           emit(polyfill, node, name, isExplicitGlobal);
           // Bail out because isGetProp overlaps below
           return;
@@ -223,7 +249,7 @@ final class PolyfillFindingCallback {
       if (node.isGetProp()) {
         String methodName = node.getLastChild().getString();
         Collection<Polyfill> methods = polyfills.methods.get(methodName);
-        if (!methods.isEmpty() && !isGuarded("." + methodName)) {
+        if (!methods.isEmpty() && (includeGuardedUsages || !isGuarded("." + methodName))) {
           for (Polyfill polyfill : methods) {
             emit(polyfill, node, methodName, /* rootIsKnownGlobal= */ false);
           }

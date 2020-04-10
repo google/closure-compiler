@@ -22,8 +22,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,11 +42,13 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
   private static final LanguageMode ES3 = LanguageMode.ECMASCRIPT3;
 
   private final List<String> polyfillTable = new ArrayList<>();
+  private final Set<String> polyfillsToInject = new LinkedHashSet<>();
 
   private boolean enablePropertyFlattening = false;
 
   private void addLibrary(String name, String from, String to, String library) {
     polyfillTable.add(String.format("%s %s %s %s", name, from, to, nullToEmpty(library)));
+    polyfillsToInject.add(name);
   }
 
   @Override
@@ -51,6 +56,7 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     polyfillTable.clear();
+    polyfillsToInject.clear();
     disableCompareSyntheticCode();
     allowExternsChanges();
   }
@@ -58,10 +64,12 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (externs, root) -> {
+      // Synthetic definition of $jscomp$lookupPolyfilledValue
       compiler
           .getSynthesizedExternsInputAtEnd()
           .getAstRoot(compiler)
           .addChildToBack(IR.var(IR.name("$jscomp$lookupPolyfilledValue")));
+      addPolyfillInjection(compiler.getNodeForCodeInsertion(/* module= */ null), compiler);
       new IsolatePolyfills(compiler, Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)))
           .process(externs, root);
     };
@@ -73,6 +81,29 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     options.setCollapsePropertiesLevel(
         enablePropertyFlattening ? PropertyCollapseLevel.ALL : PropertyCollapseLevel.NONE);
     return options;
+  }
+
+  /** Adds synthetic defintitions of all the polyfills to the AST */
+  private void addPolyfillInjection(Node parent, AbstractCompiler compiler) {
+    if (this.polyfillsToInject.isEmpty()) {
+      return;
+    }
+    String jscompPolyfillName =
+        this.enablePropertyFlattening ? "$jscomp$polyfill" : "$jscomp.polyfill";
+
+    StringBuilder syntheticCode = new StringBuilder().append("var $jscomp = {};\n");
+
+    for (String polyfill : polyfillsToInject) {
+      // $jscomp.polyfill('syntheticName');
+      syntheticCode.append(jscompPolyfillName);
+      syntheticCode.append("('");
+      syntheticCode.append(polyfill);
+      syntheticCode.append("');\n");
+    }
+
+    Node codeRoot = compiler.parseSyntheticCode(syntheticCode.toString());
+    parent.addChildrenToFront(codeRoot.removeChildren());
+    compiler.reportChangeToEnclosingScope(parent);
   }
 
   @Test
@@ -89,6 +120,32 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     test("var m = new Map();", "var m = new $jscomp.polyfills['Map']();");
     test("var m = new window.Map();", "var m = new $jscomp.polyfills['Map']();");
     test("var m = new goog.global.Map();", "var m = new $jscomp.polyfills['Map']();");
+  }
+
+  @Test
+  public void testClassesAreNotIsolatedUnlessPolyfillInjected() {
+    // Model a case where there is no actual $jscomp.polyfill('Map' call.
+    // (Possibly because RemoveUnusedCode deleted it.)
+    // Replacing "new Map()" with "new $jscomp.polyfills['Map']()" would result in an undefined
+    // reference at runtime, so just leave "new Map()" as is.
+
+    addLibrary("Map", "es6", "es5", "es6/map");
+    polyfillsToInject.remove("Map");
+
+    setLanguage(ES6, ES5);
+    testSame("var m = new Map();");
+    testSame("var m = new window.Map();");
+    testSame("var m = new goog.global.Map();");
+  }
+
+  @Test
+  public void testClassesGuardedByIfAreIsolated() {
+    addLibrary("Map", "es6", "es5", "es6/map");
+
+    setLanguage(ES6, ES5);
+    test(
+        "if (Map) { var m = new Map(); }",
+        "if ($jscomp.polyfills['Map']) { var m = new $jscomp.polyfills['Map'](); }");
   }
 
   @Test
@@ -208,10 +265,17 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testStaticMethodsGuardedByIfNotIsolated() {
+  public void testStaticMethodsGuardedByIfStillIsolated() {
     addLibrary("Array.of", "es6", "es5", "es6/array/of");
 
-    testSame("if (Array.of) { Array.of(); } else { Array.of(); }");
+    test(
+        "if (Array.of) { Array.of(); } else { Array.of(); }",
+        lines(
+            "if ($jscomp$lookupPolyfilledValue(Array, 'of')) {",
+            "$jscomp$lookupPolyfilledValue(Array, 'of').call(Array);",
+            "} else {",
+            "  $jscomp$lookupPolyfilledValue(Array, 'of').call(Array);",
+            "}"));
   }
 
   @Test
@@ -279,6 +343,19 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
 
     setLanguage(ES6, ES5);
     test("x.includes(y);", "$jscomp$lookupPolyfilledValue(x, 'includes').call(x, y);");
+  }
+
+  @Test
+  public void testMethodsNotIsolatedUnlessPolyfillInjected() {
+    addLibrary("String.prototype.includes", "es6", "es5", "es6/string/includes");
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+    polyfillsToInject.remove("String.prototype.endsWith");
+
+    setLanguage(ES6, ES5);
+    testSame("x.endsWith(y);");
+    test(
+        "x.includes(y) && x.endsWith(z);",
+        "$jscomp$lookupPolyfilledValue(x, 'includes').call(x, y) && x.endsWith(z);");
   }
 
   @Test
