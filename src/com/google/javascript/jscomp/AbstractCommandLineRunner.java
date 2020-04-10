@@ -384,7 +384,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (config.browserFeaturesetYear != 0) {
       validateBrowserFeaturesetYearFlag(config.browserFeaturesetYear);
       options.setBrowserFeaturesetYear(config.browserFeaturesetYear);
-      define.add(SimpleFormat.format("goog.FEATURESET_YEAR=%d", config.browserFeaturesetYear));
     }
 
     createDefineOrTweakReplacements(define, options, false);

@@ -7995,10 +7995,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setBrowserFeaturesetYear(2020);
 
+    String googDefine =
+        lines(
+            "const goog = {};", //
+            "/** @define {number} */",
+            "goog.FEATURESET_YEAR = 2012;\n");
+    String googDefineOutput = "const goog={};goog.FEATURESET_YEAR=2020;";
+
     // async generators and for await ... of are emitted untranspiled.
     test(
         options,
         lines(
+            googDefine,
             "async function* foo() {yield 1; await 0; yield 2;}",
             "async function bar() {",
             "  for await (const val of foo()) {",
@@ -8006,26 +8014,29 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  }",
             "}",
             "bar();"),
-        "async function*foo(){yield 1;await 0;yield 2}async function bar(){for await(const val of"
-            + " foo())console.log(val)}bar()");
+        googDefineOutput
+            + "async function*foo(){yield 1;await 0;yield 2}async function bar(){for await(const"
+            + " val of foo())console.log(val)}bar()");
 
     // So is object rest and spread.
     test(
         options,
         lines(
+            googDefine,
             "const {foo, ...bar} = {foo: 10, bar: 20, ...{baz: 30}};",
             "console.log(foo);",
             "console.log(bar);"),
-        "const {foo,...bar}={foo:10,bar:20,...{baz:30}};console.log(foo);console.log(bar)");
+        googDefineOutput
+            + "const {foo,...bar}={foo:10,bar:20,...{baz:30}};console.log(foo);console.log(bar)");
 
     // But we won't emit ES 2018 regexp features.
     DiagnosticType untranspilable =
         MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
-    test(options, "/foo/s", untranspilable);
-    test(options, "/(?<foo>.)/", untranspilable);
-    test(options, "/(?<=foo)/", untranspilable);
-    test(options, "/(?<!foo)/", untranspilable);
-    test(options, "/\\p{Number}/u", untranspilable);
+    test(options, lines(googDefine, "/foo/s"), untranspilable);
+    test(options, lines(googDefine, "/(?<foo>.)/"), untranspilable);
+    test(options, lines(googDefine, "/(?<=foo)/"), untranspilable);
+    test(options, lines(googDefine, "/(?<!foo)/"), untranspilable);
+    test(options, lines(googDefine, "/\\p{Number}/u"), untranspilable);
   }
 
   @Test

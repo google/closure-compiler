@@ -182,6 +182,7 @@ public class CompilerOptions implements Serializable {
   public void setBrowserFeaturesetYear(Integer year) {
     validateBrowserFeaturesetYearOption(year);
     this.browserFeaturesetYear.setYear(year);
+    this.setDefineToNumberLiteral("goog.FEATURESET_YEAR", year);
   }
 
   /**
