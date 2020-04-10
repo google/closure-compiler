@@ -26,10 +26,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class Es6InjectRuntimeLibrariesTest {
+public class InjectTranspilationRuntimeLibrariesTest {
 
   /**
-   * Parses the given code and runs the Es6InjectRuntimeLibraries pass over the resulting AST
+   * Parses the given code and runs the {@link InjectTranspilationRuntimeLibraries} pass over the
+   * resulting AST
    *
    * @return the set of paths to all the injected libraries
    */
@@ -43,7 +44,7 @@ public class Es6InjectRuntimeLibrariesTest {
         ImmutableList.of(SourceFile.fromCode("testcode", js)),
         options);
     compiler.parseInputs();
-    new Es6InjectRuntimeLibraries(compiler)
+    new InjectTranspilationRuntimeLibraries(compiler)
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
 
     return compiler.injected;

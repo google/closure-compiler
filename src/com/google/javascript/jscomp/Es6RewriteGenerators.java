@@ -42,9 +42,11 @@ import javax.annotation.Nullable;
  * for yield and generators have been transpiled.
  *
  * <p>Genertor transpilation pass uses two sets of node properties:
- * <ul><li>generatorMarker property - to indicate that subtee contains YIELD nodes;
- *     <li>generatorSafe property - the node is known to require no further modifications to work in
- *         the transpiled form of the generator body.
+ *
+ * <ul>
+ *   <li>generatorMarker property - to indicate that subtee contains YIELD nodes;
+ *   <li>generatorSafe property - the node is known to require no further modifications to work in
+ *       the transpiled form of the generator body.
  * </ul>
  *
  * <p>The conversion is done in the following steps:
@@ -55,14 +57,14 @@ import javax.annotation.Nullable;
  *   <li>Mark all nodes in original body that contain any YIELD nodes
  *   <li>Transpile every statement of the original body into replaced template
  *       <ul>
- *         <li>unmarked nodes may be copied into the template with a trivial transpilation
- *             of "this", "break", "continue", "return" and "arguments" keywords.
- *         <li>marked nodes must be broken up into multiple states to support the yields
- *             they contain.
+ *         <li>unmarked nodes may be copied into the template with a trivial transpilation of
+ *             "this", "break", "continue", "return" and "arguments" keywords.
+ *         <li>marked nodes must be broken up into multiple states to support the yields they
+ *             contain.
  *       </ul>
  * </ul>
  *
- * <p>{@code Es6RewriteGenerators} depends on {@link Es6InjectRuntimeLibraries} to inject
+ * <p>{@code Es6RewriteGenerators} depends on {@link InjectTranspilationRuntimeLibraries} to inject
  * <code>generator_engine.js</code> template.
  */
 final class Es6RewriteGenerators implements HotSwapCompilerPass {

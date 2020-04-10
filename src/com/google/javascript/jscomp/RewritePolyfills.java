@@ -28,7 +28,10 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Injects polyfill libraries to ensure that ES6 library functions are available.
+ * Injects polyfill libraries to ensure that ES6+ library functions are available.
+ *
+ * <p>TODO(b/120486392): consider merging this pass with {@link InjectRuntimeLibraries} and {@link
+ * InjectTranspilationRuntimeLibraries}.
  */
 public class RewritePolyfills implements HotSwapCompilerPass {
 

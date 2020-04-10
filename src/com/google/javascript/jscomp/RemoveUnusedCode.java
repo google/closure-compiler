@@ -2624,18 +2624,24 @@ class RemoveUnusedCode implements CompilerPass {
    * Each definition falls into one of three categories: (1) global names, such as {@code Map} or
    * {@code Promise}; (2) static properties, such as {@code Array.from} or {@code Reflect.get},
    * which must always have exactly two name components; or (3) prototype properties, such as {@code
-   * String.prototype.repeat} or {@code Promise.prorotype.finally}, which must always have exactly
-   * three name components. The definition can be removed once it is found that there is an
-   * <i>unguarded</i> reference to it. References guarded by existence or truthiness checks (such as
-   * {@code if (Promise) return Promise.resolve('ok');} do not prevent removal of the polyfill
-   * definition.
+   * String.prototype.repeat} or {@code Promise.prototype.finally}, which must always have exactly
+   * three name components. The definition can be removed once it is found that there are no
+   * references to it.
    *
-   * <p>Determining whether a node is a reference (guarded or not) depends on the type of polyfill.
-   * When type information is available, the type of the expected owner (i.e. the global object for
-   * global polyfills, the namespace or class for static polyfills, or an instance of the owning
-   * class (or its implicit prototype) for prototype polyfills) is used exclusively to determine
-   * this with very good accuracy. Types are considered to match if a direct cast would be allowed
-   * without a warning (i.e. some element of the union is a direct subtype or supertype).
+   * <p>All references to polyfill definitions, even those guarded by existence or truthiness checks
+   * (such as {@code if (Promise) return Promise.resolve('ok');}), prevent removal of the polyfill
+   * definition. As part of b/120486392, it might useful to make this pass distinguish between
+   * guarded and unguarded references to polyfills. Then a polyfill definition would be removable if
+   * there are no <i>unguarded</i> references to it. Currently this logic lives in {@link
+   * RewritePolyfills}, which runs before any dead-code elimination, and attempts to only inject
+   * polyfills if they have any unguarded references.
+   *
+   * <p>Determining whether a node is a reference depends on the type of polyfill. When type
+   * information is available, the type of the expected owner (i.e. the global object for global
+   * polyfills, the namespace or class for static polyfills, or an instance of the owning class (or
+   * its implicit prototype) for prototype polyfills) is used exclusively to determine this with
+   * very good accuracy. Types are considered to match if a direct cast would be allowed without a
+   * warning (i.e. some element of the union is a direct subtype or supertype).
    *
    * <p>When type information is not available (or is too loose) then we fall back on a heuristic:
    *

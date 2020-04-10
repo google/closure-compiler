@@ -56,13 +56,11 @@ public class TranspilationPasses {
             .build());
   }
 
-  public static void addPreTypecheckTranspilationPasses(
+  public static void addTranspilationRuntimeLibraries(
       List<PassFactory> passes, CompilerOptions options) {
-
-    // TODO(bradfordcsmith): Rename this since it isn't just libraries for ES6 features anymore.
-    // Inject runtime libraries needed for the transpilation we will have to do.
-    passes.add(es6InjectRuntimeLibraries);
-
+    // Inject runtime libraries needed for the transpilation we will have to do. Should run before
+    // typechecking.
+    passes.add(injectTranspilationRuntimeLibraries);
   }
 
   public static void addEs6ModuleToCjsPass(List<PassFactory> passes) {
@@ -299,11 +297,11 @@ public class TranspilationPasses {
           .setFeatureSet(ES2018)
           .build();
 
-  /** Injects runtime library code needed for transpiled ES6 code. */
-  static final PassFactory es6InjectRuntimeLibraries =
+  /** Injects runtime library code needed for transpiled ES6+ code. */
+  static final PassFactory injectTranspilationRuntimeLibraries =
       PassFactory.builderForHotSwap()
           .setName("es6InjectRuntimeLibraries")
-          .setInternalFactory(Es6InjectRuntimeLibraries::new)
+          .setInternalFactory(InjectTranspilationRuntimeLibraries::new)
           .setFeatureSet(ES_NEXT_IN)
           .build();
 

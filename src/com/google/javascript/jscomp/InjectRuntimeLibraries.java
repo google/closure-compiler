@@ -18,9 +18,11 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 
 /**
- * Adds runtime libraries to the beginning of the AST. The libraries for ES6 transpilation
- * and the Dart pass are added, if needed, as well as any other libraries explicitly
- * requested via the CompilerOptions#forceLibraryInjection field.
+ * Adds runtime libraries to the beginning of the AST. The libraries for runtime typechecking are
+ * added, if needed, as well as any other libraries explicitly requested via the {@link
+ * CompilerOptions#forceLibraryInjection} field.
+ *
+ * <p>TODO(b/120486392): merge this pass with {@link InjectTranspilationRuntimeLibraries}.
  */
 class InjectRuntimeLibraries implements CompilerPass {
   private final AbstractCompiler compiler;

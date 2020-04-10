@@ -116,7 +116,8 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     // instead of re-enumerating all these passes.
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
-        makePassFactory("es6InjectRuntimeLibraries", new Es6InjectRuntimeLibraries(compiler)));
+        makePassFactory(
+            "es6InjectRuntimeLibraries", new InjectTranspilationRuntimeLibraries(compiler)));
     optimizer.addOneTimePass(
         makePassFactory(
             "Es6RenameVariablesInParamLists", new Es6RenameVariablesInParamLists(compiler)));

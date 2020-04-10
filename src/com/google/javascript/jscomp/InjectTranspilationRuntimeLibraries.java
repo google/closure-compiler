@@ -24,17 +24,20 @@ import com.google.javascript.rhino.Node;
 /**
  * Injects JS library code that may be needed by the transpiled form of the input source code.
  *
- * <p>The intention here is to add anything that could be needed and rely on `RemoveUnusedCode` to
- * remove the parts that don't end up getting used. This pass should run before type checking so the
- * type checking code can add type information to the injected JavaScript for checking and
- * optimization purposes.
+ * <p>The intention here is to add anything that could be needed and rely on {@link
+ * RemoveUnusedCode} to remove the parts that don't end up getting used. This pass should run before
+ * type checking so the type checking code can add type information to the injected JavaScript for
+ * checking and optimization purposes.
  *
  * <p>This class also reports an error if it finds getters or setters are used and the language
  * output level is too low to support them. TODO(bradfordcsmith): The getter/setter check should
  * probably be done separately in an earlier pass that only runs when the output language level is
  * ES3 and the input language level is ES5 or greater.
+ *
+ * <p>TODO(b/120486392): consider merging this pass with {@link InjectRuntimeLibraries} and {@link
+ * RewritePolyfills}.
  */
-public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
+public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final boolean getterSetterSupported;
@@ -42,7 +45,7 @@ public final class Es6InjectRuntimeLibraries extends AbstractPostOrderCallback
   // Since there's currently no Feature for Symbol, run this pass if the code has any ES6 features.
   private static final FeatureSet requiredForFeatures = FeatureSet.ES6.without(FeatureSet.ES5);
 
-  public Es6InjectRuntimeLibraries(AbstractCompiler compiler) {
+  public InjectTranspilationRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.getterSetterSupported =
         !FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet());
