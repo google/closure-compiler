@@ -32,7 +32,6 @@ import org.junit.runners.JUnit4;
  * <p>TODO(b/144593112): Remove this file when module rewriting is permanently moved after type
  * checking.
  */
-
 @RunWith(JUnit4.class)
 public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestCase {
   private ImmutableList<String> moduleRoots = null;

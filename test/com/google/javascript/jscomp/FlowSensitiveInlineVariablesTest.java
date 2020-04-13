@@ -25,7 +25,6 @@ import org.junit.runners.JUnit4;
  * Unit tests for {@link FlowSensitiveInlineVariables}.
  *
  */
-
 @RunWith(JUnit4.class)
 public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase {
 

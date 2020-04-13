@@ -29,7 +29,6 @@ import org.junit.runners.JUnit4;
  *
  * @author kushal@google.com (Kushal Dave)
  */
-
 @RunWith(JUnit4.class)
 public final class InlineVariablesTest extends CompilerTestCase {
 

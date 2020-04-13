@@ -40,7 +40,6 @@ import org.junit.runners.JUnit4;
  * typecheck passes behavior, and it's complicated to manually mimic the results of typechecking.
  *
  */
-
 @RunWith(JUnit4.class)
 public final class DisambiguatePropertiesTest extends CompilerTestCase {
   private DisambiguateProperties lastPass;

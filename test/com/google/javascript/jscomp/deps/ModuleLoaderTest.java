@@ -37,7 +37,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link ModuleLoader}. */
-
 @RunWith(JUnit4.class)
 public final class ModuleLoaderTest {
   private final ImmutableMap<String, String> packageJsonMainEntries =

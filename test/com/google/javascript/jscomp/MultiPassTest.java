@@ -34,7 +34,6 @@ import org.junit.runners.JUnit4;
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-
 @RunWith(JUnit4.class)
 public final class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;

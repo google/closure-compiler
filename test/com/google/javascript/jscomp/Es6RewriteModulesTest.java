@@ -40,7 +40,6 @@ import org.junit.runners.JUnit4;
  * <p>TODO(b/144593112): Remove the other test class when the pass is permanently moved after type
  * checking.
  */
-
 @RunWith(JUnit4.class)
 public final class Es6RewriteModulesTest extends CompilerTestCase {
   private ImmutableList<String> moduleRoots = null;

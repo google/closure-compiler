@@ -27,7 +27,6 @@ import org.junit.runners.JUnit4;
  * Tests {@link RemoveUnusedCode} for functionality that was previously implemented in NameAnalyzer
  * aka smartNamePass, which has now been removed.
  */
-
 @RunWith(JUnit4.class)
 public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
 

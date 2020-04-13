@@ -35,7 +35,6 @@ import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link CoverageInstrumenter}. */
 @GwtIncompatible
-
 @RunWith(JUnit4.class)
 public final class CoverageInstrumenterTest {
 

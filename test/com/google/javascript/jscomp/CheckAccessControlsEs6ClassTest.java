@@ -46,7 +46,6 @@ import org.junit.runners.JUnit4;
  * duplication. If a case using `@constructor`, `@interface`, or `@record` is added to that suite, a
  * similar case should be added here under the same name using `class`.
  */
-
 @RunWith(JUnit4.class)
 public final class CheckAccessControlsEs6ClassTest extends CompilerTestCase {
 

@@ -50,7 +50,6 @@ import org.junit.runners.JUnit4;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-
 @RunWith(JUnit4.class)
 public final class IntegrationTest extends IntegrationTestCase {
   private static final String CLOSURE_BOILERPLATE =

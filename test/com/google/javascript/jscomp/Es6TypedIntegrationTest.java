@@ -24,7 +24,6 @@ import org.junit.runners.JUnit4;
  * Integration tests for compilation in {@link LanguageMode#ECMASCRIPT6_TYPED} mode, with type
  * checking by {@link TypeValidator}.
  */
-
 @RunWith(JUnit4.class)
 public final class Es6TypedIntegrationTest extends IntegrationTestCase {
 

@@ -48,7 +48,6 @@ import org.junit.runners.JUnit4;
  * classes to ES5 syntax and has long supported removal of unused properties that are defined with
  * it.
  */
-
 @RunWith(JUnit4.class)
 public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
 

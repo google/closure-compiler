@@ -30,7 +30,6 @@ import org.junit.runners.JUnit4;
  *
  * @author stalcup@google.com (John Stalcup)
  */
-
 @RunWith(JUnit4.class)
 public final class MissingProvideTest extends CompilerTestCase {
 

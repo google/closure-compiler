@@ -27,7 +27,6 @@ import org.junit.runners.JUnit4;
  *
  * @author johnlenz@google.com (john lenz)
  */
-
 @RunWith(JUnit4.class)
 public class InlineFunctionsTest extends CompilerTestCase {
   private Reach inliningReach;

@@ -30,7 +30,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link RewriteGoogJsImports} that involve only linting and no rewriting. */
-
 @RunWith(JUnit4.class)
 public final class CheckGoogJsImportTest extends CompilerTestCase {
   @Override

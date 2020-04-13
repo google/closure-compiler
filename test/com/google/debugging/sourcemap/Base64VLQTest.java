@@ -98,7 +98,6 @@ public final class Base64VLQTest {
     }
   }
 
-
   private static void testValue(int value) {
     try {
       StringBuilder sb = new StringBuilder();

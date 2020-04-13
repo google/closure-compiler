@@ -500,3 +500,4 @@ public final class GenerateExportsTest extends CompilerTestCase {
         "/** @export {number} */ Foo.prototype.myprop;"));
   }
 }
+

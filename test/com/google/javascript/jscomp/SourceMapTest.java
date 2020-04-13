@@ -32,7 +32,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** @author johnlenz@google.com (John Lenz) */
-
 @RunWith(JUnit4.class)
 public final class SourceMapTest extends SourceMapTestCase {
 

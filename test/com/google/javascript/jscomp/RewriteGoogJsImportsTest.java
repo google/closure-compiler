@@ -35,7 +35,6 @@ import org.junit.runners.JUnit4;
  * Tests for {@link RewriteGoogJsImports} that involve rewriting. {@link CheckGoogJsImportTest} has
  * the link tests.
  */
-
 @RunWith(JUnit4.class)
 public final class RewriteGoogJsImportsTest extends CompilerTestCase {
   // JsFileRegexParser determines if this file is base.js by looking at the first comment of the

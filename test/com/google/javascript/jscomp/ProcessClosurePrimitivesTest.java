@@ -39,7 +39,6 @@ import org.junit.runners.JUnit4;
  * Tests for {@link ProcessClosurePrimitives}.
  *
  */
-
 @RunWith(JUnit4.class)
 public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 

@@ -20,7 +20,6 @@
  * @externs
  */
 
-
 /**
  * https://developers.google.com/analytics/devguides/collection/analyticsjs/command-queue-reference
  * @param {string|function(!ga.Tracker)} commandOrReadyCallback

@@ -27,7 +27,6 @@ import org.junit.runners.JUnit4;
  * Tests for PeepholeRemoveDeadCodeTest in isolation. Tests for the interaction of multiple peephole
  * passes are in PeepholeIntegrationTest.
  */
-
 @RunWith(JUnit4.class)
 public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 

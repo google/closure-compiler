@@ -32,7 +32,6 @@ import org.junit.runners.JUnit4;
  *
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
-
 @RunWith(JUnit4.class)
 public final class CommonJSIntegrationTest extends IntegrationTestCase {
   @Test

@@ -52,7 +52,6 @@ import org.junit.runners.JUnit4;
  * Tests {@link TypeCheck}.
  *
  */
-
 @RunWith(JUnit4.class)
 public final class TypeCheckTest extends TypeCheckTestCase {
 

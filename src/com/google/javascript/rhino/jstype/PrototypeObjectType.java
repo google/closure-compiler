@@ -49,7 +49,6 @@ import com.google.javascript.rhino.Node;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Function;
 
 /**
  * The object type represents instances of JavaScript objects such as

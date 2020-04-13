@@ -97,7 +97,6 @@ public final class ClosureBundler {
     return withTranspilers(transpiler, newEs6ModuleTranspiler);
   }
 
-
   public ClosureBundler disableJ2clMinifier() {
     return new ClosureBundler(
         transpiler,

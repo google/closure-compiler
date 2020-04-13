@@ -1,0 +1,18 @@
+<script>
+  // Ensure that some ES6 polyfills are not defined. (The test runner transpiler may have defined
+  // some polyfills on Window, so get rid of them.)
+  window.Map = undefined;
+  String.prototype.startsWith = undefined;
+  Array.of = undefined;
+
+  // Insert bad polyfills for some ES6 features, so that the test code can verify the compiled
+  // binary uses the correct polyfill implementations.
+  // In particular, we want to verify that polyfill isolation detects that our Symbol "polyfill" is
+  // non-native.
+  window.Promise = function() {};
+  Array.prototype.includes = function() { return false; }
+  Math.sign = function() { return -1; }
+  window.Symbol = function() {};
+  Object.getOwnPropertySymbols = function() { return []; };
+</script>
+<script src="polyfill_isolation_bin.js"></script>

@@ -49,3 +49,4 @@ public final class CheckEmptyStatements extends AbstractPostOrderCallback implem
     }
   }
 }
+

@@ -34,7 +34,6 @@ import org.junit.runners.JUnit4;
  * Tests for the "missing requires" check in {@link CheckMissingAndExtraRequires}.
  *
  */
-
 @RunWith(JUnit4.class)
 public final class MissingRequireTest extends CompilerTestCase {
   @Override
@@ -579,7 +578,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
   @Test
   public void testFailConstant() {
-    // TODO(evanm): this code used to warn in single-file mode, but it no longer warns
+    // TODO(user): this code used to warn in single-file mode, but it no longer warns
     // after I removed single-file mode. Fix the logic and restore this test.
     // testMissingRequireStrict(
     //     "goog.require('example.Class'); alert(example.Constants.FOO);",

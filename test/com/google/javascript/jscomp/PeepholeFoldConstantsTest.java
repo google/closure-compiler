@@ -36,7 +36,6 @@ import org.junit.runners.JUnit4;
  * Tests for {@link PeepholeFoldConstants} in isolation. Tests for the interaction of multiple
  * peephole passes are in {@link PeepholeIntegrationTest}.
  */
-
 @RunWith(JUnit4.class)
 public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 

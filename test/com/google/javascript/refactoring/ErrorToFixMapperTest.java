@@ -44,7 +44,6 @@ import org.junit.runners.JUnit4;
 // on whether a fix is required, which causes no fix to be suggested when it should.
 
 /** Test case for {@link ErrorToFixMapper}. */
-
 @RunWith(JUnit4.class)
 public class ErrorToFixMapperTest {
   private FixingErrorManager errorManager;
@@ -144,7 +143,6 @@ public class ErrorToFixMapperTest {
                     ""))
             .build());
   }
-
 
   @Test
   public void testDebugger() {

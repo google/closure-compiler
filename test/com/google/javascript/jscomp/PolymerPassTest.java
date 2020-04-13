@@ -4965,7 +4965,7 @@ public class PolymerPassTest extends CompilerTestCase {
   @Test
   public void testParseErrorForComputedPropertyStrings2() {
     propertyRenamingEnabled = true;
-
+    
     polymerVersion = 2;
     super.testError(
         lines(
@@ -4995,7 +4995,7 @@ public class PolymerPassTest extends CompilerTestCase {
   @Test
   public void testReflectionForComplexObservers() {
     propertyRenamingEnabled = true;
-
+    
     test(
         2,
         lines(
@@ -5281,3 +5281,4 @@ public class PolymerPassTest extends CompilerTestCase {
     super.testWarning(js, error);
   }
 }
+

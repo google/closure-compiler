@@ -24,7 +24,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests the hotswap functionality of {@link GatherModuleMetadata}. */
-
 @RunWith(JUnit4.class)
 public class GatherModuleMetadataReplaceScriptTest extends BaseReplaceScriptTestCase {
   @Test

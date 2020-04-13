@@ -23,7 +23,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for hotswap functionality of the ClosureRewriteModule pass. */
-
 @RunWith(JUnit4.class)
 public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase {
 

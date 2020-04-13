@@ -34,7 +34,6 @@ import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link Transpiler}. */
 @GwtIncompatible
-
 @RunWith(JUnit4.class)
 public final class TranspilerTest {
 

@@ -68,7 +68,6 @@ final class CompilerOptionsPreprocessor {
           "remove_unused_prototype_props_in_externs "
           + "and export_local_property_definitions cannot be used together.");
     }
-
   }
 
   /**

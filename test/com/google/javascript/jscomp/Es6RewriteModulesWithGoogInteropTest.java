@@ -40,7 +40,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Unit tests for {@link Es6RewriteModules} that test interop with closure files. */
-
 @RunWith(JUnit4.class)
 public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase {
   private static final SourceFile CLOSURE_BASE =

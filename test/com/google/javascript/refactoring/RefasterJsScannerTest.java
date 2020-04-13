@@ -46,7 +46,6 @@ import org.junit.runners.JUnit4;
  * @author mknichel@google.com (Mark Knichel)
  */
 // TODO(mknichel): Make this a SmallTest by disabling threads in the JS Compiler.
-
 @RunWith(JUnit4.class)
 public class RefasterJsScannerTest {
 
