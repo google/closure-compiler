@@ -97,8 +97,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
 
   @Override
   public CheckLevel level(JSError error) {
-    if (error.getDefaultLevel().equals(CheckLevel.ERROR)
-        && !DOWNGRADEABLE_ERRORS_LIST.contains(error.getType().key)) {
+    if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
       return null;
     }
     if (containWarning(formatWarning(error))) {
@@ -109,15 +108,10 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     }
     return null;
   }
-
-  private static final ImmutableSet<String> DOWNGRADEABLE_ERRORS_LIST =
-      ImmutableSet.of(
-          );
-
   /**
    * Determines whether a given warning is included in the white-list.
    *
-   * @param formattedWarning the warning formatted by {@code formatWarning}
+   * @param formattedWarning the warning formatted by {@code formattedWarning}
    * @return whether the given warning is white-listed or not.
    */
   protected boolean containWarning(String formattedWarning) {
