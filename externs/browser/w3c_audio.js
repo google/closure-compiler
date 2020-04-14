@@ -134,6 +134,11 @@ BaseAudioContext.prototype.createChannelSplitter = function(numberOfOutputs) {};
 BaseAudioContext.prototype.createChannelMerger = function(numberOfInputs) {};
 
 /**
+ * @return {!ConstantSourceNode}
+ */
+BaseAudioContext.prototype.createConstantSource = function() {};
+
+/**
  * @return {!DynamicsCompressorNode}
  */
 BaseAudioContext.prototype.createDynamicsCompressor = function() {};
@@ -1410,6 +1415,37 @@ OscillatorNode.prototype.onended;
  * @constructor
  */
 function PeriodicWave() {}
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/webaudio/#dictdef-constantsourceoptions
+ */
+function ConstantSourceOptions() {};
+
+/** @const {(number|undefined)} */
+ConstantSourceOptions.offset;
+
+/**
+ * @param {!BaseAudioContext} context
+ * @param {!ConstantSourceOptions=} options
+ * @constructor
+ * @extends {AudioNode}
+ * @see https://www.w3.org/TR/webaudio/#ConstantSourceNode
+ */
+function ConstantSourceNode(context, options) {}
+
+/**
+ * @param {number=} when
+ */
+ConstantSourceNode.prototype.start = function(when) {};
+
+/**
+ * @param {number=} when
+ */
+ConstantSourceNode.prototype.stop = function(when) {};
+
+/** @type {!AudioParam} */
+ConstantSourceNode.prototype.offset;
 
 /**
  * @constructor
