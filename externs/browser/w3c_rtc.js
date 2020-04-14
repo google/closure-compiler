@@ -1749,21 +1749,6 @@ RTCRtpStreamStats.prototype.transportId;
 /** @const {string} */
 RTCRtpStreamStats.prototype.codecId;
 
-/** @const {number} */
-RTCRtpStreamStats.prototype.firCount;
-
-/** @const {number} */
-RTCRtpStreamStats.prototype.pliCount;
-
-/** @const {number} */
-RTCRtpStreamStats.prototype.nackCount;
-
-/** @const {number} */
-RTCRtpStreamStats.prototype.sliCount;
-
-/** @const {number} */
-RTCRtpStreamStats.prototype.qpSum;
-
 
 /**
  * @see https://www.w3.org/TR/webrtc-stats/#dom-rtcreceivedrtpstreamstats
@@ -1832,6 +1817,9 @@ RTCInboundRtpStreamStats.prototype.remoteId;
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.framesDecoded;
 
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.qpSum;
+
 /** @const {?Date|number} */
 RTCInboundRtpStreamStats.prototype.lastPacketReceivedTimestamp;
 
@@ -1846,6 +1834,18 @@ RTCInboundRtpStreamStats.prototype.packetsFailedDecryption;
 
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.packetsDuplicated;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.nackCount;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.firCount;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.pliCount;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.sliCount;
 
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.audioLevel;
@@ -2028,11 +2028,26 @@ RTCOutboundRtpStreamStats.prototype.frameWidth;
 /** @const {number} */
 RTCOutboundRtpStreamStats.prototype.frameHeight;
 
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.qpSum;
+
 /**
  * Firefox specific value.
  * @const {number|undefined}
  */
 RTCOutboundRtpStreamStats.prototype.bitrateMean;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.nackCount;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.firCount;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.pliCount;
+
+/** @const {number} */
+RTCOutboundRtpStreamStats.prototype.sliCount;
 
 /** @const {string|undefined} */
 RTCOutboundRtpStreamStats.prototype.encoderImplementation;
