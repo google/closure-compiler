@@ -38,18 +38,21 @@ $jscomp.getGlobal = function(passedInThis) {
     // This use of `globalThis` does not prevent removal of the `globalThis`
     // polyfill, because the usage is guarded by a typeof check.
     'object' == typeof globalThis && globalThis,
+    // Rhino (used by older Google Docs Script projects) has no `window` or
+    // `self`, but `this` from the global scope is the global object. Also,
+    // some GWT tests running on Rhino do have a `window` and `self` but, for
+    // unknown reasons, see runtime exceptions when we return `window` instead
+    // of `passedInThis`.
+    // NOTE: If the compiler's output is wrapped in a strict-mode function,
+    // this file's code won't actually be executing in global scope, so this
+    // value will be undefined.
+    passedInThis,
     // Browser windows always have `window`
     'object' == typeof window && window,
     // WebWorkers have `self`
     'object' == typeof self && self,
     // NodeJS has `global`
     'object' == typeof global && global,
-    // Rhino (used by older Google Docs Script projects) has none of the above,
-    // but `this` from the global scope is the global object.
-    // NOTE: If the compiler's output is wrapped in a strict-mode function,
-    // this file's code won't actually be executing in global scope, so this
-    // value will be undefined.
-    passedInThis
   ];
   for (var i = 0; i < possibleGlobals.length; ++i) {
     var maybeGlobal = possibleGlobals[i];
