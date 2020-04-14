@@ -89,9 +89,13 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
     JSType typeParam = unknownType;
     if (addTypes) {
-      // TODO(sdh): This is going to be null if the iterable is nullable or unknown. We might want
-      // to consider some way of unifying rather than simply looking at the nominal type.
-      ObjectType iterableType = iterable.getJSType().autobox().toMaybeObjectType();
+      // TODO(sdh): This is going to be null if the iterable is a union or nullable type. We might
+      // want to consider some way of unifying rather than simply looking at the nominal type.
+      // Also: we have to consider the case where iterable.getJSType() is null because unless
+      // TypeCheck runs, some expression are never given types by TypeInference.
+      // TODO(b/154044898): remove this null check.
+      ObjectType iterableType =
+          iterable.getJSType() != null ? iterable.getJSType().autobox().toMaybeObjectType() : null;
       if (iterableType != null) {
         typeParam =
             iterableType
