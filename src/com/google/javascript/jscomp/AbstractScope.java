@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import java.io.Serializable;
@@ -61,8 +62,8 @@ import javax.annotation.Nullable;
  */
 public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends AbstractVar<S, V>>
     implements StaticScope, Serializable {
-  private final Map<String, V> vars = new LinkedHashMap<>();
-  private final Map<ImplicitVar, V> implicitVars = new EnumMap<>(ImplicitVar.class);
+  private Map<String, V> vars = ImmutableMap.of();
+  private Map<ImplicitVar, V> implicitVars = ImmutableMap.of();
   private final Node rootNode;
 
   AbstractScope(Node rootNode) {
@@ -140,16 +141,25 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
 
   /** Without any safety checks */
   final void undeclareInteral(V var) {
+    // Assume that vars must contain var, and thus not be empty
     vars.remove(var.getName());
   }
 
   final void declareInternal(String name, V var) {
     checkState(hasOwnSlot(name) || canDeclare(name), "Illegal shadow: %s", var.getNode());
+
+    // For memory savings, only initialize the map once it needs to add its first element
+    Map<String, V> emptySentinel = ImmutableMap.of();
+    if (vars == emptySentinel) {
+      vars = new LinkedHashMap<>();
+    }
     vars.put(name, var);
   }
 
   final void clearVarsInternal() {
-    vars.clear();
+    if (!vars.isEmpty()) {
+      vars.clear();
+    }
   }
 
   /** Returns true iff this scope implies a slot with the given name. */
@@ -176,6 +186,12 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
   private final V getOwnImplicitSlot(@Nullable ImplicitVar name) {
     if (!hasOwnImplicitSlot(name)) {
       return null;
+    }
+
+    // For memory savings, only initialize the map once it needs to add its first element
+    Map<ImplicitVar, V> emptySentinel = ImmutableMap.of();
+    if (implicitVars == emptySentinel) {
+      implicitVars = new EnumMap<>(ImplicitVar.class);
     }
 
     return implicitVars.computeIfAbsent(name, this::makeImplicitVar);
