@@ -3912,9 +3912,17 @@ public final class NodeUtilTest {
               "dFoo",
               GoogRequire.fromNamespace("d.Foo")
             },
+            {
+              "goog.module('a.b.c'); const Foo = goog.requireType('d.Foo');",
+              "Foo",
+              GoogRequire.fromNamespace("d.Foo")
+            },
+            {
+              "goog.module('a.b.c'); const {Bar} = goog.requireType('d.Foo');",
+              "Bar",
+              GoogRequire.fromNamespaceAndProperty("d.Foo", "Bar")
+            },
             // Test that non-requires just return null.
-            {"goog.module('a.b.c'); const Foo = goog.requireType('d.Foo');", "Foo", null},
-            {"goog.module('a.b.c'); const {Bar} = goog.requireType('d.Foo');", "Bar", null},
             {"goog.module('a.b.c'); let Foo;", "Foo", null},
             {"goog.module('a.b.c'); let [Foo] = arr;", "Foo", null},
             {"goog.module('a.b.c'); let {Bar: {Foo}} = obj;", "Foo", null},

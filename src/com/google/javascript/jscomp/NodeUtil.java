@@ -79,6 +79,8 @@ public final class NodeUtil {
 
   private static final QualifiedName GOOG_REQUIRE = QualifiedName.of("goog.require");
 
+  private static final QualifiedName GOOG_REQUIRE_TYPE = QualifiedName.of("goog.requireType");
+
   // Utility class; do not instantiate.
   private NodeUtil() {}
 
@@ -5333,6 +5335,14 @@ public final class NodeUtil {
     return false;
   }
 
+  static boolean isGoogRequireTypeCall(Node call) {
+    if (call.isCall()) {
+      Node target = call.getFirstChild();
+      return GOOG_REQUIRE_TYPE.matches(target);
+    }
+    return false;
+  }
+
   static boolean isModuleScopeRoot(Node n) {
     return n.isModuleBody() || isBundledGoogModuleScopeRoot(n);
   }
@@ -5760,14 +5770,16 @@ public final class NodeUtil {
 
     if (NodeUtil.isNameDeclaration(nameNode.getParent())) {
       Node requireCall = nameNode.getFirstChild();
-      if (requireCall == null || !isGoogRequireCall(requireCall)) {
+      if (requireCall == null
+          || !(isGoogRequireCall(requireCall) || isGoogRequireTypeCall(requireCall))) {
         return null;
       }
       String namespace = requireCall.getSecondChild().getString();
       return GoogRequire.fromNamespace(namespace);
     } else if (nameNode.getParent().isStringKey() && nameNode.getGrandparent().isObjectPattern()) {
       Node requireCall = nameNode.getGrandparent().getNext();
-      if (requireCall == null || !isGoogRequireCall(requireCall)) {
+      if (requireCall == null
+          || !(isGoogRequireCall(requireCall) || isGoogRequireTypeCall(requireCall))) {
         return null;
       }
       String property = nameNode.getParent().getString();
