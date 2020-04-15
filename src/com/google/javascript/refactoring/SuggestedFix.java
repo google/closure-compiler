@@ -28,8 +28,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
@@ -631,6 +629,8 @@ public final class SuggestedFix {
       if (script == null) {
         return this;
       }
+      ScriptMetadata scriptMetadata = ScriptMetadata.create(script, metadata);
+
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();
       }
@@ -639,9 +639,8 @@ public final class SuggestedFix {
           IR.getprop(IR.name("goog"), IR.string("require")),
           IR.string(namespace));
 
-      String shortName = RequireNameShortener.shorten(namespace, script);
-      boolean useAliasedRequire = usesConstGoogRequires(metadata, script);
-      if (useAliasedRequire) {
+      String shortName = RequireNameShortener.shorten(namespace, scriptMetadata);
+      if (scriptMetadata.supportsRequireAliases()) {
         googRequireNode = IR.constNode(IR.name(shortName), googRequireNode);
       } else {
         googRequireNode = IR.exprResult(googRequireNode);
@@ -717,39 +716,6 @@ public final class SuggestedFix {
 
       return insertBefore(
           nodeToInsertBefore, googRequireNode, m.getMetadata().getCompiler(), namespace);
-    }
-
-    /**
-     * If the namespace has a short name, return it. Otherwise return the full name.
-     *
-     * <p>Assumes {@link addGoogRequire} was already called.
-     */
-    public String getRequireName(Match m, String namespace) {
-      Node existingNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
-      if (existingNode != null && (existingNode.isConst() || existingNode.isVar())) {
-        Node lhsAssign = existingNode.getFirstChild();
-        String originalName = lhsAssign.getOriginalName();
-        if (originalName != null) {
-          return originalName; // The import was renamed inside a module.
-        }
-        return lhsAssign.getQualifiedName();
-      }
-      Node script = NodeUtil.getEnclosingScript(m.getNode());
-
-      if (script != null && usesConstGoogRequires(m.getMetadata(), script)) {
-        return RequireNameShortener.shorten(namespace, script);
-      }
-      return namespace;
-    }
-
-    /** True if the file uses {@code const foo = goog.require('namespace.foo');} */
-    private boolean usesConstGoogRequires(final NodeMetadata metadata, Node script) {
-      if (script.isModuleBody()) {
-        return true;
-      }
-      HasAliasedRequireOrModuleCallback callback = new HasAliasedRequireOrModuleCallback(metadata);
-      NodeTraversal.traverse(metadata.getCompiler(), script, callback);
-      return callback.getUsesAliasedRequires();
     }
 
     /**
@@ -859,36 +825,6 @@ public final class SuggestedFix {
     public abstract int getCharno();
 
     public abstract boolean isInClosurizedFile();
-  }
-
-  /** Traverse an AST and find {@code goog.module} or {@code const X = goog.require('...');}. */
-  private static class HasAliasedRequireOrModuleCallback extends AbstractPreOrderCallback {
-    private boolean usesAliasedRequires;
-    final NodeMetadata metadata;
-
-    public HasAliasedRequireOrModuleCallback(NodeMetadata metadata) {
-      this.usesAliasedRequires = false;
-      this.metadata = metadata;
-    }
-
-    boolean getUsesAliasedRequires() {
-      return usesAliasedRequires;
-    }
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      if (Matchers.googModule().matches(n, metadata) || isAliasedRequire(n, metadata)) {
-        usesAliasedRequires = true;
-        return false;
-      }
-      return true;
-    }
-
-    private static boolean isAliasedRequire(Node node, NodeMetadata metadata) {
-      return NodeUtil.isNameDeclaration(node)
-          && node.getFirstFirstChild() != null
-          && Matchers.googRequire().matches(node.getFirstFirstChild(), metadata);
-    }
   }
 
   /**

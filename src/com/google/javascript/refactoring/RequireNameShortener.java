@@ -16,15 +16,11 @@
 
 package com.google.javascript.refactoring;
 
-import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.Node;
-import java.util.LinkedHashSet;
 
 /**
  * Implements {@see go/js-style#file-goog-require} for selecting import aliases.
@@ -67,17 +63,15 @@ final class RequireNameShortener {
 
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
-  private final LinkedHashSet<String> namesInUse = new LinkedHashSet<>(BLACKLISTED_ALIASES);
+  private final ScriptMetadata scriptMetadata;
 
-  static String shorten(String namespace, Node script) {
-    checkArgument(script.isScript() || script.isModuleBody());
-
-    RequireNameShortener shortener = new RequireNameShortener();
-    shortener.recordNamesInUse(script, false);
-    return shortener.shortenInternal(namespace);
+  static String shorten(String namespace, ScriptMetadata scriptMetadata) {
+    return new RequireNameShortener(scriptMetadata).shortenInternal(namespace);
   }
 
-  private RequireNameShortener() {}
+  private RequireNameShortener(ScriptMetadata scriptMetadata) {
+    this.scriptMetadata = scriptMetadata;
+  }
 
   private String shortenInternal(String namespace) {
     ImmutableList<String> parts = ImmutableList.copyOf(DOT_SPLITTER.split(namespace)).reverse();
@@ -107,30 +101,7 @@ final class RequireNameShortener {
   }
 
   private boolean isValidAlias(String alias) {
-    return !this.namesInUse.contains(alias);
-  }
-
-  private void recordNamesInUse(Node n, boolean isJsdoc) {
-    if (isJsdoc) {
-      if (n.isString()) {
-        this.namesInUse.add(DOT_SPLITTER.split(n.getString()).iterator().next());
-      }
-    } else {
-      if (n.isName()) {
-        this.namesInUse.add(n.getString());
-      }
-    }
-
-    JSDocInfo jsdoc = n.getJSDocInfo();
-    if (jsdoc != null) {
-      for (Node expr : jsdoc.getTypeNodes()) {
-        this.recordNamesInUse(expr, true);
-      }
-    }
-
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      this.recordNamesInUse(c, isJsdoc);
-    }
+    return !BLACKLISTED_ALIASES.contains(alias) && !this.scriptMetadata.usesName(alias);
   }
 
   private static String upperCaseFirstChar(String w) {

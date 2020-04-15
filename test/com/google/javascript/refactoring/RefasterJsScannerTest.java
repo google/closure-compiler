@@ -17,7 +17,6 @@
 package com.google.javascript.refactoring;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
@@ -29,6 +28,7 @@ import com.google.javascript.jscomp.SourceFile;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1008,14 +1008,14 @@ public class RefasterJsScannerTest {
                 "foo.js")
             .build();
     List<SuggestedFix> fixes = driver.drive(scanner);
-    ImmutableList<ImmutableMap<String, String>> outputChoices =
+    List<String> outputChoices =
         ApplySuggestedFixes.applyAllSuggestedFixChoicesToCode(
-            fixes, ImmutableMap.of("input", originalCode));
-    assertThat(outputChoices).hasSize(expectedChoices.length);
+                fixes, ImmutableMap.of("input", originalCode))
+            .stream()
+            .map((m) -> m.get("input"))
+            .collect(Collectors.toList());
 
-    for (int i = 0; i < outputChoices.size(); i++) {
-      assertEquals("Choice " + i, expectedChoices[i], outputChoices.get(i).get("input"));
-    }
+    assertThat(outputChoices).containsExactlyElementsIn(expectedChoices).inOrder();
   }
 
   private String lines(String... lines) {

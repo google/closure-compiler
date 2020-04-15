@@ -1152,7 +1152,6 @@ public class SuggestedFixTest {
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
     SuggestedFix.Builder fixBuilder = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe");
-    assertThat(fixBuilder.getRequireName(match, "goog.safe")).isEqualTo("googSafe");
     assertThat(fixBuilder.build().getReplacements()).isEmpty();
   }
 

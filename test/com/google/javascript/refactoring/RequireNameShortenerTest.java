@@ -18,6 +18,7 @@ package com.google.javascript.refactoring;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -70,7 +71,8 @@ public final class RequireNameShortenerTest {
     if (this.expr != null) {
       script.addChildToFront(IR.exprResult(this.expr));
     }
+    ScriptMetadata metadata = ScriptMetadata.create(script, new Compiler());
 
-    assertThat(RequireNameShortener.shorten(this.namespace, script)).isEqualTo(this.shortName);
+    assertThat(RequireNameShortener.shorten(this.namespace, metadata)).isEqualTo(this.shortName);
   }
 }

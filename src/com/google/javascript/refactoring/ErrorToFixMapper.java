@@ -219,7 +219,8 @@ public final class ErrorToFixMapper {
       shortName = shortNameMatcher.group(1);
     } else {
       Node script = compiler.getScriptNode(error.getSourceName());
-      shortName = RequireNameShortener.shorten(fullName, script);
+      ScriptMetadata scriptMetadata = ScriptMetadata.create(script, metadata);
+      shortName = RequireNameShortener.shorten(fullName, scriptMetadata);
       fix.addLhsToGoogRequire(match, fullName, shortName);
     }
 
@@ -346,7 +347,8 @@ public final class ErrorToFixMapper {
 
       if (nodeToReplace != null && nodeToReplace.matchesQualifiedName(namespaceToRequire)) {
         Node script = NodeUtil.getEnclosingScript(error.getNode());
-        String shortName = RequireNameShortener.shorten(namespaceToRequire, script);
+        ScriptMetadata scriptMetadata = ScriptMetadata.create(script, metadata);
+        String shortName = RequireNameShortener.shorten(namespaceToRequire, scriptMetadata);
         fix.replace(nodeToReplace, IR.name(shortName), compiler);
       }
     }
