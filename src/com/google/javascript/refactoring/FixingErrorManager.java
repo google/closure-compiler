@@ -39,7 +39,7 @@ import java.util.List;
  * <p>An error manager that finds a SuggestedFix for all errors if possible.
  */
 public class FixingErrorManager extends BasicErrorManager {
-  private AbstractCompiler compiler;
+  private ErrorToFixMapper fixer;
   private final HashMap<JSError, SuggestedFix> sureFixes = new HashMap<>();
   private final ListMultimap<JSError, SuggestedFix> multiFixes = ArrayListMultimap.create();
   private final ImmutableSet<DiagnosticType> unfixableErrors;
@@ -58,14 +58,14 @@ public class FixingErrorManager extends BasicErrorManager {
   }
 
   public void setCompiler(AbstractCompiler compiler) {
-    this.compiler = compiler;
+    this.fixer = new ErrorToFixMapper(compiler);
   }
 
   @Override
   public void report(CheckLevel level, JSError error) {
     super.report(level, error);
     if (!unfixableErrors.contains(error.getType())) {
-      ImmutableList<SuggestedFix> fixes = ErrorToFixMapper.getFixesForJsError(error, compiler);
+      ImmutableList<SuggestedFix> fixes = this.fixer.getFixesForJsError(error);
       if (fixes.size() == 1) {
         sureFixes.put(error, fixes.get(0));
       } else {

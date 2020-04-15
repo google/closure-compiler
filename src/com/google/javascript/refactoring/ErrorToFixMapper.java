@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
  *     make it easier for people adding new warnings to also add fixes for them.
  */
 public final class ErrorToFixMapper {
-  private ErrorToFixMapper() {} // All static
 
   private static final Pattern DID_YOU_MEAN = Pattern.compile(".*Did you mean (.*)\\?");
   private static final Pattern EARLY_REF =
@@ -52,9 +51,14 @@ public final class ErrorToFixMapper {
   private static final Pattern USE_SHORT_NAME =
       Pattern.compile(".*Please use the short name '(.*)' instead.");
 
-  public static ImmutableList<SuggestedFix> getFixesForJsError(
-      JSError error, AbstractCompiler compiler) {
-    SuggestedFix fix = getFixForJsError(error, compiler);
+  private final AbstractCompiler compiler;
+
+  public ErrorToFixMapper(AbstractCompiler compiler) {
+    this.compiler = compiler;
+  }
+
+  public ImmutableList<SuggestedFix> getFixesForJsError(JSError error) {
+    SuggestedFix fix = getFixForJsError(error);
     if (fix != null) {
       return ImmutableList.of(fix);
     }
@@ -63,28 +67,28 @@ public final class ErrorToFixMapper {
       case "JSC_IMPLICITLY_NULLABLE_JSDOC":
       case "JSC_MISSING_NULLABILITY_MODIFIER_JSDOC":
       case "JSC_NULL_MISSING_NULLABILITY_MODIFIER_JSDOC":
-        return getFixesForImplicitNullabilityErrors(error, compiler);
+        return getFixesForImplicitNullabilityErrors(error);
       default:
         return ImmutableList.of();
     }
   }
 
   /**
-   * Creates a SuggestedFix for the given error. Note that some errors have multiple fixes
-   * so getFixesForJsError should often be used instead of this.
+   * Creates a SuggestedFix for the given error. Note that some errors have multiple fixes so
+   * getFixesForJsError should often be used instead of this.
    */
-  public static SuggestedFix getFixForJsError(JSError error, AbstractCompiler compiler) {
+  public SuggestedFix getFixForJsError(JSError error) {
     switch (error.getType().key) {
       case "JSC_REDECLARED_VARIABLE":
-        return getFixForRedeclaration(error, compiler);
+        return getFixForRedeclaration(error);
       case "JSC_REFERENCE_BEFORE_DECLARE":
-        return getFixForEarlyReference(error, compiler);
+        return getFixForEarlyReference(error);
       case "JSC_MISSING_SEMICOLON":
-        return getFixForMissingSemicolon(error, compiler);
+        return getFixForMissingSemicolon(error);
       case "JSC_REQUIRES_NOT_SORTED":
-        return getFixForUnsortedRequires(error, compiler);
+        return getFixForUnsortedRequires(error);
       case "JSC_PROVIDES_NOT_SORTED":
-        return getFixForUnsortedProvides(error, compiler);
+        return getFixForUnsortedProvides(error);
       case "JSC_DEBUGGER_STATEMENT_PRESENT":
         return new SuggestedFix.Builder()
             .attachMatchedNodeInfo(error.getNode(), compiler)
@@ -92,32 +96,32 @@ public final class ErrorToFixMapper {
             .delete(error.getNode())
             .build();
       case "JSC_USELESS_EMPTY_STATEMENT":
-        return removeEmptyStatement(error, compiler);
+        return removeEmptyStatement(error);
       case "JSC_INEXISTENT_PROPERTY_WITH_SUGGESTION":
       case "JSC_STRICT_INEXISTENT_PROPERTY_WITH_SUGGESTION":
-        return getFixForInexistentProperty(error, compiler);
+        return getFixForInexistentProperty(error);
       case "JSC_MISSING_CALL_TO_SUPER":
-        return getFixForMissingSuper(error, compiler);
+        return getFixForMissingSuper(error);
       case "JSC_INVALID_SUPER_CALL_WITH_SUGGESTION":
-        return getFixForInvalidSuper(error, compiler);
+        return getFixForInvalidSuper(error);
       case "JSC_MISSING_REQUIRE_WARNING":
       case "JSC_MISSING_REQUIRE_STRICT_WARNING":
-        return getFixForMissingRequire(error, compiler);
+        return getFixForMissingRequire(error);
       case "JSC_EXTRA_REQUIRE_WARNING":
-        return getFixForExtraRequire(error, compiler);
+        return getFixForExtraRequire(error);
       case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
       case "JSC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME":
-        return getFixForReferenceToShortImportByLongName(error, compiler);
+        return getFixForReferenceToShortImportByLongName(error);
       case "JSC_REDUNDANT_NULLABILITY_MODIFIER_JSDOC":
-        return getFixForRedundantNullabilityModifierJsDoc(error, compiler);
+        return getFixForRedundantNullabilityModifierJsDoc(error);
       case "JSC_MISSING_CONST_ON_CONSTANT_CASE":
-        return getFixForConstantCaseErrors(error, compiler);
+        return getFixForConstantCaseErrors(error);
       default:
         return null;
     }
   }
 
-  private static SuggestedFix getFixForRedeclaration(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForRedeclaration(JSError error) {
     Node name = error.getNode();
     checkState(name.isName(), name);
     Node parent = name.getParent();
@@ -188,7 +192,7 @@ public final class ErrorToFixMapper {
    * (JSC_REDECLARED_VARIABLE). But after running the fixer once, you can then run it again and
    * #getFixForRedeclaration will take care of the JSC_REDECLARED_VARIABLE warning.
    */
-  private static SuggestedFix getFixForEarlyReference(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForEarlyReference(JSError error) {
     Matcher m = EARLY_REF.matcher(error.getDescription());
     if (m.matches()) {
       String name = m.group(1);
@@ -202,8 +206,7 @@ public final class ErrorToFixMapper {
     return null;
   }
 
-  private static SuggestedFix getFixForReferenceToShortImportByLongName(
-      JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForReferenceToShortImportByLongName(JSError error) {
     SuggestedFix.Builder fix =
         new SuggestedFix.Builder().attachMatchedNodeInfo(error.getNode(), compiler);
     NodeMetadata metadata = new NodeMetadata(compiler);
@@ -236,8 +239,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static ImmutableList<SuggestedFix> getFixesForImplicitNullabilityErrors(
-      JSError error, AbstractCompiler compiler) {
+  private ImmutableList<SuggestedFix> getFixesForImplicitNullabilityErrors(JSError error) {
 
     if (error.getNode().getSourceFileName() == null) {
       // If we don't have a source location we can't generate a valid fix.
@@ -274,7 +276,7 @@ public final class ErrorToFixMapper {
     }
   }
 
-  private static SuggestedFix removeEmptyStatement(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix removeEmptyStatement(JSError error) {
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.getNode(), compiler)
         .setDescription("Remove empty statement")
@@ -282,14 +284,14 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static SuggestedFix getFixForMissingSemicolon(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForMissingSemicolon(JSError error) {
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.getNode(), compiler)
         .insertAfter(error.getNode(), ";")
         .build();
   }
 
-  private static SuggestedFix getFixForMissingSuper(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForMissingSuper(JSError error) {
     Node constructorFunction = error.getNode().getFirstChild();
     Node body = NodeUtil.getFunctionBody(constructorFunction);
     return new SuggestedFix.Builder()
@@ -298,7 +300,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static SuggestedFix getFixForInvalidSuper(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForInvalidSuper(JSError error) {
     Matcher m = DID_YOU_MEAN.matcher(error.getDescription());
     if (m.matches()) {
       String superDotSuggestion = checkNotNull(m.group(1));
@@ -311,8 +313,7 @@ public final class ErrorToFixMapper {
     return null;
   }
 
-  private static SuggestedFix getFixForInexistentProperty(
-      JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForInexistentProperty(JSError error) {
     Matcher m = DID_YOU_MEAN.matcher(error.getDescription());
     if (m.matches()) {
       String suggestedPropName = m.group(1);
@@ -325,7 +326,7 @@ public final class ErrorToFixMapper {
     return null;
   }
 
-  private static SuggestedFix getFixForMissingRequire(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForMissingRequire(JSError error) {
     Matcher regexMatcher = MISSING_REQUIRE.matcher(error.getDescription());
     checkState(regexMatcher.matches(), "Unexpected error description: %s", error.getDescription());
     String namespaceToRequire = regexMatcher.group(1);
@@ -355,7 +356,7 @@ public final class ErrorToFixMapper {
     return fix.build();
   }
 
-  private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForExtraRequire(JSError error) {
     Node node = error.getNode();
 
     SuggestedFix.Builder fix = new SuggestedFix.Builder().attachMatchedNodeInfo(node, compiler);
@@ -375,7 +376,7 @@ public final class ErrorToFixMapper {
     return fix.build();
   }
 
-  private static SuggestedFix getFixForUnsortedRequires(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForUnsortedRequires(JSError error) {
     // TODO(tjgq): Encode enough information in the error to avoid the need to run a traversal in
     // order to produce the fix.
     Node script = NodeUtil.getEnclosingScript(error.getNode());
@@ -392,7 +393,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static SuggestedFix getFixForUnsortedProvides(JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForUnsortedProvides(JSError error) {
     // TODO(tjgq): Encode enough information in the error to avoid the need to run a traversal in
     // order to produce the fix.
     Node script = NodeUtil.getEnclosingScript(error.getNode());
@@ -409,8 +410,7 @@ public final class ErrorToFixMapper {
         .build();
   }
 
-  private static SuggestedFix getFixForRedundantNullabilityModifierJsDoc(
-      JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForRedundantNullabilityModifierJsDoc(JSError error) {
     return new SuggestedFix.Builder()
         .attachMatchedNodeInfo(error.getNode(), compiler)
         .replaceText(error.getNode(), 1, "")
@@ -423,8 +423,7 @@ public final class ErrorToFixMapper {
    * adding a @const annotation. Don't try to adjust the JSDoc, because that can produce invalid
    * output.
    */
-  private static SuggestedFix getFixForConstantCaseErrors(
-      JSError error, AbstractCompiler compiler) {
+  private SuggestedFix getFixForConstantCaseErrors(JSError error) {
     Node n = error.getNode();
     Node parent = n.getParent();
     if (!n.isName() || !NodeUtil.isNameDeclaration(parent)) {
