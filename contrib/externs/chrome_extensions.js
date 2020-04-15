@@ -2719,6 +2719,10 @@ chrome.runtime.onConnect;
 chrome.runtime.onConnectExternal;
 
 
+/** @type {!chrome.runtime.PortEvent} */
+chrome.runtime.onConnectNative;
+
+
 /** @type {!ChromeObjectEvent} */
 chrome.runtime.onInstalled;
 
