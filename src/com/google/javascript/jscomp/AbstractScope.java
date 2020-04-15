@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import java.io.Serializable;
@@ -151,7 +152,7 @@ public abstract class AbstractScope<S extends AbstractScope<S, V>, V extends Abs
     // For memory savings, only initialize the map once it needs to add its first element
     Map<String, V> emptySentinel = ImmutableMap.of();
     if (vars == emptySentinel) {
-      vars = new LinkedHashMap<>();
+      vars = Maps.newLinkedHashMapWithExpectedSize(1);
     }
     vars.put(name, var);
   }

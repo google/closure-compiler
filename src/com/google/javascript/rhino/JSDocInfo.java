@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -1405,7 +1406,7 @@ public class JSDocInfo implements Serializable {
     }
 
     if (documentation.parameters == null) {
-      documentation.parameters = new LinkedHashMap<>();
+      documentation.parameters = Maps.newLinkedHashMapWithExpectedSize(1);
     }
 
     if (!documentation.parameters.containsKey(parameter)) {
@@ -1483,7 +1484,7 @@ public class JSDocInfo implements Serializable {
   boolean declareParam(JSTypeExpression jsType, String parameter) {
     lazyInitInfo();
     if (info.parameters == null) {
-      info.parameters = new LinkedHashMap<>();
+      info.parameters = Maps.newLinkedHashMapWithExpectedSize(1);
     }
     if (!info.parameters.containsKey(parameter)) {
       info.parameters.put(parameter, jsType);
@@ -1518,7 +1519,7 @@ public class JSDocInfo implements Serializable {
       return false;
     }
     if (info.templateTypeNames == null) {
-      info.templateTypeNames = new LinkedHashMap<>();
+      info.templateTypeNames = Maps.newLinkedHashMapWithExpectedSize(1);
     } else if (info.templateTypeNames.containsKey(newTemplateTypeName)) {
       return false;
     }
@@ -1558,7 +1559,7 @@ public class JSDocInfo implements Serializable {
     if (info.typeTransformations == null){
       // A LinkedHashMap is used to keep the insertion order. The type
       // transformation expressions will be evaluated in this order.
-      info.typeTransformations = new LinkedHashMap<>();
+      info.typeTransformations = Maps.newLinkedHashMapWithExpectedSize(1);
     } else if (info.typeTransformations.containsKey(newName)) {
       return false;
     }
