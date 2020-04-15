@@ -2068,6 +2068,66 @@ RTCRemoteOutboundRtpStreamStats.prototype.remoteTimestamp;
 
 
 /**
+ * @see https://www.w3.org/TR/webrtc-stats/#transportstats-dict*
+ * @interface
+ * @extends {RTCStats}
+ */
+function RTCTransportStats() {}
+
+/** @type {number} */
+RTCTransportStats.prototype.packetsSent;
+
+/** @type {number} */
+RTCTransportStats.prototype.packetsReceived;
+
+/** @type {number} */
+RTCTransportStats.prototype.bytesSent;
+
+/** @type {number} */
+RTCTransportStats.prototype.bytesReceived;
+
+/** @type {string} */
+RTCTransportStats.prototype.rtcpTransportStatsId;
+
+/**
+ * @type {string}
+ * Set of possible string values: 'unknown', 'controlling', 'controlled'.
+ */
+RTCTransportStats.prototype.iceRole;
+
+/**
+ * @type {string}
+ * Set of possible string values: 'new', 'connecting', 'connected',
+ * 'closed', 'failed'.
+ */
+RTCTransportStats.prototype.dtlsState;
+
+/** @type {string} */
+RTCTransportStats.prototype.selectedCandidatePairId;
+
+/** @type {string} */
+RTCTransportStats.prototype.localCertificateId;
+
+/** @type {string} */
+RTCTransportStats.prototype.remoteCertificateId;
+
+/** @type {string} */
+RTCTransportStats.prototype.tlsVersion;
+
+/** @type {string} */
+RTCTransportStats.prototype.dtlsCipher;
+
+/** @type {string} */
+RTCTransportStats.prototype.srtpCipher;
+
+/** @type {string} */
+RTCTransportStats.prototype.tlsGroup;
+
+/** @type {number} */
+RTCTransportStats.prototype.selectedCandidatePairChanges;
+
+
+/**
  * @interface
  * @extends {Iterable<!Array<string|!RTCStats>>}
  * @see https://w3c.github.io/webrtc-pc/#rtcstatsreport-object
