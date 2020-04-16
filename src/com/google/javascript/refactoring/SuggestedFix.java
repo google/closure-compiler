@@ -599,38 +599,35 @@ public final class SuggestedFix {
       return this;
     }
 
-    public Builder addLhsToGoogRequire(Match m, String namespace, String shortName) {
-      Node existingNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
-      if (existingNode == null || !existingNode.isExprResult()) {
-        // TODO(b/139953612): Destructured goog.requires are not supported.
-        return this;
+    /** Adds a goog.require for the given namespace to the file if it does not already exist. */
+    public Builder addGoogRequire(Match m, String namespace, ScriptMetadata scriptMetadata) {
+      String alias = null;
+      if (scriptMetadata.supportsRequireAliases()) {
+        if (scriptMetadata.getAlias(namespace) != null) {
+          return this; // No require is needed.
+        }
+
+        alias = RequireNameShortener.shorten(namespace, scriptMetadata);
       }
 
-      checkState(existingNode.getFirstChild().isCall(), existingNode.getFirstChild());
-
-      Node newNode = IR.constNode(IR.name(shortName), existingNode.getFirstChild().cloneTree());
-      replace(existingNode, newNode, m.getMetadata().getCompiler());
-      return this;
-    }
-
-    /**
-     * Adds a goog.require for the given namespace to the file if it does not already exist.
-     */
-    public Builder addGoogRequire(Match m, String namespace) {
-      Node node = m.getNode();
       NodeMetadata metadata = m.getMetadata();
       Node existingNode = findGoogRequireNode(m.getNode(), metadata, namespace);
+
       if (existingNode != null) {
+        // TODO(b/139953612): Destructured goog.requires are not supported.
+
+        // Add an alias to a naked require if allowed in this file.
+        if (existingNode.isExprResult() && alias != null) {
+          Node newNode = IR.constNode(IR.name(alias), existingNode.getFirstChild().cloneTree());
+          replace(existingNode, newNode, m.getMetadata().getCompiler());
+          scriptMetadata.addAlias(namespace, alias);
+        }
+
         return this;
       }
 
       // Find the right goog.require node to insert this after.
-      Node script = NodeUtil.getEnclosingScript(node);
-      if (script == null) {
-        return this;
-      }
-      ScriptMetadata scriptMetadata = ScriptMetadata.create(script, metadata);
-
+      Node script = scriptMetadata.getScript();
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();
       }
@@ -639,9 +636,9 @@ public final class SuggestedFix {
           IR.getprop(IR.name("goog"), IR.string("require")),
           IR.string(namespace));
 
-      String shortName = RequireNameShortener.shorten(namespace, scriptMetadata);
-      if (scriptMetadata.supportsRequireAliases()) {
-        googRequireNode = IR.constNode(IR.name(shortName), googRequireNode);
+      if (alias != null) {
+        googRequireNode = IR.constNode(IR.name(alias), googRequireNode);
+        scriptMetadata.addAlias(namespace, alias);
       } else {
         googRequireNode = IR.exprResult(googRequireNode);
       }
@@ -677,7 +674,7 @@ public final class SuggestedFix {
           if (originalName != null) {
             requireName = originalName;
           }
-          if (shortName.compareTo(requireName) < 0) {
+          if (alias.compareTo(requireName) < 0) {
             nodeToInsertBefore = child;
             break;
           }

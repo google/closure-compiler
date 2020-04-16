@@ -37,8 +37,9 @@ import javax.annotation.Nullable;
  * <p>Instances are mutable so that changes to a script caused by one fix cen be reflected during
  * subseuqent fixes.
  */
-final class ScriptMetadata {
+public final class ScriptMetadata {
 
+  private final Node script;
   private boolean supportsRequireAliases;
   private final LinkedHashMap<String, String> requireAliases = new LinkedHashMap<>();
   private final LinkedHashSet<String> namesInUse = new LinkedHashSet<>();
@@ -47,10 +48,10 @@ final class ScriptMetadata {
     return create(script, metadata.getCompiler());
   }
 
-  static ScriptMetadata create(Node script, AbstractCompiler compiler) {
+  public static ScriptMetadata create(Node script, AbstractCompiler compiler) {
     checkArgument(script.isScript());
 
-    ScriptMetadata toFill = new ScriptMetadata();
+    ScriptMetadata toFill = new ScriptMetadata(script);
     NodeTraversal.traverse(compiler, script, new FillerCallback(toFill));
 
     // Even if the file was not found to be a module, the existence of other aliases means aliases
@@ -61,7 +62,13 @@ final class ScriptMetadata {
     return toFill;
   }
 
-  private ScriptMetadata() {}
+  private ScriptMetadata(Node script) {
+    this.script = script;
+  }
+
+  Node getScript() {
+    return this.script;
+  }
 
   /** When requires are added to this script, should they be given local aliases? */
   boolean supportsRequireAliases() {

@@ -156,12 +156,7 @@ public final class RefasterJsScanner extends Scanner {
 
       for (String require : matchedTemplate.getGoogRequiresToAdd()) {
         if (scriptMetadata.getAlias(require) == null) {
-          fix.addGoogRequire(match, require);
-
-          if (scriptMetadata.supportsRequireAliases()) {
-            String alias = RequireNameShortener.shorten(require, scriptMetadata);
-            scriptMetadata.addAlias(require, alias);
-          }
+          fix.addGoogRequire(match, require, scriptMetadata);
         }
       }
 

@@ -15,6 +15,7 @@
  */
 package com.google.javascript.refactoring;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -30,6 +31,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +42,7 @@ import java.util.regex.Pattern;
  *     make it easier for people adding new warnings to also add fixes for them.
  */
 public final class ErrorToFixMapper {
+
 
   private static final Pattern DID_YOU_MEAN = Pattern.compile(".*Did you mean (.*)\\?");
   private static final Pattern EARLY_REF =
@@ -52,6 +55,7 @@ public final class ErrorToFixMapper {
       Pattern.compile(".*Please use the short name '(.*)' instead.");
 
   private final AbstractCompiler compiler;
+  private final LinkedHashMap<Node, ScriptMetadata> metadataForEachScript = new LinkedHashMap<>();
 
   public ErrorToFixMapper(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -212,6 +216,9 @@ public final class ErrorToFixMapper {
     NodeMetadata metadata = new NodeMetadata(compiler);
     Match match = new Match(error.getNode(), metadata);
 
+    Node script = compiler.getScriptNode(error.getSourceName());
+    ScriptMetadata scriptMetadata = this.getMetadataForScript(script);
+
     Matcher fullNameMatcher = FULLY_QUALIFIED_NAME.matcher(error.getDescription());
     checkState(fullNameMatcher.matches(), error.getDescription());
     String fullName = fullNameMatcher.group(1);
@@ -221,10 +228,8 @@ public final class ErrorToFixMapper {
     if (shortNameMatcher.matches()) {
       shortName = shortNameMatcher.group(1);
     } else {
-      Node script = compiler.getScriptNode(error.getSourceName());
-      ScriptMetadata scriptMetadata = ScriptMetadata.create(script, metadata);
-      shortName = RequireNameShortener.shorten(fullName, scriptMetadata);
-      fix.addLhsToGoogRequire(match, fullName, shortName);
+      fix.addGoogRequire(match, fullName, scriptMetadata);
+      shortName = scriptMetadata.getAlias(fullName);
     }
 
     String oldName =
@@ -329,13 +334,19 @@ public final class ErrorToFixMapper {
   private SuggestedFix getFixForMissingRequire(JSError error) {
     Matcher regexMatcher = MISSING_REQUIRE.matcher(error.getDescription());
     checkState(regexMatcher.matches(), "Unexpected error description: %s", error.getDescription());
+
+    Node script = NodeUtil.getEnclosingScript(error.getNode());
+    ScriptMetadata scriptMetadata = this.getMetadataForScript(script);
+
     String namespaceToRequire = regexMatcher.group(1);
     NodeMetadata metadata = new NodeMetadata(compiler);
     Match match = new Match(error.getNode(), metadata);
+
     SuggestedFix.Builder fix =
         new SuggestedFix.Builder()
             .attachMatchedNodeInfo(error.getNode(), compiler)
-            .addGoogRequire(match, namespaceToRequire);
+            .addGoogRequire(match, namespaceToRequire, scriptMetadata);
+
     if (NodeUtil.getEnclosingType(error.getNode(), Token.MODULE_BODY) != null) {
       Node nodeToReplace = null;
       if (error.getNode().isNew()) {
@@ -347,12 +358,10 @@ public final class ErrorToFixMapper {
       }
 
       if (nodeToReplace != null && nodeToReplace.matchesQualifiedName(namespaceToRequire)) {
-        Node script = NodeUtil.getEnclosingScript(error.getNode());
-        ScriptMetadata scriptMetadata = ScriptMetadata.create(script, metadata);
-        String shortName = RequireNameShortener.shorten(namespaceToRequire, scriptMetadata);
-        fix.replace(nodeToReplace, IR.name(shortName), compiler);
+        fix.replace(nodeToReplace, IR.name(scriptMetadata.getAlias(namespaceToRequire)), compiler);
       }
     }
+
     return fix.build();
   }
 
@@ -449,5 +458,11 @@ public final class ErrorToFixMapper {
           .build();
     }
     return null;
+  }
+
+  private ScriptMetadata getMetadataForScript(Node script) {
+    checkArgument(script.isScript());
+    return this.metadataForEachScript.computeIfAbsent(
+        script, (s) -> ScriptMetadata.create(s, this.compiler));
   }
 }

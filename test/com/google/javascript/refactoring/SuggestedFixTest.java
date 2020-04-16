@@ -1046,9 +1046,10 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .addGoogRequire(match, "abc.def")
-        .build();
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, "abc.def", scriptMetadata).build();
     SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
     assertThat(replacementMap).isEmpty();
   }
@@ -1073,7 +1074,10 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, "goog.safe", scriptMetadata).build();
     assertChanges(fix, "", input, expected);
   }
 
@@ -1095,7 +1099,10 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, "goog.safe", scriptMetadata).build();
     assertChanges(fix, "", input, expected);
   }
 
@@ -1119,7 +1126,10 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, "goog.safe", scriptMetadata).build();
     assertChanges(fix, "", input, expected);
   }
 
@@ -1135,7 +1145,10 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, "goog.safe", scriptMetadata).build();
     assertThat(fix.getReplacements()).isEmpty();
   }
 
@@ -1151,7 +1164,10 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix.Builder fixBuilder = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe");
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix.Builder fixBuilder =
+        new SuggestedFix.Builder().addGoogRequire(match, "goog.safe", scriptMetadata);
     assertThat(fixBuilder.build().getReplacements()).isEmpty();
   }
 
@@ -1159,9 +1175,10 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
     Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    SuggestedFix fix = new SuggestedFix.Builder()
-        .addGoogRequire(match, namespace)
-        .build();
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, namespace, scriptMetadata).build();
     CodeReplacement replacement =
         CodeReplacement.create(
             before.length(), 0, "goog.require('" + namespace + "');\n", namespace);
