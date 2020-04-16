@@ -965,6 +965,11 @@ class TypeValidator implements Serializable {
         // Abstract classes and interfaces are not required to implement interface properties.
         return;
       }
+      if (implementedInterface.getPropertyType(propName).isVoidable()) {
+        // Voidable properties don't require explicit initializaition in type constructors.
+        return;
+      }
+
       registerMismatchAndReport(
           instance,
           implementedInterface,

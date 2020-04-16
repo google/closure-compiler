@@ -501,6 +501,21 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOptionalProperties_dontNeedInitializer_inConstructor() {
+    testSame(
+        lines(
+            "/** @interface */",
+            "function Foo() {}",
+            "/** @type {boolean|undefined} */",
+            "Foo.prototype.prop;",
+            "",
+            "/** @constructor @implements {Foo} */",
+            "function Bar() {",
+            // No initializer here.
+            "}"));
+  }
+
+  @Test
   public void testDuplicateSuppression() {
     testWarning(
         lines(
