@@ -192,15 +192,12 @@ public abstract class PassConfig {
     return current;
   }
 
-  /**
-   * An implementation of PassConfig that just proxies all its method calls
-   * into an inner class.
-   */
-  static class PassConfigDelegate extends PassConfig {
+  /** An implementation of PassConfig that just proxies all its method calls into an inner class. */
+  public static class PassConfigDelegate extends PassConfig {
 
     private final PassConfig delegate;
 
-    PassConfigDelegate(PassConfig delegate) {
+    protected PassConfigDelegate(PassConfig delegate) {
       super(delegate.options);
       this.delegate = delegate;
     }
