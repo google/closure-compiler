@@ -143,6 +143,13 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDontTreatLocalVariablesAsExportedByConvention() {
+    // In the GoogleCodingConvention, globals starting with "_" are exported. (see the above two
+    // tests). Verify that we don't accidentally apply the same convention to locals.
+    test("function f() { var _x = 1; var z = _x; }", "function f() { var z = 1; }");
+  }
+
+  @Test
   public void testDoNotInlineIncrement() {
     testSame("var x = 1; x++;");
   }

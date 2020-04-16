@@ -109,9 +109,18 @@ public interface CodingConvention extends Serializable {
   public boolean isExported(String name, boolean local);
 
   /**
-   * Should be isExported(name, true) || isExported(name, false);
+   * Equivalent to `isExported(name, true) || isExported(name, false);`
+   *
+   * <p>Should only be used to check if a property is exported. Variables should always use {@link
+   * #isExported(String, boolean)}, as in most cases local variables should not be treated as
+   * exported.
+   *
+   * <p>Do not override! Unfortunately, that cannot be enforced without making this an abstract
+   * class.
    */
-  public boolean isExported(String name);
+  default boolean isExported(String name) {
+    return isExported(name, true) || isExported(name, false);
+  }
 
   /**
    * Check whether the property name is eligible for renaming.

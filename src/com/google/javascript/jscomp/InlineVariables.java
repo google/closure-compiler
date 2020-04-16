@@ -297,7 +297,7 @@ class InlineVariables implements CompilerPass {
       //    have a good way to update the reference. Just punt on it.
       // 3) Don't inline the special property rename functions.
       return var.isExtern()
-          || compiler.getCodingConvention().isExported(var.getName())
+          || compiler.getCodingConvention().isExported(var.getName(), var.isLocal())
           || compiler
               .getCodingConvention()
               .isPropertyRenameFunction(var.getNameNode().getOriginalQualifiedName())

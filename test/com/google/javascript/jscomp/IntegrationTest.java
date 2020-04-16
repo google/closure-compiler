@@ -8200,4 +8200,52 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     test(options, "var x = 0; var y = 1; x ?? y", "0");
   }
+
+  @Test
+  public void nullishCoalesceFromTranspiledTs38_inModule() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    // Ensure the compiler can optimize TS 3.8's transpilation of nullish coalescing. NOTE: it's
+    // possible a future TSC version will change how nullish coalescing is transpiled, making this
+    // test out-of-date.
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('mod');",
+              "function alwaysNull() { return null; }",
+              // transpiled form of `const y = alwaysNull() ? 42;`
+              "var _a;",
+              "const y = (_a = alwaysNull()) !== null && _a !== void 0 ? _a : 42;",
+              "alert(y);")
+        },
+        new String[] {"", "alert(42);"});
+  }
+
+  @Test
+  public void nullishCoalesceFromTranspiledTs38_inFunction() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+
+    // Ensure the compiler can optimize TS 3.8's transpilation of nullish coalescing.
+    test(
+        options,
+        new String[] {
+          CLOSURE_DEFS,
+          lines(
+              "goog.module('mod');",
+              "function alwaysNull() { return null; }",
+              "function getDefaultValue(maybeNull) {",
+              // transpiled form of `return maybeNull ?? 42;`
+              "  var _a;",
+              "  return (_a = maybeNull) !== null && _a !== void 0 ? _a : 42;",
+              "}",
+              "alert(getDefaultValue(alwaysNull()));")
+        },
+        new String[] {"", "alert(42);"});
+  }
 }

@@ -128,7 +128,7 @@ public final class CodingConventions {
 
     @Override
     public final boolean isExported(String name) {
-      return isExported(name, false) || isExported(name, true);
+      return CodingConvention.super.isExported(name);
     }
 
     @Override
@@ -379,8 +379,8 @@ public final class CodingConventions {
     }
 
     @Override
-    public boolean isExported(String name) {
-      return isExported(name, false) || isExported(name, true);
+    public final boolean isExported(String name) {
+      return CodingConvention.super.isExported(name);
     }
 
     @Override
