@@ -2360,6 +2360,10 @@ public class Parser {
       recordFeatureUsed(Feature.UNESCAPED_UNICODE_LINE_OR_PARAGRAPH_SEP);
     }
 
+    if (literal.type == TokenType.NUMBER && literal.toString().contains("_")) {
+      recordFeatureUsed(Feature.NUMERIC_SEPARATOR);
+    }
+
     return new LiteralExpressionTree(getTreeLocation(start), literal);
   }
 

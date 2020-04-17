@@ -66,6 +66,15 @@ public final class IntegrationTest extends IntegrationTestCase {
           "};");
 
   @Test
+  public void testNumericSeparator() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    test(options, "1_000", "1000");
+  }
+
+  @Test
   public void testProcessDefinesInModule() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

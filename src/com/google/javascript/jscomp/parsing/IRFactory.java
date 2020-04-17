@@ -3574,6 +3574,10 @@ class IRFactory {
 
   double normalizeNumber(LiteralToken token) {
     String value = token.value;
+    if (value.contains("_")) {
+      value = value.replace("_", "");
+      maybeWarnForFeature(token, Feature.NUMERIC_SEPARATOR);
+    }
     SourceRange location = token.location;
     int length = value.length();
     checkState(length > 0);

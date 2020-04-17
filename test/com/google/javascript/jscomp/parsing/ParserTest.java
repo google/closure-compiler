@@ -95,7 +95,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Before
   public void setUp() throws Exception {
-    mode = LanguageMode.ES_NEXT;
+    mode = LanguageMode.ES_NEXT_IN;
     parsingMode = JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
     strictMode = SLOPPY;
     isIdeMode = false;
@@ -359,6 +359,65 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node string = exprResult.getFirstChild();
     assertNode(string).hasType(Token.STRING);
     assertNode(string).hasLength(7);  // 2 quotes, plus 5 characters
+  }
+
+  @Test
+  public void testNumericSeparatorOnDecimal() {
+    Node result = parse("1_000_000;");
+    expectFeatures(Feature.NUMERIC_SEPARATOR);
+    assertNode(result).hasType(Token.SCRIPT);
+    Node exprResult = result.getOnlyChild();
+    assertNode(exprResult).hasType(Token.EXPR_RESULT);
+    Node numberNode = exprResult.getOnlyChild();
+    assertNode(numberNode).isNumber(1000000);
+  }
+
+  @Test
+  public void testNumericSeparatorOnBinary() {
+    Node result = parse("0b1_0000;");
+    expectFeatures(Feature.NUMERIC_SEPARATOR);
+    assertNode(result).hasType(Token.SCRIPT);
+    Node exprResult = result.getOnlyChild();
+    assertNode(exprResult).hasType(Token.EXPR_RESULT);
+    Node numberNode = exprResult.getOnlyChild();
+    assertNode(numberNode).isNumber(16);
+  }
+
+  @Test
+  public void testNumericSeparatorOnOctal() {
+    Node result = parse("0o01_00;");
+    expectFeatures(Feature.NUMERIC_SEPARATOR);
+    assertNode(result).hasType(Token.SCRIPT);
+    Node exprResult = result.getOnlyChild();
+    assertNode(exprResult).hasType(Token.EXPR_RESULT);
+    Node numberNode = exprResult.getOnlyChild();
+    assertNode(numberNode).isNumber(64);
+  }
+
+  @Test
+  public void testNumericSeparatorOnHex() {
+    Node result = parse("0x01_01");
+    expectFeatures(Feature.NUMERIC_SEPARATOR);
+    assertNode(result).hasType(Token.SCRIPT);
+    Node exprResult = result.getOnlyChild();
+    assertNode(exprResult).hasType(Token.EXPR_RESULT);
+    Node numberNode = exprResult.getOnlyChild();
+    assertNode(numberNode).isNumber(257);
+  }
+
+  @Test
+  public void testTrailingNumericSeparator() {
+    parseError("1000_", "Trailing numeric separator");
+    parseError("0b0001_", "Trailing numeric separator");
+    parseError("0o100_", "Trailing numeric separator");
+    parseError("0x0F_", "Trailing numeric separator");
+  }
+
+  @Test
+  public void testNumericSeparatorWarning() {
+    mode = LanguageMode.ECMASCRIPT_2020;
+    parseWarning(
+        "1_000", requiresLanguageModeMessage(LanguageMode.ES_NEXT_IN, Feature.NUMERIC_SEPARATOR));
   }
 
   @Test

@@ -76,6 +76,14 @@ public class TranspilationPasses {
       List<PassFactory> passes, CompilerOptions options) {
     // Note that, for features >ES8 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
+    if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
+      // Numeric separators are flagged as present by the parser,
+      // but never actually represented in the AST.
+      // The only thing we need to do is mark them as not present in the AST.
+      passes.add(
+          createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
+    }
+
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
       passes.add(rewriteNullishCoalesceOperator);
     }
@@ -475,7 +483,7 @@ public class TranspilationPasses {
                 }
               };
             })
-        .setFeatureSet(FeatureSet.latest())
+        .setFeatureSet(FeatureSet.ES_NEXT_IN)
         .build();
   }
 }
