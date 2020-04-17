@@ -1818,13 +1818,55 @@ RTCInboundRtpStreamStats.prototype.remoteId;
 RTCInboundRtpStreamStats.prototype.framesDecoded;
 
 /** @const {number} */
+RTCInboundRtpStreamStats.prototype.keyFramesDecoded;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameWidth;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameHeight;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.frameBitDepth;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.framesPerSecond;
+
+/** @const {number} */
 RTCInboundRtpStreamStats.prototype.qpSum;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalDecodeTime;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalInterframeDelay;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.totalSquaredInterFrameDelay;
+
+/** @const {boolean} */
+RTCInboundRtpStreamStats.prototype.voiceActivityFlag;
 
 /** @const {?Date|number} */
 RTCInboundRtpStreamStats.prototype.lastPacketReceivedTimestamp;
 
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.averageRtcpInterval;
+
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.headerBytesReceived;
+
+/**
+ * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fecPacketsReceived;
+
+/**
+ * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.fecPacketsDiscarded;
 
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.bytesReceived;
@@ -1834,6 +1876,8 @@ RTCInboundRtpStreamStats.prototype.packetsFailedDecryption;
 
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.packetsDuplicated;
+
+// TODO: record<USVString, unsigned long long> perDscpPacketsReceived;
 
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.nackCount;
@@ -1847,26 +1891,14 @@ RTCInboundRtpStreamStats.prototype.pliCount;
 /** @const {number} */
 RTCInboundRtpStreamStats.prototype.sliCount;
 
-/** @const {number} */
-RTCInboundRtpStreamStats.prototype.audioLevel;
-
-/** @const {number} */
-RTCInboundRtpStreamStats.prototype.frameWidth;
-
-/** @const {number} */
-RTCInboundRtpStreamStats.prototype.frameHeight;
+/** @const {?Date|number} */
+RTCInboundRtpStreamStats.prototype.estimatedPlayoutTimestamp;
 
 /**
  * Firefox specific value.
  * @const {number|undefined}
  */
 RTCInboundRtpStreamStats.prototype.bitrateMean;
-
-/** @const {number|undefined} */
-RTCInboundRtpStreamStats.prototype.concealedSamples;
-
-/** @const {number|undefined} */
-RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
 
 /** @const {number|undefined} */
 RTCInboundRtpStreamStats.prototype.jitterBufferDelay;
@@ -1881,6 +1913,42 @@ RTCInboundRtpStreamStats.prototype.jitterBufferEmittedCount;
  */
 RTCInboundRtpStreamStats.prototype.jitterBufferFlushes;
 
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.samplesDecodedWithSilk;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.samplesDecodedWithCelt;
+
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.concealedSamples;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.silentConcealedSamples;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.concealmentEvents;
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.insertedSamplesForDeceleration
+
+/**
+ * Not available in Safari 13.
+ * @const {number|undefined}
+ */
+RTCInboundRtpStreamStats.prototype.removedSamplesForAcceleration;
+
 /**
  * Experimental chrome stats under this origin trial:
  * https://groups.google.com/a/chromium.org/forum/#!topic/blink-dev/hE2B1iItPDk
@@ -1894,47 +1962,17 @@ RTCInboundRtpStreamStats.prototype.delayedPacketOutageSamples;
  */
 RTCInboundRtpStreamStats.prototype.fractionLost;
 
-/**
- * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
- * @const {number|undefined}
- */
-RTCInboundRtpStreamStats.prototype.fecPacketsReceived;
+/** @const {number} */
+RTCInboundRtpStreamStats.prototype.audioLevel;
 
-/**
- * Not available in Safari 13, Firefox 69 (Chrome 81+ only).
- * @const {number|undefined}
- */
-RTCInboundRtpStreamStats.prototype.fecPacketsDiscarded;
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalAudioEnergy;
 
-/**
- * Not available in Safari 13.
- * @const {number|undefined}
- */
-RTCInboundRtpStreamStats.prototype.totalSamplesReceived;
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.totalSamplesDuration;
 
-/**
- * Not available in Safari 13.
- * @const {number|undefined}
- */
-RTCInboundRtpStreamStats.prototype.concealedSamples;
-
-/**
- * Not available in Safari 13.
- * @const {number|undefined}
- */
-RTCInboundRtpStreamStats.prototype.silentConcealedSamples;
-
-/**
- * Not available in Safari 13.
- * @const {number|undefined}
- */
-RTCInboundRtpStreamStats.prototype.insertedSamplesForDeceleration
-
-/**
- * Not available in Safari 13.
- * @const {number|undefined}
- */
-RTCInboundRtpStreamStats.prototype.removedSamplesForAcceleration;
+/** @const {number|undefined} */
+RTCInboundRtpStreamStats.prototype.framesReceived;
 
 /** @const {string|undefined} */
 RTCInboundRtpStreamStats.prototype.decoderImplementation;
