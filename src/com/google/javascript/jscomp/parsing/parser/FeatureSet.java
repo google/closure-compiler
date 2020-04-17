@@ -207,6 +207,9 @@ public final class FeatureSet implements Serializable {
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
     OPTIONAL_CHAINING("Optional chaining", LangVersion.ES_UNSUPPORTED),
 
+    // ES_NEXT_IN
+    NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT_IN),
+
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
@@ -321,6 +324,9 @@ public final class FeatureSet implements Serializable {
     // are part of an official ES spec release. It will return the name of that release instead.
     if (ES_NEXT.contains(this)) {
       return "es_next";
+    }
+    if (ES_NEXT_IN.contains(this)) {
+      return "es_next_in";
     }
     // Note that this method will not return "es_unsupported" when ES_UNSUPPORTED
     // contains the same features as ES_NEXT. It will return es_next.

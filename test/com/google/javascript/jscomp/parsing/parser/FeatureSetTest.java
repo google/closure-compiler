@@ -104,6 +104,17 @@ public final class FeatureSetTest {
   }
 
   @Test
+  public void testEsNextIn() {
+    // ES_NEXT_IN currently has one or more features that are not in other feature sets, so its name
+    // will be returned by versionForDebugging().
+    // This will change when those features are added to ES_NEXT/ES_XXXX, so this test case will
+    // then have to change.
+    // This is on purpose so the test case serves as documentation that we intentionally
+    // have ES_NEXT_IN the same as or different from the latest supported ES version.
+    assertThat(FeatureSet.ES_NEXT_IN.versionForDebugging()).isEqualTo("es_next_in");
+  }
+
+  @Test
   public void testEsUnsupported() {
     // ES_UNSUPPORTED is currently has more features than ES_NEXT, so versionForDebugging() will
     // return es_unsupported
