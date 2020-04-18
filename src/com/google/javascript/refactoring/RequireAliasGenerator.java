@@ -19,23 +19,29 @@ package com.google.javascript.refactoring;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Splitter;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Iterator;
 
 /**
  * Implements {@see go/js-style#file-goog-require} for selecting import aliases.
  *
- * <p>This imeplementation is a heuristic for selecting a likely good alias. In addition to
+ * <p>Instances act as lazy generators for an infinite sequence of names, in order of preferability.
+ * Callers can pull from this sequence until they find a suitable name. This design allows
+ * higher-level concerns, such as uniqueness, to be managed by higher-level code.
+ *
+ * <p>This impelementation is a heuristic for selecting likely good aliases. In addition to
  * conforming to the style guide, the ideal heurisitc is simple engough to explain in a few bullets,
  * in priority order:
  *
  * <ul>
- *   <li>Alias never collides with a name already in use in the same file
  *   <li>Alias is not blacklisted
  *   <li>Alias is always only composed of segments of the full namespace
+ *   <li>Shorter aliases are preferred over longer ones
  * </ul>
  */
-final class RequireNameShortener {
+final class RequireAliasGenerator implements Iterable<String> {
 
   private static final ImmutableSet<String> BLACKLISTED_ALIASES = createBlacklistedAliases();
 
@@ -55,7 +61,7 @@ final class RequireNameShortener {
 
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     for (String seed : seeds) {
-      builder.add(upperCaseFirstChar(seed));
+      builder.add(captializeFirstChar(seed));
       builder.add(Ascii.toLowerCase(seed));
     }
     return builder.build();
@@ -63,48 +69,56 @@ final class RequireNameShortener {
 
   private static final Splitter DOT_SPLITTER = Splitter.on('.');
 
-  private final ScriptMetadata scriptMetadata;
+  private final ImmutableList<String> parts;
+  private final boolean capitalize;
 
-  static String shorten(String namespace, ScriptMetadata scriptMetadata) {
-    return new RequireNameShortener(scriptMetadata).shortenInternal(namespace);
+  static Iterable<String> over(String namespace) {
+    return new RequireAliasGenerator(namespace);
   }
 
-  private RequireNameShortener(ScriptMetadata scriptMetadata) {
-    this.scriptMetadata = scriptMetadata;
+  private RequireAliasGenerator(String namespace) {
+    this.parts = ImmutableList.copyOf(DOT_SPLITTER.split(namespace)).reverse();
+    this.capitalize = Ascii.isUpperCase(this.parts.get(0).charAt(0));
   }
 
-  private String shortenInternal(String namespace) {
-    ImmutableList<String> parts = ImmutableList.copyOf(DOT_SPLITTER.split(namespace)).reverse();
-    String lastPart = parts.get(0);
-    boolean shouldUpperCaseFirstChar = Ascii.isUpperCase(lastPart.charAt(0));
+  @Override
+  public Iterator<String> iterator() {
+    return new NameIterator();
+  }
 
-    String result = "";
+  private final class NameIterator extends AbstractIterator<String> {
 
-    for (String part : parts) {
-      if (this.isValidAlias(result)) {
-        return result;
-      }
+    private String concat = "";
+    private int index = 0;
+    private int suffix = 0;
 
-      if (shouldUpperCaseFirstChar) {
-        part = upperCaseFirstChar(part);
-      }
-      result = part + upperCaseFirstChar(result);
+    @Override
+    protected String computeNext() {
+      String next;
+      do {
+        next = this.computeNextWithoutFiltering();
+      } while (BLACKLISTED_ALIASES.contains(next));
+
+      return next;
     }
 
-    final String allParts = result;
+    private String computeNextWithoutFiltering() {
+      if (this.index >= RequireAliasGenerator.this.parts.size()) {
+        return this.concat + this.suffix++;
+      }
 
-    for (int i = 0; !this.isValidAlias(result); i++) {
-      result = allParts + i;
+      String part = RequireAliasGenerator.this.parts.get(this.index++);
+
+      if (RequireAliasGenerator.this.capitalize) {
+        part = captializeFirstChar(part);
+      }
+      this.concat = part + captializeFirstChar(this.concat);
+
+      return this.concat;
     }
-
-    return result;
   }
 
-  private boolean isValidAlias(String alias) {
-    return !BLACKLISTED_ALIASES.contains(alias) && !this.scriptMetadata.usesName(alias);
-  }
-
-  private static String upperCaseFirstChar(String w) {
+  private static String captializeFirstChar(String w) {
     if (w.isEmpty() || Ascii.isUpperCase(w.charAt(0))) {
       return w;
     }

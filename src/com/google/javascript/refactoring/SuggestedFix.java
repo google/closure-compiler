@@ -18,6 +18,7 @@ package com.google.javascript.refactoring;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Streams.stream;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Joiner;
@@ -607,7 +608,11 @@ public final class SuggestedFix {
           return this; // No require is needed.
         }
 
-        alias = RequireNameShortener.shorten(namespace, scriptMetadata);
+        alias =
+            stream(RequireAliasGenerator.over(namespace))
+                .filter((a) -> !scriptMetadata.usesName(a))
+                .findFirst()
+                .orElseThrow(AssertionError::new);
       }
 
       NodeMetadata metadata = m.getMetadata();
