@@ -52,7 +52,13 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
                     + " returnUnionType(){}",
                 "/** @constructor */ function Foo(){}",
                 "/** @type {function(this: Foo, ...*): !Foo} */ Foo.prototype.concat",
-                "var obj = new Foo();"));
+                "var obj = new Foo();",
+                "/**",
+                " * @param {...T} var_args",
+                " * @return {!Array<T>}",
+                " * @template T",
+                " */",
+                "Array.of = function(var_args) {};"));
   }
 
   @Override
@@ -670,6 +676,34 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     // Chained folding of empty array lit
     fold("[].concat([], [1,2,3], [4])", "[1,2,3].concat([4])");
     fold("[].concat([]).concat([1]).concat([2,3])", "[1].concat([2,3])");
+  }
+
+  @Test
+  public void testArrayOfSpread() {
+    fold("x = Array.of(...['a', 'b', 'c'])", "x = [...['a', 'b', 'c']]");
+    fold("x = Array.of(...['a', 'b', 'c',])", "x = [...['a', 'b', 'c']]");
+    fold("x = Array.of(...['a'], ...['b', 'c'])", "x = [...['a'], ...['b', 'c']]");
+    fold("x = Array.of('a', ...['b', 'c'])", "x = ['a', ...['b', 'c']]");
+    fold("x = Array.of('a', ...['b', 'c'])", "x = ['a', ...['b', 'c']]");
+  }
+
+  @Test
+  public void testArrayOfNoSpread() {
+    fold("x = Array.of('a', 'b', 'c')", "x = ['a', 'b', 'c']");
+    fold("x = Array.of('a', ['b', 'c'])", "x = ['a', ['b', 'c']]");
+    fold("x = Array.of('a', ['b', 'c'],)", "x = ['a', ['b', 'c']]");
+  }
+
+  @Test
+  public void testArrayOfNoArgs() {
+    fold("x = Array.of()", "x = []");
+  }
+
+  @Test
+  public void testArrayOfNoChange() {
+    foldSame("x = Array.of.apply(window, ['a', 'b', 'c'])");
+    foldSame("x = ['a', 'b', 'c']");
+    foldSame("x = [Array.of, 'a', 'b', 'c']");
   }
 
   private void foldSame(String js) {

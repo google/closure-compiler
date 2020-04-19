@@ -1618,7 +1618,6 @@ public final class DefaultPassConfig extends PassConfig {
     optimizations.add(new PeepholeMinimizeConditions(late));
     optimizations.add(new PeepholeSubstituteAlternateSyntax(late));
     optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));
-    optimizations.add(new PeepholeReplaceArrayOf());
     optimizations.add(new PeepholeRemoveDeadCode());
     if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
       optimizations.add(new J2clEqualitySameRewriterPass(useTypesForOptimization));
@@ -1666,7 +1665,6 @@ public final class DefaultPassConfig extends PassConfig {
                     new PeepholeMinimizeConditions(late),
                     new PeepholeSubstituteAlternateSyntax(late),
                     new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
-                    new PeepholeReplaceArrayOf(),
                     new PeepholeFoldConstants(late, useTypesForOptimization),
                     new PeepholeReorderConstantExpression());
               })
