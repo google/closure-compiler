@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -148,6 +150,9 @@ class RemoveUnusedCode implements CompilerPass {
   private final boolean removeUnusedPolyfills;
   private final boolean assumeGettersArePure;
 
+  // Allocated & cleaned up by process()
+  private LogFile removalLog;
+
   RemoveUnusedCode(Builder builder) {
     this.compiler = builder.compiler;
     this.astAnalyzer = compiler.getAstAnalyzer();
@@ -237,6 +242,108 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
+  /** Supplies the string needed for an entry in the removal log. */
+  private static class RemovalLogRecord implements Supplier<String> {
+    private final String kind;
+    private final Supplier<String> nameSupplier;
+    private final Supplier<String> functionNameSupplier;
+
+    /**
+     * Returns a log entry string.
+     *
+     * <p>Each entry is one tab-separated line of the form:
+     *
+     * <pre>
+     *   KIND NAME [FUNCTION_NAME]
+     * </pre>
+     *
+     * <p>See specific methods below for details.
+     */
+    @Override
+    public String get() {
+      return String.join("\t", kind, nameSupplier.get(), functionNameSupplier.get());
+    }
+
+    RemovalLogRecord(
+        String kind, Supplier<String> nameSupplier, Supplier<String> functionNameSupplier) {
+      this.kind = checkNotNull(kind);
+      this.nameSupplier = checkNotNull(nameSupplier);
+      this.functionNameSupplier = checkNotNull(functionNameSupplier);
+    }
+
+    RemovalLogRecord(String kind, Supplier<String> nameSupplier) {
+      // No function name
+      this(kind, nameSupplier, () -> "");
+    }
+
+    static RemovalLogRecord forProperty(String propName) {
+      return new RemovalLogRecord("prop", () -> propName);
+    }
+
+    static RemovalLogRecord forVar(Var var) {
+      return new RemovalLogRecord("var", var::getName);
+    }
+
+    static RemovalLogRecord forPolyfill(PolyfillInfo polyfillInfo) {
+      return new RemovalLogRecord("poly", polyfillInfo::getName);
+    }
+
+    /**
+     * Records removal of a named function parameter.
+     *
+     * @param nameNode The parameter's NAME node
+     * @param argList The function's PARAM_LIST node
+     */
+    static RemovalLogRecord forNamedArg(Node nameNode, Node argList) {
+      return new RemovalLogRecord(
+          "arg", nameNode::getString, getLoggableFunctionNameSupplier(argList));
+    }
+
+    /**
+     * Records removal of a destructuring function parameter.
+     *
+     * @param argList The function's PARAM_LIST node
+     */
+    static RemovalLogRecord forDestructuringArg(Node argList) {
+      return new RemovalLogRecord(
+          "arg", () -> "<pattern>", getLoggableFunctionNameSupplier(argList));
+    }
+
+    /**
+     * Records that a named parameter is marked as unused for possible removal by {@see
+     * OptimizeParameters}.
+     *
+     * @param nameNode The parameter's NAME node
+     * @param argList The function's PARAM_LIST node
+     */
+    static RemovalLogRecord forMarkingNamedArg(Node nameNode, Node argList) {
+      return new RemovalLogRecord(
+          "argmark", nameNode::getString, getLoggableFunctionNameSupplier(argList));
+    }
+
+    /**
+     * Returns a supplier for the FUNCTION_NAME field of an argument removal log entry.
+     *
+     * <p>If no good name can be found, then {@code "<anonymous>"} will be supplied.
+     *
+     * @param argList The function's PARAM_LIST node
+     */
+    private static Supplier<String> getLoggableFunctionNameSupplier(Node argList) {
+      return () -> {
+        String functionName = NodeUtil.getNearestFunctionName(checkNotNull(argList).getParent());
+        if (functionName == null) {
+          functionName = "<anonymous>";
+        }
+        return functionName;
+      };
+    }
+  }
+
+  // Keep track of the number of times the process() method is called.
+  // This is static, because we don't want to care whether process() is called
+  // multiple times on one object, or once on multiple objects.
+  private static int numProcessCalls = 0;
+
   /**
    * Traverses the root, removing all unused variables. Multiple traversals
    * may occur to ensure all unused variables are removed.
@@ -247,12 +354,19 @@ class RemoveUnusedCode implements CompilerPass {
     if (!allowRemovalOfExternProperties) {
       pinnedPropertyNames.addAll(compiler.getExternProperties());
     }
-    traverseAndRemoveUnusedReferences(root);
+
+    // Create a separate log for each time process() is called.
+    numProcessCalls++;
+    final String removalsLogFileName = "removals-" + numProcessCalls + ".log";
+    try (LogFile logFile = compiler.createOrReopenLog(this.getClass(), removalsLogFileName)) {
+      removalLog = logFile; // avoid passing the log file through a bunch of methods
+      traverseAndRemoveUnusedReferences(root);
+    } finally {
+      removalLog = null;
+    }
   }
 
-  /**
-   * Traverses a node recursively. Call this once per pass.
-   */
+  /** Traverses a node recursively. Call this once per pass. */
   private void traverseAndRemoveUnusedReferences(Node root) {
     // Create scope from parent of root node, which also has externs as a child, so we'll
     // have extern definitions in scope.
@@ -277,8 +391,11 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private void removeIndependentlyRemovableProperties() {
-    for (Removable removable : removablesForPropertyNames.values()) {
-      removable.remove(compiler);
+    for (String propName : removablesForPropertyNames.keys()) {
+      removalLog.log(RemovalLogRecord.forProperty(propName));
+      for (Removable removable : removablesForPropertyNames.get(propName)) {
+        removable.remove(compiler);
+      }
     }
   }
 
@@ -1267,8 +1384,8 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   /**
-   * Removes unreferenced arguments from a function declaration and when
-   * possible the function's callSites.
+   * Removes unreferenced arguments from a function declaration and when possible the function's
+   * callSites.
    *
    * @param fparamScope The function parameter
    */
@@ -1365,20 +1482,27 @@ class RemoveUnusedCode implements CompilerPass {
    * @param fparamScope
    */
   private void markUnusedParameters(Node paramList, Scope fparamScope) {
+    checkArgument(paramList.isParamList(), paramList);
+
     for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
       if (param.isUnusedParameter()) {
+        // already marked
         continue;
       }
 
-      Node lValue = nameOfParam(param);
-      if (lValue == null) {
+      Node paramNameNode = nameOfParam(param);
+      if (paramNameNode == null) {
+        // destructuring pattern parameters don't have a name that applies to the whole parameter
+        // TODO(bradfordcsmith): We could mark this if we determined that all vars created by
+        // the pattern are unused.
         continue;
       }
 
-      VarInfo varInfo = traverseNameNode(lValue, fparamScope);
+      VarInfo varInfo = traverseNameNode(paramNameNode, fparamScope);
       if (varInfo.isRemovable()) {
         param.setUnusedParameter(true);
         compiler.reportChangeToEnclosingScope(paramList);
+        removalLog.log(RemovalLogRecord.forMarkingNamedArg(paramNameNode, paramList));
       }
     }
   }
@@ -1393,22 +1517,23 @@ class RemoveUnusedCode implements CompilerPass {
    * @param fparamScope
    */
   private void maybeRemoveUnusedTrailingParameters(Node argList, Scope fparamScope) {
+    checkArgument(argList.isParamList(), argList);
     Node lastArg;
     while ((lastArg = argList.getLastChild()) != null) {
-      Node lValue = lastArg;
+      Node argNode = lastArg;
       if (lastArg.isDefaultValue()) {
-        lValue = lastArg.getFirstChild();
+        argNode = lastArg.getFirstChild();
         if (astAnalyzer.mayHaveSideEffects(lastArg.getLastChild())) {
           break;
         }
       }
 
-      if (lValue.isRest()) {
-        lValue = lValue.getFirstChild();
+      if (argNode.isRest()) {
+        argNode = argNode.getFirstChild();
       }
 
-      if (lValue.isDestructuringPattern()) {
-        if (lValue.hasChildren()) {
+      if (argNode.isDestructuringPattern()) {
+        if (argNode.hasChildren()) {
           // TODO(johnlenz): handle the case where there are no assignments.
           break;
         } else {
@@ -1417,13 +1542,15 @@ class RemoveUnusedCode implements CompilerPass {
           // destructuring pattern with a "leftover" property key as in {a:{}} is not considered
           // empty in this case!
           NodeUtil.deleteNode(lastArg, compiler);
+          removalLog.log(RemovalLogRecord.forDestructuringArg(argList));
           continue;
         }
       }
 
-      VarInfo varInfo = getVarInfo(getVarForNameNode(lValue, fparamScope));
+      VarInfo varInfo = getVarInfo(getVarForNameNode(argNode, fparamScope));
       if (varInfo.isRemovable()) {
         NodeUtil.deleteNode(lastArg, compiler);
+        removalLog.log(RemovalLogRecord.forNamedArg(argNode, argList));
       } else {
         break;
       }
@@ -1526,6 +1653,7 @@ class RemoveUnusedCode implements CompilerPass {
         continue;
       }
 
+      removalLog.log(RemovalLogRecord.forVar(var));
       // Regardless of what happens to the original declaration,
       // we need to remove all assigns, because they may contain references
       // to other unreferenced variables.
@@ -1560,6 +1688,7 @@ class RemoveUnusedCode implements CompilerPass {
     while (iter.hasNext()) {
       PolyfillInfo polyfill = iter.next();
       if (polyfill.isRemovable) {
+        removalLog.log(RemovalLogRecord.forPolyfill(polyfill));
         polyfill.removable.remove(compiler);
         iter.remove();
       }
@@ -2691,6 +2820,10 @@ class RemoveUnusedCode implements CompilerPass {
       }
     }
 
+    String getName() {
+      return key;
+    }
+
     /** Template method to check the node. */
     abstract void considerPossibleReferenceInternal(Node n);
   }
@@ -2729,8 +2862,13 @@ class RemoveUnusedCode implements CompilerPass {
     StaticPropertyPolyfillInfo(
         Polyfill removable, String key, @Nullable JSType owner, String ownerName) {
       super(removable, key);
-      this.polyfillOwnerName = ownerName;
+      this.polyfillOwnerName = checkNotNull(ownerName);
       this.polyfillOwnerType = owner;
+    }
+
+    @Override
+    String getName() {
+      return polyfillOwnerName + "." + key;
     }
 
     @Override
@@ -2760,6 +2898,13 @@ class RemoveUnusedCode implements CompilerPass {
     PrototypePropertyPolyfillInfo(Polyfill removable, String key, @Nullable JSType owner) {
       super(removable, key);
       this.polyfillOwnerType = owner;
+    }
+
+    @Override
+    String getName() {
+      String ownerName =
+          (polyfillOwnerType == null) ? "<anonymous>" : polyfillOwnerType.getDisplayName();
+      return ownerName + ".prototype." + key;
     }
 
     @Override
