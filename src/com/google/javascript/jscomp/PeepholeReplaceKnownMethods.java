@@ -74,12 +74,15 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       Node callTarget = checkNotNull(subtree.getFirstChild());
 
       if (NodeUtil.isGet(callTarget)) {
-        if (isASTNormalized() && callTarget.getFirstChild().isQualifiedName()) {
+        if (callTarget.getFirstChild().isQualifiedName()) {
           switch (callTarget.getFirstChild().getQualifiedName()) {
             case "Array":
               return tryFoldKnownArrayMethods(subtree, callTarget);
             case "Math":
-              return tryFoldKnownMathMethods(subtree, callTarget);
+              if (isASTNormalized()) {
+                return tryFoldKnownMathMethods(subtree, callTarget);
+              }
+              break;
             default: // fall out
           }
         }
