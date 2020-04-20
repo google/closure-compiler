@@ -4197,6 +4197,11 @@ chrome.management.setLaunchType = function(id, launchType, opt_callback) {};
 chrome.management.generateAppForLink = function(url, title, opt_callback) {};
 
 
+/**
+ * @param {function():void=} callback
+ * @return {undefined}
+ */
+chrome.management.installReplacementWebApp = function(callback) {};
 
 /**
  * Event whose listeners take an ExtensionInfo parameter.
