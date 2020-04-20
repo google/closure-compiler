@@ -23,6 +23,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.function.Supplier;
 
 /**
@@ -38,7 +39,12 @@ final class WritingLogFile extends LogFile {
     try {
       Path dir = file.getParent();
       Files.createDirectories(dir);
-      return new WritingLogFile(Files.newBufferedWriter(file));
+      return new WritingLogFile(
+          Files.newBufferedWriter(
+              file,
+              StandardOpenOption.CREATE,
+              StandardOpenOption.APPEND,
+              StandardOpenOption.WRITE));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
