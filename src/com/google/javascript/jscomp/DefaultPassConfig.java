@@ -182,7 +182,11 @@ public final class DefaultPassConfig extends PassConfig {
     TranspilationPasses.addPostCheckTranspilationPasses(passes, options);
 
     if (options.needsTranspilationFrom(ES6)) {
-      if (options.rewritePolyfills) {
+      if (options.getRewritePolyfills()) {
+        if (options.getIsolatePolyfills()) {
+          throw new IllegalStateException(
+              "Polyfill isolation cannot be used in transpileOnly mode");
+        }
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
     }
@@ -772,6 +776,13 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    // Isolate injected polyfills from the global scope. Runs late in the optimization loop
+    // to take advantage of property renaming & RemoveUnusedCode, as this pass will increase code
+    // size by wrapping all potential polyfill usages.
+    if (options.getIsolatePolyfills()) {
+      passes.add(isolatePolyfills);
+    }
+
     if (options.collapseAnonymousFunctions) {
       passes.add(collapseAnonymousFunctions);
     }
@@ -1180,6 +1191,13 @@ public final class DefaultPassConfig extends PassConfig {
         j2clUtilGetDefineRewriterPass,
         "J2CL define re-writing should be done after processDefines since it relies on "
             + "collectDefines which has side effects.");
+
+    assertPassOrder(
+        optimizations,
+        removeUnusedCode,
+        isolatePolyfills,
+        "Polyfill isolation should be done after RemovedUnusedCode. Otherwise unused polyfill"
+            + " removal will not find any polyfill usages and will delete all polyfills.");
   }
 
   /** Checks that all goog.require()s are used. */
@@ -2396,6 +2414,14 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.INLINE_PROPERTIES)
           .setRunInFixedPointLoop(true)
           .setInternalFactory(InlineProperties::new)
+          .setFeatureSet(ES2019_MODULES)
+          .build();
+
+  /** Isolates injected polyfills & references from the global scope */
+  private final PassFactory isolatePolyfills =
+      PassFactory.builder()
+          .setName("IsolatePolyfills")
+          .setInternalFactory(IsolatePolyfills::new)
           .setFeatureSet(ES2019_MODULES)
           .build();
 

@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.CLOSURE_DEFS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -8256,5 +8257,80 @@ public final class IntegrationTest extends IntegrationTestCase {
               "alert(getDefaultValue(alwaysNull()));")
         },
         new String[] {"", "alert(42);"});
+  }
+
+  @Test
+  public void testRewritePolyfills_noAddedCodeForUnusedPolyfill() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addArray().addString().addObject().build()));
+    test(options, "const unused = 'foo'.startsWith('bar');", "");
+  }
+
+  @Test
+  public void testIsolatePolyfills_noAddedCodeForUnusedPolyfill() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setIsolatePolyfills(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addArray().addString().addObject().build()));
+
+    // TODO(b/154255009): recognize that the symbol existence test is side-effect free.
+    test(
+        options,
+        "const unused = 'foo'.startsWith('bar');",
+        "var $$jscomp$propertyToPolyfillSymbol$$={}; 'function'===typeof Symbol&&Symbol('x')");
+  }
+
+  @Test
+  public void testIsolatePolyfills_noPolyfillsUsed() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setIsolatePolyfills(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("testExterns.js", new TestExternsBuilder().addAlert().build()));
+
+    testSame(options, "alert('hi');");
+  }
+
+  @Test
+  public void testIsolatePolyfills_transpileOnlyMode() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setIsolatePolyfills(true);
+    options.setSkipNonTranspilationPasses(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("testExterns.js", new TestExternsBuilder().addAlert().build()));
+
+    // Polyfill isolation currently doesn't work with transpileOnly mode. It depends on runtime
+    // library injection not being disabled.
+    assertThrows(Exception.class, () -> compile(options, "alert('hi'.startsWith('h'));"));
   }
 }

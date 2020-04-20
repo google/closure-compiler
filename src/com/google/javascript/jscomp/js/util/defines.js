@@ -45,3 +45,12 @@ $jscomp.ASSUME_NO_NATIVE_SET = false;
  * @define {boolean}
  */
 $jscomp.SIMPLE_FROUND_POLYFILL = false;
+
+/**
+ * Whether to isolate all injected polyfills from global state. This is not
+ * on by default, as it bloats code size, but is useful when code needs to
+ * operate on untrusted third_party sites. It relies on a compiler pass to
+ * rewrite potential polyfill accesses.
+ * @define {boolean}
+ */
+$jscomp.ISOLATE_POLYFILLS = false;

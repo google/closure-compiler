@@ -89,6 +89,12 @@ testSuite({
   },
 
   testFlat_arraySubclassWithOverriddenPush() {
+    /**
+     * @param {T} element
+     * @return {T}
+     * @this {!IArrayLike<T>}
+     * @template T
+     */
     var customPush = function(element) {
       Array.prototype.push.call(this, element);
       return Array.prototype.push.call(this, element);
@@ -105,7 +111,12 @@ testSuite({
 
   /** @suppress {checkTypes} */
   testFlat_arraySubclassWithOverriddenFlat() {
-    var customFlat = function(element) {
+    /**
+     * @return {!Array<T>}
+     * @this {!Array<?>}
+     * @template T
+     */
+    var customFlat = function() {
       return Array.prototype.concat.call(this, 'very flat');
     };
 

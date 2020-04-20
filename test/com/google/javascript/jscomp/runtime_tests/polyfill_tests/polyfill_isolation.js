@@ -52,6 +52,7 @@ function addJSCompPolyfillsToWindow() {
   window['jscomp_Math_sign'] = Math.sign;
   window['jscomp_Symbol_iterator'] = Symbol.iterator;
   window['jscomp_Array_of'] = Array.of;
+  window['jscomp_Promise_settled'] = Promise.allSettled;
 
   window['jscomp_String_startsWith'] = String.prototype.startsWith;
   window['jscomp_Array_includes'] = Array.prototype.includes;

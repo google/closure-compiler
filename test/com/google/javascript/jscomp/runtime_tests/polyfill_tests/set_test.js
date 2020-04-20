@@ -64,7 +64,7 @@ testSuite({
 
   testAdd_normalizeZero() {
     // Note: +0 and -0 are the same
-    const set = new Set().add(-0);
+    const /** !Set<number> */ set = new Set().add(-0);
     assertTrue(set.has(0));
     assertTrue(set.has(-0));
     // stored value should be +0
@@ -164,7 +164,7 @@ testSuite({
   },
 
   testConstructor_normalizeZero() {
-    const set = new Set([-0]);
+    const /** !Set<number> */ set = new Set([-0]);
     assertEquals(Infinity, 1 / set.keys().next().value);
     assertEquals(Infinity, 1 / set.entries().next().value[0]);
     set.forEach(

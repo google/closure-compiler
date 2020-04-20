@@ -25,7 +25,7 @@ goog.setTestOnly();
 const testSuite = goog.require('goog.testing.testSuite');
 
 testSuite({
-  testPolyfillReceiversWithSideEffectsOnlyEvaledOnce: function() {
+  testPolyfillReceiversWithSideEffectsOnlyEvaledOnce() {
     assertEquals(0, window['getCounterValue']());
     assertEquals(true, window['invokeStrStartsWith']('123', '1'));
     assertEquals(1, window['getCounterValue']());
@@ -37,16 +37,26 @@ testSuite({
    * Tests that the compiled binary uses the native implementation of various
    * ES6 methods, not the compiler polyfills.
    */
-  testSymbolPolyfill_usesNativeImplementation: function() {
+  testSymbolPolyfill_usesNativeImplementation() {
     assertEquals(Symbol, window['jscomp_Symbol']);
   },
-  testPromisePolyfill_usesNativeImplementation: function() {
+  testPromisePolyfill_usesNativeImplementation() {
     assertEquals(Promise, window['jscomp_Promise']);
   },
-  testArrayIncludesPolyfill_usesNativeImplementation: function() {
-    assertEquals(Array.prototype.includes, window['jscomp_Array_includes']);
+  testStringStartsWithPolyfill_usesNativeImplementation() {
+    assertEquals(
+        String.prototype.startsWith, window['jscomp_String_startsWith']);
   },
-  testMathSignPolyfill_usesNativeImplementation: function() {
+  testMathSignPolyfill_usesNativeImplementation() {
     assertEquals(Math.sign, window['jscomp_Math_sign']);
-  }
+  },
+  /** Methods from a newer spec version than ES6 are still polyfilled */
+  testPromiseAllSettledPolyfill_ignoresNativeImpl() {
+    // From ES2020
+    assertNotEquals(Promise.allSettled, window['jscomp_Promise_settled']);
+  },
+  testArrayIncludesPolyfill_ignoresNativeImpl() {
+    // From ES2016
+    assertNotEquals(Array.prototype.includes, window['jscomp_Array_includes']);
+  },
 });

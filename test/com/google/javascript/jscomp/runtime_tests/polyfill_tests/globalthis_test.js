@@ -23,8 +23,8 @@ const testSuite = goog.require('goog.testing.testSuite');
 testSuite({
   testGlobalThis() {
     // making sure known attributes on globalThis are what they are expected to
-    // be to confirm that globalThis is set to the correct thing
-    assertEquals(globalThis, globalThis['globalThis']);
-    assertEquals(Object, globalThis['Object']);
+    // be to confirm that globalThis is set to the correct thing.
+    assertEquals(globalThis, globalThis.globalThis);
+    assertEquals(Object, globalThis.Object);
   },
 });

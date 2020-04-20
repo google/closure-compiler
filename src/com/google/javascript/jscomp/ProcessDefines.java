@@ -58,11 +58,11 @@ class ProcessDefines implements CompilerPass {
       Logger.getLogger("com.google.javascript.jscomp.ProcessDefines");
 
   /**
-   * Defines in this set will not be flagged with "unknown define" warnings. There are legacy flags
-   * that always set these defines, even when they might not be in the binary.
+   * Defines in this set will not be flagged with "unknown define" warnings. There are flags that
+   * always set these defines, even when they might not be in the binary.
    */
   private static final ImmutableSet<String> KNOWN_DEFINES =
-      ImmutableSet.of("COMPILED", "goog.DEBUG");
+      ImmutableSet.of("COMPILED", "goog.DEBUG", "$jscomp.ISOLATE_POLYFILLS");
 
   private final AbstractCompiler compiler;
   private final Map<String, Node> dominantReplacements;

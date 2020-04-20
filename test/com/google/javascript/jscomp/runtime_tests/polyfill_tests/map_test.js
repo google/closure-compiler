@@ -66,7 +66,7 @@ testSuite({
   },
 
   testKeysNormalizeZero() {
-    const map = new Map().set(-0, 'foo');
+    const /** !Map<number, string> */ map = new Map().set(-0, 'foo');
     assertTrue(map.has(-0));
     assertEquals('foo', map.get(0));
     assertEquals('foo', map.get(-0));
@@ -173,7 +173,7 @@ testSuite({
   },
 
   testConstructor_normalizeZero() {
-    const map = new Map([[-0, 'foo']]);
+    const /** !Map<number, string> */ map = new Map([[-0, 'foo']]);
     assertEquals(Infinity, 1 / map.keys().next().value);
     assertEquals(Infinity, 1 / map.entries().next().value[0]);
     map.forEach(
