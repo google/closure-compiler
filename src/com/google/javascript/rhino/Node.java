@@ -2152,7 +2152,7 @@ public class Node implements Serializable {
    * <code>x</code>, returns false if this is not a NAME node.
    */
   public final boolean matchesName(String name) {
-    if (token != token.NAME) {
+    if (token != Token.NAME) {
       return false;
     }
     String internalString = getString();
@@ -2167,7 +2167,7 @@ public class Node implements Serializable {
    */
   @SuppressWarnings("ReferenceEquality")
   public final boolean matchesName(Node n) {
-    if (token != token.NAME || n.token != Token.NAME) {
+    if (token != Token.NAME || n.token != Token.NAME) {
       return false;
     }
 
