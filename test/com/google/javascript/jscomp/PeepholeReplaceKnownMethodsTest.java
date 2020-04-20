@@ -68,6 +68,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     late = true;
     useTypes = true;
     disableTypeCheck();
+    enableNormalize();
   }
 
   @Override
