@@ -2792,6 +2792,13 @@ chrome.tabs.TabStatus = {
 
 
 /**
+ * @const {number}
+ * @see https://developer.chrome.com/extensions/tabs#property-TAB_ID_NONE
+ */
+chrome.tabs.TAB_ID_NONE = -1;
+
+
+/**
  * @typedef {?{
  *   code: (string|undefined),
  *   file: (string|undefined),
