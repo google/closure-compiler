@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckConstantCaseNames.MISSING_CONST_PROPERTY;
+import static com.google.javascript.jscomp.lint.CheckConstantCaseNames.REASSIGNED_CONSTANT_CASE_NAME;
+
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -40,24 +43,84 @@ public class CheckConstantCaseNamesTest extends CompilerTestCase {
     return options;
   }
 
-  private void testWarning(String js) {
-    testWarning(js, CheckConstantCaseNames.MISSING_CONST_PROPERTY);
+  @Test
+  public void emptyScriptIsOk() {
+    testNoWarning("");
+  }
+
+  @Test
+  public void emptyModuleIsOk() {
+    testNoWarning("goog.module('mod');");
+    testNoWarning("export {};");
   }
 
   @Test
   public void constantCaseNameDeclarations_requireExplicitConst() {
-    testWarning("goog.module('m'); var ABC;");
-    testWarning("goog.module('m'); var ABC = 0;");
-    testWarning("goog.module('m'); let ABC = 0;");
-    testWarning("goog.module('m'); var ABC_DEF_0 = 0;");
-    testWarning("goog.module('m'); var ABC;");
-    testWarning("goog.module('m'); var abc = 0, DEF = 1;");
+    testWarning("goog.module('m'); var ABC;", MISSING_CONST_PROPERTY);
+    testWarning("goog.module('m'); var ABC = 0;", MISSING_CONST_PROPERTY);
+    testWarning("goog.module('m'); let ABC = 0;", MISSING_CONST_PROPERTY);
+    testWarning("goog.module('m'); var ABC_DEF_0 = 0;", MISSING_CONST_PROPERTY);
+    testWarning("goog.module('m'); var abc = 0, DEF = 1;", MISSING_CONST_PROPERTY);
     test(
         srcs("goog.module('m'); var ABC = 0, DEF = 1;"),
-        warning(CheckConstantCaseNames.MISSING_CONST_PROPERTY),
-        warning(CheckConstantCaseNames.MISSING_CONST_PROPERTY));
-    testWarning("goog.module('m'); var {ABC} = obj;");
-    testWarning("goog.module('m'); var {abc, DEF} = obj;");
+        warning(MISSING_CONST_PROPERTY),
+        warning(MISSING_CONST_PROPERTY));
+    testWarning("goog.module('m'); var {ABC} = obj;", MISSING_CONST_PROPERTY);
+    testWarning("goog.module('m'); var {abc, DEF} = obj;", MISSING_CONST_PROPERTY);
+    testWarning("let ABC = 0; export {ABC};", MISSING_CONST_PROPERTY);
+  }
+
+  @Test
+  public void constantCaseNameDeclarations_whenReassigned_requireCamelCase() {
+    testWarning("goog.module('m'); var ABC = 0; ABC = 1;", REASSIGNED_CONSTANT_CASE_NAME);
+    testWarning("goog.module('m'); let ABC = 0; ABC = 1;", REASSIGNED_CONSTANT_CASE_NAME);
+    testWarning("goog.module('m'); let ABC = 0; [[ABC]] = [[1]];", REASSIGNED_CONSTANT_CASE_NAME);
+  }
+
+  @Test
+  public void constantCaseNameDeclarations_whenReassignedInFunction_requireCamelCase() {
+    testWarning(
+        "goog.module('m'); var ABC = 0; exports = function() { ABC = 1; };",
+        REASSIGNED_CONSTANT_CASE_NAME);
+    testWarning(
+        "goog.module('m'); let ABC = 0; exports = function() { ABC = 1; };",
+        REASSIGNED_CONSTANT_CASE_NAME);
+  }
+
+  @Test
+  public void constantCaseNameDeclarations_localShadowAreNotReassignments() {
+    testWarning(
+        // the local 'ABC' does not refer to the module-level 'ABC'.
+        "goog.module('m'); let ABC = 0; if (cond) { let ABC = 0; ABC = 1; }",
+        MISSING_CONST_PROPERTY);
+    testWarning(
+        // the local 'ABC' does not refer to the module-level 'ABC'.
+        "goog.module('m'); let ABC = 0; exports = function(ABC) { ABC = 1; };",
+        MISSING_CONST_PROPERTY);
+  }
+
+  @Test
+  public void constantCaseNameDeclarations_usagesAreNotReassignments() {
+    testWarning("goog.module('m'); let ABC = 0; alert(ABC);", MISSING_CONST_PROPERTY);
+    testWarning("goog.module('m'); let ABC = 0; const {d = ABC} = {};", MISSING_CONST_PROPERTY);
+    testWarning(
+        "goog.module('m'); let ABC = 0; let d = 1; export {d as ABC};", MISSING_CONST_PROPERTY);
+  }
+
+  @Test
+  public void constantCaseNameDeclarations_appearingInMultipleFiles_getDistinctErrors() {
+    testWarning(
+        srcs(
+            "goog.module('m'); let ABC = 0;",
+            "let ABC = 0; ABC = 1;" // not a reassignment of the module local.
+            ),
+        warning(MISSING_CONST_PROPERTY));
+    test(
+        srcs(
+            // Recognize that only one out of the two 'ABC's is mutated.
+            "goog.module('m1'); let ABC = 0;", "goog.module('m2'); let ABC = 0; ABC = 1;"),
+        warning(MISSING_CONST_PROPERTY),
+        warning(REASSIGNED_CONSTANT_CASE_NAME));
   }
 
   @Test

@@ -20,11 +20,14 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CodingConvention;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 /**
  * This pass looks for module-level variable declarations that use CONSTANT_CASE, according to the
@@ -36,17 +39,26 @@ import com.google.javascript.rhino.Node;
  * In order to not confuse users, this pass does not warn that they should be @const. (A more
  * correct lint check could warn that non-module-locals should not be constant case.)
  */
-public class CheckConstantCaseNames extends AbstractPostOrderCallback
-    implements HotSwapCompilerPass {
+public class CheckConstantCaseNames implements NodeTraversal.Callback, HotSwapCompilerPass {
 
   public static final DiagnosticType MISSING_CONST_PROPERTY =
       DiagnosticType.disabled(
           "JSC_MISSING_CONST_ON_CONSTANT_CASE",
-          "CONSTANT_CASE name \"{0}\" is constant-by-convention, so must be explicitly `const` or"
-              + " @const");
+          "CONSTANT_CASE name \"{0}\" is constant-by-convention, so must be explicitly"
+              + " `const` or @const");
+
+  public static final DiagnosticType REASSIGNED_CONSTANT_CASE_NAME =
+      DiagnosticType.disabled(
+          "JSC_REASSIGNED_CONSTANT_CASE_NAME",
+          "CONSTANT_CASE name \"{0}\" is constant-by-convention but is reassigned. "
+              + "Use camelCase instead.");
 
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
+  // Maps CONSTANT_CASE module-level names to their initializing NAME node
+  private LinkedHashMap<String, Node> invalidNamesPerModule = new LinkedHashMap<>();
+  // Subset of variables in `invalidNamesPerModule` that are mutated post-declaration.
+  private LinkedHashSet<String> reassignedNames = new LinkedHashSet<>();
 
   public CheckConstantCaseNames(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -64,27 +76,67 @@ public class CheckConstantCaseNames extends AbstractPostOrderCallback
   }
 
   @Override
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    // Only need to warn for module-level names, so don't visit other files.
+    if (n.isScript()) {
+      return n.getFirstChild() != null && n.getFirstChild().isModuleBody();
+    }
+    return true;
+  }
+
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!t.inModuleScope()) {
+    if (n.isModuleBody()) {
+      reportWarningsAndClear();
       return;
     }
     switch (n.getToken()) {
       case VAR:
       case LET:
-        // Skip CONST as it automatically meets the criteria.
+        // Skip CONST as it automatically meets the criteria and only look for module-level vars.
+        if (!t.inModuleScope()) {
+          return;
+        }
         JSDocInfo info = n.getJSDocInfo();
         if (info != null && info.hasConstAnnotation()) {
           break;
         }
         for (Node name : NodeUtil.findLhsNodesInNode(n)) {
           if (convention.isConstant(name.getString())) {
-            t.report(name, MISSING_CONST_PROPERTY, name.getString());
+            this.invalidNamesPerModule.put(name.getString(), name);
           }
+        }
+        break;
+
+      case NAME:
+        if (!this.invalidNamesPerModule.containsKey(n.getString())) {
+          return;
+        }
+        if (!NodeUtil.isLValue(n)) {
+          return;
+        }
+        // Verify this name is referring to the actual module-level var and not a local shadow.
+        Var v = t.getScope().getVar(n.getString());
+        if (v.getScopeRoot().isModuleBody()) {
+          this.reassignedNames.add(n.getString());
         }
         break;
 
       default:
         break;
     }
+  }
+
+  private void reportWarningsAndClear() {
+    for (Node nameNode : this.invalidNamesPerModule.values()) {
+      String name = nameNode.getString();
+      if (this.reassignedNames.contains(name)) {
+        compiler.report(JSError.make(nameNode, REASSIGNED_CONSTANT_CASE_NAME, name));
+      } else {
+        compiler.report(JSError.make(nameNode, MISSING_CONST_PROPERTY, name));
+      }
+    }
+    this.invalidNamesPerModule = new LinkedHashMap<>();
+    this.reassignedNames = new LinkedHashSet<>();
   }
 }
