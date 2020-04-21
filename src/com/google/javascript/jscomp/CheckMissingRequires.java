@@ -166,6 +166,13 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       // precede the reference within the same source file (e.g. an ES5 ctor in a different file).
       return;
     }
+    if (qualifiedName.isSimple() && qualifiedName.getRoot().equals("xid")) {
+      // Specifically don't report the name 'xid', which is a function that is widely used
+      // within Google without an accompanying goog.require, and which makes it hard to roll out
+      // this check.
+      // TODO(user): fix the remaining code involving xid and remove this workaround.
+      return;
+    }
     Var var = t.getScope().getVar(qualifiedName.getRoot());
     if (var != null && var.getScope().isLocal()) {
       // If the name refers to a nonexisting variable, the error will be caught elsewhere.
