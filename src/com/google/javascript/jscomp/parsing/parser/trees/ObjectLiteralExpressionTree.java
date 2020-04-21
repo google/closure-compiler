@@ -22,12 +22,16 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 public class ObjectLiteralExpressionTree extends ParseTree {
 
   public final ImmutableList<ParseTree> propertyNameAndValues;
+  public final boolean hasTrailingComma;
 
   public ObjectLiteralExpressionTree(
-      SourceRange location, ImmutableList<ParseTree> propertyNameAndValues) {
+      SourceRange location,
+      ImmutableList<ParseTree> propertyNameAndValues,
+      boolean hasTrailingComma) {
     super(ParseTreeType.OBJECT_LITERAL_EXPRESSION, location);
 
     this.propertyNameAndValues = propertyNameAndValues;
+    this.hasTrailingComma = hasTrailingComma;
   }
 
 }

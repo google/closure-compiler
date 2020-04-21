@@ -2573,7 +2573,8 @@ public class Parser {
 
     maybeReportTrailingComma(commaToken);
 
-    return new ObjectLiteralExpressionTree(getTreeLocation(start), result.build());
+    return new ObjectLiteralExpressionTree(
+        getTreeLocation(start), result.build(), commaToken != null);
   }
 
   void maybeReportTrailingComma(Token commaToken) {

@@ -248,6 +248,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testTrailingCommaObject() {
+    Node objectlit =
+        parse("var obj = {a:1,b:2,};") // SCRIPT
+            .getOnlyChild() // VAR
+            .getOnlyChild() // NAME
+            .getOnlyChild(); // OBJECTLIT
+    assertNode(objectlit).hasType(Token.OBJECTLIT);
+    assertNode(objectlit).hasTrailingComma();
+  }
+
+  @Test
   public void testWhile() {
     parse("while(1) { break; }");
   }

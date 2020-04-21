@@ -1908,6 +1908,7 @@ class IRFactory {
 
     Node processObjectLiteral(ObjectLiteralExpressionTree objTree) {
       Node node = newNode(Token.OBJECTLIT);
+      node.setTrailingComma(objTree.hasTrailingComma);
       boolean maybeWarn = false;
       for (ParseTree el : objTree.propertyNameAndValues) {
         if (el.type == ParseTreeType.DEFAULT_PARAMETER) {
