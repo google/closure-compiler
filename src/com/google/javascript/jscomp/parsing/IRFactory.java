@@ -1111,6 +1111,7 @@ class IRFactory {
 
     Node processArrayLiteral(ArrayLiteralExpressionTree tree) {
       Node node = newNode(Token.ARRAYLIT);
+      node.setTrailingComma(tree.hasTrailingComma);
       for (ParseTree child : tree.elements) {
         Node c = transform(child);
         node.addChildToBack(c);

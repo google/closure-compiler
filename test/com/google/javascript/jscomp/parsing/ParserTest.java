@@ -238,6 +238,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testTrailingCommaArray() {
+    Node arrayLit =
+        parse("[1, 2, 3,]") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // ARRAYLIT
+    assertNode(arrayLit).hasType(Token.ARRAYLIT);
+    assertNode(arrayLit).hasTrailingComma();
+  }
+
+  @Test
   public void testWhile() {
     parse("while(1) { break; }");
   }

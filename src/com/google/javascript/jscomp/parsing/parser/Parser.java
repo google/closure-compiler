@@ -2548,7 +2548,7 @@ public class Parser {
     maybeReportTrailingComma(trailingCommaToken);
 
     return new ArrayLiteralExpressionTree(
-        getTreeLocation(start), elements.build());
+        getTreeLocation(start), elements.build(), trailingCommaToken != null);
   }
 
   // 11.1.4 Object Literal Expression

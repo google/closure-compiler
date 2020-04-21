@@ -22,11 +22,13 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 public class ArrayLiteralExpressionTree extends ParseTree {
 
   public final ImmutableList<ParseTree> elements;
+  public final boolean hasTrailingComma;
 
   public ArrayLiteralExpressionTree(
-      SourceRange location, ImmutableList<ParseTree> elements) {
+      SourceRange location, ImmutableList<ParseTree> elements, boolean hasTrailingComma) {
     super(ParseTreeType.ARRAY_LITERAL_EXPRESSION, location);
     this.elements = elements;
+    this.hasTrailingComma = hasTrailingComma;
   }
 
 }
