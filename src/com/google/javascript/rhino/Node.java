@@ -207,6 +207,9 @@ public class Node implements Serializable {
     // Indicate that a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, or OPTCHAIN_CALL is the start of an
     // optional chain.
     START_OF_OPT_CHAIN,
+    // Indicates a trailing comma in an array literal, object literal, parameter list, or argument
+    // list
+    TRAILING_COMMA,
   }
 
   /**
@@ -2815,6 +2818,16 @@ public class Node implements Serializable {
   /** Sets the goog.define name for a NAME or GETPROP node. */
   public final void setDefineName(String name) {
     putProp(Prop.DEFINE_NAME, name);
+  }
+
+  /** Indicates that there was a trailing comma in this list */
+  public final void setTrailingComma(boolean hasTrailingComma) {
+    putBooleanProp(Prop.TRAILING_COMMA, hasTrailingComma);
+  }
+
+  /** Returns true if there was a trailing comma in the orginal code */
+  public final boolean hasTrailingComma() {
+    return getBooleanProp(Prop.TRAILING_COMMA);
   }
 
   /**

@@ -247,6 +247,11 @@ public final class NodeSubject extends Subject {
     return this;
   }
 
+  public NodeSubject hasTrailingComma() {
+    check("hasTrailingComma()").that(actual.hasTrailingComma()).isTrue();
+    return this;
+  }
+
   /**
    * indicates whether the node we are asserting is the start of an optional chain
    * e.g. `a?.b` of `a?.b.c`

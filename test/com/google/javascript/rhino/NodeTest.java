@@ -659,6 +659,13 @@ public class NodeTest {
     assertThat(node.getAncestors()).isEmpty();
   }
 
+  @Test
+  public void testTrailingComma() {
+    Node list = new Node(Token.ARRAYLIT);
+    list.setTrailingComma(true);
+    assertNode(list).hasTrailingComma();
+  }
+
   private static Node getVarRef(String name) {
     return Node.newString(Token.NAME, name);
   }
