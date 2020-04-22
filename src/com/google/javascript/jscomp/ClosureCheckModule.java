@@ -234,7 +234,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     }
     JSDocInfo jsDoc = n.getJSDocInfo();
     if (jsDoc != null) {
-      checkJSDoc(jsDoc);
+      checkJSDoc(t, jsDoc);
     }
     switch (n.getToken()) {
       case CALL:
@@ -290,11 +290,17 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           t.report(n, GOOG_MODULE_USES_THROW);
         }
         break;
+      case NAME:
       case GETPROP:
         if (n.matchesQualifiedName(currentModuleInfo.name)) {
-          t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
+          if (n.isGetProp()) {
+            // This warning makes sense on NAME nodes as well,
+            // but it would require a cleanup to land.
+            t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
+          }
         } else {
           checkImproperReferenceToImport(
+              t,
               n,
               n.getQualifiedName(),
               parent.isGetProp() ? parent.getSecondChild().getString() : null);
@@ -305,13 +311,13 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     }
   }
 
-  private void checkJSDoc(JSDocInfo jsDoc) {
+  private void checkJSDoc(NodeTraversal t, JSDocInfo jsDoc) {
     for (Node typeNode : jsDoc.getTypeNodes()) {
-      checkTypeExpression(typeNode);
+      checkTypeExpression(t, typeNode);
     }
   }
 
-  private void checkTypeExpression(Node typeNode) {
+  private void checkTypeExpression(NodeTraversal t, Node typeNode) {
     NodeUtil.visitPreOrder(
         typeNode,
         new NodeUtil.Visitor() {
@@ -325,13 +331,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback
             String nextQnamePart = null;
 
             while (true) {
+              checkImproperReferenceToImport(t, node, qname, nextQnamePart);
+
               int lastDot = qname.lastIndexOf('.');
               if (lastDot < 0) {
-                return; // Don't check simple names.
+                return;
               }
-
-              checkImproperReferenceToImport(node, qname, nextQnamePart);
-
               nextQnamePart = qname.substring(lastDot + 1);
               qname = qname.substring(0, lastDot);
             }
@@ -339,13 +344,24 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         });
   }
 
-  private void checkImproperReferenceToImport(Node n, String qname, String nextQnamePart) {
+  private static boolean isLocalVar(Var v) {
+    if (v == null) {
+      return false;
+    }
+    return v.isLocal();
+  }
+
+  private void checkImproperReferenceToImport(
+      NodeTraversal t, Node n, String qname, String nextQnamePart) {
     if (qname == null) {
       return;
     }
-    checkState(qname.contains("."), qname); // Don't check simple names.
 
     if (!currentModuleInfo.importsByLongRequiredName.containsKey(qname)) {
+      return;
+    }
+
+    if (!qname.contains(".") && isLocalVar(t.getScope().getVar(qname))) {
       return;
     }
 

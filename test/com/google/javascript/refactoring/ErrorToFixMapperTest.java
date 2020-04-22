@@ -556,13 +556,20 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testFixProvides_noProvides() {
-    assertNoChanges(
+    assertChanges(
         lines(
             "/** @fileoverview foo */",
             "",
             "goog.module('m');",
             "",
             "goog.require('x');",
+            useInCode("x")),
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.module('m');",
+            "",
+            "const x = goog.require('x');",
             useInCode("x")));
   }
 
@@ -950,7 +957,17 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testFixRequires_nonAliasedRequire() {
+    assertChanges(
+        fileWithImports("goog.require('a');", useInCode("a")),
+        fileWithImports("const a = goog.require('a');", useInCode("a")));
+  }
+
+  @Ignore
+  @Test
   public void testFixRequires_emptyDestructuring_alone() {
+    // It would be nice to dedeuplicate the destructuring require with the aliased require,
+    // but it's not clear that this pattern is common enough to warrant special casing
     assertChanges(
         fileWithImports("const {} = goog.require('a');", useInCode("a")),
         fileWithImports("goog.require('a');", useInCode("a")));
@@ -970,8 +987,11 @@ public class ErrorToFixMapperTest {
         fileWithImports("goog.require('a');", useInCode("a")));
   }
 
+  @Ignore
   @Test
   public void testFixRequires_emptyDestructuringStandaloneByWeakerPrimitive() {
+    // It would be nice to dedeuplicate the destructuring require with the aliased require,
+    // but it's not clear that this pattern is common enough to warrant special casing
     assertChanges(
         fileWithImports("const {} = goog.require('a');", "goog.requireType('a');", useInCode("a")),
         fileWithImports("goog.require('a');", useInCode("a")));

@@ -608,11 +608,17 @@ public final class SuggestedFix {
           return this; // No require is needed.
         }
 
-        alias =
-            stream(RequireAliasGenerator.over(namespace))
-                .filter((a) -> !scriptMetadata.usesName(a))
-                .findFirst()
-                .orElseThrow(AssertionError::new);
+        if (namespace.indexOf('.') == -1) {
+          // For unqualified names, the exisiting references will still be valid so long as
+          // we keep the same name for the alias.
+          alias = namespace;
+        } else {
+          alias =
+              stream(RequireAliasGenerator.over(namespace))
+                  .filter((a) -> !scriptMetadata.usesName(a))
+                  .findFirst()
+                  .orElseThrow(AssertionError::new);
+        }
       }
 
       NodeMetadata metadata = m.getMetadata();
