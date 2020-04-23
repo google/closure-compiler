@@ -3838,6 +3838,7 @@ public class Parser {
 
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> arguments = ImmutableList.builder();
+    boolean trailingComma = false;
 
     eat(TokenType.OPEN_PAREN);
     while (peekAssignmentOrSpread()) {
@@ -3850,11 +3851,12 @@ public class Parser {
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in arguments list");
           }
+          trailingComma = true;
         }
       }
     }
     eat(TokenType.CLOSE_PAREN);
-    return new ArgumentListTree(getTreeLocation(start), arguments.build());
+    return new ArgumentListTree(getTreeLocation(start), arguments.build(), trailingComma);
   }
 
   /**

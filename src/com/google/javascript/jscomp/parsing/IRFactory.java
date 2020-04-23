@@ -1486,6 +1486,7 @@ class IRFactory {
     Node processFunctionCall(CallExpressionTree callNode) {
       Node node = newNode(Token.CALL,
                            transform(callNode.operand));
+      node.setTrailingComma(callNode.arguments.hasTrailingComma);
       for (ParseTree child : callNode.arguments.arguments) {
         node.addChildToBack(transform(child));
       }
