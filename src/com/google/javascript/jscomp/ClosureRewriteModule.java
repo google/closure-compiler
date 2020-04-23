@@ -1677,17 +1677,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
 
       // Remove the require node so this problem isn't reported again in ProcessClosurePrimitives.
-      // TODO(lharker): after fixing b/122549561, delete all the complicated logic below.
       if (preserveSugar) {
         continue;
       }
 
-      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(requireNode);
-      if (changeScope == null) {
+      if (NodeUtil.getEnclosingScript(requireNode) == null) {
         continue; // It's already been removed; nothing to do.
       }
 
-      compiler.reportChangeToChangeScope(changeScope);
+      compiler.reportChangeToEnclosingScope(requireNode);
       Node enclosingStatement = NodeUtil.getEnclosingStatement(requireNode);
 
       // To make compilation with partial source information work for Clutz, delete any name
