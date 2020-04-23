@@ -1599,6 +1599,7 @@ class IRFactory {
 
     Node processFormalParameterList(FormalParameterListTree tree) {
       Node params = newNode(Token.PARAM_LIST);
+      params.setTrailingComma(tree.hasTrailingComma);
       if (!checkParameters(tree.parameters)) {
         return params;
       }

@@ -1405,6 +1405,7 @@ public class Parser {
     eat(TokenType.OPEN_PAREN);
 
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
+    boolean trailingComma = false;
 
     while (peekParameter(context)) {
       result.add(parseParameter(context));
@@ -1416,14 +1417,14 @@ public class Parser {
           if (!config.atLeast8) {
             reportError(comma, "Invalid trailing comma in formal parameter list");
           }
+          trailingComma = true;
         }
       }
     }
 
     eat(TokenType.CLOSE_PAREN);
 
-    return new FormalParameterListTree(
-        getTreeLocation(listStart), result.build());
+    return new FormalParameterListTree(getTreeLocation(listStart), result.build(), trailingComma);
   }
 
   private FormalParameterListTree parseSetterParameterList() {
@@ -2813,7 +2814,8 @@ public class Parser {
     if (peek(TokenType.CLOSE_PAREN)) {
       eat(TokenType.CLOSE_PAREN);
       if (peek(TokenType.ARROW)) {
-        return new FormalParameterListTree(getTreeLocation(start), ImmutableList.<ParseTree>of());
+        return new FormalParameterListTree(
+            getTreeLocation(start), ImmutableList.<ParseTree>of(), /* hasTrailingComma= */ false);
       } else {
         reportError("invalid parenthesized expression");
         return new MissingPrimaryExpressionTree(getTreeLocation(start));
@@ -2825,7 +2827,8 @@ public class Parser {
           parseParameter(ParamContext.IMPLEMENTATION));
       eat(TokenType.CLOSE_PAREN);
       if (peek(TokenType.ARROW)) {
-        return new FormalParameterListTree(getTreeLocation(start), params);
+        return new FormalParameterListTree(
+            getTreeLocation(start), params, /* hasTrailingComma= */ false);
       } else {
         reportError("invalid parenthesized expression");
         return new MissingPrimaryExpressionTree(getTreeLocation(start));
@@ -3071,7 +3074,9 @@ public class Parser {
         // e.g. x => x + 1
         arrowParameterList =
             new FormalParameterListTree(
-                leftOfArrow.location, ImmutableList.<ParseTree>of(leftOfArrow));
+                leftOfArrow.location,
+                ImmutableList.<ParseTree>of(leftOfArrow),
+                /* hasTrailingComma= */ false);
         break;
       case ARGUMENT_LIST:
       case PAREN_EXPRESSION:
@@ -3121,7 +3126,9 @@ public class Parser {
       final IdentifierExpressionTree singleParameter = parseIdentifierExpression();
       arrowParameterList =
           new FormalParameterListTree(
-              singleParameter.location, ImmutableList.<ParseTree>of(singleParameter));
+              singleParameter.location,
+              ImmutableList.<ParseTree>of(singleParameter),
+              /* hasTrailingComma= */ false);
     }
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed before '=>'");
@@ -3150,7 +3157,8 @@ public class Parser {
   }
 
   private static FormalParameterListTree newEmptyFormalParameterList(SourceRange location) {
-    return new FormalParameterListTree(location, ImmutableList.<ParseTree>of());
+    return new FormalParameterListTree(
+        location, ImmutableList.<ParseTree>of(), /* hasTrailingComma= */ false);
   }
 
   /**

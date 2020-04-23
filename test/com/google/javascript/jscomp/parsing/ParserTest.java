@@ -259,6 +259,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testTrailingCommaParamList() {
+    Node paramList =
+        parse("function f(a, b,) {}") // SCRIPT
+            .getOnlyChild() // FUNCTION
+            .getSecondChild(); // PARAM_LIST
+    assertNode(paramList).hasType(Token.PARAM_LIST);
+    assertNode(paramList).hasTrailingComma();
+  }
+
+  @Test
   public void testTrailingCommaCallNode() {
     Node call =
         parse("f(a, b,);") // SCRIPT
