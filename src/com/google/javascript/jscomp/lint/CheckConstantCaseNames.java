@@ -79,7 +79,7 @@ public class CheckConstantCaseNames implements NodeTraversal.Callback, HotSwapCo
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     // Only need to warn for module-level names, so don't visit other files.
     if (n.isScript()) {
-      return n.getFirstChild() != null && n.getFirstChild().isModuleBody();
+      return n.hasChildren() && n.getFirstChild().isModuleBody();
     }
     return true;
   }

@@ -72,7 +72,7 @@ public final class RewriteNullishCoalesceOperator
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
     Node body = enclosingStatement.getParent();
 
-    Node left = n.getFirstChild().detach();
+    Node left = n.removeFirstChild();
     Node right = n.getLastChild().detach();
 
     Node let = astFactory.declareSingleLet(tempVarName, left.getJSType());
