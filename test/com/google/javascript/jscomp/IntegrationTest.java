@@ -8292,11 +8292,10 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "testExterns.js",
                 new TestExternsBuilder().addArray().addString().addObject().build()));
 
-    // TODO(b/154255009): recognize that the symbol existence test is side-effect free.
     test(
         options,
         "const unused = 'foo'.startsWith('bar');",
-        "var $$jscomp$propertyToPolyfillSymbol$$={}; 'function'===typeof Symbol&&Symbol('x')");
+        "var $$jscomp$propertyToPolyfillSymbol$$={};");
   }
 
   @Test

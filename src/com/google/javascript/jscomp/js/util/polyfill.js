@@ -34,11 +34,8 @@ $jscomp.POLYFILL_PREFIX = '$jscp$';
 /**
  * @const {boolean} whether Symbol is implemented natively (i.e. is not a
  * polyfill)
- * TODO(b/154255009): remove the $jscomp.ISOLATE_POLYFILLS once Symbol('x') is
- * considered side-effect-free. $jscomp.ISOLATE_POLYFILLS case is only present
- * to allow dead-code-elimiation when polyfill isolation is disabled.
  */
-$jscomp.IS_SYMBOL_NATIVE = $jscomp.ISOLATE_POLYFILLS &&
+$jscomp.IS_SYMBOL_NATIVE =
     typeof Symbol === 'function' && typeof Symbol('x') === 'symbol';
 
 /**

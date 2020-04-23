@@ -37,6 +37,7 @@ public class TestExternsBuilder {
           " * @constructor",
           " * @param {*=} opt_description",
           " * @return {symbol}",
+          " * @nosideeffects",
           " */",
           "function Symbol(opt_description) {}",
           "",

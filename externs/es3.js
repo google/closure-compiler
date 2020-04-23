@@ -34,6 +34,10 @@
  * @constructor
  * @param {*=} opt_description
  * @return {symbol}
+ * @nosideeffects
+ * Note: calling `new Symbol('x');` will always throw, but we mark this
+ * nosideeffects because the compiler does not promise to preserve all coding
+ * errors.
  */
 function Symbol(opt_description) {}
 
