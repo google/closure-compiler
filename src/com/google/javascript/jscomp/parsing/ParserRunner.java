@@ -182,16 +182,10 @@ public final class ParserRunner {
       case ECMASCRIPT_2018:
       case ECMASCRIPT_2019:
       case ECMASCRIPT_2020:
-        parserConfigLanguageMode = Mode.ES8_OR_GREATER;
-        break;
       case ES_NEXT:
-        parserConfigLanguageMode = Mode.ES_NEXT;
-        break;
       case ES_NEXT_IN:
-        parserConfigLanguageMode = Mode.ES_NEXT_IN;
-        break;
       case UNSUPPORTED:
-        parserConfigLanguageMode = Mode.UNSUPPORTED;
+        parserConfigLanguageMode = Mode.ES8_OR_GREATER;
         break;
     }
     return new com.google.javascript.jscomp.parsing.parser.Parser.Config(
