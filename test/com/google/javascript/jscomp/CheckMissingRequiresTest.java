@@ -89,8 +89,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequire_inEsModuleExport() throws Exception {
-    checkNoWarning(
+  public void testMissingRequire_inEsModuleExport() throws Exception {
+    checkRequireWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",
@@ -102,8 +103,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequire_inEsModuleImport() throws Exception {
-    checkNoWarning(
+  public void testMissingRequire_inEsModuleImport() throws Exception {
+    checkRequireWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",
@@ -240,8 +242,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequireType_inEsModuleExport() throws Exception {
-    checkNoWarning(
+  public void testMissingRequireType_inEsModuleExport() throws Exception {
+    checkRequireTypeWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",
@@ -254,8 +257,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequireType_inEsModuleImport() throws Exception {
-    checkNoWarning(
+  public void testMissingRequireType_inEsModuleImport() throws Exception {
+    checkRequireTypeWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",

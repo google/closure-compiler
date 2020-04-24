@@ -174,7 +174,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).isEmpty();
-    assertThat(m.isScript()).isTrue();
+    assertThat(m.isNonProvideScript()).isTrue();
   }
 
   @Test
@@ -197,7 +197,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).isEmpty();
-    assertThat(m.isScript()).isTrue();
+    assertThat(m.isNonProvideScript()).isTrue();
   }
 
   @Test
@@ -220,7 +220,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).isEmpty();
-    assertThat(m.isScript()).isTrue();
+    assertThat(m.isNonProvideScript()).isTrue();
   }
 
   @Test
@@ -246,7 +246,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).isEmpty();
-    assertThat(m.isScript()).isTrue();
+    assertThat(m.isNonProvideScript()).isTrue();
   }
 
   @Test
@@ -278,7 +278,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
     m = metadataMap().getModulesByPath().get("testcode");
     assertThat(m.googNamespaces()).isEmpty();
-    assertThat(m.isScript()).isTrue();
+    assertThat(m.isNonProvideScript()).isTrue();
   }
 
   @Test

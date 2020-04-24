@@ -68,9 +68,8 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     if (currentModule == null) {
       return true;
     }
-    if (n == currentModule.rootNode() && !currentModule.isGoogModule()) {
-      // Only check inside goog.module files.
-      // TODO(tjgq): Extend the check to ES modules that interop with Closure.
+    if (n == currentModule.rootNode() && !currentModule.isModule()) {
+      // Only check inside modules.
       return false;
     }
     // Traverse nodes in preorder to collect `@template` parameter names before their use.

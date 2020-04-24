@@ -390,8 +390,8 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         ModuleMetadata currentModule,
         ClosureImport importType) {
       boolean atTopLevelScope = t.inGlobalHoistScope() || t.inModuleScope();
-      boolean isNonModule = currentModule.isGoogProvide() || currentModule.isScript();
-      boolean validAssignment = !isNonModule || parent.isExprResult();
+      boolean isModule = currentModule.isModule();
+      boolean validAssignment = isModule || parent.isExprResult();
       boolean isAliased = NodeUtil.isNameDeclaration(parent.getParent());
 
       if (!atTopLevelScope || !validAssignment) {
@@ -404,7 +404,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         return;
       }
 
-      if (!isNonModule && isAliased) {
+      if (isModule && isAliased) {
         Node declaration = parent.getParent();
 
         if (!declaration.hasOneChild()) {
@@ -441,7 +441,7 @@ final class CheckClosureImports implements HotSwapCompilerPass {
         if (importType == ClosureImport.FORWARD_DECLARE) {
           // Ok to forwardDeclare any global, sadly. This is some bad legacy behavior and people
           // ought to use externs.
-          if (isAliased && !isNonModule) {
+          if (isAliased && isModule) {
             // Special case `const Foo = goog.forwardDeclare('a.Foo');`. For legacy reasons, we
             // allow js_library to be less strict about missing forwardDeclares vs. other missing
             // Closure imports.
