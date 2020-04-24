@@ -231,6 +231,10 @@ public class WhitelistWarningsGuard extends WarningsGuard {
 
     @Override
     public void report(CheckLevel level, JSError error) {
+      if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
+        // ERROR-level diagnostics are ignored by WhitelistWarningsGuard (c.f. above getLevel).
+        return;
+      }
       warnings.add(error);
     }
 
