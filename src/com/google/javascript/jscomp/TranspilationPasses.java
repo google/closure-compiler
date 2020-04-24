@@ -287,7 +287,10 @@ public class TranspilationPasses {
           .setName("RewritePolyfills")
           .setInternalFactory(
               (compiler) ->
-                  new RewritePolyfills(compiler, compiler.getOptions().getIsolatePolyfills()))
+                  new RewritePolyfills(
+                      compiler,
+                      compiler.getOptions().getRewritePolyfills(),
+                      compiler.getOptions().getIsolatePolyfills()))
           .setFeatureSet(FeatureSet.latest())
           .build();
 

@@ -395,7 +395,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     TranspilationPasses.addTranspilationRuntimeLibraries(checks, options);
 
-    if (options.rewritePolyfills && !options.checksOnly) {
+    if ((options.rewritePolyfills || options.getIsolatePolyfills()) && !options.checksOnly) {
       TranspilationPasses.addRewritePolyfillPass(checks);
     }
 

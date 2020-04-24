@@ -30,6 +30,9 @@ import java.util.Set;
 /**
  * Injects polyfill libraries to ensure that ES6+ library functions are available.
  *
+ * <p>Also runs if polyfill isolation is enabled, even if polyfill injection is disabled, in order
+ * to prevent deletion of a required library function by dead code elimination.
+ *
  * <p>TODO(b/120486392): consider merging this pass with {@link InjectRuntimeLibraries} and {@link
  * InjectTranspilationRuntimeLibraries}.
  */
@@ -41,30 +44,40 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
   private final Polyfills polyfills;
+  private final boolean injectPolyfills;
   private final boolean isolatePolyfills;
   private Set<String> libraries;
 
-  public RewritePolyfills(AbstractCompiler compiler, boolean isolatePolyfills) {
+  /**
+   * @param injectPolyfills if true, injects $jscomp.polyfill initializations into the first input.
+   *     if false, no polyfills are injected.
+   * @param isolatePolyfills if true, adds externs for library functions used by {@link
+   *     IsolatePolyfills} to prevent their deletion.
+   */
+  public RewritePolyfills(
+      AbstractCompiler compiler, boolean injectPolyfills, boolean isolatePolyfills) {
     this(
         compiler,
         Polyfills.fromTable(
             ResourceLoader.loadTextResource(RewritePolyfills.class, "js/polyfills.txt")),
+        injectPolyfills,
         isolatePolyfills);
   }
 
   @VisibleForTesting
-  RewritePolyfills(AbstractCompiler compiler, Polyfills polyfills, boolean isolatePolyfills) {
+  RewritePolyfills(
+      AbstractCompiler compiler,
+      Polyfills polyfills,
+      boolean injectPolyfills,
+      boolean isolatePolyfills) {
     this.compiler = compiler;
     this.polyfills = polyfills;
+    this.injectPolyfills = injectPolyfills;
     this.isolatePolyfills = isolatePolyfills;
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    this.libraries = new LinkedHashSet<>();
-    new PolyfillFindingCallback(compiler, polyfills)
-        .traverseExcludingGuarded(scriptRoot, this::inject);
-
     if (this.isolatePolyfills) {
       // Polyfill isolation requires a pass to run near the end of optimizations. That pass may call
       // into a library method injected in this pass. Adding an externs declaration of that library
@@ -74,7 +87,18 @@ public class RewritePolyfills implements HotSwapCompilerPass {
           .getSynthesizedExternsInputAtEnd()
           .getAstRoot(compiler)
           .addChildToBack(jscompLookupMethodDecl);
+      compiler.reportChangeToEnclosingScope(jscompLookupMethodDecl);
     }
+
+    if (!this.injectPolyfills) {
+      // Nothing left to do. Probably this pass only needed to run because --isolate_polyfills is
+      // enabled but not --rewrite_polyfills.
+      return;
+    }
+
+    this.libraries = new LinkedHashSet<>();
+    new PolyfillFindingCallback(compiler, polyfills)
+        .traverseExcludingGuarded(scriptRoot, this::inject);
 
     if (libraries.isEmpty()) {
       return;

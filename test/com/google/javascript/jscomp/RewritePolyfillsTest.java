@@ -42,6 +42,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   private final Map<String, String> injectableLibraries = new HashMap<>();
   private final List<String> polyfillTable = new ArrayList<>();
   private boolean isolatePolyfills = false;
+  private boolean injectPolyfills = true;
 
   private void addLibrary(String name, String from, String to, String library) {
     if (library != null) {
@@ -63,7 +64,10 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new RewritePolyfills(
-        compiler, Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)), isolatePolyfills);
+        compiler,
+        Polyfills.fromTable(Joiner.on("\n").join(polyfillTable)),
+        injectPolyfills,
+        isolatePolyfills);
   }
 
   @Override
@@ -500,5 +504,17 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
 
     testExternChanges("", "var $jscomp$lookupPolyfilledValue");
+  }
+
+  @Test
+  public void testNoCodeChangesIfInjectionDisabled() {
+    isolatePolyfills = true;
+    injectPolyfills = false;
+    addLibrary("String.prototype.endsWith", "es6", "es5", "es6/string/endswith");
+
+    testExternChanges("", "var $jscomp$lookupPolyfilledValue");
+
+    allowExternsChanges();
+    testSame("'x'.endsWith('y');");
   }
 }

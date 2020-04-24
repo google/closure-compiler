@@ -8277,6 +8277,26 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testIsolatePolyfills_worksWithoutRewritePolyfills() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(false);
+    options.setIsolatePolyfills(true);
+    options.setForceLibraryInjection(ImmutableList.of("es6/string/startswith"));
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addArray().addString().addObject().build()));
+
+    compile(options, "alert('foo'.startsWith('bar'));");
+  }
+
+  @Test
   public void testIsolatePolyfills_noAddedCodeForUnusedPolyfill() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
