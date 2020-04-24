@@ -45,6 +45,7 @@ import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TemplateLiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayTypeTree;
@@ -755,6 +756,12 @@ class IRFactory {
         && currentNonJSDocComment.location.end.offset <= location.start.offset;
   }
 
+  private boolean hasPendingNonJSDocCommentBefore(SourcePosition pos) {
+    return currentNonJSDocComment != null
+        && currentNonJSDocComment.location.end.line <= pos.line
+        && currentNonJSDocComment.location.end.offset <= pos.offset;
+  }
+
   private ArrayList<Comment> getNonJSDocComments(SourceRange location) {
     ArrayList<Comment> previousComments = new ArrayList<>();
     while (hasPendingNonJSDocCommentBefore(location)) {
@@ -771,6 +778,15 @@ class IRFactory {
 
   private ArrayList<Comment> getNonJSDocComments(ParseTree tree) {
     return getNonJSDocComments(tree.location);
+  }
+
+  private ArrayList<Comment> getNonJSDocCommentsBefore(SourcePosition pos) {
+    ArrayList<Comment> previousComments = new ArrayList<>();
+    while (hasPendingNonJSDocCommentBefore(pos)) {
+      previousComments.add(currentNonJSDocComment);
+      currentNonJSDocComment = skipJsDocComments(nextNonJSDocCommentIter);
+    }
+    return previousComments;
   }
 
   private static ParseTree findNearestNode(ParseTree tree) {
@@ -1487,10 +1503,88 @@ class IRFactory {
       Node node = newNode(Token.CALL,
                            transform(callNode.operand));
       node.setTrailingComma(callNode.arguments.hasTrailingComma);
+      ArgumentListTree argumentsTree = callNode.arguments;
+      // For each arg, represents a location (end SourcePosition) such that all
+      // trailing comments before this location correspond to that arg.
+      List<SourcePosition> zones =
+          getEndOfArgCommentZones(
+              argumentsTree.arguments, argumentsTree.commaPositions, argumentsTree.location.end);
+      int argCount = 0;
       for (ParseTree child : callNode.arguments.arguments) {
-        node.addChildToBack(transform(child));
+        Node childNode = transform(child);
+        node.addChildToBack(childNode);
+        // The non-trailing comments are already attached to `childNode` in `transform(child)`
+        // call. Now we must attach possible trailing comments to `childNode`.
+
+        attachPossibleTrailingCommentsForArg(childNode, zones.get(argCount));
       }
       return node;
+    }
+
+    /**
+     * Calculates, for each arg, a location (end SourcePosition) such that all trailing comments
+     * before this location correspond to that arg. Can be used while processing both function calls
+     * (ArgsList) as well as declarations (ParamList).
+     *
+     * @param args list of arguments or formal parameters (ParseTree nodes)
+     * @param commaPositions list of SourcePositions corresponding to commas in the argsList or
+     *     formal parameter list
+     * @param argListEndPosition SourcePosition of the end of argsList or paramList
+     */
+    List<SourcePosition> getEndOfArgCommentZones(
+        ImmutableList<ParseTree> args,
+        ImmutableList<SourcePosition> commaPositions,
+        SourcePosition argListEndPosition) {
+      ImmutableList.Builder<SourcePosition> zones = ImmutableList.builder();
+      int commaCount = 0;
+      for (ParseTree arg : args) {
+        if (args.size() > commaCount + 1) {
+          // there is a next arg after this arg
+          ParseTree nextParam = args.get(commaCount + 1);
+          if (nextParam.location.start.line > arg.location.end.line) {
+            // Next arg is on a new line; all trailing comments on this line belong to this arg
+            // create a source position to represent the end of current line
+            SourcePosition tempSourcePos =
+                new SourcePosition(
+                    null,
+                    Integer.MAX_VALUE /* offset */,
+                    arg.location.end.line,
+                    Integer.MAX_VALUE /*col */);
+            zones.add(tempSourcePos);
+          } else {
+            // Next arg is on the same line; trailing comments before the comma belong to this arg
+            SourcePosition commaPosition = commaPositions.get(commaCount);
+            zones.add(commaPosition);
+          }
+        } else {
+          // last arg; trailing comments till the end of argList belong to this arg
+          zones.add(argListEndPosition);
+        }
+        commaCount++;
+      }
+      return zones.build();
+    }
+
+    /**
+     * Attaches trailing comments associated with this arg or formal param to it.
+     *
+     * @param paramNode The node to which we're attaching trailing comment
+     * @param endZone The end location until which we fetch pending comments for attachment
+     */
+    void attachPossibleTrailingCommentsForArg(Node paramNode, SourcePosition endZone) {
+      NonJSDocComment trailingComment = null;
+      if (hasPendingNonJSDocCommentBefore(endZone)) {
+        trailingComment = combineCommentsIntoSingleComment(getNonJSDocCommentsBefore(endZone));
+
+        NonJSDocComment nonTrailingComment = paramNode.getNonJSDocComment();
+        if (nonTrailingComment != null) {
+          // This node has both trailing and non-trailing comment
+          nonTrailingComment.appendTrailingCommentToNonTrailing(trailingComment);
+        } else {
+          trailingComment.setIsTrailing(true);
+          paramNode.setNonJSDocComment(trailingComment);
+        }
+      }
     }
 
     Node processOptChainFunctionCall(OptionalCallExpressionTree callNode) {
@@ -1604,6 +1698,11 @@ class IRFactory {
         return params;
       }
 
+      ImmutableList<ParseTree> parameters = tree.parameters;
+      List<SourcePosition> zones =
+          getEndOfArgCommentZones(parameters, tree.commaPositions, tree.location.end);
+      int argCount = 0;
+
       for (ParseTree param : tree.parameters) {
         final Node paramNode;
         switch (param.type) {
@@ -1617,6 +1716,8 @@ class IRFactory {
             break;
           default:
             paramNode = transformNodeWithInlineComments(param);
+            // Reusing the logic to attach trailing comments used from call-site argsList
+            attachPossibleTrailingCommentsForArg(paramNode, zones.get(argCount));
             break;
         }
 
@@ -1629,6 +1730,7 @@ class IRFactory {
                 || paramNode.isObjectPattern()
                 || paramNode.isDefaultValue());
         params.addChildToBack(paramNode);
+        argCount++;
       }
 
       return params;

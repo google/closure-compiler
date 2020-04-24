@@ -1406,12 +1406,16 @@ public class Parser {
 
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
     boolean trailingComma = false;
+    ImmutableList.Builder<SourcePosition> commaPositions = ImmutableList.builder();
 
     while (peekParameter(context)) {
       result.add(parseParameter(context));
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         Token comma = eat(TokenType.COMMA);
+        if (comma != null) {
+          commaPositions.add(comma.getStart());
+        }
         if (peek(TokenType.CLOSE_PAREN)) {
           recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
@@ -1423,8 +1427,8 @@ public class Parser {
     }
 
     eat(TokenType.CLOSE_PAREN);
-
-    return new FormalParameterListTree(getTreeLocation(listStart), result.build(), trailingComma);
+    return new FormalParameterListTree(
+        getTreeLocation(listStart), result.build(), trailingComma, commaPositions.build());
   }
 
   private FormalParameterListTree parseSetterParameterList() {
@@ -2815,7 +2819,10 @@ public class Parser {
       eat(TokenType.CLOSE_PAREN);
       if (peek(TokenType.ARROW)) {
         return new FormalParameterListTree(
-            getTreeLocation(start), ImmutableList.<ParseTree>of(), /* hasTrailingComma= */ false);
+            getTreeLocation(start),
+            ImmutableList.<ParseTree>of(),
+            /* hasTrailingComma= */ false,
+            ImmutableList.<SourcePosition>of());
       } else {
         reportError("invalid parenthesized expression");
         return new MissingPrimaryExpressionTree(getTreeLocation(start));
@@ -2828,7 +2835,10 @@ public class Parser {
       eat(TokenType.CLOSE_PAREN);
       if (peek(TokenType.ARROW)) {
         return new FormalParameterListTree(
-            getTreeLocation(start), params, /* hasTrailingComma= */ false);
+            getTreeLocation(start),
+            params,
+            /* hasTrailingComma= */ false,
+            ImmutableList.<SourcePosition>of());
       } else {
         reportError("invalid parenthesized expression");
         return new MissingPrimaryExpressionTree(getTreeLocation(start));
@@ -3076,7 +3086,8 @@ public class Parser {
             new FormalParameterListTree(
                 leftOfArrow.location,
                 ImmutableList.<ParseTree>of(leftOfArrow),
-                /* hasTrailingComma= */ false);
+                /* hasTrailingComma= */ false,
+                ImmutableList.<SourcePosition>of());
         break;
       case ARGUMENT_LIST:
       case PAREN_EXPRESSION:
@@ -3128,7 +3139,8 @@ public class Parser {
           new FormalParameterListTree(
               singleParameter.location,
               ImmutableList.<ParseTree>of(singleParameter),
-              /* hasTrailingComma= */ false);
+              /* hasTrailingComma= */ false,
+              ImmutableList.<SourcePosition>of());
     }
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed before '=>'");
@@ -3158,7 +3170,10 @@ public class Parser {
 
   private static FormalParameterListTree newEmptyFormalParameterList(SourceRange location) {
     return new FormalParameterListTree(
-        location, ImmutableList.<ParseTree>of(), /* hasTrailingComma= */ false);
+        location,
+        ImmutableList.<ParseTree>of(),
+        /* hasTrailingComma= */ false,
+        ImmutableList.<SourcePosition>of());
   }
 
   /**
@@ -3847,6 +3862,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> arguments = ImmutableList.builder();
     boolean trailingComma = false;
+    ImmutableList.Builder<SourcePosition> commaPositions = ImmutableList.builder();
 
     eat(TokenType.OPEN_PAREN);
     while (peekAssignmentOrSpread()) {
@@ -3854,6 +3870,9 @@ public class Parser {
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         Token comma = eat(TokenType.COMMA);
+        if (comma != null) {
+          commaPositions.add(comma.getStart());
+        }
         if (peek(TokenType.CLOSE_PAREN)) {
           recordFeatureUsed(Feature.TRAILING_COMMA_IN_PARAM_LIST);
           if (!config.atLeast8) {
@@ -3864,7 +3883,8 @@ public class Parser {
       }
     }
     eat(TokenType.CLOSE_PAREN);
-    return new ArgumentListTree(getTreeLocation(start), arguments.build(), trailingComma);
+    return new ArgumentListTree(
+        getTreeLocation(start), arguments.build(), trailingComma, commaPositions.build());
   }
 
   /**

@@ -17,18 +17,24 @@
 package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class ArgumentListTree extends ParseTree {
 
   public final ImmutableList<ParseTree> arguments;
   public final boolean hasTrailingComma;
+  public final ImmutableList<SourcePosition> commaPositions;
 
   public ArgumentListTree(
-      SourceRange location, ImmutableList<ParseTree> arguments, boolean hasTrailingComma) {
+      SourceRange location,
+      ImmutableList<ParseTree> arguments,
+      boolean hasTrailingComma,
+      ImmutableList<SourcePosition> commaPositions) {
     super(ParseTreeType.ARGUMENT_LIST, location);
     this.arguments = arguments;
     this.hasTrailingComma = hasTrailingComma;
+    this.commaPositions = commaPositions;
   }
 
 }

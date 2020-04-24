@@ -1650,6 +1650,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("/* blah */");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
   @Test
@@ -1660,34 +1661,194 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(fn).hasType(Token.FUNCTION);
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("// blah");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
+  @Test
+  public void testInlineNonJSDocComments_TrailingAndNonTrailing_ParamList() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn = parse("function f(x /* first */ , /* second */ y ) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node paramListNode = fn.getSecondChild();
+    Node xNode = paramListNode.getFirstChild();
+    Node yNode = paramListNode.getSecondChild();
+
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(yNode.getNonJSDocCommentString()).isEqualTo("/* second */");
+    assertThat(yNode.getNonJSDocComment().isTrailing()).isFalse();
+  }
+
+  @Test
+  public void testInlineNonJSDocTrailingComments_ParamList() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn = parse("function f(x /* first */ , y ) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node paramListNode = fn.getSecondChild();
+    Node xNode = paramListNode.getFirstChild();
+    Node yNode = xNode.getNext();
+
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+    assertThat(yNode.getNonJSDocCommentString()).isEmpty();
+  }
+
+  @Test
+  public void testInlineNonJSDocTrailingComments_formalParamList_SingleParam() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn = parse("function f(x /* first */) {}").getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node paramListNode = fn.getSecondChild();
+    Node xNode = paramListNode.getFirstChild();
+    assertNode(xNode).hasType(Token.NAME);
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+  }
+
+  // Tests that same-line trailing comments attach to the same line param
+  // function f(x, // first
+  //            y // second
+  //            ) {}
+  @Test
+  public void testInlineNonJSDocTrailingComments_ParamList_MultiLine() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn =
+        parse(
+                lines(
+                    "function f(", //
+                    "  x,// first",
+                    "  y // second",
+                    "){}"))
+            .getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node paramListNode = fn.getSecondChild();
+    Node xNode = paramListNode.getFirstChild();
+    Node yNode = paramListNode.getSecondChild();
+
+    assertThat(xNode.getNonJSDocCommentString()).isEqualTo("// first");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+
+    assertThat(yNode.getNonJSDocCommentString()).isEqualTo("// second");
+    assertThat(yNode.getNonJSDocComment().isTrailing()).isTrue();
+  }
+
+  // Tests that same-line trailing comments attach to the same line param
+  // function f(x, /* first */
+  //            y /* second */
+  //            ) {}
+  @Test
+  public void testInlineNonJSDocTrailingComments_ParamList_MultiLine_BlockComments() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn =
+        parse(
+                lines(
+                    "function f(", //
+                    "  x, /* first */",
+                    "  y /* second */",
+                    ") {}"))
+            .getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node paramListNode = fn.getSecondChild();
+    Node xNode = paramListNode.getFirstChild();
+    Node yNode = paramListNode.getSecondChild();
+
+    assertThat(xNode.getNonJSDocCommentString()).isEqualTo("/* first */");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+
+    assertThat(yNode.getNonJSDocCommentString()).isEqualTo("/* second */");
+    assertThat(yNode.getNonJSDocComment().isTrailing()).isTrue();
+  }
+
+  // Tests that same-line trailing comments attach to the same line param
+  // function f(x, /* first */
+  //            y
+  //            ) {}
+  @Test
+  public void testInlineNonJSDocTrailingComments_ParamList_MultiLine_SingleBlockComments() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn =
+        parse(
+                lines(
+                    "function f(x, /* first */", //
+                    "y",
+                    ") {}"))
+            .getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node paramListNode = fn.getSecondChild();
+    Node xNode = paramListNode.getFirstChild();
+    Node yNode = paramListNode.getSecondChild();
+
+    assertThat(xNode.getNonJSDocCommentString()).isEqualTo("/* first */");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isTrue();
+
+    assertThat(yNode.getNonJSDocComment()).isNull();
+  }
+
+  // function f( // blah1
+  //              x,
+  //             // blah2
+  //              y) {}
   @Test
   public void testMultipleInline_LineCommentsAttachment() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node fn = parse("function f( // blah1\n x, // blah2\n y) {}").getFirstChild();
+    Node fn =
+        parse(
+                lines(
+                    "function f(", //
+                    "  // blah1", //
+                    "  x,", //
+                    "  // blah2", //
+                    "  y) {}"))
+            .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("// blah1");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
 
     Node yNode = fn.getSecondChild().getSecondChild();
-    assertThat(yNode.getNonJSDocCommentString()).contains("// blah2");
+    assertThat(yNode.getNonJSDocCommentString()).isEqualTo("// blah2");
+    assertThat(yNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
+  // function f( /* blah1 */ x,
+  //            // blah2
+  //            y) {}
   @Test
   public void testMultipleInline_MixedCommentsAttachment() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
-    Node fn = parse("function f( /* blah1 */ x, // blah2\n y) {}").getFirstChild();
+    Node fn =
+        parse(
+                lines(
+                    "function f(", //
+                    "  /* blah1 */ x,", //
+                    "  // blah2", //
+                    "  y", //
+                    ") {}"))
+            .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */");
+    assertThat(xNode.getNonJSDocComment().isTrailing()).isFalse();
 
     Node yNode = fn.getSecondChild().getSecondChild();
-    assertThat(yNode.getNonJSDocCommentString()).contains("// blah2");
+    assertThat(yNode.getNonJSDocCommentString()).isEqualTo("// blah2");
+    assertThat(yNode.getNonJSDocComment().isTrailing()).isFalse();
   }
 
   @Test
@@ -1699,6 +1860,40 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     Node xNode = fn.getSecondChild().getFirstChild();
     assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */\n// blah");
+  }
+
+  @Test
+  public void testBoth_TrailingAndNonTrailing_NonJSDocCommentsGetAttachedToSameNode_MultiLine() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn =
+        parse(
+                lines(
+                    "function f(", //
+                    "     /* blah1 */",
+                    "     x // blah",
+                    "  ) {}"))
+            .getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node xNode = fn.getSecondChild().getFirstChild();
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */// blah");
+  }
+
+  @Test
+  public void testBoth_TrailingAndNonTrailing_NonJSDocCommentsGetAttachedToSameNode_SingleLine() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    Node fn =
+        parse(
+                lines(
+                    "function f(/* blah1 */ x // blah", //
+                    ") {}"))
+            .getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+
+    Node xNode = fn.getSecondChild().getFirstChild();
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* blah1 */// blah");
   }
 
   @Test
@@ -1729,20 +1924,67 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertThat(xNode.getNonJSDocCommentString()).contains("// nonJSDoc");
   }
 
+  // Tests inline trailing comment of a parameter does not get attached to function body code when
+  // there are no more parameters
   @Test
-  public void testInlineNonJSDocComments_FunctionArgsAndBody() {
+  public void testInlineTrailingNonJSDocComments_FunctionArgsAndBody() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
     Node fn = parse("function f(x /* first */ ) { /* second */ let y;}").getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
-    Node bodyNode = fn.getLastChild();
-    Node yNode = bodyNode.getFirstChild();
+    Node xNode = fn.getSecondChild().getOnlyChild();
+    Node yNode = fn.getLastChild().getFirstChild();
 
-    // TODO(rishipal): Fix this test so that the first comment gets attached to `x` instead of the
-    // function body node
-    assertThat(bodyNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(xNode.getNonJSDocCommentString()).contains("/* first */");
     assertThat(yNode.getNonJSDocCommentString()).contains("/* second */");
+  }
+
+  // Tests inline (non-trailing) comment preserved for single argument
+  @Test
+  public void testInlineNonJSDocComments_FunctionCall() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+
+    Node exprRes = parse("function f(x) {let y;}; f( /* first */  1)").getLastChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+
+    Node call = exprRes.getFirstChild();
+    Node oneArgNode = call.getSecondChild();
+
+    assertThat(oneArgNode.getNonJSDocCommentString()).contains("/* first */");
+  }
+
+  // Tests inline trailing comment does not get attached to the next argument
+  @Test
+  public void testInlineTrailingNonJSDocComments_MultipleArgs() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+
+    Node exprRes = parse("function f(x, y) {}; f( 1 /* first */, 2 );").getLastChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+
+    Node call = exprRes.getFirstChild();
+    Node oneArgNode = call.getSecondChild();
+    Node twoArgNode = oneArgNode.getNext();
+
+    assertThat(oneArgNode.getNonJSDocCommentString()).contains("/* first */");
+    assertThat(twoArgNode.getNonJSDocCommentString()).isEmpty();
+  }
+
+  // Tests inline trailing comment does not get lost when there is no next argument
+  @Test
+  public void testInlineTrailingNonJSDocComments_SingleArgument() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+
+    Node exprRes = parse("function f(x, y) {}; f( 1 /* first */);").getLastChild();
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+
+    Node call = exprRes.getFirstChild();
+    Node oneArgNode = call.getSecondChild();
+
+    assertThat(oneArgNode.getNonJSDocCommentString()).contains("/* first */");
   }
 
   @Test
