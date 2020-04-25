@@ -2717,7 +2717,6 @@ class RemoveUnusedCode implements CompilerPass {
    * this is a global, static, or prototype polyfill.
    */
   private PolyfillInfo createPolyfillInfo(Node call, Scope scope, String name) {
-    checkState(scope.isGlobal());
     checkState(call.getParent().isExprResult());
     // Make the removable and polyfill info.  Add continuations for all arguments.
     RemovableBuilder builder = new RemovableBuilder();

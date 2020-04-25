@@ -2443,7 +2443,10 @@ public final class DefaultPassConfig extends PassConfig {
                     .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
                     .removeUnusedObjectDefinePropertiesDefinitions(
                         options.isRemoveUnusedClassProperties())
-                    .removeUnusedPolyfills(options.rewritePolyfills)
+                    // If we are forcing injection of some library code, don't remove polyfills.
+                    // Otherwise, we might end up removing polyfills the user specifically asked to
+                    // include.
+                    .removeUnusedPolyfills(options.forceLibraryInjection.isEmpty())
                     .assumeGettersArePure(options.getAssumeGettersArePure())
                     .build();
               })
