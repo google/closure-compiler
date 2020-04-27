@@ -8333,4 +8333,31 @@ public final class IntegrationTest extends IntegrationTestCase {
     // library injection not being disabled.
     assertThrows(Exception.class, () -> compile(options, "alert('hi'.startsWith('h'));"));
   }
+
+  @Test
+  public void testArrayOfType() {
+    CompilerOptions options = createCompilerOptions();
+    options.addWarningsGuard(
+        new DiagnosticGroupWarningsGuard(DiagnosticGroups.STRICT_CHECK_TYPES, CheckLevel.WARNING));
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode(
+            "es6.js",
+            lines(
+                "/**",
+                " * @param {...T} var_args",
+                " * @return {!Array<T>}",
+                " * @template T",
+                " */",
+                "Array.of = function(var_args) {};")));
+    externs = externsList.build();
+
+    test(
+        options,
+        lines("const array = Array.of('1', '2', '3');", "if (array[0] - 1) {}"),
+        TypeValidator.INVALID_OPERAND_TYPE);
+  }
 }

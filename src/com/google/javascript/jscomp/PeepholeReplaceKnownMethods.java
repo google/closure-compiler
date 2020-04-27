@@ -25,6 +25,7 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       if (NodeUtil.isGet(callTarget)) {
         if (isASTNormalized() && callTarget.getFirstChild().isQualifiedName()) {
           switch (callTarget.getFirstChild().getQualifiedName()) {
+            case "Array":
+              return tryFoldKnownArrayMethods(subtree, callTarget);
             case "Math":
               return tryFoldKnownMathMethods(subtree, callTarget);
             default: // fall out
@@ -87,6 +90,23 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
 
     return subtree;
+  }
+
+  /** Tries to evaluate a method on the Array object */
+  private Node tryFoldKnownArrayMethods(Node subtree, Node callTarget) {
+    checkArgument(subtree.isCall());
+
+    if (!callTarget.getFirstChild().getNext().getString().equals("of")) {
+      return subtree;
+    }
+
+    subtree.removeFirstChild();
+
+    Node arraylit = new Node(Token.ARRAYLIT);
+    arraylit.addChildrenToBack(subtree.removeChildren());
+    subtree.replaceWith(arraylit);
+    reportChangeToEnclosingScope(arraylit);
+    return arraylit;
   }
 
   /** Tries to evaluate a method on the Math object */
