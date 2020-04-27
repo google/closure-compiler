@@ -1795,6 +1795,14 @@ Atomics.isLockFree = function(size) {};
 Atomics.load = function(typedArray, index) {};
 
 /**
+ * @param {!Int32Array} typedArray
+ * @param {number} index
+ * @param {number} count
+ * @return {number}
+ */
+Atomics.notify = function(typedArray, index, count) {};
+
+/**
  * @param {!TypedArray} typedArray
  * @param {number} index
  * @param {number} value
