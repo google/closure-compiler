@@ -279,6 +279,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testTrailingCommaNewNode() {
+    Node call =
+        parse("new f(a, b,);") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // NEW
+    assertNode(call).hasType(Token.NEW);
+    assertNode(call).hasTrailingComma();
+  }
+
+  @Test
   public void testWhile() {
     parse("while(1) { break; }");
   }

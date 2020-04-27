@@ -1995,6 +1995,7 @@ class IRFactory {
       Node node = newNode(
           Token.NEW,
           transform(exprNode.operand));
+      node.setTrailingComma(exprNode.hasTrailingComma);
       if (exprNode.arguments != null) {
         for (ParseTree arg : exprNode.arguments.arguments) {
           node.addChildToBack(transform(arg));

@@ -3829,7 +3829,11 @@ public class Parser {
       if (peek(TokenType.OPEN_PAREN)) {
         arguments = parseArguments();
       }
-      return new NewExpressionTree(getTreeLocation(start), operand, arguments);
+      return new NewExpressionTree(
+          getTreeLocation(start),
+          operand,
+          arguments,
+          arguments != null && arguments.hasTrailingComma);
     }
   }
 
