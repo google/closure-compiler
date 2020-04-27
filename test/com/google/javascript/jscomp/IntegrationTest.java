@@ -8319,6 +8319,34 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testIsolatePolyfills_noAddedCodeForUnusedSymbol() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.STABLE_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setRewritePolyfills(true);
+    options.setIsolatePolyfills(true);
+    options.setGeneratePseudoNames(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "testExterns.js",
+                new TestExternsBuilder().addArray().addString().addObject().build()));
+
+    // TODO(b/155089778): renable this test. It's producing a lot of unnecessary output
+    // because RemoveUnusedCode doesn't remove the native Symbol test in the polyfill.js library.
+    // test(
+    //     options,
+    //     "const unusedOne = Symbol('bar');",
+    //     "var $$jscomp$propertyToPolyfillSymbol$$={};");
+    // The call `Symbol('bar')` is actually removed, but the Symbol polyfill is not.
+    compile(options, "const unusedOne = Symbol('bar');");
+    assertThat(lastCompiler.getCurrentJsSource()).contains("jscomp_symbol_");
+    assertThat(lastCompiler.getCurrentJsSource()).doesNotContain("bar");
+  }
+
+  @Test
   public void testIsolatePolyfills_noPolyfillsUsed() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
