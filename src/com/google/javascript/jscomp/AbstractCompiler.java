@@ -17,13 +17,16 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.MustBeClosed;
+import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.modules.ModuleMap;
@@ -56,13 +59,17 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   protected Map<String, Object> annotationMap = new HashMap<>();
 
-  /** Will be called before each pass runs. */
-  abstract void beforePass(String passName);
+  private int currentPassIndex = -1;
 
-  /**
-   * Will be called after each pass finishes.
-   */
-  abstract void afterPass(String passName);
+  /** Will be called before each pass runs. */
+  @OverridingMethodsMustInvokeSuper
+  void beforePass(String passName) {
+    this.currentPassIndex++;
+  }
+
+  /** Will be called after each pass finishes. */
+  @OverridingMethodsMustInvokeSuper
+  void afterPass(String passName) {}
 
   private LifeCycleStage stage = LifeCycleStage.RAW;
 
@@ -672,15 +679,41 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   public abstract void setModuleMap(ModuleMap moduleMap);
 
+  /** Provides logging access to a file with the specified name. */
   @MustBeClosed
-  public LogFile createOrReopenLog(Class<?> owner, String name) {
+  public final LogFile createOrReopenLog(
+      Class<?> owner, String firstNamePart, String... restNameParts) {
+    checkState(this.currentPassIndex >= 0);
+
     @Nullable Path dir = getOptions().getDebugLogDirectory();
     if (dir == null) {
       return LogFile.createNoOp();
     }
 
-    Path file = Paths.get(dir.toString(), owner.getSimpleName(), name);
+    Path relativeParts = Paths.get(firstNamePart, restNameParts);
+    Path file = dir.resolve(owner.getSimpleName()).resolve(relativeParts);
     return LogFile.createOrReopen(file);
+  }
+
+  /**
+   * Provides logging access to a file with the specified name, differentiated by the index of the
+   * current pass.
+   *
+   * <p>Indexing helps in separating logs from different pass loops. The filename pattern is
+   * "[debug_log_directory]/[owner_name]/([name_part[i]]/){0,n-1}[pass_index]_[name_part[n]]".
+   */
+  @MustBeClosed
+  public final LogFile createOrReopenIndexedLog(
+      Class<?> owner, String firstNamePart, String... restNameParts) {
+    String index = Strings.padStart(Integer.toString(this.currentPassIndex), 3, '0');
+    int length = restNameParts.length;
+    if (length == 0) {
+      firstNamePart = index + "_" + firstNamePart;
+    } else {
+      restNameParts[length - 1] = index + "_" + restNameParts[length - 1];
+    }
+
+    return this.createOrReopenLog(owner, firstNamePart, restNameParts);
   }
 
   /** Returns the InputId of the synthetic code input (even if it is not initialized yet). */

@@ -46,6 +46,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.deps.WebpackModuleResolver;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
@@ -1061,12 +1062,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           .setFeatureSet(ES8_MODULES)
           .build();
 
-  private void maybeRunValidityCheck() {
-    if (options.devMode == DevMode.EVERY_PASS) {
-      runValidityCheck();
-    }
-  }
-
   private void runValidityCheck() {
     validityCheck.create(this).process(externsRoot, jsRoot);
   }
@@ -1087,50 +1082,42 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private Tracer currentTracer = null;
-  private String currentPassName = null;
-
-  /**
-   * Marks the beginning of a pass.
-   */
-  void startPass(String passName) {
-    checkState(currentTracer == null);
-    currentPassName = passName;
-    currentTracer = newTracer(passName);
-    beforePass(passName);
-  }
-
-  /**
-   * Marks the end of a pass.
-   */
-  void endPass(String passName) {
-    checkState(currentTracer != null, "Tracer should not be null at the end of a pass.");
-    stopTracer(currentTracer, currentPassName);
-    afterPass(passName);
-    currentPassName = null;
-    currentTracer = null;
-
-    maybeRunValidityCheck();
-  }
 
   @Override
   final void beforePass(String passName) {
-    // does nothing for now
+    super.beforePass(passName);
   }
 
   @Override
   final void afterPass(String passName) {
-    if (options.printSourceAfterEachPass) {
-      String currentJsSource = getCurrentJsSource();
-      if (!currentJsSource.equals(this.lastJsSource)) {
+    super.afterPass(passName);
+    this.maybePrintSourceAfterEachPass(passName);
+  }
+
+  private void maybePrintSourceAfterEachPass(String passName) {
+    if (!options.printSourceAfterEachPass) {
+      return;
+    }
+
+    String currentJsSource = getCurrentJsSource();
+    if (currentJsSource.equals(this.lastJsSource)) {
+      return;
+    }
+
+    if (this.getOptions().getDebugLogDirectory() == null) {
         System.err.println();
         System.err.println("// " + passName + " yields:");
         System.err.println("// ************************************");
         System.err.println(currentJsSource);
         System.err.println("// ************************************");
-        lastJsSource = currentJsSource;
+    } else {
+      try (LogFile log =
+          this.createOrReopenIndexedLog(this.getClass(), "src_after_pass", passName)) {
+        log.log(currentJsSource);
       }
     }
+
+    this.lastJsSource = currentJsSource;
   }
 
   final String getCurrentJsSource() {
@@ -1494,7 +1481,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.scopeCreator = creator;
   }
 
-  @SuppressWarnings("unchecked")
   DefaultPassConfig ensureDefaultPassConfig() {
     PassConfig passes = getPassConfig().getBasePassConfig();
     checkState(
