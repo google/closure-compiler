@@ -339,11 +339,6 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
-  // Keep track of the number of times the process() method is called.
-  // This is static, because we don't want to care whether process() is called
-  // multiple times on one object, or once on multiple objects.
-  private static int numProcessCalls = 0;
-
   /**
    * Traverses the root, removing all unused variables. Multiple traversals
    * may occur to ensure all unused variables are removed.
@@ -355,10 +350,7 @@ class RemoveUnusedCode implements CompilerPass {
       pinnedPropertyNames.addAll(compiler.getExternProperties());
     }
 
-    // Create a separate log for each time process() is called.
-    numProcessCalls++;
-    final String removalsLogFileName = "removals-" + numProcessCalls + ".log";
-    try (LogFile logFile = compiler.createOrReopenLog(this.getClass(), removalsLogFileName)) {
+    try (LogFile logFile = compiler.createOrReopenIndexedLog(this.getClass(), "removals.log")) {
       removalLog = logFile; // avoid passing the log file through a bunch of methods
       traverseAndRemoveUnusedReferences(root);
     } finally {
