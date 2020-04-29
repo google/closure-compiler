@@ -381,6 +381,13 @@ class PeepholeMinimizeConditions
    * and the potential replacement are in the same exception handler.
    */
   boolean areMatchingExits(Node nodeThis, Node nodeThat) {
+    if (!isASTNormalized()
+        && (nodeThis.isThrow() || nodeThis.isReturn())
+        && nodeThis.hasChildren()) {
+      // if the ast isn't normalized "return a" or "throw a" may not mean the same thing in
+      // different blocks.
+      return false;
+    }
     return nodeThis.isEquivalentTo(nodeThat)
         && (!isExceptionPossible(nodeThis)
             || getExceptionHandler(nodeThis) == getExceptionHandler(nodeThat));

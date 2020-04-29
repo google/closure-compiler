@@ -151,6 +151,23 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFunctionReturnScoped() {
+    testSame(
+        lines(
+            "function f(a) {",
+            "  if (a) {",
+            "    const a = Math.random();",
+            "",
+            "    if (a < 0.5) {",
+            "        return a;",
+            "    }",
+            "  }",
+            "",
+            "  return a;",
+            "}"));
+  }
+
+  @Test
   public void testWhileContinueOptimization() {
     fold("while(true){if(x)continue; x=3; continue; }",
          "while(true)if(x);else x=3");

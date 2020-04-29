@@ -133,6 +133,16 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
          "function f(){}");
   }
 
+  /** Try to minimize returns */
+  @Test
+  public void testFoldReturnsIntegrationWithScoped() {
+    late = true;
+    disableNormalize();
+
+    // if-then-else duplicate statement removal handles this case:
+    testSame("function test(a) {if (a) {const a = Math.random();if(a) {return a;}} return a; }");
+  }
+
   @Test
   public void testBug1059649() {
     // ensure that folding blocks with a single var node doesn't explode

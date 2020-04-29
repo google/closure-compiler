@@ -238,6 +238,15 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFoldReturnsIntegration2() {
+    late = true;
+    disableNormalize();
+
+    // if-then-else duplicate statement removal handles this case:
+    testSame("function test(a) {if (a) {const a = Math.random();if(a) {return a;}} return a; }");
+  }
+
+  @Test
   public void testDontRemoveDuplicateStatementsWithoutNormalization() {
     // In the following test case, we can't remove the duplicate "alert(x);" lines since each "x"
     // refers to a different variable.
@@ -517,6 +526,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testSubsituteReturn() {
+    late = false;
+    enableNormalize();
 
     fold("function f() { while(x) { return }}",
          "function f() { while(x) { break }}");
@@ -589,6 +600,8 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testSubsituteBreakForThrow() {
+    late = false;
+    enableNormalize();
 
     foldSame("function f() { while(x) { throw Error }}");
 
@@ -664,6 +677,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testRemoveDuplicateReturn() {
+    late = false;
+    enableNormalize();
+
     fold("function f() { return; }",
          "function f(){}");
     foldSame("function f() { return a; }");
@@ -693,6 +709,9 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   @Test
   public void testRemoveDuplicateThrow() {
+    late = false;
+    enableNormalize();
+
     foldSame("function f() { throw a; }");
     fold("function f() { if (x) { throw a } throw a; }",
          "function f() { if (x) {} throw a; }");
