@@ -2166,6 +2166,64 @@ RTCTransportStats.prototype.selectedCandidatePairChanges;
 
 
 /**
+ * @see https://w3c.github.io/webrtc-stats/#dom-rtcmediasourcestats
+ * @interface
+ * @extends {RTCStats}
+ */
+function RTCMediaSourceStats() {}
+
+/** @const {string} */
+RTCMediaSourceStats.prototype.trackIdentifier;
+
+/** @const {string} */
+RTCMediaSourceStats.prototype.kind;
+
+/**
+ * @see https://w3c.github.io/webrtc-stats/#dom-rtcvideosourcestats
+ * @interface
+ * @extends {RTCMediaSourceStats}
+ */
+function RTCVideoSourceStats() {}
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.width;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.height;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.bitDepth;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.frames;
+
+/** @const {number} */
+RTCVideoSourceStats.prototype.framesPerSecond;
+
+/**
+ * @see https://w3c.github.io/webrtc-stats/#dom-rtcaudiosourcestats
+ * @interface
+ * @extends {RTCMediaSourceStats}
+ */
+function RTCAudioSourceStats() {}
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.audioLevel;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.totalAudioEnergy;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.totalSamplesDuration;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.echoReturnLoss;
+
+/** @const {number} */
+RTCAudioSourceStats.prototype.echoReturnLossEnhancement;
+
+
+/**
  * @interface
  * @extends {Iterable<!Array<string|!RTCStats>>}
  * @see https://w3c.github.io/webrtc-pc/#rtcstatsreport-object
