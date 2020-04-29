@@ -29,7 +29,8 @@ public final class IjsErrors {
   public static final DiagnosticType CONFLICTING_IJS_FILE =
       DiagnosticType.warning(
           "JSC_CONFLICTING_IJS_FILE",
-          "Found --ijs file in a conflict with --js or --weakdep file.\n"
+          "Found --ijs file in a conflict with --js or --weakdep file. This usually means the same"
+              + " file appears both in the srcs and the transitive deps of a build target.\n"
               + "File 1: {0}\n"
               + "File 2: {1}");
 }
