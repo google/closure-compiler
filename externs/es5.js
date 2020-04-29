@@ -92,28 +92,32 @@ ObjectPropertyDescriptor.prototype.configurable;
 
 /**
  * @param {?Object} proto
- * @param {?Object=} opt_properties  A map of ObjectPropertyDescriptors.
+ * @param {?Object<string|symbol, !ObjectPropertyDescriptor<?>>=} properties
+ *     A map of ObjectPropertyDescriptors.
  * @return {!Object}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/create
  */
-Object.create = function(proto, opt_properties) {};
+Object.create = function(proto, properties) {};
 
 
 /**
- * @param {!Object} obj
+ * @template T
+ * @param {T} obj
  * @param {string|symbol} prop
- * @param {!Object} descriptor A ObjectPropertyDescriptor.
- * @return {!Object}
+ * @param {!ObjectPropertyDescriptor<T>} descriptor A ObjectPropertyDescriptor.
+ * @return {T}
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/defineProperty
  */
 Object.defineProperty = function(obj, prop, descriptor) {};
 
 
 /**
- * @param {!Object} obj
- * @param {!Object} props A map of ObjectPropertyDescriptors.
- * @return {!Object}
+ * @template T
+ * @param {T} obj
+ * @param {!Object<string|symbol, !ObjectPropertyDescriptor<T>>} props A map of
+ *     ObjectPropertyDescriptors.
+ * @return {T}
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/defineProperties
  */
 Object.defineProperties = function(obj, props) {};

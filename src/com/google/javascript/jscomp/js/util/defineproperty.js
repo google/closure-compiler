@@ -29,21 +29,27 @@
  * since we can't make them non-enumerable and this messes up peoples' for
  * loops.  Beyond this, we simply assign values and not worry
  * about enumerability or writeability.
- * @param {?} target
- * @param {string} property
- * @param {?} descriptor
+ *
+ * @type {(typeof Object.defineProperty)}
  * @suppress {reportUnknownTypes}
  */
 $jscomp.defineProperty =
     $jscomp.ASSUME_ES5 || typeof Object.defineProperties == 'function' ?
     Object.defineProperty :
     function(target, property, descriptor) {
-      descriptor = /** @type {!ObjectPropertyDescriptor} */ (descriptor);
-      // NOTE: This is currently never called with a descriptor outside
-      // the control of the compiler.  If we ever decide to polyfill either
-      // Object.defineProperty or Reflect.defineProperty for ES3, we should
-      // explicitly check for `get` or `set` on the descriptor and throw a
-      // TypeError, since it's impossible to properly polyfill it.
-      if (target == Array.prototype || target == Object.prototype) return;
+      if (target == Array.prototype ||
+          // b/155133192
+          /** @type {?} */ (target) == Object.prototype) {
+        return target;
+      }
+
+      /**
+       * NOTE: This is currently never called with a descriptor outside
+       * the control of the compiler.  If we ever decide to polyfill either
+       * Object.defineProperty or Reflect.defineProperty for ES3, we should
+       * explicitly check for `get` or `set` on the descriptor and throw a
+       * TypeError, since it's impossible to properly polyfill it.
+       */
       target[property] = descriptor.value;
+      return target;
     };
