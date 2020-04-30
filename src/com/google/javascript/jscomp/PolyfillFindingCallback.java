@@ -186,7 +186,8 @@ final class PolyfillFindingCallback {
    * Promise.resolve('ok');}
    */
   void traverseExcludingGuarded(Node root, Consumer<PolyfillUsage> polyfillConsumer) {
-    NodeTraversal.traverse(compiler, root, new Traverser(this.compiler, polyfillConsumer, false));
+    NodeTraversal.traverse(
+        compiler, root, new Traverser(this.compiler, polyfillConsumer, Guard.ONLY_UNGUARDED));
   }
 
   /**
@@ -196,19 +197,49 @@ final class PolyfillFindingCallback {
    * Promise.resolve('ok');}
    */
   void traverseIncludingGuarded(Node root, Consumer<PolyfillUsage> polyfillConsumer) {
-    NodeTraversal.traverse(compiler, root, new Traverser(this.compiler, polyfillConsumer, true));
+    NodeTraversal.traverse(
+        compiler, root, new Traverser(this.compiler, polyfillConsumer, Guard.ALL));
   }
+
+  /**
+   * Passes all polyfill usages found, in postorder, to the given polyfillConsumer
+   *
+   * <p>Only includes polyfill usages that are behind a guard, like {@code if (Promise) return
+   * Promise.resolve('ok');}
+   */
+  void traverseOnlyGuarded(Node root, Consumer<PolyfillUsage> polyfillConsumer) {
+    NodeTraversal.traverse(
+        compiler, root, new Traverser(this.compiler, polyfillConsumer, Guard.ONLY_GUARDED));
+  }
+
+  private enum Guard {
+    ONLY_GUARDED,
+    ONLY_UNGUARDED,
+    ALL;
+
+    boolean shouldInclude(boolean isGuarded) {
+      switch (this) {
+        case ALL:
+          return true;
+        case ONLY_GUARDED:
+          return isGuarded;
+        case ONLY_UNGUARDED:
+          return !isGuarded;
+      }
+      throw new AssertionError();
+    }
+  };
 
   private class Traverser extends GuardedCallback<String> {
 
     private final Consumer<PolyfillUsage> polyfillConsumer;
     // Whether to emit usages like Promise in `if (Promise) return Promise.resolve('ok');}`
-    private final boolean includeGuardedUsages;
+    private final Guard includeGuardedUsages;
 
     Traverser(
         AbstractCompiler compiler,
         Consumer<PolyfillUsage> polyfillConsumer,
-        boolean includeGuardedUsages) {
+        Guard includeGuardedUsages) {
       super(compiler);
       this.polyfillConsumer = polyfillConsumer;
       this.includeGuardedUsages = includeGuardedUsages;
@@ -238,7 +269,7 @@ final class PolyfillFindingCallback {
           polyfill = null;
         }
 
-        if (polyfill != null && (includeGuardedUsages || !isGuarded(name))) {
+        if (polyfill != null && includeGuardedUsages.shouldInclude(isGuarded(name))) {
           emit(polyfill, node, name, isExplicitGlobal);
           // Bail out because isGetProp overlaps below
           return;
@@ -249,7 +280,7 @@ final class PolyfillFindingCallback {
       if (node.isGetProp()) {
         String methodName = node.getLastChild().getString();
         Collection<Polyfill> methods = polyfills.methods.get(methodName);
-        if (!methods.isEmpty() && (includeGuardedUsages || !isGuarded("." + methodName))) {
+        if (!methods.isEmpty() && includeGuardedUsages.shouldInclude(isGuarded("." + methodName))) {
           for (Polyfill polyfill : methods) {
             emit(polyfill, node, methodName, /* rootIsKnownGlobal= */ false);
           }

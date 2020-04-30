@@ -26,7 +26,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
+import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
 import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -141,6 +144,10 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Multimap<String, PolyfillInfo> polyfills = HashMultimap.create();
 
+  private final Set<Node> guardedUsages = new HashSet<>();
+
+  private final Polyfills polyfillsFromTable;
+
   private final SyntacticScopeCreator scopeCreator;
 
   private final boolean removeUnusedPrototypeProperties;
@@ -168,6 +175,9 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
     this.removeUnusedPolyfills = builder.removeUnusedPolyfills;
+    this.polyfillsFromTable =
+        Polyfills.fromTable(
+            ResourceLoader.loadTextResource(RemoveUnusedCode.class, "js/polyfills.txt"));
     this.assumeGettersArePure = builder.assumeGettersArePure;
 
     // All Vars that are completely unremovable will share this VarInfo instance.
@@ -369,6 +379,11 @@ class RemoveUnusedCode implements CompilerPass {
       scope.declare(
           NodeUtil.JSC_PROPERTY_NAME_FN, /* no declaration node */ null, /* no input */ null);
     }
+
+    // Accumulate guarded usages of polyfills before removal starts.
+    new PolyfillFindingCallback(compiler, polyfillsFromTable)
+        .traverseOnlyGuarded(root, this::storePolyfill);
+
     worklist.add(new Continuation(root, scope));
     while (!worklist.isEmpty()) {
       Continuation continuation = worklist.remove();
@@ -380,6 +395,10 @@ class RemoveUnusedCode implements CompilerPass {
     for (Scope fparamScope : allFunctionParamScopes) {
       removeUnreferencedFunctionArgs(fparamScope);
     }
+  }
+
+  private void storePolyfill(PolyfillUsage polyfillUsage) {
+    this.guardedUsages.add(polyfillUsage.node());
   }
 
   private void removeIndependentlyRemovableProperties() {
@@ -2748,13 +2767,10 @@ class RemoveUnusedCode implements CompilerPass {
    * three name components. The definition can be removed once it is found that there are no
    * references to it.
    *
-   * <p>All references to polyfill definitions, even those guarded by existence or truthiness checks
-   * (such as {@code if (Promise) return Promise.resolve('ok');}), prevent removal of the polyfill
-   * definition. As part of b/120486392, it might useful to make this pass distinguish between
-   * guarded and unguarded references to polyfills. Then a polyfill definition would be removable if
-   * there are no <i>unguarded</i> references to it. Currently this logic lives in {@link
-   * RewritePolyfills}, which runs before any dead-code elimination, and attempts to only inject
-   * polyfills if they have any unguarded references.
+   * <p>References are ignored if they are "guarded". This allows removing, e.g, the Promise
+   * polyfill if it is only referenced in `if (typeof Promise === 'function') { use(Promise); }`.
+   * Note that a guarded reference to a polyfill does not guarantee its removal, either. Polyfills
+   * may have nonguarded references as well.
    *
    * <p>Determining whether a node is a reference depends on the type of polyfill. When type
    * information is available, the type of the expected owner (i.e. the global object for global
@@ -2784,7 +2800,7 @@ class RemoveUnusedCode implements CompilerPass {
    * the future to eliminate the possibility of incorrect removals, at the cost of more incorrect
    * retentions.
    */
-  private abstract static class PolyfillInfo {
+  private abstract class PolyfillInfo {
     /** The {@link Polyfill} instance corresponding to the polyfill's definition. */
     final Polyfill removable;
     /** The rightmost component of the polyfill's qualified name (does not contain a dot). */
@@ -2803,7 +2819,7 @@ class RemoveUnusedCode implements CompilerPass {
      * polyfill as referenced and therefore not removable.
      */
     void considerPossibleReference(Node n) {
-      if (isRemovable) {
+      if (isRemovable && !guardedUsages.contains(n)) {
         considerPossibleReferenceInternal(n);
         if (!isRemovable) {
           removable.applyContinuations();

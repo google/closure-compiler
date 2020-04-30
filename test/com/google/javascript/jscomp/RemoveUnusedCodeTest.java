@@ -2773,6 +2773,151 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemoveUnusedPolyfills_guardedGlobals() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(
+                    JSCOMP_POLYFILL,
+                    "/** @constructor */ function Map() {}",
+                    "/** @constructor */ function Promise() {}")
+                .build());
+
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "if (typeof Map !== 'undefined') {",
+                "  console.log(Map);",
+                "}")),
+        expected(
+            lines(
+                "if (typeof Map !== 'undefined') {", //
+                "  console.log(Map);",
+                "}")));
+
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "if (Map) {",
+                "  console.log(Map);",
+                "}")),
+        expected(
+            lines(
+                "if (Map) {", //
+                "  console.log(Map);",
+                "}")));
+
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "if (typeof Map !== 'undefined') {",
+                "  console.log(Map);",
+                "  console.log(Promise);",
+                "}")),
+        expected(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');", //
+                "if (typeof Map !== 'undefined') {", //
+                "  console.log(Map);",
+                "  console.log(Promise);",
+                "}")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_guardedStatics() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addArray()
+                .addPromise()
+                .addExtra(JSCOMP_POLYFILL)
+                .build());
+
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
+                "if (typeof Array.from !== 'undefined') {",
+                "  console.log(Array.from);",
+                "}")),
+        expected(
+            lines(
+                "if (typeof Array.from !== 'undefined') {", //
+                "console.log(Array.from);",
+                "}")));
+
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Promise.allSettled', function() {}, 'es8', 'es3');",
+                "var a;",
+                "if (Promise && Promise.allSettled) {",
+                "  Promise.allSettled(a);",
+                "}")),
+        expected(
+            lines(
+                "var a;",
+                "if (Promise && Promise.allSettled) {",
+                "  Promise.allSettled(a);",
+                "}")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_guardedMethods() {
+    Externs externs =
+        externs(new TestExternsBuilder().addConsole().addArray().addExtra(JSCOMP_POLYFILL).build());
+
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Array.prototype.find', function() {}, 'es6', 'es3');", //
+                "const arr = [];",
+                "if (typeof arr.find !== 'undefined') {",
+                "  console.log(arr.find(0));",
+                "}")),
+        expected(
+            lines(
+                "const arr = [];",
+                "if (typeof arr.find !== 'undefined') {",
+                "  console.log(arr.find(0));",
+                "}")));
+  }
+
+  @Test
+  public void testRemoveUnusedPolyfills_unguardedAndGuarded() {
+    Externs externs =
+        externs(
+            new TestExternsBuilder()
+                .addConsole()
+                .addExtra(JSCOMP_POLYFILL, "/** @constructor */ function Map() {}")
+                .build());
+
+    // Map is not removed because it has an unguarded usage.
+    testSame(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');", //
+                "if (typeof Map == 'undefined') {",
+                "  console.log(Map);",
+                "}",
+                "console.log(Map);")));
+  }
+
+  @Test
   public void testNoCatchBinding() {
     testSame("function doNothing() {} try { doNothing(); } catch { doNothing(); }");
     testSame("function doNothing() {} try { throw 0; } catch { doNothing(); }");
