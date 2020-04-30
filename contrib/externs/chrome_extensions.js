@@ -6935,6 +6935,31 @@ chrome.system.display.clearTouchCalibration = function(id) {};
  */
 chrome.system.display.onDisplayChanged;
 
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/system_memory
+ */
+chrome.system.memory = {};
+
+/**
+ * Get physical memory information.
+ * @param {function(!chrome.system.memory.MemoryInfo)} callback
+ * @return {undefined}
+ */
+chrome.system.memory.getInfo = function(callback) {};
+
+/**
+ * @constructor
+ */
+chrome.system.memory.MemoryInfo = function() {};
+
+
+/** @type {number} */
+chrome.system.memory.MemoryInfo.prototype.capacity;
+
+
+/** @type {number} */
+chrome.system.memory.MemoryInfo.prototype.availableCapacity;
 
 /**
  * @const
