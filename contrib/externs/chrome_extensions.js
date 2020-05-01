@@ -2697,8 +2697,63 @@ chrome.runtime.sendNativeMessage = function(
 
 
 /**
- *
- * @param {function(!Object)} callback
+ * The operating system chrome is running on.
+ * @see https://developer.chrome.com/apps/runtime#type-PlatformOs
+ * @enum {string}
+ */
+chrome.runtime.PlatformOs = {
+  ANDROID: '',
+  CROS: '',
+  LINUX: '',
+  MAC: '',
+  OPENBSD: '',
+  WIN: '',
+};
+
+
+/**
+ * The machine's processor architecture.
+ * @see https://developer.chrome.com/apps/runtime#type-PlatformArch
+ * @enum {string}
+ */
+chrome.runtime.PlatformArch = {
+  ARM: '',
+  ARM64: '',
+  MIPS: '',
+  MIPS64: '',
+  X86_32: '',
+  X86_64: '',
+};
+
+
+/**
+ * The native client architecture.
+ * @see https://developer.chrome.com/apps/runtime#type-PlatformNaclArch
+ * @enum {string}
+ */
+chrome.runtime.PlatformNaclArch = {
+  ARM: '',
+  MIPS: '',
+  MIPS64: '',
+  X86_32: '',
+  X86_64: '',
+};
+
+
+/**
+ * @see https://developer.chrome.com/apps/runtime#type-PlatformInfo
+ * @typedef {{
+ *   os: !chrome.runtime.PlatformOs,
+ *   arch: !chrome.runtime.PlatformArch,
+ *   nacl_arch: !chrome.runtime.PlatformNaclArch,
+ * }}
+ */
+chrome.runtime.PlatformInfo;
+
+
+/**
+ * @see https://developer.chrome.com/extensions/runtime#type-PlatformInfo
+ * @param {function(!chrome.runtime.PlatformInfo)} callback
  * @return {undefined}
  */
 chrome.runtime.getPlatformInfo = function(callback) {};
