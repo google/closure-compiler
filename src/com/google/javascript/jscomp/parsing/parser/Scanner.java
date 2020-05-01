@@ -808,6 +808,11 @@ public class Scanner {
         if (value.charAt(escapeStart + 2) != '{') {
           // Simple escape with exactly four hex digits: \\uXXXX
           escapeEnd = escapeStart + 6;
+          // TODO(b/155480859): Don't trust String#substring to throw on out of bounds. J2CL
+          // implements it incorrectly.
+          if (escapeEnd > value.length()) {
+            return null;
+          }
           hexDigits = value.substring(escapeStart + 2, escapeEnd);
         } else {
           // Escape with braces can have any number of hex digits: \\u{XXXXXXX}
@@ -821,7 +826,7 @@ public class Scanner {
           hexDigits = value.substring(escapeStart + 3, escapeEnd);
           escapeEnd++;
         }
-        // TODO(mattloring): Allow code points greater than the size of a char
+        // TODO(mattloring): Allow code points >= 0xFFFF (greater than the size of a char).
         char ch = (char) Integer.parseInt(hexDigits, 0x10);
         if (!isIdentifierPart(ch)) {
           return null;
@@ -836,38 +841,49 @@ public class Scanner {
 
   @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isIdentifierStart(char ch) {
-    // Most code is written in pure ASCII create a fast path here.
+    // Most code is written in pure ASCII, so create a fast path here.
     if (ch <= 127) {
       // Intentionally avoiding short circuiting behavior of "||" and "&&".
       // This minimizes branches in this code which minimizes branch prediction misses.
       return ((ch >= 'A' & ch <= 'Z') | (ch >= 'a' & ch <= 'z') | (ch == '_' | ch == '$'));
     }
 
-    // Workaround b/36459436
-    // When running under GWT, Character.isLetter only handles ASCII
-    // Angular relies heavily on U+0275 (Latin Barred O) and U+0394 (Greek Capital Letter Delta).
-    return ch == 0x0275
-        || ch == 0x0394
-        // TODO: UnicodeLetter also includes Letter Number (NI)
-        || Character.isLetter(ch);
+    // Handle non-ASCII characters.
+    // TODO(tjgq): This should include all characters with the ID_Start property.
+    if (Character.isLetter(ch)) {
+      return true;
+    }
+
+    // Workaround for b/36459436.
+    // When running under GWT/J2CL, Character.isLetter only handles ASCII.
+    // Angular relies heavily on Latin Small Letter Barred O and Greek Capital Letter Delta.
+    // Greek letters are occasionally found in math code.
+    // Latin letters are found in our own tests.
+    return (ch >= 0x00C0 & ch <= 0x00D6) // Latin letters
+        // 0x00D7 = multiplication sign, not a letter
+        | (ch >= 0x00D8 & ch <= 0x00F6) // Latin letters
+        // 0x00F7 = division sign, not a letter
+        | (ch >= 0x00F8 & ch <= 0x00FF) // Latin letters
+        | ch == 0x0275 // Latin Barred O
+        | (ch >= 0x0391 & ch <= 0x03A1) // Greek uppercase letters
+        // 0x03A2 = unassigned
+        | (ch >= 0x03A3 & ch <= 0x03A9) // Remaining Greek uppercase letters
+        | (ch >= 0x03B1 & ch <= 0x03C9); // Greek lowercase letters
   }
 
   @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isIdentifierPart(char ch) {
-    // Most code is written in pure ASCII create a fast path here.
+    // Most code is written in pure ASCII, so create a fast path here.
     if (ch <= 127) {
       return ((ch >= 'A' & ch <= 'Z')
           | (ch >= 'a' & ch <= 'z')
           | (ch >= '0' & ch <= '9')
-          | (ch == '_' | ch == '$')); // _ or $
+          | (ch == '_' | ch == '$'));
     }
-    // TODO: identifier part character classes
-    // CombiningMark
-    //   Non-Spacing mark (Mn)
-    //   Combining spacing mark(Mc)
-    // Connector punctuation (Pc)
-    // Zero Width Non-Joiner
-    // Zero Width Joiner
+
+    // Handle non-ASCII characters.
+    // TODO(tjgq): This should include all characters with the ID_Continue property, plus
+    // Zero Width Non-Joiner and Zero Width Joiner.
     return isIdentifierStart(ch) || Character.isDigit(ch);
   }
 

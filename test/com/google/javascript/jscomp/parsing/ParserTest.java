@@ -4310,6 +4310,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testUnicodeInIdentifiers() {
+    parse("var à");
+    parse("var cosθ");
+    parse("if(true){foo=α}");
+    parse("if(true){foo=Δ}else bar()");
+  }
+
+  @Test
+  public void testUnicodeEscapeInIdentifiers() {
     parse("var \\u00fb");
     parse("var \\u00fbtest\\u00fb");
     parse("Js\\u00C7ompiler");
@@ -4325,7 +4333,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var \\u0043test\\u{0043}");
     parse("var \\u{0043}test\\u0043");
     parse("Js\\u{0043}ompiler");
-    parse("Js\\u{765}ompiler");
+    parse("Js\\u{275}ompiler");
     parse("var \\u0043;{43}");
   }
 
@@ -6243,15 +6251,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   private static String requiresLanguageModeMessage(LanguageMode languageMode, Feature feature) {
-    return String.format(
-        "This language feature is only supported for %s mode or better: %s",
-        languageMode,
-        feature);
+    return "This language feature is only supported for "
+        + languageMode
+        + " mode or better: "
+        + feature;
   }
 
   private static String unsupportedFeatureMessage(Feature feature) {
-    return String.format(
-        "This language feature is not currently supported by the compiler: %s", feature);
+    return "This language feature is not currently supported by the compiler: " + feature;
   }
 
   private static Node script(Node stmt) {
