@@ -2887,6 +2887,28 @@ public final class TypeInferenceTest {
     assertType(getType("foo")).isString();
   }
 
+  @Test
+  public void testShneTightensUnknownOperandOnLhs() {
+    assuming("foo", NUMBER_TYPE);
+    assuming("bar", UNKNOWN_TYPE);
+
+    inFunction("if (bar === foo) { FOO: foo; BAR: bar; }");
+
+    assertTypeOfExpression("FOO").isNumber();
+    assertTypeOfExpression("BAR").isNumber();
+  }
+
+  @Test
+  public void testShneTightensUnknownOperandOnRhs() {
+    assuming("foo", NUMBER_TYPE);
+    assuming("bar", UNKNOWN_TYPE);
+
+    inFunction("if (foo === bar) { FOO: foo; BAR: bar; }");
+
+    assertTypeOfExpression("FOO").isNumber();
+    assertTypeOfExpression("BAR").isNumber();
+  }
+
   private ObjectType getNativeObjectType(JSTypeNative t) {
     return registry.getNativeObjectType(t);
   }

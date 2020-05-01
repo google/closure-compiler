@@ -133,8 +133,8 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
     assertThat(nullOrUnknown.isUnknownType()).isTrue();
     assertType(NULL_TYPE.getLeastSupertype(nullOrUnknown)).isEqualTo(nullOrUnknown);
     assertType(nullOrUnknown.getLeastSupertype(NULL_TYPE)).isEqualTo(nullOrUnknown);
-    assertType(NULL_TYPE.getGreatestSubtype(nullOrUnknown)).isEqualTo(UNKNOWN_TYPE);
-    assertType(nullOrUnknown.getGreatestSubtype(NULL_TYPE)).isEqualTo(UNKNOWN_TYPE);
+    assertType(NULL_TYPE.getGreatestSubtype(nullOrUnknown)).isEqualTo(NULL_TYPE);
+    assertType(nullOrUnknown.getGreatestSubtype(NULL_TYPE)).isEqualTo(NULL_TYPE);
 
     assertThat(NULL_TYPE.differsFrom(nullOrUnknown)).isTrue();
     assertThat(nullOrUnknown.differsFrom(NULL_TYPE)).isTrue();

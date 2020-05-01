@@ -62,7 +62,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
         "goog.isDef",
         getNativeUnknownType(),
         getNativeUnknownType(), // TODO(johnlenz): should be getNativeCheckedUnknownType()
-        getNativeUnknownType());
+        getNativeVoidType());
   }
 
   @Test
@@ -93,7 +93,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
     testClosureFunction(
         "goog.isNull",
         getNativeUnknownType(),
-        getNativeUnknownType(),
+        getNativeNullType(),
         getNativeUnknownType()); // TODO(johnlenz): this should be CHECK_UNKNOWN
   }
 
@@ -136,7 +136,7 @@ public final class ClosureReverseAbstractInterpreterTest extends CompilerTypeTes
         "goog.isDefAndNotNull",
         getNativeUnknownType(),
         getNativeUnknownType(), // TODO(johnlenz): this should be "CHECKED_UNKNOWN"
-        getNativeUnknownType());
+        createNullableType(getNativeVoidType()));
   }
 
   @Test

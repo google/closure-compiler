@@ -4492,6 +4492,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private ImmutableList<JSType> getTypesToTestForSymmetry() {
     return ImmutableList.of(
         UNKNOWN_TYPE,
+        CHECKED_UNKNOWN_TYPE,
         NULL_TYPE,
         VOID_TYPE,
         NUMBER_TYPE,
@@ -4863,13 +4864,20 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         ARRAY_TYPE.getGreatestSubtype(REGEXP_TYPE));
     assertTypeEquals(NO_TYPE,
         NULL_TYPE.getGreatestSubtype(ARRAY_TYPE));
-    assertTypeEquals(UNKNOWN_TYPE,
+    assertTypeEquals(NUMBER_TYPE,
         NUMBER_TYPE.getGreatestSubtype(UNKNOWN_TYPE));
+    assertTypeEquals(NUMBER_TYPE,
+        NUMBER_TYPE.getGreatestSubtype(CHECKED_UNKNOWN_TYPE));
 
     assertTypeEquals(NO_RESOLVED_TYPE,
         NO_OBJECT_TYPE.getGreatestSubtype(forwardDeclaredNamedType));
     assertTypeEquals(NO_RESOLVED_TYPE,
         forwardDeclaredNamedType.getGreatestSubtype(NO_OBJECT_TYPE));
+
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
+        CHECKED_UNKNOWN_TYPE.getGreatestSubtype(CHECKED_UNKNOWN_TYPE));
+    assertTypeEquals(CHECKED_UNKNOWN_TYPE,
+        CHECKED_UNKNOWN_TYPE.getGreatestSubtype(UNKNOWN_TYPE));
 
   }
 

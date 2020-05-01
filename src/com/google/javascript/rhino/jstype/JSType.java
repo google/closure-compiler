@@ -1097,16 +1097,24 @@ public abstract class JSType implements Serializable {
       // A < B => sup(A, B) == B
       // does not hold because of unknown parameters and return types.
       // See the comment in supAndInfHelper for more info on this.
-      return thisType.toMaybeFunctionType().supAndInfHelper(
-          thatType.toMaybeFunctionType(), false);
+      return thisType.toMaybeFunctionType().supAndInfHelper(thatType.toMaybeFunctionType(), false);
     } else if (thisType.equals(thatType)) {
       return thisType;
-    } else if (thisType.isUnknownType() || thatType.isUnknownType()) {
-      // The greatest subtype with any unknown type is the universal
-      // unknown type, unless the two types are equal.
-      return thisType.equals(thatType)
-          ? thisType
-          : thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    } else if (thisType.isUnknownType()) {
+      // Handle unknowns by returning the tightest type possible:
+      //  given a known and unknown type, return the known type
+      //  given a checked unknown type and some unknown type, return a checked unknown
+      //  otherwise return an unchecked unknown
+      if (!thatType.isUnknownType()) {
+        return thatType;
+      } else if (thisType.isCheckedUnknownType() || thatType.isCheckedUnknownType()) {
+        return thisType.getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE);
+      } else {
+        return thisType.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      }
+    } else if (thatType.isUnknownType()) {
+      // thisType must be known
+      return thisType;
     } else if (thisType.isUnionType()) {
       return UnionType.getGreatestSubtype(thisType.toMaybeUnionType(), thatType);
     } else if (thatType.isUnionType()) {
@@ -1307,15 +1315,13 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * Computes the subset of {@code this} and {@code that} types under shallow
-   * equality.
+   * Computes the subset of {@code this} and {@code that} types under shallow equality.
    *
-   * @return a pair containing the restricted type of {@code this} as the first
-   *         component and the restricted type of {@code that} as the second
-   *         element. The returned pair is never {@code null} even though its
-   *         components may be {@code null}.
+   * @return a pair containing the restricted type of {@code this} as the first component and the
+   *     restricted type of {@code that} as the second element. The returned pair is never {@code
+   *     null} even though its components may be {@code null}.
    */
-  public TypePair getTypesUnderShallowEquality(JSType that) {
+  public final TypePair getTypesUnderShallowEquality(JSType that) {
     JSType commonType = getGreatestSubtype(that);
     return new TypePair(commonType, commonType);
   }
