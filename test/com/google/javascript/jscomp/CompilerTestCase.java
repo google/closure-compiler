@@ -1895,9 +1895,14 @@ public abstract class CompilerTestCase {
   private void validateSourceLocation(JSError jserror) {
     // Make sure that source information is always provided.
     if (!allowSourcelessWarnings) {
+      final String sourceName = jserror.getSourceName();
       assertWithMessage("Missing source file name in warning: " + jserror)
-          .that(jserror.getSourceName() != null && !jserror.getSourceName().isEmpty())
+          .that(sourceName != null && !sourceName.isEmpty())
           .isTrue();
+      Node scriptNode = lastCompiler.getScriptNode(sourceName);
+      assertWithMessage("No SCRIPT node found for warning: " + jserror)
+          .that(scriptNode)
+          .isNotNull();
       assertWithMessage("Missing line number in warning: " + jserror)
           .that(-1 != jserror.getLineNumber())
           .isTrue();

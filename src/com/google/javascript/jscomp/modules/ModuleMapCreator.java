@@ -163,7 +163,7 @@ public class ModuleMapCreator implements HotSwapCompilerPass {
       ModuleLoader.ModulePath requestedPath =
           modulePath.resolveJsModule(
               moduleRequest,
-              modulePath.toString(),
+              forLineInfo.getSourceFileName(),
               forLineInfo.getLineno(),
               forLineInfo.getCharno());
 
