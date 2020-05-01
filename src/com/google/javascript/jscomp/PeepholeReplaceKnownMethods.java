@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -155,6 +154,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             // if the double is exactly representable as a float, then just cast since no rounding
             // is involved
           } else if ((float) arg == arg) {
+            // TODO(b/155511629): This condition is always true after J2CL transpilation.
             replacement = Double.valueOf((float) arg);
           } else {
             // (float) arg does not necessarily use the correct rounding mode, so don't do anything
@@ -328,10 +328,17 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   }
 
   /**
-   * @return The lowered string Node.
+   * Returns The lowered string Node.
+   *
+   * <p>This method is believed to be correct independent of the locale of the compiler and the JSVM
+   * executing the compiled code, assuming both are implementations of Unicode are correct.
+   *
+   * @see <a href="https://tc39.es/ecma262/#sec-string.prototype.tolowercase"></a>
+   * @see <a href="https://unicode.org/faq/casemap_charprop.html#5"></a>
+   * @see <a
+   *     href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html#toLowerCase-java.util.Locale-"></a>
    */
   private Node tryFoldStringToLowerCase(Node subtree, Node stringNode) {
-    // From Rhino, NativeString.java. See ECMA 15.5.4.11
     String lowered = stringNode.getString().toLowerCase(Locale.ROOT);
     Node replacement = IR.string(lowered);
     subtree.replaceWith(replacement);
@@ -340,11 +347,18 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   }
 
   /**
-   * @return The upped string Node.
+   * Returns The upped string Node.
+   *
+   * <p>This method is believed to be correct independent of the locale of the compiler and the JSVM
+   * executing the compiled code, assuming both are implementations of Unicode are correct.
+   *
+   * @see <a href="https://tc39.es/ecma262/#sec-string.prototype.touppercase"></a>
+   * @see <a href="https://unicode.org/faq/casemap_charprop.html#5"></a>
+   * @see <a
+   *     href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html#toUpperCase-java.util.Locale-"></a>
    */
   private Node tryFoldStringToUpperCase(Node subtree, Node stringNode) {
-    // From Rhino, NativeString.java. See ECMA 15.5.4.12
-    String upped = Ascii.toUpperCase(stringNode.getString());
+    String upped = stringNode.getString().toUpperCase(Locale.ROOT);
     Node replacement = IR.string(upped);
     subtree.replaceWith(replacement);
     reportChangeToEnclosingScope(replacement);

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -372,6 +373,28 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
     foldSame("`abc`.toUpperCase()");
     foldSame("`a ${bc}`.toUpperCase()");
+
+    /**
+     * Make sure things aren't totally broken for non-ASCII strings, non-exhaustive.
+     *
+     * <p>This includes things like:
+     *
+     * <ul>
+     *   <li>graphemes with multiple code-points
+     *   <li>graphemes represented by multiple graphemes in other cases
+     *   <li>graphemes whose case changes are not round-trippable
+     *   <li>graphemes that change case in a position sentitive way
+     * </ul>
+     */
+    fold("'\u0049'.toUpperCase()", "'\u0049'");
+    fold("'\u0069'.toUpperCase()", "'\u0049'");
+    fold("'\u0130'.toUpperCase()", "'\u0130'");
+    fold("'\u0131'.toUpperCase()", "'\u0049'");
+    fold("'\u0049\u0307'.toUpperCase()", "'\u0049\u0307'");
+    fold("'ß'.toUpperCase()", "'SS'");
+    fold("'SS'.toUpperCase()", "'SS'");
+    fold("'σ'.toUpperCase()", "'Σ'");
+    fold("'σς'.toUpperCase()", "'ΣΣ'");
   }
 
   @Test
@@ -381,7 +404,30 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     fold("'aBcDe'.toLowerCase()", "'abcde'");
 
     foldSame("`ABC`.toLowerCase()");
-    foldSame("`A ${BC}`.toUpperCase()");
+    foldSame("`A ${BC}`.toLowerCase()");
+
+    /**
+     * Make sure things aren't totally broken for non-ASCII strings, non-exhaustive.
+     *
+     * <p>This includes things like:
+     *
+     * <ul>
+     *   <li>graphemes with multiple code-points
+     *   <li>graphemes with multiple representations
+     *   <li>graphemes represented by multiple graphemes in other cases
+     *   <li>graphemes whose case changes are not round-trippable
+     *   <li>graphemes that change case in a position sentitive way
+     * </ul>
+     */
+    fold("'\u0049'.toLowerCase()", "'\u0069'");
+    fold("'\u0069'.toLowerCase()", "'\u0069'");
+    fold("'\u0130'.toLowerCase()", "'\u0069\u0307'");
+    fold("'\u0131'.toLowerCase()", "'\u0131'");
+    fold("'\u0049\u0307'.toLowerCase()", "'\u0069\u0307'");
+    fold("'ß'.toLowerCase()", "'ß'");
+    fold("'SS'.toLowerCase()", "'ss'");
+    fold("'Σ'.toLowerCase()", "'σ'");
+    fold("'ΣΣ'.toLowerCase()", "'σς'");
   }
 
   @Test
@@ -433,8 +479,16 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   public void testFoldMathFunctions_fround() {
     enableNormalize();
     foldSame("Math.fround(Math.random())");
+
     fold("Math.fround(NaN)", "NaN");
+    fold("Math.fround(Infinity)", "Infinity");
     fold("Math.fround(1)", "1");
+    fold("Math.fround(0)", "0");
+  }
+
+  @Test
+  @GwtIncompatible // TODO(b/155511629): Enable this test for J2CL
+  public void testFoldMathFunctions_fround_j2cl() {
     foldSame("Math.fround(1.2)");
   }
 
