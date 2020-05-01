@@ -21,7 +21,7 @@
   <packaging>jar</packaging>
 
   <name>Closure Compiler Externs</name>
-  <version>v20200426</version>
+  <version>1.0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,7 +31,7 @@
   <parent>
     <groupId>com.google.javascript</groupId>
     <artifactId>closure-compiler-parent</artifactId>
-    <version>v20200426</version>
+    <version>1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
