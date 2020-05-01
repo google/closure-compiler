@@ -3670,7 +3670,11 @@ public class Parser {
           ArgumentListTree arguments = parseArguments();
           operand =
               new OptionalCallExpressionTree(
-                  getTreeLocation(start), operand, arguments, /* isStartOfOptionalChain = */ true);
+                  getTreeLocation(start),
+                  operand,
+                  arguments,
+                  /* isStartOfOptionalChain = */ true,
+                  arguments.hasTrailingComma);
           break;
         case OPEN_SQUARE:
           eat(TokenType.OPEN_SQUARE);
@@ -3732,7 +3736,8 @@ public class Parser {
                   getTreeLocation(start),
                   optionalExpression,
                   arguments,
-                  /* isStartOfOptionalChain = */ false);
+                  /* isStartOfOptionalChain = */ false,
+                  arguments.hasTrailingComma);
           break;
         case OPEN_SQUARE:
           eat(TokenType.OPEN_SQUARE);

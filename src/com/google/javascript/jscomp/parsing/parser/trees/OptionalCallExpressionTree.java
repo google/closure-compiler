@@ -27,16 +27,19 @@ public class OptionalCallExpressionTree extends ParseTree {
   public final ParseTree operand;
   public final ArgumentListTree arguments;
   public final boolean isStartOfOptionalChain;
+  public final boolean hasTrailingComma;
 
   public OptionalCallExpressionTree(
       SourceRange location,
       ParseTree operand,
       ArgumentListTree arguments,
-      boolean isStartOfOptionalChain) {
+      boolean isStartOfOptionalChain,
+      boolean hasTrailingComma) {
     super(ParseTreeType.OPT_CHAIN__CALL_EXPRESSION, location);
 
     this.operand = operand;
     this.arguments = arguments;
     this.isStartOfOptionalChain = isStartOfOptionalChain;
+    this.hasTrailingComma = hasTrailingComma;
   }
 }

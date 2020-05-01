@@ -1590,6 +1590,7 @@ class IRFactory {
     Node processOptChainFunctionCall(OptionalCallExpressionTree callNode) {
       maybeWarnForFeature(callNode, Feature.OPTIONAL_CHAINING);
       Node node = newNode(Token.OPTCHAIN_CALL, transform(callNode.operand));
+      node.setTrailingComma(callNode.hasTrailingComma);
       for (ParseTree child : callNode.arguments.arguments) {
         node.addChildToBack(transform(child));
       }
