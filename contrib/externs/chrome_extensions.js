@@ -2569,6 +2569,10 @@ chrome.runtime.Manifest.prototype.manifest_version;
 chrome.runtime.Manifest.prototype.description;
 
 
+/** @type {!Object<string, string>} */
+chrome.runtime.Manifest.prototype.icons;
+
+
 /** @type {!chrome.runtime.Manifest.Oauth2|undefined} */
 chrome.runtime.Manifest.prototype.oauth2;
 
