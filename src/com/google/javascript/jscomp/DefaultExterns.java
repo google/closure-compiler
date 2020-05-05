@@ -56,7 +56,9 @@ public final class DefaultExterns {
           "webkit_css.js",
           "w3c_touch_event.js",
           "whatwg_console.js",
-          "nonstandard_console.js");
+          "nonstandard_console.js",
+          // w3d_rtc.js must be evaluated before nonstandard_rtc.js
+          "w3c_rtc.js");
 
   /**
    * Filters and orders the passed externs for the specified environment.
