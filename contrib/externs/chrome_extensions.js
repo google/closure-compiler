@@ -8375,6 +8375,641 @@ chrome.fileSystem.getVolumeList = function(callback) {};
 
 /**
  * @const
+ * @see https://developer.chrome.com/extensions/fileSystemProvider
+ */
+chrome.fileSystemProvider = {};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#type-ChangeType
+ */
+chrome.fileSystemProvider.ChangeType = {
+  CHANGED: '',
+  DELETED: '',
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#type-CommonActionId
+ */
+chrome.fileSystemProvider.CommonActionId = {
+  OFFLINE_NOT_NECESSARY: '',
+  SAVE_FOR_OFFLINE: '',
+  SHARE: '',
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#type-OpenFileMode
+ */
+chrome.fileSystemProvider.OpenFileMode = {
+  READ: '',
+  WRITE: '',
+};
+
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#type-ProviderError
+ */
+chrome.fileSystemProvider.ProviderError = {
+  ABORT: '',
+  ACCESS_DENIED: '',
+  EXISTS: '',
+  FAILED: '',
+  INVALID_OPERATION: '',
+  INVALID_URL: '',
+  IN_USE: '',
+  IO: '',
+  NOT_A_DIRECTORY: '',
+  NOT_A_FILE: '',
+  NOT_EMPTY: '',
+  NOT_FOUND: '',
+  NO_MEMORY: '',
+  NO_SPACE: '',
+  OK: '',
+  SECURITY: '',
+  TOO_MANY_OPENED: '',
+};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#type-EntryMetadata
+ */
+chrome.fileSystemProvider.EntryMetadata = function() {};
+
+
+/** @type {boolean|undefined} */
+chrome.fileSystemProvider.EntryMetadata.prototype.isDirectory;
+
+
+/** @type {string|undefined} */
+chrome.fileSystemProvider.EntryMetadata.prototype.name;
+
+
+/** @type {number|undefined} */
+chrome.fileSystemProvider.EntryMetadata.prototype.size;
+
+
+/** @type {!Date|undefined} */
+chrome.fileSystemProvider.EntryMetadata.prototype.modificationTime;
+
+
+/** @type {string|undefined} */
+chrome.fileSystemProvider.EntryMetadata.prototype.mimeType;
+
+
+/** @type {string|undefined} */
+chrome.fileSystemProvider.EntryMetadata.prototype.thumbnail;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#type-FileSystemInfo
+ */
+chrome.fileSystemProvider.FileSystemInfo = function() {};
+
+
+/** @type {string} */
+chrome.fileSystemProvider.FileSystemInfo.prototype.fileSystemId;
+
+
+/** @type {string} */
+chrome.fileSystemProvider.FileSystemInfo.prototype.displayName;
+
+
+/** @type {boolean} */
+chrome.fileSystemProvider.FileSystemInfo.prototype.writable;
+
+
+/** @type {number} */
+chrome.fileSystemProvider.FileSystemInfo.prototype.openedFilesLimit;
+
+
+/**
+ * @type {!Array<{
+ *   openRequestId: number,
+ *   filePath: string,
+ *   mode: !chrome.fileSystemProvider.OpenFileMode,
+ * }>}
+ */
+chrome.fileSystemProvider.FileSystemInfo.prototype.openedFiles;
+
+
+/** @type {boolean|undefined} */
+chrome.fileSystemProvider.FileSystemInfo.prototype.supportsNotifyTag;
+
+
+/**
+ * @type {!Array<!{
+ *   entryPath: string,
+ *   recursive: boolean,
+ *   lastTag: (string|undefined),
+ * }>}
+ */
+chrome.fileSystemProvider.FileSystemInfo.prototype.watchers;
+
+
+/**
+ * @param {string} fileSystemId
+ * @param {function(!chrome.fileSystemProvider.FileSystemInfo): void} callback
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#method-get
+ */
+chrome.fileSystemProvider.get = function(fileSystemId, callback) {};
+
+
+/**
+ * @param {function(!Array<!chrome.fileSystemProvider.FileSystemInfo>): void} callback
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#method-getAll
+ */
+chrome.fileSystemProvider.getAll = function(callback) {};
+
+
+/**
+ * @record
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#method-mount
+ */
+chrome.fileSystemProvider.MountOptions;
+
+
+/** @type {string} */
+chrome.fileSystemProvider.MountOptions.prototype.fileSystemId;
+
+
+/** @type {string} */
+chrome.fileSystemProvider.MountOptions.prototype.displayName;
+
+
+/** @type {boolean|undefined} */
+chrome.fileSystemProvider.MountOptions.prototype.writable;
+
+
+/** @type {number|undefined} */
+chrome.fileSystemProvider.MountOptions.prototype.openedFilesLimit;
+
+
+/** @type {boolean|undefined} */
+chrome.fileSystemProvider.MountOptions.prototype.supportsNotifyTag;
+
+
+/** @type {boolean|undefined} */
+chrome.fileSystemProvider.MountOptions.prototype.persistent;
+
+
+/**
+ * @param {!chrome.fileSystemProvider.MountOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#method-mount
+ */
+chrome.fileSystemProvider.mount = function(options, callback) {};
+
+
+/**
+ * @record
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#method-notify
+ */
+chrome.fileSystemProvider.NotifyOptions;
+
+
+/** @type {string} */
+chrome.fileSystemProvider.NotifyOptions.prototype.fileSystemId;
+
+
+/** @type {string} */
+chrome.fileSystemProvider.NotifyOptions.prototype.observedPath;
+
+
+/** @type {boolean} */
+chrome.fileSystemProvider.NotifyOptions.prototype.recursive;
+
+
+/** @type {!chrome.fileSystemProvider.ChangeType} */
+chrome.fileSystemProvider.NotifyOptions.prototype.changeType;
+
+
+/**
+ * @type {!Array<{
+ *   entryPath: string,
+ *   changeType: !chrome.fileSystemProvider.ChangeType,
+ * }>|undefined}
+ */
+chrome.fileSystemProvider.NotifyOptions.prototype.changes;
+
+
+/** @type {string|undefined} */
+chrome.fileSystemProvider.NotifyOptions.prototype.tag;
+
+
+/**
+ * @param {!chrome.fileSystemProvider.NotifyOptions} options
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#method-notify
+ */
+chrome.fileSystemProvider.notify = function(options, callback) {};
+
+
+/**
+ * @record
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#method-unmount
+ */
+chrome.fileSystemProvider.UnmountOptions;
+
+
+/** @type {string} */
+chrome.fileSystemProvider.UnmountOptions.prototype.fileSystemId;
+
+
+/**
+ * @param {!chrome.fileSystemProvider.UnmountOptions} options
+ * @param {function(): void=} callback
+ */
+chrome.fileSystemProvider.unmount = function(options, callback) {};
+
+/**
+ * FSP events that don't "return" values to the caller via onSuccess.
+ *
+ * @interface
+ * @template T
+ * @extends {ChromeBaseEvent<function(
+ *   T,
+ *   function(): void,
+ *   function(!chrome.fileSystemProvider.ProviderError): void
+ * )>}
+ */
+chrome.fileSystemProvider.VoidBaseEvent;
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   operationRequestId: number,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onAbortRequested
+ */
+chrome.fileSystemProvider.AbortRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.AbortRequestedEvent} */
+chrome.fileSystemProvider.onAbortRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   entryPath: string,
+ *   recursive: boolean,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onAddWatcherRequested
+ */
+chrome.fileSystemProvider.AddWatcherRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.AddWatcherRequestedEvent} */
+chrome.fileSystemProvider.onAddWatcherRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   openRequestId: number,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onCloseFileRequested
+ */
+chrome.fileSystemProvider.CloseFileRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.CloseFileRequestedEvent} */
+chrome.fileSystemProvider.onCloseFileRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onConfigureRequested
+ */
+chrome.fileSystemProvider.ConfigureRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.ConfigureRequestedEvent} */
+chrome.fileSystemProvider.onConfigureRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   sourcePath: string,
+ *   targetPath: string,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onCopyEntryRequested
+ */
+chrome.fileSystemProvider.CopyEntryRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.CopyEntryRequestedEvent} */
+chrome.fileSystemProvider.onCopyEntryRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   directoryPath: string,
+ *   recursive: boolean,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onCreateDirectoryRequested
+ */
+chrome.fileSystemProvider.CreateDirectoryRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.CreateDirectoryRequestedEvent} */
+chrome.fileSystemProvider.onCreateDirectoryRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   filePath: string,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onCreateFileRequested
+ */
+chrome.fileSystemProvider.CreateFileRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.CreateFileRequestedEvent} */
+chrome.fileSystemProvider.onCreateFileRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   entryPath: string,
+ *   recursive: boolean,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onDeleteEntryRequested
+ */
+chrome.fileSystemProvider.DeleteEntryRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.DeleteEntryRequestedEvent} */
+chrome.fileSystemProvider.onDeleteEntryRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   entryPaths: !Array<string>,
+ *   actionId: string,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onExecuteActionRequested
+ */
+chrome.fileSystemProvider.ExecuteActionRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.ExecuteActionRequestedEvent} */
+chrome.fileSystemProvider.onExecuteActionRequested;
+
+
+/**
+ * @interface
+ * @extends {ChromeBaseEvent<function(
+ *   {
+ *     fileSystemId: string,
+ *     requestId: number,
+ *     entryPaths: !Array<string>,
+ *   },
+ *   function(
+ *     !Array<!{
+ *       id: (string|chrome.fileSystemProvider.CommonActionId),
+ *       title: (string|undefined),
+ *     }>
+ *   ): void,
+ *   function(!chrome.fileSystemProvider.ProviderError): void
+ * )>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onGetActionsRequested
+ */
+chrome.fileSystemProvider.GetActionsRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.GetActionsRequestedEvent} */
+chrome.fileSystemProvider.onGetActionsRequested;
+
+
+/**
+ * @interface
+ * @extends {ChromeBaseEvent<function(
+ *   {
+ *     fileSystemId: string,
+ *     requestId: number,
+ *     entryPath: string,
+ *     isDirectory: boolean,
+ *     name: boolean,
+ *     size: boolean,
+ *     modificationTime: boolean,
+ *     mimeType: boolean,
+ *     thumbnail: boolean,
+ *   },
+ *   function(!chrome.fileSystemProvider.EntryMetadata): void,
+ *   function(!chrome.fileSystemProvider.ProviderError): void
+ * )>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onGetMetadataRequested
+ */
+chrome.fileSystemProvider.GetMetadataRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.GetMetadataRequestedEvent} */
+chrome.fileSystemProvider.onGetMetadataRequested;
+
+
+/**
+ * @interface
+ * @extends {ChromeBaseEvent<function(
+ *   function(): void,
+ *   function(!chrome.fileSystemProvider.ProviderError): void
+ * )>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onMountRequested
+ */
+chrome.fileSystemProvider.MountRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.MountRequestedEvent} */
+chrome.fileSystemProvider.onMountRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   sourcePath: string,
+ *   targetPath: string,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onMoveEntryRequested
+ */
+chrome.fileSystemProvider.MoveEntryRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.MoveEntryRequestedEvent} */
+chrome.fileSystemProvider.onMoveEntryRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   filePath: string,
+ *   mode: chrome.fileSystemProvider.OpenFileMode,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onOpenFileRequested
+ */
+chrome.fileSystemProvider.OpenFileRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.OpenFileRequestedEvent} */
+chrome.fileSystemProvider.onOpenFileRequested;
+
+
+/**
+ * @interface
+ * @extends {ChromeBaseEvent<function(
+ *   {
+ *     fileSystemId: string,
+ *     requestId: number,
+ *     directoryPath: string,
+ *     isDirectory: boolean,
+ *     name: boolean,
+ *     size: boolean,
+ *     modificationTime: boolean,
+ *     mimeType: boolean,
+ *     thumbnail: boolean,
+ *   },
+ *   function(
+ *     !Array<!chrome.fileSystemProvider.EntryMetadata>,
+ *     boolean
+ *   ): void,
+ *   function(!chrome.fileSystemProvider.ProviderError): void
+ * )>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onReadDirectoryRequested
+ */
+chrome.fileSystemProvider.ReadDirectoryRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.ReadDirectoryRequestedEvent} */
+chrome.fileSystemProvider.onReadDirectoryRequested;
+
+
+/**
+ * @interface
+ * @extends {ChromeBaseEvent<function(
+ *   {
+ *     fileSystemId: string,
+ *     requestId: number,
+ *     openRequestId: number,
+ *     offset: number,
+ *     length: number,
+ *   },
+ *   function(!ArrayBuffer, boolean): void,
+ *   function(!chrome.fileSystemProvider.ProviderError): void
+ * )>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onReadFileRequested
+ */
+chrome.fileSystemProvider.ReadFileRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.ReadFileRequestedEvent} */
+chrome.fileSystemProvider.onReadFileRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   entryPath: string,
+ *   recursive: boolean,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onRemoveWatcherRequested
+ */
+chrome.fileSystemProvider.RemoveWatcherRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.RemoveWatcherRequestedEvent} */
+chrome.fileSystemProvider.onRemoveWatcherRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   filePath: string,
+ *   length: number,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onTruncateRequested
+ */
+chrome.fileSystemProvider.TruncateRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.TruncateRequestedEvent} */
+chrome.fileSystemProvider.onTruncateRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onUnmountRequested
+ */
+chrome.fileSystemProvider.UnmountRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.UnmountRequestedEvent} */
+chrome.fileSystemProvider.onUnmountRequested;
+
+
+/**
+ * @interface
+ * @extends {chrome.fileSystemProvider.VoidBaseEvent<{
+ *   fileSystemId: string,
+ *   requestId: number,
+ *   openRequestId: number,
+ *   offset: number,
+ *   data: !ArrayBuffer,
+ * }>}
+ * @see https://developer.chrome.com/extensions/fileSystemProvider#event-onWriteFileRequested
+ */
+chrome.fileSystemProvider.WriteFileRequestedEvent;
+
+
+/** @type {!chrome.fileSystemProvider.WriteFileRequestedEvent} */
+chrome.fileSystemProvider.onWriteFileRequested;
+
+
+/**
+ * @const
  * @see https://developer.chrome.com/apps/syncFileSystem
  */
 chrome.syncFileSystem = {};
