@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.createGenericType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
@@ -158,8 +159,12 @@ class Es6TemplateLiterals {
             .createSingleVarNameDeclaration(TEMPLATELIT_VAR + uniqueId, callTemplateTagArgCreator)
             .setJSDocInfo(info)
             .useSourceInfoIfMissingFromForTree(n);
-    Node script = NodeUtil.getEnclosingScript(n);
-    script.addChildToFront(tagFnFirstArgDeclaration);
+
+    // Get the nearest SCRIPT-scoped node as insertion point for this assignment as injecting to the
+    // top of the script causes runtime errors
+    // https://github.com/google/closure-compiler/issues/3589
+    Node insertionPoint = findInsertionPoint(n);
+    insertionPoint.getParent().addChildBefore(tagFnFirstArgDeclaration, insertionPoint);
     t.reportCodeChange(tagFnFirstArgDeclaration);
 
     // Generate the call expression.
@@ -184,6 +189,21 @@ class Es6TemplateLiterals {
       }
     }
     return array;
+  }
+
+  /**
+   * Finds the closest enclosing node whose parent is a SCRIPT. We'll want to insert the call to
+   * `var tagFnFirstArg = $jscomp.createTemplateTagFirstArg...` just before that one.
+   */
+  private static Node findInsertionPoint(Node n) {
+    Node insertionPoint = n;
+    Node insertionParent = checkNotNull(insertionPoint.getParent(), n);
+    while (!insertionParent.isScript()) {
+      insertionPoint = insertionParent;
+      insertionParent = checkNotNull(insertionPoint.getParent(), insertionPoint);
+    }
+    checkState(insertionParent.isScript(), insertionParent);
+    return insertionPoint;
   }
 
   private Node createCookedStringArray(Node n, JSType templateArrayType) {

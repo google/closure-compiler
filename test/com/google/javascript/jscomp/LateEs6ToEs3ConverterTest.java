@@ -358,6 +358,36 @@ public final class LateEs6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTaggedTemplateLiteral_InsertPosition() {
+    // inserted at the directly enclosing script scope
+    taggedTemplateLiteral_TestRunner(
+        lines("var a = {};", "tag``;"),
+        lines(
+            "var a = {};",
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['']);",
+            "tag(TAGGED_TEMPLATE_TMP_VAR$0);"));
+
+    // inserted at the script scope above the immediate enclosing function at the script scope
+    taggedTemplateLiteral_TestRunner(
+        lines("var a = {};", "function foo() {tag``;}"),
+        lines(
+            "var a = {};",
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['']);",
+            "function foo() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}"));
+
+    // inserted at the script scope above the outer enclosing function at the script scope
+    taggedTemplateLiteral_TestRunner(
+        lines("var a = {};", "function foo() {function bar() {tag``;}}"),
+        lines(
+            "var a = {};",
+            "/** @noinline */ var TAGGED_TEMPLATE_TMP_VAR$0 =",
+            "    $jscomp.createTemplateTagFirstArg(['']);",
+            "function foo() {function bar() {tag(TAGGED_TEMPLATE_TMP_VAR$0);}}"));
+  }
+
+  @Test
   public void testUnicodeEscapes() {
     test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
     test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
