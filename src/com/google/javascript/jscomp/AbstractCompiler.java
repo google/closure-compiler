@@ -683,8 +683,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   @MustBeClosed
   public final LogFile createOrReopenLog(
       Class<?> owner, String firstNamePart, String... restNameParts) {
-    checkState(this.currentPassIndex >= 0);
-
     @Nullable Path dir = getOptions().getDebugLogDirectory();
     if (dir == null) {
       return LogFile.createNoOp();
@@ -705,6 +703,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   @MustBeClosed
   public final LogFile createOrReopenIndexedLog(
       Class<?> owner, String firstNamePart, String... restNameParts) {
+    checkState(this.currentPassIndex >= 0);
+
     String index = Strings.padStart(Integer.toString(this.currentPassIndex), 3, '0');
     int length = restNameParts.length;
     if (length == 0) {

@@ -535,6 +535,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initInputsByIdMap();
 
     initAST();
+
+    // If debug logging is enabled, write out the module / chunk graph in GraphViz format.
+    // This graph is often too big to reasonably render.
+    // Using gvpr(1) is recommended to extract the parts of the graph that are of interest.
+    // `dot -Tpng graph_file.dot > graph_file.png` will render an image.
+    try (LogFile moduleGraphLog = createOrReopenLog(this.getClass(), "chunk_graph.dot")) {
+      moduleGraphLog.log(DotFormatter.toDot(moduleGraph.toGraphvizGraph()));
+    }
   }
 
   /**
