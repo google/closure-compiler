@@ -54,8 +54,7 @@ testSuite({
    * corresponding HTML file defined on window.
    */
   testSymbolPolyfill_doesNotUseExistingPolyfill: function() {
-    // TODO(b/132718547): window.Symbol should be undefined.
-    assertEquals(window.Symbol, window['jscomp_Symbol']);
+    assertNotEquals(window.Symbol, window['jscomp_Symbol']);
   },
   testPromisePolyfill_doesNotUseExistingPolyfill: function() {
     assertNotEquals(window['Promise'], window['jscomp_Promise']);

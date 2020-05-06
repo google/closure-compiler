@@ -1818,7 +1818,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testInitSymbol() {
-    test("let a = alert(Symbol.thimble);", "$jscomp.initSymbol(); var a = alert(Symbol.thimble)");
+    test("let a = alert(Symbol.thimble);", "var a = alert(Symbol.thimble)");
     assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
 
     test(
@@ -1830,7 +1830,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
         lines(
             "function f() {",
             "  var x = 1;",
-            "  $jscomp.initSymbol();",
             "  var y = Symbol('nimble');",
             "}"));
     test(
@@ -1846,11 +1845,9 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "  if (true) {",
             "     var Symbol$0 = function() {};",
             "  }",
-            "  $jscomp.initSymbol();",
             "  alert(Symbol.ism)",
             "}"));
 
-    // No $jscomp.initSymbol because "Symbol" doesn't refer to the global Symbol function here.
     test(
         lines(
             "function f() {",
@@ -1877,7 +1874,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var x = {[Symbol.iterator]: function() { return this; }};",
         lines(
-            "$jscomp.initSymbol();",
             "$jscomp.initSymbolIterator();",
             "var $jscomp$compprop0 = {};",
             "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",

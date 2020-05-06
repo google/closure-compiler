@@ -4810,10 +4810,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var itr = {",
             "  next: function() { return { value: 1234, done: false }; },",
             "};",
-            // TODO(bradfordcsmith): Es6InjectRuntimeLibraries should traverse even if no Es6
-            // features are present
-            // "$jscomp.initSymbol();",
-            // "$jscomp.initSymbolIterator();",
             "itr[Symbol.iterator] = function() { return itr; }"));
   }
 
@@ -4838,7 +4834,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var itr = {",
             "  next: function() { return { value: 1234, done: false }; },",
             "};",
-            "$jscomp.initSymbol();",
             "$jscomp.initSymbolIterator();",
             "itr[Symbol.iterator] = function() { return itr; }"));
   }
@@ -4861,12 +4856,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  [Symbol.asyncIterator]() { return this; },",
             "};"),
         lines(
-            // TODO(bradfordcsmith): initSymbolAsyncIterator isn't added because Es6RewriteInjection
-            // isn't added by TranspilationPasses and it doesn't run its traversal unless ES6
-            // transpilation is needed.
-            // TODO(bradfordcsmith): Avoid calls to initSymbol if we can
-            // "$jscomp.initSymbol();",
-            // "$jscomp.initSymbolAsyncIterator();",
             "const itr = {",
             "  next() { return { value: 1234, done: false }; },",
             "  [Symbol.asyncIterator]() { return this; },",
@@ -4903,10 +4892,12 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testLanguageMode() {
     CompilerOptions options = createCompilerOptions();
 
-    String code = "var a = {get f(){}}";
+    String code1 = "var a = {get f(){}}";
+    String code2 = "var a = {set f(x){}}";
 
+    // Tests that getters/setters are not parsed in Language_IN=ES3
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    Compiler compiler = compile(options, code);
+    Compiler compiler = compile(options, code1);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
     assertThat(compiler.getErrors().get(0).toString())
         .isEqualTo(
@@ -4916,11 +4907,11 @@ public final class IntegrationTest extends IntegrationTestCase {
                 + " set the appropriate language_in option."
                 + " at i0.js line 1 : 0");
 
+    // Tests no error when language_OUT=ES5
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    testSame(options, code);
-
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    testSame(options, code);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    testSame(options, code1);
+    testSame(options, code2);
   }
 
   @Test
@@ -8334,16 +8325,8 @@ public final class IntegrationTest extends IntegrationTestCase {
                 "testExterns.js",
                 new TestExternsBuilder().addArray().addString().addObject().build()));
 
-    // TODO(b/155089778): renable this test. It's producing a lot of unnecessary output
-    // because RemoveUnusedCode doesn't remove the native Symbol test in the polyfill.js library.
-    // test(
-    //     options,
-    //     "const unusedOne = Symbol('bar');",
-    //     "var $$jscomp$propertyToPolyfillSymbol$$={};");
-    // The call `Symbol('bar')` is actually removed, but the Symbol polyfill is not.
-    compile(options, "const unusedOne = Symbol('bar');");
-    assertThat(lastCompiler.getCurrentJsSource()).contains("jscomp_symbol_");
-    assertThat(lastCompiler.getCurrentJsSource()).doesNotContain("bar");
+    test(
+        options, "const unusedOne = Symbol('bar');", "var $$jscomp$propertyToPolyfillSymbol$$={};");
   }
 
   @Test

@@ -60,11 +60,8 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
 
     FeatureSet mustBeCompiledAway = used.without(compiler.getOptions().getOutputFeatureSet());
 
-    // TODO(johnlenz): remove this check for Symbol.  Symbol should be handled like the other
-    // polyfills.
-
-    // Check for "Symbol" references before injecting libraries.  This prevents conditional checks
-    // from pulling in 'Symbol'.
+    // Check for `Symbol.iterator` and `Symbol.asyncIterator` references before injecting libraries.
+    // This prevents conditional checks from pulling them in'.
     TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
 
     // We will need these runtime methods when we transpile, but we want the runtime
@@ -132,13 +129,6 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
-      // TODO(johnlenz): remove this.  Symbol should be handled like the other polyfills.
-      case NAME:
-        if (!n.isFromExterns() && isGlobalSymbol(t, n)) {
-          initSymbolBefore(n);
-        }
-        break;
-
       case GETPROP:
         if (!n.isFromExterns()) {
           visitGetprop(t, n);
@@ -165,15 +155,6 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     }
     Var var = t.getScope().getVar("Symbol");
     return var == null || var.isGlobal();
-  }
-
-  /** Inserts a call to $jscomp.initSymbol() before {@code n}. */
-  private void initSymbolBefore(Node n) {
-    compiler.ensureLibraryInjected("es6/symbol", false);
-    Node statement = NodeUtil.getEnclosingStatement(n);
-    Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
-    statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
-    compiler.reportChangeToEnclosingScope(initSymbol);
   }
 
   // TODO(tbreisacher): Do this for all well-known symbols.

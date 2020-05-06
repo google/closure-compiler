@@ -202,7 +202,7 @@ public class TestExternsBuilder {
           "Object.getOwnPropertyDescriptor = function(obj, prop) {};",
           "/**",
           " * @param {!Object} obj",
-          " * @param {string} prop",
+          " * @param {string | symbol} prop",
           " * @param {!Object} descriptor",
           " * @return {!Object}",
           " */",

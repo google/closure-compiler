@@ -22,73 +22,68 @@
 'require es6/util/arrayiterator';
 'require util/defineproperty';
 'require util/global';
-
-/** @const {string} */
-$jscomp.SYMBOL_PREFIX = 'jscomp_symbol_';
+'require util/polyfill';
 
 /**
  * Initializes the Symbol function.
  * @suppress {reportUnknownTypes}
+ * @noinline
  */
-$jscomp.initSymbol = function() {
-  // Only need to do this once. All future calls are no-ops.
-  $jscomp.initSymbol = function() {};
+// TODO(rishipal): Remove this function
+$jscomp.initSymbol = function() {};
 
-  if (!$jscomp.global['Symbol']) {
-    $jscomp.global['Symbol'] = $jscomp.Symbol;
-  }
-};
+$jscomp.polyfill('Symbol', function(orig) {
+  if (orig) return orig;  // no polyfill needed
+  $jscomp.initSymbol();   // to ensure initSymbol isn't removed as some tests
+                          // rely on it.
 
+  /**
+   * @struct @constructor
+   * @param {string} id
+   * @param {string=} opt_description
+   */
+  var SymbolClass = function(id, opt_description) {
+    /** @private @const {string} */
+    this.$jscomp$symbol$id_ = id;
 
-/**
- * @struct @constructor
- * @param {string} id
- * @param {string=} opt_description
- */
-$jscomp.SymbolClass = function(id, opt_description) {
-  /** @private @const {string} */
-  this.$jscomp$symbol$id_ = id;
+    /** @const {string|undefined} */
+    this.description;
 
-  /** @const {string|undefined} */
-  this.description;
-
-  // description is read-only.
-  $jscomp.defineProperty(
-      this, 'description',
-      {configurable: true, writable: true, value: opt_description});
-};
+    // description is read-only.
+    $jscomp.defineProperty(
+        this, 'description',
+        {configurable: true, writable: true, value: opt_description});
+  };
 
 
-/** @override */
-$jscomp.SymbolClass.prototype.toString = function() {
-  return this.$jscomp$symbol$id_;
-};
+  /** @override */
+  SymbolClass.prototype.toString = function() {
+    return this.$jscomp$symbol$id_;
+  };
 
 
-/**
- * Produces "symbols" (actually just unique strings).
- * @param {string=} opt_description
- * @return {symbol}
- */
-$jscomp.Symbol = /** @type {function(): !Function} */ (function() {
+  /** @const {string} */
+  var SYMBOL_PREFIX = 'jscomp_symbol_';
+
   var counter = 0;
 
   /**
+   * Produces "symbols" (actually just unique strings).
    * @param {string=} opt_description
-   * @return {symbol}
-   * @suppress {reportUnknownTypes}
+   * @return {!SymbolClass}
+   * @this {?Object}
    */
-  function Symbol(opt_description) {
-    if (/** @type {?} */ (this) instanceof Symbol) {
+  var symbolPolyfill = function(opt_description) {
+    if (this instanceof symbolPolyfill) {
       throw new TypeError('Symbol is not a constructor');
     }
-    return /** @type {?} */ (new $jscomp.SymbolClass(
-        $jscomp.SYMBOL_PREFIX + (opt_description || '') + '_' + (counter++),
+    return (new SymbolClass(
+        SYMBOL_PREFIX + (opt_description || '') + '_' + (counter++),
         opt_description));
-  }
+  };
 
-  return Symbol;
-})();
+  return symbolPolyfill;
+}, 'es6', 'es3');
 
 /**
  * Initializes Symbol.iterator (if it's not already defined) and adds a
@@ -96,31 +91,27 @@ $jscomp.Symbol = /** @type {function(): !Function} */ (function() {
  * @suppress {reportUnknownTypes}
  */
 $jscomp.initSymbolIterator = function() {
-  $jscomp.initSymbol();
-  var symbolIterator = $jscomp.global['Symbol'].iterator;
+  // Only need to do this once. All future calls are no-ops.
+  $jscomp.initSymbolIterator = function() {};
+
+  var symbolIterator = Symbol.iterator;
   if (!symbolIterator) {
-    symbolIterator = $jscomp.global['Symbol'].iterator =
-        $jscomp.global['Symbol']('Symbol.iterator');
+    symbolIterator = Symbol.iterator = Symbol('Symbol.iterator');
   }
 
   if (typeof Array.prototype[symbolIterator] != 'function') {
-    $jscomp.defineProperty(
-        Array.prototype, symbolIterator, {
-          configurable: true,
-          writable: true,
-          /**
-           * @this {Array}
-           * @return {!IteratorIterable}
-           */
-          value: function() {
-            return $jscomp.iteratorPrototype(
-                $jscomp.arrayIteratorImpl(this));
-          }
-        });
+    $jscomp.defineProperty(Array.prototype, symbolIterator, {
+      configurable: true,
+      writable: true,
+      /**
+       * @this {Array}
+       * @return {!IteratorIterable}
+       */
+      value: function() {
+        return $jscomp.iteratorPrototype($jscomp.arrayIteratorImpl(this));
+      }
+    });
   }
-
-  // Only need to do this once. All future calls are no-ops.
-  $jscomp.initSymbolIterator = function() {};
 };
 
 
@@ -129,15 +120,12 @@ $jscomp.initSymbolIterator = function() {
  * @suppress {reportUnknownTypes}
  */
 $jscomp.initSymbolAsyncIterator = function() {
-  $jscomp.initSymbol();
-  var symbolAsyncIterator = $jscomp.global['Symbol'].asyncIterator;
-  if (!symbolAsyncIterator) {
-    symbolAsyncIterator = $jscomp.global['Symbol'].asyncIterator =
-        $jscomp.global['Symbol']('Symbol.asyncIterator');
-  }
-
   // Only need to do this once. All future calls are no-ops.
   $jscomp.initSymbolAsyncIterator = function() {};
+
+  if (!Symbol.asyncIterator) {
+    Symbol.asyncIterator = Symbol('Symbol.asyncIterator');
+  }
 };
 
 /**
@@ -159,7 +147,7 @@ $jscomp.iteratorPrototype = function(next) {
    * @this {IteratorIterable}
    * @return {!IteratorIterable}
    */
-  iterator[$jscomp.global['Symbol'].iterator] = function() {
+  iterator[Symbol.iterator] = function() {
     return this;
   };
   return /** @type {!IteratorIterable} */ (iterator);

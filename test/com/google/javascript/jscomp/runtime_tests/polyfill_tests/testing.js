@@ -94,16 +94,17 @@ exports.getKeys = function(obj) {
 
 /**
  * Builds an iterable from the given objects.
+ * @param {symbol} symbolIterator JSCompiler's runtime library injection skips
+ * ES5-syntax files while looking for uses of Symbol.Iterator for injecting it.
+ * Here, we workaround that fact by passing-in Symbol.Iterator as an argument to
+ * iterable and iterator from an ES6-syntax file.
  * @param {...*} var_args
  * @return {!Iterable} An iterable.
  */
-exports.iterable = function(var_args) {
+exports.iterable = function(symbolIterator, var_args) {
   var args = Array.prototype.slice.call(arguments);
   var out = {};
-  // Note: we may not be transpiling this file, but if this method
-  // is being called, then the test should already depend on Symbol,
-  // so it should have been pulled in anyway.
-  out[Symbol.iterator] = function() {
+  out[symbolIterator] = function() {
     return exports.iterator.apply(null, args);
   };
   return /** @type {!Iterable} */ (out);
@@ -112,18 +113,19 @@ exports.iterable = function(var_args) {
 
 /**
  * Builds an iterator from the given objects.
+ * @param {symbol} symbolIterator
  * @param {...*} var_args
  * @return {!Iterator}
  */
-exports.iterator = function(var_args) {
-  var i = -1;
+exports.iterator = function(symbolIterator, var_args) {
+  var i = 0;
   var args = Array.prototype.slice.call(arguments);
   var out = {
     next: function() {
       return ++i < args.length ? {value: args[i], done: false} : {done: true};
     }
   };
-  out[Symbol.iterator] = function() {
+  out[symbolIterator] = function() {
     return out;
   };
   return /** @type {!Iterator} */ (out);

@@ -45,7 +45,8 @@ testSuite({
       assertObjectEquals(['x', 'y'], Array.from(arguments));
     })('x', 'y');
 
-    assertObjectEquals(['x', 'y'], Array.from(iterable('x', 'y')));
+    assertObjectEquals(
+        ['x', 'y'], Array.from(iterable(Symbol.iterator, 'x', 'y')));
   },
 
   testMapFn() {
@@ -53,7 +54,8 @@ testSuite({
     assertObjectEquals([2, 4, 8], Array.from([1, 2, 4], x2));
     assertObjectEquals(['aa', 'cc', 'bb'], Array.from(noCheck('acb'), x2));
     assertObjectEquals([6], Array.from({length: 1, 0: 3}, x2));
-    assertObjectEquals([6, 'xx'], Array.from(iterable(3, 'x'), x2));
+    assertObjectEquals(
+        [6, 'xx'], Array.from(iterable(Symbol.iterator, 3, 'x'), x2));
   },
 
   testMapFnWithContextObj() {
@@ -75,6 +77,7 @@ testSuite({
         [['a', 0], ['c', 1], ['b', 2]], Array.from(noCheck('acb'), id));
     assertObjectEquals(
         [[3, 0], [undefined, 1]], Array.from({length: 2, 0: 3}, id));
-    assertObjectEquals([[3, 0], ['x', 1]], Array.from(iterable(3, 'x'), id));
+    assertObjectEquals(
+        [[3, 0], ['x', 1]], Array.from(iterable(Symbol.iterator, 3, 'x'), id));
   },
 });
