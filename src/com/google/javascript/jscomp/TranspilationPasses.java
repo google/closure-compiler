@@ -103,12 +103,7 @@ public class TranspilationPasses {
     }
 
     if (options.needsTranspilationFrom(ES8)) {
-      // Trailing commas in parameter lists are flagged as present by the parser,
-      // but never actually represented in the AST.
-      // The only thing we need to do is mark them as not present in the AST.
-      passes.add(
-          createFeatureRemovalPass(
-              "markTrailingCommasInParameterListsRemoved", Feature.TRAILING_COMMA_IN_PARAM_LIST));
+      passes.add(removeTrailingCommaFromParamList);
       passes.add(rewriteAsyncFunctions);
     }
 
@@ -217,6 +212,13 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("rewriteCatchWithNoBinding")
           .setInternalFactory(RewriteCatchWithNoBinding::new)
+          .setFeatureSet(ES_NEXT)
+          .build();
+
+  private static final PassFactory removeTrailingCommaFromParamList =
+      PassFactory.builderForHotSwap()
+          .setName("removeTrailingCommaFromParamList")
+          .setInternalFactory(RemoveTrailingCommaFromParamList::new)
           .setFeatureSet(ES_NEXT)
           .build();
 
