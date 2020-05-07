@@ -2465,11 +2465,6 @@ public class CompilerOptions implements Serializable {
     this.computeFunctionSideEffects = computeFunctionSideEffects;
   }
 
-  @Deprecated
-  public void setDisambiguatePrivateProperties(boolean value) {
-    // no op
-  }
-
   public void setDisambiguateProperties(boolean disambiguateProperties) {
     this.disambiguateProperties = disambiguateProperties;
   }
