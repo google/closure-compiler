@@ -39,6 +39,46 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
+  public void testTrailingCommaInArrayAndObjectWithPrettyPrint() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT_IN;
+    assertPrettyPrintSame("({a:1, b:2, });\n");
+    assertPrettyPrintSame("[1, 2, 3, ];\n");
+    assertPrettyPrintSame("[, ];\n");
+  }
+
+  @Test
+  public void testTrailingCommaInArrayAndObjectWithoutPrettyPrint() {
+    languageMode = LanguageMode.ECMASCRIPT_NEXT_IN;
+    assertPrint("({a:1, b:2,})", "({a:1,b:2})");
+    assertPrint("[1, 2, 3,]", "[1,2,3]");
+
+    // When the last element is empty,  the trailing comma must be kept.
+    assertPrintSame("[,]"); // same as `[undefined]`
+    assertPrintSame("[a,,]"); // same as `[a, undefined]`
+  }
+
+  @Test
+  public void testNoTrailingCommaInEmptyArrayLiteral() {
+    // In cases where we modify the AST we might wind up with an array literal that has no elements
+    // yet still has a trailing comma. This is meant to test for that. We need to build the tree
+    // manually because an array literal with no elements and a trailing comma has a different
+    // meaning: it represents a single undefined element.
+    Node arrLit = IR.arraylit();
+    arrLit.setTrailingComma(true);
+    assertPrettyPrintNode("[]", arrLit);
+  }
+
+  @Test
+  public void testNoTrailingCommaInEmptyObjectLiteral() {
+    // In cases where we modify the AST we might wind up with an object literal that has no elements
+    // yet still has a trailing comma. This is meant to test for that. We need to build the tree
+    // manually because an object literal with no elements and a trailing comma is a syntax error.
+    Node objLit = IR.objectlit();
+    objLit.setTrailingComma(true);
+    assertPrettyPrintNode("{}", objLit);
+  }
+
+  @Test
   public void optionalChaining() {
     languageMode = LanguageMode.UNSUPPORTED;
     assertPrintSame("a.b?.c");

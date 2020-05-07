@@ -128,6 +128,19 @@ public abstract class CodePrinterTestBase {
     assertThat(printNode(ast)).isEqualTo(expectedJs);
   }
 
+  String prettyPrintNode(Node n) {
+    CompilerOptions options = new CompilerOptions();
+    options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
+    options.setLanguageOut(languageMode);
+    options.setOutputCharset(outputCharset);
+    options.setPrettyPrint(true);
+    return new CodePrinter.Builder(n).setCompilerOptions(options).build();
+  }
+
+  void assertPrettyPrintNode(String expectedJs, Node ast) {
+    assertThat(prettyPrintNode(ast)).isEqualTo(expectedJs);
+  }
+
   protected void assertPrint(String js, String expected) {
     parse(expected); // validate the expected string is valid JS
     assertThat(

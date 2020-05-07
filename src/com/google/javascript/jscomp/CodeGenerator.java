@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * CodeGenerator generates codes from a parse tree, sending it to the specified
@@ -51,6 +52,7 @@ public class CodeGenerator {
   private final boolean trustedStrings;
   private final boolean quoteKeywordProperties;
   private final boolean useOriginalName;
+  private final boolean prettyPrint;
   private final FeatureSet outputFeatureSet;
   private final JSDocInfoPrinter jsDocInfoPrinter;
 
@@ -62,6 +64,7 @@ public class CodeGenerator {
     preserveTypeAnnotations = false;
     quoteKeywordProperties = false;
     useOriginalName = false;
+    prettyPrint = false;
     this.outputFeatureSet = FeatureSet.BARE_MINIMUM;
     this.jsDocInfoPrinter = new JSDocInfoPrinter(false);
   }
@@ -76,6 +79,7 @@ public class CodeGenerator {
     this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
     this.outputFeatureSet = options.getOutputFeatureSet();
+    this.prettyPrint = options.isPrettyPrint();
     this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
   }
 
@@ -1122,6 +1126,9 @@ public class CodeGenerator {
             checkState(NodeUtil.isObjLitProperty(c) || c.isSpread(), c);
             add(c);
           }
+          if (first != null && prettyPrint && n.hasTrailingComma()) {
+            cc.listSeparator();
+          }
           add("}");
           if (needsParens) {
             add(")");
@@ -1811,14 +1818,16 @@ public class CodeGenerator {
   }
 
   /**
-   * This function adds a comma-separated list as is specified by an ARRAYLIT
-   * node with the associated skipIndexes array.  This is a space optimization
-   * since we avoid creating a whole Node object for each empty array literal
-   * slot.
-   * @param firstInList The first in the node list (chained through the next
-   * property).
+   * This function adds a comma-separated list as is specified by an ARRAYLIT node with the
+   * associated skipIndexes array. This is a space optimization since we avoid creating a whole Node
+   * object for each empty array literal slot.
+   *
+   * @param firstInList The first in the node list (chained through the next property).
    */
-  void addArrayList(Node firstInList) {
+  void addArrayList(@Nullable Node firstInList) {
+    if (firstInList == null) {
+      return;
+    }
     boolean lastWasEmpty = false;
     for (Node n = firstInList; n != null; n = n.getNext()) {
       if (n != firstInList) {
@@ -1828,7 +1837,7 @@ public class CodeGenerator {
       lastWasEmpty = n.isEmpty();
     }
 
-    if (lastWasEmpty) {
+    if (lastWasEmpty || (prettyPrint && checkNotNull(firstInList.getParent()).hasTrailingComma())) {
       cc.listSeparator();
     }
   }
