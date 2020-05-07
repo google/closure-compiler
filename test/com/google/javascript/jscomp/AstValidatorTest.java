@@ -130,6 +130,15 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFor() {
+    valid("for(var a;;);");
+    valid("for(let a;;);");
+    valid("for(var a = 0;;);");
+    valid("for(var a;b;c);");
+    valid("for(var a;;c);");
+  }
+
+  @Test
   public void testForIn() {
     valid("for(var a in b);");
     valid("for(let a in b);");
@@ -137,6 +146,18 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for(a in b);");
     valid("for(a in []);");
     valid("for(a in {});");
+
+    // Test that initializers are banned (except for simple vars - see testQuestionableForIn)
+    enableTypeInfoValidation = false;
+    expectInvalid(
+        new Node(Token.FOR_IN, IR.constNode(IR.name("a"), IR.number(1)), IR.name("b")),
+        Check.STATEMENT);
+    expectInvalid(
+        new Node(
+            Token.FOR_IN,
+            IR.var(new Node(Token.DESTRUCTURING_LHS, IR.objectPattern(), IR.objectlit())),
+            IR.name("b")),
+        Check.STATEMENT);
   }
 
   @Test
@@ -147,6 +168,22 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("for(a of b);");
     valid("for(a of []);");
     valid("for(a of /** @type {!Iterable<?>} */ ({}));");
+    valid("for (const [] of b);");
+    valid("for (const {} of b);");
+
+    // Test that initializers are banned
+    enableTypeInfoValidation = false;
+    expectInvalid(
+        new Node(Token.FOR_OF, IR.var(IR.name("a"), IR.number(1)), IR.name("b")), Check.STATEMENT);
+    expectInvalid(
+        new Node(Token.FOR_OF, IR.constNode(IR.name("a"), IR.number(1)), IR.name("b")),
+        Check.STATEMENT);
+    expectInvalid(
+        new Node(
+            Token.FOR_OF,
+            IR.var(new Node(Token.DESTRUCTURING_LHS, IR.objectPattern(), IR.objectlit())),
+            IR.name("b")),
+        Check.STATEMENT);
   }
 
   @Test
@@ -158,6 +195,49 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("async () => { for await(a of b); }");
     valid("async () => { for await(a of []); }");
     valid("async () => { for await(a of /** @type {!Iterable<?>} */ ({})); }");
+
+    // Test that initializers are banned
+    enableTypeInfoValidation = false;
+    expectInvalid(
+        new Node(Token.FOR_AWAIT_OF, IR.var(IR.name("a"), IR.number(1)), IR.name("b")),
+        Check.STATEMENT);
+    expectInvalid(
+        new Node(Token.FOR_AWAIT_OF, IR.constNode(IR.name("a"), IR.number(1)), IR.name("b")),
+        Check.STATEMENT);
+    expectInvalid(
+        new Node(
+            Token.FOR_AWAIT_OF,
+            IR.var(new Node(Token.DESTRUCTURING_LHS, IR.objectPattern(), IR.objectlit())),
+            IR.name("b")),
+        Check.STATEMENT);
+  }
+
+  @Test
+  public void testIncDec() {
+    valid("x++");
+    valid("x--");
+    valid("++x");
+    valid("--x");
+    valid("const a = {b: 0}; a.b++");
+    valid("a['b']++");
+    valid("/** @type {number} */ (x)++;");
+
+    enableTypeInfoValidation = false;
+    expectInvalid(new Node(Token.INC, IR.name("x"), IR.name("x")), Check.EXPRESSION);
+    expectInvalid(new Node(Token.INC, IR.arrayPattern()), Check.EXPRESSION);
+    expectInvalid(new Node(Token.INC, IR.objectPattern()), Check.EXPRESSION);
+  }
+
+  @Test
+  public void testCompoundAssign() {
+    valid("a += 1;");
+    valid("a['b'] += 1;");
+    valid("const a = {b: 0}; a.b += 1;");
+    valid("const a = {b: '0'}; /** @type {?} */ (a.b) += 1;");
+
+    enableTypeInfoValidation = false;
+    expectInvalid(new Node(Token.ASSIGN_ADD, IR.arrayPattern(), IR.number(0)), Check.EXPRESSION);
+    expectInvalid(new Node(Token.ASSIGN_ADD, IR.objectPattern(), IR.number(0)), Check.EXPRESSION);
   }
 
   @Test
@@ -493,6 +573,34 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     expectValid(n, Check.EXPRESSION);
+  }
+
+  @Test
+  public void testInvalidDestructuringDeclaration() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+
+    // missing DESTRUCTURING_LHS
+    //     Node n = IR.var(IR.objectPattern());
+    //     expectInvalid(n, Check.STATEMENT);
+
+    //     n = IR.let(IR.objectPattern());
+    //     expectInvalid(n, Check.STATEMENT);
+
+    //     n = new Node(Token.CONST, IR.objectPattern());
+    //     expectInvalid(n, Check.STATEMENT);
+
+    // missing a right-hand side
+    Node n = IR.var(new Node(Token.DESTRUCTURING_LHS, IR.objectPattern()));
+    expectInvalid(n, Check.STATEMENT);
+
+    n = IR.let(new Node(Token.DESTRUCTURING_LHS, IR.objectPattern()));
+    expectInvalid(n, Check.STATEMENT);
+
+    n = new Node(Token.CONST, new Node(Token.DESTRUCTURING_LHS, IR.objectPattern()));
+    expectInvalid(n, Check.STATEMENT);
   }
 
   @Test

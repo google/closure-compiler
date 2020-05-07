@@ -149,6 +149,11 @@ public final class AstValidator implements CompilerPass {
     validateStatement(n, false);
   }
 
+  /**
+   * Validates a statement node and its children.
+   *
+   * @param isAmbient whether this statement comes from TS ambient `declare [...]`
+   */
   public void validateStatement(Node n, boolean isAmbient) {
     switch (n.getToken()) {
       case LABEL:
@@ -192,20 +197,9 @@ public final class AstValidator implements CompilerPass {
         validateIf(n);
         return;
       case CONST:
-        for (Node child : n.children()) {
-          if (child.isDestructuringLhs()) {
-            // Must have two children: First child of the DESTRUCTURING_LHS node is the pattern on
-            // the LHS, second is the RHS.
-            validateChildCount(child, 2);
-          } else {
-            // Must have a child, which is the RHS (unlike VAR and LET which may have no RHS).
-            validateChildCount(child, 1);
-          }
-        }
-        // fallthrough
       case VAR:
       case LET:
-        validateNameDeclarationHelper(n.getToken(), n);
+        validateNameDeclarationHelper(n, n.getToken(), n);
         return;
       case EXPR_RESULT:
         validateExprStmt(n);
@@ -1138,49 +1132,67 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateNameDeclarationHelper(Token type, Node n) {
+  /** @param statement the enclosing statement. Will not always match the declaration Token. */
+  private void validateNameDeclarationHelper(Node statement, Token declaration, Node n) {
     validateMinimumChildCount(n, 1);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateNameDeclarationChild(type, c);
+      validateNameDeclarationChild(statement, declaration, c);
     }
-    if (type == Token.LET) {
+    if (declaration.equals(Token.LET)) {
       validateFeature(Feature.LET_DECLARATIONS, n);
-    } else if (type == Token.CONST) {
+    } else if (declaration.equals(Token.CONST)) {
       validateFeature(Feature.CONST_DECLARATIONS, n);
     }
   }
 
-  private void validateNameDeclarationChild(Token type, Node n) {
+  private void validateNameDeclarationChild(Node statement, Token declaration, Node n) {
+    boolean inEnhancedFor = NodeUtil.isEnhancedFor(statement);
+    boolean inForIn = statement.isForIn();
+    int minValues;
+    int maxValues;
+    if (inForIn && declaration.equals(Token.VAR)) {
+      // ECMASCRIPT5 sloppy mode allows for-in initializers.
+      minValues = 0;
+      maxValues = 1;
+    } else if (inEnhancedFor) {
+      minValues = 0;
+      maxValues = 0;
+    } else if (n.isDestructuringLhs() || declaration.equals(Token.CONST)) {
+      minValues = 1;
+      maxValues = 1;
+    } else {
+      minValues = 0;
+      maxValues = 1;
+    }
+
     if (n.isName()) {
-      // Don't use validateName here since this NAME node may have
-      // a child.
+      // Don't use validateName here since this NAME node may have a child.
       validateNonEmptyString(n);
-      validateMaximumChildCount(n, 1);
+      validateChildCountIn(n, minValues, maxValues);
+
       if (n.hasChildren()) {
         validateExpression(n.getFirstChild());
       }
     } else if (n.isDestructuringLhs()) {
-      validateDestructuringLhs(type, n);
-    } else {
-      violation("Invalid child for " + type + " node", n);
-    }
-  }
+      validateChildCountIn(n, 1 + minValues, 1 + maxValues);
 
-  private void validateDestructuringLhs(Token type, Node n) {
-    validateChildCountIn(n, 1, 2);
-    Node c = n.getFirstChild();
-    switch (c.getToken()) {
-      case ARRAY_PATTERN:
-        validateArrayPattern(type, c);
-        break;
-      case OBJECT_PATTERN:
-        validateObjectPattern(type, c);
-        break;
-      default:
-        violation("Invalid destructuring lhs first child for " + type + " node", n);
-    }
-    if (n.hasTwoChildren()) {
-      validateExpression(n.getSecondChild());
+      Node c = n.getFirstChild();
+      switch (c.getToken()) {
+        case ARRAY_PATTERN:
+          validateArrayPattern(declaration, c);
+          break;
+        case OBJECT_PATTERN:
+          validateObjectPattern(declaration, c);
+          break;
+        default:
+          violation("Invalid destructuring lhs first child for " + declaration + " node", n);
+      }
+
+      if (n.hasTwoChildren()) {
+        validateExpression(n.getSecondChild());
+      }
+    } else {
+      violation("Invalid child for " + declaration + " node", n);
     }
   }
 
@@ -1274,7 +1286,12 @@ public final class AstValidator implements CompilerPass {
   private void validateFor(Node n) {
     validateNodeType(Token.FOR, n);
     validateChildCount(n, 4);
-    validateVarOrOptionalExpression(n.getFirstChild());
+    Node target = n.getFirstChild();
+    if (NodeUtil.isNameDeclaration(target)) {
+      validateNameDeclarationHelper(n, target.getToken(), target);
+    } else {
+      validatePseudoExpression(target, Token.EMPTY);
+    }
     validatePseudoExpression(n.getSecondChild(), Token.EMPTY);
     validatePseudoExpression(n.getChildAtIndex(2), Token.EMPTY);
     validateBlock(n.getLastChild());
@@ -1283,7 +1300,7 @@ public final class AstValidator implements CompilerPass {
   private void validateForIn(Node n) {
     validateNodeType(Token.FOR_IN, n);
     validateChildCount(n);
-    validateVarOrAssignmentTarget(n.getFirstChild());
+    validateEnhancedForVarOrAssignmentTarget(n, n.getFirstChild());
     validateExpression(n.getSecondChild());
     validateBlock(n.getLastChild());
   }
@@ -1292,7 +1309,7 @@ public final class AstValidator implements CompilerPass {
     validateFeature(Feature.FOR_OF, n);
     validateNodeType(Token.FOR_OF, n);
     validateChildCount(n);
-    validateVarOrAssignmentTarget(n.getFirstChild());
+    validateEnhancedForVarOrAssignmentTarget(n, n.getFirstChild());
     validateExpression(n.getSecondChild());
     validateBlock(n.getLastChild());
   }
@@ -1301,24 +1318,16 @@ public final class AstValidator implements CompilerPass {
     validateFeature(Feature.FOR_AWAIT_OF, n);
     validateNodeType(Token.FOR_AWAIT_OF, n);
     validateChildCount(n);
-    validateVarOrAssignmentTarget(n.getFirstChild());
+    validateEnhancedForVarOrAssignmentTarget(n, n.getFirstChild());
     validateExpression(n.getSecondChild());
     validateBlock(n.getLastChild());
   }
 
-  private void validateVarOrOptionalExpression(Node n) {
+  private void validateEnhancedForVarOrAssignmentTarget(Node forNode, Node n) {
     if (NodeUtil.isNameDeclaration(n)) {
-      validateNameDeclarationHelper(n.getToken(), n);
-    } else {
-      validatePseudoExpression(n, Token.EMPTY);
-    }
-  }
-
-  private void validateVarOrAssignmentTarget(Node n) {
-    if (NodeUtil.isNameDeclaration(n)) {
-      // Only one NAME can be declared for FOR-IN expressions.
+      // Only one NAME can be declared for FOR-IN and FOR_OF expressions.
       validateChildCount(n, 1);
-      validateNameDeclarationHelper(n.getToken(), n);
+      validateNameDeclarationHelper(forNode, n.getToken(), n);
     } else {
       validateLHS(n.getParent().getToken(), n);
     }
@@ -1498,6 +1507,16 @@ public final class AstValidator implements CompilerPass {
     validateChildCount(n);
     Token contextType = n.getToken();
     Node lhs = n.getFirstChild();
+    validateAssignmentOpTarget(lhs, contextType);
+    validateExpression(n.getLastChild());
+  }
+
+  /**
+   * Validates the lhs of a compound assignment op, inc, or dec
+   *
+   * <p>This check is stricter than validateLhs.
+   */
+  private void validateAssignmentOpTarget(Node lhs, Token contextType) {
     switch (lhs.getToken()) {
       case NAME:
         validateName(lhs);
@@ -1506,10 +1525,13 @@ public final class AstValidator implements CompilerPass {
       case GETELEM:
         validateGetPropGetElemInLHS(contextType, lhs);
         break;
+      case CAST:
+        validateChildCount(lhs, 1);
+        validateAssignmentOpTarget(lhs.getFirstChild(), contextType);
+        break;
       default:
         violation("Invalid child for " + contextType + " node", lhs);
     }
-    validateExpression(n.getLastChild());
   }
 
   private void validateGetElem(Node n) {
@@ -1774,23 +1796,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateIncDecOp(Node n) {
     validateChildCount(n, 1);
-    validateIncDecTarget(n.getFirstChild());
-  }
-
-  private void validateIncDecTarget(Node n) {
-    switch (n.getToken()) {
-      case NAME:
-      case GETPROP:
-      case GETELEM:
-        validateExpression(n);
-        break;
-      case CAST:
-        validateChildCount(n.getFirstChild(), 1);
-        validateIncDecTarget(n.getFirstChild());
-        break;
-      default:
-        violation("Invalid INC/DEC target " + n.getToken(), n);
-    }
+    validateAssignmentOpTarget(n.getFirstChild(), n.getToken());
   }
 
 
@@ -1836,7 +1842,7 @@ public final class AstValidator implements CompilerPass {
       case VAR:
       case LET:
       case CONST:
-        validateNameDeclarationHelper(n.getToken(), n);
+        validateNameDeclarationHelper(n.getParent(), n.getToken(), n);
         break;
       case FUNCTION:
         validateFunctionSignature(n);
@@ -1930,6 +1936,10 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateChildCountIn(Node n, int min, int max) {
+    if (max == min) {
+      validateChildCount(n, min);
+      return;
+    }
     int count = n.getChildCount();
     if (count < min || count > max) {
       violation("Expected child count in [" + min + ", " + max
