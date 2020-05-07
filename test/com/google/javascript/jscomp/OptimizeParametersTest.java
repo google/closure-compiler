@@ -1316,4 +1316,10 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "new Foo(4);",
             "new Bar();"));
   }
+
+  @Test
+  public void testRemoveOptionalDestructuringParam() {
+    test("function f({x}) {} f();", "function f() { var {x} = void 0; } f();");
+    test("function f({x} = {}) {} f();", "function f() { var {x} = {}; } f();");
+  }
 }

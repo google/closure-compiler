@@ -1007,6 +1007,13 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           Node lhs = formal.removeFirstChild();
           Node value = formal.getLastChild().detach();
           stmt = NodeUtil.newVarNode(lhs, value);
+        } else if (formal.isDestructuringPattern()) {
+          // Destructuring declarations must have an rhs.
+          // NOTE: assigning undefined will cause an exception at runtime if this code is evaluated,
+          // which matches the behavior of the input code. It's also possible this method will never
+          // be evaluated at runtime. This pass jointly optimizes all methods with the same name.
+          Node value = NodeUtil.newUndefinedNode(formal);
+          stmt = NodeUtil.newVarNode(formal, value);
         } else {
           stmt = IR.var(formal).useSourceInfoIfMissingFrom(formal);
         }
