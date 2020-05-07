@@ -616,14 +616,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clAssertRemovalPass);
     }
 
-    // Property disambiguation should only run once and needs to be done
-    // soon after type checking, both so that it can make use of type
-    // information and so that other passes can take advantage of the renamed
-    // properties.
-    if (options.disambiguatePrivateProperties) {
-      passes.add(disambiguatePrivateProperties);
-    }
-
     assertAllOneTimePasses(passes);
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
@@ -2248,14 +2240,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> new InlineObjectLiterals(compiler, compiler.getUniqueNameIdSupplier()))
           .setFeatureSet(ES_NEXT)
-          .build();
-
-  /** Disambiguate property names based on the coding convention. */
-  private final PassFactory disambiguatePrivateProperties =
-      PassFactory.builder()
-          .setName(PassNames.DISAMBIGUATE_PRIVATE_PROPERTIES)
-          .setInternalFactory(DisambiguatePrivateProperties::new)
-          .setFeatureSet(ES2019_MODULES)
           .build();
 
   /** Disambiguate property names based on type information. */

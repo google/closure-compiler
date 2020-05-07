@@ -692,12 +692,6 @@ public class CompilerOptions implements Serializable {
   public boolean computeFunctionSideEffects;
 
   /**
-   * Rename private properties to disambiguate between unrelated fields based on
-   * the coding convention.
-   */
-  boolean disambiguatePrivateProperties;
-
-  /**
    * Rename properties to disambiguate between unrelated fields based on
    * type information.
    */
@@ -2471,19 +2465,9 @@ public class CompilerOptions implements Serializable {
     this.computeFunctionSideEffects = computeFunctionSideEffects;
   }
 
-  /**
-   * @return Whether disambiguate private properties is enabled.
-   */
-  public boolean isDisambiguatePrivateProperties() {
-    return disambiguatePrivateProperties;
-  }
-
-  /**
-   * @param value Whether to enable private property disambiguation based on
-   * the coding convention.
-   */
+  @Deprecated
   public void setDisambiguatePrivateProperties(boolean value) {
-    this.disambiguatePrivateProperties = value;
+    // no op
   }
 
   public void setDisambiguateProperties(boolean disambiguateProperties) {
@@ -3043,7 +3027,6 @@ public class CompilerOptions implements Serializable {
             .add("dependencyOptions", getDependencyOptions())
             .add("devirtualizeMethods", devirtualizeMethods)
             .add("devMode", devMode)
-            .add("disambiguatePrivateProperties", disambiguatePrivateProperties)
             .add("disambiguateProperties", disambiguateProperties)
             .add("enableModuleRewriting", enableModuleRewriting)
             .add("enforceAccessControlCodingConventions", enforceAccessControlCodingConventions)
