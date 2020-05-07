@@ -79,6 +79,66 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testNoTrailingCommaInEmptyParamList() {
+    // In cases where we modify the AST we might wind up with a parameter list that has no elements
+    // yet still has a trailing comma. This is meant to test for that. We need to build the tree
+    // manually because a parameter list with no elements and a trailing comma is a syntax error.
+    Node paramList = IR.paramList();
+    IR.function(IR.name("f"), paramList, IR.block());
+    paramList.setTrailingComma(true);
+    assertPrettyPrintNode("()", paramList);
+  }
+
+  @Test
+  public void testNoTrailingCommaInEmptyCall() {
+    // In cases where we modify the AST we might wind up with a call node that has no elements
+    // yet still has a trailing comma. This is meant to test for that. We need to build the tree
+    // manually because a call node with no elements and a trailing comma is a syntax error.
+    Node call = IR.call(IR.name("f"));
+    call.setTrailingComma(true);
+    assertPrettyPrintNode("f()", call);
+  }
+
+  @Test
+  public void testNoTrailingCommaInEmptyOptChainCall() {
+    // In cases where we modify the AST we might wind up with an optional chain call node that has
+    // no elements yet still has a trailing comma. This is meant to test for that. We need to build
+    // the tree manually because an optional chain call node with no elements and a trailing comma
+    // is a syntax error.
+    Node optChainCall = IR.startOptChainCall(IR.name("f"));
+    optChainCall.setTrailingComma(true);
+    assertPrettyPrintNode("f?.()", optChainCall);
+  }
+
+  @Test
+  public void testNoTrailingCommaInEmptyNew() {
+    // In cases where we modify the AST we might wind up with a new node that has no elements
+    // yet still has a trailing comma. This is meant to test for that. We need to build the tree
+    // manually because a new node with no elements and a trailing comma is a syntax error.
+    Node newNode = IR.newNode(IR.name("f"));
+    newNode.setTrailingComma(true);
+    assertPrettyPrintNode("new f", newNode);
+  }
+
+  @Test
+  public void testTrailingCommaInParameterListWithPrettyPrint() {
+    languageMode = LanguageMode.UNSUPPORTED;
+    assertPrettyPrintSame("function f(a, b, ) {\n}\n");
+    assertPrettyPrintSame("f(1, 2, );\n");
+    assertPrettyPrintSame("f?.(1, 2, );\n");
+    assertPrettyPrintSame("let x = new Number(1, );\n");
+  }
+
+  @Test
+  public void testTrailingCommaInParameterListWithoutPrettyPrint() {
+    languageMode = LanguageMode.UNSUPPORTED;
+    assertPrint("function f(a, b,) {}", "function f(a,b){}");
+    assertPrint("f(1, 2,);", "f(1,2)");
+    assertPrint("f?.(1, 2,);", "f?.(1,2)");
+    assertPrint("let x = new Number(1,);", "let x=new Number(1)");
+  }
+
+  @Test
   public void optionalChaining() {
     languageMode = LanguageMode.UNSUPPORTED;
     assertPrintSame("a.b?.c");

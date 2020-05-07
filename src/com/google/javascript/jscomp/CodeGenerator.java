@@ -1755,6 +1755,9 @@ public class CodeGenerator {
 
   void addList(Node firstInList, boolean isArrayOrFunctionArgument,
       Context lhsContext, String separator) {
+    if (firstInList == null) {
+      return;
+    }
     for (Node n = firstInList; n != null; n = n.getNext()) {
       boolean isFirst = n == firstInList;
       if (isFirst) {
@@ -1764,6 +1767,11 @@ public class CodeGenerator {
         addExpr(n, isArrayOrFunctionArgument ? 1 : 0,
             getContextForNoInOperator(lhsContext));
       }
+    }
+    if (prettyPrint
+        && isArrayOrFunctionArgument
+        && checkNotNull(firstInList.getParent()).hasTrailingComma()) {
+      cc.listSeparator();
     }
   }
 
