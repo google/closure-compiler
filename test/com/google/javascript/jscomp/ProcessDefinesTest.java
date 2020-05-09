@@ -578,13 +578,11 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testSimpleConstReassign() {
-    test(
+    testError(
         lines(
-            "/** @define {boolean} */ const DEF = false;",
+            "/** @define {boolean} */ const DEF = false;", //
             "DEF = true;"),
-        lines(
-            "/** @define {boolean} */ const DEF=true;",
-            "true"));
+        ProcessDefines.DEFINE_NOT_ASSIGNABLE_ERROR);
   }
 
   private class ProcessDefinesWithInjectedNamespace implements CompilerPass {

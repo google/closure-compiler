@@ -192,7 +192,7 @@ class GlobalNamespace
   }
 
   @Override
-  public Iterable<Name> getAllSymbols() {
+  public Collection<Name> getAllSymbols() {
     ensureGenerated();
     return Collections.unmodifiableCollection(getNameIndex().values());
   }

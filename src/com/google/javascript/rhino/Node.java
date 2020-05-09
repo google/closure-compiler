@@ -1567,6 +1567,10 @@ public class Node implements Serializable {
     return extractCharno(sourcePosition);
   }
 
+  public final String getLocation() {
+    return this.getSourceFileName() + ":" + this.getLineno() + ":" + this.getCharno();
+  }
+
   // TODO(johnlenz): make this final
   public int getSourceOffset() {
     StaticSourceFile file = getStaticSourceFile();
