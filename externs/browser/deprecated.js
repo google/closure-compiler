@@ -19,6 +19,8 @@
  * but are still needed in some project's build.
  * @externs
  */
+
+/** @const */
 var opera = {};
 
 opera.postError;
