@@ -2159,6 +2159,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       String name = input.getName();
       String code = input.getSourceFile().getCode();
 
+      // Ignore weak files.
+      if (input.getSourceFile().isWeak()) {
+        continue;
+      }
+
       // Ignore empty fill files created by the compiler to facilitate cross-module code motion.
       // Note that non-empty fill files (ones whose code has actually been moved into) are still
       // emitted. In particular, this ensures that if there are no (real) inputs the bundle will be
