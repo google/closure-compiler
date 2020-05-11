@@ -412,7 +412,7 @@ class ProcessDefines implements CompilerPass {
         } else {
           // This name can't be removed, so instead we make it a stub declaration.
           checkState(n.isName(), n);
-          n.getFirstChild().detach();
+          n.removeFirstChild();
         }
 
         assignmentToCleanUpLater = null;
