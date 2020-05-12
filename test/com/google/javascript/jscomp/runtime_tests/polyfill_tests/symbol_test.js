@@ -17,7 +17,7 @@
 /**
  * @fileoverview Tests for user-defined Symbols.
  */
-goog.module('jscomp.runtime_tests.symbol_test');
+goog.module('jscomp.runtime_tests.polyfill_tests.symbol_test');
 
 const testSuite = goog.require('goog.testing.testSuite');
 const userAgent = goog.require('goog.userAgent');
@@ -59,7 +59,7 @@ testSuite({
     assertTrue(iter.next().done);
   },
 
-  testDescrption() {
+  testDescription() {
     // There is no support for "upgrading" the native implementation
     if (userAgent.EDGE && Symbol.toString().includes("[native code]")) {
       assertEquals(undefined, s1.description);
