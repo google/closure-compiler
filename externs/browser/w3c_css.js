@@ -1336,12 +1336,6 @@ CSSProperties.prototype.cssFloat;
 
 /**
  * @type {string}
- * @see https://drafts.fxtf.org/filter-effects/#FilterProperty
- */
-CSSProperties.prototype.filter;
-
-/**
- * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-font
  */
 CSSProperties.prototype.font;
