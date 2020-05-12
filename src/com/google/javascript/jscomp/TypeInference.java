@@ -975,18 +975,14 @@ class TypeInference
   private FlowScope traverseCatch(Node catchNode, FlowScope scope) {
     Node catchTarget = catchNode.getFirstChild();
     if (catchTarget.isName()) {
-      // TODO(lharker): is this case even necessary? seems like TypedScopeCreator handles it
       Node name = catchNode.getFirstChild();
-      JSType type;
-      // If the catch expression name was declared in the catch use that type,
-      // otherwise use "unknown".
-      JSDocInfo info = name.getJSDocInfo();
-      if (info != null && info.hasType()) {
-        type = info.getType().evaluate(scope.getDeclarationScope(), registry);
-      } else {
-        type = getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      JSType type = name.getJSType();
+      // If the catch expression name was declared in the catch in TypedScopeCreator use that type.
+      // Otherwise use "unknown".
+      if (type == null) {
+        type = unknownType;
+        name.setJSType(unknownType);
       }
-      name.setJSType(type);
       return redeclareSimpleVar(scope, name, type);
     } else if (catchTarget.isDestructuringPattern()) {
       Node pattern = catchNode.getFirstChild();
@@ -1602,7 +1598,7 @@ class TypeInference
     if (trueType != null && falseType != null) {
       n.setJSType(trueType.getLeastSupertype(falseType));
     } else {
-      n.setJSType(null);
+      n.setJSType(unknownType);
     }
 
     return scope;
@@ -1630,6 +1626,8 @@ class TypeInference
         n.setJSType(registry.createUnionType(leftType.restrictByNotNullOrUndefined(), rightType));
         return join(scope, scopeAfterTraverseRight);
       }
+    } else {
+      n.setJSType(unknownType);
     }
     return scope;
   }
@@ -1671,7 +1669,7 @@ class TypeInference
     } else if (left.getJSType() != null && left.getJSType().isUnknownType()) {
       // TODO(lharker): do we also want to set this to unknown if the left's type is null? We would
       // lose some inference that TypeCheck does when given a null type.
-      n.setJSType(getNativeType(UNKNOWN_TYPE));
+      n.setJSType(unknownType);
     }
     return scope;
   }
@@ -2030,10 +2028,7 @@ class TypeInference
   }
 
   private FlowScope traverseInstantiation(Node n, JSType ctorType, FlowScope scope) {
-    if (ctorType == null) {
-      n.setJSType(null);
-      return scope;
-    } else if (ctorType.isUnknownType()) {
+    if (ctorType == null || ctorType.isUnknownType()) {
       n.setJSType(unknownType);
       return scope;
     }
@@ -2049,7 +2044,7 @@ class TypeInference
     }
 
     if (ctorFnType == null || !ctorFnType.isConstructor()) {
-      n.setJSType(null);
+      n.setJSType(unknownType);
       return scope;
     }
 
@@ -2074,7 +2069,7 @@ class TypeInference
               .toMaybeObjectType();
     }
 
-    n.setJSType(instantiatedType);
+    n.setJSType(instantiatedType != null ? instantiatedType : unknownType);
     return scope;
   }
 
@@ -2093,19 +2088,19 @@ class TypeInference
     scope = traverseChildren(n, scope);
     Node indexKey = n.getLastChild();
     JSType indexType = getJSType(indexKey);
+    JSType inferredType = unknownType;
     if (indexType.isSymbolValueType()) {
       // For now, allow symbols definitions/access on any type. In the future only allow them
       // on the subtypes for which they are defined.
-
       // TODO(b/77474174): Type well known symbol accesses.
-      n.setJSType(unknownType);
     } else {
       JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
       TemplateTypeMap typeMap = type.getTemplateTypeMap();
       if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
-        n.setJSType(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
+        inferredType = typeMap.getResolvedTemplateType(registry.getObjectElementKey());
       }
     }
+    n.setJSType(inferredType != null ? inferredType : unknownType);
     return tightenTypeAfterDereference(n.getFirstChild(), scope);
   }
 
