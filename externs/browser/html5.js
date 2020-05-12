@@ -3657,6 +3657,23 @@ XMLHttpRequest.prototype.responseType;
  */
 XMLHttpRequest.prototype.response;
 
+/**
+ * @typedef {{
+ *     type: string,
+ *     issuer: string,
+ *     refreshPolicy: string,
+ *     signRequestData: string,
+ *     includeTimestampHeader: boolean,
+ *     additionalSignedHeaders: !Array<string>
+ *   }}
+ */
+var TrustTokenAttributeType;
+
+/**
+ * @type {?function(!TrustTokenAttributeType): void}
+ * @see https://docs.google.com/document/d/1qUjtKgA7nMv9YGMhi0xWKEojkSITKzGLdIcZgoz6ZkI.
+ */
+XMLHttpRequest.prototype.setTrustToken;
 
 /**
  * @type {ArrayBuffer}
