@@ -1797,7 +1797,7 @@ Atomics.load = function(typedArray, index) {};
 /**
  * @param {!Int32Array} typedArray
  * @param {number} index
- * @param {number} count
+ * @param {number=} count
  * @return {number}
  */
 Atomics.notify = function(typedArray, index, count) {};
@@ -1838,7 +1838,7 @@ Atomics.wait = function(typedArray, index, value, timeout) {};
 /**
  * @param {!Int32Array} typedArray
  * @param {number} index
- * @param {number} count
+ * @param {number=} count
  * @return {number}
  */
 Atomics.wake = function(typedArray, index, count) {};
