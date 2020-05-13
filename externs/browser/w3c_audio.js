@@ -41,6 +41,9 @@ BaseAudioContext.prototype.currentTime;
 /** @type {!AudioListener} */
 BaseAudioContext.prototype.listener;
 
+/** @type {!AudioWorklet} */
+BaseAudioContext.prototype.audioWorklet;
+
 /**
  * @type {string}
  * See https://www.w3.org/TR/webaudio/#BaseAudioContext for valid values
@@ -370,6 +373,13 @@ function AudioParam() {}
 
 /** @type {number} */
 AudioParam.prototype.value;
+
+/**
+ * @type {string}
+ * See https://www.w3.org/TR/webaudio/#dom-audioparam-automationrate for valid
+ * values.
+ */
+AudioParam.prototype.automationRate;
 
 /**
  * @deprecated
@@ -1461,3 +1471,118 @@ function MediaStreamAudioDestinationNode() {}
 
 /** @type {!MediaStream} */
 MediaStreamAudioDestinationNode.prototype.stream;
+
+// TODO(b/156296621): Add Worklet to externs so AudioWorklet can implement it.
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/webaudio/#audioworklet
+ */
+function AudioWorklet() {}
+
+// TODO(b/156296621): Add WorkletGlobalScope to externs so
+// AudioWorkletGlobalScope can implement it.
+/**
+ * @constructor
+ * @see https://www.w3.org/TR/webaudio/#audioworkletglobalscope
+ */
+function AudioWorkletGlobalScope() {}
+
+/** @type {number} */
+AudioWorkletGlobalScope.prototype.currentFrame;
+
+/** @type {number} */
+AudioWorkletGlobalScope.prototype.currentTime;
+
+/** @type {number} */
+AudioWorkletGlobalScope.prototype.sampleRate;
+
+/**
+ * @param {!string} name
+ * @param {!function()} processorCtor
+ */
+AudioWorkletGlobalScope.prototype.registerProcessor = function(
+    name, processorCtor) {};
+
+/**
+ * @constructor
+ * @extends {AudioNode}
+ * @param {!BaseAudioContext} context
+ * @param {string} name
+ * @param {!AudioWorkletNodeOptions=} options
+ * @see https://www.w3.org/TR/webaudio/#audioworkletnode
+ */
+function AudioWorkletNode(context, name, options) {}
+
+/** @type {!EventListener|function()} */
+AudioWorkletNode.prototype.onprocesserror;
+
+/** @type {!Object<string, !AudioParam>} */
+AudioWorkletNode.prototype.parameters;
+
+/** @type {!MessagePort} */
+AudioWorkletNode.prototype.port;
+
+/**
+ * @record
+ * @see https://webaudio.github.io/web-audio-api/#dictdef-audioworkletnodeoptions
+ */
+function AudioWorkletNodeOptions() {};
+
+/** @type {number} */
+AudioWorkletNodeOptions.prototype.numberOfInputs;
+
+/** @type {number} */
+AudioWorkletNodeOptions.prototype.numberOfOutputs;
+
+/** @type {!Array<number>} */
+AudioWorkletNodeOptions.prototype.outputChannelCount;
+
+/** @type {!Object<string, number>} */
+AudioWorkletNodeOptions.prototype.parameterData;
+
+/** @type {?Object} */
+AudioWorkletNodeOptions.prototype.processorOptions;
+
+/**
+ * @constructor
+ * @param {!AudioWorkletNodeOptions=} options
+ * @see https://www.w3.org/TR/webaudio/#audioworkletprocessor
+ */
+function AudioWorkletProcessor(options) {}
+
+/** @type {!MessagePort} */
+AudioWorkletProcessor.prototype.port;
+
+/**
+ * @param {!Array<!Array<!Float32Array>>} inputs
+ * @param {!Array<!Array<!Float32Array>>} outputs
+ * @param {!Object<string, !Float32Array>} parameters
+ * @return {boolean}
+ */
+AudioWorkletProcessor.prototype.process = function(
+    inputs, outputs, parameters) {};
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/webaudio/#dictdef-audioparamdescriptor
+ */
+function AudioParamDescriptor() {};
+
+/**
+ * @type {string}
+ * See https://www.w3.org/TR/webaudio/#dom-audioparam-automationrate for valid
+ * values.
+ */
+AudioParamDescriptor.prototype.automationRate;
+
+/** @type {number} */
+AudioParamDescriptor.prototype.defaultValue;
+
+/** @type {number} */
+AudioParamDescriptor.prototype.maxValue;
+
+/** @type {number} */
+AudioParamDescriptor.prototype.minValue;
+
+/** @type {string} */
+AudioParamDescriptor.prototype.name;
