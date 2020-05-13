@@ -2872,6 +2872,18 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "if (Promise && Promise.allSettled) {",
                 "  Promise.allSettled(a);",
                 "}")));
+
+    test(
+        externs,
+        srcs(
+            lines(
+                "$jscomp.polyfill('Symbol', function() {}, 'es6', 'es3');",
+                "$jscomp.polyfill('Symbol.iterator', function() {}, 'es6', 'es3');",
+                "if (Symbol && Symbol.iterator) {",
+                "  console.log(Symbol.iterator);",
+                "}")),
+        expected(
+            lines("if (Symbol && Symbol.iterator) {", "  console.log(Symbol.iterator);", "}")));
   }
 
   @Test

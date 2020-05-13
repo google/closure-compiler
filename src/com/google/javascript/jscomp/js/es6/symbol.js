@@ -88,16 +88,16 @@ $jscomp.polyfill('Symbol', function(orig) {
 /**
  * Initializes Symbol.iterator (if it's not already defined) and adds a
  * Symbol.iterator property to the Array prototype.
- * @suppress {reportUnknownTypes}
  */
-$jscomp.initSymbolIterator = function() {
-  // Only need to do this once. All future calls are no-ops.
-  $jscomp.initSymbolIterator = function() {};
+// TODO(rishipal): Remove this function
+$jscomp.initSymbolIterator = function() {};
 
-  var symbolIterator = Symbol.iterator;
-  if (!symbolIterator) {
-    symbolIterator = Symbol.iterator = Symbol('Symbol.iterator');
-  }
+$jscomp.polyfill('Symbol.iterator', function(orig) {
+  if (orig) return orig;  // no polyfill needed
+
+  $jscomp.initSymbolIterator();
+
+  var symbolIterator = Symbol('Symbol.iterator');
 
   if (typeof Array.prototype[symbolIterator] != 'function') {
     $jscomp.defineProperty(Array.prototype, symbolIterator, {
@@ -112,8 +112,8 @@ $jscomp.initSymbolIterator = function() {
       }
     });
   }
-};
-
+  return symbolIterator;
+}, 'es6', 'es3');
 
 /**
  * Initializes Symbol.asyncIterator (if it's not already defined)
