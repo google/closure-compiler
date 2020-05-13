@@ -4797,7 +4797,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("goog.module('mod.a'); exports = class {}; MOD_A: 0;");
 
     assertType(registry.getGlobalType("exports")).isNull();
-    assertType(registry.getTypeForScope(getLabeledStatement("MOD_A").enclosingScope, "exports"))
+    assertType(registry.getType(getLabeledStatement("MOD_A").enclosingScope, "exports"))
         .isNotNull();
   }
 
@@ -4832,7 +4832,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame("goog.module('mod.a'); exports.B = class {}; MOD_A: 0;");
 
     assertType(registry.getGlobalType("exports.B")).isNull();
-    assertType(registry.getTypeForScope(getLabeledStatement("MOD_A").enclosingScope, "exports.B"))
+    assertType(registry.getType(getLabeledStatement("MOD_A").enclosingScope, "exports.B"))
         .isNotNull();
   }
 

@@ -1456,16 +1456,6 @@ public class JSTypeRegistry implements Serializable {
     }
   }
 
-  /**
-   * Looks up a native type by name.
-   *
-   * @param jsTypeName The name string.
-   * @return the corresponding JSType object or {@code null} it cannot be found
-   */
-  public JSType getTypeForScope(StaticScope scope, String jsTypeName) {
-    return getTypeForScopeInternal(scope, jsTypeName);
-  }
-
   public JSType getGlobalType(String jsTypeName) {
     return getType(null, jsTypeName);
   }
@@ -2404,10 +2394,9 @@ public class JSTypeRegistry implements Serializable {
   /**
    * Saves the derived state.
    *
-   * Note: This should be only used when serializing the compiler state and needs to be done at the
-   * end, after serializing CompilerState.
+   * <p>Note: This should be only used when serializing the compiler state and needs to be done at
+   * the end, after serializing CompilerState.
    */
-  @SuppressWarnings("unchecked")
   @GwtIncompatible("ObjectOutputStream")
   public void saveContents(ObjectOutputStream out) throws IOException {
     out.writeObject(eachRefTypeIndexedByProperty);

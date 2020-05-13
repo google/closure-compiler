@@ -1026,9 +1026,7 @@ final class FunctionTypeBuilder {
     //  externs.
     //   2. Cases like "class C {} C = class {}"
     // See https://github.com/google/closure-compiler/issues/2928 for some related bugs.
-    // We use "getTypeForScope" to specifically check if this was defined for declarationScope
-    // so we don't pick up types that are going to be shadowed.
-    JSType existingType = typeRegistry.getTypeForScope(declarationScope, fnName);
+    JSType existingType = typeRegistry.getType(declarationScope, fnName);
     if (existingType != null) {
       boolean isInstanceObject = existingType.isInstanceType();
       if (isInstanceObject || fnName.equals("Function")) {
