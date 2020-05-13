@@ -722,7 +722,7 @@ RTCRtpContributingSource.prototype.audioLevel;
 RTCRtpContributingSource.prototype.rtpTimestamp;
 
 /**
- * @interface
+ * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcrtpreceiver-interface
  */
 function RTCRtpReceiver() {}
@@ -766,6 +766,15 @@ RTCRtpReceiver.prototype.jitterBufferDelayHint;
  * @type {?number|undefined}
  */
 RTCRtpReceiver.prototype.playoutDelayHint;
+
+/**
+ * Get most optimistic view of the capabilities of the system for sending media
+ * of the given kind.
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpreceiver-getcapabilities
+ * @param {!string} kind Media kind: 'video' or 'audio'.
+ * @return {!RTCRtpCapabilities}
+ */
+RTCRtpReceiver.getCapabilities = function(kind) {};
 
 /**
  * @see https://www.w3.org/TR/webrtc/#dom-rtcrtptransceiverinit
