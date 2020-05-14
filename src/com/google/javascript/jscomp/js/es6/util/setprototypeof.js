@@ -19,6 +19,12 @@
  * @suppress {uselessCode}
  */
 
+'require util/defines';
+// This require is necessary both to access $jscomp.IS_SYMBOL_NATIVE and to
+// ensure that $jscomp$lookupPolyfilledValue has been loaded in polyfill
+// isolation mode before evaluating Object.setPrototypeOf.
+'require util/polyfill';
+
 /**
  * @suppress {missingProperties,reportUnknownTypes}
  * @return {boolean}
@@ -44,14 +50,16 @@ $jscomp.underscoreProtoCanBeSet = function() {
  *
  * @type {null|function(!Object, ?Object): !Object}
  */
-$jscomp.setPrototypeOf = (typeof Object.setPrototypeOf == 'function') ?
+$jscomp.setPrototypeOf =
+    // If polyfill isolation is enabled, avoid the existing
+    // Object.setPrototypeOf unless this browser has native Symbol support.
+    ((!$jscomp.ISOLATE_POLYFILLS || $jscomp.IS_SYMBOL_NATIVE) &&
+     typeof Object.setPrototypeOf == 'function') ?
     Object.setPrototypeOf :
-    $jscomp.underscoreProtoCanBeSet() ?
-    function(target, proto) {
+    $jscomp.underscoreProtoCanBeSet() ? function(target, proto) {
       target.__proto__ = proto;
       if (target.__proto__ !== proto) {
         throw new TypeError(target + ' is not extensible');
       }
       return target;
-    } :
-    null;
+    } : null;

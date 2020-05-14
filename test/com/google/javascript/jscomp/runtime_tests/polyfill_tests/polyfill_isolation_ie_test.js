@@ -74,5 +74,9 @@ testSuite({
     // not.
     assertEquals(1, window['jscomp_Math_sign'](1));
     assertEquals(-1, Math.sign(1));
-  }
+  },
+  testObjectSetPrototypeOfPolyfill_doesNotUseExistingPolyfill: function() {
+    assertNotEquals(
+        Object.setPrototypeOf, window['jscomp_Object_setPrototypeOf']);
+  },
 });
