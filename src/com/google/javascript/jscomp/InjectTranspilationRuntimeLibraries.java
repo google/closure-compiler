@@ -165,15 +165,6 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
       compiler.ensureLibraryInjected("es6/symbol", false);
       Node statement = NodeUtil.getEnclosingStatement(n);
       switch (propName) {
-        case "iterator":
-          {
-            Node init =
-                IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")))
-                    .useSourceInfoFromForTree(statement);
-            statement.getParent().addChildBefore(init, statement);
-            compiler.reportChangeToEnclosingScope(init);
-            break;
-          }
         case "asyncIterator":
           {
             Node init =

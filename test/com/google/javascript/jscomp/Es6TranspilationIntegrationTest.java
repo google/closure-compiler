@@ -1874,7 +1874,6 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var x = {[Symbol.iterator]: function() { return this; }};",
         lines(
-            "$jscomp.initSymbolIterator();",
             "var $jscomp$compprop0 = {};",
             "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
             "         $jscomp$compprop0)"));

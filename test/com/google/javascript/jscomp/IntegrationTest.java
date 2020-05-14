@@ -4791,8 +4791,90 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var itr = {",
             "  next: function() { return { value: 1234, done: false }; },",
             "};",
-            "$jscomp.initSymbolIterator();",
             "itr[Symbol.iterator] = function() { return itr; }"));
+  }
+
+  @Test
+  public void testInitSymbolIteratorNotInjected_whenLangOutIsEs6_RewritePolyfillsDisabled() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setRewritePolyfills(false);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+    test(
+        options,
+        lines(
+            "var itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"),
+        lines(
+            "var itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"));
+    assertThat(lastCompiler.getResult().errors).isEmpty();
+    assertThat(lastCompiler.getResult().warnings).isEmpty();
+    assertThat(((NoninjectingCompiler) lastCompiler).injected).doesNotContain("es6/symbol");
+  }
+
+  @Test
+  public void testInitSymbolIteratorNotInjected_whenLangOutIsEs6() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+    test(
+        options,
+        lines(
+            "var itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"),
+        lines(
+            "var itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"));
+    assertThat(lastCompiler.getResult().errors).isEmpty();
+    assertThat(lastCompiler.getResult().warnings).isEmpty();
+    assertThat(((NoninjectingCompiler) lastCompiler).injected).doesNotContain("es6/symbol");
+  }
+
+  @Test
+  public void testInitSymbolIteratorNotInjectedWithES6Syntax_whenLangOutIsEs6() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    useNoninjectingCompiler = true;
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(SourceFile.fromCode("extraExterns", "var $jscomp = {};"));
+    externs = externsList.build();
+    test(
+        options,
+        lines(
+            "let itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"),
+        lines(
+            "let itr = {",
+            "  next: function() { return { value: 1234, done: false }; },",
+            "};",
+            "itr[Symbol.iterator] = function() { return itr; }"));
+
+    assertThat(lastCompiler.getResult().errors).isEmpty();
+    assertThat(lastCompiler.getResult().warnings).isEmpty();
+    assertThat(((NoninjectingCompiler) lastCompiler).injected).doesNotContain("es6/symbol");
   }
 
   @Test

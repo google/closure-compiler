@@ -33,8 +33,6 @@ $jscomp.initSymbol = function() {};
 
 $jscomp.polyfill('Symbol', function(orig) {
   if (orig) return orig;  // no polyfill needed
-  $jscomp.initSymbol();   // to ensure initSymbol isn't removed as some tests
-                          // rely on it.
 
   /**
    * @struct @constructor
@@ -94,8 +92,6 @@ $jscomp.initSymbolIterator = function() {};
 $jscomp.polyfill('Symbol.iterator', function(orig) {
   if (orig) return orig;  // no polyfill needed
 
-  $jscomp.initSymbolIterator();
-
   var symbolIterator = Symbol('Symbol.iterator');
 
   // Polyfill 'Symbol.iterator' onto Array and the various TypedArray* objects.
@@ -154,8 +150,6 @@ $jscomp.initSymbolAsyncIterator = function() {
  * @template T
  */
 $jscomp.iteratorPrototype = function(next) {
-  $jscomp.initSymbolIterator();
-
   var iterator = {next: next};
   /**
    * @this {IteratorIterable}

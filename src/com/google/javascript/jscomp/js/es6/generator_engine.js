@@ -844,8 +844,6 @@ $jscomp.generator.Generator_ = function(engine) {
     return engine.return_(value);
   };
 
-  $jscomp.initSymbolIterator();
-
   /** @this {$jscomp.generator.Generator_<VALUE>} */
   this[Symbol.iterator] = function() {
     return this;

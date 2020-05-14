@@ -72,11 +72,6 @@ $jscomp.polyfill('Set',
     if (isConformant()) return NativeSet;
   }
 
-  // We depend on Symbol.iterator, so ensure it's loaded.
-  $jscomp.initSymbolIterator();
-
-
-
   /**
    * Polyfill for the global Map data type.
    * @constructor

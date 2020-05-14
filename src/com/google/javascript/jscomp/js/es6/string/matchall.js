@@ -24,9 +24,6 @@
 $jscomp.polyfill('String.prototype.matchAll', function(orig) {
   if (orig) return orig;
 
-  // We depend on Symbol.iterator, so ensure it's loaded.
-  $jscomp.initSymbolIterator();
-
   /**
    * Returns an iterator of all results matching a string against a
    * regular expression, including capturing groups.

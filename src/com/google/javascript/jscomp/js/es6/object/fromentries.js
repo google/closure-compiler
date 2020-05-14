@@ -35,8 +35,6 @@ $jscomp.polyfill('Object.fromEntries', function(orig) {
   function fromEntries(iter) {
     var obj = {};
 
-    $jscomp.initSymbolIterator();
-
     if (!(Symbol.iterator in iter)) {
       throw new TypeError('' + iter + ' is not iterable');
     }
