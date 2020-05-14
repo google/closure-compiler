@@ -682,7 +682,7 @@ final class AstFactory {
    * type is known.
    */
   Node createObjectDotAssignCall(Scope scope, JSType returnType, Node... args) {
-    Node objAssign = createQName(scope, "Object.assign");
+    Node objAssign = createQName(scope, "Object", "assign");
     Node result = createCall(objAssign, args);
 
     if (isAddingTypes()) {
@@ -920,7 +920,7 @@ final class AstFactory {
 
   Node createJSCompMakeIteratorCall(Node iterable, Scope scope) {
     String function = "makeIterator";
-    Node makeIteratorName = createQName(scope, "$jscomp." + function);
+    Node makeIteratorName = createQName(scope, "$jscomp", function);
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
     // of makeIteratorName manually.
     if (isAddingTypes() && !makeIteratorName.getJSType().isUnknownType()) {
@@ -944,8 +944,7 @@ final class AstFactory {
   }
 
   Node createJscompArrayFromIteratorCall(Node iterator, Scope scope) {
-    String function = "arrayFromIterator";
-    Node makeIteratorName = createQName(scope, "$jscomp." + function);
+    Node makeIteratorName = createQName(scope, "$jscomp", "arrayFromIterator");
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
     // of makeIteratorName manually.
     if (isAddingTypes() && !makeIteratorName.getJSType().isUnknownType()) {
@@ -981,7 +980,7 @@ final class AstFactory {
    * }</pre>
    */
   Node createJSCompMakeAsyncIteratorCall(Node iterable, Scope scope) {
-    Node makeIteratorAsyncName = createQName(scope, "$jscomp.makeAsyncIterator");
+    Node makeIteratorAsyncName = createQName(scope, "$jscomp", "makeAsyncIterator");
     // Since createCall (currently) doesn't handle templated functions, fill in the template types
     // of makeIteratorName manually.
     if (isAddingTypes() && !makeIteratorAsyncName.getJSType().isUnknownType()) {
@@ -1019,7 +1018,7 @@ final class AstFactory {
    * @param originalFunctionType the type of the async generator function that needs transpilation
    */
   Node createAsyncGeneratorWrapperReference(JSType originalFunctionType, Scope scope) {
-    Node ctor = createQName(scope, "$jscomp.AsyncGeneratorWrapper");
+    Node ctor = createQName(scope, "$jscomp", "AsyncGeneratorWrapper");
 
     if (isAddingTypes() && !ctor.getJSType().isUnknownType()) {
       // if ctor has the unknown type, we must have not injected the required runtime
@@ -1074,8 +1073,8 @@ final class AstFactory {
   }
 
   Node createJscompAsyncExecutePromiseGeneratorFunctionCall(Scope scope, Node generatorFunction) {
-    String function = "asyncExecutePromiseGeneratorFunction";
-    Node jscompDotAsyncExecutePromiseGeneratorFunction = createQName(scope, "$jscomp." + function);
+    Node jscompDotAsyncExecutePromiseGeneratorFunction =
+        createQName(scope, "$jscomp", "asyncExecutePromiseGeneratorFunction");
     // TODO(bradfordcsmith): Maybe update the type to be more specific
     // Currently this method expects `function(): !Generator<?>` and returns `Promise<?>`.
     // Since we propagate type information only if type checking has already run,
