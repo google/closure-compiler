@@ -405,21 +405,6 @@ public class CompilerOptions implements Serializable {
    */
   Set<String> extraAnnotationNames;
 
-  /**
-   * Used for projects that are not well maintained, but are still used.
-   * Does not allow promoting warnings to errors, and disables some potentially
-   * risky optimizations.
-   */
-  boolean legacyCodeCompile = false;
-
-  public boolean getLegacyCodeCompile() {
-    return this.legacyCodeCompile;
-  }
-
-  public void setLegacyCodeCompile(boolean legacy) {
-    this.legacyCodeCompile = legacy;
-  }
-
   // TODO(bradfordcsmith): Investigate how can we use multi-threads as default.
   int numParallelThreads = 1;
 
@@ -3070,7 +3055,6 @@ public class CompilerOptions implements Serializable {
             .add("labelRenaming", labelRenaming)
             .add("languageIn", getLanguageIn())
             .add("languageOutIsDefaultStrict", languageOutIsDefaultStrict)
-            .add("legacyCodeCompile", legacyCodeCompile)
             .add("lineBreak", lineBreak)
             .add("lineLengthThreshold", lineLengthThreshold)
             .add("locale", locale)

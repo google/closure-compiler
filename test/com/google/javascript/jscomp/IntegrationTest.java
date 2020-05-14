@@ -2705,49 +2705,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testLegacyCompileOverridesStrict() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setCheckTypes(true);
-    options.addWarningsGuard(new StrictWarningsGuard());
-    options.setLegacyCodeCompile(true);
-    Compiler compiler = compile(options, "123();");
-    assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getWarnings()).hasSize(1);
-  }
-
-  @Test
-  public void testLegacyCompileOverridesExplicitPromotionToError() {
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setCheckTypes(true);
-    options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR));
-    options.setLegacyCodeCompile(true);
-    Compiler compiler = compile(options, "123();");
-    assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getWarnings()).hasSize(1);
-  }
-
-  @Test
-  public void testLegacyCompileTurnsOffDisambiguateProperties() {
-    CompilerOptions options = new CompilerOptions();
-    options.setCheckTypes(true);
-    options.setDisambiguateProperties(true);
-    options.setLegacyCodeCompile(true);
-    testSame(options,
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {",
-            "  this.p = 123;",
-            "}",
-            "/** @constructor */",
-            "function Bar() {",
-            "  this.p = 234;",
-            "}"));
-  }
-
-  @Test
   public void testReplaceCssNames() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

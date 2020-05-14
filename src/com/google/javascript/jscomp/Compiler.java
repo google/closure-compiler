@@ -362,12 +362,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setUseTypesForOptimization(false);
     }
 
-    if (options.legacyCodeCompile) {
-      options.setDisambiguateProperties(false);
-      options.setAmbiguateProperties(false);
-      options.useNonStrictWarningsGuard();
-    }
-
     if (options.assumeForwardDeclaredForMissingTypes) {
       this.forwardDeclaredTypes =
           new AbstractSet<String>() {
