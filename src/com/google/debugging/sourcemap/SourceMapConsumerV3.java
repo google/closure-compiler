@@ -679,5 +679,13 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
         }
       }
     }
+    // Complete pending entry if any.
+    if (pending) {
+      // Given that this is the last entry and we don't know how much of the generated file left
+      // after that entry - make it of length 1.
+      FilePosition endPosition =
+          new FilePosition(startPosition.getLine(), startPosition.getColumn() + 1);
+      visitor.visit(sourceName, symbolName, sourceStartPosition, startPosition, endPosition);
+    }
   }
 }
