@@ -21,7 +21,7 @@
 
 /**
  * Returns an internal iterator from the given array.
- * @param {!Array<T>} array
+ * @param {!IArrayLike<T>} array
  * @return {function():!IIterableResult<T>}
  * @template T
  */

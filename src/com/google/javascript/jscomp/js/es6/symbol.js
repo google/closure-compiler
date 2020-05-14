@@ -26,7 +26,6 @@
 
 /**
  * Initializes the Symbol function.
- * @suppress {reportUnknownTypes}
  * @noinline
  */
 // TODO(rishipal): Remove this function
@@ -99,25 +98,41 @@ $jscomp.polyfill('Symbol.iterator', function(orig) {
 
   var symbolIterator = Symbol('Symbol.iterator');
 
-  if (typeof Array.prototype[symbolIterator] != 'function') {
-    $jscomp.defineProperty(Array.prototype, symbolIterator, {
-      configurable: true,
-      writable: true,
-      /**
-       * @this {Array}
-       * @return {!IteratorIterable}
-       */
-      value: function() {
-        return $jscomp.iteratorPrototype($jscomp.arrayIteratorImpl(this));
-      }
-    });
+  // Polyfill 'Symbol.iterator' onto Array and the various TypedArray* objects.
+  // This array uses strings to index into $jscomp.global because the TypedArray
+  // objects are present in IE11 but not on older browsers. Using bracket access
+  // saves code size compared to `typeof Int8Array === 'function' && Int8Array`.
+  var /** !Array<string> */ arrayLikes = [
+    'Array',
+    // List taken from https://tc39.es/ecma262/#sec-typedarray-objects.
+    // The BigInt*Arrays are intentionally omitted because they are only present
+    // in browsers where Symbol is fully supported.
+    'Int8Array', 'Uint8Array', 'Uint8ClampedArray', 'Int16Array', 'Uint16Array',
+    'Int32Array', 'Uint32Array', 'Float32Array', 'Float64Array'
+  ];
+
+  for (var i = 0; i < arrayLikes.length; i++) {
+    var ArrayLikeCtor = /** @type {*} */ ($jscomp.global[arrayLikes[i]]);
+    if (typeof ArrayLikeCtor === 'function' &&
+        typeof ArrayLikeCtor.prototype[symbolIterator] != 'function') {
+      $jscomp.defineProperty(ArrayLikeCtor.prototype, symbolIterator, {
+        configurable: true,
+        writable: true,
+        /**
+         * @this {IArrayLike}
+         * @return {!IteratorIterable}
+         */
+        value: function() {
+          return $jscomp.iteratorPrototype($jscomp.arrayIteratorImpl(this));
+        }
+      });
+    }
   }
   return symbolIterator;
 }, 'es6', 'es3');
 
 /**
  * Initializes Symbol.asyncIterator (if it's not already defined)
- * @suppress {reportUnknownTypes}
  */
 $jscomp.initSymbolAsyncIterator = function() {
   // Only need to do this once. All future calls are no-ops.
@@ -137,7 +152,6 @@ $jscomp.initSymbolAsyncIterator = function() {
  * @param {function(this: Iterator<T>): T} next
  * @return {!IteratorIterable<T>}
  * @template T
- * @suppress {reportUnknownTypes}
  */
 $jscomp.iteratorPrototype = function(next) {
   $jscomp.initSymbolIterator();
