@@ -3464,7 +3464,7 @@ Location.prototype.hash;
 
 /**
  * Navigates to the given page.
- * @param {!TrustedURL|string} url
+ * @param {string} url
  * @return {undefined}
  * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-assign
  */
@@ -3473,7 +3473,7 @@ Location.prototype.assign = function(url) {};
 /**
  * Removes the current page from the session history and navigates to the given
  * page.
- * @param {!TrustedURL|string} url
+ * @param {string} url
  * @return {undefined}
  * @see https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
  */
