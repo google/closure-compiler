@@ -19061,6 +19061,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testUnknownTypeReport_allowsUnknownIfStatement() {
+    enableReportUnknownTypes();
+    testTypes("function id(x) { x; }");
+  }
+
+  @Test
   public void testUnknownForIn() {
     enableReportUnknownTypes();
     testTypes("var x = {'a':1}; var y; \n for(\ny\n in x) {}");

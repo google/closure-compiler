@@ -1119,7 +1119,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (type == null) {
       nullCount++;
     } else if (type.isUnknownType()) {
-      if (reportUnknownTypes) {
+      if (reportUnknownTypes && !n.getParent().isExprResult()) {
         compiler.report(JSError.make(n, UNKNOWN_EXPR_TYPE));
       }
       unknownCount++;
