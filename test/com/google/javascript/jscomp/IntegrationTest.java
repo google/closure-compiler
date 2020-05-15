@@ -67,6 +67,33 @@ public final class IntegrationTest extends IntegrationTestCase {
           "};");
 
   @Test
+  public void testNewDotTargetTranspilation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
+    test(
+        options,
+        lines(
+            "", //
+            "class Foo {",
+            "  constructor() {",
+            "    use(new.target);",
+            "    use(() => new.target);", // works in arrow functions, too
+            "  }",
+            "}",
+            ""),
+        lines(
+            "", //
+            "var Foo = function() {",
+            "  var a = this;",
+            "  use(this.constructor);",
+            "  use(function() { return a.constructor; });", // works in arrow functions, too
+            "}",
+            ""));
+  }
+
+  @Test
   public void testNumericSeparator() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

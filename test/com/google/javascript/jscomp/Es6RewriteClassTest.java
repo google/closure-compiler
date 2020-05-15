@@ -263,11 +263,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNewTarget() {
-    testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
-  }
-
-  @Test
   public void testClassWithNoJsDoc() {
     test("class C { }", "/** @constructor */ let C = function() { };");
   }

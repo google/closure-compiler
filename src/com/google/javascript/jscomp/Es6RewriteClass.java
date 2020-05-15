@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.cannotConvert;
-import static com.google.javascript.jscomp.Es6ToEs3Util.cannotConvertYet;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -121,9 +120,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
           return false;
         }
         break;
-      case NEW_TARGET:
-        cannotConvertYet(compiler, n, "new.target");
-        break;
       default:
         break;
     }
@@ -132,12 +128,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case CLASS:
-        visitClass(t, n, parent);
-        break;
-      default:
-        break;
+    if (n.isClass()) {
+      visitClass(t, n, parent);
     }
   }
 

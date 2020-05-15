@@ -132,6 +132,7 @@ public class TranspilationPasses {
       passes.add(es6SplitVariableDeclarations);
       passes.add(
           getEs6RewriteDestructuring(ObjectDestructuringRewriteMode.REWRITE_ALL_OBJECT_PATTERNS));
+      passes.add(rewriteNewDotTarget);
       passes.add(es6RewriteArrowFunction);
       passes.add(es6ExtractClasses);
       passes.add(es6RewriteClass);
@@ -212,6 +213,13 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("rewriteCatchWithNoBinding")
           .setInternalFactory(RewriteCatchWithNoBinding::new)
+          .setFeatureSet(ES_NEXT)
+          .build();
+
+  private static final PassFactory rewriteNewDotTarget =
+      PassFactory.builderForHotSwap()
+          .setName("rewriteNewDotTarget")
+          .setInternalFactory(RewriteNewDotTarget::new)
           .setFeatureSet(ES_NEXT)
           .build();
 
