@@ -179,11 +179,15 @@ class IsolatePolyfills implements CompilerPass {
     final Node parent = polyfillUsage.node().getParent();
 
     if (polyfillAccess.getSourceFileName().equals(" [synthetic:util/global] ")
-        || polyfillAccess.getSourceFileName().equals(" [synthetic:util/polyfill] ")) {
+        || polyfillAccess.getSourceFileName().equals(" [synthetic:util/shouldpolyfill] ")) {
       // Special-case code in the compiler runtime libraries that executes before any polyfills are
       // injected.
       //   - the definition of $jscomp.global needs to look for a global variable globalThis
       //   - the $jscomp.polyfill function needs to check whether Symbol is native
+      // If desired we could programatically detect these cases instead of having this allowlist of
+      // polyfill accesses, but that might silently allow other usages of third-party polyfills
+      // into the codebase.
+      // TODO(b/156776817): crash on early references to polyfills that are not in our allowlist.
       return;
     }
 

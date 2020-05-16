@@ -20,6 +20,8 @@
  */
 
 'require util/objectcreate';
+'require util/polyfill';
+'require util/shouldpolyfill';
 
 /**
  * Polyfill for Reflect.construct() method:
@@ -46,7 +48,8 @@ $jscomp.construct = /** @type {function(): !Function} */ (function() {
     return new Base() instanceof Base;
   }
 
-  if (typeof Reflect != 'undefined' && Reflect.construct) {
+  if ($jscomp.TRUST_ES6_POLYFILLS && typeof Reflect != 'undefined' &&
+      Reflect.construct) {
     if (reflectConstructWorks()) return Reflect.construct;
     var brokenConstruct = Reflect.construct;
     /**

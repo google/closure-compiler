@@ -67,6 +67,14 @@ testSuite({
     assertTrue(window['jscomp_Array_includes'].call([1], 1));
     assertFalse(Array.prototype.includes.call([1], 1));
   },
+  testObjectStatics_doNotUseExistingPolyfill: function() {
+    assertNotEquals(Object.assign, window['jscomp_Object_assign']);
+    assertNotEquals(
+        Object.setPrototypeOf, window['jscomp_Object_setPrototypeOf']);
+  },
+  testReflectConstruct_doesNotUseExistingPolyfill: function() {
+    assertNotEquals(Reflect.construct, window['jscomp_Reflect_construct']);
+  },
   testMathSignPolyfill_doesNotUseExistingPolyfill: function() {
     assertNotEquals(Math.sign, window['jscomp_Math_sign']);
 
@@ -74,9 +82,5 @@ testSuite({
     // not.
     assertEquals(1, window['jscomp_Math_sign'](1));
     assertEquals(-1, Math.sign(1));
-  },
-  testObjectSetPrototypeOfPolyfill_doesNotUseExistingPolyfill: function() {
-    assertNotEquals(
-        Object.setPrototypeOf, window['jscomp_Object_setPrototypeOf']);
   },
 });

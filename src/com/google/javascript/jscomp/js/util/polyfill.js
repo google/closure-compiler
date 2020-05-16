@@ -21,6 +21,7 @@
 'require util/defineproperty';
 'require util/defines';
 'require util/global';
+'require util/shouldpolyfill';
 
 /** @const {!Object<string, ?>} map from classes (Map) to polyfills*/
 $jscomp.polyfills = {};
@@ -30,13 +31,6 @@ $jscomp.propertyToPolyfillSymbol = {};
 
 /** @const {string} */
 $jscomp.POLYFILL_PREFIX = '$jscp$';
-
-/**
- * @const {boolean} whether Symbol is implemented natively (i.e. is not a
- * polyfill)
- */
-$jscomp.IS_SYMBOL_NATIVE =
-    typeof Symbol === 'function' && typeof Symbol('x') === 'symbol';
 
 /**
  * Returns a polyfilled version of the given property if present, otherwise

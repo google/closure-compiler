@@ -54,6 +54,8 @@ function addJSCompPolyfillsToWindow() {
   window['jscomp_Array_of'] = Array.of;
   window['jscomp_Promise_settled'] = Promise.allSettled;
   window['jscomp_Object_setPrototypeOf'] = Object.setPrototypeOf;
+  window['jscomp_Object_assign'] = Object.assign;
+  window['jscomp_Reflect_construct'] = Reflect.construct;
 
   window['jscomp_String_startsWith'] = String.prototype.startsWith;
   window['jscomp_Array_includes'] = Array.prototype.includes;

@@ -20,10 +20,8 @@
  */
 
 'require util/defines';
-// This require is necessary both to access $jscomp.IS_SYMBOL_NATIVE and to
-// ensure that $jscomp$lookupPolyfilledValue has been loaded in polyfill
-// isolation mode before evaluating Object.setPrototypeOf.
 'require util/polyfill';
+'require util/shouldpolyfill';
 
 /**
  * @suppress {missingProperties,reportUnknownTypes}
@@ -50,11 +48,8 @@ $jscomp.underscoreProtoCanBeSet = function() {
  *
  * @type {null|function(!Object, ?Object): !Object}
  */
-$jscomp.setPrototypeOf =
-    // If polyfill isolation is enabled, avoid the existing
-    // Object.setPrototypeOf unless this browser has native Symbol support.
-    ((!$jscomp.ISOLATE_POLYFILLS || $jscomp.IS_SYMBOL_NATIVE) &&
-     typeof Object.setPrototypeOf == 'function') ?
+$jscomp.setPrototypeOf = ($jscomp.TRUST_ES6_POLYFILLS &&
+                          typeof Object.setPrototypeOf == 'function') ?
     Object.setPrototypeOf :
     $jscomp.underscoreProtoCanBeSet() ? function(target, proto) {
       target.__proto__ = proto;

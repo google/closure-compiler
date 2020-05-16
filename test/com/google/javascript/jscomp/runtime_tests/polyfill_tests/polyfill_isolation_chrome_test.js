@@ -47,8 +47,11 @@ testSuite({
     assertEquals(
         String.prototype.startsWith, window['jscomp_String_startsWith']);
   },
-  testMathSignPolyfill_usesNativeImplementation() {
+  testStaticEs6Polyfills_useNativeImplementation() {
     assertEquals(Math.sign, window['jscomp_Math_sign']);
+    assertEquals(Object.assign, window['jscomp_Object_assign']);
+    assertEquals(Object.setPrototypeOf, window['jscomp_Object_setPrototypeOf']);
+    assertEquals(Reflect.construct, window['jscomp_Reflect_construct']);
   },
   /** Methods from a newer spec version than ES6 are still polyfilled */
   testPromiseAllSettledPolyfill_ignoresNativeImpl() {
