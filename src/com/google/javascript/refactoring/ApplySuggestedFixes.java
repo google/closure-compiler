@@ -16,7 +16,7 @@
 
 package com.google.javascript.refactoring;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Joiner;
@@ -24,20 +24,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Streams;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -47,11 +45,7 @@ import java.util.stream.IntStream;
  */
 public final class ApplySuggestedFixes {
 
-  private static final Ordering<CodeReplacement> ORDER_CODE_REPLACEMENTS =
-      Ordering.natural()
-          .onResultOf(CodeReplacement::getStartPosition)
-          .compound(Ordering.natural().onResultOf(CodeReplacement::getLength))
-          .compound(Ordering.natural().onResultOf(CodeReplacement::getSortKey));
+  private static final Joiner DOUBLE_LINE_JOINER = Joiner.on("\n\n");
 
   /**
    * Applies the provided set of suggested fixes to the files listed in the suggested fixes.
@@ -140,12 +134,17 @@ public final class ApplySuggestedFixes {
   }
 
   /**
-   * Applies the provided set of code replacements to the code and returns the transformed code.
-   * The code replacements may not have any overlap.
+   * Applies the provided set of code replacements to the code and returns the transformed code. The
+   * code replacements may not have any overlap.
    */
-  public static String applyCodeReplacements(Iterable<CodeReplacement> replacements, String code) {
-    List<CodeReplacement> sortedReplacements = ORDER_CODE_REPLACEMENTS.sortedCopy(replacements);
-    validateNoOverlaps(sortedReplacements);
+  public static String applyCodeReplacements(
+      Collection<CodeReplacement> replacements, String code) {
+    ImmutableSortedSet<CodeReplacement> sortedReplacements =
+        ImmutableSortedSet.copyOf(replacements);
+    checkArgument(
+        !containsOverlaps(sortedReplacements),
+        "Found overlap between code replacements:\n%s",
+        DOUBLE_LINE_JOINER.join(sortedReplacements));
 
     StringBuilder sb = new StringBuilder();
     int lastIndex = 0;
@@ -161,41 +160,24 @@ public final class ApplySuggestedFixes {
   }
 
   /**
-   * Validates that none of the CodeReplacements have any overlap, since applying
-   * changes that have overlap will produce malformed results.
-   * The replacements must be provided in order sorted by start position, as sorted
-   * by ORDER_CODE_REPLACEMENTS.
+   * Checks whether the `CodeReplacement`s have any overlap.
+   *
+   * <p>We intentinoally accept a set here beceuse we want to supprt/ignore equivalent
+   * `CodeReplacement`s. It's safe if those overlap as long as we only apply one of them.
    */
-  private static void validateNoOverlaps(List<CodeReplacement> replacements) {
-    checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
-    if (containsOverlaps(replacements)) {
-      throw new IllegalArgumentException(
-          "Found overlap between code replacements!\n" + Joiner.on("\n\n").join(replacements));
-    }
-  }
-
-  /**
-   * Checks whether the CodeReplacements have any overlap. The replacements must be provided in
-   * order sorted by start position, as sorted by ORDER_CODE_REPLACEMENTS.
-   */
-  private static boolean containsOverlaps(List<CodeReplacement> replacements) {
-    checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
+  private static boolean containsOverlaps(ImmutableSortedSet<CodeReplacement> replacements) {
     int start = -1;
     for (CodeReplacement replacement : replacements) {
       if (replacement.getStartPosition() < start) {
         return true;
       }
-      start = Math.max(start, replacement.getEndPosition());
+      start = replacement.getEndPosition();
     }
     return false;
   }
 
   private static class ReplacementMap {
-    private final SetMultimap<String, CodeReplacement> map;
-
-    ReplacementMap() {
-      this.map = HashMultimap.create();
-    }
+    private final SetMultimap<String, CodeReplacement> map = HashMultimap.create();
 
     void putIfNoOverlap(SuggestedFix fix) {
       if (canPut(fix)) {
@@ -205,9 +187,11 @@ public final class ApplySuggestedFixes {
 
     private boolean canPut(SuggestedFix fix) {
       for (String filename : fix.getReplacements().keySet()) {
-        List<CodeReplacement> replacements = new ArrayList<>(map.get(filename));
-        replacements.addAll(fix.getReplacements().get(filename));
-        replacements = ORDER_CODE_REPLACEMENTS.sortedCopy(replacements);
+        ImmutableSortedSet<CodeReplacement> replacements =
+            ImmutableSortedSet.<CodeReplacement>naturalOrder()
+                .addAll(map.get(filename))
+                .addAll(fix.getReplacements().get(filename))
+                .build();
         if (containsOverlaps(replacements)) {
           return false;
         }
@@ -215,9 +199,10 @@ public final class ApplySuggestedFixes {
       return true;
     }
 
-    Set<Entry<String, Set<CodeReplacement>>> entrySet() {
+    Set<Map.Entry<String, Set<CodeReplacement>>> entrySet() {
       return Multimaps.asMap(map).entrySet();
     }
   }
+
   private ApplySuggestedFixes() {}
 }

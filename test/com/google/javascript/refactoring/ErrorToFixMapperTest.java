@@ -963,6 +963,17 @@ public class ErrorToFixMapperTest {
         fileWithImports("const a = goog.require('a');", useInCode("a")));
   }
 
+  @Test
+  public void testFixRequires_mutlipleFixesSpecifySameRequire() {
+    assertChanges(
+        fileWithImports(
+            "goog.require('a.b');", //
+            useInCode("a.b", "a.b", "a.b")),
+        fileWithImports(
+            "const b = goog.require('a.b');", //
+            useInCode("b", "b", "b")));
+  }
+
   @Ignore
   @Test
   public void testFixRequires_emptyDestructuring_alone() {

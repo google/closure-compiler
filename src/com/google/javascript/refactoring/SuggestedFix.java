@@ -326,7 +326,7 @@ public final class SuggestedFix {
             nodeToRename = nodeToRename.getParent();
           }
         }
-      } else if (n.isStringKey()) {
+      } else if (n.isStringKey() || n.isName()) {
         nodeToRename = n;
       } else if (n.isString()) {
         checkState(n.getParent().isGetProp(), n);
@@ -602,15 +602,20 @@ public final class SuggestedFix {
 
     /** Adds a goog.require for the given namespace to the file if it does not already exist. */
     public Builder addGoogRequire(Match m, String namespace, ScriptMetadata scriptMetadata) {
-      String alias = null;
+      final String alias;
       if (scriptMetadata.supportsRequireAliases()) {
-        if (scriptMetadata.getAlias(namespace) != null) {
-          return this; // No require is needed.
-        }
-
-        if (namespace.indexOf('.') == -1) {
-          // For unqualified names, the exisiting references will still be valid so long as
-          // we keep the same name for the alias.
+        String existingAlias = scriptMetadata.getAlias(namespace);
+        if (existingAlias != null) {
+          /**
+           * Each fix muct be independently valid, so go through the steps of adding a require even
+           * if one may already exist or have been added by another fix.
+           */
+          alias = existingAlias;
+        } else if (namespace.indexOf('.') == -1) {
+          /**
+           * For unqualified names, the exisiting references will still be valid so long as we keep
+           * the same name for the alias.
+           */
           alias = namespace;
         } else {
           alias =
@@ -619,6 +624,8 @@ public final class SuggestedFix {
                   .findFirst()
                   .orElseThrow(AssertionError::new);
         }
+      } else {
+        alias = null;
       }
 
       NodeMetadata metadata = m.getMetadata();

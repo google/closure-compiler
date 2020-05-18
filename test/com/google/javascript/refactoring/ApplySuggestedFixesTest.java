@@ -50,6 +50,13 @@ public class ApplySuggestedFixesTest {
   }
 
   @Test
+  public void testApplyCodeReplacements_overlapsAreErrors_unlessEqual() throws Exception {
+    List<CodeReplacement> replacements =
+        ImmutableList.of(CodeReplacement.create(0, 3, "A"), CodeReplacement.create(0, 3, "A"));
+    ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
+  }
+
+  @Test
   public void testApplyCodeReplacements_noOverlapsSucceed() throws Exception {
     List<CodeReplacement> replacements =
         ImmutableList.of(CodeReplacement.create(0, 3, ""), CodeReplacement.create(5, 3, ""));
@@ -175,6 +182,30 @@ public class ApplySuggestedFixesTest {
       ApplySuggestedFixes.applySuggestedFixesToCode(fixes, codeMap);
       fail("applySuggestedFixesToCode should have failed since file is missing from code map.");
     } catch (IllegalArgumentException expected) {}
+  }
+
+  @Test
+  public void testApplySuggestedFixes_withOveralppingEqualParts_areAllApplied() throws Exception {
+    String code = "var first, second, shared;";
+    Compiler compiler = getCompiler(code);
+    Node root = compileToScriptRoot(compiler);
+    System.out.println(root.toStringTree());
+    Node var = root.getFirstChild();
+
+    List<SuggestedFix> fixes =
+        ImmutableList.of(
+            new SuggestedFix.Builder()
+                .rename(var.getLastChild(), "newShared")
+                .rename(var.getFirstChild(), "newFirst")
+                .build(),
+            new SuggestedFix.Builder()
+                .rename(var.getLastChild(), "newShared")
+                .rename(var.getSecondChild(), "newSecond")
+                .build());
+
+    Map<String, String> newCodeMap =
+        ApplySuggestedFixes.applySuggestedFixesToCode(fixes, ImmutableMap.of("test", code));
+    assertThat(newCodeMap).containsExactly("test", "var newFirst, newSecond, newShared;");
   }
 
   /** Returns the root script node produced from the compiled JS input. */
