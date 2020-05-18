@@ -6303,12 +6303,15 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setCodingConvention(convention);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    Compiler compiler = compile(options, LINE_JOINER.join(
-        "class Base {}",
-        "class Sub extends Base {}",
-        "alert(1);"));
-    String result = compiler.toSource(compiler.getJsRoot());
-    assertThat(result).isEqualTo("alert(1)");
+    test(
+        options,
+        lines(
+            "", //
+            "class Base {}",
+            "class Sub extends Base {}",
+            "alert(1);",
+            ""),
+        "alert(1)");
   }
 
   @Test
