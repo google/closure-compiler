@@ -103,9 +103,8 @@ import java.util.Set;
  */
 public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
-  static final DiagnosticType DUPLICATE_CLASS = DiagnosticType.error(
-      "DUPLICATE_CLASS",
-      "Multiple classes cannot share the same name.");
+  static final DiagnosticType DUPLICATE_CLASS =
+      DiagnosticType.error("DUPLICATE_CLASS", "Multiple classes cannot share the same name: {0}");
 
   private final Set<String> duplicateClassNames = new HashSet<>();
 
@@ -160,7 +159,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       JavascriptClass superClass = classByAlias.get(superclassQname);
       JavascriptClass subClass = classByAlias.get(subclassQname);
       if (duplicateClassNames.contains(superclassQname)) {
-        compiler.report(JSError.make(inheritsCall, DUPLICATE_CLASS));
+        compiler.report(JSError.make(inheritsCall, DUPLICATE_CLASS, superclassQname));
         return;
       }
       if (superClass == null || subClass == null) {
