@@ -21,7 +21,7 @@
   <packaging>pom</packaging>
 
   <name>Closure Compiler Main</name>
-  <version>v20200517</version>
+  <version>1.0-SNAPSHOT</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
@@ -47,7 +47,7 @@
   <parent>
     <groupId>com.google.javascript</groupId>
     <artifactId>closure-compiler-parent</artifactId>
-    <version>v20200517</version>
+    <version>1.0-SNAPSHOT</version>
     <relativePath>pom.xml</relativePath>
   </parent>
 
@@ -61,7 +61,7 @@
     <dependency>
       <groupId>com.google.javascript</groupId>
       <artifactId>closure-compiler-externs</artifactId>
-      <version>v20200517</version>
+      <version>1.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
