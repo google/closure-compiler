@@ -436,7 +436,7 @@ public class DiagnosticGroups {
           // triggered by typedefs with missing types
           DUPLICATE_VARS,
           // caused by a define depending on another define that's missing
-          DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_INIT_ERROR),
+          DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE),
           // ES Module imports of files not reachable from this partial program.
           DiagnosticGroup.forType(ModuleLoader.LOAD_WARNING));
 

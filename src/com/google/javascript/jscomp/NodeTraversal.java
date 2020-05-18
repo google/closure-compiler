@@ -1249,6 +1249,18 @@ public class NodeTraversal {
     return getScopeDepth() == 0;
   }
 
+  /**
+   * Determines whether the traversal is currently in the global scope. Note that this returns false
+   * in a global block scope.
+   */
+  public boolean inModuleScope() {
+    return NodeUtil.isModuleScopeRoot(getScopeRoot());
+  }
+
+  public boolean inGlobalOrModuleScope() {
+    return this.inGlobalScope() || inModuleScope();
+  }
+
   /** Determines whether the traversal is currently in the scope of the block of a function. */
   public boolean inFunctionBlockScope() {
     return NodeUtil.isFunctionBlock(getScopeRoot());
@@ -1267,14 +1279,6 @@ public class NodeTraversal {
             || cfgRoot.isModuleBody(),
         cfgRoot);
     return cfgRoot.isScript() || cfgRoot.isRoot() || cfgRoot.isBlock();
-  }
-
-  /**
-   * Determines whether the traversal is currently in the global scope. Note that this returns false
-   * in a global block scope.
-   */
-  public boolean inModuleScope() {
-    return NodeUtil.isModuleScopeRoot(getScopeRoot());
   }
 
   /**

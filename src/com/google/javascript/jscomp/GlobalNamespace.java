@@ -1329,6 +1329,10 @@ class GlobalNamespace
       return globalSets;
     }
 
+    int getTotalSets() {
+      return globalSets + localSets;
+    }
+
     int getCallGets() {
       return callGets;
     }

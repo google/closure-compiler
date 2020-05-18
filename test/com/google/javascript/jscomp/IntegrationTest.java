@@ -632,7 +632,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
     DiagnosticType[] warnings = {
-        ProcessDefines.INVALID_DEFINE_TYPE_ERROR, RhinoErrorReporter.TYPE_PARSE_ERROR};
+      ProcessDefines.INVALID_DEFINE_TYPE,
+      ProcessDefines.INVALID_DEFINE_VALUE,
+      RhinoErrorReporter.TYPE_PARSE_ERROR
+    };
     String[] input = { "var goog = {};" +
                        "goog.provide('foo.bar');" +
                        "/** @define{foo.bar} */ foo.bar = {};" };
@@ -3316,22 +3319,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "goog.provide('Placer.Alignment');",
             "/** @param {*} image */ var Placer = function(image) {};",
             "Placer.Alignment = {LEFT: 'left'};"));
-  }
-
-  @Test
-  public void testAtDefineReassigned() {
-    test(createCompilerOptions(),
-         "/** @define {boolean} */ var HI = true; HI = false;",
-         ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
-  }
-
-  @Test
-  public void testProcessDefinesAdditionalReplacements() {
-    CompilerOptions options = createCompilerOptions();
-    options.setDefineToBooleanLiteral("HI", false);
-    test(options,
-         "/** @define {boolean} */ var HI = true;",
-         "var HI = false;");
   }
 
   @GwtIncompatible("com.google.javascript.jscomp.ReplaceMessages is incompatible")
