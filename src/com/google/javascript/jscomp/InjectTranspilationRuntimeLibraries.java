@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -60,8 +59,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
 
     FeatureSet mustBeCompiledAway = used.without(compiler.getOptions().getOutputFeatureSet());
 
-    // Check for `Symbol.iterator` and `Symbol.asyncIterator` references before injecting libraries.
-    // This prevents conditional checks from pulling them in'.
+    // Check for getters/setters
     TranspilationPasses.processTranspile(compiler, root, requiredForFeatures, this);
 
     // We will need these runtime methods when we transpile, but we want the runtime
@@ -157,28 +155,11 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     return var == null || var.isGlobal();
   }
 
-  // TODO(tbreisacher): Do this for all well-known symbols.
   private void visitGetprop(NodeTraversal t, Node n) {
     Node receiverNode = n.getFirstChild();
     String propName = receiverNode.getNext().getString();
     if (isGlobalSymbol(t, receiverNode)) {
       compiler.ensureLibraryInjected("es6/symbol", false);
-      Node statement = NodeUtil.getEnclosingStatement(n);
-      switch (propName) {
-        case "asyncIterator":
-          {
-            Node init =
-                IR.exprResult(
-                        IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolAsyncIterator")))
-                    .useSourceInfoFromForTree(statement);
-            statement.getParent().addChildBefore(init, statement);
-            compiler.reportChangeToEnclosingScope(init);
-            break;
-          }
-        default:
-          // TODO(bradfordcsmith): Should we warn for unrecognized symbol names?
-          break;
-      }
     }
   }
 }

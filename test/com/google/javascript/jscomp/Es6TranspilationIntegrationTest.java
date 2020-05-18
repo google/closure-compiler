@@ -1823,6 +1823,9 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test("let a = alert(Symbol.thimble);", "var a = alert(Symbol.thimble)");
     assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
 
+    test("let a = alert(Symbol.iterator);", "var a = alert(Symbol.iterator)");
+    assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
+
     test(
         lines(
             "function f() {",

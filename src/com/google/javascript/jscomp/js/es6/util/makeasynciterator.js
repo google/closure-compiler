@@ -29,7 +29,6 @@
  * @suppress {reportUnknownTypes}
  */
 $jscomp.makeAsyncIterator = function(iterable) {
-  $jscomp.initSymbolAsyncIterator();
   var asyncIteratorFunction = (iterable)[Symbol.asyncIterator];
   if (asyncIteratorFunction !== undefined) {
     return asyncIteratorFunction.call(iterable);
