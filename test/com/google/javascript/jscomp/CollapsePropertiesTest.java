@@ -18,7 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.PARTIAL_NAMESPACE_WARNING;
-import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
+import static com.google.javascript.jscomp.CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -155,7 +156,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "alert(C.getP());",
             ""),
         // TODO(b/117437011): should recognize type of `this` in a static method
-        UNSAFE_THIS);
+        RECEIVER_AFFECTED_BY_COLLAPSE);
   }
 
   @Test
@@ -174,7 +175,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "alert(C.p_);",
             ""),
         // TODO(b/117437011): should recognize type of `this` in a static method
-        UNSAFE_THIS);
+        RECEIVER_AFFECTED_BY_COLLAPSE);
   }
 
   @Test
@@ -1317,7 +1318,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = function() {this.c};",
         "var a$b = function() {this.c}; ",
-        warning(CollapseProperties.UNSAFE_THIS));
+        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
   @Test
@@ -1340,7 +1341,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {b: function() {this.c}};",
         "var a$b = function() { this.c };",
-        warning(CollapseProperties.UNSAFE_THIS));
+        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
   @Test
@@ -2690,7 +2691,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
                 "class A {}",
                 "var A$foo = 'bar';",
                 "A$useFoo();")),
-        warning(UNSAFE_THIS));
+        warning(RECEIVER_AFFECTED_BY_COLLAPSE));
 
     test(
         srcs(
@@ -2710,7 +2711,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
                 "/** @nocollapse */",
                 "A.foo = 'bar';",
                 "A$useFoo();")),
-        warning(UNSAFE_THIS));
+        warning(RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
   @Test
@@ -2833,7 +2834,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPropertyMethodAssignment_unsafeThis() {
+  public void testPropertyMethodAssignment_receiverAffectedByCollapse() {
     // ES5 version
     setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
     test(
@@ -2851,7 +2852,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  return this.bar",
             "};",
             "foo$myFunc();"),
-        warning(CollapseProperties.UNSAFE_THIS));
+        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+
+    test(
+        lines(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc: function myFunc() {",
+            "    function inner() {",
+            "      return this.bar;",
+            "    }",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        lines(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function myFunc() {",
+            "  function inner() {",
+            "    return this.bar;",
+            "  }",
+            "};",
+            "foo$myFunc();"));
 
     // ES6 version
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
@@ -2870,22 +2891,77 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  return this.bar",
             "};",
             "foo$myFunc();"),
-        warning(CollapseProperties.UNSAFE_THIS));
+        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
 
     // "this" is lexically scoped in arrow functions so collapsing is safe.
     test(
         lines(
-            "var foo = { ",
+            "var foo = { ", //
             "  myFunc: () => {",
             "    return this;",
             "  }",
             "};",
             "foo.myFunc();"),
         lines(
-            "var foo$myFunc = () => {",
+            "var foo$myFunc = () => {", //
             "  return this",
             "};",
             "foo$myFunc();"));
+
+    // but not in inner functions
+    test(
+        lines(
+            "var foo = {", //
+            "  myFunc: function() {",
+            "    return (() => this);",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        lines(
+            "var foo$myFunc = function() {", //
+            "  return (() => this);",
+            "};",
+            "foo$myFunc();"),
+        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+
+    // `super` is also a receiver reference
+    // TODO(b/122665204): Make this case pass rather than crash.
+    assertThrows(
+        Exception.class,
+        () -> {
+          test(
+              lines(
+                  "var foo = { ",
+                  "  bar: 1, ",
+                  "  myFunc() {",
+                  "    return super.bar;",
+                  "  }",
+                  "};",
+                  "foo.myFunc();"),
+              lines(
+                  "var foo$bar = 1;",
+                  "var foo$myFunc = function() {",
+                  "  return super.bar", // Unclear what goes here.
+                  "};",
+                  "foo$myFunc();"),
+              warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
+        });
+
+    // check references in param lists
+    test(
+        lines(
+            "var foo = { ", //
+            "  bar: 1, ",
+            "  myFunc(x = this) {",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        lines(
+            "var foo$bar = 1;", //
+            "var foo$myFunc = function(x = this) {",
+            "};",
+            "foo$myFunc();"),
+        warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
   }
 
   @Test

@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CollapseProperties.PARTIAL_NAMESPACE_WARNING;
-import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_THIS;
+import static com.google.javascript.jscomp.CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
 
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.rhino.Node;
@@ -1268,7 +1268,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
                 "const B = null;",
                 "A$foo = 'baz';",
                 "A$useFoo();")),
-        warning(UNSAFE_THIS));
+        warning(RECEIVER_AFFECTED_BY_COLLAPSE));
 
     // Adding @nocollapse makes this safe.
     test(
