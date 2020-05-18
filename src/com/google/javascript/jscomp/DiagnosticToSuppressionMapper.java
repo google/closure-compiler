@@ -79,10 +79,7 @@ public final class DiagnosticToSuppressionMapper {
 
       DiagnosticGroup group = entry.getValue();
       for (DiagnosticType diagnosticType : group.getTypes()) {
-        diagnosticToSuppression.merge(
-            diagnosticType,
-            suppression,
-            DiagnosticToSuppressionMapper::dispreferMissingSourcesWarning);
+        diagnosticToSuppression.merge(diagnosticType, suppression, this::preferMoreTargetedGroup);
       }
     }
 
@@ -92,15 +89,11 @@ public final class DiagnosticToSuppressionMapper {
                 naturalOrder(), (entrySet) -> entrySet.getKey().key, Map.Entry::getValue));
   }
 
-  /**
-   * Avoid suppressing MISSING_SOURCES_WARNINGS.
-   *
-   * <p>MISSING_SOURCES_WARNINGS is a grabbag of different vaguely related suppressions, so use a
-   * more targeted suppression if one exists. Some diagnostics are only suppressible via
-   * missingSourcesWarnings, though.
-   */
-  private static String dispreferMissingSourcesWarning(String next, String current) {
-    return current.equals("missingSourcesWarnings") ? next : current;
+  /** Use a more targeted suppression if one exists. */
+  private String preferMoreTargetedGroup(String next, String current) {
+    DiagnosticGroup nextGroup = this.diagnosticGroups.get(next);
+    DiagnosticGroup currentGroup = this.diagnosticGroups.get(current);
+    return nextGroup.getTypes().size() < currentGroup.getTypes().size() ? next : current;
   }
 
   private static void printAsJson(ImmutableSortedMap<String, String> diagnosticToSuppression) {
