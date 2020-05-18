@@ -5090,7 +5090,13 @@ public final class IntegrationTest extends IntegrationTestCase {
             "      getType.toString.apply(functionToCheck) === '[object Function]';",
             "};");
     String result =
-        "isFunction = function(a){ var b={}; return a && '[object Function]' === b.a.apply(a); }";
+        lines(
+            "",
+            "isFunction = function(a){",
+            "  var b={};",
+            "  return a && '[object Function]' === b.toString.apply(a);",
+            "}",
+            "");
 
     test(options, code, result);
   }
@@ -7593,14 +7599,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
-    externs =
-        ImmutableList.<SourceFile>builder()
-            .addAll(externs)
-            .add(
-                SourceFile.fromCode(
-                    "extra_ex.js",
-                    "/** @return {!Object} */ Object.assign = function(target, var_args) {}"))
-            .build();
 
     // TODO(b/116532470): the compiler should compile this down to nothing.
     test(

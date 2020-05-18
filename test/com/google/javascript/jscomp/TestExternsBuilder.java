@@ -95,7 +95,18 @@ public class TestExternsBuilder {
           " * @return {!IIterableResult<VALUE>}",
           " * @override",
           " */",
-          "Generator.prototype.next = function(opt_value) {};");
+          "Generator.prototype.next = function(opt_value) {};",
+          "/**",
+          " * @param {VALUE} value",
+          " * @return {!IIterableResult<VALUE>}",
+          " */",
+          "Generator.prototype.return = function(value) {};",
+          "/**",
+          " * @param {?} exception",
+          " * @return {!IIterableResult<VALUE>}",
+          " */",
+          "Generator.prototype.throw = function(exception) {};",
+          "");
 
   private static final String STRING_EXTERNS =
       lines(
@@ -169,11 +180,26 @@ public class TestExternsBuilder {
   private static final String OBJECT_EXTERNS =
       lines(
           "/**",
-          " * @constructor",
+          " * @record",
+          " * @template THIS",
           " */",
           "function ObjectPropertyDescriptor() {}",
-          "/** @type {*} */",
+          "/** @type {(*|undefined)} */",
           "ObjectPropertyDescriptor.prototype.value;",
+          "/** @type {(function(this: THIS):?)|undefined} */",
+          "ObjectPropertyDescriptor.prototype.get;",
+          "",
+          "/** @type {(function(this: THIS, ?):void)|undefined} */",
+          "ObjectPropertyDescriptor.prototype.set;",
+          "",
+          "/** @type {boolean|undefined} */",
+          "ObjectPropertyDescriptor.prototype.writable;",
+          "",
+          "/** @type {boolean|undefined} */",
+          "ObjectPropertyDescriptor.prototype.enumerable;",
+          "",
+          "/** @type {boolean|undefined} */",
+          "ObjectPropertyDescriptor.prototype.configurable;",
           "",
           "/**",
           " * @constructor",
@@ -203,10 +229,19 @@ public class TestExternsBuilder {
           "/**",
           " * @param {!Object} obj",
           " * @param {string | symbol} prop",
-          " * @param {!Object} descriptor",
+          " * @param {!ObjectPropertyDescriptor} descriptor",
           " * @return {!Object}",
           " */",
           "Object.defineProperty = function(obj, prop, descriptor) {};",
+          "",
+          "/**",
+          " * @template T",
+          " * @param {T} obj",
+          " * @param {!Object<string|symbol, !ObjectPropertyDescriptor<T>>} props",
+          " * @return {T}",
+          " */",
+          "Object.defineProperties = function(obj, props) {};",
+          "",
           "/**",
           " * @param {?Object} proto",
           " * @param {?Object=} opt_properties",
@@ -231,7 +266,15 @@ public class TestExternsBuilder {
           " * @param {...(Object|null|undefined)} var_args",
           " * @return {!Object}",
           " */",
-          "Object.assign = function(target, var_args) {};");
+          "Object.assign = function(target, var_args) {};",
+          "",
+          "/**",
+          " * @param {T} obj",
+          " * @return {T}",
+          " * @template T",
+          " */",
+          "Object.seal = function(obj) {}",
+          "");
   private static final String ARRAY_EXTERNS =
       lines(
           "/**",
@@ -321,6 +364,9 @@ public class TestExternsBuilder {
           " * @nosideeffects",
           " */",
           "Array.prototype.slice = function(begin, end) {};",
+          "",
+          "/** @return {!IteratorIterable<T>} */",
+          "Array.prototype.values;",
           "");
 
   private static final String ARGUMENTS_EXTERNS =
