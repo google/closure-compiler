@@ -117,7 +117,7 @@ public final class ScriptMetadata {
     @Override
     public void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
       this.updateSupportsRequireAlias(n);
-      this.maybeCollectRequireAlias(n);
+      this.maybeCollectRequirelikeAlias(n);
       this.maybeCollectNames(n);
     }
 
@@ -141,7 +141,7 @@ public final class ScriptMetadata {
       this.toFill.supportsRequireAliases = true;
     }
 
-    private void maybeCollectRequireAlias(Node n) {
+    private void maybeCollectRequirelikeAlias(Node n) {
       if (!NodeUtil.isNameDeclaration(n)) {
         return;
       }
@@ -153,12 +153,8 @@ public final class ScriptMetadata {
         return;
       }
 
-      Node requireCall = aliasNode.getFirstChild();
-      if (requireCall == null
-          || !requireCall.isCall()
-          || requireCall.getChildCount() != 2
-          || !requireCall.getFirstChild().matchesQualifiedName("goog.require")
-          || !requireCall.getSecondChild().isString()) {
+      Node requirelikeCall = aliasNode.getFirstChild();
+      if (!this.isRequirelikeCall(requirelikeCall)) {
         return;
       }
 
@@ -167,8 +163,22 @@ public final class ScriptMetadata {
         alias = aliasNode.getString();
       }
 
-      String namespace = requireCall.getSecondChild().getString();
+      String namespace = requirelikeCall.getSecondChild().getString();
       this.toFill.requireAliases.put(namespace, alias);
+    }
+
+    private boolean isRequirelikeCall(Node call) {
+      if (call == null
+          || !call.isCall()
+          || call.getChildCount() != 2
+          || !call.getSecondChild().isString()) {
+        return false;
+      }
+
+      Node callee = call.getFirstChild();
+      return callee.matchesQualifiedName("goog.require")
+          || callee.matchesQualifiedName("goog.requireType")
+          || callee.matchesQualifiedName("goog.forwardDeclare");
     }
 
     private void maybeCollectNames(Node n) {
