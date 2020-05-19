@@ -872,7 +872,9 @@ $jscomp.generator.createGenerator = function(generator, program) {
   // instance by the constructor, so this does no harm.
   // We also cast Generator_ to Object to hide dynamic inheritance from
   // jscompiler, it makes ConformanceRules$BanUnknownThis happy.
-  if ($jscomp.setPrototypeOf) {
+  // In some transpiled cases there may not be an explicit prototype, in which
+  // case we skip this step.
+  if ($jscomp.setPrototypeOf && generator.prototype) {
     /** @type {function(!Object, ?Object): !Object} */ ($jscomp.setPrototypeOf)(
         result, generator.prototype);
   }
