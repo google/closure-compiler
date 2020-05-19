@@ -975,11 +975,6 @@ public class JSTypeRegistry implements Serializable {
     register(null, type, name);
   }
 
-  private void reregister(StaticScope scope, JSType type, String name) {
-    checkTypeName(name);
-    registerForScope(getLookupScope(scope, name), type, name);
-  }
-
   private void register(StaticScope scope, JSType type, String name) {
     checkTypeName(name);
     registerForScope(getLookupScope(scope, name), type, name);
@@ -1305,7 +1300,7 @@ public class JSTypeRegistry implements Serializable {
    */
   public void overwriteDeclaredType(StaticScope scope, String name, JSType type) {
     checkState(isDeclaredForScope(scope, name), "missing name %s", name);
-    reregister(scope, type, name);
+    register(scope, type, name);
   }
 
   /**
