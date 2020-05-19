@@ -65,7 +65,8 @@ public class ErrorToFixMapperTest {
     options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, ERROR);
     options.setWarningLevel(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT, ERROR);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, WARNING);
-    options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, ERROR);
+    options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE, ERROR);
+    options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE, ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, ERROR);
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_CHECKS, WARNING);
     options.setCodingConvention(new GoogleCodingConvention());
@@ -1239,17 +1240,25 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testMissingRequireInGoogProvideFile() {
-    assertChanges(
+  @Ignore("This has a bug, but hopefully it's uncommon enough that we never need to fix")
+  public void testMissingRequire_inJSDoc_withWhitespace() {
+    preexistingCode = "goog.provide('some.really.very.long.namespace.SuperInt');";
+    assertExpectedFixes(
         lines(
-            "goog.provide('p');", //
+            "goog.module('m');",
             "",
-            "alert(new a.b.C());"),
-        lines(
-            "goog.provide('p');", //
-            "goog.require('a.b.C');",
-            "",
-            "alert(new a.b.C());"));
+            "/** @interface @implements {some.really.very.long.",
+            "                            namespace.SuperInt} */",
+            "class Bar {}"),
+        ExpectedFix.builder()
+            .fixedCode(
+                lines(
+                    "goog.module('m');",
+                    "const SuperInt = goog.require('some.really.very.long.namespace.SuperInt');",
+                    "",
+                    "/** @interface @implements {SuperInt} */",
+                    "class Bar {}"))
+            .build());
   }
 
   @Test
@@ -1334,8 +1343,7 @@ public class ErrorToFixMapperTest {
             "goog.module('m');",
             "const C = goog.require('a.b.C');",
             "",
-            // TODO(tbreisacher): Can we make automatically switch both lines to use 'new C()'?
-            "alert(new a.b.C());",
+            "alert(new C());",
             "alert(new C());"));
   }
 
@@ -1382,8 +1390,7 @@ public class ErrorToFixMapperTest {
             "goog.module('m');",
             "const Animal = goog.require('world.util.Animal');",
             "",
-            // TODO(tbreisacher): Change this to "@extends {Animal}"
-            "/** @constructor @extends {world.util.Animal} */",
+            "/** @constructor @extends {Animal} */",
             "function Cat() {}"));
   }
 
@@ -1665,8 +1672,7 @@ public class ErrorToFixMapperTest {
             "goog.module('m');",
             "const Animal = goog.require('world.util.Animal');",
             "",
-            // TODO(tbreisacher): Change this to "@extends {Animal}"
-            "/** @constructor @extends {world.util.Animal} */",
+            "/** @constructor @extends {Animal} */",
             "world.util.Cat = function() {};"));
   }
 
@@ -1687,7 +1693,7 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testMissingRequireInGoogModule_googStructsMap() {
-    preexistingCode = "goog.provide('goog.structs');";
+    preexistingCode = "goog.provide('goog.structs.Map');";
     assertChanges(
         lines(
             "goog.module('m');", //

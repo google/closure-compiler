@@ -48,7 +48,9 @@ public final class ErrorToFixMapper {
   private static final Pattern EARLY_REF =
       Pattern.compile("Variable referenced before declaration: (.*)");
   private static final Pattern MISSING_REQUIRE =
-      Pattern.compile("missing require: '([^']+)'");
+      Pattern.compile(
+          "'([^']+)' references a fully qualified namespace, which is disallowed .*",
+          Pattern.DOTALL);
   private static final Pattern FULLY_QUALIFIED_NAME =
       Pattern.compile("Reference to fully qualified import name '([^']+)'.*");
   private static final Pattern USE_SHORT_NAME =
@@ -108,9 +110,11 @@ public final class ErrorToFixMapper {
         return getFixForMissingSuper(error);
       case "JSC_INVALID_SUPER_CALL_WITH_SUGGESTION":
         return getFixForInvalidSuper(error);
-      case "JSC_MISSING_REQUIRE_WARNING":
-      case "JSC_MISSING_REQUIRE_STRICT_WARNING":
+      case "JSC_MISSING_REQUIRE":
         return getFixForMissingRequire(error);
+      case "JSC_MISSING_REQUIRE_TYPE":
+        // Adding a requireType is not (yet) supported, but should be
+        return null;
       case "JSC_EXTRA_REQUIRE_WARNING":
         return getFixForExtraRequire(error);
       case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
@@ -334,35 +338,37 @@ public final class ErrorToFixMapper {
   private SuggestedFix getFixForMissingRequire(JSError error) {
     Matcher regexMatcher = MISSING_REQUIRE.matcher(error.getDescription());
     checkState(regexMatcher.matches(), "Unexpected error description: %s", error.getDescription());
+    Node errorNode = error.getNode();
+    String namespaceToRequire = regexMatcher.group(1);
 
-    Node script = NodeUtil.getEnclosingScript(error.getNode());
+    String oldName =
+        error.getNode().isQualifiedName()
+            ? error.getNode().getQualifiedName()
+            : error.getNode().getString();
+
+    checkState(
+        oldName.startsWith(namespaceToRequire),
+        "Expected error location %s to start with namespace <%s>",
+        errorNode,
+        namespaceToRequire);
+
+    Node script = compiler.getScriptNode(error.getSourceName());
     ScriptMetadata scriptMetadata = this.getMetadataForScript(script);
 
-    String namespaceToRequire = regexMatcher.group(1);
     NodeMetadata metadata = new NodeMetadata(compiler);
     Match match = new Match(error.getNode(), metadata);
-
     SuggestedFix.Builder fix =
         new SuggestedFix.Builder()
             .attachMatchedNodeInfo(error.getNode(), compiler)
             .addGoogRequire(match, namespaceToRequire, scriptMetadata);
 
-    if (NodeUtil.getEnclosingType(error.getNode(), Token.MODULE_BODY) != null) {
-      Node nodeToReplace = null;
-      if (error.getNode().isNew()) {
-        nodeToReplace = error.getNode().getFirstChild();
-      } else if (error.getNode().isCall()) {
-        nodeToReplace = error.getNode().getFirstFirstChild();
-      } else if (error.getNode().isQualifiedName()) {
-        nodeToReplace = error.getNode();
-      }
+    String shortName = scriptMetadata.getAlias(namespaceToRequire);
 
-      if (nodeToReplace != null && nodeToReplace.matchesQualifiedName(namespaceToRequire)) {
-        fix.replace(nodeToReplace, IR.name(scriptMetadata.getAlias(namespaceToRequire)), compiler);
-      }
-    }
-
-    return fix.build();
+    return fix.replace(
+            error.getNode(),
+            NodeUtil.newQName(compiler, oldName.replace(namespaceToRequire, shortName)),
+            compiler)
+        .build();
   }
 
   private SuggestedFix getFixForExtraRequire(JSError error) {
