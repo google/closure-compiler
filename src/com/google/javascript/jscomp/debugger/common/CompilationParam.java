@@ -194,21 +194,21 @@ public enum CompilationParam {
   CHECK_GLOBAL_THIS(ParamGroup.ERROR_CHECKING) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setCheckGlobalThisLevel(value ? CheckLevel.WARNING : CheckLevel.OFF);
+      options.setWarningLevel(
+          DiagnosticGroups.GLOBAL_THIS, value ? CheckLevel.WARNING : CheckLevel.OFF);
     }
 
     @Override
     public String getJavaInfo() {
-      return "options.setCheckGlobalThisLevel(CheckLevel.WARNING)";
+      return diagGroupWarningInfo("GLOBAL_THIS");
     }
   },
 
   CHECK_LINT(ParamGroup.ERROR_CHECKING) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      if (value) {
-        options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
-      }
+      options.setWarningLevel(
+          DiagnosticGroups.LINT_CHECKS, value ? CheckLevel.WARNING : CheckLevel.OFF);
     }
 
     @Override

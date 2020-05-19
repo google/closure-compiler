@@ -2168,7 +2168,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testCheckGlobalThisOn() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSuspiciousCode(true);
-    options.setCheckGlobalThisLevel(CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.ERROR);
     test(options, "function f() { this.y = 3; }", CheckGlobalThis.GLOBAL_THIS);
   }
 
@@ -2176,7 +2176,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testSusiciousCodeOff() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSuspiciousCode(false);
-    options.setCheckGlobalThisLevel(CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.ERROR);
     test(options, "function f() { this.y = 3; }", CheckGlobalThis.GLOBAL_THIS);
   }
 
@@ -2184,7 +2184,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testCheckGlobalThisOff() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSuspiciousCode(true);
-    options.setCheckGlobalThisLevel(CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     testSame(options, "function f() { this.y = 3; }");
   }
 
@@ -3978,6 +3978,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.WARNING);
     test(options, code, code, CheckGlobalNames.STRICT_MODULE_DEP_QNAME);
   }
 
