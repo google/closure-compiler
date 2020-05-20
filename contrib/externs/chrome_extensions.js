@@ -7022,6 +7022,35 @@ chrome.system.memory.MemoryInfo.prototype.availableCapacity;
 
 /**
  * @const
+ * @see http://developer.chrome.com/apps/system_network.html
+ */
+chrome.system.network = {};
+
+/**
+ * @param {function(!Array<!chrome.system.network.NetworkInterface>)} callback
+ * @return {undefined}
+ */
+chrome.system.network.getNetworkInterfaces = function(callback) {};
+
+/**
+ * @interface
+ */
+chrome.system.network.NetworkInterface = function() {};
+
+/**
+ * @const {string} The underlying name of the adapter. On *nix, this will
+ *     typically be "eth0", "wlan0", etc.
+ */
+chrome.system.network.NetworkInterface.prototype.name;
+
+/** @const {string} The available IPv4/6 address. */
+chrome.system.network.NetworkInterface.prototype.address;
+
+/** @const {number} The prefix length */
+chrome.system.network.NetworkInterface.prototype.prefixLength;
+
+/**
+ * @const
  * @see https://developer.chrome.com/apps/system_powerSource
  */
 chrome.system.powerSource = {};
