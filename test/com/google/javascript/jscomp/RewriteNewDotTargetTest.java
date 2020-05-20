@@ -95,4 +95,53 @@ public class RewriteNewDotTargetTest extends CompilerTestCase {
             "}",
             ""));
   }
+
+  @Test
+  public void testNewTargetInEs6Constructor_superCtorReturnsObject() {
+    // TODO(b/157140030): This is an unexpected behaviour change.
+    test(
+        lines(
+            "/** @constructor */",
+            "function Base() {",
+            "  return {};",
+            "}",
+            "",
+            "class Child extends Base {",
+            "  constructor() {",
+            "    super();",
+            "    new.target;", // Child
+            "  }",
+            "}"),
+        lines(
+            "/** @constructor */",
+            "function Base() {",
+            "  return {};",
+            "}",
+            "",
+            "class Child extends Base {",
+            "  constructor() {",
+            "    super();",
+            "    this.constructor;", // Object
+            "  }",
+            "}"));
+  }
+
+  @Test
+  public void testNewTargetInEs6Constructor_beforeSuper() {
+    test(
+        lines(
+            "class Foo extends Object {",
+            "  constructor() {",
+            "    new.target;",
+            "    super();",
+            "  }",
+            "}"),
+        lines(
+            "class Foo extends Object {",
+            "  constructor() {",
+            "    this.constructor;", // `this` before `super`
+            "    super();",
+            "  }",
+            "}"));
+  }
 }
