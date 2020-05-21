@@ -515,15 +515,6 @@ public final class DefaultPassConfig extends PassConfig {
 
       // There's no need to complete transpilation if we're only running checks.
       TranspilationPasses.addPostCheckTranspilationPasses(checks, options);
-
-      if (options.needsTranspilationFrom(ES6)) {
-        // This pass used to be necessary to make the typechecker happy with class-side inheritance.
-        // It's not necessary for typechecking now that class transpilation is post-typechecking,
-        // but it turned out to be necessary to avoid CollapseProperties breaking static inheritance
-        // TODO(b/116054203): try to only run this pass when property collapsing is enabled during
-        // the optimizations. Even better, find a way to get rid of this pass completely.
-        checks.add(convertStaticInheritance);
-      }
     }
 
     assertAllOneTimePasses(checks);
@@ -620,6 +611,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
     if (options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
+      if (options.needsTranspilationFrom(ES6)) {
+        // This helps AggressiveInlineAliases / CollapseProperties with static inheritance
+        passes.add(convertStaticInheritance);
+      }
       passes.add(aggressiveInlineAliases);
     }
 

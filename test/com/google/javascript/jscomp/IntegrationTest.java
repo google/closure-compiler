@@ -6283,6 +6283,31 @@ public final class IntegrationTest extends IntegrationTestCase {
     testES6UnusedClassesAreRemoved(CodingConventions.getDefault());
   }
 
+  @Test
+  public void testNoDuplicateClassNameForLocalBaseClasses() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        lines(
+            "", //
+            // Previously Es6ToEs3ClassSideInheritance failed to take scope into account,
+            // so it produced DUPLICATE_CLASS errors for code like this.
+            "function f1() {",
+            "  class Base {}",
+            "  class Sub extends Base {}",
+            "}",
+            "function f2() {",
+            "  class Base {}",
+            "  class Sub extends Base {}",
+            "}",
+            "alert(1);",
+            ""),
+        "alert(1)");
+  }
+
   // Tests that unused classes are removed, even if they are passed to $jscomp.inherits.
   private void
       testES6UnusedClassesAreRemoved(CodingConvention convention) {
