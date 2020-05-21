@@ -31,6 +31,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
@@ -577,6 +578,7 @@ class TypeInference
   }
 
   private FlowScope traverse(Node n, FlowScope scope) {
+    boolean isTypeable = true;
     switch (n.getToken()) {
       case ASSIGN:
         scope = traverseAssign(n, scope);
@@ -589,6 +591,7 @@ class TypeInference
       case OPTCHAIN_GETPROP:
         // TODO(b/151248857) Calculate appropriate type here
         n.setJSType(getNativeType(UNKNOWN_TYPE));
+        scope = traverseChildren(n, scope);
         break;
 
       case GETPROP:
@@ -701,12 +704,20 @@ class TypeInference
         break;
 
       case TEMPLATELIT_SUB:
-        // TEMPLATELIT_SUBs are untyped but we do need to traverse their children.
+      case THROW:
+      case ITER_SPREAD:
+      case OBJECT_SPREAD:
+        // these nodes are untyped but have children that may affect the flow scope and need to
+        // be typed.
         scope = traverseChildren(n, scope);
+        isTypeable = false;
         break;
 
       case TAGGED_TEMPLATELIT:
         scope = traverseFunctionInvocation(n, scope);
+        if (n.getJSType() == null) {
+          n.setJSType(unknownType);
+        }
         break;
 
       case DELPROP:
@@ -744,14 +755,17 @@ class TypeInference
             ensurePropertyDeclaredHelper(getprop, ownerType, scope);
           }
         }
+        isTypeable = false;
         break;
 
       case SWITCH:
         scope = traverse(n.getFirstChild(), scope);
+        isTypeable = false;
         break;
 
       case RETURN:
         scope = traverseReturn(n, scope);
+        isTypeable = false;
         break;
 
       case YIELD:
@@ -763,14 +777,12 @@ class TypeInference
       case LET:
       case CONST:
         scope = traverseDeclaration(n, scope);
-        break;
-
-      case THROW:
-        scope = traverseChildren(n, scope);
+        isTypeable = false;
         break;
 
       case CATCH:
         scope = traverseCatch(n, scope);
+        isTypeable = false;
         break;
 
       case CAST:
@@ -797,13 +809,6 @@ class TypeInference
         traverseSuper(n);
         break;
 
-      case ITER_SPREAD:
-      case OBJECT_SPREAD:
-        // The spread itself has no type, but the expression it contains does and may affect
-        // type inference.
-        scope = traverseChildren(n, scope);
-        break;
-
       case AWAIT:
         scope = traverseAwait(n, scope);
         break;
@@ -823,6 +828,7 @@ class TypeInference
             defaultExport.setType(getJSType(n.getOnlyChild()));
           }
         }
+        isTypeable = false;
         break;
 
       case IMPORT_META:
@@ -856,6 +862,7 @@ class TypeInference
       case IMPORT_SPECS:
       case EXPORT_SPECS:
         // These don't need to be typed here, since they only affect control flow.
+        isTypeable = false;
         break;
 
       case TRUE:
@@ -873,8 +880,17 @@ class TypeInference
             "Type inference doesn't know to handle token " + n.getToken());
     }
 
+    if (isTypeable && n.getJSType() == null && !TOKENS_ALLOWING_NULL_TYPES.contains(n.getToken())) {
+      throw new IllegalStateException("Failed to infer JSType for " + n);
+    }
     return scope;
   }
+
+  // TODO(b/154044898): delete these exceptions. Names are given null types to enable inference of
+  // undeclared names assigned in multiple local scopes. The compiler also infers call and new
+  // types when the invocation target is such a name.
+  private static final ImmutableSet<Token> TOKENS_ALLOWING_NULL_TYPES =
+      ImmutableSet.of(Token.NAME, Token.CALL, Token.NEW);
 
   private void traverseSuper(Node superNode) {
     // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
@@ -1625,6 +1641,8 @@ class TypeInference
       } else if (rightType != null) {
         n.setJSType(registry.createUnionType(leftType.restrictByNotNullOrUndefined(), rightType));
         return join(scope, scopeAfterTraverseRight);
+      } else {
+        n.setJSType(unknownType);
       }
     } else {
       n.setJSType(unknownType);
@@ -2265,7 +2283,7 @@ class TypeInference
         }
       }
     } else {
-      type = null;
+      type = unknownType;
       outcome = new BooleanOutcomePair(
           BooleanLiteralSet.BOTH, BooleanLiteralSet.BOTH,
           leftOutcome.getJoinedFlowScope(),
