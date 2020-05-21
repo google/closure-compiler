@@ -42,6 +42,7 @@ public final class DotFormatter {
   private static final String INDENT = "  ";
   private static final String ARROW = " -> ";
   private static final String LINE = " -- ";
+  private static final int MAX_LABEL_NAME_LENGTH = 10;
 
   // stores the current assignment of node to keys
   private final HashMap<Node, Integer> assignments = new HashMap<>();
@@ -235,6 +236,9 @@ public final class DotFormatter {
       builder.append(formatNodeName(key));
       builder.append(" [label=\"");
       builder.append(n.getToken().toString());
+      if (n.isName() || n.isString() || n.isImportStar() || n.isStringKey()) {
+        builder.append(getNodeLabel(n));
+      }
       JSType type = n.getJSType();
       if (type != null) {
         builder.append(" : ");
@@ -254,6 +258,17 @@ public final class DotFormatter {
       builder.append("];\n");
     }
     return key;
+  }
+
+  private static String getNodeLabel(Node n) {
+    String content = n.getString();
+    if (content.length() > MAX_LABEL_NAME_LENGTH) {
+      content = content.substring(0, MAX_LABEL_NAME_LENGTH);
+    }
+    if (!content.isEmpty()) {
+      content = "(" + content + ")";
+    }
+    return content;
   }
 
   private static String formatNodeName(Integer key) {
