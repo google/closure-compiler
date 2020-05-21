@@ -165,6 +165,7 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1752,8 +1753,9 @@ class IRFactory {
         // declared with individual statements, like `/** @type {string} */ ns.a.b;`
         targetNode = transformNodeWithInlineComments(targetTree);
       }
-      Node defaultValueNode =
-          newNode(Token.DEFAULT_VALUE, targetNode, transform(tree.defaultValue));
+      final Node defaultValueExpression = transform(tree.defaultValue);
+      Node defaultValueNode = newNode(Token.DEFAULT_VALUE, targetNode, defaultValueExpression);
+      reportErrorIfYieldOrAwaitInDefaultValue(defaultValueNode);
       setSourceInfo(defaultValueNode, tree);
       return defaultValueNode;
     }
@@ -3459,6 +3461,46 @@ class IRFactory {
       }
       return processIllegalToken(node);
     }
+  }
+
+  private void reportErrorIfYieldOrAwaitInDefaultValue(Node defaultValueNode) {
+    Node yieldNode = findNodeTypeInExpression(defaultValueNode, Token.YIELD);
+    if (yieldNode != null) {
+      errorReporter.error(
+          "`yield` is illegal in parameter default value.",
+          yieldNode.getSourceFileName(),
+          yieldNode.getLineno(),
+          yieldNode.getCharno());
+    }
+    Node awaitNode = findNodeTypeInExpression(defaultValueNode, Token.AWAIT);
+    if (awaitNode != null) {
+      errorReporter.error(
+          "`await` is illegal in parameter default value.",
+          awaitNode.getSourceFileName(),
+          awaitNode.getLineno(),
+          awaitNode.getCharno());
+    }
+  }
+
+  /**
+   * Tries to find a node with the given token in the given expression. Returns the first one found
+   * in pre-order traversal or `null` if none found. Will not traverse into function or class
+   * expressions.
+   */
+  private static Node findNodeTypeInExpression(Node expressionNode, Token token) {
+    Deque<Node> worklist = new ArrayDeque<>();
+    worklist.add(expressionNode);
+    while (!worklist.isEmpty()) {
+      Node node = worklist.remove();
+      if (node.getToken() == token) {
+        return node;
+      } else if (!node.isFunction() && !node.isClass()) {
+        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+          worklist.add(child);
+        }
+      }
+    }
+    return null;
   }
 
   String normalizeRegex(LiteralToken token) {

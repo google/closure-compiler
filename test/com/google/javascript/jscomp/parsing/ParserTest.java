@@ -3169,6 +3169,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testYieldForbidden() {
     parseError("function f() { yield 3; }",
         "primary expression expected");
+    parseError("function f(x = yield 3) { return x }", "primary expression expected");
+    parseError(
+        "function *f(x = yield 3) { return x }", "`yield` is illegal in parameter default value.");
+    parseError(
+        "function *f() { return function*(x = yield 1) { return x; } }",
+        "`yield` is illegal in parameter default value.");
   }
 
   @Test
@@ -5335,6 +5341,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("await 15;", "'await' used in a non-async function context");
     parseError(
         "function f() { return await 5; }", "'await' used in a non-async function context");
+    parseError(
+        "async function f(x = await 15) { return x; }",
+        "`await` is illegal in parameter default value.");
   }
 
   @Test
