@@ -249,7 +249,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
-    options.checkTypes = false; // This is more a syntax test.
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
 
     testSame(
         options,
@@ -5204,7 +5204,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         .setOptionsForCompilationLevel(options);
     options.setRenamingPolicy(
         VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
-    options.setCheckTypes(false);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
     test(options, source, expected);
   }
 
@@ -5781,7 +5781,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testNamelessParameter() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setCheckTypes(false);
+    options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
     String code =
         "var impl_0;" +
         "$load($init());" +

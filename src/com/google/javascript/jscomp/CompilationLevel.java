@@ -128,7 +128,7 @@ public enum CompilationLevel {
     options.setInlineVariables(Reach.LOCAL_ONLY);
     options.setInlineFunctions(Reach.LOCAL_ONLY);
     options.setAssumeClosuresOnlyCaptureReferences(false);
-    options.setCheckGlobalThisLevel(CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     options.setFoldConstants(true);
     options.setCoalesceVariableNames(true);
     options.setDeadAssignmentElimination(true);
@@ -182,7 +182,7 @@ public enum CompilationLevel {
     options.setRemoveUnusedClassProperties(true);
     options.setCollapseAnonymousFunctions(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    options.setCheckGlobalThisLevel(CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.WARNING);
     options.setRewriteFunctionExpressions(false);
     options.setSmartNameRemoval(true);
     options.setExtraSmartNameRemoval(true);

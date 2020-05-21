@@ -65,7 +65,7 @@ public enum WarningLevel {
     options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY, CheckLevel.OFF);
     options.setCheckGlobalNamesLevel(CheckLevel.OFF);
     options.setCheckSuspiciousCode(false);
-    options.setCheckGlobalThisLevel(CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
 
@@ -95,7 +95,7 @@ public enum WarningLevel {
 
     // checkSuspiciousCode needs to be enabled for CheckGlobalThis to get run.
     options.setCheckSuspiciousCode(true);
-    options.setCheckGlobalThisLevel(CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.WARNING);
     options.setCheckSymbols(true);
 
     // checkTypes has the side-effect of asserting that the

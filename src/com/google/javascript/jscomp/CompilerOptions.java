@@ -369,19 +369,9 @@ public class CompilerOptions implements Serializable {
     brokenClosureRequiresLevel = level;
   }
 
-  public CheckLevel checkGlobalThisLevel;
-
-  /**
-   * Checks for certain uses of the {@code this} keyword that are considered
-   * unsafe because they are likely to reference the global {@code this}
-   * object unintentionally.
-   *
-   * If this is off, but collapseProperties is on, then the compiler will
-   * usually ignore you and run this check anyways.
-   */
-  public void setCheckGlobalThisLevel(CheckLevel level) {
-    this.checkGlobalThisLevel = level;
-  }
+  /** Deprecated. Please use setWarningLevel(DiagnosticGroups.GLOBAL_THIS, level) instead. */
+  @Deprecated
+  public void setCheckGlobalThisLevel(CheckLevel level) {}
 
   public CheckLevel checkMissingGetCssNameLevel;
 
@@ -1340,7 +1330,6 @@ public class CompilerOptions implements Serializable {
     checkTypes = false;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
-    checkGlobalThisLevel = CheckLevel.OFF;
     checkMissingGetCssNameLevel = CheckLevel.OFF;
     checkMissingGetCssNameBlacklist = null;
     computeFunctionSideEffects = false;
@@ -2973,7 +2962,6 @@ public class CompilerOptions implements Serializable {
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
             .add("checkDeterminism", getCheckDeterminism())
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
-            .add("checkGlobalThisLevel", checkGlobalThisLevel)
             .add("checkMissingGetCssNameBlacklist", checkMissingGetCssNameBlacklist)
             .add("checkMissingGetCssNameLevel", checkMissingGetCssNameLevel)
             .add("checksOnly", checksOnly)
