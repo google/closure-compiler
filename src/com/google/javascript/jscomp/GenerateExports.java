@@ -44,6 +44,12 @@ class GenerateExports implements CompilerPass {
 
   private final Set<String> exportedVariables = new HashSet<>();
 
+  static final DiagnosticType MISSING_GOOG_FOR_EXPORT =
+      DiagnosticType.error(
+          "JSC_MISSING_EXPORT_SYMBOL_DEFINITION",
+          "@export cannot be used without including closure/base.js or other definition of"
+              + " {0} and {1}");
+
   /**
    * Creates a new generate exports compiler pass.
    *
@@ -79,6 +85,23 @@ class GenerateExports implements CompilerPass {
     Map<Node, String> es6Exports = findExportableNodes.getEs6ClassExports();
     Set<String> localExports = findExportableNodes.getLocalExports();
 
+    if ((!exports.isEmpty() || !es6Exports.isEmpty()) && !includesExportMethods(root.getParent())) {
+      // Pick an arbitrary @export to report the warning on.
+      final Node errorLocation;
+      if (!exports.isEmpty()) {
+        errorLocation = exports.values().stream().findFirst().get();
+      } else {
+        errorLocation = es6Exports.keySet().stream().findFirst().get();
+      }
+      compiler.report(
+          JSError.make(
+              errorLocation,
+              MISSING_GOOG_FOR_EXPORT,
+              this.exportSymbolFunction,
+              this.exportPropertyFunction));
+      declareExportMethodsInExterns(errorLocation);
+    }
+
     for (Map.Entry<Node, String> entry : es6Exports.entrySet()) {
       addExportForEs6Method(entry.getKey(), entry.getValue());
     }
@@ -92,6 +115,43 @@ class GenerateExports implements CompilerPass {
     for (String export : localExports) {
       addExtern(export);
     }
+  }
+
+  /**
+   * In order to use @export, the user must have included the defintiion of the property and symbol
+   * export methods in their binary.
+   *
+   * <p>In real code these methods are typically goog.exportProperty and goog.exportSymbol.
+   */
+  private boolean includesExportMethods(Node root) {
+    Scope globalScope = new SyntacticScopeCreator(compiler).createScope(root, /* parent= */ null);
+    String exportPropertyRoot = NodeUtil.getRootOfQualifiedName(exportPropertyFunction);
+    String exportSymbolRoot = NodeUtil.getRootOfQualifiedName(exportSymbolFunction);
+    return globalScope.hasSlot(exportPropertyRoot) && globalScope.hasSlot(exportSymbolRoot);
+  }
+
+  /** Add a synthesized externs declaration to prevent crashes later on in VarCheck. */
+  private void declareExportMethodsInExterns(Node srcref) {
+
+    String exportPropertyRoot = NodeUtil.getRootOfQualifiedName(exportPropertyFunction);
+    String exportSymbolRoot = NodeUtil.getRootOfQualifiedName(exportSymbolFunction);
+
+    if (exportPropertyRoot.equals(exportSymbolRoot)) {
+      declareSyntheticExternsVar(exportPropertyRoot, srcref);
+    } else {
+      declareSyntheticExternsVar(exportPropertyRoot, srcref);
+      declareSyntheticExternsVar(exportSymbolRoot, srcref);
+    }
+  }
+
+  private void declareSyntheticExternsVar(String name, Node srcref) {
+    CompilerInput syntheticInput = compiler.getSynthesizedExternsInputAtEnd();
+    Node syntheticVarRoot = syntheticInput.getAstRoot(compiler);
+
+    Node varDeclaration = IR.var(IR.name(name)).srcrefTree(srcref);
+    varDeclaration.setStaticSourceFile(compiler.getSynthesizedExternsInput().getSourceFile());
+    syntheticVarRoot.addChildToBack(varDeclaration);
+    compiler.reportChangeToEnclosingScope(varDeclaration);
   }
 
   private void addExtern(String export) {

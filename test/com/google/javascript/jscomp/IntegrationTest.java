@@ -8470,4 +8470,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         lines("const array = Array.of('1', '2', '3');", "if (array[0] - 1) {}"),
         TypeValidator.INVALID_OPERAND_TYPE);
   }
+
+  @Test
+  public void testExportMissingClosureBase() {
+    CompilerOptions options = createCompilerOptions();
+    options.setGenerateExports(true);
+    options.setContinueAfterErrors(true); // test that the AST is not left in an invalid state.
+
+    test(
+        options,
+        "/** @export */ function Foo() { alert('hi'); }",
+        GenerateExports.MISSING_GOOG_FOR_EXPORT);
+  }
 }
