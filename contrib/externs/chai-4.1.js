@@ -509,6 +509,15 @@ assert.sameMembers = function(set1, set2, opt_message) {};
  */
 assert.sameDeepMembers = function(set1, set2, opt_message) {};
 
+/**
+ * Docs: https://www.chaijs.com/api/assert/#sameorderedmembersset1-set2-message
+ *
+ * @param {!Array<*>} set1
+ * @param {!Array<*>} set2
+ * @param {string=} opt_message
+ */
+assert.sameOrderedMembers = function(set1, set2, opt_message) {};
+
 // Below are the externs for the APIs to build custom assertions:
 // http://www.chaijs.com/api/plugins/
 
