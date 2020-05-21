@@ -795,6 +795,8 @@ public class CodeGenerator {
         {
           // This attempts to convert rewritten aliased code back to the original code,
           // such as when using goog.scope(). See ScopedAliases.java for the original code.
+          // NOTE: OPTCHAIN_GETPROP case doesn't need this logic, because it only applies to
+          // qualified names.
           if (useOriginalName && n.getOriginalName() != null) {
             // The ScopedAliases pass will convert variable assignments and function declarations
             // to assignments to GETPROP nodes, like $jscomp.scope.SOME_VAR = 3;. This attempts to
@@ -808,7 +810,10 @@ public class CodeGenerator {
           }
           checkState(childCount == 2, "Bad GETPROP: expected 2 children, but got %s", childCount);
           checkState(last.isString(), "Bad GETPROP: RHS should be STRING");
+          // We need parentheses to distinguish
+          // `a?.b.c` from `(a?.b).c`
           boolean breakOutOfOptionalChain = NodeUtil.isOptChainNode(first);
+          // `2.toString()` is invalid - it must be `(2).toString()`
           boolean needsParens = first.isNumber() || breakOutOfOptionalChain;
           if (needsParens) {
             add("(");
@@ -818,6 +823,9 @@ public class CodeGenerator {
             add(")");
           }
           if (quoteKeywordProperties && TokenStream.isKeyword(last.getString())) {
+            // NOTE: We don't have to worry about quoting keyword properties in the
+            // OPTCHAIN_GETPROP case above, because we only need to quote keywords for
+            // ES3-compatible output.
             add("[");
             add(last);
             add("]");
