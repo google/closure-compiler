@@ -445,7 +445,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "var C = function() { D.apply(this, arguments); };",
             "$jscomp.inherits(C, D);"));
     assertThat(getLastCompiler().injected)
-        .containsExactly("es6/util/inherits", "es6/util/arrayfromiterable");
+        .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
 
     test(
         "class D {} class C extends D { constructor() { super(); } }",
@@ -992,23 +992,44 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExtendFunction() {
-    // Function and other native classes cannot be correctly extended in transpiled form.
-    // Test both explicit and automatically generated constructors.
-    testError(
+  public void testExtendNativeClass() {
+    test(
         lines(
-            "class FooFunction extends Function {",
+            "class FooPromise extends Promise {",
             "  /** @param {string} msg */",
-            "  constructor(msg) {",
-            "    super();",
+            // explicit constructor
+            "  constructor(callback, msg) {",
+            "    super(callback);",
             "    this.msg = msg;",
             "  }",
             "}"),
-        CANNOT_CONVERT);
+        lines(
+            "/**",
+            " * @constructor",
+            " * @extends {Promise}",
+            " */",
+            "var FooPromise = function(callback, msg) {",
+            "  var $jscomp$super$this;",
+            "  $jscomp$super$this = $jscomp.construct(Promise, [callback], this.constructor)",
+            "  $jscomp$super$this.msg = msg;",
+            "  return $jscomp$super$this;",
+            "}",
+            "$jscomp.inherits(FooPromise, Promise);",
+            ""));
 
-    testError(
-        "class FooFunction extends Function {}",
-        CANNOT_CONVERT);
+    test(
+        // automatically generated constructor
+        "class FooPromise extends Promise {}",
+        lines(
+            "/**",
+            " * @constructor",
+            " * @extends {Promise}",
+            " */",
+            "var FooPromise = function() {",
+            "  return $jscomp.construct(Promise, arguments, this.constructor)",
+            "}",
+            "$jscomp.inherits(FooPromise, Promise);",
+            ""));
   }
 
   @Test

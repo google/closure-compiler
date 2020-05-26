@@ -239,3 +239,49 @@ function testSuperInDifferentStaticMethod() {
   }
   assertEquals(14, D.bar());
 }
+
+// Confirm that extension of native classes works.
+// Use Map, because it's a class users are likely to want to extend.
+function testExtendMapClass() {
+  /**
+   * @template K
+   * @extends {Map<K, number>}
+   */
+  class CounterMap extends Map {
+    /**
+     * @param {!Iterable<!Array<K|number>>} keyCountPairs
+     */
+    constructor(keyCountPairs) {
+      super(keyCountPairs);  // test calling super() with arguments.
+    }
+
+    /** @override */
+    get(key) {
+      // test overriding a method
+      return this.has(key) ? super.get(key) : 0;
+    }
+
+    /**
+     * Increment the counter for `key`.
+     *
+     * @param {K} key
+     * @return {number} count after incrementing
+     */
+    increment(key) {
+      const newCount = this.get(key) + 1;
+      this.set(key, newCount);
+      return newCount;
+    }
+  }
+
+  /** @type {!CounterMap<string>} */
+  const counterMap = new CounterMap([['a', 1], ['b', 2]]);
+
+  assertEquals(1, counterMap.get('a'));
+  assertEquals(2, counterMap.get('b'));
+  assertEquals(0, counterMap.get('not-there'));
+
+  assertEquals(2, counterMap.increment('a'));
+  assertEquals(3, counterMap.increment('b'));
+  assertEquals(1, counterMap.increment('add-me'));
+}

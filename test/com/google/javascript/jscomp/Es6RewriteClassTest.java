@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
@@ -1408,27 +1407,47 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExtendFunction_withExplicitConstructor() {
+  public void testExtendNativeClass_withExplicitConstructor() {
     // Function and other native classes cannot be correctly extended in transpiled form.
     // Test both explicit and automatically generated constructors.
-    testError(
+    test(
         lines(
-            "class FooFunction extends Function {",
+            "class FooPromise extends Promise {",
             "  /** @param {string} msg */",
-            "  constructor(msg) {",
-            "    super();",
+            "  constructor(callback, msg) {",
+            "    super(callback);",
             "    this.msg = msg;",
             "  }",
             "}"),
-        CANNOT_CONVERT);
+        lines(
+            "/**",
+            " * @constructor",
+            " * @extends {Promise}",
+            " */",
+            "let FooPromise = function(callback, msg) {",
+            "  var $jscomp$super$this;",
+            "  $jscomp$super$this = $jscomp.construct(Promise, [callback], this.constructor)",
+            "  $jscomp$super$this.msg = msg;",
+            "  return $jscomp$super$this;",
+            "}",
+            "$jscomp.inherits(FooPromise, Promise);",
+            ""));
   }
 
   @Test
-  public void testExtendFunction_withImplicitConstructor() {
-    disableTypeInfoValidation(); // type info is incorrect because transpilation did not finish
-    testError(
-        "class FooFunction extends Function {}",
-        CANNOT_CONVERT);
+  public void testExtendNativeClass_withImplicitConstructor() {
+    test(
+        "class FooPromise extends Promise {}",
+        lines(
+            "/**",
+            " * @constructor",
+            " * @extends {Promise}",
+            " */",
+            "let FooPromise = function() {",
+            "  return $jscomp.construct(Promise, arguments, this.constructor)",
+            "}",
+            "$jscomp.inherits(FooPromise, Promise);",
+            ""));
   }
 
   @Test

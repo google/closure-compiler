@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -127,11 +126,16 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           superCall.replaceWith(thisNode);
           compiler.reportChangeToEnclosingScope(thisNode);
         }
-      } else if (isUnextendableNativeClass(t, superClassQName)) {
-        compiler.report(
-            JSError.make(
-                constructor, CANNOT_CONVERT, "extending native class: " + superClassQName));
+      } else if (isKnownNativeClass(t, superClassQName)) {
+        // Although we're transpiling down to ES5, it's quite possible that the code will end up
+        // running in an environment where native classes are ES6 classes.
+        // To correctly extend them with the ES5 classes we're generating here, we must use
+        // `$jscomp.construct`, which is our wrapper around `Reflect.construct`.
+        convertSuperCallsToJsCompConstructCalls(
+            t, constructor, superCalls, superClassNameNode, thisType);
       } else if (isNativeErrorClass(t, superClassQName)) {
+        // TODO(bradfordcsmith): It might be better to use $jscomp.construct() for these instead
+        // of our custom-made, Error-specific workaround.
         for (Node superCall : superCalls) {
           Node newSuperCall = createNewSuperCall(superClassNameNode, superCall, thisType);
           replaceNativeErrorSuperCall(superCall, newSuperCall);
@@ -155,6 +159,18 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
           compiler.reportChangeToEnclosingScope(superCallParent);
         }
       } else {
+        // Either the superclass constructor returns a value, or we cannot find its definition in
+        // the sources, so we don't know if it does.
+        //
+        // 1. We must use the value it returns, if defined, as the 'this' value in the constructor
+        //    we're currently transpiling, and we must also return it from this constructor.
+        // 2. It may be an ES6 class defined outside of the sources we can see.
+        //
+        // The code below works as long as the class we're extending is an ES5 class, but will
+        // break if we're extending an ES6 class (#2), because it calls the superclass constructor
+        // without using `new` or `Reflect.construct()`
+        // TODO(b/36789413): We should use $jscomp.construct() here to avoid breakage when extending
+        // an ES6 class.
         Node constructorBody = checkNotNull(constructor.getChildAtIndex(2));
         Node firstStatement = constructorBody.getFirstChild();
         Node firstSuperCall = superCalls.get(0);
@@ -201,6 +217,79 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
         compiler.reportChangeToEnclosingScope(constructorBody);
       }
     }
+  }
+
+  /**
+   * Change calls to `super` to use `$jscomp.construct` instead.
+   *
+   * <pre><code>
+   *   // note that conversion of the ES6 class to ES5 happens before this pass.
+   *   // we're just cleaning up the super() calls now
+   *   var Foo = function(arg1, arg2) {
+   *     super(arg1);
+   *     this.prop = arg2;
+   *   }
+   *   // becomes
+   *   var Foo = function(arg1, arg2) {
+   *     // tmp var and return are necessary, because $jscomp.construct() always creates a new
+   *     // object to be used as `this`
+   *     var $jscomp$super$this;
+   *     $jscomp$super$this = $jscomp.construct(SuperClassName, [arg1], this.constructor);
+   *     $jscomp$super$this.prop = arg2
+   *     return $jscomp$super$this;
+   *   }
+   * </code></pre>
+   */
+  private void convertSuperCallsToJsCompConstructCalls(
+      NodeTraversal t,
+      Node constructor,
+      List<Node> superCalls,
+      Node superClassNameNode,
+      JSType thisType) {
+    Node constructorBody = checkNotNull(constructor.getChildAtIndex(2));
+    Node firstStatement = constructorBody.getFirstChild();
+    // A constructor body with no call to `super()` is a syntax error for a class that has an
+    // extends clause. An error should have been reported and we should never reach this point
+    // for an empty constructor body.
+    checkNotNull(firstStatement, "Empty constructor body");
+    Node firstSuperCall = superCalls.get(0);
+
+    if (constructorBody.hasOneChild()
+        && firstStatement.isExprResult()
+        && firstStatement.hasOneChild()
+        && firstStatement.getFirstChild() == firstSuperCall) {
+      checkState(superCalls.size() == 1, constructor);
+      // Super call is the entire constructor, so just replace it with.
+      // `return $jscomp.construct(SuperClassName, [args], this.constructor);`
+      firstStatement.replaceWith(
+          astFactory.createReturn(
+              createJSCompConstructorCall(
+                  t.getScope(), superClassNameNode, firstSuperCall, thisType)));
+    } else {
+      final JSType typeOfThis = getTypeOfThisForConstructor(constructor);
+      // `this` -> `$jscomp$super$this` throughout the constructor body,
+      // except for super() calls.
+      updateThisToSuperThis(typeOfThis, constructorBody, superCalls);
+      // Start constructor with `var $jscomp$super$this;`
+      constructorBody.addChildToFront(
+          astFactory.createSingleVarNameDeclaration(SUPER_THIS).srcrefTree(constructorBody));
+      // End constructor with `return $jscomp$super$this;`
+      constructorBody.addChildToBack(
+          astFactory
+              .createReturn(astFactory.createName(SUPER_THIS, typeOfThis))
+              .srcrefTree(constructorBody));
+      // Replace each super() call with `($jscomp$super$this = $jscomp.construct(...))`
+      for (Node superCall : superCalls) {
+        superCall.replaceWith(
+            astFactory
+                .createAssign(
+                    astFactory.createName(SUPER_THIS, typeOfThis).srcref(superCall),
+                    createJSCompConstructorCall(
+                        t.getScope(), superClassNameNode, superCall, thisType))
+                .srcref(superCall));
+      }
+    }
+    compiler.reportChangeToEnclosingScope(constructorBody);
   }
 
   private boolean isKnownToReturnOnlyUndefined(String functionQName) {
@@ -361,6 +450,59 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
     }
   }
 
+  /**
+   * Returns a transpiled version of the super constructor call using `$jscomp.constructor`.
+   *
+   * <p>The children of the passed in `superCall` are all removed from it by this method, but the
+   * existing call itself is not replaced in the AST yet. The returned node is not yet attached to
+   * the AST.
+   */
+  private Node createJSCompConstructorCall(
+      Scope scope, Node superClassQNameNode, Node superCall, JSType thisType) {
+    checkArgument(superClassQNameNode.isQualifiedName(), superClassQNameNode);
+    checkArgument(superCall.isCall(), superCall);
+
+    final Node callee = checkNotNull(superCall.removeFirstChild(), superCall);
+    checkState(callee.isSuper(), callee);
+
+    // `$jscomp.construct`
+    final Node jscompDotConstruct =
+        astFactory.createQName(scope, "$jscomp", "construct").srcrefTree(callee);
+
+    final Node superClassQName = superClassQNameNode.cloneTree();
+
+    // extract the arguments from the super() call and create the arguments list to pass to
+    // $jscomp.construct()
+    final List<Node> superCallArgList = new ArrayList<>();
+    while (superCall.hasChildren()) {
+      superCallArgList.add(superCall.removeFirstChild());
+    }
+    // It's very common to just have `super(...arguments)`, because we generate constructors
+    // containing that for extending classes that don't have an explicit constructor.
+    // For that case it's more efficient to just convert `super(...arguments)` to
+    // `$jscomp.construct(SuperClass, arguments, this.constructor)` here rather than relying on
+    // later optimizations to
+    // convert `[...arguments]` to `arguments`.
+    final Node superArgs =
+        isSingleSpreadOfArguments(superCallArgList)
+            // pull out `arguments` from `...arguments`
+            ? Iterables.getOnlyElement(superCallArgList).getOnlyChild().detach()
+            : astFactory.createArraylit(superCallArgList).srcref(superCall);
+
+    // `this.constructor`
+    final Node thisDotConstructor =
+        astFactory
+            .createGetProp(astFactory.createThis(thisType), "constructor")
+            .srcrefTree(superCall);
+
+    // `super(arg1, arg2)`
+    // becomes
+    // `$jscomp.construct(SuperClassName, [arg1, arg2], this.constructor)`
+    return astFactory
+        .createCall(jscompDotConstruct, superClassQName, superArgs, thisDotConstructor)
+        .srcref(superCall);
+  }
+
   private static boolean isSingleSpreadOfArguments(List<Node> nodeList) {
     return nodeList.size() == 1 && isSpreadOfArguments(Iterables.getOnlyElement(nodeList));
   }
@@ -434,11 +576,11 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
   }
 
   /**
-   * Is the given class a native class for which we cannot properly transpile extension?
-   * @param t
-   * @param className
+   * Is `className` the name of a known native JS class for which we haven't seen a definition in
+   * the source code we're compiling. (Note that our own polyfill definitions don't count as a
+   * definition being present in the source code.)
    */
-  private boolean isUnextendableNativeClass(NodeTraversal t, String className) {
+  private boolean isKnownNativeClass(NodeTraversal t, String className) {
     // This list originally taken from the list of built-in objects at
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference
     // as of 2016-10-22.
@@ -461,6 +603,7 @@ public final class Es6ConvertSuperConstructorCalls implements NodeTraversal.Call
       case "InternalError":
       case "Map":
       case "Number":
+      case "Object":
       case "Promise":
       case "Proxy":
       case "RegExp":

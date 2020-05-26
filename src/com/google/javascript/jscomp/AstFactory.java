@@ -374,7 +374,7 @@ final class AstFactory {
    * Creates a new `var` declaration statement for a single variable name with void type and no
    * JSDoc.
    *
-   * <p>e.g. `const variableName`
+   * <p>e.g. `var variableName`
    */
   Node createSingleVarNameDeclaration(String variableName) {
     return IR.var(createName(variableName, JSTypeNative.VOID_TYPE));
@@ -385,7 +385,7 @@ final class AstFactory {
    *
    * <p>Takes the type for the variable name from the value node.
    *
-   * <p>e.g. `const variableName = value;`
+   * <p>e.g. `var variableName = value;`
    */
   Node createSingleVarNameDeclaration(String variableName, Node value) {
     return IR.var(createName(variableName, value.getJSType()), value);

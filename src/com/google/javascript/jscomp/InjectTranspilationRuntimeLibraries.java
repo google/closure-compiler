@@ -90,6 +90,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
     }
 
     if (mustBeCompiledAway.contains(Feature.CLASS_EXTENDS)) {
+      Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "construct");
       Es6ToEs3Util.preloadEs6RuntimeFunction(compiler, "inherits");
     }
 

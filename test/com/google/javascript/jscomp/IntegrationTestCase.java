@@ -53,6 +53,7 @@ abstract class IntegrationTestCase {
               .addArguments()
               .addString()
               .addObject()
+              .addReflect()
               .addFunction()
               .addIterable()
               .addPromise()

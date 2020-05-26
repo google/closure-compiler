@@ -275,6 +275,31 @@ public class TestExternsBuilder {
           " */",
           "Object.seal = function(obj) {}",
           "");
+
+  private static final String REFLECT_EXTERNS =
+      lines(
+          "/** @const */",
+          "var Reflect = {}",
+          "",
+          "/**",
+          " * @param {function(new: ?, ...?)} targetConstructorFn",
+          " * @param {!Array<?>} argList",
+          " * @param {function(new: TARGET, ...?)=} opt_newTargetConstructorFn",
+          " * @return {TARGET}",
+          " * @template TARGET",
+          " * @nosideeffects",
+          " */",
+          "Reflect.construct = function(",
+          "    targetConstructorFn, argList, opt_newTargetConstructorFn) {};",
+          "",
+          "/**",
+          " * @param {!Object} target",
+          " * @param {?Object} proto",
+          " * @return {boolean}",
+          " */",
+          "Reflect.setPrototypeOf = function(target, proto) {};",
+          "");
+
   private static final String ARRAY_EXTERNS =
       lines(
           "/**",
@@ -625,6 +650,7 @@ public class TestExternsBuilder {
   private boolean includePromiseExterns = false;
   private boolean includeAsyncIterableExterns = false;
   private boolean includeEs6ClassTranspilationExterns = false;
+  private boolean includeReflectExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
   public TestExternsBuilder addIterable() {
@@ -687,6 +713,12 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addReflect() {
+    includeReflectExterns = true;
+    addObject(); // Reflect shares many things in common with Object
+    return this;
+  }
+
   /**
    * Externs needed for successful transpilation of ES6 classes without injecting the runtime code.
    *
@@ -721,6 +753,9 @@ public class TestExternsBuilder {
     }
     if (includeArrayExterns) {
       externSections.add(ARRAY_EXTERNS);
+    }
+    if (includeReflectExterns) {
+      externSections.add(REFLECT_EXTERNS);
     }
     if (includeArgumentsExterns) {
       externSections.add(ARGUMENTS_EXTERNS);
