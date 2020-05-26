@@ -239,7 +239,7 @@ Range.prototype.detach = function() {};
 
 // Introduced in DOM Level 2:
 /**
- * @constructor
+ * @interface
  * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-DocumentRange-idl
  */
 function DocumentRange() {}
