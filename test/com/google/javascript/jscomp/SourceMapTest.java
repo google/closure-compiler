@@ -149,6 +149,34 @@ public final class SourceMapTest extends SourceMapTestCase {
                 "}\n"));
   }
 
+  @Test
+  public void testVariousStructsCorrectlyMapped() throws IOException {
+    // Code is intentionally not well-printed making all keywords/identifiers appear on separate
+    // lines so that we can catch any bugs related to incorrect line mappings.
+    String originalJs =
+        Joiner.on('\n')
+            .join(
+                "class ",
+                "  __class__ {",
+                "    __memberFunction__() {",
+                "      this.",
+                "        __classProperty__ = 123;",
+                "    }",
+                "    static ",
+                "      __staticFunction__() {}",
+                "}",
+                "function",
+                "  __function__(",
+                "    __argument__) {",
+                "    var",
+                "      __localVariable__ = 123;",
+                "}",
+                "window.",
+                "  __globalWindowVariable__ = 123;");
+    RunResult result = compile(originalJs, "file1", null, null);
+    check("file1", originalJs, result.generatedSource, result.sourceMapFileContent);
+  }
+
   @Override
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = super.getCompilerOptions();

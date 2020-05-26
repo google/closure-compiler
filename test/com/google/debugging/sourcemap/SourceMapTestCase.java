@@ -65,10 +65,10 @@ public abstract class SourceMapTestCase {
   }
 
   protected static class RunResult {
-      String generatedSource;
-      SourceMap sourceMap;
-      public String sourceMapFileContent;
-    }
+    public String generatedSource;
+    SourceMap sourceMap;
+    public String sourceMapFileContent;
+  }
 
   protected static class Token {
       final String tokenName;
@@ -245,7 +245,9 @@ public abstract class SourceMapTestCase {
 
       // Ensure that the map correctly points to the token (we add 1
       // to normalize versus the Rhino line number indexing scheme).
-      assertThat(inputToken.position.getLine() + 1).isEqualTo(mapping.getLineNumber());
+      assertWithMessage("Checking line for token %s ", token.tokenName)
+          .that(inputToken.position.getLine() + 1)
+          .isEqualTo(mapping.getLineNumber());
 
       int start = inputToken.position.getColumn() + 1;
       if (inputToken.tokenName.startsWith("STR")) {
@@ -254,7 +256,9 @@ public abstract class SourceMapTestCase {
       }
 
       if (validateColumns) {
-        assertThat(mapping.getColumnPosition()).isEqualTo(start);
+        assertWithMessage("Checking column for token %s ", token.tokenName)
+            .that(mapping.getColumnPosition())
+            .isEqualTo(start);
       }
 
       // Ensure that if the token name does not being with an 'STR' (meaning a

@@ -787,7 +787,7 @@ public class CodeGenerator {
           checkState(last.isString(), "Bad OPTCHAIN_GETPROP: RHS should be STRING");
           addExpr(first, NodeUtil.precedence(type), context);
           add(n.isOptionalChainStart() ? "?." : ".");
-          addIdentifier(last.getString());
+          addIdentifier(last);
           break;
         }
 
@@ -831,7 +831,7 @@ public class CodeGenerator {
             add("]");
           } else {
             add(".");
-            addIdentifier(last.getString());
+            addIdentifier(last);
           }
           break;
         }
@@ -1410,6 +1410,12 @@ public class CodeGenerator {
 
   private void addIdentifier(String identifier) {
     cc.addIdentifier(identifierEscape(identifier));
+  }
+
+  private void addIdentifier(Node identifier) {
+    cc.startSourceMapping(identifier);
+    addIdentifier(identifier.getString());
+    cc.endSourceMapping(identifier);
   }
 
   private int precedence(Node n) {
