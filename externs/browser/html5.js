@@ -258,10 +258,11 @@ CanvasPathMethods.prototype.arc = function(
 
 /**
  * @constructor
+ * @param {!Path2D|string=} arg
  * @implements {CanvasPathMethods}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#path2d-objects
  */
-function Path2D() {}
+function Path2D(arg) {}
 
 /**
  * @return {undefined}
