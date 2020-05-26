@@ -219,3 +219,126 @@ DOMRectInit.prototype.width;
  * @see https://www.w3.org/TR/geometry-1/#dom-domrectinit-height
  */
 DOMRectInit.prototype.height;
+
+/**
+ * @constructor
+ * @param {number=} x
+ * @param {number=} y
+ * @param {number=} z
+ * @param {number=} w
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-dompointreadonly
+ * TODO(larsrc): Remove duplicate definitions, then remove these
+ * @suppress {duplicate}
+ */
+function DOMPointReadOnly(x, y, z, w) {}
+
+/**
+ * @param {!DOMPointInit} other
+ * @return {!DOMPointReadOnly}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-frompoint
+ * @suppress {duplicate}
+ */
+DOMPointReadOnly.prototype.fromPoint = function(other) {};
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-x
+ * @suppress {duplicate}
+ */
+DOMPointReadOnly.prototype.x;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-y
+ * @suppress {duplicate}
+ */
+DOMPointReadOnly.prototype.y;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-z
+ * @suppress {duplicate}
+ */
+DOMPointReadOnly.prototype.z;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-w
+ * @suppress {duplicate}
+ */
+DOMPointReadOnly.prototype.w;
+
+/**
+ * @constructor
+ * @extends {DOMPointReadOnly}
+ * @param {number=} x
+ * @param {number=} y
+ * @param {number=} z
+ * @param {number=} w
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-dompoint
+ * @suppress {duplicate}
+ */
+function DOMPoint(x, y, z, w) {}
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-x
+ * @suppress {duplicate}
+ */
+DOMPoint.prototype.x;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-y
+ * @suppress {duplicate}
+ */
+DOMPoint.prototype.y;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-z
+ * @suppress {duplicate}
+ */
+DOMPoint.prototype.z;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-w
+ * @suppress {duplicate}
+ */
+DOMPoint.prototype.w;
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/geometry-1/#dictdef-dompointinit
+ * @suppress {duplicate}
+ */
+function DOMPointInit() {}
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-x
+ * @suppress {duplicate}
+ */
+DOMPointInit.prototype.x;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-y
+ * @suppress {duplicate}
+ */
+DOMPointInit.prototype.y;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-z
+ * @suppress {duplicate}
+ */
+DOMPointInit.prototype.z;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-w
+ * @suppress {duplicate}
+ */
+DOMPointInit.prototype.w;
