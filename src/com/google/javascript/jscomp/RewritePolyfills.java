@@ -129,6 +129,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
               FeatureSet.valueOf(name.getNext().getNext().getNext().getString());
           if (languageOutIsAtLeast(nativeVersion)) {
             NodeUtil.removeChild(parent, node);
+            NodeUtil.markFunctionsDeleted(node, compiler);
           }
         }
       }

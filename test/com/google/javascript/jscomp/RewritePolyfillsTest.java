@@ -84,17 +84,27 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
 
       @Override
       Node ensureLibraryInjected(String library, boolean force) {
-        Node parent = getNodeForCodeInsertion(null);
-        Node ast = parseSyntheticCode(injectableLibraries.get(library));
-        Node lastChild = ast.getLastChild();
-        Node firstChild = ast.removeChildren();
-        NodeUtil.markNewScopesChanged(firstChild, this);
-        if (lastInjected == null) {
-          parent.addChildrenToFront(firstChild);
+        if (injected.contains(library)) {
+          // already injected
+          return lastInjected;
         } else {
-          parent.addChildrenAfter(firstChild, lastInjected);
+          // super method just records library in `injected`
+          super.ensureLibraryInjected(library, force);
+          Node parent = getNodeForCodeInsertion(null);
+          Node ast = parseSyntheticCode(injectableLibraries.get(library));
+          Node lastChild = ast.getLastChild();
+          Node firstChild = ast.removeChildren();
+          // Any newly added functions must be marked as changed.
+          for (Node child = firstChild; child != null; child = child.getNext()) {
+            NodeUtil.markNewScopesChanged(child, this);
+          }
+          if (lastInjected == null) {
+            parent.addChildrenToFront(firstChild);
+          } else {
+            parent.addChildrenAfter(firstChild, lastInjected);
+          }
+          return lastInjected = lastChild;
         }
-        return lastInjected = lastChild;
       }
     };
   }
@@ -484,18 +494,51 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   @Test
   public void testCleansUpUnnecessaryPolyfills() {
     // Put two polyfill statements in the same library.
-    injectableLibraries.put("es6/set",
-        "$jscomp.polyfill('Set', '', 'es6', 'es3'); $jscomp.polyfill('Map', '', 'es5', 'es3');");
+    injectableLibraries.put(
+        "es6/set",
+        lines(
+            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
+            "$jscomp.polyfill('Map', function() {}, 'es5', 'es3');"));
     polyfillTable.add("Set es6 es3 es6/set");
 
     setLanguage(ES6, ES5);
-    test("var set = new Set();", "$jscomp.polyfill('Set', '', 'es6', 'es3'); var set = new Set();");
+    test(
+        "var set = new Set();",
+        lines(
+            "", //
+            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
+            "var set = new Set();"));
 
     setLanguage(ES6, ES3);
     test(
         "var set = new Set();",
-        "$jscomp.polyfill('Set', '', 'es6', 'es3'); $jscomp.polyfill('Map', '', 'es5', 'es3');"
-            + "var set = new Set();");
+        lines(
+            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
+            "$jscomp.polyfill('Map', function() {}, 'es5', 'es3');",
+            "var set = new Set();",
+            ""));
+  }
+
+  @Test
+  public void testCleansUpUnnecessaryPreviouslyInjectedPolyfills() {
+    // Put two polyfill statements in the same library.
+    injectableLibraries.put(
+        "es6/set",
+        lines(
+            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
+            // pretend Map isn't needed for ES5
+            "$jscomp.polyfill('Map', function() {}, 'es5', 'es3');"));
+    polyfillTable.add("Set es6 es3 es6/set");
+
+    // simulate injection of Map by a prior-run pass
+    ensureLibraryInjected("es6/set");
+    setLanguage(ES6, ES5);
+    test(
+        "var set = new Set();",
+        lines(
+            "", // Map gets removed even though not added by RewritePolyfills
+            "$jscomp.polyfill('Set', function() {}, 'es6', 'es3');",
+            "var set = new Set();"));
   }
 
   @Test

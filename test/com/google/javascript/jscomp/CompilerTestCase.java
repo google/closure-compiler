@@ -1592,9 +1592,11 @@ public abstract class CompilerTestCase {
         }
 
         if (!librariesToInject.isEmpty() && i == 0) {
+          recentChange.reset();
           for (String resourceName : librariesToInject) {
             compiler.ensureLibraryInjected(resourceName, true);
           }
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
 
         // Only run the type checking pass once, if asked.
