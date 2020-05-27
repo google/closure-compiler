@@ -4080,8 +4080,17 @@ HTMLTextAreaElement.prototype.autofocus;
  */
 HTMLTextAreaElement.prototype.labels;
 
+/** @type {number} */
+HTMLTextAreaElement.prototype.maxLength;
+
+/** @type {number} */
+HTMLTextAreaElement.prototype.minLength;
+
 /** @type {string} */
 HTMLTextAreaElement.prototype.placeholder;
+
+/** @type {number} */
+HTMLTextAreaElement.prototype.textLength;
 
 /** @type {string} */
 HTMLTextAreaElement.prototype.validationMessage;
