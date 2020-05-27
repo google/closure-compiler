@@ -618,6 +618,12 @@ IDBTransaction.prototype.objectStore = function(name) {};
 IDBTransaction.prototype.abort = function() {};
 
 /**
+ * Commits the transaction.
+ * @return {undefined}
+ */
+IDBTransaction.prototype.commit = function() {};
+
+/**
  * @type {?function(!Event)}
  */
 IDBTransaction.prototype.onabort;
