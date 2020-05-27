@@ -892,8 +892,8 @@ class GlobalNamespace
         case DESTRUCTURING_LHS:
         case ASSIGN:
           Node lhs = n.getPrevious();
-          if (lhs.isCast()) {
-            // Case: `/** @type {!Foo} */ (x) = ...`;
+          while (lhs.isCast()) {
+            // Case: `/** @type {!Foo} */ (x) = ...`; or multiple casts like `(cast(cast(x)) =`
             lhs = lhs.getOnlyChild();
           }
 

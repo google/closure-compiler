@@ -781,6 +781,30 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testDoubleLhsCastInAssignment_doesNotCrash() {
+    // The type of the cast doesn't matter.
+    // Casting is only legal JS syntax in simple assignments, not with destructuring or declaration.
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const ns = {};",
+                " const b = 5;",
+                " /** @type {*} */ (/** @type {*} */ (ns.a)) = b;"));
+
+    Name ns = namespace.getSlot("ns");
+    assertThat(ns.getGlobalSets()).isEqualTo(1);
+    assertThat(ns.getTotalGets()).isEqualTo(0);
+
+    Name nsA = namespace.getSlot("ns.a");
+    assertThat(nsA.getGlobalSets()).isEqualTo(0); // TODO(b/127505242): Should be 1.
+    assertThat(nsA.getTotalGets()).isEqualTo(1); // TODO(b/127505242): Should be 0.
+
+    Name b = namespace.getSlot("b");
+    assertThat(b.getGlobalSets()).isEqualTo(1);
+    assertThat(b.getAliasingGets()).isEqualTo(1);
+  }
+
+  @Test
   public void testCannotCollapseAliasedObjectLitProperty() {
     GlobalNamespace namespace = parse("var foo = {prop: 0}; use(foo);");
 
