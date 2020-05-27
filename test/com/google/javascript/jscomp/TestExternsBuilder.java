@@ -30,6 +30,16 @@ import java.util.List;
 public class TestExternsBuilder {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
+  private static final String BIGINT_EXTERNS =
+      lines(
+          "/** ",
+          " * @constructor",
+          " * @param {*=} arg",
+          " * @return {bigint}",
+          " */",
+          "function BigInt(arg) {}",
+          "");
+
   private static final String ITERABLE_EXTERNS =
       lines(
           // Symbol is needed for Symbol.iterator
@@ -639,6 +649,7 @@ public class TestExternsBuilder {
           "$jscomp.inherits = function(subClass, superClass) {};",
           "");
 
+  private boolean includeBigIntExterns = false;
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
   private boolean includeFunctionExterns = false;
@@ -652,6 +663,11 @@ public class TestExternsBuilder {
   private boolean includeEs6ClassTranspilationExterns = false;
   private boolean includeReflectExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
+
+  public TestExternsBuilder addBigInt() {
+    includeBigIntExterns = true;
+    return this;
+  }
 
   public TestExternsBuilder addIterable() {
     includeIterableExterns = true;
@@ -739,6 +755,9 @@ public class TestExternsBuilder {
 
   public String build() {
     List<String> externSections = new ArrayList<>();
+    if (includeBigIntExterns) {
+      externSections.add(BIGINT_EXTERNS);
+    }
     if (includeIterableExterns) {
       externSections.add(ITERABLE_EXTERNS);
     }

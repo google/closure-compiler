@@ -22,7 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Jervis
+ *   Brock Smickley
  *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -43,19 +43,17 @@ import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 
-/**
- * Boolean type.
- */
-public class BooleanType extends ValueType {
+/** BigInt type. */
+public class BigIntType extends ValueType {
   private static final long serialVersionUID = 1L;
 
-  BooleanType(JSTypeRegistry registry) {
+  BigIntType(JSTypeRegistry registry) {
     super(registry);
   }
 
   @Override
   JSTypeClass getTypeClass() {
-    return JSTypeClass.BOOLEAN;
+    return JSTypeClass.BIGINT;
   }
 
   @Override
@@ -65,16 +63,18 @@ public class BooleanType extends ValueType {
       return result;
     }
     if (that.isUnknownType()
-        || that.isSubtypeOf(getNativeType(JSTypeNative.NUMBER_STRING_BOOLEAN))
-        || that.isSubtypeOf(getNativeType(JSTypeNative.BIGINT_TYPE))
-        || that.isObject()) {
+        || that.isSubtypeOf(getNativeType(JSTypeNative.OBJECT_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.NUMBER_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.STRING_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.BIGINT_TYPE))) {
       return UNKNOWN;
     }
     return FALSE;
   }
 
   @Override
-  public boolean isBooleanValueType() {
+  public boolean isBigIntValueType() {
     return true;
   }
 
@@ -90,18 +90,12 @@ public class BooleanType extends ValueType {
 
   @Override
   public boolean matchesObjectContext() {
-    // TODO(user): Revisit this for ES4, which is stricter.
     return true;
   }
 
   @Override
-  public JSType autoboxesTo() {
-    return getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE);
-  }
-
-  @Override
   public String getDisplayName() {
-    return "boolean";
+    return "bigint";
   }
 
   @Override
@@ -111,6 +105,11 @@ public class BooleanType extends ValueType {
 
   @Override
   public <T> T visit(Visitor<T> visitor) {
-    return visitor.caseBooleanType();
+    return visitor.caseBigIntType();
+  }
+
+  @Override
+  public JSType autoboxesTo() {
+    return getNativeType(JSTypeNative.BIGINT_OBJECT_TYPE);
   }
 }

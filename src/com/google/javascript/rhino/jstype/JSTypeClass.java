@@ -60,6 +60,7 @@ enum JSTypeClass {
   ALL,
   ARROW,
   BOOLEAN,
+  BIGINT,
   ENUM,
   ENUM_ELEMENT,
   FUNCTION,

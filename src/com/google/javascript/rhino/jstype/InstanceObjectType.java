@@ -160,6 +160,11 @@ final class InstanceObjectType extends PrototypeObjectType {
   }
 
   @Override
+  public boolean isBigIntObjectType() {
+    return getConstructor().isNativeObjectType() && "BigInt".equals(getReferenceName());
+  }
+
+  @Override
   public boolean isStringObjectType() {
     return getConstructor().isNativeObjectType()
         && "String".equals(getReferenceName());

@@ -281,7 +281,8 @@ public abstract class ObjectType extends JSType implements Serializable {
         || that.isSubtypeOf(getNativeType(JSTypeNative.NUMBER_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.STRING_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))
-        || that.isSubtypeOf(getNativeType(JSTypeNative.SYMBOL_TYPE))) {
+        || that.isSubtypeOf(getNativeType(JSTypeNative.SYMBOL_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.BIGINT_TYPE))) {
       return UNKNOWN;
     }
     return FALSE;

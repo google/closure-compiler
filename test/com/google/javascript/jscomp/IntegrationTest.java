@@ -94,6 +94,16 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testBigInt() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    // Confirm that the native BigInt type has been implemented, so the BigInt externs don't cause
+    // errors.
+    externs = ImmutableList.of(new TestExternsBuilder().addBigInt().buildExternsFile("externs.js"));
+    test(options, "BigInt(1)", "BigInt(1)");
+  }
+
+  @Test
   public void testNumericSeparator() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

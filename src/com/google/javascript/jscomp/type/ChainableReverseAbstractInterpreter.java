@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
@@ -301,6 +302,11 @@ public abstract class ChainableReverseAbstractInterpreter
     }
 
     @Override
+    public JSType caseBigIntType() {
+      return null;
+    }
+
+    @Override
     public JSType caseObjectType(ObjectType type) {
       return null;
     }
@@ -356,6 +362,11 @@ public abstract class ChainableReverseAbstractInterpreter
     @Override
     public JSType caseNumberType() {
       return getNativeType(NUMBER_TYPE);
+    }
+
+    @Override
+    public JSType caseBigIntType() {
+      return getNativeType(BIGINT_TYPE);
     }
 
     @Override
@@ -447,6 +458,11 @@ public abstract class ChainableReverseAbstractInterpreter
     @Override
     public JSType caseNumberType() {
       return matchesExpectation("number") ? getNativeType(NUMBER_TYPE) : null;
+    }
+
+    @Override
+    public JSType caseBigIntType() {
+      return matchesExpectation("bigint") ? getNativeType(BIGINT_TYPE) : null;
     }
 
     @Override

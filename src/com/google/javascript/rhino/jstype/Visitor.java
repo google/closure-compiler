@@ -108,9 +108,10 @@ public interface Visitor<T> {
    */
   T caseNumberType();
 
-  /**
-   * String value type's case.
-   */
+  /** BigInt value type's case. */
+  T caseBigIntType();
+
+  /** String value type's case. */
   T caseStringType();
 
   /**
@@ -207,6 +208,11 @@ public interface Visitor<T> {
 
     @Override
     public T caseNumberType() {
+      return this.caseDefault(null);
+    }
+
+    @Override
+    public T caseBigIntType() {
       return this.caseDefault(null);
     }
 

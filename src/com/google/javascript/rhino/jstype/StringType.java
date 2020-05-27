@@ -68,7 +68,8 @@ public final class StringType extends ValueType {
         || that.isSubtypeOf(getNativeType(JSTypeNative.OBJECT_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.NUMBER_TYPE))
         || that.isSubtypeOf(getNativeType(JSTypeNative.STRING_TYPE))
-        || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))) {
+        || that.isSubtypeOf(getNativeType(JSTypeNative.BOOLEAN_TYPE))
+        || that.isSubtypeOf(getNativeType(JSTypeNative.BIGINT_TYPE))) {
       return UNKNOWN;
     }
     return FALSE;

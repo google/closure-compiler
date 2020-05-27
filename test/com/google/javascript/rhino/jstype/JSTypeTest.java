@@ -1470,6 +1470,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCanTestForEqualityWith(NUMBER_TYPE, NO_OBJECT_TYPE);
     assertCanTestForEqualityWith(NUMBER_TYPE, ALL_TYPE);
     assertCanTestForEqualityWith(NUMBER_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(NUMBER_TYPE, BIGINT_TYPE);
     assertCanTestForEqualityWith(NUMBER_TYPE, STRING_OBJECT_TYPE);
     assertCannotTestForEqualityWith(NUMBER_TYPE, SYMBOL_TYPE);
     assertCannotTestForEqualityWith(NUMBER_TYPE, SYMBOL_OBJECT_TYPE);
@@ -2257,6 +2258,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertCannotTestForEqualityWith(STRING_TYPE, functionType);
     assertCanTestForEqualityWith(STRING_TYPE, OBJECT_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, NUMBER_TYPE);
+    assertCanTestForEqualityWith(STRING_TYPE, BIGINT_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, BOOLEAN_TYPE);
     assertCanTestForEqualityWith(STRING_TYPE, BOOLEAN_OBJECT_TYPE);
     assertCannotTestForEqualityWith(STRING_TYPE, SYMBOL_TYPE);
@@ -3855,6 +3857,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // canTestForEqualityWith
     assertCanTestForEqualityWith(objectType, NUMBER_TYPE);
+    assertCanTestForEqualityWith(objectType, BIGINT_TYPE);
 
     // matchesXxxContext
     assertThat(objectType.matchesNumberContext()).isFalse();
@@ -4149,16 +4152,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private void compare(TernaryValue r, JSType t1, JSType t2) {
     assertThat(t1.testForEquality(t2)).isEqualTo(r);
     assertThat(t2.testForEquality(t1)).isEqualTo(r);
-  }
-
-  private void assertCanTestForEqualityWith(JSType t1, JSType t2) {
-    assertThat(t1.canTestForEqualityWith(t2)).isTrue();
-    assertThat(t2.canTestForEqualityWith(t1)).isTrue();
-  }
-
-  private void assertCannotTestForEqualityWith(JSType t1, JSType t2) {
-    assertThat(t1.canTestForEqualityWith(t2)).isFalse();
-    assertThat(t2.canTestForEqualityWith(t1)).isFalse();
   }
 
   /** Tests the subtyping relationships among simple types. */

@@ -212,6 +212,14 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
+  public boolean isBigIntObjectType() {
+    return false;
+  }
+
+  public boolean isBigIntValueType() {
+    return false;
+  }
+
   /** Whether this is the prototype of a function. */
   // TODO(sdh): consider renaming this to isPrototypeObject.
   public boolean isFunctionPrototypeType() {

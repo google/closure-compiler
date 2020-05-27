@@ -295,6 +295,11 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
+  public JSType caseBigIntType() {
+    return getNativeType(JSTypeNative.BIGINT_TYPE);
+  }
+
+  @Override
   public JSType caseStringType() {
     return getNativeType(JSTypeNative.STRING_TYPE);
   }

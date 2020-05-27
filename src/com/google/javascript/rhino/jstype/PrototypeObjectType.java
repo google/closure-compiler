@@ -242,15 +242,25 @@ public class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean matchesNumberContext() {
-    return isNumberObjectType() || isDateType() || isBooleanObjectType()
-        || isStringObjectType() || hasOverriddenNativeProperty("valueOf");
+    return isNumberObjectType()
+        || isDateType()
+        || isBooleanObjectType()
+        || isStringObjectType()
+        || isBigIntObjectType()
+        || hasOverriddenNativeProperty("valueOf");
   }
 
   @Override
   public boolean matchesStringContext() {
-    return isTheObjectType() || isStringObjectType() || isDateType()
-        || isRegexpType() || isArrayType() || isNumberObjectType()
-        || isBooleanObjectType() || hasOverriddenNativeProperty("toString");
+    return isTheObjectType()
+        || isStringObjectType()
+        || isDateType()
+        || isRegexpType()
+        || isArrayType()
+        || isNumberObjectType()
+        || isBigIntObjectType()
+        || isBooleanObjectType()
+        || hasOverriddenNativeProperty("toString");
   }
 
   @Override
@@ -286,6 +296,8 @@ public class PrototypeObjectType extends ObjectType {
       return getNativeType(JSTypeNative.NUMBER_TYPE);
     } else if (isSymbolObjectType()) {
       return getNativeType(JSTypeNative.SYMBOL_TYPE);
+    } else if (isBigIntObjectType()) {
+      return getNativeType(JSTypeNative.BIGINT_TYPE);
     } else {
       return super.unboxesTo();
     }

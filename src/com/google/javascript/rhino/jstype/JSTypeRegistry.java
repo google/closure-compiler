@@ -343,6 +343,9 @@ public class JSTypeRegistry implements Serializable {
     NullType nullType = new NullType(this);
     registerNativeType(JSTypeNative.NULL_TYPE, nullType);
 
+    BigIntType bigIntType = new BigIntType(this);
+    registerNativeType(JSTypeNative.BIGINT_TYPE, bigIntType);
+
     NumberType numberType = new NumberType(this);
     registerNativeType(JSTypeNative.NUMBER_TYPE, numberType);
 
@@ -604,6 +607,18 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.PROMISE_FUNCTION_TYPE, promiseFunctionType);
     registerNativeType(JSTypeNative.PROMISE_TYPE, promiseFunctionType.getInstanceType());
 
+    // BigInt
+    FunctionType bigIntObjectFunctionType =
+        nativeConstructorBuilder("BigInt")
+            .withParamsNode(createOptionalParameters(allType))
+            .withReturnType(bigIntType)
+            .build();
+    bigIntObjectFunctionType.getPrototype(); // Force initialization
+    registerNativeType(JSTypeNative.BIGINT_OBJECT_FUNCTION_TYPE, bigIntObjectFunctionType);
+
+    ObjectType bigIntObjectType = bigIntObjectFunctionType.getInstanceType();
+    registerNativeType(JSTypeNative.BIGINT_OBJECT_TYPE, bigIntObjectType);
+
     // Boolean
     FunctionType booleanObjectFunctionType =
         nativeConstructorBuilder("Boolean")
@@ -743,6 +758,8 @@ public class JSTypeRegistry implements Serializable {
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERABLE_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_ITERATOR_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.ASYNC_GENERATOR_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.BIGINT_OBJECT_TYPE));
+    registerGlobalType(getNativeType(JSTypeNative.BIGINT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.BOOLEAN_TYPE));
     registerGlobalType(getNativeType(JSTypeNative.I_ARRAY_LIKE_TYPE));
@@ -1483,6 +1500,8 @@ public class JSTypeRegistry implements Serializable {
         return getNativeType(JSTypeNative.BOOLEAN_TYPE);
       case "number":
         return getNativeType(JSTypeNative.NUMBER_TYPE);
+      case "bigint":
+        return getNativeType(JSTypeNative.BIGINT_TYPE);
       case "string":
         return getNativeType(JSTypeNative.STRING_TYPE);
       case "undefined":

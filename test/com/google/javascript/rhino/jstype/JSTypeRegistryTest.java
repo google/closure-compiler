@@ -100,6 +100,12 @@ public class JSTypeRegistryTest {
   }
 
   @Test
+  public void testGetBuiltInType_bigint() {
+    assertType(registry.getType(null, "bigint"))
+        .isEqualTo(registry.getNativeType(JSTypeNative.BIGINT_TYPE));
+  }
+
+  @Test
   public void testGetBuiltInType_iterable() {
     assertType(registry.getGlobalType("Iterable"))
         .isEqualTo(registry.getNativeType(ITERABLE_TYPE));
