@@ -600,6 +600,22 @@ function expectAsync(expectedValue) {}
  */
 function expect(expectedValue = undefined) {}
 
+/**
+ * Sets a user-defined property that will be provided to reporters as part of
+ * SpecResult#properties
+ * @param {string} key The name of the property
+ * @param {*} value The value of the property
+ */
+function setSpecProperty(key, value) {}
+
+/**
+ * Sets a user-defined property that will be provided to reporters as part of
+ * SuiteResult#properties
+ * @param {string} key The name of the property
+ * @param {*} value The value of the property
+ */
+function setSuiteProperty(key, value) {}
+
 /** @typedef {function()} */
 var DoneFunc;
 
