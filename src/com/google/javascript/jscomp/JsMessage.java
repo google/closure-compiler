@@ -214,17 +214,15 @@ public final class JsMessage {
       return false;
     }
     JsMessage m = (JsMessage) o;
-    return id.equals(m.id) &&
-           key.equals(m.key) &&
-           isAnonymous == m.isAnonymous &&
-           parts.equals(m.parts) &&
-           (meaning == null ? m.meaning == null : meaning.equals(m.meaning)) &&
-           placeholders.equals(m.placeholders) &&
-           (desc == null ? m.desc == null : desc.equals(m.desc)) &&
-           (sourceName == null
-               ? m.sourceName == null
-               : sourceName.equals(m.sourceName)) &&
-           hidden == m.hidden;
+    return id.equals(m.id)
+        && key.equals(m.key)
+        && isAnonymous == m.isAnonymous
+        && parts.equals(m.parts)
+        && (meaning == null ? m.meaning == null : meaning.equals(m.meaning))
+        && placeholders.equals(m.placeholders)
+        && (desc == null ? m.desc == null : desc.equals(m.desc))
+        && (sourceName == null ? m.sourceName == null : sourceName.equals(m.sourceName))
+        && hidden == m.hidden;
   }
 
   @Override
@@ -439,8 +437,7 @@ public final class JsMessage {
 
       if (!isExternal) {
         String defactoMeaning = meaning != null ? meaning : key;
-        id = idGenerator == null ? defactoMeaning :
-            idGenerator.generateId(defactoMeaning, parts);
+        id = idGenerator == null ? defactoMeaning : idGenerator.generateId(defactoMeaning, parts);
       }
 
       return new JsMessage(sourceName, key, isAnonymous, isExternal, id, parts,

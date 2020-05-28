@@ -57,8 +57,9 @@ final class ReplaceMessages extends JsMessageVisitor {
     boolean isSecondMessageTranslated =
         (bundle.getMessage(message2.getId()) != null);
     Node replacementNode =
-        isSecondMessageTranslated && !isFirstMessageTranslated ?
-        callNode.getChildAtIndex(2) : callNode.getSecondChild();
+        (isSecondMessageTranslated && !isFirstMessageTranslated)
+            ? callNode.getChildAtIndex(2)
+            : callNode.getSecondChild();
     callNode.replaceWith(replacementNode.detach());
     Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(replacementNode);
     if (changeScope != null) {
@@ -336,8 +337,8 @@ final class ReplaceMessages extends JsMessageVisitor {
 
       // The translated message is null
       if (objLitNode == null) {
-        throw new MalformedException("Empty placeholder value map " +
-            "for a translated message with placeholders.", refNode);
+        throw new MalformedException(
+            "Empty placeholder value map for a translated message with placeholders.", refNode);
       }
 
       for (Node key = objLitNode.getFirstChild(); key != null;

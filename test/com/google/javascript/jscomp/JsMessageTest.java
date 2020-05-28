@@ -48,12 +48,10 @@ public final class JsMessageTest {
 
   @Test
   public void testHashValues() {
-    final String EMPTY = "";
-    final String VAL = "Hello, world";
-    final long   ANSWER_STRING_64 = 0x43ec5d9731515874L;
-    final long   ANSWER_EMPTY_64 = 0x468d9ea2c42361aaL;
+    final long answerString64 = 0x43ec5d9731515874L;
+    assertThat(JsMessage.Hash.hash64("Hello, world")).isEqualTo(answerString64);
 
-    assertThat(JsMessage.Hash.hash64(VAL)).isEqualTo(ANSWER_STRING_64);
-    assertThat(JsMessage.Hash.hash64(EMPTY)).isEqualTo(ANSWER_EMPTY_64);
+    final long answerEmpty64 = 0x468d9ea2c42361aaL;
+    assertThat(JsMessage.Hash.hash64("")).isEqualTo(answerEmpty64);
   }
 }

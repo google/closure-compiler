@@ -34,6 +34,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ReplaceMessagesTest extends CompilerTestCase {
 
+  // Messages returned from fake bundle, keyed by `JsMessage.id`.
   private Map<String, JsMessage> messages;
   private Style style;
   private boolean strictReplacement;
@@ -387,10 +388,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadFallbackSyntax1() {
-    testError("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('asdf');" +
-         "var x = goog.getMsgWithFallback(MSG_A);",
-         JsMessageVisitor.BAD_FALLBACK_SYNTAX);
+    testError(
+        "/** @desc d */\n"
+            + "var MSG_A = goog.getMsg('asdf');"
+            + "var x = goog.getMsgWithFallback(MSG_A);",
+        JsMessageVisitor.BAD_FALLBACK_SYNTAX);
   }
 
   @Test
@@ -560,7 +562,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   private void registerMessage(JsMessage message) {
-    messages.put(message.getKey(), message);
+    messages.put(message.getId(), message);
   }
 
   private class SimpleMessageBundle implements MessageBundle {
