@@ -2328,8 +2328,8 @@ angular.$routeProvider.Params.prototype.controllerAs;
 /** @type {string|function(!Object<string, string>): string|undefined} */
 angular.$routeProvider.Params.prototype.template;
 
-/** @type {string|!Object|function(!Object<string,string>=)} */
-angular.$routeProvider.Params.templateUrl;
+/** @type {string|!Object|function(!Object<string,string>=)|undefined} */
+angular.$routeProvider.Params.prototype.templateUrl;
 
 /** @type {undefined|
  * !Object<string,(string|!angular.Injectable|!angular.$q.Promise)>} */
