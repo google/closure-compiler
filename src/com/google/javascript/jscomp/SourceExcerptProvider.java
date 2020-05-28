@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import javax.annotation.Nullable;
 
 /**
  * A source excerpt provider is responsible for building source code excerpt
@@ -32,10 +33,26 @@ public interface SourceExcerptProvider {
      */
     LINE {
       @Override
-      public String get(SourceExcerptProvider source, String sourceName,
-          int lineNumber, ExcerptFormatter formatter) {
+      public String get(
+          SourceExcerptProvider source,
+          String sourceName,
+          int lineNumber,
+          int unused,
+          ExcerptFormatter formatter) {
         return formatter.formatLine(
             source.getSourceLine(sourceName, lineNumber), lineNumber);
+      }
+    },
+    /** Multiple lines excerpt. */
+    FULL {
+      @Override
+      public String get(
+          SourceExcerptProvider source,
+          String sourceName,
+          int startLineNumber,
+          int length,
+          ExcerptFormatter formatter) {
+        return formatter.formatRegion(source.getSourceLines(sourceName, startLineNumber, length));
       }
     },
     /**
@@ -43,18 +60,33 @@ public interface SourceExcerptProvider {
      */
     REGION {
       @Override
-      public String get(SourceExcerptProvider source, String sourceName,
-          int lineNumber, ExcerptFormatter formatter) {
+      public String get(
+          SourceExcerptProvider source,
+          String sourceName,
+          int lineNumber,
+          int length,
+          ExcerptFormatter formatter) {
         return formatter.formatRegion(
             source.getSourceRegion(sourceName, lineNumber));
       }
     };
 
-    /**
-     * Get a source excerpt string based on the type of the source excerpt.
-     */
-    public abstract String get(SourceExcerptProvider source, String sourceName,
-        int lineNumber, ExcerptFormatter formatter);
+    /** Get a source excerpt string based on the type of the source excerpt. */
+    public String get(
+        SourceExcerptProvider source,
+        String sourceName,
+        int lineNumber,
+        ExcerptFormatter formatter) {
+      return this.get(source, sourceName, lineNumber, -1, formatter);
+    }
+
+    /** Get a source excerpt string based on the type of the source excerpt. */
+    public abstract String get(
+        SourceExcerptProvider source,
+        String sourceName,
+        int lineNumber,
+        int length,
+        ExcerptFormatter formatter);
   }
 
   /**
@@ -67,14 +99,27 @@ public interface SourceExcerptProvider {
   String getSourceLine(String sourceName, int lineNumber);
 
   /**
-   * Get a region around the indicated line number. The exact definition of a
-   * region is implementation specific, but it must contain the line indicated
-   * by the line number. A region must not start or end by a carriage return.
+   * Gets the specific lines returned by the beginning and excerpt length. Must not start or end
+   * with a carriage return. Implementations may decide to truncate lines but will always include
+   * the first line and never be longer than the specified length.
    *
    * @param lineNumber the line number, 1 being the first line of the file
-   * @return the region around the line number indicated, or {@code null}
-   * if it does not exist
+   * @param length the desired length of the excerpt (in chars). If -1, returns just a single line.
+   *     Otherwise, returns as many lines as needed. (including the remainder of the last line)
+   * @return the region around the line number indicated, or {@code null} if it does not exist
    */
+  @Nullable
+  Region getSourceLines(String sourceName, int lineNumber, int length);
+
+  /**
+   * Get a region around the indicated line number. The exact definition of a region is
+   * implementation specific, but it must contain the line indicated by the line number. A region
+   * must not start or end by a carriage return.
+   *
+   * @param lineNumber the line number, 1 being the first line of the file
+   * @return the region around the line number indicated, or {@code null} if it does not exist
+   */
+  @Nullable
   Region getSourceRegion(String sourceName, int lineNumber);
 
   /**
@@ -92,9 +137,7 @@ public interface SourceExcerptProvider {
      */
     String formatLine(String line, int lineNumber);
 
-    /**
-     * Format a region excerpt.
-     */
-    String formatRegion(Region region);
+    /** Format a region excerpt. */
+    String formatRegion(@Nullable Region region);
   }
 }

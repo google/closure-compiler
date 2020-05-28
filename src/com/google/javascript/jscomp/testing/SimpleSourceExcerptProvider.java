@@ -38,6 +38,11 @@ public final class SimpleSourceExcerptProvider implements SourceExcerptProvider 
   }
 
   @Override
+  public Region getSourceLines(String sourceName, int lineNumber, int length) {
+    return sourceFile.getLines(lineNumber, length);
+  }
+
+  @Override
   public Region getSourceRegion(String sourceName, int lineNumber) {
     return sourceFile.getRegion(lineNumber);
   }

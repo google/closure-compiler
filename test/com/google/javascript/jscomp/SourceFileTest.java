@@ -300,4 +300,56 @@ public final class SourceFileTest {
     ois.close();
     assertThat(afterSerialization.getCode()).isEqualTo(sourceFile.getCode());
   }
+
+  @Test
+  public void testGetLines() {
+    SourceFile sourceFile =
+        SourceFile.fromCode("file.js", "const a = 0;\nconst b = 1;\nconst c = 2;");
+
+    assertThat(sourceFile.getLines(1, 1).getSourceExcerpt()).isEqualTo("const a = 0;");
+    assertThat(sourceFile.getLines(2, 1).getSourceExcerpt()).isEqualTo("const b = 1;");
+    assertThat(sourceFile.getLines(3, 1).getSourceExcerpt()).isEqualTo("const c = 2;");
+
+    assertThat(sourceFile.getLines(1, "const a = 0;\n".length()).getSourceExcerpt())
+        .isEqualTo("const a = 0;");
+    assertThat(sourceFile.getLines(1, "const a = 0;\nconst b".length()).getSourceExcerpt())
+        .isEqualTo("const a = 0;\nconst b = 1;");
+    assertThat(sourceFile.getLines(2, "const b = 1;\nconst c".length()).getSourceExcerpt())
+        .isEqualTo("const b = 1;\nconst c = 2;");
+  }
+
+  @Test
+  public void testGetLines_invalidLengths() {
+    SourceFile sourceFile =
+        SourceFile.fromCode("file.js", "const a = 0;\nconst b = 1;\nconst c = 2;");
+
+    assertThat(sourceFile.getLines(0, -3).getSourceExcerpt()).isEqualTo("const a = 0;");
+    assertThat(sourceFile.getLines(0, 0).getSourceExcerpt()).isEqualTo("const a = 0;");
+    assertThat(sourceFile.getLines(1, 100000).getSourceExcerpt())
+        .isEqualTo("const a = 0;\nconst b = 1;\nconst c = 2;");
+    assertThat(sourceFile.getLines(2, 10000).getSourceExcerpt())
+        .isEqualTo("const b = 1;\nconst c = 2;");
+  }
+
+  @Test
+  public void testGetLines_whenFileEndsWithNewline() {
+    SourceFile sourceFile =
+        SourceFile.fromCode("file.js", "const a = 0;\nconst b = 1;\nconst c = 2;\n");
+
+    assertThat(sourceFile.getLines(3, 1).getSourceExcerpt()).isEqualTo("const c = 2;");
+    assertThat(sourceFile.getLines(1, 100000).getSourceExcerpt())
+        .isEqualTo("const a = 0;\nconst b = 1;\nconst c = 2;");
+    assertThat(sourceFile.getLines(2, 10000).getSourceExcerpt())
+        .isEqualTo("const b = 1;\nconst c = 2;");
+  }
+
+  @Test
+  public void testGetLines_invalidLineNumbers() {
+    SourceFile sourceFile =
+        SourceFile.fromCode("file.js", "const a = 0;\nconst b = 1;\nconst c = 2;");
+
+    assertThat(sourceFile.getLines(-20, 1).getSourceExcerpt()).isEqualTo("const a = 0;");
+    assertThat(sourceFile.getLines(0, 1).getSourceExcerpt()).isEqualTo("const a = 0;");
+    assertThat(sourceFile.getLines(4, 1)).isNull();
+  }
 }
