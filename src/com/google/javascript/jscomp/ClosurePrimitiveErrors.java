@@ -79,5 +79,5 @@ final class ClosurePrimitiveErrors {
       DiagnosticType.error(
           "JSC_INVALID_CLOSURE_CALL_ERROR",
           "Closure primitive methods (goog.provide, goog.require, goog.define, etc) must be called "
-              + " at file scope.");
+              + "at file scope.");
 }
