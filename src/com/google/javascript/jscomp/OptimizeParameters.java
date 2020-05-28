@@ -70,7 +70,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
   public void process(Node externs, Node root, ReferenceMap refMap) {
     this.globalScope = refMap.getGlobalScope();
 
-    // Find all function nodes whose callers ignore the return values.
+    // Find all function nodes that are possible candidates for parameter removal.
     List<ArrayList<Node>> toOptimize = new ArrayList<>();
 
     for (Entry<String, ArrayList<Node>> entry : refMap.getNameReferences()) {
@@ -793,6 +793,8 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     // are "this", "arguments", local names, and functions that capture local
     // values.
     switch (n.getToken()) {
+      case AWAIT:
+      case YIELD:
       case THIS:
       case SUPER:
       case ITER_SPREAD:

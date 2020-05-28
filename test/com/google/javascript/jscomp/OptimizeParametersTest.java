@@ -254,6 +254,50 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoInlineYieldExpression() {
+    testSame(
+        lines(
+            "", //
+            "function f(a) { return a; }",
+            "function *g() { f(yield 1); }",
+            "use(g().next());",
+            ""));
+  }
+
+  @Test
+  public void testNoRemoveYieldExpression() {
+    testSame(
+        lines(
+            "", //
+            "function f(a) { }",
+            "function *g() { f(yield 1); }",
+            "use(g().next());",
+            ""));
+  }
+
+  @Test
+  public void testNoInlineAwaitExpression() {
+    testSame(
+        lines(
+            "", //
+            "function f(a) { return a; }",
+            "async function g() { f(await 1); }",
+            "use(g().next());",
+            ""));
+  }
+
+  @Test
+  public void testNoRemoveAwaitExpression() {
+    testSame(
+        lines(
+            "", //
+            "function f(a) { }",
+            "async function g() { f(await 1); }",
+            "use(g().next());",
+            ""));
+  }
+
+  @Test
   public void testSimpleRemoval0() {
     test("function foo(p1) {       } foo(); foo()",
          "function foo(  ) {var p1;} foo(); foo()");
