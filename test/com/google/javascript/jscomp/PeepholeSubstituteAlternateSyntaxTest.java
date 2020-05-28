@@ -80,9 +80,14 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
     // Cannot fold all the way to a literal because there are too few arguments.
     fold("x = new RegExp",                    "x = RegExp()");
-    // Empty regexp should not fold to // since that is a line comment in JS
-    fold("x = new RegExp(\"\")",              "x = RegExp(\"\")");
+    // Empty regexp should not fold to // since that is a line comment
+    fold("x = new RegExp(\"\")", "x = RegExp(\"\")");
     fold("x = new RegExp(\"\", \"i\")",       "x = RegExp(\"\",\"i\")");
+
+    // Regexp starting with * should not fold to /* since that is the start of a comment
+    fold("x = new RegExp('*')", "x = RegExp('*')");
+    fold("x = new RegExp('*', 'i')", "x = RegExp('*', 'i')");
+
     // Bogus flags should not fold
     testSame("x = RegExp(\"foobar\", \"bogus\")",
          PeepholeSubstituteAlternateSyntax.INVALID_REGULAR_EXPRESSION_FLAGS);

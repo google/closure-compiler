@@ -527,16 +527,16 @@ class PeepholeSubstituteAlternateSyntax
       return n;
     }
 
-    if (// is pattern folded
-        pattern.isString()
-        // make sure empty pattern doesn't fold to //
+    if ( // is pattern folded
+    pattern.isString()
+        // make sure empty pattern doesn't fold to a comment //
         && !"".equals(pattern.getString())
-
+        // make sure empty pattern doesn't fold to a comment /*
+        && !pattern.getString().startsWith("*")
         && (null == flags || flags.isString())
         // don't escape patterns with Unicode escapes since Safari behaves badly
         // (read can't parse or crashes) on regex literals with Unicode escapes
-        && (isEcmaScript5OrGreater()
-            || !containsUnicodeEscape(pattern.getString()))) {
+        && (isEcmaScript5OrGreater() || !containsUnicodeEscape(pattern.getString()))) {
 
       // Make sure that / is escaped, so that it will fit safely in /brackets/
       // and make sure that no LineTerminatorCharacters appear literally inside
