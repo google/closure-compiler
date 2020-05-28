@@ -28,24 +28,6 @@ function compareResults(expected, actual) {
   assertEquals(expected.done, actual.done);
 }
 
-/**
- * @param {VALUE} result
- * @param {number} millis
- * @return {!Promise<VALUE>}
- * @template VALUE
- */
-function resolveAfterWaiting(result, millis) {
-  return new Promise(function(resolve, reject) {
-    try {
-      setTimeout(function() {
-        resolve(result);
-      }, millis);
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
-
 testSuite({
   testAsyncGenBasic() {
     async function* foo() {
@@ -285,9 +267,9 @@ testSuite({
   },
   testAsyncGenRaceOfNexts() {
     async function* foo() {
-      yield resolveAfterWaiting(1, 100);
-      yield resolveAfterWaiting(2, 100);
-      yield resolveAfterWaiting(3, 100);
+      yield Promise.resolve(1);
+      yield Promise.resolve(2);
+      yield Promise.resolve(3);
       yield 4;
       yield 5;
       yield 6;
@@ -312,12 +294,12 @@ testSuite({
   },
   testAsyncGenRaceOfNextAndReturn() {
     async function* foo() {
-      yield resolveAfterWaiting(1, 100);
-      yield resolveAfterWaiting(2, 100);
-      yield resolveAfterWaiting(3, 100);
-      yield resolveAfterWaiting(4, 100);
-      yield resolveAfterWaiting(5, 100);
-      yield resolveAfterWaiting(6, 100);
+      yield Promise.resolve(1);
+      yield Promise.resolve(2);
+      yield Promise.resolve(3);
+      yield Promise.resolve(4);
+      yield Promise.resolve(5);
+      yield Promise.resolve(6);
     }
     let gen = foo();
     return Promise.all([
@@ -337,12 +319,12 @@ testSuite({
   },
   testAsyncGenRaceOfNextAndThrow() {
     async function* foo() {
-      yield resolveAfterWaiting(1, 100);
-      yield resolveAfterWaiting(2, 100);
-      yield resolveAfterWaiting(3, 100);
-      yield resolveAfterWaiting(4, 100);
-      yield resolveAfterWaiting(5, 100);
-      yield resolveAfterWaiting(6, 100);
+      yield Promise.resolve(1);
+      yield Promise.resolve(2);
+      yield Promise.resolve(3);
+      yield Promise.resolve(4);
+      yield Promise.resolve(5);
+      yield Promise.resolve(6);
     }
     let gen = foo();
     return Promise.all([
