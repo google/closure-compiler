@@ -316,6 +316,9 @@ public final class SourceFileTest {
         .isEqualTo("const a = 0;\nconst b = 1;");
     assertThat(sourceFile.getLines(2, "const b = 1;\nconst c".length()).getSourceExcerpt())
         .isEqualTo("const b = 1;\nconst c = 2;");
+
+    assertThat(sourceFile.getLines(3, "const c = 2;".length()).getSourceExcerpt())
+        .isEqualTo("const c = 2;");
   }
 
   @Test
@@ -329,6 +332,7 @@ public final class SourceFileTest {
         .isEqualTo("const a = 0;\nconst b = 1;\nconst c = 2;");
     assertThat(sourceFile.getLines(2, 10000).getSourceExcerpt())
         .isEqualTo("const b = 1;\nconst c = 2;");
+    assertThat(sourceFile.getLines(3, 10000).getSourceExcerpt()).isEqualTo("const c = 2;");
   }
 
   @Test
@@ -336,11 +340,12 @@ public final class SourceFileTest {
     SourceFile sourceFile =
         SourceFile.fromCode("file.js", "const a = 0;\nconst b = 1;\nconst c = 2;\n");
 
-    assertThat(sourceFile.getLines(3, 1).getSourceExcerpt()).isEqualTo("const c = 2;");
     assertThat(sourceFile.getLines(1, 100000).getSourceExcerpt())
         .isEqualTo("const a = 0;\nconst b = 1;\nconst c = 2;");
     assertThat(sourceFile.getLines(2, 10000).getSourceExcerpt())
         .isEqualTo("const b = 1;\nconst c = 2;");
+    assertThat(sourceFile.getLines(3, 1).getSourceExcerpt()).isEqualTo("const c = 2;");
+    assertThat(sourceFile.getLines(4, 1).getSourceExcerpt()).isEmpty();
   }
 
   @Test

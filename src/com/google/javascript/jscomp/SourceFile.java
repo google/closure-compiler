@@ -297,6 +297,10 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
 
     int pos = lineOffsets[lineNumber - 1];
+    if (pos == js.length()) {
+      return new SimpleRegion(
+          lineNumber, lineNumber, ""); // Happens when asking for the last empty line in a file.
+    }
     int endChar = pos;
     int endLine = lineNumber;
     // go through lines until we've reached the end of the file or met the specified length.
