@@ -1,0 +1,23 @@
+var __var1__ = 1;
+
+let __var2__ = 2;
+
+const __var3__ = 3;
+
+const __var4__ = 4,
+      __var5__ = 5;
+
+const __var6__ = __var7__;
+
+const __var8__ = [
+  __var9__,
+  __var10__,
+];
+
+const __var11__ = {
+  [__var12__]: __var13__
+};
+
+const [__var14__, ...__var15__] = [];
+
+const {a: __var16__, ...__var17__} = {a: 1};

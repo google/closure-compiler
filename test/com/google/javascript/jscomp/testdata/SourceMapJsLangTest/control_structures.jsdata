@@ -1,0 +1,27 @@
+// Can use each variable only once.
+for (var __var1__ = 0;;) {}
+
+for (const __var2__ in __var3__) {}
+
+for (const __var4__ of __var5__) {}
+
+for await (const __var6__ of __var7__) {}
+
+while (__var8__) {}
+
+do {} while (__var9__) {}
+
+if (__var10__) {
+  __var11__;
+} else if (__var12__) {}
+
+switch (__var13__) {
+  case 1:
+    __var14__;
+    break;
+  default:
+    __var15__;
+}
+
+try {}
+catch (__var16__) {}

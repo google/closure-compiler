@@ -1,0 +1,10 @@
+function __functionName__(
+  __firstArg__,
+  __secondArg__ = __defaultValue__,
+  ...__restArgs__) {
+}
+
+const obj = {
+  get __getter__() {},
+  set __setter__(__setterArg__) {},
+};

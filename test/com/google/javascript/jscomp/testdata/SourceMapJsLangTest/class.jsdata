@@ -1,0 +1,5 @@
+class __className__ extends __parentClass__ {
+  __memberFunction__() {}
+
+  static __staticFunction__() {}
+}

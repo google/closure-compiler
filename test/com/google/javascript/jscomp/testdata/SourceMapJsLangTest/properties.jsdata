@@ -1,0 +1,12 @@
+__var1__.__var2__;
+
+class SomeClass {
+  constructor() {
+    this.__var3__ = 3;
+  }
+}
+
+__var4__[__var5__];
+
+// TODO: uncomment once JS compiler support optional chaining.
+// _ _var6_ _?._ _var7_ _;
