@@ -377,6 +377,14 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoOp() {
+    configuration =
+        "requirement: { type: NO_OP, value: 'no matter', value: 'can be anything', error_message:"
+            + " 'Never happens' }";
+    testNoWarning("eval()");
+  }
+
+  @Test
   public void testBannedNameCall() {
     configuration =
         "requirement: {\n" +

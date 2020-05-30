@@ -274,6 +274,22 @@ private static final long serialVersionUID = 0L;
      */
     CUSTOM(1),
     /**
+     *
+     *
+     * <pre>
+     * No-op requirement that never reports any violations.
+     * This exists so that, if a requirement becomes obsolete but is extended by
+     * other requirements that can't all be simultaneously deleted, it can be
+     * changed to this rule, allowing it to be effectively removed without
+     * breaking downstream builds.
+     * </pre>
+     *
+     * <code>NO_OP = 15;</code>
+     */
+    NO_OP(15),
+    /**
+     *
+     *
      * <pre>
      * A forbidden source file
      * </pre>
@@ -418,6 +434,22 @@ private static final long serialVersionUID = 0L;
      */
     public static final int CUSTOM_VALUE = 1;
     /**
+     *
+     *
+     * <pre>
+     * No-op requirement that never reports any violations.
+     * This exists so that, if a requirement becomes obsolete but is extended by
+     * other requirements that can't all be simultaneously deleted, it can be
+     * changed to this rule, allowing it to be effectively removed without
+     * breaking downstream builds.
+     * </pre>
+     *
+     * <code>NO_OP = 15;</code>
+     */
+    public static final int NO_OP_VALUE = 15;
+    /**
+     *
+     *
      * <pre>
      * A forbidden source file
      * </pre>
@@ -574,6 +606,8 @@ private static final long serialVersionUID = 0L;
     public static Type forNumber(int value) {
       switch (value) {
         case 1: return CUSTOM;
+        case 15:
+          return NO_OP;
         case 2: return BANNED_DEPENDENCY;
         case 14: return BANNED_DEPENDENCY_REGEX;
         case 3: return BANNED_NAME;

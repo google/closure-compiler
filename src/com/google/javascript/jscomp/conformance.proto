@@ -86,6 +86,13 @@ message Requirement {
     // A requirement enforced with code a external java class.
     CUSTOM = 1;
 
+    // No-op requirement that never reports any violations.
+    // This exists so that, if a requirement becomes obsolete but is extended by
+    // other requirements that can't all be simultaneously deleted, it can be
+    // changed to this rule, allowing it to be effectively removed without
+    // breaking downstream builds.
+    NO_OP = 15;
+
     // A forbidden source file
     BANNED_DEPENDENCY = 2;
 

@@ -338,6 +338,24 @@ public final class ConformanceRules {
     }
   }
 
+  /**
+   * No-op rule that never reports any violations.
+   *
+   * <p>This exists so that, if a requirement becomes obsolete but is extended by other requirements
+   * that can't all be simultaneously deleted, it can be changed to this rule, allowing it to be
+   * effectively removed without breaking downstream builds.
+   */
+  static final class NoOp extends AbstractRule {
+    NoOp(AbstractCompiler compiler, Requirement requirement) throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
   abstract static class AbstractTypeRestrictionRule extends AbstractRule {
     private final JSType nativeObjectType;
     private final JSType whitelistedTypes;

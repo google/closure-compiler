@@ -218,6 +218,8 @@ public final class CheckConformance implements Callback, CompilerPass {
       switch (requirement.getType()) {
         case CUSTOM:
           return new ConformanceRules.CustomRuleProxy(compiler, requirement);
+        case NO_OP:
+          return new ConformanceRules.NoOp(compiler, requirement);
         case BANNED_CODE_PATTERN:
           return new ConformanceRules.BannedCodePattern(compiler, requirement);
         case BANNED_DEPENDENCY:
