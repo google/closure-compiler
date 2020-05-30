@@ -1618,33 +1618,6 @@ public class JSTypeRegistry implements Serializable {
     return new EnumType(this, name, source, elementsType);
   }
 
-  /**
-   * Creates an arrow type, an abstract representation of the parameters
-   * and return value of a function.
-   *
-   * @param parametersNode the parameters' types, formatted as a Node with
-   *     param names and optionality info.
-   * @param returnType the function's return type
-   */
-  ArrowType createArrowType(Node parametersNode, JSType returnType) {
-    return new ArrowType(this, parametersNode, returnType);
-  }
-
-  /**
-   * Creates an arrow type with an unknown return type.
-   *
-   * @param parametersNode the parameters' types, formatted as a Node with
-   *     param names and optionality info.
-   */
-  ArrowType createArrowType(Node parametersNode) {
-    return new ArrowType(this, parametersNode, null);
-  }
-
-  /** Creates an arrow type with no parameters and an unknown return type. */
-  ArrowType createArrowType() {
-    return new ArrowType(this, createEmptyParams(), null);
-  }
-
   /** Creates an empty parameter list node. */
   Node createEmptyParams() {
     return new Node(Token.PARAM_LIST);
