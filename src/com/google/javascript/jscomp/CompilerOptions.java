@@ -1219,13 +1219,7 @@ public class CompilerOptions implements Serializable {
    * useful to work around CI and build systems that use absolute paths.
    */
   private Optional<Pattern> conformanceRemoveRegexFromPath =
-      Optional.of(
-          // The regex uses lookahead because we want to be able to identify generated files. For a
-          // path like "blaze-out/directory/bin/some/file.js" we strip out the entire prefix,
-          // resulting in a reported path of "some/file.js". For generated files, we only strip the
-          // first two segments, leaving "genfiles/some/file.js".
-          Pattern.compile(
-              "^((.*/)?google3/)?((^/)?(blaze|bazel)-out/[^/]+/(bin/|(?=genfiles/)))?"));
+      Optional.of(Pattern.compile("^((.*/)?google3/)?((^/)?(blaze|bazel)-out/[^/]+/bin/)?"));
 
   public void setConformanceRemoveRegexFromPath(Optional<Pattern> pattern) {
     conformanceRemoveRegexFromPath = pattern;
