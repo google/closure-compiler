@@ -203,6 +203,7 @@ public final class FeatureSet implements Serializable {
     DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
 
     // ES 2020 Stage 4
+    BIGINT("bigint", LangVersion.ES_UNSUPPORTED),
     IMPORT_META("import.meta", LangVersion.ES2020),
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
     OPTIONAL_CHAINING("Optional chaining", LangVersion.ES_UNSUPPORTED),

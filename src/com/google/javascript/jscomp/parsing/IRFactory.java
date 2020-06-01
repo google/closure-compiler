@@ -163,6 +163,7 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.dtoa.DToA;
+import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -2014,6 +2015,14 @@ class IRFactory {
       return number;
     }
 
+    Node processBigIntLiteral(LiteralExpressionTree literalNode) {
+      maybeWarnForFeature(literalNode, Feature.BIGINT);
+      BigInteger value = normalizeBigInt(literalNode.literalToken.asLiteral());
+      Node bigint = newBigIntNode(value);
+      setSourceInfo(bigint, literalNode);
+      return bigint;
+    }
+
     Node processObjectLiteral(ObjectLiteralExpressionTree objTree) {
       Node node = newNode(Token.OBJECTLIT);
       node.setTrailingComma(objTree.hasTrailingComma);
@@ -2402,8 +2411,12 @@ class IRFactory {
     Node processUnaryExpression(UnaryExpressionTree exprNode) {
       Token type = transformUnaryTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
-      if (type == Token.NEG && operand.isNumber()) {
-        operand.setDouble(-operand.getDouble());
+      if (type == Token.NEG && (operand.isNumber() || operand.isBigInt())) {
+        if (operand.isBigInt()) {
+          operand.setBigInt(operand.getBigInt().negate());
+        } else {
+          operand.setDouble(-operand.getDouble());
+        }
         operand.setLineno(-1);
         setSourceInfo(operand, exprNode.operator.getStart(), exprNode.operand.getEnd());
         return operand;
@@ -3224,6 +3237,8 @@ class IRFactory {
           return processNumberLiteral(expr);
         case STRING:
           return processStringLiteral(expr);
+        case BIGINT:
+          return processBigIntLiteral(expr);
         case FALSE:
         case TRUE:
           return processBooleanLiteral(expr);
@@ -3725,8 +3740,7 @@ class IRFactory {
   double normalizeNumber(LiteralToken token) {
     String value = token.value;
     if (value.contains("_")) {
-      value = value.replace("_", "");
-      maybeWarnForFeature(token, Feature.NUMERIC_SEPARATOR);
+      value = removeNumericSeparators(value, token);
     }
     SourceRange location = token.location;
     int length = value.length();
@@ -3802,6 +3816,53 @@ class IRFactory {
     } else {
       return Double.parseDouble(value);
     }
+  }
+
+  BigInteger normalizeBigInt(LiteralToken token) {
+    String value = token.value;
+    value = value.substring(0, value.indexOf('n'));
+    if (value.contains("_")) {
+      value = removeNumericSeparators(value, token);
+    }
+    int length = value.length();
+    checkState(length > 0);
+    checkState(value.charAt(0) != '-' && value.charAt(0) != '+');
+    if (value.charAt(0) == '0' && length > 1) {
+      switch (value.charAt(1)) {
+        case 'b':
+        case 'B':
+          maybeWarnForFeature(token, Feature.BINARY_LITERALS);
+          return new BigInteger(value.substring(2), 2);
+        case 'o':
+        case 'O':
+          maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
+          return new BigInteger(value.substring(2), 8);
+        case 'x':
+        case 'X':
+          return new BigInteger(value.substring(2), 16);
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          throw new IllegalStateException("Nonzero BigInts can't have a leading zero");
+        default:
+          throw new IllegalStateException(
+              "Unexpected character in bigint literal: " + value.charAt(1));
+      }
+    } else {
+      return new BigInteger(value);
+    }
+  }
+
+  private String removeNumericSeparators(String value, LiteralToken token) {
+    maybeWarnForFeature(token, Feature.NUMERIC_SEPARATOR);
+    return value.replace("_", "");
   }
 
   private static int binarydigit(char c) {
@@ -4012,6 +4073,10 @@ class IRFactory {
 
   Node newNumberNode(Double value) {
     return IR.number(value).clonePropsFrom(templateNode);
+  }
+
+  Node newBigIntNode(BigInteger value) {
+    return Node.newBigInt(value).clonePropsFrom(templateNode);
   }
 
   /**

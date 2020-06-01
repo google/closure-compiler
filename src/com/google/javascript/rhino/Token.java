@@ -86,6 +86,7 @@ public enum Token {
 
   NAME,
   NUMBER,
+  BIGINT,
   STRING,
   NULL,
   THIS,

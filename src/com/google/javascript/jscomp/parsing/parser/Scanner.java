@@ -652,6 +652,11 @@ public class Scanner {
 
   private Token scanPostDigit(int beginToken) {
     skipDecimalDigits();
+    if (peek('n')) {
+      nextChar();
+      return new LiteralToken(
+          TokenType.BIGINT, getTokenString(beginToken), getTokenRange(beginToken));
+    }
     return scanFractionalNumericLiteral(beginToken);
   }
 
@@ -665,8 +670,14 @@ public class Scanner {
           reportError("Binary Integer Literal must contain at least one digit");
         }
         skipBinaryDigits();
+        boolean isBigInt = peek('n');
+        if (isBigInt) {
+          nextChar();
+        }
         return new LiteralToken(
-            TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+            isBigInt ? TokenType.BIGINT : TokenType.NUMBER,
+            getTokenString(beginToken),
+            getTokenRange(beginToken));
 
       case 'o':
       case 'O':
@@ -679,8 +690,14 @@ public class Scanner {
         if (peek('8') || peek('9')) {
           reportError("Invalid octal digit in octal literal.");
         }
+        isBigInt = peek('n');
+        if (isBigInt) {
+          nextChar();
+        }
         return new LiteralToken(
-            TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+            isBigInt ? TokenType.BIGINT : TokenType.NUMBER,
+            getTokenString(beginToken),
+            getTokenRange(beginToken));
       case 'x':
       case 'X':
         nextChar();
@@ -688,8 +705,14 @@ public class Scanner {
           reportError("Hex Integer Literal must contain at least one digit");
         }
         skipHexDigits();
+        isBigInt = peek('n');
+        if (isBigInt) {
+          nextChar();
+        }
         return new LiteralToken(
-            TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+            isBigInt ? TokenType.BIGINT : TokenType.NUMBER,
+            getTokenString(beginToken),
+            getTokenRange(beginToken));
       case 'e':
       case 'E':
         return scanExponentOfNumericLiteral(beginToken);
@@ -710,8 +733,15 @@ public class Scanner {
           nextChar();
           skipDecimalDigits();
         }
+        if (peek('n')) {
+          reportError("SyntaxError: nonzero BigInt can't have leading zero");
+        }
         return new LiteralToken(
             TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));
+      case 'n':
+        nextChar();
+        return new LiteralToken(
+            TokenType.BIGINT, getTokenString(beginToken), getTokenRange(beginToken));
       default:
         return new LiteralToken(
             TokenType.NUMBER, getTokenString(beginToken), getTokenRange(beginToken));

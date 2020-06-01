@@ -53,6 +53,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Function;
@@ -219,6 +220,12 @@ public final class NodeSubject extends Subject {
   public NodeSubject isNumber(double value) {
     check("isNumber()").that(actual.isNumber()).isTrue();
     check("getNumber()").that(actual.getDouble()).isEqualTo(value);
+    return this;
+  }
+
+  public NodeSubject isBigInt(BigInteger value) {
+    check("isBigInt()").that(actual.isBigInt()).isTrue();
+    check("getBigInt()").that(actual.getBigInt()).isEqualTo(value);
     return this;
   }
 

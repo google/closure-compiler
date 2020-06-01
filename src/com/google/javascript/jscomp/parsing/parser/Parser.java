@@ -2297,6 +2297,7 @@ public class Parser {
         return parseIdentifierExpression();
       case NUMBER:
       case STRING:
+      case BIGINT:
       case TRUE:
       case FALSE:
       case NULL:

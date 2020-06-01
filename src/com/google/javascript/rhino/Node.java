@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -356,6 +357,27 @@ public class Node implements Serializable {
     public NumberNode cloneNode(boolean cloneTypeExprs) {
       return copyNodeFields(new NumberNode(number), cloneTypeExprs);
     }
+  }
+
+  private static final class BigIntNode extends Node {
+    private static final long serialVersionUID = 1L;
+
+    BigIntNode(BigInteger bigint) {
+      super(Token.BIGINT);
+      setBigInt(bigint);
+    }
+
+    @Override
+    public BigInteger getBigInt() {
+      return this.bigint;
+    }
+
+    @Override
+    public void setBigInt(BigInteger number) {
+      this.bigint = number;
+    }
+
+    private BigInteger bigint;
   }
 
   private static final class StringNode extends Node {
@@ -707,6 +729,10 @@ public class Node implements Serializable {
 
   public static Node newNumber(double number, int lineno, int charno) {
     return new NumberNode(number, lineno, charno);
+  }
+
+  public static Node newBigInt(BigInteger bigint) {
+    return new BigIntNode(bigint);
   }
 
   public static Node newString(String str) {
@@ -1246,7 +1272,29 @@ public class Node implements Serializable {
       throw new IllegalStateException(
           "Number node not created with Node.newNumber");
     } else {
-      throw new UnsupportedOperationException(this + " is not a string node");
+      throw new UnsupportedOperationException(this + " is not a number node");
+    }
+  }
+
+  /** Can only be called when <code>getType() == TokenStream.BIGINT</code> */
+  public BigInteger getBigInt() {
+    if (this.token == Token.BIGINT) {
+      throw new IllegalStateException("BigInt node not created with Node.newBigInt");
+    } else {
+      throw new UnsupportedOperationException(this + " is not a bigint node");
+    }
+  }
+
+  /**
+   * Can only be called when <code>getType() == Token.BIGINT</code>
+   *
+   * @param value value to set.
+   */
+  public void setBigInt(BigInteger value) {
+    if (this.token == Token.BIGINT) {
+      throw new IllegalStateException("BigInt node not created with Node.newBigInt");
+    } else {
+      throw new UnsupportedOperationException(this + " is not a bigint node");
     }
   }
 
@@ -3214,6 +3262,10 @@ public class Node implements Serializable {
 
   public final boolean isAwait() {
     return this.token == Token.AWAIT;
+  }
+
+  public final boolean isBigInt() {
+    return this.token == Token.BIGINT;
   }
 
   public final boolean isBreak() {

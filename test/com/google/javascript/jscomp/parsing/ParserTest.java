@@ -44,6 +44,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.List;
 import org.junit.Before;
@@ -468,11 +469,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testNumericSeparatorOnBigInt() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node bigint =
+        parse("1_000n") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // BIGINT
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).isBigInt(new BigInteger("1000"));
+  }
+
+  @Test
   public void testTrailingNumericSeparator() {
     parseError("1000_", "Trailing numeric separator");
     parseError("0b0001_", "Trailing numeric separator");
     parseError("0o100_", "Trailing numeric separator");
     parseError("0x0F_", "Trailing numeric separator");
+    parseError("1000_n", "Trailing numeric separator");
+    parseError("0b0001_n", "Trailing numeric separator");
+    parseError("0o100_n", "Trailing numeric separator");
+    parseError("0x0F_n", "Trailing numeric separator");
   }
 
   @Test
@@ -3762,6 +3778,104 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("1E-",
         "Exponent part must contain at least one digit");
     parseError("1E1.1", SEMICOLON_EXPECTED);
+  }
+
+  @Test
+  public void testBigIntLiteralZero() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node bigint =
+        parse("0n;") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // BIGINT
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).hasLineno(1);
+    assertNode(bigint).hasCharno(0);
+    assertNode(bigint).hasLength(2);
+    assertNode(bigint).isBigInt(BigInteger.ZERO);
+  }
+
+  @Test
+  public void testBigIntLiteralPositive() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node bigint =
+        parse("1n;") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // BIGINT
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).hasLineno(1);
+    assertNode(bigint).hasCharno(0);
+    assertNode(bigint).hasLength(2);
+    assertNode(bigint).isBigInt(BigInteger.ONE);
+  }
+
+  @Test
+  public void testBigIntLiteralNegative() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node bigint =
+        parse("-1n;") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // BIGINT
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).hasLineno(1);
+    assertNode(bigint).hasCharno(0);
+    assertNode(bigint).hasLength(3);
+    assertNode(bigint).isBigInt(new BigInteger("-1"));
+  }
+
+  @Test
+  public void testBigIntLiteralBinary() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node bigint =
+        parse("0b10000n;") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // BIGINT
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).hasLineno(1);
+    assertNode(bigint).hasCharno(0);
+    assertNode(bigint).hasLength(8);
+    assertNode(bigint).isBigInt(new BigInteger("16"));
+  }
+
+  @Test
+  public void testBigIntLiteralOctal() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node bigint =
+        parse("0o100n;") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // BIGINT
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).hasLineno(1);
+    assertNode(bigint).hasCharno(0);
+    assertNode(bigint).hasLength(6);
+    assertNode(bigint).isBigInt(new BigInteger("64"));
+  }
+
+  @Test
+  public void testBigIntLiteralHex() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node bigint =
+        parse("0xFn;") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // BIGINT
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).hasLineno(1);
+    assertNode(bigint).hasCharno(0);
+    assertNode(bigint).hasLength(4);
+    assertNode(bigint).isBigInt(new BigInteger("15"));
+  }
+
+  @Test
+  public void testBigIntLiteralErrors() {
+    mode = LanguageMode.UNSUPPORTED;
+    parseError("01n;", "SyntaxError: nonzero BigInt can't have leading zero");
+    parseError(".1n", "Semi-colon expected");
+    parseError("0.1n", "Semi-colon expected");
+    parseError("1e1n", "Semi-colon expected");
+  }
+
+  @Test
+  public void testBigIntLiteralWarning() {
+    parseWarning("1n;", "This language feature is not currently supported by the compiler: bigint");
   }
 
   @Test
