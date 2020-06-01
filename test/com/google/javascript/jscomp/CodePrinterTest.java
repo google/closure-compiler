@@ -39,6 +39,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   @Test
+  public void testBigInt() {
+    languageMode = LanguageMode.UNSUPPORTED;
+    assertPrintSame("1n");
+    assertPrint("0b10n", "2n");
+    assertPrint("0o3n", "3n");
+    assertPrint("0x4n", "4n");
+    assertPrintSame("-5n");
+    assertPrint("-0b110n", "-6n");
+    assertPrint("-0o7n", "-7n");
+    assertPrint("-0x8n", "-8n");
+  }
+
+  @Test
   public void testTrailingCommaInArrayAndObjectWithPrettyPrint() {
     languageMode = LanguageMode.ECMASCRIPT_NEXT_IN;
     assertPrettyPrintSame("({a:1, b:2, });\n");

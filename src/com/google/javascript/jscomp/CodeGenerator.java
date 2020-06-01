@@ -337,6 +337,11 @@ public class CodeGenerator {
         cc.addNumber(n.getDouble(), n);
         break;
 
+      case BIGINT:
+        Preconditions.checkState(childCount == 0, n);
+        cc.add(n.getBigInt() + "n");
+        break;
+
       case TYPEOF:
       case VOID:
       case NOT:
