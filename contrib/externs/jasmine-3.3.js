@@ -18,8 +18,7 @@
  * @fileoverview Externs for Jasmine 3.3 (not backwards compatible with 1.3,
  * but should be backwards compatible with 2.0).
  *
- * TODO: Missing externs for JsApiReporter, real type support for defining
- * matchers.
+ * TODO: Missing externs for real type support for defining matchers.
  *
  * @see https://jasmine.github.io/api/3.3/global
  * @externs
@@ -334,6 +333,9 @@ jasmine.Spec.prototype.fail = function(e) {};
 jasmine.Spec.prototype.finish = function(opt_onComplete) {};
 
 
+/** @type {undefined|function(): string} */
+jasmine.Spec.prototype.getFullName;
+
 
 /**
  * @constructor
@@ -521,29 +523,124 @@ jasmine.Env.prototype.afterEach = function(handler) {};
 jasmine.Env.prototype.afterAll = function(handler) {};
 
 
+/** @param {!Object} configuration */
+jasmine.Env.prototype.configure = function(configuration) {};
+
+
 /**
  * @return {!jasmine.Env}
  */
 jasmine.getEnv = function() {};
 
 
-/** @record */
-jasmine.Reporter = function() {};
-
 /**
- * @param {{
+ * @typedef {{
  *   id: number,
  *   description: string,
  *   fullName: string,
+ *   failedExpectations: Array,
+ *   passedExpectations: Array,
+ *   deprecationWarnings: Array,
  *   pendingReason: string,
- *   status: string
- * }} result
+ *   status: string,
+ *   duration: number
+ * }}
  */
+jasmine.SpecResult;
+
+
+/**
+ * @typedef {{
+ *   overallStatus: string,
+ *   totalTime: number,
+ *   incompleteReason: string,
+ *   order: string,
+ *   failedExpectations: Array,
+ *   deprecationWarnings: Array
+ * }}
+ */
+jasmine.JasmineDoneInfo;
+
+
+/** @record */
+jasmine.Reporter = function() {};
+
+/** @param {!jasmine.SpecResult} result */
 jasmine.Reporter.prototype.specDone = function(result) {};
 
-/** @param {{id: number, description: string, fullName: string}} result */
+/** @param {!jasmine.SpecResult} result */
 jasmine.Reporter.prototype.specStarted = function(result) {};
 
+
+/**
+ * @constructor
+ * @implements {jasmine.Reporter}
+ */
+jasmine.jsApiReporter = function() {};
+
+/** @return {!Array<!jasmine.SpecResult>} results */
+jasmine.jsApiReporter.prototype.specs = function() {};
+
+/** @param {!jasmine.JasmineDoneInfo} suiteInfo */
+jasmine.jsApiReporter.prototype.jasmineDone = function(suiteInfo) {};
+
+
+/**
+ * @constructor
+ * @implements {jasmine.Reporter}
+ * @param {!Object} options
+ */
+jasmine.HtmlReporter = function(options) {};
+
+/** @return {void} */
+jasmine.HtmlReporter.prototype.initialize = function() {};
+
+
+/**
+ * @constructor
+ * @param {!Object} options
+ */
+jasmine.QueryString = function(options) {};
+
+
+/**
+ * @param {string} key
+ * @return {undefined|string|Object} value
+ */
+jasmine.QueryString.prototype.getParam = function(key) {};
+
+
+/**
+ * @param {string} key
+ * @param {?Object} value
+ */
+jasmine.QueryString.prototype.navigateWithNewParam = function(key, value) {};
+
+
+/**
+ * @param {string} key
+ * @param {?Object} value
+ * @return {string} params
+ */
+jasmine.QueryString.prototype.fullStringWithNewParam = function(key, value) {};
+
+
+/**
+ * @constructor
+ * @param {!Object} options
+ */
+jasmine.HtmlSpecFilter = function(options) {};
+
+
+/**
+ * @param {string} specName
+ * @return {boolean} match
+ */
+jasmine.HtmlSpecFilter.prototype.matches = function(specName) {};
+
+
+/** @constructor */
+jasmine.Timer = function() {};
 
 /**
  * @param {function(this:jasmine.Spec, function())} handler
@@ -687,3 +784,7 @@ function xit(description, handler, timeout = undefined) {}
  * @type {jasmine.Spec}
  */
 var currentSpec;
+
+
+/** @type {!jasmine.jsApiReporter} */
+var jsApiReporter;
