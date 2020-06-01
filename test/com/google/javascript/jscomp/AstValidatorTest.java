@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.Streams.stream;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -433,6 +433,62 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoAwaitExpressionInDefaultParams() {
+    // We're inserting our own Nodes below, and we won't be bothering to put valid type
+    // information on them.
+    enableTypeInfoValidation = false;
+    Node scriptNode =
+        parseValidScript(
+            lines(
+                "async function outer(){",
+                // `await` in a parameter default value is not allowed,
+                // regardless of whether the function with the parameter is an
+                // async function or enclosed in an async function.
+                "  async function inner(a = replaceWithAwait) {",
+                "  }",
+                "}",
+                ""));
+
+    Node awaitNode = new Node(Token.AWAIT);
+    awaitNode.addChildToBack(IR.number(1));
+    Node nodeToReplace =
+        stream(NodeUtil.preOrderIterable(scriptNode))
+            .filter(node -> node.isName() && node.getString().equals("replaceWithAwait"))
+            .findFirst()
+            .get();
+    nodeToReplace.replaceWith(awaitNode);
+    expectInvalid(awaitNode, Check.EXPRESSION);
+  }
+
+  @Test
+  public void testNoYieldExpressionInDefaultParams() {
+    // We're inserting our own Nodes below, and we won't be bothering to put valid type
+    // information on them.
+    enableTypeInfoValidation = false;
+    Node scriptNode =
+        parseValidScript(
+            lines(
+                "function *outer(){",
+                // `yield` in a parameter default value is not allowed,
+                // regardless of whether the function with the parameter is a generator
+                // or is enclosed in a generator function.
+                "  function *inner(a = replaceWithYield) {",
+                "  }",
+                "}",
+                ""));
+
+    Node yieldNode = new Node(Token.YIELD);
+    yieldNode.addChildToBack(IR.number(1));
+    Node nodeToReplace =
+        stream(NodeUtil.preOrderIterable(scriptNode))
+            .filter(node -> node.isName() && node.getString().equals("replaceWithYield"))
+            .findFirst()
+            .get();
+    nodeToReplace.replaceWith(yieldNode);
+    expectInvalid(yieldNode, Check.EXPRESSION);
+  }
+
+  @Test
   public void testAwaitExpressionNonAsyncFunction() {
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
@@ -444,12 +500,33 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testYieldExpressionNonGeneratorFunction() {
+    Node yieldNode = new Node(Token.YIELD);
+    yieldNode.addChildToBack(IR.number(1));
+    Node parentFunction =
+        IR.function(IR.name("foo"), IR.paramList(), IR.block(IR.returnNode(yieldNode)));
+    parentFunction.setIsGeneratorFunction(false);
+    expectInvalid(yieldNode, Check.EXPRESSION);
+  }
+
+  @Test
   public void testAwaitExpressionNoFunction() {
     // Since we're building the AST by hand, there won't be any types on it.
     enableTypeInfoValidation = false;
 
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node n = new Node(Token.AWAIT);
+    n.addChildToBack(IR.number(1));
+    expectInvalid(n, Check.EXPRESSION);
+  }
+
+  @Test
+  public void testYieldExpressionNoFunction() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
+    Node n = new Node(Token.YIELD);
     n.addChildToBack(IR.number(1));
     expectInvalid(n, Check.EXPRESSION);
   }
@@ -796,7 +873,7 @@ public final class AstValidatorTest extends CompilerTestCase {
                 ""));
 
     Node nodeToReplace =
-        Streams.stream(NodeUtil.preOrderIterable(scriptNode))
+        stream(NodeUtil.preOrderIterable(scriptNode))
             .filter(node -> node.isName() && node.getString().equals("replaceWithSuper"))
             .findFirst()
             .get();
@@ -818,7 +895,7 @@ public final class AstValidatorTest extends CompilerTestCase {
                 ""));
 
     Node superNode =
-        Streams.stream(NodeUtil.preOrderIterable(scriptNode))
+        stream(NodeUtil.preOrderIterable(scriptNode))
             .filter(node -> node.isSuper())
             .findFirst()
             .get();

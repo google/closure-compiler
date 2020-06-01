@@ -560,6 +560,16 @@ public final class AstValidator implements CompilerPass {
     if (n.hasChildren()) {
       validateExpression(n.getFirstChild());
     }
+    validateYieldWithinGeneratorFunction(n);
+  }
+
+  private void validateYieldWithinGeneratorFunction(Node n) {
+    Node parentFunction = NodeUtil.getEnclosingFunction(n);
+    if (parentFunction == null || !parentFunction.isGeneratorFunction()) {
+      violation("'yield' expression is not within a generator function", n);
+    } else if (isInParameterListOfFunction(n, parentFunction)) {
+      violation("'yield' expression is not allowed in a parameter list", n);
+    }
   }
 
   private void validateAwait(Node n) {
@@ -567,14 +577,27 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.AWAIT, n);
     validateChildCount(n);
     validateExpression(n.getFirstChild());
-    validateWithinAsyncFunction(n);
+    validateAwaitWithinAsyncFunction(n);
   }
 
-  private void validateWithinAsyncFunction(Node n) {
+  private void validateAwaitWithinAsyncFunction(Node n) {
     Node parentFunction = NodeUtil.getEnclosingFunction(n);
     if (parentFunction == null || !parentFunction.isAsyncFunction()) {
       violation("'await' expression is not within an async function", n);
+    } else if (isInParameterListOfFunction(n, parentFunction)) {
+      violation("'await' expression is not allowed in a parameter list", n);
     }
+  }
+
+  private boolean isInParameterListOfFunction(Node child, Node functionNode) {
+    Node paramList = checkNotNull(functionNode.getSecondChild(), functionNode);
+    for (Node parent = child.getParent(); parent != functionNode; parent = parent.getParent()) {
+      checkNotNull(parent, "{} not contained in function {}", child, functionNode);
+      if (parent == paramList) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void validateImport(Node n) {
