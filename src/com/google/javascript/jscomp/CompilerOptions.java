@@ -1445,7 +1445,7 @@ public class CompilerOptions implements Serializable {
     preferLineBreakAtEndOfFile = false;
     tracer = TracerMode.OFF;
     colorizeErrorOutput = false;
-    errorFormat = ErrorFormat.SINGLELINE;
+    errorFormat = ErrorFormat.FULL;
     externExports = false;
 
     // Debugging
