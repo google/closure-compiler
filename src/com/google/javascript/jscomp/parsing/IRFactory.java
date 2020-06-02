@@ -2434,6 +2434,10 @@ class IRFactory {
               sourceName,
               operand.getLineno(), 0);
         }
+        if (type == Token.POS && operand.isBigInt()) {
+          errorReporter.error(
+              "Cannot convert a BigInt value to a number", sourceName, operand.getLineno(), 0);
+        }
 
         return newNode(type, operand);
       }

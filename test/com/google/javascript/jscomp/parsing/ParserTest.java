@@ -2324,6 +2324,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("++delete a.b", "Invalid prefix increment operand.");
   }
 
+  @Test
+  public void testUnaryExpressionWithBigInt() {
+    mode = LanguageMode.UNSUPPORTED;
+    parseError("+1n", "Cannot convert a BigInt value to a number");
+    parseError("delete 6n", "Invalid delete operand. Only properties can be deleted.");
+  }
+
   // Automatic Semicolon Insertion
   // http://www.ecma-international.org/ecma-262/10.0/index.html#sec-rules-of-automatic-semicolon-insertion
 
