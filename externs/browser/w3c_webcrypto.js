@@ -349,6 +349,269 @@ webCrypto.RsaHashedImportParams.prototype.hash;
 
 
 /**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaPssParams
+ */
+webCrypto.RsaPssParams;
+/**
+ * @type {number}
+ */
+webCrypto.RsaPssParams.prototype.saltLength;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-RsaOaepParams
+ */
+webCrypto.RsaOaepParams;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.RsaOaepParams.prototype.label;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-EcdsaParams
+ */
+webCrypto.EcdsaParams;
+/**
+ * @type {!webCrypto.HashAlgorithmIdentifier}
+ */
+webCrypto.EcdsaParams.prototype.hash;
+
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-NamedCurve
+ */
+webCrypto.NamedCurve;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-EcKeyGenParams
+ */
+webCrypto.EcKeyGenParams;
+/**
+ * @type {!webCrypto.NamedCurve}
+ */
+webCrypto.EcKeyGenParams.prototype.namedCurve;
+
+
+/**
+ * @record
+ * @extends webCrypto.KeyAlgorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-EcKeyAlgorithm
+ */
+webCrypto.EcKeyAlgorithm;
+/**
+ * @type {!webCrypto.NamedCurve}
+ */
+webCrypto.EcKeyAlgorithm.prototype.namedCurve;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-EcKeyImportParams
+ */
+webCrypto.EcKeyImportParams;
+/**
+ * @type {!webCrypto.NamedCurve}
+ */
+webCrypto.EcKeyImportParams.prototype.namedCurve;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-EcKeyDeriveParams
+ */
+webCrypto.EcKeyDeriveParams;
+/**
+ * @type {!webCrypto.CryptoKey}
+ */
+webCrypto.EcKeyDeriveParams.prototype.public;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-AesCtrParams
+ */
+webCrypto.AesCtrParams;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.AesCtrParams.prototype.counter;
+/**
+ * @type {number}
+ */
+webCrypto.AesCtrParams.prototype.length;
+
+
+/**
+ * @record
+ * @extends webCrypto.KeyAlgorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-AesKeyAlgorithm
+ */
+webCrypto.AesKeyAlgorithm;
+/**
+ * @type {number}
+ */
+webCrypto.AesKeyAlgorithm.prototype.length;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-AesKeyGenParams
+ */
+webCrypto.AesKeyGenParams;
+/**
+ * @type {number}
+ */
+webCrypto.AesKeyGenParams.prototype.length;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-AesDerivedKeyParams
+ */
+webCrypto.AesDerivedKeyParams;
+/**
+ * @type {number}
+ */
+webCrypto.AesDerivedKeyParams.prototype.length;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-AesCbcParams
+ */
+webCrypto.AesCbcParams;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.AesCbcParams.prototype.iv;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-AesGcmParams
+ */
+webCrypto.AesGcmParams;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.AesGcmParams.prototype.iv;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.AesGcmParams.prototype.additionalData;
+/**
+ * @type {number}
+ */
+webCrypto.AesGcmParams.prototype.tagLength;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-HmacImportParams
+ */
+webCrypto.HmacImportParams;
+/**
+ * @type {!webCrypto.HashAlgorithmIdentifier}
+ */
+webCrypto.HmacImportParams.prototype.hash;
+/**
+ * @type {number}
+ */
+webCrypto.HmacImportParams.prototype.length;
+
+
+/**
+ * @record
+ * @extends webCrypto.KeyAlgorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-HmacKeyAlgorithm
+ */
+webCrypto.HmacKeyAlgorithm;
+/**
+ * @type {!webCrypto.KeyAlgorithm}
+ */
+webCrypto.HmacKeyAlgorithm.prototype.hash;
+/**
+ * @type {number}
+ */
+webCrypto.HmacKeyAlgorithm.prototype.length;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-HmacKeyGenParams
+ */
+webCrypto.HmacKeyGenParams;
+/**
+ * @type {!webCrypto.HashAlgorithmIdentifier}
+ */
+webCrypto.HmacKeyGenParams.prototype.hash;
+/**
+ * @type {number}
+ */
+webCrypto.HmacKeyGenParams.prototype.length;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-HkdfParams
+ */
+webCrypto.HkdfParams;
+/**
+ * @type {!webCrypto.HashAlgorithmIdentifier}
+ */
+webCrypto.HkdfParams.prototype.hash;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.HkdfParams.prototype.salt;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.HkdfParams.prototype.info;
+
+
+/**
+ * @record
+ * @extends webCrypto.Algorithm
+ * @see https://www.w3.org/TR/WebCryptoAPI/#dfn-Pbkdf2Params
+ */
+webCrypto.Pbkdf2Params;
+/**
+ * @type {!BufferSource}
+ */
+webCrypto.Pbkdf2Params.prototype.salt;
+/**
+ * @type {number}
+ */
+webCrypto.Pbkdf2Params.prototype.iterations;
+/**
+ * @type {!webCrypto.HashAlgorithmIdentifier}
+ */
+webCrypto.Pbkdf2Params.prototype.hash;
+
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/WebCryptoAPI/#subtlecrypto-interface
  */
