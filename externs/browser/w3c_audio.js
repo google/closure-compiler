@@ -1472,18 +1472,17 @@ function MediaStreamAudioDestinationNode() {}
 /** @type {!MediaStream} */
 MediaStreamAudioDestinationNode.prototype.stream;
 
-// TODO(b/156296621): Add Worklet to externs so AudioWorklet can implement it.
 /**
  * @constructor
  * @see https://www.w3.org/TR/webaudio/#audioworklet
+ * @implements {Worklet}
  */
 function AudioWorklet() {}
 
-// TODO(b/156296621): Add WorkletGlobalScope to externs so
-// AudioWorkletGlobalScope can implement it.
 /**
  * @constructor
  * @see https://www.w3.org/TR/webaudio/#audioworkletglobalscope
+ * @implements {WorkletGlobalScope}
  */
 function AudioWorkletGlobalScope() {}
 
