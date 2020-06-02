@@ -1342,14 +1342,6 @@ public class JSTypeRegistry implements Serializable {
     return getReadableJSTypeName(n, false);
   }
 
-  public String createGetterPropName(String originalPropName) {
-    return originalPropName;
-  }
-
-  public String createSetterPropName(String originalPropName) {
-    return originalPropName;
-  }
-
   private static String getSimpleReadableJSTypeName(JSType type) {
     if (type instanceof AllType) {
       return type.toString();
