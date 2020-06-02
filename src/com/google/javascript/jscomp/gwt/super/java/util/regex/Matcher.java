@@ -18,6 +18,7 @@ package java.util.regex;
 
 import elemental2.core.JsRegExp;
 import elemental2.core.JsString;
+import elemental2.core.RegExpResult;
 
 /** GWT-compatible minimal replacement for {@code Matcher} */
 public class Matcher {
@@ -34,10 +35,10 @@ public class Matcher {
   }
 
   public boolean matches() {
-    String[] result = regExp.exec(input);
+    RegExpResult result = regExp.exec(input);
 
     if (result != null) {
-      String match = result[0];
+      String match = result.getAt(0);
       if (match.equals(input)) {
         return true;
       }
