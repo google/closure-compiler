@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Closure Compiler Authors.
+ * Copyright 2016 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@
 'require es6/set';
 'require es6/string';
 'require es6/symbol';
-'require es6/typed_array';
 'require es6/util/createtemplatetagfirstarg';
 'require es6/util/arrayfromiterable';
 'require es6/util/arrayfromiterator';
