@@ -270,7 +270,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         }
 
         paramList.replaceChild(param, newParam);
-        newParam.setOptionalArg(true);
         newParam.setJSDocInfo(jsDoc);
 
         compiler.reportChangeToChangeScope(function);

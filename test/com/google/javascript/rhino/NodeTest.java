@@ -178,25 +178,6 @@ public class NodeTest {
     testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
   }
 
-  @Test
-  public void testVarArgs1() {
-    assertThat(new Node(Token.LET).isVarArgs()).isFalse();
-  }
-
-  @Test
-  public void testVarArgs2() {
-    Node n = new Node(Token.LET);
-    n.setVarArgs(false);
-    assertThat(n.isVarArgs()).isFalse();
-  }
-
-  @Test
-  public void testVarArgs3() {
-    Node n = new Node(Token.LET);
-    n.setVarArgs(true);
-    assertThat(n.isVarArgs()).isTrue();
-  }
-
   private void testMergeExtract(int lineno, int charno) {
     int linecharno = Node.mergeLineCharNo(lineno, charno);
     assertThat(Node.extractLineno(linecharno)).isEqualTo(lineno);

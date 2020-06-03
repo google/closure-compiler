@@ -82,14 +82,10 @@ public class Node implements Serializable {
     NON_JSDOC_COMMENT,
     // Contains a JSDocInfo object
     JSDOC_INFO,
-    // The name node is a variable length argument placeholder.
-    VAR_ARGS,
     // Whether incrdecr is pre (false) or post (true)
     INCRDECR,
     // Set to indicate a quoted object lit key
     QUOTED,
-    // The name node is an optional argument.
-    OPT_ARG,
     // A synthetic block. Used to make processing simpler, and does not represent a real block in
     // the source.
     SYNTHETIC,
@@ -2628,42 +2624,6 @@ public class Node implements Serializable {
   /** Whether this {x:x} property was originally parsed as {x}. */
   public final boolean isShorthandProperty() {
     return getBooleanProp(Prop.IS_SHORTHAND_PROPERTY);
-  }
-
-  /**
-   * Sets whether this node is a variable length argument node. This
-   * method is meaningful only on {@link Token#NAME} nodes
-   * used to define a {@link Token#FUNCTION}'s argument list.
-   */
-  public final void setVarArgs(boolean varArgs) {
-    putBooleanProp(Prop.VAR_ARGS, varArgs);
-  }
-
-  /**
-   * Returns whether this node is a variable length argument node. This
-   * method's return value is meaningful only on {@link Token#NAME} nodes
-   * used to define a {@link Token#FUNCTION}'s argument list.
-   */
-  public final boolean isVarArgs() {
-    return getBooleanProp(Prop.VAR_ARGS);
-  }
-
-  /**
-   * Sets whether this node is an optional argument node. This
-   * method is meaningful only on {@link Token#NAME} nodes
-   * used to define a {@link Token#FUNCTION}'s argument list.
-   */
-  public final void setOptionalArg(boolean optionalArg) {
-    putBooleanProp(Prop.OPT_ARG, optionalArg);
-  }
-
-  /**
-   * Returns whether this node is an optional argument node. This
-   * method's return value is meaningful only on {@link Token#NAME} nodes
-   * used to define a {@link Token#FUNCTION}'s argument list.
-   */
-  public final boolean isOptionalArg() {
-    return getBooleanProp(Prop.OPT_ARG);
   }
 
   /**

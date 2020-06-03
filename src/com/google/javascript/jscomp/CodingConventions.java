@@ -345,15 +345,13 @@ public final class CodingConventions {
 
     @Override
     public boolean isOptionalParameter(Node parameter) {
-      // be as lax as possible, but this must be mutually exclusive from
-      // var_args parameters.
-      return parameter.isOptionalArg();
+      return false;
     }
 
     @Override
     public boolean isVarArgsParameter(Node parameter) {
       // be as lax as possible
-      return parameter.isRest() || parameter.isVarArgs();
+      return parameter.isRest();
     }
 
     @Override

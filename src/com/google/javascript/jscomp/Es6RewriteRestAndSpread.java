@@ -123,7 +123,6 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     String paramName = nameNode.getString();
 
     // Swap the existing param into the list, moving requisite AST annotations.
-    nameNode.setVarArgs(true);
     nameNode.setJSDocInfo(restParam.getJSDocInfo());
     paramList.replaceChild(restParam, nameNode.detach());
 
