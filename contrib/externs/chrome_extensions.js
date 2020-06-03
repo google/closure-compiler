@@ -4998,6 +4998,57 @@ chrome.input.ime.setCursorPosition = function(parameters, opt_callback) {};
 
 
 /**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/input.ime#type-AssistiveWindowType
+ */
+chrome.input.ime.AssistiveWindowType = {
+  UNDO: '',
+};
+
+
+/**
+ * Properties of the assistive window.
+ * @typedef {{
+ *   type: !chrome.input.ime.AssistiveWindowType,
+ *   visible: boolean
+ * }}
+ * @see https://developer.chrome.com/extensions/input.ime#type-AssistiveWindowProperties
+ */
+chrome.input.ime.AssistiveWindowProperties;
+
+
+/**
+ * Shows/Hides an assistive window with the given properties.
+ * @param {{
+ *   contextID: number,
+ *   properties: !chrome.input.ime.AssistiveWindowProperties
+ * }} parameters
+ * @param {function(boolean): void=} callback Called when the operation
+ *     completes.
+ * @see https://developer.chrome.com/extensions/input.ime#method-setAssistiveWindowProperties
+ */
+chrome.input.ime.setAssistiveWindowProperties = function(
+    parameters, callback) {};
+
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/input.ime#type-AssistiveWindowButton
+ */
+chrome.input.ime.AssistiveWindowButton = {
+  UNDO: '',
+  ADD_TO_DICTIONARY: '',
+};
+
+
+/**
+ * This event is sent when a button in an assistive window is clicked.
+ * @type {!ChromeEvent}
+ * @see https://developer.chrome.com/extensions/input.ime#event-onAssistiveWindowButtonClicked
+ */
+chrome.input.ime.onAssistiveWindowButtonClicked;
+
+
+/**
  * @param {!Object<string,(string|Array<Object<string,(string|boolean)>>)>}
  *     parameters An object with 'engineID' (string) and 'items'
  *     (array of object) keys.
@@ -8552,7 +8603,8 @@ chrome.fileSystemProvider.get = function(fileSystemId, callback) {};
 
 
 /**
- * @param {function(!Array<!chrome.fileSystemProvider.FileSystemInfo>): void} callback
+ * @param {function(!Array<!chrome.fileSystemProvider.FileSystemInfo>): void}
+ *     callback
  * @see https://developer.chrome.com/extensions/fileSystemProvider#method-getAll
  */
 chrome.fileSystemProvider.getAll = function(callback) {};
