@@ -74,12 +74,12 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testSupAndInfOfReturnTypes() {
     FunctionType retString =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withInferredReturnType(STRING_TYPE)
             .build();
     FunctionType retNumber =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withReturnType(NUMBER_TYPE)
             .build();
 
@@ -100,12 +100,12 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testSupAndInfOfReturnTypesWithDifferentParams() {
     FunctionType retString =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withParameters(registry.createParameters(NUMBER_TYPE))
             .withInferredReturnType(STRING_TYPE)
             .build();
     FunctionType retNumber =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withReturnType(NUMBER_TYPE)
             .build();
 
@@ -119,12 +119,12 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testSupAndInfWithDifferentParams() {
     FunctionType retString =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withParameters(registry.createParameters(NUMBER_TYPE))
             .withReturnType(STRING_TYPE)
             .build();
     FunctionType retNumber =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(STRING_TYPE))
+            .withParameters(registry.createParameters(STRING_TYPE))
             .withReturnType(NUMBER_TYPE)
             .build();
 
@@ -138,13 +138,13 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testSupAndInfWithDifferentThisTypes() {
     FunctionType retString =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(OBJECT_TYPE)
             .withReturnType(STRING_TYPE)
             .build();
     FunctionType retNumber =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(DATE_TYPE)
             .withReturnType(NUMBER_TYPE)
             .build();
@@ -159,13 +159,13 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testSupAndInfWithDifferentThisTypes2() {
     FunctionType retString =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(ARRAY_TYPE)
             .withReturnType(STRING_TYPE)
             .build();
     FunctionType retNumber =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(DATE_TYPE)
             .withReturnType(NUMBER_TYPE)
             .build();
@@ -180,12 +180,12 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testSupAndInfOfReturnTypesWithNumOfParams() {
     FunctionType twoNumbers =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE, NUMBER_TYPE))
+            .withParameters(registry.createParameters(NUMBER_TYPE, NUMBER_TYPE))
             .withReturnType(BOOLEAN_TYPE)
             .build();
     FunctionType oneNumber =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withParameters(registry.createParameters(NUMBER_TYPE))
             .withReturnType(BOOLEAN_TYPE)
             .build();
 
@@ -201,13 +201,13 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
         ImmutableList.<TemplateType>of(), false);
     FunctionType ifaceReturnBoolean =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(iface.getInstanceType())
             .withReturnType(BOOLEAN_TYPE)
             .build();
     FunctionType objReturnBoolean =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(OBJECT_TYPE)
             .withReturnType(BOOLEAN_TYPE)
             .build();
@@ -218,7 +218,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testOrdinaryFunctionPrototype() {
     FunctionType oneNumber =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withParameters(registry.createParameters(NUMBER_TYPE))
             .withReturnType(BOOLEAN_TYPE)
             .build();
     assertThat(oneNumber.getOwnPropertyNames()).isEmpty();
@@ -419,15 +419,15 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testequalsParams() {
     FunctionType oneNum =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withParameters(registry.createParameters(NUMBER_TYPE))
             .build();
     FunctionType optNum =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
+            .withParameters(registry.createOptionalParameters(NUMBER_TYPE))
             .build();
     FunctionType varNum =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParametersWithVarArgs(NUMBER_TYPE))
+            .withParameters(registry.createParametersWithVarArgs(NUMBER_TYPE))
             .build();
     Asserts.assertEquivalenceOperations(oneNum, oneNum);
     Asserts.assertEquivalenceOperations(optNum, optNum);
@@ -441,14 +441,14 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
   public void testIsEquivalentOptAndVarArgs() {
     FunctionType varNum =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParametersWithVarArgs(NUMBER_TYPE))
+            .withParameters(registry.createParametersWithVarArgs(NUMBER_TYPE))
             .build();
 
     FunctionParamBuilder builder = new FunctionParamBuilder(registry);
     builder.addOptionalParams(NUMBER_TYPE);
     builder.addVarArgs(NUMBER_TYPE);
     FunctionType optAndVarNum =
-        FunctionType.builder(registry).withParamsNode(builder.build()).build();
+        FunctionType.builder(registry).withParameters(builder.build()).build();
 
     // We currently do not consider function(T=, ...T) and function(...T)
     // equivalent. This may change.
@@ -461,7 +461,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     ProxyObjectType loop = new ProxyObjectType(registry, NUMBER_TYPE);
     FunctionType fn =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(loop))
+            .withParameters(registry.createParameters(loop))
             .withReturnType(loop)
             .build();
 
@@ -476,7 +476,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType fn =
         FunctionType.builder(registry)
             .withTypeOfThis(DATE_TYPE)
-            .withParamsNode(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
+            .withParameters(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
             .withReturnType(BOOLEAN_TYPE)
             .build();
 
@@ -490,7 +490,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType fn =
         FunctionType.builder(registry)
             .withTypeOfThis(DATE_TYPE)
-            .withParamsNode(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
+            .withParameters(registry.createParameters(STRING_TYPE, NUMBER_TYPE))
             .withReturnType(BOOLEAN_TYPE)
             .build();
 
@@ -503,7 +503,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType fn =
         FunctionType.builder(registry)
             .withTypeOfThis(DATE_TYPE)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withReturnType(BOOLEAN_TYPE)
             .build();
 

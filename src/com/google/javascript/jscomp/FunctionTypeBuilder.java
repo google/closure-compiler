@@ -300,7 +300,7 @@ final class FunctionTypeBuilder {
       // Not a function literal.
       parameters = oldType.getParameters();
       if (parameters == null) {
-        parameters = new FunctionParamBuilder(typeRegistry).buildList();
+        parameters = new FunctionParamBuilder(typeRegistry).build();
       }
     } else {
       // We're overriding with a function literal. Apply type information
@@ -314,21 +314,25 @@ final class FunctionTypeBuilder {
            currentParam != null; currentParam = currentParam.getNext()) {
         if (oldParams.hasNext()) {
           Parameter oldParam = oldParams.next();
-          Node newParam = paramBuilder.newParameterFrom(oldParam);
 
           oldParamsListHitOptArgs =
               oldParamsListHitOptArgs || oldParam.isVariadic() || oldParam.isOptional();
 
           // The subclass method might write its var_args as individual arguments.
-          if (currentParam.getNext() != null && newParam.isVarArgs()) {
-            newParam.setVarArgs(false);
-            newParam.setOptionalArg(true);
+
+          boolean isOptionalArg = oldParam.isOptional();
+          boolean isVarArgs = oldParam.isVariadic();
+          if (currentParam.getNext() != null && isVarArgs) {
+            isVarArgs = false;
+            isOptionalArg = true;
           }
           // The subclass method might also make a required parameter into an optional parameter
           // with a default value
           if (currentParam.isDefaultValue()) {
-            newParam.setOptionalArg(true);
+            isOptionalArg = true;
           }
+          paramBuilder.newParameterFrom(
+              new Parameter(oldParam.getJSType(), isOptionalArg, isVarArgs));
         } else {
           warnedAboutArgList |=
               addParameter(
@@ -348,7 +352,7 @@ final class FunctionTypeBuilder {
         paramBuilder.newOptionalParameterFrom(oldParams.next());
       }
 
-      parameters = paramBuilder.buildList();
+      parameters = paramBuilder.build();
     }
     return this;
   }
@@ -665,7 +669,7 @@ final class FunctionTypeBuilder {
       reportWarning(INEXISTENT_PARAM, inexistentName, formatFnName());
     }
 
-    parameters = builder.buildList();
+    parameters = builder.build();
     return this;
   }
 
@@ -947,7 +951,7 @@ final class FunctionTypeBuilder {
           FunctionType.builder(typeRegistry)
               .withName(fnName)
               .withSourceNode(contents.getSourceNode())
-              .withParamsList(parameters)
+              .withParameters(parameters)
               .withReturnType(returnType, returnTypeInferred)
               .withTypeOfThis(thisType)
               .withTemplateKeys(templateTypeNames)
@@ -1000,7 +1004,7 @@ final class FunctionTypeBuilder {
             .forConstructor()
             .withName(fnName)
             .withSourceNode(contents.getSourceNode())
-            .withParamsList(parameters)
+            .withParameters(parameters)
             .withReturnType(returnType)
             .withTemplateKeys(templateTypeNames)
             .withConstructorTemplateKeys(constructorTemplateTypeNames)

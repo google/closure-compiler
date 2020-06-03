@@ -1571,9 +1571,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         } else {
           // Unresolveable extends clause: suppress typechecking.
           builder.inferImplicitConstructorParameters(
-              FunctionParamBuilder.fromNode(
-                  typeRegistry.createParametersWithVarArgs(
-                      typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE))));
+              typeRegistry.createParametersWithVarArgs(
+                  typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
         }
       }
 

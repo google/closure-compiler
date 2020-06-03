@@ -859,7 +859,7 @@ final class AstFactory {
       FunctionType functionType =
           FunctionType.builder(registry)
               .withReturnType(expression.getJSTypeRequired())
-              .withParamsNode(IR.paramList())
+              .withParameters()
               .buildAndResolve();
       result.setJSType(functionType);
     }

@@ -249,11 +249,13 @@ public final class ClosureCodingConventionTest {
     try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
       Node nodeA = new Node(Token.FUNCTION);
       FunctionType ctorA =
-          registry.createConstructorType("A", nodeA, new Node(Token.PARAM_LIST), null, null, false);
+          registry.createConstructorType(
+              "A", nodeA, registry.createParameters(), null, null, false);
 
       Node nodeB = new Node(Token.FUNCTION);
       FunctionType ctorB =
-          registry.createConstructorType("B", nodeB, new Node(Token.PARAM_LIST), null, null, false);
+          registry.createConstructorType(
+              "B", nodeB, registry.createParameters(), null, null, false);
 
       conv.applySubclassRelationship(
           new NominalTypeBuilder(ctorA, ctorA.getInstanceType()),

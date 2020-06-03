@@ -2824,7 +2824,7 @@ public final class TypeInferenceTest {
     TemplateType templateKey = registry.createTemplateType("T");
     FunctionType fooCtor =
         registry.createConstructorType(
-            "Foo", null, IR.paramList(), null, ImmutableList.of(templateKey), false);
+            "Foo", null, registry.createParameters(), null, ImmutableList.of(templateKey), false);
     ObjectType fooInstanceType = fooCtor.getInstanceType();
     fooInstanceType.defineDeclaredProperty("data", templateKey, null);
 
@@ -2927,7 +2927,7 @@ public final class TypeInferenceTest {
     FunctionType fnType =
         FunctionType.builder(registry)
             .withReturnType(returnType)
-            .withParamsNode(IR.paramList(IR.name("p").setJSType(getNativeType(UNKNOWN_TYPE))))
+            .withParameters(registry.createParameters(getNativeType(UNKNOWN_TYPE)))
             .withName(fullName)
             .build();
     assuming(fullName, fnType);
@@ -2941,7 +2941,7 @@ public final class TypeInferenceTest {
             .withName(fnName)
             .withClosurePrimitiveId(ClosurePrimitive.ASSERTS_TRUTHY)
             .withReturnType(t)
-            .withParamsNode(IR.paramList(IR.name("x").setJSType(t)))
+            .withParameters(registry.createParameters(t))
             .withTemplateKeys(t)
             .build();
     assuming(fnName, assertType);
@@ -2955,7 +2955,7 @@ public final class TypeInferenceTest {
     FunctionType fnType =
         FunctionType.builder(registry)
             .withReturnType(returnType)
-            .withParamsNode(IR.paramList(IR.name("p").setJSType(getNativeType(UNKNOWN_TYPE))))
+            .withParameters(registry.createParameters(getNativeType(UNKNOWN_TYPE)))
             .withName(fullName)
             .withClosurePrimitiveId(ClosurePrimitive.ASSERTS_MATCHES_RETURN)
             .build();
@@ -2979,10 +2979,8 @@ public final class TypeInferenceTest {
     //    */
     FunctionType fnType =
         FunctionType.builder(registry)
-            .withParamsNode(
-                IR.paramList(
-                    IR.name("value").setJSType(getNativeType(UNKNOWN_TYPE)),
-                    IR.name("type").setJSType(templateTypeCtor)))
+            .withParameters(
+                registry.createParameters(getNativeType(UNKNOWN_TYPE), templateTypeCtor))
             .withTemplateKeys(templateType)
             .withReturnType(templateType)
             .withName(fullName)

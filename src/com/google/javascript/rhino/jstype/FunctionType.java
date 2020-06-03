@@ -686,7 +686,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         defineDeclaredProperty(
             name,
             builder(registry)
-                .withParamsList(builder.buildList())
+                .withParameters(builder.build())
                 .withReturnType(getReturnType())
                 .withTemplateKeys(getTemplateTypeMap().getTemplateKeys())
                 .build(),
@@ -718,7 +718,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       }
       params.remove(0);
     }
-    builder.withParamsList(params);
+    builder.withParameters(params);
 
     return builder.build();
   }
@@ -765,7 +765,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       }
     }
 
-    builder.withParamsList(params);
+    builder.withParameters(params);
 
     return builder.build();
   }
@@ -897,7 +897,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     boolean newReturnTypeInferred = call.returnTypeInferred || other.call.returnTypeInferred;
 
     return builder(registry)
-        .withParamsList(newParamsNode)
+        .withParameters(newParamsNode)
         .withReturnType(newReturnType, newReturnTypeInferred)
         .withTypeOfThis(newTypeOfThis)
         .build();
@@ -1483,29 +1483,14 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       return this;
     }
 
-    /** Set the parameters of the function type with a specially-formatted node. */
-    public Builder withParamsNode(Node paramList) {
-      if (paramList != null) {
-        ImmutableList.Builder<Parameter> parameters = ImmutableList.builder();
-        for (Node param : paramList.children()) {
-          parameters.add(
-              new Parameter(param.getJSType(), param.isOptionalArg(), param.isVarArgs()));
-        }
-        this.parameters = parameters.build();
-      } else {
-        this.parameters = null;
-      }
-      return this;
-    }
-
-    /** Set the parameters of the function type with a specially-formatted node. */
-    public Builder withParamsList(List<Parameter> parameters) {
+    /** Set the parameters of the function type. */
+    public Builder withParameters(List<Parameter> parameters) {
       this.parameters = parameters;
       return this;
     }
 
-    /** Set the parameters of the function type with a specially-formatted node. */
-    Builder withEmptyParams() {
+    /** Set the function to take zero parameters. */
+    public Builder withParameters() {
       this.parameters = ImmutableList.of();
       return this;
     }

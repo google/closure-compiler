@@ -200,7 +200,7 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
       FunctionType ft =
           FunctionType.builder(registry)
               .withKind(type.getKind())
-              .withParamsNode(paramBuilder.build())
+              .withParameters(paramBuilder.build())
               .withReturnType(afterReturn)
               .withTypeOfThis(afterThis)
               .withTemplateKeys(type.getTypeParameters())

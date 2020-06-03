@@ -305,7 +305,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
 
   private FunctionType createFunctionWithReturn(JSType type) {
     return FunctionType.builder(registry)
-        .withParamsNode(registry.createParameters())
+        .withParameters(registry.createParameters())
         .withReturnType(type)
         .build();
   }

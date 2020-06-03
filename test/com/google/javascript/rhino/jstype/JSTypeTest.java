@@ -54,9 +54,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Outcome;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
 import com.google.javascript.rhino.testing.Asserts;
@@ -119,7 +117,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       functionType = FunctionType.builder(registry).withReturnType(NUMBER_TYPE).build();
       dateMethod =
           FunctionType.builder(registry)
-              .withParamsNode(new Node(Token.PARAM_LIST))
+              .withParameters(registry.createParameters())
               .withReturnType(NUMBER_TYPE)
               .withTypeOfThis(DATE_TYPE)
               .build();
@@ -3157,7 +3155,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertThat(
             FunctionType.builder(registry)
-                .withParamsNode(registry.createParameters(NUMBER_TYPE))
+                .withParameters(registry.createParameters(NUMBER_TYPE))
                 .withReturnType(NUMBER_STRING_BOOLEAN)
                 .withTypeOfThis(DATE_TYPE)
                 .build()
@@ -3170,12 +3168,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testFunctionTypeRelationships() {
     FunctionType dateMethodEmpty =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(DATE_TYPE)
             .build();
     FunctionType dateMethodWithParam =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
+            .withParameters(registry.createOptionalParameters(NUMBER_TYPE))
             .withTypeOfThis(DATE_TYPE)
             .build();
     FunctionType dateMethodWithReturn =
@@ -3185,12 +3183,12 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             .build();
     FunctionType stringMethodEmpty =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(STRING_OBJECT_TYPE)
             .build();
     FunctionType stringMethodWithParam =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createOptionalParameters(NUMBER_TYPE))
+            .withParameters(registry.createOptionalParameters(NUMBER_TYPE))
             .withTypeOfThis(STRING_OBJECT_TYPE)
             .build();
     FunctionType stringMethodWithReturn =
@@ -3239,13 +3237,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testProxiedFunctionTypeRelationships() {
     FunctionType dateMethodEmpty =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withTypeOfThis(DATE_TYPE)
             .build()
             .toMaybeFunctionType();
     FunctionType dateMethodWithParam =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(NUMBER_TYPE))
+            .withParameters(registry.createParameters(NUMBER_TYPE))
             .withTypeOfThis(DATE_TYPE)
             .build()
             .toMaybeFunctionType();
@@ -3265,17 +3263,17 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testFunctionSubTypeRelationships() {
     FunctionType googBarMethod = FunctionType.builder(registry).withTypeOfThis(googBar).build();
     FunctionType googBarParamFn =
-        FunctionType.builder(registry).withParamsNode(registry.createParameters(googBar)).build();
+        FunctionType.builder(registry).withParameters(registry.createParameters(googBar)).build();
     FunctionType googBarReturnFn =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters())
+            .withParameters(registry.createParameters())
             .withReturnType(googBar)
             .build();
     FunctionType googSubBarMethod =
         FunctionType.builder(registry).withTypeOfThis(googSubBar).build();
     FunctionType googSubBarParamFn =
         FunctionType.builder(registry)
-            .withParamsNode(registry.createParameters(googSubBar))
+            .withParameters(registry.createParameters(googSubBar))
             .build();
     FunctionType googSubBarReturnFn =
         FunctionType.builder(registry).withReturnType(googSubBar).build();
@@ -4675,19 +4673,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testSupertypeOfProxiedFunctionTypes() {
     ObjectType fn1 =
         FunctionType.builder(registry)
-            .withParamsNode(new Node(Token.PARAM_LIST))
+            .withParameters(registry.createParameters())
             .withReturnType(NUMBER_TYPE)
             .build();
     ObjectType fn2 =
         FunctionType.builder(registry)
-            .withParamsNode(new Node(Token.PARAM_LIST))
+            .withParameters(registry.createParameters())
             .withReturnType(STRING_TYPE)
             .build();
     ObjectType p1 = new ProxyObjectType(registry, fn1);
     ObjectType p2 = new ProxyObjectType(registry, fn2);
     ObjectType supremum =
         FunctionType.builder(registry)
-            .withParamsNode(new Node(Token.PARAM_LIST))
+            .withParameters(registry.createParameters())
             .withReturnType(registry.createUnionType(STRING_TYPE, NUMBER_TYPE))
             .build();
 

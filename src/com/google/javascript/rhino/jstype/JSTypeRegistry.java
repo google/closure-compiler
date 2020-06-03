@@ -63,7 +63,6 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.HamtPMap;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -415,7 +414,7 @@ public class JSTypeRegistry implements Serializable {
             .withName("Function")
             .forConstructor()
             .forNativeType()
-            .withParamsNode(createParametersWithVarArgs(unknownType))
+            .withParameters(createParametersWithVarArgs(unknownType))
             .withTypeOfThis(unknownType)
             .withReturnType(unknownType)
             .build();
@@ -433,7 +432,7 @@ public class JSTypeRegistry implements Serializable {
             .withName("Function")
             .forConstructor()
             .forNativeType()
-            .withParamsNode(createParametersWithVarArgs(allType))
+            .withParameters(createParametersWithVarArgs(allType))
             .withTypeOfThis(functionType)
             // TODO(nickreid): .withReturnsOwnInstanceType()
             .build();
@@ -452,7 +451,7 @@ public class JSTypeRegistry implements Serializable {
     // Object
     FunctionType objectFunctionType =
         nativeConstructorBuilder("Object")
-            .withParamsNode(createOptionalParameters(allType))
+            .withParameters(createOptionalParameters(allType))
             .withReturnsOwnInstanceType()
             .withTemplateKeys(iObjectIndexTemplateKey, iObjectElementTemplateKey)
             .build();
@@ -511,7 +510,7 @@ public class JSTypeRegistry implements Serializable {
     // Array
     FunctionType arrayFunctionType =
         nativeConstructorBuilder("Array")
-            .withParamsNode(createParametersWithVarArgs(allType))
+            .withParameters(createParametersWithVarArgs(allType))
             .withReturnsOwnInstanceType()
             .withTemplateKeys(arrayElementTemplateKey)
             .build();
@@ -527,9 +526,7 @@ public class JSTypeRegistry implements Serializable {
 
     // ITemplateArray extends !Array<string>
     FunctionType iTemplateArrayFunctionType =
-        nativeConstructorBuilder("ITemplateArray")
-            .withParamsNode(createEmptyParams())
-            .build();
+        nativeConstructorBuilder("ITemplateArray").withParameters().build();
     registerNativeType(
         JSTypeNative.I_TEMPLATE_ARRAY_TYPE, iTemplateArrayFunctionType.getInstanceType());
 
@@ -593,12 +590,13 @@ public class JSTypeRegistry implements Serializable {
                         thenableType,
                         nullType))),
             createFunctionType(unknownType, createOptionalParameters(allType)));
-    Node promiseParameter = IR.name("");
-    promiseParameter.setJSType(promiseParameterType);
+    FunctionType.Parameter promiseParameter =
+        new FunctionType.Parameter(
+            promiseParameterType, /* isOptional= */ false, /* isVariadic= */ false);
 
     FunctionType promiseFunctionType =
         nativeConstructorBuilder("Promise")
-            .withParamsNode(IR.paramList(promiseParameter))
+            .withParameters(ImmutableList.of(promiseParameter))
             .withTemplateKeys(promiseTemplateKey)
             .build();
     promiseFunctionType.setImplementedInterfaces(
@@ -610,7 +608,7 @@ public class JSTypeRegistry implements Serializable {
     // BigInt
     FunctionType bigIntObjectFunctionType =
         nativeConstructorBuilder("BigInt")
-            .withParamsNode(createOptionalParameters(allType))
+            .withParameters(createOptionalParameters(allType))
             .withReturnType(bigIntType)
             .build();
     bigIntObjectFunctionType.getPrototype(); // Force initialization
@@ -622,7 +620,7 @@ public class JSTypeRegistry implements Serializable {
     // Boolean
     FunctionType booleanObjectFunctionType =
         nativeConstructorBuilder("Boolean")
-            .withParamsNode(createOptionalParameters(allType))
+            .withParameters(createOptionalParameters(allType))
             .withReturnType(booleanType)
             .build();
     booleanObjectFunctionType.getPrototype(); // Force initialization
@@ -634,14 +632,15 @@ public class JSTypeRegistry implements Serializable {
     // Date
     FunctionType dateFunctionType =
         nativeConstructorBuilder("Date")
-            .withParamsNode(createOptionalParameters(
-                unknownType,
-                unknownType,
-                unknownType,
-                unknownType,
-                unknownType,
-                unknownType,
-                unknownType))
+            .withParameters(
+                createOptionalParameters(
+                    unknownType,
+                    unknownType,
+                    unknownType,
+                    unknownType,
+                    unknownType,
+                    unknownType,
+                    unknownType))
             .withReturnType(stringType)
             .build();
     dateFunctionType.getPrototype(); // Force initialization
@@ -653,7 +652,7 @@ public class JSTypeRegistry implements Serializable {
     // Number
     FunctionType numberObjectFunctionType =
         nativeConstructorBuilder("Number")
-            .withParamsNode(createOptionalParameters(allType))
+            .withParameters(createOptionalParameters(allType))
             .withReturnType(numberType)
             .build();
     numberObjectFunctionType.getPrototype(); // Force initialization
@@ -665,7 +664,7 @@ public class JSTypeRegistry implements Serializable {
     // RegExp
     FunctionType regexpFunctionType =
         nativeConstructorBuilder("RegExp")
-            .withParamsNode(createOptionalParameters(allType, allType))
+            .withParameters(createOptionalParameters(allType, allType))
             .withReturnsOwnInstanceType()
             .build();
     regexpFunctionType.getPrototype(); // Force initialization
@@ -677,7 +676,7 @@ public class JSTypeRegistry implements Serializable {
     // String
     FunctionType stringObjectFunctionType =
         nativeConstructorBuilder("String")
-            .withParamsNode(createOptionalParameters(allType))
+            .withParameters(createOptionalParameters(allType))
             .withReturnType(stringType)
             .build();
     stringObjectFunctionType.getPrototype(); // Force initialization
@@ -691,7 +690,7 @@ public class JSTypeRegistry implements Serializable {
     // it is illegal to call "new Symbol".  This is checked in the type checker.
     FunctionType symbolObjectFunctionType =
         nativeConstructorBuilder("Symbol")
-            .withParamsNode(createOptionalParameters(allType))
+            .withParameters(createOptionalParameters(allType))
             .withReturnType(symbolType)
             .build();
     symbolObjectFunctionType.getPrototype(); // Force initialization
@@ -738,7 +737,7 @@ public class JSTypeRegistry implements Serializable {
     // the 'this' object in the global scope
     FunctionType globalThisCtor =
         nativeConstructorBuilder("global this")
-            .withParamsNode(createParameters(allType))
+            .withParameters(createParameters(allType))
             .withReturnType(numberType)
             .build();
     ObjectType globalThis = globalThisCtor.getInstanceType();
@@ -1632,8 +1631,9 @@ public class JSTypeRegistry implements Serializable {
    * @param returnType the function's return type or {@code null} to indicate that the return type
    *     is unknown.
    */
-  public FunctionType createFunctionType(JSType returnType, Node parameters) {
-    return FunctionType.builder(this).withParamsNode(parameters).withReturnType(returnType).build();
+  public FunctionType createFunctionType(
+      JSType returnType, List<FunctionType.Parameter> parameters) {
+    return FunctionType.builder(this).withParameters(parameters).withReturnType(returnType).build();
   }
 
   /**
@@ -1671,9 +1671,10 @@ public class JSTypeRegistry implements Serializable {
    */
   public JSType createFunctionTypeWithInstanceType(ObjectType instanceType,
       JSType returnType, List<JSType> parameterTypes) {
-    Node paramsNode = createParameters(parameterTypes.toArray(new JSType[parameterTypes.size()]));
+    List<FunctionType.Parameter> paramsNode =
+        createParameters(parameterTypes.toArray(new JSType[0]));
     return FunctionType.builder(this)
-        .withParamsNode(paramsNode)
+        .withParameters(paramsNode)
         .withReturnType(returnType)
         .withTypeOfThis(instanceType)
         .build();
@@ -1685,7 +1686,7 @@ public class JSTypeRegistry implements Serializable {
    * @param parameterTypes the parameter types.
    * @return a tree hierarchy representing a typed argument list.
    */
-  public Node createParameters(JSType... parameterTypes) {
+  public ImmutableList<FunctionType.Parameter> createParameters(JSType... parameterTypes) {
     return createParameters(false, parameterTypes);
   }
 
@@ -1697,7 +1698,8 @@ public class JSTypeRegistry implements Serializable {
    *     variable length argument is {@code lastVarArgs} is {@code true}.
    * @return a tree hierarchy representing a typed argument list
    */
-  private Node createParameters(boolean lastVarArgs, JSType... parameterTypes) {
+  private ImmutableList<FunctionType.Parameter> createParameters(
+      boolean lastVarArgs, JSType... parameterTypes) {
     FunctionParamBuilder builder = new FunctionParamBuilder(this);
     int max = parameterTypes.length - 1;
     for (int i = 0; i <= max; i++) {
@@ -1711,22 +1713,23 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Creates a tree hierarchy representing a typed argument list. The last
-   * parameter type is considered a variable length argument.
+   * Creates a tree hierarchy representing a typed argument list. The last parameter type is
+   * considered a variable length argument.
    *
-   * @param parameterTypes the parameter types. The last element of this array
-   *     is considered a variable length argument.
+   * @param parameterTypes the parameter types. The last element of this array is considered a
+   *     variable length argument.
    * @return a tree hierarchy representing a typed argument list.
    */
-  public Node createParametersWithVarArgs(JSType... parameterTypes) {
+  public ImmutableList<FunctionType.Parameter> createParametersWithVarArgs(
+      JSType... parameterTypes) {
     return createParameters(true, parameterTypes);
   }
 
   /**
-   * Creates a tree hierarchy representing a typed parameter list in which
-   * every parameter is optional.
+   * Creates a tree hierarchy representing a typed parameter list in which every parameter is
+   * optional.
    */
-  public Node createOptionalParameters(JSType... parameterTypes) {
+  public ImmutableList<FunctionType.Parameter> createOptionalParameters(JSType... parameterTypes) {
     FunctionParamBuilder builder = new FunctionParamBuilder(this);
     builder.addOptionalParams(parameterTypes);
     return builder.build();
@@ -1747,9 +1750,9 @@ public class JSTypeRegistry implements Serializable {
   }
 
   private FunctionType createNativeFunctionType(
-      JSType returnType, Node parameters) {
+      JSType returnType, List<FunctionType.Parameter> parameters) {
     return FunctionType.builder(this)
-        .withParamsNode(parameters)
+        .withParameters(parameters)
         .withReturnType(returnType)
         .forNativeType()
         .build();
@@ -1836,7 +1839,7 @@ public class JSTypeRegistry implements Serializable {
   public FunctionType createConstructorType(
       String name,
       Node source,
-      Node parameters,
+      List<FunctionType.Parameter> parameters,
       JSType returnType,
       @Nullable ImmutableList<TemplateType> templateKeys,
       boolean isAbstract) {
@@ -1845,7 +1848,7 @@ public class JSTypeRegistry implements Serializable {
         .forConstructor()
         .withName(name)
         .withSourceNode(source)
-        .withParamsNode(parameters)
+        .withParameters(parameters)
         .withReturnType(returnType)
         .withTemplateKeys((templateKeys == null) ? ImmutableList.of() : templateKeys)
         .withIsAbstract(isAbstract)
@@ -1867,7 +1870,7 @@ public class JSTypeRegistry implements Serializable {
             .forInterface()
             .withName(name)
             .withSourceNode(source)
-            .withEmptyParams()
+            .withParameters()
             .withTemplateKeys((templateKeys == null) ? ImmutableList.of() : templateKeys)
             .build();
     if (struct) {
@@ -2156,7 +2159,7 @@ public class JSTypeRegistry implements Serializable {
         JSType returnType = createTypeFromCommentNode(current, sourceName, scope);
 
         return FunctionType.builder(this)
-            .withParamsNode(paramBuilder.build())
+            .withParameters(paramBuilder.build())
             .withReturnType(returnType)
             .withTypeOfThis(thisType)
             .withKind(isConstructor ? FunctionType.Kind.CONSTRUCTOR : FunctionType.Kind.ORDINARY)
