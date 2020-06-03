@@ -325,6 +325,10 @@ public final class AstValidator implements CompilerPass {
         validateNumber(n);
         return;
 
+      case BIGINT:
+        validateBigInt(n);
+        return;
+
       case NAME:
         validateName(n);
         return;
@@ -1628,6 +1632,17 @@ public final class AstValidator implements CompilerPass {
       n.getDouble();
     } catch (UnsupportedOperationException e) {
       violation("Invalid NUMBER node.", n);
+    }
+  }
+
+  private void validateBigInt(Node n) {
+    validateNodeType(Token.BIGINT, n);
+    validateChildCount(n);
+    try {
+      // Validate that getBigInt doesn't throw
+      n.getBigInt();
+    } catch (UnsupportedOperationException e) {
+      violation("Invalid BIGINT node.", n);
     }
   }
 
