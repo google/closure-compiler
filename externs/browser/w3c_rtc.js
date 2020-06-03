@@ -1752,6 +1752,12 @@ RTCRtpStreamStats.prototype.ssrc;
 /** @const {string} */
 RTCRtpStreamStats.prototype.kind;
 
+/**
+ * Safari 13 still uses .mediaType instead of .kind.
+ * @const {string}
+ */
+RTCRtpStreamStats.prototype.mediaType;
+
 /** @const {string} */
 RTCRtpStreamStats.prototype.transportId;
 
