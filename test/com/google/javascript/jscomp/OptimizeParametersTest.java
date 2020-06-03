@@ -49,6 +49,33 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAliasingAssignment() {
+    testSame(
+        lines(
+            "", //
+            "/** @constructor */",
+            "function MyClass() {",
+            "  this.myField = null;",
+            "}",
+            "",
+            // This assignment creates an alias, so we can't know all of the callers and cannot
+            // safely optimize away `myArgument`.
+            "MyClass.prototype[\"myMethod\"] =",
+            "    MyClass.prototype.myMethod = function (myArgument) {",
+            "  if (undefined === myArgument) {",
+            "      myArgument = this.myField;",
+            "  }",
+            "  return \"myMethod with argument: \" + myArgument;",
+            "};",
+            "",
+            "function globalMyMethod(oMyClass) {",
+            // One call to `myMethod` exists, and it doesn't use the optional argument.
+            "  return oMyClass.myMethod();",
+            "}",
+            ""));
+  }
+
+  @Test
   public void nullishCoalesce() {
     setAcceptedLanguage(ECMASCRIPT_NEXT_IN);
     test(

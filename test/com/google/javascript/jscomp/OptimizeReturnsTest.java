@@ -253,6 +253,17 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoRewriteWhenAliasedDuringAssignment() {
+    String source =
+        lines(
+            "var a, b;",
+            "a = b = function (){return 1}",
+            "use(a());", // result used
+            "b()"); // result unused
+    testSame(source);
+  }
+
+  @Test
   public void testRewriteUnusedResult4c() {
     String source = lines(
         "function a(){return a()}",
@@ -506,6 +517,22 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
             "let x = functionFactory();",
             "x(1, 2);",
             "x = function(a,b) { return b; }"));
+  }
+
+  @Test
+  public void testReturnNotRemovedFromRecursiveNamedFunctionExpression() {
+    testSame(
+        lines(
+            "let x = function innerName(n) {",
+            "  if (n < 1) {",
+            "    return 0",
+            "  } else {",
+            "    return innerName(n - 1) + n;",
+            "  }",
+            "",
+            "}",
+            "x(3);",
+            ""));
   }
 
   @Test

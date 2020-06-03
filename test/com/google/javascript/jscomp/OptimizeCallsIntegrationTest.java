@@ -78,6 +78,60 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAliasOfAFunction() {
+    testSame(
+        lines(
+            "", //
+            "function foo(arg1) {",
+            "  return arg1",
+            "}",
+            "",
+            // first definition of bar
+            "let bar = foo;",
+            // really calls foo(1)
+            // the `1` cannot be inlined because bar is an alias of
+            // `foo`
+            "bar(1);", // return value unused
+            // redefinition of bar with a function literal
+            "bar = function(arg1) {",
+            "  return arg1 + 1;",
+            "};",
+            "bar(1)", // return value unused & same argument
+            ""));
+  }
+
+  @Test
+  public void testAliasingAssignment() {
+    testSame(
+        lines(
+            "", //
+            "/** @constructor */",
+            "function MyClass() {",
+            "  this.myField = null;",
+            "}",
+            "",
+            // This assignment creates an alias, so we can't know all of the callers and cannot
+            // safely optimize away `myArgument`.
+            "MyClass.prototype[\"myMethod\"] =",
+            "    MyClass.prototype.myMethod = function (myArgument) {",
+            "  if (undefined === myArgument) {",
+            "      myArgument = this.myField;",
+            "  }",
+            "  return \"myMethod with argument: \" + myArgument;",
+            "};",
+            "",
+            "function globalMyMethod(oMyClass) {",
+            // One call to `myMethod` exists, and it doesn't use the optional argument.
+            "  return oMyClass.myMethod();",
+            "}",
+            "",
+            // These both escape, so they won't be removed as unused.
+            "window[\"MyClass\"] = MyClass;",
+            "window[\"globalMyMethod\"] = globalMyMethod;",
+            ""));
+  }
+
+  @Test
   public void testSimpleRemoval() {
     // unused parameter value
     test("var foo = (p1)=>{}; foo(1); foo(2)",

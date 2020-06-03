@@ -373,7 +373,8 @@ class OptimizeCalls implements CompilerPass {
 
     static boolean isSimpleAssignmentTarget(Node n) {
       Node parent = n.getParent();
-      return parent.isAssign() && n == parent.getFirstChild();
+      // `ref = value;`
+      return parent.isAssign() && n.isFirstChildOf(parent) && parent.getParent().isExprResult();
     }
   }
 
