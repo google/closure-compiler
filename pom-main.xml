@@ -134,6 +134,13 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.google.truth.extensions</groupId>
+      <artifactId>truth-java8-extension</artifactId>
+      <version>0.45</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Ant is a provided scope as it is only needed to compile; ant will provide itself when using the jar -->
     <dependency>
       <groupId>org.apache.ant</groupId>

@@ -45,10 +45,10 @@ import static com.google.javascript.rhino.jstype.JSTypeIterations.allTypesMatch;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.anyTypeMatches;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
@@ -447,9 +447,14 @@ final class SubtypeChecker {
     // to create a new no-op function for every possible type signature.
     //
     // So, in this case, g < f, but f !< g
-    Node subtypeParam = subtype.parameters.getFirstChild();
-    Node supertypeParam = supertype.parameters.getFirstChild();
+    Iterator<FunctionType.Parameter> subtypeParameters = subtype.getParameterList().iterator();
+    Iterator<FunctionType.Parameter> supertypeParameters = supertype.getParameterList().iterator();
+    FunctionType.Parameter subtypeParam =
+        subtypeParameters.hasNext() ? subtypeParameters.next() : null;
+    FunctionType.Parameter supertypeParam =
+        supertypeParameters.hasNext() ? supertypeParameters.next() : null;
     while (subtypeParam != null && supertypeParam != null) {
+
       JSType subtypeParamType = subtypeParam.getJSType();
       JSType supertypeParamType = supertypeParam.getJSType();
       if (subtypeParamType != null) {
@@ -459,10 +464,10 @@ final class SubtypeChecker {
         }
       }
 
-      boolean thisIsVarArgs = subtypeParam.isVarArgs();
-      boolean thatIsVarArgs = supertypeParam.isVarArgs();
-      boolean thisIsOptional = thisIsVarArgs || subtypeParam.isOptionalArg();
-      boolean thatIsOptional = thatIsVarArgs || supertypeParam.isOptionalArg();
+      boolean thisIsVarArgs = subtypeParam.isVariadic();
+      boolean thatIsVarArgs = supertypeParam.isVariadic();
+      boolean thisIsOptional = thisIsVarArgs || subtypeParam.isOptional();
+      boolean thatIsOptional = thatIsVarArgs || supertypeParam.isOptional();
 
       // "that" can't be a supertype, because it's missing a required argument.
       if (!thisIsOptional && thatIsOptional) {
@@ -483,23 +488,22 @@ final class SubtypeChecker {
 
       // don't advance if we have variable arguments
       if (!thisIsVarArgs) {
-        subtypeParam = subtypeParam.getNext();
+        subtypeParam = subtypeParameters.hasNext() ? subtypeParameters.next() : null;
       }
       if (!thatIsVarArgs) {
-        supertypeParam = supertypeParam.getNext();
+        supertypeParam = supertypeParameters.hasNext() ? supertypeParameters.next() : null;
       }
 
       // both var_args indicates the end
       if (thisIsVarArgs && thatIsVarArgs) {
-        subtypeParam = null;
-        supertypeParam = null;
+        break;
       }
     }
 
     // "that" can't be a supertype, because it's missing a required argument.
     return subtypeParam == null
-        || subtypeParam.isOptionalArg()
-        || subtypeParam.isVarArgs()
+        || subtypeParam.isOptional()
+        || subtypeParam.isVariadic()
         || supertypeParam != null;
   }
 

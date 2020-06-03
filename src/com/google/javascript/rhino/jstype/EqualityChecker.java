@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType.MatchStatus;
 import java.util.HashMap;
 import java.util.Objects;
@@ -312,9 +312,14 @@ final class EqualityChecker {
   }
 
   private boolean areArrowParameterEqual(ArrowType left, ArrowType right) {
-    Node leftParam = left.parameters.getFirstChild();
-    Node rightParam = right.parameters.getFirstChild();
-    while (leftParam != null && rightParam != null) {
+    if (left.getParameterList().size() != right.getParameterList().size()) {
+      return false;
+    }
+
+    for (int i = 0; i < left.getParameterList().size(); i++) {
+      Parameter leftParam = left.getParameterList().get(i);
+      Parameter rightParam = right.getParameterList().get(i);
+
       JSType leftParamType = leftParam.getJSType();
       JSType rightParamType = rightParam.getJSType();
       if (leftParamType != null) {
@@ -329,20 +334,16 @@ final class EqualityChecker {
       }
 
       // Check var_args/optionality
-      if (leftParam.isOptionalArg() != rightParam.isOptionalArg()) {
+      if (leftParam.isOptional() != rightParam.isOptional()) {
         return false;
       }
 
-      if (leftParam.isVarArgs() != rightParam.isVarArgs()) {
+      if (leftParam.isVariadic() != rightParam.isVariadic()) {
         return false;
       }
-
-      leftParam = leftParam.getNext();
-      rightParam = rightParam.getNext();
     }
-    // One of the parameters is null, so the types are only equal if both
-    // parameter lists are null (they are equal).
-    return leftParam == rightParam;
+
+    return true;
   }
 
   /**

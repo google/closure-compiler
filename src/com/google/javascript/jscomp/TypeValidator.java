@@ -825,7 +825,6 @@ class TypeValidator implements Serializable {
    * Expect that the first type can be cast to the second type. The first type must have some
    * relationship with the second.
    *
-   * @param t The node traversal.
    * @param n The node where warnings should point.
    * @param targetType The type being cast to.
    * @param sourceType The type being cast from.
@@ -1206,8 +1205,8 @@ class TypeValidator implements Serializable {
 
     @Override
     public Boolean caseFunctionType(FunctionType type) {
-      for (JSType param : type.getParameterTypes()) {
-        if (!param.visit(this)) {
+      for (FunctionType.Parameter param : type.getParameters()) {
+        if (!param.getJSType().visit(this)) {
           return false;
         }
       }

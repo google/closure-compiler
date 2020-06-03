@@ -81,6 +81,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -94,6 +95,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -567,8 +569,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     checkNotNull(scriptName);
 
     Predicate<Node> inScript = n -> scriptName.equals(NodeUtil.getSourceName(n));
-    escapedVarNames.removeIf(var -> inScript.test(var.getScopeRoot()));
-    assignedVarNames.removeIf(var -> inScript.test(var.getScopeRoot()));
+    escapedVarNames.removeIf(v -> inScript.test(v.getScopeRoot()));
+    assignedVarNames.removeIf(v -> inScript.test(v.getScopeRoot()));
     functionsWithNonEmptyReturns.removeIf(inScript);
 
     NodeTraversal.traverse(compiler, scriptRoot, new FirstOrderFunctionAnalyzer());
@@ -1557,7 +1559,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         builder.inferConstructorParameters(constructor.getSecondChild(), ctorInfo);
       } else if (extendsClause.isEmpty()) {
         // No explicit constructor and no superclass: constructor is no-args.
-        builder.inferImplicitConstructorParameters(new Node(Token.PARAM_LIST));
+        builder.inferImplicitConstructorParameters(ImmutableList.of());
       } else {
         // No explicit constructor, but we have a superclass.  If we know its type, then copy its
         // constructor arguments (and templates).  If not, make the constructor arguments unknown.
@@ -1565,12 +1567,13 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         FunctionType extendsCtor = baseType != null ? baseType.getConstructor() : null;
         if (extendsCtor != null) {
           // Known superclass: copy the parameters node.
-          builder.inferImplicitConstructorParameters(extendsCtor.getParametersNode().cloneTree());
+          builder.inferImplicitConstructorParameters(extendsCtor.getParameters());
         } else {
           // Unresolveable extends clause: suppress typechecking.
           builder.inferImplicitConstructorParameters(
-              typeRegistry.createParametersWithVarArgs(
-                  typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
+              FunctionParamBuilder.fromNode(
+                  typeRegistry.createParametersWithVarArgs(
+                      typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE))));
         }
       }
 
@@ -3249,24 +3252,22 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       FunctionType functionType = JSType.toMaybeFunctionType(functionNode.getJSType());
       if (functionType != null) {
+        Iterator<Parameter> jsdocParameters = functionType.getParameters().iterator();
+        Parameter jsDocParameter = jsdocParameters.hasNext() ? jsdocParameters.next() : null;
 
-        Node jsDocParameters = functionType.getParametersNode();
-        if (jsDocParameters != null) {
-          Node jsDocParameter = jsDocParameters.getFirstChild();
-          for (Node astParameter : astParameters.children()) {
-            if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
-              // don't try inferring types from spreads in iifes because we don't know how
-              // many items are in the iterable.
-              iifeArgumentNode = null;
-            }
-            JSType declaredType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
-            declareNamesInPositionalParameter(astParameter, declaredType, iifeArgumentNode);
-            if (jsDocParameter != null) {
-              jsDocParameter = jsDocParameter.getNext();
-            }
-            if (iifeArgumentNode != null) {
-              iifeArgumentNode = iifeArgumentNode.getNext();
-            }
+        for (Node astParameter : astParameters.children()) {
+          if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
+            // don't try inferring types from spreads in iifes because we don't know how
+            // many items are in the iterable.
+            iifeArgumentNode = null;
+          }
+          JSType declaredType = jsDocParameter == null ? unknownType : jsDocParameter.getJSType();
+          declareNamesInPositionalParameter(astParameter, declaredType, iifeArgumentNode);
+          if (jsDocParameter != null) {
+            jsDocParameter = jsdocParameters.hasNext() ? jsdocParameters.next() : null;
+          }
+          if (iifeArgumentNode != null) {
+            iifeArgumentNode = iifeArgumentNode.getNext();
           }
         }
 
@@ -3496,7 +3497,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           break;
 
         case SETTER_DEF:
-          propertyType = Iterables.getFirst(methodType.getParameterTypes(), unknownType);
+          propertyType =
+              methodType.getParameters().isEmpty()
+                  ? unknownType
+                  : methodType.getParameters().get(0).getJSType();
           break;
 
         default:

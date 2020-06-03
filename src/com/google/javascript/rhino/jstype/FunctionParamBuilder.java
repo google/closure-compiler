@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -65,7 +66,7 @@ public class FunctionParamBuilder {
     }
 
     for (JSType type : types) {
-      newParameter(type);
+      newParameter(type, false, false);
     }
     return true;
   }
@@ -82,7 +83,7 @@ public class FunctionParamBuilder {
     }
 
     for (JSType type : types) {
-      newParameter(registry.createOptionalType(type)).setOptionalArg(true);
+      newParameter(registry.createOptionalType(type), true, false);
     }
     return true;
   }
@@ -96,42 +97,39 @@ public class FunctionParamBuilder {
       return false;
     }
 
-    newParameter(type).setVarArgs(true);
+    newParameter(type, false, true);
     return true;
   }
 
-  /**
-   * Copies the parameter specification from the given node.
-   */
-  public Node newParameterFromNode(Node n) {
-    Node newParam = newParameter(n.getJSType());
-    newParam.setVarArgs(n.isVarArgs());
-    newParam.setOptionalArg(n.isOptionalArg());
-    return newParam;
+  /** Copies the parameter specification from the given node. */
+  public Node newParameterFrom(FunctionType.Parameter n) {
+    return newParameter(n.getJSType(), n.isOptional(), n.isVariadic());
   }
 
-  /**
-   * Copies the parameter specification from the given node,
-   * but makes sure it's optional.
-   */
-  public Node newOptionalParameterFromNode(Node n) {
-    Node newParam = newParameterFromNode(n);
+  /** Copies the parameter specification from the given node, but makes sure it's optional. */
+  public void newOptionalParameterFrom(FunctionType.Parameter p) {
+    Node newParam = newParameterFrom(p);
     if (!newParam.isVarArgs() && !newParam.isOptionalArg()) {
       newParam.setOptionalArg(true);
     }
-    return newParam;
   }
 
   // Add a parameter to the list with the given type.
-  private Node newParameter(JSType type) {
+  private Node newParameter(JSType type, boolean isOptionalArg, boolean isVarArgs) {
     Node paramNode = Node.newString(Token.NAME, "");
     paramNode.setJSType(type);
+    paramNode.setOptionalArg(isOptionalArg);
+    paramNode.setVarArgs(isVarArgs);
     root.addChildToBack(paramNode);
     return paramNode;
   }
 
   public Node build() {
     return root;
+  }
+
+  public ImmutableList<FunctionType.Parameter> buildList() {
+    return fromNode(root);
   }
 
   private boolean hasOptionalOrVarArgs() {
@@ -143,5 +141,14 @@ public class FunctionParamBuilder {
   public boolean hasVarArgs() {
     Node lastChild = root.getLastChild();
     return lastChild != null && lastChild.isVarArgs();
+  }
+
+  public static ImmutableList<FunctionType.Parameter> fromNode(Node root) {
+    ImmutableList.Builder<FunctionType.Parameter> parameters = ImmutableList.builder();
+    for (Node param : root.children()) {
+      parameters.add(
+          new FunctionType.Parameter(param.getJSType(), param.isOptionalArg(), param.isVarArgs()));
+    }
+    return parameters.build();
   }
 }

@@ -3096,21 +3096,18 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals("apply should have the same return type as its function",
         NUMBER_TYPE, applyFn.getReturnType());
 
-    Node params = applyFn.getParametersNode();
-    assertWithMessage("apply takes two args").that(params.getChildCount()).isEqualTo(2);
+    List<FunctionType.Parameter> params = applyFn.getParameters();
+    assertWithMessage("apply takes two args").that(params).hasSize(2);
     assertTypeEquals(
         "apply's first arg is the @this type",
         registry.createOptionalNullableType(DATE_TYPE),
-        params.getFirstChild().getJSType());
-    assertTypeEquals("apply's second arg is an Array",
+        params.get(0).getJSType());
+    assertTypeEquals(
+        "apply's second arg is an Array",
         registry.createOptionalNullableType(OBJECT_TYPE),
-        params.getLastChild().getJSType());
-    assertWithMessage("apply's args must be optional")
-        .that(params.getFirstChild().isOptionalArg())
-        .isTrue();
-    assertWithMessage("apply's args must be optional")
-        .that(params.getLastChild().isOptionalArg())
-        .isTrue();
+        params.get(1).getJSType());
+    assertWithMessage("apply's args must be optional").that(params.get(0).isOptional()).isTrue();
+    assertWithMessage("apply's args must be optional").that(params.get(1).isOptional()).isTrue();
   }
 
   /** Tests the "call" method on the function type. */
@@ -3123,17 +3120,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals("call should have the same return type as its function",
         NUMBER_TYPE, callFn.getReturnType());
 
-    Node params = callFn.getParametersNode();
-    assertWithMessage("call takes one argument in this case")
-        .that(params.getChildCount())
-        .isEqualTo(1);
+    List<FunctionType.Parameter> params = callFn.getParameters();
+    assertWithMessage("call takes one argument in this case").that(params).hasSize(1);
     assertTypeEquals(
         "call's first arg is the @this type",
         registry.createOptionalNullableType(DATE_TYPE),
-        params.getFirstChild().getJSType());
-    assertWithMessage("call's args must be optional")
-        .that(params.getFirstChild().isOptionalArg())
-        .isTrue();
+        params.get(0).getJSType());
+    assertWithMessage("call's args must be optional").that(params.get(0).isOptional()).isTrue();
   }
 
   /** Tests the representation of function types. */

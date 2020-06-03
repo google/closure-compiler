@@ -31,6 +31,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -227,32 +228,6 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      */
     private Node createExternsParamListFromOriginalFunction(Node exportedFunction) {
       final Node originalParamList = NodeUtil.getFunctionParameters(exportedFunction);
-      return createExternsParamListFromOriginalParamList(originalParamList);
-    }
-
-    /**
-     * Creates a PARAM_LIST to store in the AST we'll use to generate externs for a function with
-     * the given type.
-     *
-     * <p>If the NODE defining the original function is available, it would be better to use
-     * createExternsParamListFromOriginalFunction(), because that one will keep the parameter names
-     * the same instead of generating arbitrary parameter names.
-     *
-     * @param functionType JSType read from the FUNCTION (or possibly CLASS) node
-     * @return
-     */
-    private Node createExternsParamListFromFunctionType(JSType functionType) {
-      return createExternsParamListFromOriginalParamList(
-          functionType.assertFunctionType().getParametersNode());
-    }
-
-    /**
-     * Creates a PARAM_LIST to store in the AST we'll use to generate externs for a function.
-     *
-     * @param originalParamList Either the original PARAM_LIST from the function or the synthetic
-     *     PARAM_LIST stored in the function's FunctionType
-     */
-    private Node createExternsParamListFromOriginalParamList(Node originalParamList) {
       // First get all of the original positional parameter list names we can.
       // Place empty stings in the positions where we'll need to generate names.
       List<String> originalParamNames = new ArrayList<>();
@@ -265,7 +240,33 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         // names for all of them.
         originalParamNames.add(getOriginalNameForParam(originalParam));
       }
+      return createExternsParamListFromOriginalParamList(originalParamNames);
+    }
 
+    /**
+     * Creates a PARAM_LIST to store in the AST we'll use to generate externs for a function with
+     * the given type.
+     *
+     * <p>If the NODE defining the original function is available, it would be better to use
+     * createExternsParamListFromOriginalFunction(), because that one will keep the parameter names
+     * the same instead of generating arbitrary parameter names.
+     *
+     * @param functionType JSType read from the FUNCTION (or possibly CLASS) node
+     */
+    private Node createExternsParamListFromFunctionType(JSType functionType) {
+      // Place empty stings in the positions where we'll need to generate names.
+      List<String> emptyParamNames =
+          Collections.nCopies(functionType.assertFunctionType().getParameters().size(), "");
+
+      return createExternsParamListFromOriginalParamList(emptyParamNames);
+    }
+
+    /**
+     * Creates a PARAM_LIST to store in the AST we'll use to generate externs for a function.
+     *
+     * @param originalParamNames names for the parameters, possibly synthetic.
+     */
+    private Node createExternsParamListFromOriginalParamList(List<String> originalParamNames) {
       final Node paramList = IR.paramList();
       NameGenerator nameGenerator =
           new DefaultNameGenerator(

@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -94,7 +95,7 @@ final class InvocationTemplateTypeMatcher {
     }
 
     if (this.invocation.isTaggedTemplateLit()) {
-      Iterator<Node> calleeParameters = this.calleeType.getParameters().iterator();
+      Iterator<Parameter> calleeParameters = this.calleeType.getParameters().iterator();
       if (!calleeParameters.hasNext()) {
         // TypeCheck will warn if there are too few function parameters
         return ImmutableMap.copyOf(this.matchedTypes);
@@ -153,8 +154,9 @@ final class InvocationTemplateTypeMatcher {
         this.matchTemplateTypesRecursive(
             paramFunctionType.getReturnType(), argFunctionType.getReturnType());
         // infer from parameter types of the function type
-        this.matchTemplateTypesFromNodes(
-            paramFunctionType.getParameters(), argFunctionType.getParameters());
+        this.matchTemplateTypesFromParameters(
+            paramFunctionType.getParameters().iterator(),
+            argFunctionType.getParameters().iterator());
       }
     } else if (paramType.isRecordType() && !paramType.isNominalType()) {
       // example: @param {{foo:T}}
@@ -203,20 +205,36 @@ final class InvocationTemplateTypeMatcher {
     }
   }
 
-  private void matchTemplateTypesFromNodes(Iterable<Node> declParams, Iterable<Node> callParams) {
+  private void matchTemplateTypesFromNodes(
+      Iterable<Parameter> declParams, Iterable<Node> callParams) {
     this.matchTemplateTypesFromNodes(declParams.iterator(), callParams.iterator());
   }
 
-  private void matchTemplateTypesFromNodes(Iterator<Node> declParams, Iterator<Node> callParams) {
+  private void matchTemplateTypesFromNodes(
+      Iterator<Parameter> declParams, Iterator<Node> callParams) {
     while (declParams.hasNext() && callParams.hasNext()) {
-      Node declParam = declParams.next();
+      Parameter declParam = declParams.next();
       this.matchTemplateTypesRecursive(
-          this.getTypeOrUnknown(declParam), this.getTypeOrUnknown(callParams.next()));
+          declParam.getJSType(), this.getTypeOrUnknown(callParams.next()));
 
-      if (declParam.isVarArgs()) {
+      if (declParam.isVariadic()) {
         while (callParams.hasNext()) {
           this.matchTemplateTypesRecursive(
-              this.getTypeOrUnknown(declParam), this.getTypeOrUnknown(callParams.next()));
+              declParam.getJSType(), this.getTypeOrUnknown(callParams.next()));
+        }
+      }
+    }
+  }
+
+  private void matchTemplateTypesFromParameters(
+      Iterator<Parameter> declParams, Iterator<Parameter> callParams) {
+    while (declParams.hasNext() && callParams.hasNext()) {
+      Parameter declParam = declParams.next();
+      this.matchTemplateTypesRecursive(declParam.getJSType(), callParams.next().getJSType());
+
+      if (declParam.isVariadic()) {
+        while (callParams.hasNext()) {
+          this.matchTemplateTypesRecursive(declParam.getJSType(), callParams.next().getJSType());
         }
       }
     }

@@ -68,6 +68,7 @@ import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
@@ -155,10 +156,10 @@ public class JSTypeRegistryTest {
     // Test that it takes one parameter of type
     // function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?
     FunctionType promiseCtor = promiseType.getConstructor();
-    Node paramList = promiseCtor.getParametersNode();
-    Node firstParameter = paramList.getFirstChild();
-    assertThat(firstParameter).isNotNull();
-    FunctionType paramType = paramList.getFirstChild().getJSType().toMaybeFunctionType();
+    List<FunctionType.Parameter> paramList = promiseCtor.getParameters();
+    assertThat(paramList).hasSize(1);
+    FunctionType.Parameter firstParameter = paramList.get(0);
+    FunctionType paramType = firstParameter.getJSType().toMaybeFunctionType();
     assertThat(paramType.toString())
         .isEqualTo(
             "function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?");

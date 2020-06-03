@@ -85,10 +85,11 @@ public abstract class TypeMismatch implements Serializable {
       if (found.isFunctionType() && required.isFunctionType()) {
         FunctionType fnTypeA = found.toMaybeFunctionType();
         FunctionType fnTypeB = required.toMaybeFunctionType();
-        Iterator<JSType> paramItA = fnTypeA.getParameterTypes().iterator();
-        Iterator<JSType> paramItB = fnTypeB.getParameterTypes().iterator();
+        Iterator<FunctionType.Parameter> paramItA = fnTypeA.getParameters().iterator();
+        Iterator<FunctionType.Parameter> paramItB = fnTypeB.getParameters().iterator();
         while (paramItA.hasNext() && paramItB.hasNext()) {
-          this.registerIfMismatch(location, paramItA.next(), paramItB.next());
+          this.registerIfMismatch(
+              location, paramItA.next().getJSType(), paramItB.next().getJSType());
         }
         this.registerIfMismatch(location, fnTypeA.getReturnType(), fnTypeB.getReturnType());
       }

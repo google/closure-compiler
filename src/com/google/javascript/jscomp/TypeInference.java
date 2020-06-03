@@ -48,6 +48,7 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -165,7 +166,8 @@ class TypeInference
     }
 
     FunctionType functionType = JSType.toMaybeFunctionType(functionNode.getJSType());
-    Node parameterTypeNode = functionType.getParametersNode().getFirstChild();
+    Iterator<Parameter> parameterTypes = functionType.getParameters().iterator();
+    Parameter parameter = parameterTypes.hasNext() ? parameterTypes.next() : null;
 
     // This really iterates over three different things at once:
     //   - the actual AST parameter nodes (which may be REST, DEFAULT_VALUE, etc.)
@@ -189,9 +191,9 @@ class TypeInference
         if (iifeArgumentNode.getJSType() != null) {
           inferredType = iifeArgumentNode.getJSType();
         }
-      } else if (parameterTypeNode != null) {
-        if (parameterTypeNode.getJSType() != null) {
-          inferredType = parameterTypeNode.getJSType();
+      } else if (parameter != null) {
+        if (parameter.getJSType() != null) {
+          inferredType = parameter.getJSType();
         }
       }
 
@@ -228,7 +230,7 @@ class TypeInference
             updateNamedParameter(astParameter, defaultValue != null, inferredType, entryFlowScope);
       }
 
-      parameterTypeNode = parameterTypeNode != null ? parameterTypeNode.getNext() : null;
+      parameter = parameterTypes.hasNext() ? parameterTypes.next() : null;
       iifeArgumentNode = iifeArgumentNode != null ? iifeArgumentNode.getNext() : null;
     }
 
@@ -1853,7 +1855,7 @@ class TypeInference
    */
   private void updateTypeOfArguments(Node n, FunctionType fnType) {
     checkState(NodeUtil.isInvocation(n), n);
-    Iterator<Node> parameters = fnType.getParameters().iterator();
+    Iterator<Parameter> parameters = fnType.getParameters().iterator();
     if (n.isTaggedTemplateLit()) {
       // Skip the first parameter because it corresponds to a constructed array of the template lit
       // subs, not an actual AST node, so there's nothing to update.
@@ -1865,7 +1867,7 @@ class TypeInference
     }
     Iterator<Node> arguments = NodeUtil.getInvocationArgsAsIterable(n).iterator();
 
-    Node iParameter;
+    Parameter iParameter;
     Node iArgument;
 
     // Note: if there are too many or too few arguments, TypeCheck will warn.
@@ -1874,7 +1876,7 @@ class TypeInference
       JSType iArgumentType = getJSType(iArgument);
 
       iParameter = parameters.next();
-      JSType iParameterType = getJSType(iParameter);
+      JSType iParameterType = iParameter.getJSType() != null ? iParameter.getJSType() : unknownType;
 
       inferPropertyTypesToMatchConstraint(iArgumentType, iParameterType);
 

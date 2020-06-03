@@ -46,6 +46,7 @@ import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -1139,7 +1140,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     JSType propertyType =
         child.isGetterDef()
             ? determineGetterType(methodType)
-            : Iterables.getFirst(methodType.getParameterTypes(), null);
+            : Iterables.getOnlyElement(methodType.getParameters()).getJSType();
     JSType officialPropertyType =
         child.isStaticMember()
             ? classType.getPropertyType(propertyName)
@@ -1464,7 +1465,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * definition <code>key() { ... }</code> If the <code>lvalue</code> is a prototype modification,
    * we change the schema of the object type it is referring to.
    *
-   * @param t the traversal
    * @param key the ASSIGN, STRING_KEY, MEMBER_FUNCTION_DEF, SPREAD, or COMPUTED_PROPERTY node
    * @param owner the parent node, either OBJECTLIT or CLASS_MEMBERS
    * @param ownerType the instance type of the enclosing object/class
@@ -1798,7 +1798,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           if (valueType.isFunctionType()) {
             // SET must always return a function type.
             FunctionType fntype = valueType.toMaybeFunctionType();
-            Node param = fntype.getParametersNode().getFirstChild();
+            Parameter param = fntype.getParameters().get(0);
             // SET function must always have one parameter.
             valueType = param.getJSType();
           } else {
@@ -2633,7 +2633,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   /** Visits the parameters of a CALL or a NEW node. */
   private void visitArgumentList(Node call, FunctionType functionType) {
-    Iterator<Node> parameters = functionType.getParameters().iterator();
+    Iterator<Parameter> parameters = functionType.getParameters().iterator();
     Iterator<Node> arguments = NodeUtil.getInvocationArgsAsIterable(call).iterator();
     checkArgumentsMatchParameters(call, functionType, arguments, parameters, 0);
   }
@@ -2651,13 +2651,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       Node call,
       FunctionType functionType,
       Iterator<Node> arguments,
-      Iterator<Node> parameters,
+      Iterator<Parameter> parameters,
       int firstParameterIndex) {
 
     int spreadArgumentCount = 0;
     int normalArgumentCount = firstParameterIndex;
     boolean checkArgumentTypeAgainstParameter = true;
-    Node parameter = null;
+    Parameter parameter = null;
     Node argument = null;
     while (arguments.hasNext()) {
       // get the next argument
@@ -2678,7 +2678,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (checkArgumentTypeAgainstParameter) {
         if (parameters.hasNext()) {
           parameter = parameters.next();
-        } else if (parameter != null && parameter.isVarArgs()) {
+        } else if (parameter != null && parameter.isVariadic()) {
           // use varargs for all remaining parameters
         } else {
           // else we ran out of parameters and will report that after this loop
@@ -2689,7 +2689,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       if (checkArgumentTypeAgainstParameter) {
         validator.expectArgumentMatchesParameter(
-            argument, getJSType(argument), getJSType(parameter), call, normalArgumentCount);
+            argument, getJSType(argument), parameter.getJSType(), call, normalArgumentCount);
       }
     }
 
@@ -2891,7 +2891,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     FunctionType tagFnType = tagType.toMaybeFunctionType();
-    Iterator<Node> parameters = tagFnType.getParameters().iterator();
+    Iterator<Parameter> parameters = tagFnType.getParameters().iterator();
 
     // The tag function gets an array of all the template lit substitutions as its first argument,
     // but there's no actual AST node representing that array so we typecheck it separately from
@@ -2910,11 +2910,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     // Validate that the first parameter is a supertype of ITemplateArray
-    Node firstParameter = parameters.next();
+    Parameter firstParameter = parameters.next();
     JSType parameterType = firstParameter.getJSType().restrictByNotNullOrUndefined();
     if (parameterType != null) {
       validator.expectITemplateArraySupertype(
-          firstParameter, parameterType, "Invalid type for the first parameter of tag function");
+          tag, parameterType, "Invalid type for the first parameter of tag function");
     }
 
     // Validate the remaining parameters (the template literal substitutions)
@@ -2928,7 +2928,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * can handle both kinds of operators easily.
    *
    * @param op The operator.
-   * @param t The traversal object, needed to report errors.
    * @param n The node being checked.
    */
   private void visitBinaryOperator(Token op, Node n) {
@@ -3284,7 +3283,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
     if (type.isOrdinaryFunction()) {
       FunctionType function = type.toMaybeFunctionType();
-      for (Node parameter : function.getParameters()) {
+      for (Parameter parameter : function.getParameters()) {
         JSType result =
             findObjectWithNonStringifiableKey(parameter.getJSType(), alreadyCheckedTypes);
         if (result != null) {

@@ -181,15 +181,15 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
     }
 
     FunctionParamBuilder paramBuilder = new FunctionParamBuilder(registry);
-    for (Node paramNode : type.getParameters()) {
+    for (FunctionType.Parameter paramNode : type.getParameters()) {
       JSType beforeParamType = paramNode.getJSType();
       JSType afterParamType = beforeParamType.visit(this);
       if (beforeParamType != afterParamType) {
         changed = true;
       }
-      if (paramNode.isOptionalArg()) {
+      if (paramNode.isOptional()) {
         paramBuilder.addOptionalParams(afterParamType);
-      } else if (paramNode.isVarArgs()) {
+      } else if (paramNode.isVariadic()) {
         paramBuilder.addVarArgs(afterParamType);
       } else {
         paramBuilder.addRequiredParams(afterParamType);

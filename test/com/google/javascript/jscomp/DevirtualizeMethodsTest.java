@@ -18,12 +18,14 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.common.truth.Truth8.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,17 +126,21 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
     assertThat(barResultType).isEqualTo(number);
 
     // Check that foo's type is {function(A): number}
-    assertThat(fooType.getParameterTypes()).containsExactly(thisType);
+    assertThat(fooType.getParameters().stream().map(Parameter::getJSType))
+        .containsExactly(thisType);
     assertThat(fooType.getReturnType()).isEqualTo(number);
     assertThat(fooType.getTypeOfThis()).isEqualTo(receiver);
 
     // Check that bar's type is {function(A, number): number}
-    assertThat(barType.getParameterTypes()).containsExactly(thisType, number).inOrder();
+    assertThat(barType.getParameters().stream().map(Parameter::getJSType))
+        .containsExactly(thisType, number)
+        .inOrder();
     assertThat(barType.getReturnType()).isEqualTo(number);
     assertThat(barType.getTypeOfThis()).isEqualTo(receiver);
 
     // Check that baz's type is {function(A): undefined}
-    assertThat(bazType.getParameterTypes()).containsExactly(thisType);
+    assertThat(bazType.getParameters().stream().map(Parameter::getJSType))
+        .containsExactly(thisType);
     assertThat(bazType.getTypeOfThis()).isEqualTo(receiver);
 
     // TODO(sdh): NTI currently fails to infer the result of the baz() call (b/37351897)

@@ -30,6 +30,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -495,7 +496,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
   private JSType convertMethodToFunction(FunctionType method) {
     List<JSType> paramTypes = new ArrayList<>();
     paramTypes.add(method.getTypeOfThis());
-    for (Node param : method.getParameters()) {
+    for (Parameter param : method.getParameters()) {
       paramTypes.add(param.getJSType());
     }
     ObjectType unknown = compiler.getTypeRegistry().getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);

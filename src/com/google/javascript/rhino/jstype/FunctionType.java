@@ -50,12 +50,10 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EqualityChecker.EqMethod;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -228,7 +226,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     this.call =
         new ArrowType(
             this.registry,
-            builder.parametersNode,
+            builder.parameters,
             builder.returnsOwnInstanceType ? this.typeOfThis : builder.returnType,
             builder.returnTypeIsInferred);
 
@@ -363,26 +361,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     return false;
   }
 
-  public final Iterable<Node> getParameters() {
-    Node n = getParametersNode();
-    if (n != null) {
-      return n.children();
-    } else {
-      return Collections.emptySet();
-    }
-  }
-
-  public final Iterable<JSType> getParameterTypes() {
-    List<JSType> types = new ArrayList<>();
-    for (Node n : getParameters()) {
-      types.add(n.getJSType());
-    }
-    return types;
-  }
-
-  /** Gets a PARAM_LIST node that contains all params. */
-  public final Node getParametersNode() {
-    return call.parameters;
+  public final ImmutableList<Parameter> getParameters() {
+    return getInternalArrowType().getParameterList();
   }
 
   /** Gets the minimum number of arguments that this function requires. */
@@ -392,9 +372,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     // of the last required parameter.
     int i = 0;
     int min = 0;
-    for (Node n : getParameters()) {
+    for (Parameter parameter : getParameters()) {
       i++;
-      if (!n.isOptionalArg() && !n.isVarArgs()) {
+      if (!parameter.isOptional() && !parameter.isVariadic()) {
         min = i;
       }
     }
@@ -406,12 +386,13 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * is a variable argument function.
    */
   public final int getMaxArity() {
-    Node params = getParametersNode();
-    if (params != null) {
-      Node lastParam = params.getLastChild();
-      if (lastParam == null || !lastParam.isVarArgs()) {
-        return params.getChildCount();
-      }
+    ImmutableList<Parameter> params = getParameters();
+    if (params.isEmpty()) {
+      return 0;
+    }
+    Parameter lastParam = Iterables.getLast(params);
+    if (!lastParam.isVariadic()) {
+      return params.size();
     }
 
     return Integer.MAX_VALUE;
@@ -705,7 +686,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         defineDeclaredProperty(
             name,
             builder(registry)
-                .withParamsNode(builder.build())
+                .withParamsList(builder.buildList())
                 .withReturnType(getReturnType())
                 .withTemplateKeys(getTemplateTypeMap().getTemplateKeys())
                 .build(),
@@ -726,19 +707,19 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         builder(registry)
             .withReturnType(getReturnType())
             .withTemplateKeys(getTemplateTypeMap().getTemplateKeys());
-    if (argsToBind >= 0) {
-      Node origParams = getParametersNode();
-      if (origParams != null) {
-        Node params = origParams.cloneTree();
-        for (int i = 1; i < argsToBind && params.getFirstChild() != null; i++) {
-          if (params.getFirstChild().isVarArgs()) {
-            break;
-          }
-          params.removeFirstChild();
-        }
-        builder.withParamsNode(params);
-      }
+    if (argsToBind < 0) {
+      return builder.build();
     }
+    ImmutableList<Parameter> origParams = call.getParameterList();
+    List<Parameter> params = new ArrayList<>(origParams);
+    for (int i = 1; i < argsToBind && !params.isEmpty(); i++) {
+      if (params.get(0).isVariadic()) {
+        break;
+      }
+      params.remove(0);
+    }
+    builder.withParamsList(params);
+
     return builder.build();
   }
 
@@ -753,31 +734,38 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
             .withReturnType(isCall ? getReturnType() : getBindReturnType(-1))
             .withTemplateKeys(getTemplateTypeMap().getTemplateKeys());
 
-    Node origParams = getParametersNode();
-    if (origParams != null) {
-      Node params = origParams.cloneTree();
+    List<Parameter> origParams = getInternalArrowType().getParameterList();
 
-      Node thisTypeNode = Node.newString(Token.NAME, "thisType");
-      thisTypeNode.setJSType(registry.createOptionalNullableType(getTypeOfThis()));
-      params.addChildToFront(thisTypeNode);
+    List<Parameter> params = new ArrayList<>(origParams);
 
-      if (isBind) {
-        // The arguments of bind() are unique in that they are all
-        // optional but not undefinable.
-        for (Node current = thisTypeNode.getNext(); current != null; current = current.getNext()) {
-          current.setOptionalArg(true);
-        }
-      } else if (isCall) {
-        // The first argument of call() is optional iff all the arguments
-        // are optional. It's sufficient to check the first argument.
-        Node firstArg = thisTypeNode.getNext();
-        if (firstArg == null || firstArg.isOptionalArg() || firstArg.isVarArgs()) {
-          thisTypeNode.setOptionalArg(true);
-        }
+    Parameter thisType =
+        new Parameter(
+            registry.createOptionalNullableType(getTypeOfThis()),
+            /* isOptional= */ false,
+            /* isVariadic= */ false);
+    params.add(0, thisType);
+
+    if (isBind) {
+      // The arguments of bind() are unique in that they are all
+      // optional but not undefinable.
+      for (int i = 1; i < params.size(); i++) {
+        Parameter current = params.get(i);
+        Parameter optionalCopy =
+            new Parameter(current.getJSType(), /* isOptional= */ true, current.isVariadic());
+        params.set(i, optionalCopy);
       }
-
-      builder.withParamsNode(params);
+    } else if (isCall) {
+      // The first argument of call() is optional iff all the arguments
+      // are optional. It's sufficient to check the first argument.
+      Parameter firstArg = params.size() > 1 ? params.get(1) : null;
+      if (firstArg == null || firstArg.isOptional() || firstArg.isVariadic()) {
+        Parameter optionalThisType =
+            new Parameter(thisType.getJSType(), /* isOptional= */ true, /* isVariadic= */ false);
+        params.set(0, optionalThisType);
+      }
     }
+
+    builder.withParamsList(params);
 
     return builder.build();
   }
@@ -879,11 +867,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   /** Try to get the sup/inf of two functions by looking at the piecewise components. */
   private FunctionType tryMergeFunctionPiecewise(FunctionType other, boolean leastSuper) {
-    Node newParamsNode = null;
+    List<Parameter> newParamsNode = null;
     if (new EqualityChecker()
         .setEqMethod(EqMethod.IDENTITY)
         .checkParameters(this.call, other.call)) {
-      newParamsNode = call.parameters;
+      newParamsNode = call.getParameterList();
     } else {
       // If the parameters are not equal, don't try to merge them.
       // Someday, we should try to merge the individual params.
@@ -909,7 +897,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     boolean newReturnTypeInferred = call.returnTypeInferred || other.call.returnTypeInferred;
 
     return builder(registry)
-        .withParamsNode(newParamsNode)
+        .withParamsList(newParamsNode)
         .withReturnType(newReturnType, newReturnTypeInferred)
         .withTypeOfThis(newTypeOfThis)
         .build();
@@ -975,7 +963,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     setPrettyPrint(false);
 
     sb.append("function(");
-    int paramNum = call.parameters.getChildCount();
+    int paramNum = call.getParameterList().size();
     boolean hasKnownTypeOfThis = !(typeOfThis instanceof UnknownType);
     if (hasKnownTypeOfThis) {
       if (isConstructor()) {
@@ -989,14 +977,13 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       if (hasKnownTypeOfThis) {
         sb.append(", ");
       }
-      Node p = call.parameters.getFirstChild();
+      Parameter p = call.getParameterList().get(0);
       appendArgString(sb, p);
 
-      p = p.getNext();
-      while (p != null) {
+      for (int i = 1; i < paramNum; i++) {
+        p = call.getParameterList().get(i);
         sb.append(", ");
         appendArgString(sb, p);
-        p = p.getNext();
       }
     }
     sb.append("): ");
@@ -1006,10 +993,10 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     return;
   }
 
-  private void appendArgString(TypeStringBuilder sb, Node p) {
-    if (p.isVarArgs()) {
+  private void appendArgString(TypeStringBuilder sb, Parameter p) {
+    if (p.isVariadic()) {
       appendVarArgsString(sb, p.getJSType());
-    } else if (p.isOptionalArg()) {
+    } else if (p.isOptional()) {
       appendOptionalArgString(sb, p.getJSType());
     } else {
       sb.appendNonNull(p.getJSType());
@@ -1341,11 +1328,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     // NOTE(aravindpg): This code is essentially lifted from TypeCheck::visitParameterList,
     // but what small differences there are make it very painful to refactor out the shared code.
     Iterator<? extends JSType> arguments = argumentTypes.iterator();
-    Iterator<Node> parameters = this.getParameters().iterator();
-    Node parameter = null;
+    Iterator<Parameter> parameters = this.getParameters().iterator();
+    Parameter parameter = null;
     JSType argument = null;
     while (arguments.hasNext()
-        && (parameters.hasNext() || parameter != null && parameter.isVarArgs())) {
+        && (parameters.hasNext() || (parameter != null && parameter.isVariadic()))) {
       // If there are no parameters left in the list, then the while loop
       // above implies that this must be a var_args function.
       if (parameters.hasNext()) {
@@ -1466,7 +1453,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   public static final class Builder extends PrototypeObjectType.Builder<Builder> {
 
     private Node sourceNode = null;
-    private Node parametersNode = null;
+    private List<Parameter> parameters = null;
     private JSType returnType = null;
     private JSType typeOfThis = null;
     private ObjectType setPrototypeBasedOn = null;
@@ -1497,14 +1484,29 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
 
     /** Set the parameters of the function type with a specially-formatted node. */
-    public Builder withParamsNode(Node parametersNode) {
-      this.parametersNode = parametersNode;
+    public Builder withParamsNode(Node paramList) {
+      if (paramList != null) {
+        ImmutableList.Builder<Parameter> parameters = ImmutableList.builder();
+        for (Node param : paramList.children()) {
+          parameters.add(
+              new Parameter(param.getJSType(), param.isOptionalArg(), param.isVarArgs()));
+        }
+        this.parameters = parameters.build();
+      } else {
+        this.parameters = null;
+      }
+      return this;
+    }
+
+    /** Set the parameters of the function type with a specially-formatted node. */
+    public Builder withParamsList(List<Parameter> parameters) {
+      this.parameters = parameters;
       return this;
     }
 
     /** Set the parameters of the function type with a specially-formatted node. */
     Builder withEmptyParams() {
-      this.parametersNode = registry.createEmptyParams();
+      this.parameters = ImmutableList.of();
       return this;
     }
 
@@ -1578,7 +1580,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     /** Make this an interface. */
     public Builder forInterface() {
       this.kind = Kind.INTERFACE;
-      this.parametersNode = registry.createEmptyParams();
+      this.parameters = ImmutableList.of();
       return this;
     }
 
@@ -1618,7 +1620,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
           .setTemplateTypeMap(otherType.getTemplateTypeMap())
           .setTemplateParamCount(otherType.getTemplateParamCount());
       this.sourceNode = otherType.getSource();
-      this.parametersNode = otherType.getParametersNode();
+      this.parameters = otherType.getParameters();
       this.returnType = otherType.getReturnType();
       this.typeOfThis = otherType.getTypeOfThis();
       this.kind = otherType.getKind();
@@ -1680,5 +1682,44 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     return canonicalRepresentation != null
         ? canonicalRepresentation
         : super.simplifyForOptimizations();
+  }
+
+  /**
+   * Models a single JavaScript parameter.
+   *
+   * <p>This parameter has a type; optionality; and may be var_args (variadic).
+   *
+   * <p>It is not immutable because type resolution needs to update the function parameter type.
+   * TODO(lharker): make this class immutable. It's unclear why type resolution needs to update the
+   * parameter type, but removing this behavior causes some new type errors.
+   */
+  public static final class Parameter implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private JSType type;
+    private final boolean isOptional;
+    private final boolean isVariadic;
+
+    public Parameter(JSType type, boolean isOptional, boolean isVariadic) {
+      this.type = checkNotNull(type);
+      this.isOptional = isOptional;
+      this.isVariadic = isVariadic;
+    }
+
+    void setJSType(JSType newType) {
+      this.type = checkNotNull(newType);
+    }
+
+    public JSType getJSType() {
+      return this.type;
+    }
+
+    public boolean isOptional() {
+      return this.isOptional;
+    }
+
+    public boolean isVariadic() {
+      return this.isVariadic;
+    }
   }
 }

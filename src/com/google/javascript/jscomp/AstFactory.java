@@ -1064,7 +1064,8 @@ final class AstFactory {
         // Generator<$jscomp.AsyncGeneratorWrapper$ActionRecord<number>>
         JSType innerFunctionReturnType =
             Iterables.getOnlyElement(
-                asyncGeneratorWrapperType.toMaybeFunctionType().getParameterTypes());
+                    asyncGeneratorWrapperType.toMaybeFunctionType().getParameters())
+                .getJSType();
         generatorType = registry.createFunctionType(innerFunctionReturnType);
       }
     }

@@ -39,12 +39,14 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.TemplateType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -92,7 +94,7 @@ final class FunctionTypeBuilder {
   private boolean isInterface = false;
   private boolean isRecord = false;
   private boolean isAbstract = false;
-  private Node parametersNode = null;
+  private List<Parameter> parameters = null;
   private ClosurePrimitive closurePrimitiveId = null;
   private ImmutableList<TemplateType> templateTypeNames = ImmutableList.of();
   private ImmutableList<TemplateType> constructorTemplateTypeNames = ImmutableList.of();
@@ -296,26 +298,26 @@ final class FunctionTypeBuilder {
     returnTypeInferred = oldType.isReturnTypeInferred();
     if (paramsParent == null) {
       // Not a function literal.
-      parametersNode = oldType.getParametersNode();
-      if (parametersNode == null) {
-        parametersNode = new FunctionParamBuilder(typeRegistry).build();
+      parameters = oldType.getParameters();
+      if (parameters == null) {
+        parameters = new FunctionParamBuilder(typeRegistry).buildList();
       }
     } else {
       // We're overriding with a function literal. Apply type information
       // to each parameter of the literal.
       FunctionParamBuilder paramBuilder =
           new FunctionParamBuilder(typeRegistry);
-      Iterator<Node> oldParams = oldType.getParameters().iterator();
+      Iterator<Parameter> oldParams = oldType.getParameters().iterator();
       boolean warnedAboutArgList = false;
       boolean oldParamsListHitOptArgs = false;
       for (Node currentParam = paramsParent.getFirstChild();
            currentParam != null; currentParam = currentParam.getNext()) {
         if (oldParams.hasNext()) {
-          Node oldParam = oldParams.next();
-          Node newParam = paramBuilder.newParameterFromNode(oldParam);
+          Parameter oldParam = oldParams.next();
+          Node newParam = paramBuilder.newParameterFrom(oldParam);
 
           oldParamsListHitOptArgs =
-              oldParamsListHitOptArgs || oldParam.isVarArgs() || oldParam.isOptionalArg();
+              oldParamsListHitOptArgs || oldParam.isVariadic() || oldParam.isOptional();
 
           // The subclass method might write its var_args as individual arguments.
           if (currentParam.getNext() != null && newParam.isVarArgs()) {
@@ -343,10 +345,10 @@ final class FunctionTypeBuilder {
       // Clone any remaining params that aren't in the function literal,
       // but make them optional.
       while (oldParams.hasNext()) {
-        paramBuilder.newOptionalParameterFromNode(oldParams.next());
+        paramBuilder.newOptionalParameterFrom(oldParams.next());
       }
 
-      parametersNode = paramBuilder.build();
+      parameters = paramBuilder.buildList();
     }
     return this;
   }
@@ -578,9 +580,13 @@ final class FunctionTypeBuilder {
     }
 
     // arguments
-    Node oldParameterType = null;
-    if (parametersNode != null) {
-      oldParameterType = parametersNode.getFirstChild();
+    final Iterator<Parameter> oldParameters;
+    Parameter oldParameterType = null;
+    if (parameters != null) {
+      oldParameters = parameters.iterator();
+      oldParameterType = oldParameters.hasNext() ? oldParameters.next() : null;
+    } else {
+      oldParameters = Collections.emptyIterator();
     }
 
     FunctionParamBuilder builder = new FunctionParamBuilder(typeRegistry);
@@ -633,8 +639,8 @@ final class FunctionTypeBuilder {
       } else if (oldParameterType != null &&
           oldParameterType.getJSType() != null) {
         parameterType = oldParameterType.getJSType();
-        isOptionalParam = oldParameterType.isOptionalArg();
-        isVarArgs = oldParameterType.isVarArgs();
+        isOptionalParam = oldParameterType.isOptional();
+        isVarArgs = oldParameterType.isVariadic();
       } else {
         parameterType = typeRegistry.getNativeType(UNKNOWN_TYPE);
       }
@@ -644,16 +650,14 @@ final class FunctionTypeBuilder {
           isOptionalParam,
           isVarArgs);
 
-      if (oldParameterType != null) {
-        oldParameterType = oldParameterType.getNext();
-      }
+      oldParameterType = oldParameters.hasNext() ? oldParameters.next() : null;
       paramIndex++;
     }
     // Copy over any old parameters that aren't in the param list.
     if (!isVarArgs) {
       while (oldParameterType != null && !isVarArgs) {
-        builder.newParameterFromNode(oldParameterType);
-        oldParameterType = oldParameterType.getNext();
+        builder.newParameterFrom(oldParameterType);
+        oldParameterType = oldParameters.hasNext() ? oldParameters.next() : null;
       }
     }
 
@@ -661,7 +665,7 @@ final class FunctionTypeBuilder {
       reportWarning(INEXISTENT_PARAM, inexistentName, formatFnName());
     }
 
-    parametersNode = builder.build();
+    parameters = builder.buildList();
     return this;
   }
 
@@ -690,18 +694,8 @@ final class FunctionTypeBuilder {
     return this;
   }
 
-  /** Infer constructor parameters from the superclass constructor. */
-  FunctionTypeBuilder inferConstructorParameters(FunctionType superCtor) {
-    inferImplicitConstructorParameters(superCtor.getParametersNode().cloneTree());
-
-    // Look for template parameters in superCtor that are missing from its instance type.
-    setConstructorTemplateTypeNames(superCtor.getConstructorOnlyTemplateParameters(), null);
-
-    return this;
-  }
-
-  FunctionTypeBuilder inferImplicitConstructorParameters(Node parametersNode) {
-    this.parametersNode = parametersNode;
+  FunctionTypeBuilder inferImplicitConstructorParameters(ImmutableList<Parameter> parameters) {
+    this.parameters = parameters;
     return this;
   }
 
@@ -938,7 +932,7 @@ final class FunctionTypeBuilder {
       checkNotNull(returnType);
     }
 
-    if (parametersNode == null) {
+    if (parameters == null) {
       throw new IllegalStateException(
           "All Function types must have params and a return type");
     }
@@ -953,7 +947,7 @@ final class FunctionTypeBuilder {
           FunctionType.builder(typeRegistry)
               .withName(fnName)
               .withSourceNode(contents.getSourceNode())
-              .withParamsNode(parametersNode)
+              .withParamsList(parameters)
               .withReturnType(returnType, returnTypeInferred)
               .withTypeOfThis(thisType)
               .withTemplateKeys(templateTypeNames)
@@ -1006,7 +1000,7 @@ final class FunctionTypeBuilder {
             .forConstructor()
             .withName(fnName)
             .withSourceNode(contents.getSourceNode())
-            .withParamsNode(parametersNode)
+            .withParamsList(parameters)
             .withReturnType(returnType)
             .withTemplateKeys(templateTypeNames)
             .withConstructorTemplateKeys(constructorTemplateTypeNames)

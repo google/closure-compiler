@@ -2585,13 +2585,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
     ObjectType fooProto = fooClass.getPrototype();
-    List<JSType> params = ImmutableList.copyOf(fooClass.getParameterTypes());
+    List<FunctionType.Parameter> params = fooClass.getParameters();
     Node ctorDef = getLabeledStatement("CTOR_BODY").statementNode.getAncestor(3);
 
     // Test class typing.
     assertThat(fooClass.isConstructor()).isTrue();
     assertThat(params).hasSize(1);
-    assertType(params.get(0)).isNumber();
+    assertType(params.get(0).getJSType()).isNumber();
 
     // Test constructor property.
     assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
@@ -2803,12 +2803,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     FunctionType fooClass = (FunctionType) findNameType("Foo", globalScope);
     ObjectType fooProto = fooClass.getPrototype();
-    List<JSType> params = ImmutableList.copyOf(fooClass.getParameterTypes());
+    List<FunctionType.Parameter> params = ImmutableList.copyOf(fooClass.getParameters());
 
     // Test class typing.
     assertThat(fooClass.isConstructor()).isTrue();
     assertThat(params).hasSize(1);
-    assertType(params.get(0)).isString();
+    assertType(params.get(0).getJSType()).isString();
 
     // Test constructor property.
     assertThat(fooProto.hasOwnProperty("constructor")).isTrue();
@@ -2845,9 +2845,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertType(fooCtor).withTypeOfProp("method").isNotUnknown();
     assertType(fooCtor).withTypeOfProp("method").isNotEmpty();
 
-    List<JSType> params = ImmutableList.copyOf(fooCtor.getParameterTypes());
+    List<FunctionType.Parameter> params = fooCtor.getParameters();
     assertThat(params).hasSize(1);
-    assertType(params.get(0)).isNumber();
+    assertType(params.get(0).getJSType()).isNumber();
     assertType(barConstructorProperty).toStringIsEqualTo("(typeof Bar)");
 
     Node fooCtorDef = NodeUtil.getEnclosingFunction(superInvocation);
@@ -2871,9 +2871,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
             "}",
             "class Foo extends class extends class extends Bar {} {} {}"));
     FunctionType foo = (FunctionType) (findNameType("Foo", globalScope));
-    List<JSType> params = ImmutableList.copyOf(foo.getParameterTypes());
+    List<FunctionType.Parameter> params = foo.getParameters();
     assertThat(params).hasSize(1);
-    assertType(params.get(0)).isString();
+    assertType(params.get(0).getJSType()).isString();
   }
 
   @Test

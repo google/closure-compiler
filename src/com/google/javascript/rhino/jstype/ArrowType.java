@@ -41,9 +41,16 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
+import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType.Parameter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /**
  * Models a "bare" function type: from some parameter types to a return type.
@@ -56,25 +63,27 @@ final class ArrowType extends JSType {
 
   private static final JSTypeClass TYPE_CLASS = JSTypeClass.ARROW;
 
-  final Node parameters;
+  // non-final for custom deserialization.
+  private transient ImmutableList<Parameter> parameterList;
   private JSType returnType;
 
   // Whether the return type is inferred.
   final boolean returnTypeInferred;
 
-  ArrowType(JSTypeRegistry registry, Node parameters, JSType returnType) {
-    this(registry, parameters, returnType, false);
-  }
-
-  ArrowType(JSTypeRegistry registry, Node parameters,
-      JSType returnType, boolean returnTypeInferred) {
+  ArrowType(
+      JSTypeRegistry registry,
+      @Nullable List<Parameter> parameters,
+      @Nullable JSType returnType,
+      boolean returnTypeInferred) {
     super(registry);
 
-    this.parameters = parameters == null ?
-        registry.createParametersWithVarArgs(getNativeType(UNKNOWN_TYPE)) :
-        parameters;
-    this.returnType = returnType == null ?
-        getNativeType(UNKNOWN_TYPE) : returnType;
+    this.parameterList =
+        parameters == null
+            ? ImmutableList.of(
+                new Parameter(
+                    getNativeType(UNKNOWN_TYPE), /* isOptional= */ false, /* isVariadic= */ true))
+            : ImmutableList.copyOf(parameters);
+    this.returnType = returnType == null ? getNativeType(UNKNOWN_TYPE) : returnType;
     this.returnTypeInferred = returnTypeInferred;
 
     registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
@@ -88,18 +97,18 @@ final class ArrowType extends JSType {
   @Override
   int recursionUnsafeHashCode() {
     int hashCode = Objects.hashCode(returnType);
-    if (parameters != null) {
-      Node param = parameters.getFirstChild();
-      while (param != null) {
-        hashCode = hashCode * 31 + Objects.hashCode(param.getJSType());
-        param = param.getNext();
-      }
+    for (Parameter param : parameterList) {
+      hashCode = hashCode * 31 + Objects.hashCode(param.getJSType());
     }
     return hashCode;
   }
 
   public JSType getReturnType() {
     return this.returnType;
+  }
+
+  ImmutableList<Parameter> getParameterList() {
+    return parameterList;
   }
 
   @Override
@@ -134,25 +143,21 @@ final class ArrowType extends JSType {
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
     returnType = safeResolve(returnType, reporter);
-    if (parameters != null) {
-      for (Node paramNode = parameters.getFirstChild();
-           paramNode != null; paramNode = paramNode.getNext()) {
-        paramNode.setJSType(paramNode.getJSType().resolve(reporter));
-      }
+    for (Parameter param : parameterList) {
+      param.setJSType(param.getJSType().resolve(reporter));
     }
+
     return this;
   }
 
   boolean hasUnknownParamsOrReturn() {
-    if (parameters != null) {
-      for (Node paramNode = parameters.getFirstChild();
-           paramNode != null; paramNode = paramNode.getNext()) {
-        JSType type = paramNode.getJSType();
-        if (type == null || type.isUnknownType()) {
-          return true;
-        }
+    for (Parameter param : parameterList) {
+      JSType type = param.getJSType();
+      if (type.isUnknownType()) {
+        return true;
       }
     }
+
     return returnType == null || returnType.isUnknownType();
   }
 
@@ -163,20 +168,32 @@ final class ArrowType extends JSType {
 
   @Override
   public boolean hasAnyTemplateTypesInternal() {
-    return returnType.hasAnyTemplateTypes()
-        || hasTemplatedParameterType();
+    return returnType.hasAnyTemplateTypes() || hasTemplatedParameterType();
   }
 
   private boolean hasTemplatedParameterType() {
-    if (parameters != null) {
-      for (Node paramNode = parameters.getFirstChild();
-           paramNode != null; paramNode = paramNode.getNext()) {
-        JSType type = paramNode.getJSType();
-        if (type != null && type.hasAnyTemplateTypes()) {
-          return true;
-        }
+    for (Parameter param : parameterList) {
+      JSType type = param.getJSType();
+      if (type.hasAnyTemplateTypes()) {
+        return true;
       }
     }
     return false;
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(ObjectOutputStream stream) throws IOException {
+    stream.defaultWriteObject();
+    // we ran into ClassCastExceptions trying to serialize ImmutableList, probably related to
+    // https://github.com/google/guava/issues/1554..
+    Parameter[] parameters = this.parameterList.toArray(new Parameter[0]);
+    stream.writeObject(parameters);
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+    stream.defaultReadObject();
+    Parameter[] parameters = (Parameter[]) stream.readObject();
+    this.parameterList = ImmutableList.copyOf(parameters);
   }
 }

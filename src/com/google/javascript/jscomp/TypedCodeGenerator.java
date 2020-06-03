@@ -20,9 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -34,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * A code generator that outputs type annotations for functions and
@@ -247,7 +246,7 @@ class TypedCodeGenerator extends CodeGenerator {
       StringBuilder sb, FunctionType funType, Node paramNode) {
     int minArity = funType.getMinArity();
     int maxArity = funType.getMaxArity();
-    List<JSType> formals = ImmutableList.copyOf(funType.getParameterTypes());
+    List<FunctionType.Parameter> formals = funType.getParameters();
     for (int i = 0; i < formals.size(); i++) {
       sb.append(" * ");
       appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArity, maxArity));
@@ -292,7 +291,7 @@ class TypedCodeGenerator extends CodeGenerator {
       StringBuilder sb, Collection<? extends JSType> typeParams) {
     if (!typeParams.isEmpty()) {
       sb.append(" * @template ");
-      Joiner.on(",").appendTo(sb, Iterables.transform(typeParams, var -> formatTypeVar(var)));
+      sb.append(typeParams.stream().map(this::formatTypeVar).collect(Collectors.joining(",")));
       sb.append("\n");
     }
   }
@@ -409,12 +408,13 @@ class TypedCodeGenerator extends CodeGenerator {
   }
 
   /** Creates a JSDoc-suitable String representation of the type of a parameter. */
-  private String getParameterJSDocType(List<JSType> types, int index, int minArgs, int maxArgs) {
-    JSType type = types.get(index);
+  private String getParameterJSDocType(
+      List<FunctionType.Parameter> parameters, int index, int minArgs, int maxArgs) {
+    JSType type = parameters.get(index).getJSType();
     if (index < minArgs) {
       return type.toAnnotationString(Nullability.EXPLICIT);
     }
-    boolean isRestArgument = maxArgs == Integer.MAX_VALUE && index == types.size() - 1;
+    boolean isRestArgument = maxArgs == Integer.MAX_VALUE && index == parameters.size() - 1;
     if (isRestArgument) {
       return "..." + restrictByUndefined(type).toAnnotationString(Nullability.EXPLICIT);
     }
