@@ -630,6 +630,7 @@ class TypeInference
         break;
 
       case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
         // TODO(b/151248857) Calculate appropriate type here
         n.setJSType(getNativeType(UNKNOWN_TYPE));
         break;
@@ -736,11 +737,6 @@ class TypeInference
       case IN:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(BOOLEAN_TYPE));
-        break;
-
-      case OPTCHAIN_GETELEM:
-        // TODO(b/151248857) Calculate appropriate type here
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
         break;
 
       case GETELEM:
