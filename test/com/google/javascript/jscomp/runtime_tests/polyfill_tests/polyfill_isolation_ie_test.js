@@ -83,4 +83,60 @@ testSuite({
     assertEquals(1, window['jscomp_Math_sign'](1));
     assertEquals(-1, Math.sign(1));
   },
+
+  /**
+   * Polyfill isolation does not support adding frozen objects to maps or sets,
+   * so test that attempting to add such an object throws.
+   */
+  testWeakMap_sealedKeys() {
+    if (!Object.seal) return;
+
+    const key1 = Object.seal({});
+    const key2 = Object.seal({});
+    const key3 = Object.freeze({});
+
+    const map = new window['jscomp_WeakMap']();
+    assertThrows(() => map.set(key1, 0));
+    assertThrows(() => map.set(key2, 0));
+    assertThrows(() => map.set(key3, 0));
+  },
+
+  testMap_sealedKeys() {
+    if (!Object.seal) return;
+
+    const key1 = Object.seal({});
+    const key2 = Object.seal({});
+    const key3 = Object.freeze({});
+
+    const map = new window['jscomp_Map']();
+    assertThrows(() => map.set(key1, 0));
+    assertThrows(() => map.set(key2, 0));
+    assertThrows(() => map.set(key3, 0));
+  },
+
+  testSet_add_sealedObjects() {
+    if (!Object.seal) return;
+
+    const key1 = Object.preventExtensions({});
+    const key2 = Object.seal({});
+    const key3 = Object.freeze({});
+
+    const set = new window['jscomp_Set']();
+    assertThrows(() => set.add(key1, 0));
+    assertThrows(() => set.add(key2, 0));
+    assertThrows(() => set.add(key3, 0));
+  },
+
+  testWeakSet_sealedKeys() {
+    if (!Object.seal) return;
+
+    const key1 = Object.preventExtensions({});
+    const key2 = Object.seal({});
+    const key3 = Object.freeze({});
+
+    const set = new window['jscomp_WeakSet']();
+    assertThrows(() => set.add(key1, 0));
+    assertThrows(() => set.add(key2, 0));
+    assertThrows(() => set.add(key3, 0));
+  },
 });

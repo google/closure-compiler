@@ -60,31 +60,6 @@ testSuite({
     assertFalse(set.has(key));
   },
 
-  testSealedKeys() {
-    if (!Object.seal) return;
-
-    const key1 = Object.preventExtensions({});
-    const key2 = Object.seal({});
-    const key3 = Object.freeze({});
-
-    const set = new WeakSet();
-    checkSetHas(set, key1);
-    checkSetHas(set, key2);
-    checkSetHas(set, key3);
-
-    assertTrue(set.has(key1));
-    assertTrue(set.has(key2));
-    assertTrue(set.has(key3));
-    assertTrue(set.delete(key1));
-    assertFalse(set.delete(key1));
-    assertTrue(set.delete(key2));
-    assertTrue(set.delete(key3));
-
-    assertFalse(set.has(key1));
-    assertFalse(set.has(key2));
-    assertFalse(set.has(key3));
-  },
-
   testKeyIdNotEnumerable() {
     if (IE8) return;
     const set = new WeakSet();

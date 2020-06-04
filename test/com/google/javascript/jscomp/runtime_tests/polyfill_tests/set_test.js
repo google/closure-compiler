@@ -89,26 +89,6 @@ testSuite({
     assertFalse(set.has(NaN));
   },
 
-  testAdd_sealedObjects() {
-    // NOTE: IE8 doesn't support Object.seal.
-    if (userAgent.IE && !userAgent.isVersionOrHigher(9)) return;
-    const key1 = Object.preventExtensions({});
-    const key2 = Object.seal({});
-    const key3 = Object.freeze({});
-
-    const set = new Set();
-    checkAddHas(set, key1);
-    checkAddHas(set, key2);
-    checkAddHas(set, key3);
-
-    assertEquals(3, set.size);
-    assertTrue(set.delete(key1));
-    assertFalse(set.delete(key1));
-    assertTrue(set.delete(key2));
-    assertTrue(set.delete(key3));
-    assertEquals(0, set.size);
-  },
-
   testKeyIdNotEnumerable() {
     // NOTE: IE8 doesn't support non-enumerable properties.
     if (userAgent.IE && !userAgent.isVersionOrHigher(9)) return;

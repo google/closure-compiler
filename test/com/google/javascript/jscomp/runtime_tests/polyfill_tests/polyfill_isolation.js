@@ -48,6 +48,9 @@ function addJSCompPolyfillsToWindow() {
   window['jscomp_Promise'] = Promise;
   window['jscomp_Symbol'] = Symbol;
   window['jscomp_Map'] = Map;
+  window['jscomp_Set'] = Set;
+  window['jscomp_WeakMap'] = WeakMap;
+  window['jscomp_WeakSet'] = WeakSet;
 
   window['jscomp_Math_sign'] = Math.sign;
   window['jscomp_Symbol_iterator'] = Symbol.iterator;

@@ -17,6 +17,7 @@
 'require es6/conformance';
 'require es6/util/makeiterator';
 'require util/defineproperty';
+'require util/defines';
 'require util/owns';
 'require util/polyfill';
 
@@ -89,13 +90,21 @@ $jscomp.polyfill('WeakMap',
    * @param {string} name
    */
   function patch(name) {
+    if ($jscomp.ISOLATE_POLYFILLS) {
+      // Monkey-patching Object.freeze and friends can cause bad interactions
+      // with third-party code. This means that polyfill isolation does not
+      // support inserting frozen objects as keys into a WeakMap.
+      return;
+    }
     var prev = Object[name];
     if (prev) {
       Object[name] = function(target) {
         if (target instanceof WeakMapMembership) {
           return target;
         } else {
-          insert(target);
+          if (Object.isExtensible(target)) {
+            insert(target);
+          }
           return prev(target);
         }
       };

@@ -36,7 +36,7 @@ function checkSetGet(map, key, value) {
 }
 
 /**
- * Feeze an object recursively
+ * Freeze an object recursively
  *
  * @param {?} o
  * @return {?}
@@ -83,31 +83,6 @@ testSuite({
     assertFalse(map.delete({}));
     assertFalse(map.has(key));
     assertUndefined(map.get(key));
-  },
-
-  testSealedKeys() {
-    if (!Object.seal) return;
-
-    const key1 = Object.seal({});
-    const key2 = Object.seal({});
-    const key3 = Object.freeze({});
-
-    const map = new WeakMap();
-    checkSetGet(map, key1, 'a');
-    checkSetGet(map, key2, 'b');
-    checkSetGet(map, key3, 'c');
-
-    assertEquals('a', map.get(key1));
-    assertEquals('b', map.get(key2));
-    assertEquals('c', map.get(key3));
-    assertTrue(map.delete(key1));
-    assertFalse(map.delete(key1));
-    assertTrue(map.delete(key2));
-    assertTrue(map.delete(key3));
-
-    assertFalse(map.has(key1));
-    assertFalse(map.has(key2));
-    assertFalse(map.has(key3));
   },
 
   testKeyIdNotEnumerable() {
