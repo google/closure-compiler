@@ -19,7 +19,6 @@
  * @suppress {uselessCode}
  */
 'require base';
-'require es6/promise/promise';
 'require es6/generator_engine';
 
 /**

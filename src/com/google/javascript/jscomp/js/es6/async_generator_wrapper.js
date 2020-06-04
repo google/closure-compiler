@@ -19,8 +19,6 @@
  * @suppress {uselessCode}
  */
 'require base';
-'require es6/promise/promise';
-'require es6/symbol';
 'require es6/util/makeasynciterator';
 
 

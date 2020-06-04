@@ -15,7 +15,6 @@
  */
 
 'require base';
-'require es6/symbol';
 'require es6/util/setprototypeof';
 'require es6/util/makeiterator';
 
