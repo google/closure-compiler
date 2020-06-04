@@ -768,6 +768,11 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = [Array.of, 'a', 'b', 'c']");
   }
 
+  @Test
+  public void testFoldArrayBug() {
+    foldSame("Array[123]()");
+  }
+
   private void foldSame(String js) {
     testSame(js);
   }

@@ -95,7 +95,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
   private Node tryFoldKnownArrayMethods(Node subtree, Node callTarget) {
     checkArgument(subtree.isCall());
 
-    if (!callTarget.getFirstChild().getNext().getString().equals("of")) {
+    Node targetMethod = callTarget.getFirstChild().getNext();
+    // Method node might not be a string if callTarget is a GETELEM.
+    // e.g. Array[something]()
+    if (!targetMethod.isString() || !targetMethod.getString().equals("of")) {
       return subtree;
     }
 
