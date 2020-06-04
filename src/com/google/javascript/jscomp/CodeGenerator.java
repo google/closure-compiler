@@ -1610,7 +1610,7 @@ public class CodeGenerator {
     if (isSimpleNumber(s)) {
       try {
         long l = Long.parseLong(s);
-        if (l < NodeUtil.MAX_POSITIVE_INTEGER_NUMBER) {
+        if (l <= NodeUtil.MAX_POSITIVE_INTEGER_NUMBER) {
           return l;
         }
       } catch (NumberFormatException e) {

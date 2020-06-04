@@ -66,7 +66,8 @@ import javax.annotation.Nullable;
  */
 public final class NodeUtil {
 
-  static final long MAX_POSITIVE_INTEGER_NUMBER = 1L << 53;
+  // Value of JavaScript's Number.MAX_SAFE_INTEGER
+  static final long MAX_POSITIVE_INTEGER_NUMBER = (1L << 53) - 1;
 
   static final String JSC_PROPERTY_NAME_FN = "JSCompiler_renameProperty";
 
