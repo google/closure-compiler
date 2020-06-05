@@ -78,6 +78,8 @@ public class Node implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private enum Prop {
+    // Is this Node within parentheses
+    IS_PARENTHESIZED,
     // Contains non-JSDoc comment
     NON_JSDOC_COMMENT,
     // Contains a JSDocInfo object
@@ -229,6 +231,17 @@ public class Node implements Serializable {
   public final Node setNonJSDocComment(NonJSDocComment comment) {
     putProp(Prop.NON_JSDOC_COMMENT, comment);
     return this;
+  }
+
+  /** Sets whether this node is inside parentheses. */
+  public final void setIsParenthesized(boolean b) {
+    checkState(IR.mayBeExpression(this));
+    putBooleanProp(Prop.IS_PARENTHESIZED, b);
+  }
+
+  /** Check whether node was inside parentheses. */
+  public final boolean getIsParenthesized() {
+    return getBooleanProp(Prop.IS_PARENTHESIZED);
   }
 
   // TODO(sdh): Get rid of these by using accessor methods instead.

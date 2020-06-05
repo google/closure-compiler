@@ -1237,6 +1237,45 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testNodeInsideParens_simpleString() {
+    Node exprRes = parse("('a')").getFirstChild();
+    Node str = exprRes.getFirstChild();
+
+    assertNode(exprRes).hasType(Token.EXPR_RESULT);
+    assertNode(str).hasType(Token.STRING);
+    assertThat(str.getIsParenthesized()).isTrue();
+  }
+
+  @Test
+  public void testNodesInsideParens() {
+    Node andExprRes = parse("((x&&y) && z)").getFirstChild();
+    assertNode(andExprRes).hasType(Token.EXPR_RESULT);
+
+    //  The expression `((x&&y) && z)` is marked as parenthesized
+    Node andNode = andExprRes.getFirstChild();
+    assertNode(andNode).hasType(Token.AND);
+    assertThat(andNode.getIsParenthesized()).isTrue();
+
+    // The expression `(x&&y)` is marked as parenthesized
+    // These parens are still recorded despite not affecting the structure of the parent expression.
+    Node xAndy = andNode.getFirstChild();
+    assertNode(xAndy).hasType(Token.AND);
+    assertThat(xAndy.getIsParenthesized()).isTrue();
+
+    // inner nodes `x` and `y` of a `(x&&y)` aren't marked as parenthesized
+    Node x = xAndy.getFirstChild();
+    Node y = xAndy.getSecondChild();
+    assertNode(x).hasType(Token.NAME);
+    assertNode(y).hasType(Token.NAME);
+    assertThat(x.getIsParenthesized()).isFalse();
+    assertThat(y.getIsParenthesized()).isFalse();
+
+    Node z = andNode.getSecondChild();
+    assertNode(z).hasType(Token.NAME);
+    assertThat(z.getIsParenthesized()).isFalse();
+  }
+
+  @Test
   public void testInlineNonJSDocCommentAttachmentToVar() {
     isIdeMode = true;
     parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;

@@ -2190,7 +2190,9 @@ class IRFactory {
 
     Node processParenthesizedExpression(ParenExpressionTree exprNode) {
       checkParenthesizedExpression(exprNode);
-      return transform(exprNode.expression);
+      Node expr = transform(exprNode.expression);
+      expr.setIsParenthesized(true);
+      return expr;
     }
 
     Node processPropertyGet(MemberExpressionTree getNode) {
