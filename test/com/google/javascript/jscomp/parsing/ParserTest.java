@@ -3925,6 +3925,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testBigIntLiteralInCall() {
+    mode = LanguageMode.UNSUPPORTED;
+    parse("alert(1n)");
+  }
+
+  @Test
   public void testBinaryLiterals() {
     expectFeatures(Feature.BINARY_LITERALS);
     mode = LanguageMode.ECMASCRIPT3;

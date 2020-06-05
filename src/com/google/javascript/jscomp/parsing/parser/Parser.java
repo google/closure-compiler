@@ -2941,6 +2941,7 @@ public class Parser {
       case NEW:
       case NULL:
       case NUMBER:
+      case BIGINT:
       case OPEN_CURLY:
       case OPEN_PAREN:
       case OPEN_SQUARE:
