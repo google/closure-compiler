@@ -279,6 +279,50 @@ public final class CheckConformanceTest extends CompilerTestCase {
   }
 
   @Test
+  public void testViolationWhitelistedIgnoresRegex() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  whitelist: 'file.js'\n "
+            + "}";
+
+    testNoWarning(ImmutableList.of(SourceFile.fromCode("test/google3/file.js", "eval()")));
+    testNoWarning(ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(
+        ImmutableList.of(SourceFile.fromCode("google3/blaze-out/k8-opt/bin/file.js", "eval()")));
+    testNoWarning(ImmutableList.of(SourceFile.fromCode("bazel-out/k8-opt/bin/file.js", "eval()")));
+  }
+
+  @Test
+  public void testViolationWhitelistedIgnoresRegex_absolutePath() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  whitelist: '/file.js'\n "
+            + "}";
+
+    testNoWarning(ImmutableList.of(SourceFile.fromCode("/file.js", "eval()")));
+  }
+
+  @Test
+  public void testViolationWhitelistedIgnoresRegex_genfiles() {
+    configuration =
+        "requirement: {\n"
+            + "  type: BANNED_NAME\n"
+            + "  value: 'eval'\n"
+            + "  error_message: 'eval is not allowed'\n"
+            + "  whitelist: 'genfiles/file.js'\n "
+            + "}";
+
+    testNoWarning(
+        ImmutableList.of(SourceFile.fromCode("blaze-out/k8-opt/genfiles/file.js", "eval()")));
+  }
+
+  @Test
   public void testFileOnOnlyApplyToIsChecked() {
     configuration =
         "requirement: {\n" +
