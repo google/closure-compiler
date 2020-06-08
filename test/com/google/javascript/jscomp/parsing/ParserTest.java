@@ -2476,6 +2476,22 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "Cannot use keyword in short object literal");
   }
 
+  @Test
+  public void testBigIntAsObjectLiteralPropertyName() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node objectLit =
+        parse("({1n() {}, 1n: 0})") // SCRIPT
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // OBJECTLIT
+    assertNode(objectLit).hasType(Token.OBJECTLIT);
+    Node computedProp = objectLit.getFirstChild();
+    assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    Node bigint = computedProp.getFirstChild();
+    assertNode(bigint).hasType(Token.BIGINT);
+    Node stringKey = objectLit.getLastChild();
+    assertNode(stringKey).hasType(Token.STRING_KEY);
+  }
+
   private void testMethodInObjectLiteral(String js) {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
@@ -2544,7 +2560,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testComputedMethodClass() {
-    mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     expectFeatures(Feature.CLASSES, Feature.COMPUTED_PROPERTIES);
     parse("class X { [prop + '_']() {} }");
@@ -2561,10 +2576,59 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("class X { *'abc'() {} }");
     parse("class X { *123() {} }");
 
-    mode = LanguageMode.ECMASCRIPT8;
     parse("class X { async [prop + '_']() {} }");
     parse("class X { async 'abc'() {} }");
     parse("class X { async 123() {} }");
+  }
+
+  @Test
+  public void testBigIntComputedMethodClass() {
+    mode = LanguageMode.UNSUPPORTED;
+    expectFeatures(Feature.CLASSES, Feature.COMPUTED_PROPERTIES);
+    Node classMembers;
+    Node computedProp;
+    Node bigint;
+    BigInteger bigintValue = new BigInteger("123");
+    classMembers =
+        parse("class X { 123n() {} }") // SCRIPT
+            .getOnlyChild() // CLASS
+            .getLastChild(); // CLASS_MEMBERS
+    assertNode(classMembers).hasType(Token.CLASS_MEMBERS);
+    computedProp = classMembers.getOnlyChild();
+    assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    bigint = computedProp.getFirstChild();
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).isBigInt(bigintValue);
+    classMembers =
+        parse("class X { static 123n() {} }") // SCRIPT
+            .getOnlyChild() // CLASS
+            .getLastChild(); // CLASS_MEMBERS
+    assertNode(classMembers).hasType(Token.CLASS_MEMBERS);
+    computedProp = classMembers.getOnlyChild();
+    assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    bigint = computedProp.getFirstChild();
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).isBigInt(bigintValue);
+    classMembers =
+        parse("class X { *123n() {} }") // SCRIPT
+            .getOnlyChild() // CLASS
+            .getLastChild(); // CLASS_MEMBERS
+    assertNode(classMembers).hasType(Token.CLASS_MEMBERS);
+    computedProp = classMembers.getOnlyChild();
+    assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    bigint = computedProp.getFirstChild();
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).isBigInt(bigintValue);
+    classMembers =
+        parse("class X { async 123n() {} }") // SCRIPT
+            .getOnlyChild() // CLASS
+            .getLastChild(); // CLASS_MEMBERS
+    assertNode(classMembers).hasType(Token.CLASS_MEMBERS);
+    computedProp = classMembers.getOnlyChild();
+    assertNode(computedProp).hasType(Token.COMPUTED_PROP);
+    bigint = computedProp.getFirstChild();
+    assertNode(bigint).hasType(Token.BIGINT);
+    assertNode(bigint).isBigInt(bigintValue);
   }
 
   @Test

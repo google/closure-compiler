@@ -904,8 +904,14 @@ class IRFactory {
   }
 
   Node transformNumberAsString(LiteralToken token) {
-    double value = normalizeNumber(token);
-    Node irNode = newStringNode(DToA.numberToString(value));
+    Node irNode;
+    if (token.type == TokenType.BIGINT) {
+      BigInteger value = normalizeBigInt(token);
+      irNode = newStringNode(value.toString());
+    } else { // must be NUMBER
+      double value = normalizeNumber(token);
+      irNode = newStringNode(DToA.numberToString(value));
+    }
     JSDocInfo jsDocInfo = handleJsDoc(token);
     if (jsDocInfo != null) {
       irNode.setJSDocInfo(jsDocInfo);
@@ -1104,7 +1110,7 @@ class IRFactory {
         return createMissingExpressionNode();
       } else if (token.type == TokenType.IDENTIFIER) {
         ret = processName(token.asIdentifier(), true);
-      } else if (token.type == TokenType.NUMBER) {
+      } else if (token.type == TokenType.NUMBER || token.type == TokenType.BIGINT) {
         ret = transformNumberAsString(token.asLiteral());
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       } else {

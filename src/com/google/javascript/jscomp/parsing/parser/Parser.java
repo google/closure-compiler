@@ -831,6 +831,7 @@ public class Parser {
 
         case IDENTIFIER:
         case NUMBER:
+        case BIGINT:
         case STAR:
         case STATIC:
         case STRING:
@@ -2600,12 +2601,13 @@ public class Parser {
   private boolean peekPropertyName(int tokenIndex) {
     TokenType type = peekType(tokenIndex);
     switch (type) {
-    case IDENTIFIER:
-    case STRING:
-    case NUMBER:
-      return true;
-    default:
-      return Keywords.isKeyword(type);
+      case IDENTIFIER:
+      case STRING:
+      case NUMBER:
+      case BIGINT:
+        return true;
+      default:
+        return Keywords.isKeyword(type);
     }
   }
 
@@ -2621,6 +2623,7 @@ public class Parser {
       return new ObjectSpreadTree(getTreeLocation(start), operand);
     } else if (type == TokenType.STRING
         || type == TokenType.NUMBER
+        || type == TokenType.BIGINT
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       if (peekGetAccessor()) {
@@ -4300,6 +4303,7 @@ public class Parser {
     switch (token.type) {
       case STRING:
       case NUMBER:
+      case BIGINT:
         return nextToken();
       case IDENTIFIER:
       default:
