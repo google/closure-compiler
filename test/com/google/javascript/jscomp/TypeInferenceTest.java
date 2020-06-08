@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
@@ -689,6 +690,27 @@ public final class TypeInferenceTest {
 
     verify("out1", startType);
     verify("out2", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testAssertBigInt_narrowsFromUnknownType() {
+    assuming("x", UNKNOWN_TYPE);
+
+    inFunction("x = 1n;");
+
+    verify("x", BIGINT_TYPE);
+  }
+
+  @Test
+  public void testAssertBigInt_narrowsAllTypeToBigInt() {
+    JSType startType = createNullableType(ALL_TYPE);
+    includePrimitiveAssertionFn("assertBigInt", getNativeType(BIGINT_TYPE));
+    assuming("x", startType);
+
+    inFunction("out1 = x; assertBigInt(x); out2 = x;");
+
+    verify("out1", startType);
+    verify("out2", BIGINT_TYPE);
   }
 
   @Test

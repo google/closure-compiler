@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.TypeCheck.MULTIPLE_VAR_DEF;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.DATE_FUNCTION_TYPE;
@@ -987,6 +988,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
         case NUMBER:
           n.setJSType(getNativeType(NUMBER_TYPE));
+          break;
+
+        case BIGINT:
+          n.setJSType(getNativeType(BIGINT_TYPE));
           break;
 
         case TRUE:

@@ -302,6 +302,7 @@ public enum Token {
       case NAME:
       case NULL:
       case NUMBER:
+      case BIGINT:
       case STRING:
       case TEMPLATELIT_STRING:
       case THIS:

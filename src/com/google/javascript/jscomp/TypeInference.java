@@ -867,6 +867,7 @@ class TypeInference
       case FALSE:
       case STRING:
       case NUMBER:
+      case BIGINT:
       case NULL:
       case REGEXP:
       case TEMPLATELIT_STRING:

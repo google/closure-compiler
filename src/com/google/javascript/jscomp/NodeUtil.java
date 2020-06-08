@@ -49,6 +49,7 @@ import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -124,6 +125,9 @@ public final class NodeUtil {
 
       case NUMBER:
         return TernaryValue.forBoolean(n.getDouble() != 0);
+
+      case BIGINT:
+        return TernaryValue.forBoolean(!n.getBigInt().equals(BigInteger.ZERO));
 
       case NOT:
         return getBooleanValue(n.getLastChild()).not();
@@ -228,6 +232,9 @@ public final class NodeUtil {
       case NUMBER:
         return DToA.numberToString(n.getDouble());
 
+      case BIGINT:
+        return n.getBigInt() + "n";
+
       case FALSE:
         return "false";
 
@@ -308,6 +315,13 @@ public final class NodeUtil {
 
       case NUMBER:
         return n.getDouble();
+
+      case BIGINT:
+        // When this call returns non-null, it is an assertion that JavaScript automatic conversion
+        // to Number (e.g. during arithmetic operations) would produce the value returned here.
+        // The spec does not allow automatic conversion from BigInt to Number, since that would
+        // likely result in incorrect computation results.
+        return null;
 
       case VOID:
         return Double.NaN;
@@ -562,6 +576,7 @@ public final class NodeUtil {
     switch (n.getToken()) {
       case STRING:
       case NUMBER:
+      case BIGINT:
       case NULL:
       case TRUE:
       case FALSE:
@@ -1246,6 +1261,7 @@ public final class NodeUtil {
       case NAME:
       case NULL:
       case NUMBER:
+      case BIGINT:
       case OBJECTLIT:
       case OBJECT_PATTERN:
       case REGEXP:
@@ -1337,6 +1353,7 @@ public final class NodeUtil {
     NULL,
     VOID,
     NUMBER,
+    BIGINT,
     STRING,
     BOOLEAN,
     OBJECT
@@ -1444,6 +1461,9 @@ public final class NodeUtil {
       case NEG:
       case NUMBER:
         return ValueType.NUMBER;
+
+      case BIGINT:
+        return ValueType.BIGINT;
 
       // Primitives
       case TRUE:
@@ -1558,6 +1578,7 @@ public final class NodeUtil {
       case BOOLEAN:
       case NULL:
       case NUMBER:
+      case BIGINT:
       case VOID:
         return false;
       case OBJECT:
@@ -1578,6 +1599,7 @@ public final class NodeUtil {
       case BOOLEAN:
       case NULL:
       case NUMBER:
+      case BIGINT:
       case STRING:
       case VOID:
         return false;
@@ -4813,6 +4835,7 @@ public final class NodeUtil {
       case TEMPLATELIT:
       case STRING:
       case NUMBER:
+      case BIGINT:
       case NULL:
       case TRUE:
       case FALSE:

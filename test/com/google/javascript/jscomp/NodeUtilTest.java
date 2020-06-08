@@ -238,6 +238,7 @@ public final class NodeUtilTest {
             // truly literal, side-effect free values are always known
             {"true", TernaryValue.TRUE},
             {"10", TernaryValue.TRUE},
+            {"1n", TernaryValue.TRUE},
             {"'0'", TernaryValue.TRUE},
             {"/a/", TernaryValue.TRUE},
             {"{}", TernaryValue.TRUE},
@@ -245,6 +246,7 @@ public final class NodeUtilTest {
             {"false", TernaryValue.FALSE},
             {"null", TernaryValue.FALSE},
             {"0", TernaryValue.FALSE},
+            {"0n", TernaryValue.FALSE},
             {"''", TernaryValue.FALSE},
             {"undefined", TernaryValue.FALSE},
 
@@ -495,6 +497,7 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getStringValue(parseExpr("false"))).isEqualTo("false");
       assertThat(NodeUtil.getStringValue(parseExpr("null"))).isEqualTo("null");
       assertThat(NodeUtil.getStringValue(parseExpr("0"))).isEqualTo("0");
+      assertThat(NodeUtil.getStringValue(parseExpr("1n"))).isEqualTo("1n");
       assertThat(NodeUtil.getStringValue(parseExpr("''"))).isEmpty();
       assertThat(NodeUtil.getStringValue(parseExpr("undefined"))).isEqualTo("undefined");
       assertThat(NodeUtil.getStringValue(parseExpr("void 0"))).isEqualTo("undefined");
@@ -534,6 +537,7 @@ public final class NodeUtilTest {
       assertMayBeObjectLitKey(parseExpr("a"), false);
       assertMayBeObjectLitKey(parseExpr("'a'"), false);
       assertMayBeObjectLitKey(parseExpr("1"), false);
+      assertMayBeObjectLitKey(parseExpr("1n"), false);
       assertMayBeObjectLitKey(parseExpr("({a: 1})").getFirstChild(), true);
       assertMayBeObjectLitKey(parseExpr("({1: 1})").getFirstChild(), true);
       assertMayBeObjectLitKey(parseExpr("({get a(){}})").getFirstChild(), true);
@@ -1676,6 +1680,7 @@ public final class NodeUtilTest {
 
       // Literals
       assertThat(NodeUtil.getNumberValue(parseExpr("1"))).isEqualTo(1.0);
+      assertThat(NodeUtil.getNumberValue(parseExpr("1n"))).isEqualTo(null);
       // "-1" is parsed as a literal
       assertThat(NodeUtil.getNumberValue(parseExpr("-1"))).isEqualTo(-1.0);
       // "+1" is parse as an op + literal
@@ -1823,6 +1828,7 @@ public final class NodeUtilTest {
     @Test
     public void testMayBeString() {
       assertThat(NodeUtil.mayBeString(parseExpr("1"))).isFalse();
+      assertThat(NodeUtil.mayBeString(parseExpr("1n"))).isFalse();
       assertThat(NodeUtil.mayBeString(parseExpr("true"))).isFalse();
       assertThat(NodeUtil.mayBeString(parseExpr("+true"))).isFalse();
       assertThat(NodeUtil.mayBeString(parseExpr("+1"))).isFalse();

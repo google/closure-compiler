@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
@@ -607,6 +608,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case NUMBER:
         ensureTyped(n, NUMBER_TYPE);
+        break;
+
+      case BIGINT:
+        ensureTyped(n, BIGINT_TYPE);
         break;
 
       case GETTER_DEF:

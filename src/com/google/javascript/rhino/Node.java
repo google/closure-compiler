@@ -387,6 +387,11 @@ public class Node implements Serializable {
     }
 
     private BigInteger bigint;
+
+    @Override
+    public BigIntNode cloneNode(boolean cloneTypeExprs) {
+      return copyNodeFields(new BigIntNode(bigint), cloneTypeExprs);
+    }
   }
 
   private static final class StringNode extends Node {

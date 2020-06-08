@@ -148,10 +148,12 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
   }
 
   private enum NodeValue {
-    NULL_OR_UNDEFINED,
-    NON_NULL,
-    NUMBER,
     UNKNOWN,
+    NULL_OR_UNDEFINED,
+    // JavaScript number. Needs special treatment to preserve Object.is semantics.
+    NUMBER,
+    // Non-null and also known to be not a number.
+    NON_NULL,
   }
 
   private static NodeValue getKnownLiteralValue(Node n) {
@@ -164,6 +166,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
       case STRING:
       case BOOLEAN:
       case OBJECT:
+      case BIGINT:
         return NodeValue.NON_NULL;
 
       case NUMBER:

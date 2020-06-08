@@ -104,6 +104,8 @@ final class JsdocUtil {
         return getConstJSDoc(oldJSDoc, "boolean");
       case NUMBER:
         return getConstJSDoc(oldJSDoc, "number");
+      case BIGINT:
+        return getConstJSDoc(oldJSDoc, "bigint");
       case STRING:
         return getConstJSDoc(oldJSDoc, "string");
       case NULL:

@@ -35,6 +35,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.JSTypeResolver;
+import java.math.BigInteger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -400,6 +401,17 @@ public final class AstValidatorTest extends CompilerTestCase {
     enableTypeInfoValidation = false;
 
     Node n = IR.number(1);
+    expectInvalid(n, Check.STATEMENT);
+    n = IR.exprResult(n);
+    expectValid(n, Check.STATEMENT);
+  }
+
+  @Test
+  public void testInvalidBigIntStatement() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
+    Node n = IR.bigint(BigInteger.ONE);
     expectInvalid(n, Check.STATEMENT);
     n = IR.exprResult(n);
     expectValid(n, Check.STATEMENT);

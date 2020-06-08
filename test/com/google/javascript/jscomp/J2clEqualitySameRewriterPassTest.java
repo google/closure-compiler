@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +35,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     useTypes = false;
     enableTypeCheck();
   }
@@ -67,6 +69,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(a, 'ABC');",
             "var b = {}",
             "Equality.$same(b, 5);",
+            "Equality.$same(b, 5n)",
             "Equality.$same(b, []);",
             "Equality.$same(b, !a);",
             "Equality.$same(b, null);",
@@ -85,6 +88,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "a === 'ABC';",
             "var b = {};",
             "b === 5;",
+            "b === 5n;",
             "b === [];",
             "b === !a;",
             "b == null;",
@@ -108,7 +112,11 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "var c = 5;",
             "Equality.$same(c, null);",
             "Equality.$same(null, c);",
-            "Equality.$same(c, undefined);"),
+            "Equality.$same(c, undefined);",
+            "var d = 5n;",
+            "Equality.$same(d, null);",
+            "Equality.$same(null, d);",
+            "Equality.$same(d, undefined);"),
         lines(
             "var b = {};",
             "!b",
@@ -121,7 +129,11 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "var c = 5;",
             "c == null;", // Note that the semantics are preserved for number.
             "c == null;",
-            "c == undefined;"));
+            "c == undefined;",
+            "var d = 5n;",
+            "d == null;",
+            "d == null;",
+            "d == undefined;"));
   }
 
   @Test
@@ -131,12 +143,17 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(c, d);",
             "/** @type {number} */",
             "var num = 5",
+            "/** @type {bigint} */",
+            "var bigint = 5n",
             "/** @type {string} */",
             "var str = 'ABC';",
             "/** @type {*} */",
             "var allType = null;",
             "Equality.$same(num, str);",
+            "Equality.$same(num, bigint);",
             "Equality.$same(num, allType);",
+            "Equality.$same(bigint, str);",
+            "Equality.$same(bigint, allType);",
             "Equality.$same(str, allType);",
             "function hasSideEffects(){};",
             // Note that the first parameter has value 'undefined' but it has side effects.
@@ -158,6 +175,11 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "/** @type {string|undefined} */",
             "var str2 = 'abc';",
             "Equality.$same(str1, str2);",
+            "/** @type {bigint} */",
+            "var bigint1 = 0n;",
+            "/** @type {bigint|undefined} */",
+            "var bigint2 = 5n;",
+            "Equality.$same(bigint1, bigint2);",
             "/** @type {!Object} */",
             "var obj1 = {};",
             "/** @type {Object} */",
@@ -165,6 +187,7 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "Equality.$same(obj1, obj2);",
             "Equality.$same(obj1, str2);",
             "Equality.$same(obj1, num2);",
+            "Equality.$same(obj1, bigint2);",
             "/** @type {number} */",
             "var num3 = 5;",
             "Equality.$same(num3, 0);",

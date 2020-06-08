@@ -72,7 +72,9 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   @Test
   public void testSimpleConstJsdocPropagation() {
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
+    test("/** @const */ var x = 5n;", "/** @const {bigint} */ var x;");
     test("/** @const */ var x = true;", "/** @const {boolean} */ var x;");
     test("/** @const */ var x = 'str';", "/** @const {string} */ var x;");
     test("/** @const */ var x = `str`;", "/** @const {string} */ var x;");

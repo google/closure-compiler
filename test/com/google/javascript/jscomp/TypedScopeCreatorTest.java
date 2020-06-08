@@ -4246,12 +4246,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testLiteralTypesInferred() {
-    testSame("null + true + false + 0 + '' + {}");
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
+    testSame("null + true + false + 0 + '' + 0n + {}");
     assertThat(findTokenType(Token.NULL, globalScope).toString()).isEqualTo("null");
     assertThat(findTokenType(Token.TRUE, globalScope).toString()).isEqualTo("boolean");
     assertThat(findTokenType(Token.FALSE, globalScope).toString()).isEqualTo("boolean");
     assertThat(findTokenType(Token.NUMBER, globalScope).toString()).isEqualTo("number");
     assertThat(findTokenType(Token.STRING, globalScope).toString()).isEqualTo("string");
+    assertThat(findTokenType(Token.BIGINT, globalScope).toString()).isEqualTo("bigint");
     assertThat(findTokenType(Token.OBJECTLIT, globalScope).toString()).isEqualTo("{}");
   }
 

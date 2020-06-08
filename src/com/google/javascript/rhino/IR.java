@@ -41,6 +41,7 @@ package com.google.javascript.rhino;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -728,6 +729,10 @@ public class IR {
     return Node.newNumber(d);
   }
 
+  public static Node bigint(BigInteger b) {
+    return Node.newBigInt(b);
+  }
+
   public static Node thisNode() {
     return new Node(Token.THIS);
   }
@@ -853,6 +858,7 @@ public class IR {
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case AWAIT:
+      case BIGINT:
       case BITAND:
       case BITOR:
       case BITNOT:
