@@ -633,6 +633,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case OPTCHAIN_GETPROP:
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
         // TODO(b/151248857) Calculate appropriate type here
         ensureTyped(n);
         break;
@@ -643,11 +645,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // If that unknown leaks elsewhere (say by an assignment to another
         // variable), then it will be counted.
         typeable = false;
-        break;
-
-      case OPTCHAIN_GETELEM:
-        // TODO(b/151248857) Calculate appropriate type here
-        ensureTyped(n);
         break;
 
       case VAR:
@@ -664,11 +661,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case CALL:
         visitCall(t, n);
         typeable = !parent.isExprResult();
-        break;
-
-      case OPTCHAIN_CALL:
-        // TODO(b/151248857) Calculate appropriate type here
-        ensureTyped(n);
         break;
 
       case RETURN:
