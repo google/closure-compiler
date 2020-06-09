@@ -185,7 +185,7 @@ final class EqualityChecker {
     boolean rightUnknown = right.isUnknownType();
     if (leftUnknown || rightUnknown) {
       if (this.eqMethod == EqMethod.DATA_FLOW) {
-        // If we're checking data flow, then two types are the same if they're
+        // If we're checkings data flow, then two types are the same if they're
         // both unknown.
         return leftUnknown && rightUnknown;
       } else if (leftUnknown && rightUnknown && (left.isNominalType() ^ right.isNominalType())) {
@@ -198,6 +198,16 @@ final class EqualityChecker {
 
     if (left.isUnionType() && right.isUnionType()) {
       return this.areUnionEqual(left.toMaybeUnionType(), right.toMaybeUnionType());
+    } else if (left.isUnionType()) {
+      ImmutableList<JSType> leftAlts = left.toMaybeUnionType().getAlternates();
+      if (leftAlts.size() == 1) {
+        return this.areEqualInternal(leftAlts.get(0), right);
+      }
+    } else if (right.isUnionType()) {
+      ImmutableList<JSType> rightAlts = right.toMaybeUnionType().getAlternates();
+      if (rightAlts.size() == 1) {
+        return this.areEqualInternal(left, rightAlts.get(0));
+      }
     }
 
     if (left.isFunctionType() && right.isFunctionType()) {

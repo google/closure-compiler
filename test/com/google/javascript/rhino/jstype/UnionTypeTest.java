@@ -417,4 +417,26 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
                 .canTestForShallowEqualityWith(OBJECT_TYPE))
         .isTrue();
   }
+
+  @Test
+  public void testUnionOfSingleType_equalToNonUnion() {
+    // Create a union of a single type. UnionTypes collapse duplicate elements by default, so we
+    // need to put in a proxy type then resolve it to number.
+
+    final UnionType numberUnion;
+    try (JSTypeResolver.Closer closer = registry.getResolver().openForDefinition()) {
+      NamedType numberProxy =
+          NamedType.builder(registry, "NumberProxy")
+              .setResolutionKind(NamedType.ResolutionKind.NONE)
+              .setReferencedType(NUMBER_TYPE)
+              .build();
+
+      numberUnion = (UnionType) registry.createUnionType(NUMBER_TYPE, numberProxy);
+    }
+    // verify our setup is correct
+    assertThat(numberUnion.getAlternates()).hasSize(1);
+
+    assertType(numberUnion).isEqualTo(NUMBER_TYPE);
+    assertType(NUMBER_TYPE).isEqualTo(numberUnion);
+  }
 }
