@@ -144,7 +144,7 @@ final class ArrowType extends JSType {
   JSType resolveInternal(ErrorReporter reporter) {
     returnType = safeResolve(returnType, reporter);
     for (Parameter param : parameterList) {
-      param.setJSType(param.getJSType().resolve(reporter));
+      param.getJSType().resolve(reporter);
     }
 
     return this;
