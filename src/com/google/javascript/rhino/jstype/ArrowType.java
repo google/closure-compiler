@@ -79,9 +79,7 @@ final class ArrowType extends JSType {
 
     this.parameterList =
         parameters == null
-            ? ImmutableList.of(
-                new Parameter(
-                    getNativeType(UNKNOWN_TYPE), /* isOptional= */ false, /* isVariadic= */ true))
+            ? registry.createParametersWithVarArgs(getNativeType(UNKNOWN_TYPE))
             : ImmutableList.copyOf(parameters);
     this.returnType = returnType == null ? getNativeType(UNKNOWN_TYPE) : returnType;
     this.returnTypeInferred = returnTypeInferred;

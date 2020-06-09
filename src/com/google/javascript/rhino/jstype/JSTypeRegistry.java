@@ -590,13 +590,10 @@ public class JSTypeRegistry implements Serializable {
                         thenableType,
                         nullType))),
             createFunctionType(unknownType, createOptionalParameters(allType)));
-    FunctionType.Parameter promiseParameter =
-        new FunctionType.Parameter(
-            promiseParameterType, /* isOptional= */ false, /* isVariadic= */ false);
 
     FunctionType promiseFunctionType =
         nativeConstructorBuilder("Promise")
-            .withParameters(ImmutableList.of(promiseParameter))
+            .withParameters(this.createParameters(promiseParameterType))
             .withTemplateKeys(promiseTemplateKey)
             .build();
     promiseFunctionType.setImplementedInterfaces(

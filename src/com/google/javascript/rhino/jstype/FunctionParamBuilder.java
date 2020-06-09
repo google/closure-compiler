@@ -113,7 +113,7 @@ public class FunctionParamBuilder {
 
   /** Adds a parameter with the given type */
   private void newParameter(JSType type, boolean isOptional, boolean isVariadic) {
-    Parameter parameter = new Parameter(type, isOptional, isVariadic);
+    Parameter parameter = Parameter.create(type, isOptional, isVariadic);
     parameters.add(parameter);
   }
 

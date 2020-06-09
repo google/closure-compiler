@@ -332,7 +332,7 @@ final class FunctionTypeBuilder {
             isOptionalArg = true;
           }
           paramBuilder.newParameterFrom(
-              new Parameter(oldParam.getJSType(), isOptionalArg, isVarArgs));
+              Parameter.create(oldParam.getJSType(), isOptionalArg, isVarArgs));
         } else {
           warnedAboutArgList |=
               addParameter(

@@ -44,6 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -739,7 +740,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     List<Parameter> params = new ArrayList<>(origParams);
 
     Parameter thisType =
-        new Parameter(
+        Parameter.create(
             registry.createOptionalNullableType(getTypeOfThis()),
             /* isOptional= */ false,
             /* isVariadic= */ false);
@@ -751,7 +752,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       for (int i = 1; i < params.size(); i++) {
         Parameter current = params.get(i);
         Parameter optionalCopy =
-            new Parameter(current.getJSType(), /* isOptional= */ true, current.isVariadic());
+            Parameter.create(current.getJSType(), /* isOptional= */ true, current.isVariadic());
         params.set(i, optionalCopy);
       }
     } else if (isCall) {
@@ -760,7 +761,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       Parameter firstArg = params.size() > 1 ? params.get(1) : null;
       if (firstArg == null || firstArg.isOptional() || firstArg.isVariadic()) {
         Parameter optionalThisType =
-            new Parameter(thisType.getJSType(), /* isOptional= */ true, /* isVariadic= */ false);
+            Parameter.create(thisType.getJSType(), /* isOptional= */ true, /* isVariadic= */ false);
         params.set(0, optionalThisType);
       }
     }
@@ -1673,38 +1674,19 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * Models a single JavaScript parameter.
    *
    * <p>This parameter has a type; optionality; and may be var_args (variadic).
-   *
-   * <p>It is not immutable because type resolution needs to update the function parameter type.
-   * TODO(lharker): make this class immutable. It's unclear why type resolution needs to update the
-   * parameter type, but removing this behavior causes some new type errors.
    */
-  public static final class Parameter implements Serializable {
+  @AutoValue
+  public abstract static class Parameter implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private JSType type;
-    private final boolean isOptional;
-    private final boolean isVariadic;
-
-    public Parameter(JSType type, boolean isOptional, boolean isVariadic) {
-      this.type = checkNotNull(type);
-      this.isOptional = isOptional;
-      this.isVariadic = isVariadic;
+    public static Parameter create(JSType type, boolean isOptional, boolean isVariadic) {
+      return new AutoValue_FunctionType_Parameter(type, isOptional, isVariadic);
     }
 
-    void setJSType(JSType newType) {
-      this.type = checkNotNull(newType);
-    }
+    public abstract JSType getJSType();
 
-    public JSType getJSType() {
-      return this.type;
-    }
+    public abstract boolean isOptional();
 
-    public boolean isOptional() {
-      return this.isOptional;
-    }
-
-    public boolean isVariadic() {
-      return this.isVariadic;
-    }
+    public abstract boolean isVariadic();
   }
 }
