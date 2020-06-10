@@ -1,0 +1,75 @@
+## Copyright 2020 The Closure Compiler Authors. All rights reserved.
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##    http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+load("@rules_java//java:defs.bzl", "java_library")
+
+java_library(
+    name = "feature_set",
+    srcs = [
+        "FeatureSet.java",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@maven//:com_google_errorprone_error_prone_annotations",
+        "@maven//:com_google_guava_guava",
+    ],
+)
+
+java_library(
+    name = "parser",
+    srcs = [
+        "LineNumberScanner.java",
+        "Parser.java",
+        "PredefinedName.java",
+        "Scanner.java",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":feature_set",
+        ":source_file",
+        ":token",
+        "//src/com/google/javascript/jscomp/parsing/parser/trees",
+        "//src/com/google/javascript/jscomp/parsing/parser/util",
+        "@maven//:com_google_code_findbugs_jsr305",
+        "@maven//:com_google_errorprone_error_prone_annotations",
+        "@maven//:com_google_guava_guava",
+    ],
+)
+
+java_library(
+    name = "source_file",
+    srcs = [
+        "SourceFile.java",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "token",
+    srcs = [
+        "IdentifierToken.java",
+        "Keywords.java",
+        "LiteralToken.java",
+        "StringLiteralToken.java",
+        "TemplateLiteralToken.java",
+        "Token.java",
+        "TokenType.java",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/com/google/javascript/jscomp/parsing/parser/util",
+        "@maven//:com_google_code_findbugs_jsr305",
+        "@maven//:com_google_guava_guava",
+    ],
+)
