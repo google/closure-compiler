@@ -695,10 +695,12 @@ public final class TypeInferenceTest {
   @Test
   public void testAssertBigInt_narrowsFromUnknownType() {
     assuming("x", UNKNOWN_TYPE);
+    assuming("y", UNKNOWN_TYPE);
 
-    inFunction("x = 1n;");
+    inFunction("x = 1n; y = BigInt(1);");
 
     verify("x", BIGINT_TYPE);
+    verify("y", BIGINT_TYPE);
   }
 
   @Test
