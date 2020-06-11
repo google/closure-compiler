@@ -266,14 +266,21 @@ public class Parser {
 
   private class CommentRecorder implements Scanner.CommentRecorder {
     private final ImmutableList.Builder<Comment> comments = ImmutableList.builder();
+    private SourcePosition lastCommentEndPosition;
 
     @Override
     public void recordComment(Comment.Type type, SourceRange range, String value) {
-      value = value.trim();
-      if (value.startsWith(SOURCE_MAPPING_URL_PREFIX)) {
-        sourceMapURL = value.substring(SOURCE_MAPPING_URL_PREFIX.length());
+      // If we rewind the token stream, the scanner might pass comments that we've already seen.
+      // Only record comments past the furthest comment end position we've seen.
+      // NB: this assumes the CommentRecorder is used for at most one source file.
+      if (lastCommentEndPosition == null || range.end.offset > this.lastCommentEndPosition.offset) {
+        value = value.trim();
+        if (value.startsWith(SOURCE_MAPPING_URL_PREFIX)) {
+          sourceMapURL = value.substring(SOURCE_MAPPING_URL_PREFIX.length());
+        }
+        comments.add(new Comment(value, range, type));
+        this.lastCommentEndPosition = range.end;
       }
-      comments.add(new Comment(value, range, type));
     }
 
     private ImmutableList<Comment> getComments() {

@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
+import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -6474,6 +6475,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(coalesce.getFirstChild()).hasLineno(1).hasCharno(0).hasLength(4);
   }
 
+  @Test
+  public void testNoDuplicateComments_arrow_fn() {
+    isIdeMode = true;
+    parsingMode = JsDocParsing.INCLUDE_ALL_COMMENTS;
+    List<Comment> comments = parseComments("const a = (/** number */ n) => {}");
+
+    assertThat(comments).hasSize(1);
+    assertThat(comments.get(0).value).isEqualTo("/** number */");
+  }
+
   private void assertNodeHasJSDocInfoWithJSType(Node node, JSType jsType) {
     JSDocInfo info = node.getJSDocInfo();
     assertWithMessage("Node has no JSDocInfo: %s", node).that(info).isNotNull();
@@ -6601,6 +6612,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
    */
   private Node parse(String string) {
     return parseWarning(string);
+  }
+
+  /**
+   * Return all comments recorded by the parser in IDE mode.
+   *
+   * <p>Assumes `isIdeMode` is true and an appropriate `parsingMode` is configured.
+   */
+  private List<Comment> parseComments(String string) {
+    return doParse(string).comments;
   }
 
   private Config createConfig() {
