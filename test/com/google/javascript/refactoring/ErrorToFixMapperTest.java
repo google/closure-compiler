@@ -559,7 +559,7 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testFixProvides_noProvides() {
+  public void testFixNonAliasedRequire() {
     assertChanges(
         lines(
             "/** @fileoverview foo */",
@@ -575,6 +575,25 @@ public class ErrorToFixMapperTest {
             "",
             "const x = goog.require('x');",
             useInCode("x")));
+  }
+
+  @Test
+  public void testFixNonAliasedRequireType() {
+    assertChanges(
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.module('m');",
+            "",
+            "goog.requireType('x');",
+            useInType("x")),
+        lines(
+            "/** @fileoverview foo */",
+            "",
+            "goog.module('m');",
+            "",
+            "const x = goog.requireType('x');",
+            useInType("x")));
   }
 
   @Test

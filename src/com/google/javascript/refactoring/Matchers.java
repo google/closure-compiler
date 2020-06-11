@@ -209,19 +209,27 @@ public final class Matchers {
     return allOf(functionCallWithNumArgs(numArgs), functionCall(name));
   }
 
-  public static Matcher googRequire(final String namespace) {
-    return new Matcher() {
-      @Override
-      public boolean matches(Node node, NodeMetadata metadata) {
-        return functionCall("goog.require").matches(node, metadata)
+  public static Matcher googRequirelike(final String namespace) {
+    return (Node node, NodeMetadata metadata) ->
+        googRequirelike().matches(node, metadata)
             && node.getSecondChild().isString()
             && node.getSecondChild().getString().equals(namespace);
-      }
-    };
+  }
+
+  public static Matcher googRequirelike() {
+    return anyOf(googRequire(), googRequireType(), googForwardDeclare());
   }
 
   public static Matcher googRequire() {
     return functionCall("goog.require");
+  }
+
+  public static Matcher googRequireType() {
+    return functionCall("goog.requireType");
+  }
+
+  public static Matcher googForwardDeclare() {
+    return functionCall("goog.forwardDeclare");
   }
 
   public static Matcher googModule() {

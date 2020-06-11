@@ -1055,6 +1055,26 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testAddGoogRequire_requireTypeAlreadyExists() {
+    String input =
+        lines(
+            "goog.provide('js.Foo');",
+            "goog.requireType('abc.def');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, "abc.def", scriptMetadata).build();
+    SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
+    assertThat(replacementMap).isEmpty();
+  }
+
+  @Test
   public void testAddRequireModule() {
     String input =
         lines(
@@ -1067,6 +1087,34 @@ public class SuggestedFixTest {
         lines(
             "goog.module('js.Foo');",
             "const safe = goog.require('goog.safe');",
+            "",
+            "/** @private */",
+            "function foo_() {",
+            "}");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequire(match, "goog.safe", scriptMetadata).build();
+    assertChanges(fix, "", input, expected);
+  }
+
+  @Test
+  public void testAddRequireModule_requireTypeAlreadyExists() {
+    String input =
+        lines(
+            "goog.module('js.Foo');", //
+            "goog.requireType('goog.safe');",
+            "",
+            "/** @private */",
+            "function foo_() {",
+            "}");
+    String expected =
+        lines(
+            "goog.module('js.Foo');",
+            "const safe = goog.requireType('goog.safe');",
             "",
             "/** @private */",
             "function foo_() {",

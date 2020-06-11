@@ -675,7 +675,7 @@ public final class SuggestedFix {
           Node grandchild = child.getFirstChild();
           if (Matchers.googModuleOrProvide().matches(grandchild, metadata)) {
             lastModuleOrProvideNode = grandchild;
-          } else if (Matchers.googRequire().matches(grandchild, metadata)) {
+          } else if (Matchers.googRequirelike().matches(grandchild, metadata)) {
             lastGoogRequireNode = grandchild;
             if (grandchild.getLastChild().isString()
                 && namespace.compareTo(grandchild.getLastChild().getString()) < 0) {
@@ -685,7 +685,7 @@ public final class SuggestedFix {
           }
         } else if (NodeUtil.isNameDeclaration(child)
             && child.getFirstFirstChild() != null
-            && Matchers.googRequire().matches(child.getFirstFirstChild(), metadata)) {
+            && Matchers.googRequirelike().matches(child.getFirstFirstChild(), metadata)) {
           lastGoogRequireNode = child.getFirstFirstChild();
           String requireName = child.getFirstChild().getString();
           String originalName = child.getFirstChild().getOriginalName();
@@ -764,7 +764,7 @@ public final class SuggestedFix {
 
       for (Node child : script.children()) {
         if (NodeUtil.isExprCall(child)
-            && Matchers.googRequire(namespace).matches(child.getFirstChild(), metadata)) {
+            && Matchers.googRequirelike(namespace).matches(child.getFirstChild(), metadata)) {
           return child;
         }
       }
@@ -774,7 +774,7 @@ public final class SuggestedFix {
             // TODO(b/139953612): respect destructured goog.requires
             && !child.getFirstChild().isDestructuringLhs()
             && child.getFirstChild().getLastChild() != null
-            && Matchers.googRequire(namespace)
+            && Matchers.googRequirelike(namespace)
                 .matches(child.getFirstChild().getLastChild(), metadata)) {
           return child;
         }
