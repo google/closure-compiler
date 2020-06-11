@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.testing;
 
 import com.google.common.base.Joiner;
+import com.google.javascript.jscomp.SourceFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

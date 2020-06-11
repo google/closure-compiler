@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
