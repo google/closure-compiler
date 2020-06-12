@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2020 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,9 @@
  */
 
 'require util/polyfill';
-'require es6/reflect/reflect';
 
-
-$jscomp.polyfill('Reflect.has', function(orig) {
+// This must execute before any Reflect.* static method polyfills.
+$jscomp.polyfill('Reflect', function(orig) {
   if (orig) return orig;
-
-  /**
-   * Polyfill for Reflect.has() method:
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has
-   *
-   * Applies the 'in' operator as a function.
-   *
-   * @param {!Object} target
-   * @param {*} propertyKey
-   * @return {boolean}
-   */
-  var polyfill = function(target, propertyKey) {
-    return propertyKey in target;
-  };
-  return polyfill;
+  return {};
 }, 'es6', 'es3');

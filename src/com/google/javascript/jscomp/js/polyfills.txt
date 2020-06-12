@@ -49,6 +49,7 @@ Promise es6 es3 es6/promise/promise
 Promise.allSettled es_2020 es3 es6/promise/allSettled
 Promise.prototype.finally es9 es3 es6/promise/finally
 Proxy es6 es6
+Reflect es6 es3 es6/reflect/reflect
 Reflect.apply es6 es3 es6/reflect/apply
 Reflect.construct es6 es3 es6/reflect/construct
 Reflect.defineProperty es6 es5 es6/reflect/defineproperty

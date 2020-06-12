@@ -15,6 +15,7 @@
  */
 
 'require es6/reflect/isextensible';
+'require es6/reflect/reflect';
 'require util/finddescriptor';
 'require util/polyfill';
 

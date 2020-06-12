@@ -112,7 +112,7 @@ $jscomp.polyfillUnisolated = function(target, polyfill, fromLang, toLang) {
   var split = target.split('.');
   for (var i = 0; i < split.length - 1; i++) {
     var key = split[i];
-    if (!(key in obj)) obj[key] = {};  // Might want to be defineProperty.
+    if (!(key in obj)) return;
     obj = obj[key];
   }
   var property = split[split.length - 1];
@@ -165,7 +165,7 @@ $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
 
   for (var i = 0; i < split.length - 1; i++) {
     var key = split[i];
-    if (!(key in obj)) obj[key] = {};  // Might want to be defineProperty.
+    if (!(key in obj)) return;
     obj = obj[key];
   }
 

@@ -16,6 +16,7 @@
 
 'require util/defines';
 'require util/polyfill';
+'require es6/reflect/reflect';
 
 
 $jscomp.polyfill('Reflect.preventExtensions', function(orig) {
