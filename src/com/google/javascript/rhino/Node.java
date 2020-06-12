@@ -2347,9 +2347,11 @@ public class Node implements Serializable {
   // Mutators
 
   /**
-   * Removes this node from its parent. Equivalent to:
-   * node.getParent().removeChild();
+   * Removes this node from its parent.
+   *
+   * @deprecated use {@link #detach()} instead. The behavior is equivalent.
    */
+  @Deprecated
   public final Node detachFromParent() {
     return detach();
   }
