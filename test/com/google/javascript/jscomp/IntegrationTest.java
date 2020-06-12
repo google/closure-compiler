@@ -1372,15 +1372,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     // We used to have a bug where the CFG drew an
     // edge straight from synStart to f(progress).
     // If that happens, then progress will get type {number|undefined}.
-    testSame(
+    testNoWarnings(
         options,
-        "/** @param {number} x */ function f(x) {}" +
-        "function g() {" +
-        " synStart('foo');" +
-        " var progress = 1;" +
-        " f(progress);" +
-        " synEnd('foo');" +
-        "}");
+        lines(
+            "/** @param {number} x */ function f(x) {}",
+            "function g() {",
+            "  synStart('foo');",
+            "  var progress = 1;",
+            "  f(progress);",
+            "  synEnd('foo');",
+            "}"));
   }
 
   @Test

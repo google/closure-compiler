@@ -353,13 +353,8 @@ abstract class IntegrationTestCase {
     checkUnexpectedErrorsOrWarnings(compiler, 0);
     Node all = compiler.parseInputs();
     checkUnexpectedErrorsOrWarnings(compiler, 0);
-    Node n = all.getLastChild();
-    Node externs = all.getFirstChild();
 
-    (new CreateSyntheticBlocks(
-        compiler, "synStart", "synEnd")).process(externs, n);
-
-    return n;
+    return all.getLastChild();
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
