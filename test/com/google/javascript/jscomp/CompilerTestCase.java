@@ -38,7 +38,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -1872,7 +1871,7 @@ public abstract class CompilerTestCase {
             .setName(PassNames.GATHER_MODULE_METADATA)
             .setRunInFixedPointLoop(true)
             .setInternalFactory((x) -> gatherModuleMetadata)
-            .setFeatureSet(FeatureSet.ES_NEXT)
+            .setFeatureSetForChecks()
             .build());
     factories.add(
         PassFactory.builder()
@@ -1880,7 +1879,7 @@ public abstract class CompilerTestCase {
             .setRunInFixedPointLoop(true)
             .setInternalFactory(
                 (x) -> new ModuleMapCreator(compiler, compiler.getModuleMetadataMap()))
-            .setFeatureSet(FeatureSet.ES_NEXT)
+            .setFeatureSetForChecks()
             .build());
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
