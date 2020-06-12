@@ -191,6 +191,7 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
     test("goog$dom$createDom(goog$dom$TagName$A)", "goog$dom$createDom('A')");
     test("goog.dom.createDom(goog.dom.TagName.A + 'REA')", "goog.dom.createDom('A' + 'REA')");
     test("goog.dom.TagName.function__new_goog_dom_TagName__string___undefined$DIV", "'DIV'");
+    test("goog.dom.TagName.JSC$0935_DIV", "'DIV'");
   }
 
   @Test

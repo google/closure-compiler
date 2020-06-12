@@ -256,8 +256,11 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       tagName = n.getString().substring(prefix.length());
     } else if (n.isGetProp() && !n.getParent().isGetProp()
         && n.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
-      tagName = n.getSecondChild().getString()
-          .replaceFirst(".*\\$", ""); // Added by DisambiguateProperties.
+      tagName =
+          n.getSecondChild()
+              .getString()
+              .replaceFirst("JSC\\$[0-9]+_", "") // Added by DisambiguateProperties2.
+              .replaceFirst(".*\\$", ""); // Added by DisambiguateProperties.
     } else {
       return;
     }
