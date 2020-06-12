@@ -141,7 +141,6 @@ abstract class IntegrationTestCase {
   // The most recently used compiler.
   protected Compiler lastCompiler;
 
-  protected boolean normalizeResults = false;
   protected boolean useNoninjectingCompiler = false;
 
   protected String inputFileNamePrefix;
@@ -151,7 +150,6 @@ abstract class IntegrationTestCase {
   public void setUp() {
     externs = DEFAULT_EXTERNS;
     lastCompiler = null;
-    normalizeResults = false;
     useNoninjectingCompiler = false;
     inputFileNamePrefix = "i";
     inputFileNameSuffix = ".js";
@@ -196,7 +194,7 @@ abstract class IntegrationTestCase {
         .isEqualTo(0);
 
     if (compiled != null) {
-      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
+      Node expectedRoot = parseExpectedCode(compiled, options);
       assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
@@ -240,7 +238,7 @@ abstract class IntegrationTestCase {
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
+      Node expectedRoot = parseExpectedCode(compiled, options);
       assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
@@ -253,7 +251,7 @@ abstract class IntegrationTestCase {
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
+      Node expectedRoot = parseExpectedCode(compiled, options);
       assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
@@ -282,8 +280,7 @@ abstract class IntegrationTestCase {
 
     if (compiled != null) {
       Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parseExpectedCode(
-          new String[] {compiled}, options, normalizeResults);
+      Node expectedRoot = parseExpectedCode(new String[] {compiled}, options);
       assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
   }
@@ -334,22 +331,19 @@ abstract class IntegrationTestCase {
   }
 
   /**
-   * Parse the expected code to compare against.
-   * We want to run this with similar parsing options, but don't
-   * want to run the commonjs preprocessing passes (so that we can use this
-   * to test the commonjs code).
+   * Parse the expected code to compare against. We want to run this with similar parsing options,
+   * but don't want to run the commonjs preprocessing passes (so that we can use this to test the
+   * commonjs code).
    */
-  protected Node parseExpectedCode(
-      String[] original, CompilerOptions options, boolean normalize) {
+  protected Node parseExpectedCode(String[] original, CompilerOptions options) {
     boolean oldProcessCommonJsModules = options.processCommonJSModules;
     options.processCommonJSModules = false;
-    Node expectedRoot = parse(original, options, normalize);
+    Node expectedRoot = parse(original, options);
     options.processCommonJSModules = oldProcessCommonJsModules;
     return expectedRoot;
   }
 
-  protected Node parse(
-      String[] original, CompilerOptions options, boolean normalize) {
+  protected Node parse(String[] original, CompilerOptions options) {
     Compiler compiler = new Compiler();
     List<SourceFile> inputs = new ArrayList<>();
     for (int i = 0; i < original.length; i++) {
@@ -364,11 +358,6 @@ abstract class IntegrationTestCase {
 
     (new CreateSyntheticBlocks(
         compiler, "synStart", "synEnd")).process(externs, n);
-
-    if (normalize) {
-      new Normalize(compiler, false)
-          .process(compiler.getExternsRoot(), compiler.getJsRoot());
-    }
 
     return n;
   }

@@ -3143,21 +3143,25 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
 
-    normalizeResults = true;
-
     test(
         options,
         "function f() { var xyz = /** @type {string} */ (0); }",
         TypeValidator.INVALID_CAST);
 
-    testSame(options,
-        "/** @suppress {invalidCasts} */\n" +
-        "function f() { var xyz = /** @type {string} */ (0); }");
+    testNoWarnings(
+        options,
+        lines(
+            "/** @suppress {invalidCasts} */",
+            "function f() { var xyz = /** @type {string} */ (0); }"));
 
-    testSame(options,
-        "/** @const */ var g = {};" +
-        "/** @suppress {invalidCasts} */" +
-        "g.a = g.b = function() { var xyz = /** @type {string} */ (0); }");
+    testNoWarnings(
+        options,
+        lines(
+            "/** @const */ var g = {};",
+            "/** @suppress {invalidCasts} */",
+            "g.a = g.b = function() {",
+            "var xyz = /** @type {string} */ (0);",
+            "}"));
   }
 
   @Test
@@ -3450,8 +3454,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     String[] input1 = {"function f(z) { return z; }"};
     String[] input2 = {"function f(y) { return y; }"};
     CompilerOptions options = new CompilerOptions();
-    Node out1 = parse(input1, options, false);
-    Node out2 = parse(input2, options, false);
+    Node out1 = parse(input1, options);
+    Node out2 = parse(input2, options);
     assertThat(out1.isEquivalentTo(out2)).isFalse();
   }
 
