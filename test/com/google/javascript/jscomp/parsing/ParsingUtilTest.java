@@ -42,10 +42,7 @@ public final class ParsingUtilTest {
   public void testNamePatternDeclaresName() {
     assertPatternDeclaresNames("x", ImmutableSet.of("x"));
 
-    AssertionError failure =
-        assertThrows(
-            AssertionError.class, () -> assertPatternDeclaresNames("x", ImmutableSet.of("y")));
-    assertThat(failure).hasMessageThat().contains("Not true that");
+    assertThrows(AssertionError.class, () -> assertPatternDeclaresNames("x", ImmutableSet.of("y")));
   }
 
   @Test
