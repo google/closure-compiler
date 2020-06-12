@@ -3012,7 +3012,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   private final PassFactory mergeSyntheticScript =
       PassFactory.builder()
-          .setName("REMOVE_SYNTHETIC_SCRIPT")
+          .setName("MERGE_SYNTHETIC_SCRIPT")
           .setFeatureSet(FeatureSet.all())
           .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
           .build();
