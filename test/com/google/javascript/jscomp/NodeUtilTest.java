@@ -3760,6 +3760,89 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void isEndOfChain_call_innerChain() {
+      Node optChainCall = parseExpr("a?.b?.(x?.y)");
+      assertThat(optChainCall.isOptChainCall()).isTrue();
+      assertThat(optChainCall.isOptionalChainStart()).isTrue();
+
+      Node innerOptChain = optChainCall.getLastChild(); // `x?.y`
+      assertThat(innerOptChain.isOptChainGetProp()).isTrue();
+      assertThat(innerOptChain.isOptionalChainStart()).isTrue();
+      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+    }
+
+    @Test
+    public void isEndOfChain_getProp_innerChain() {
+      Node optChainGetProp = parseExpr("a?.b.x?.y");
+      assertThat(optChainGetProp.isOptChainGetProp()).isTrue();
+      assertThat(optChainGetProp.isOptionalChainStart()).isTrue();
+      assertThat(NodeUtil.isEndOfOptChain(optChainGetProp)).isTrue();
+
+      // Check that `a?.b.x` is not the start of optChain, but it ends the chain `a?.b`.
+      Node innerOptChain = optChainGetProp.getFirstChild(); // `a?.b.x`
+      assertThat(innerOptChain.isOptChainGetProp()).isTrue();
+      assertThat(innerOptChain.isOptionalChainStart()).isFalse();
+      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+
+      // Check that `a?.b` is the start of optChain but not the end
+      Node innerMostOptChain = innerOptChain.getFirstChild(); // `a?.b`
+      assertThat(innerMostOptChain.isOptChainGetProp()).isTrue();
+      assertThat(innerMostOptChain.isOptionalChainStart()).isTrue();
+      assertThat(NodeUtil.isEndOfOptChain(innerMostOptChain)).isFalse();
+    }
+
+    @Test
+    public void isEndOfChain_call_innerChain2() {
+      Node optChainCall = parseExpr("a?.b?.(c.x?.y)");
+      assertThat(optChainCall.isOptChainCall()).isTrue();
+      assertThat(optChainCall.isOptionalChainStart()).isTrue();
+
+      // Check that `c.x?.y` is the start of a new chain and also its end
+      Node innerOptChain = optChainCall.getLastChild();
+      assertThat(innerOptChain.isOptChainGetProp()).isTrue();
+      assertThat(innerOptChain.isOptionalChainStart()).isTrue();
+      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+    }
+
+    @Test
+    public void isEndOfChain_callAndGetProp_innerChain() {
+      Node optChainGetProp = parseExpr("a?.b(x?.y).c");
+      assertThat(optChainGetProp.isOptChainGetProp()).isTrue();
+      assertThat(optChainGetProp.isOptionalChainStart()).isFalse();
+
+      // Check that `a?.b(x?.y)` is not the start or end of the chain
+      Node optChainCall = optChainGetProp.getFirstChild();
+      assertThat(optChainCall.isOptChainCall()).isTrue();
+      assertThat(optChainCall.isOptionalChainStart()).isFalse();
+      assertThat(NodeUtil.isEndOfOptChain(optChainCall)).isFalse();
+
+      // Check that `x?.y` is the start and end of the chain
+      Node innerOptChain = optChainCall.getLastChild();
+      assertThat(innerOptChain.isOptChainGetProp()).isTrue();
+      assertThat(innerOptChain.isOptionalChainStart()).isTrue();
+      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+    }
+
+    @Test
+    public void isEndOfChain_callAndGetProp_innerChain_multipleInnerArgs() {
+      Node optChainGetProp = parseExpr("a?.b(x?.y, c, d).e");
+      assertThat(optChainGetProp.isOptChainGetProp()).isTrue();
+      assertThat(optChainGetProp.isOptionalChainStart()).isFalse();
+
+      // Check that `a?.b(x?.y, c, d)` is not the start or end of its chain
+      Node optChainCall = optChainGetProp.getFirstChild();
+      assertThat(optChainCall.isOptChainCall()).isTrue();
+      assertThat(optChainCall.isOptionalChainStart()).isFalse();
+      assertThat(NodeUtil.isEndOfOptChain(optChainCall)).isFalse();
+
+      // Check that `x?.y` is the start and end of its chain
+      Node innerOptChain = optChainCall.getSecondChild();
+      assertThat(innerOptChain.isOptChainGetProp()).isTrue();
+      assertThat(innerOptChain.isOptionalChainStart()).isTrue();
+      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+    }
+
+    @Test
     public void shortChain() {
       // `expr?.prop1.prop2`
       Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));

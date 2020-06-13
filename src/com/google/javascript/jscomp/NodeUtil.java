@@ -1971,11 +1971,26 @@ public final class NodeUtil {
    */
   static Node getEndOfOptChain(Node n) {
     checkState(NodeUtil.isOptChainNode(n), n);
-    Node parent = n.getParent();
-    if (parent == null || !NodeUtil.isOptChainNode(parent) || parent.isOptionalChainStart()) {
+    if (isEndOfOptChain(n)) {
       return n;
+    } else {
+      return getEndOfOptChain(n.getParent());
     }
-    return getEndOfOptChain(parent);
+  }
+
+  static boolean isEndOfOptChain(Node n) {
+    if (NodeUtil.isOptChainNode(n)) {
+      Node parent = n.getParent();
+      return parent == null
+          || !NodeUtil.isOptChainNode(parent)
+          || parent.isOptionalChainStart()
+          // if an optional chain node `n` is also a call's arg or an index into a GETELEM, it will
+          // be the end of its chain
+          // e.g. In `a?.(x?.y.z)`or `a?.[x?.y.z]`, the `x?.y.z` is the end node
+          || !n.isFirstChildOf(parent);
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -2595,7 +2610,7 @@ public final class NodeUtil {
    * @return Whether the call is a NEW or CALL node.
    */
   public static boolean isCallOrNew(Node node) {
-    return node.isCall() || node.isNew();
+    return node.isCall() || node.isNew() || node.isOptChainCall();
   }
 
   /**
@@ -4898,7 +4913,8 @@ public final class NodeUtil {
    */
   static boolean isInvocationTarget(Node n) {
     Node parent = n.getParent();
-    return parent != null && (isCallOrNew(parent) || parent.isTaggedTemplateLit())
+    return parent != null
+        && (isCallOrNew(parent) || parent.isTaggedTemplateLit())
         && parent.getFirstChild() == n;
   }
 

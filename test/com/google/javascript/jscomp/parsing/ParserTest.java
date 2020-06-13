@@ -5350,6 +5350,25 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
   }
 
+  // Check that optional chain node that is an arg of a call gets marked as the start of a new chain
+  @Test
+  public void optionalChainingStartOfChain_innerChainIsArgOfACall() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node optChainCall = parse("a?.b?.(x?.y);").getFirstFirstChild();
+    assertThat(optChainCall.isOptChainCall()).isTrue();
+
+    Node optChainGetProp = optChainCall.getFirstChild(); // `a?.b`
+    Node optChainArg = optChainCall.getLastChild(); // `x?.y`
+
+    // Check that `a?.b` is the start of an opt chain
+    assertThat(optChainGetProp.isOptChainGetProp()).isTrue();
+    assertThat(optChainGetProp.isOptionalChainStart()).isTrue();
+
+    // Check that `x?.y` is the start of an opt chain
+    assertThat(optChainArg.isOptChainGetProp()).isTrue();
+    assertThat(optChainArg.isOptionalChainStart()).isTrue();
+  }
+
   @Test
   public void optionalChainingStartOfChain_optGetProp() {
     mode = LanguageMode.UNSUPPORTED;
