@@ -58,6 +58,7 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -91,6 +92,11 @@ class TypeInference
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
   private final ModuleImportResolver moduleImportResolver;
+  // A record is pushed onto this stack during the traversal of each optional chain.
+  // Inference of the type at the end of the optional chain requires scope information
+  // from traversing the start of the chain. This stack serves as a communication channel
+  // for that information.
+  private final ArrayDeque<OptChainInfo> optChainArrayDeque = new ArrayDeque<>();
 
   // Scopes that have had their unbound untyped vars inferred as undefined.
   private final Set<TypedScope> inferredUnboundVars = new HashSet<>();
@@ -591,9 +597,9 @@ class TypeInference
         break;
 
       case OPTCHAIN_GETPROP:
-        // TODO(b/151248857) Calculate appropriate type here
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
-        scope = traverseChildren(n, scope);
+      case OPTCHAIN_CALL:
+      case OPTCHAIN_GETELEM:
+        scope = traverseOptChain(n, scope);
         break;
 
       case GETPROP:
@@ -625,14 +631,7 @@ class TypeInference
         break;
 
       case CALL:
-        scope = traverseFunctionInvocation(n, scope);
-        scope = tightenTypesAfterAssertions(scope, n);
-        break;
-
-      case OPTCHAIN_CALL:
-      case OPTCHAIN_GETELEM:
-        // TODO(b/151248857) Calculate appropriate type here
-        n.setJSType(getNativeType(UNKNOWN_TYPE));
+        scope = traverseCall(n, scope);
         break;
 
       case NEW:
@@ -717,10 +716,7 @@ class TypeInference
         break;
 
       case TAGGED_TEMPLATELIT:
-        scope = traverseFunctionInvocation(n, scope);
-        if (n.getJSType() == null) {
-          n.setJSType(unknownType);
-        }
+        scope = traverseTaggedTemplateLit(n, scope);
         break;
 
       case DELPROP:
@@ -738,7 +734,6 @@ class TypeInference
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(BOOLEAN_TYPE));
         break;
-
       case GETELEM:
         scope = traverseGetElem(n, scope);
         break;
@@ -890,6 +885,27 @@ class TypeInference
   // types when the invocation target is such a name.
   private static final ImmutableSet<Token> TOKENS_ALLOWING_NULL_TYPES =
       ImmutableSet.of(Token.NAME, Token.CALL, Token.NEW);
+
+  private FlowScope traverseCall(Node callNode, FlowScope originalScope) {
+    checkArgument(callNode.isCall() || callNode.isOptChainCall(), callNode);
+    FlowScope scopeAfterChildren = traverseChildren(callNode, originalScope);
+    FlowScope scopeAfterExecution =
+        setCallNodeTypeAfterChildrenTraversed(callNode, scopeAfterChildren);
+    // e.g. after `goog.assertString(x);` we can infer `x` is a string.
+    return tightenTypesAfterAssertions(scopeAfterExecution, callNode);
+  }
+
+  private FlowScope traverseTaggedTemplateLit(Node tagTempLitNode, FlowScope originalScope) {
+    checkArgument(tagTempLitNode.isTaggedTemplateLit(), tagTempLitNode);
+    FlowScope scopeAfterChildren = traverseChildren(tagTempLitNode, originalScope);
+    // A tagged template literal is really a special kind of function call.
+    FlowScope scopeAfterExecution =
+        setCallNodeTypeAfterChildrenTraversed(tagTempLitNode, scopeAfterChildren);
+    if (tagTempLitNode.getJSType() == null) {
+      tagTempLitNode.setJSType(unknownType);
+    }
+    return scopeAfterExecution;
+  }
 
   private void traverseSuper(Node superNode) {
     // Find the closest non-arrow function (TODO(sdh): this could be an AbstractScope method).
@@ -1650,10 +1666,7 @@ class TypeInference
   }
 
   /** @param n A non-constructor function invocation, i.e. CALL or TAGGED_TEMPLATELIT */
-  private FlowScope traverseFunctionInvocation(Node n, FlowScope scope) {
-    checkArgument(n.isCall() || n.isTaggedTemplateLit(), n);
-    scope = traverseChildren(n, scope);
-
+  private FlowScope setCallNodeTypeAfterChildrenTraversed(Node n, FlowScope scopeAfterChildren) {
     // Resolve goog.{require,requireType,forwardDeclare,module.get} calls separately, as they are
     // not normal functions.
     if (n.isCall()
@@ -1669,18 +1682,18 @@ class TypeInference
       } else {
         n.setJSType(unknownType);
       }
-      return scope;
+      return scopeAfterChildren;
     }
 
     Node left = n.getFirstChild();
     JSType functionType = getJSType(left).restrictByNotNullOrUndefined();
     if (left.isSuper()) {
       // TODO(sdh): This will probably return the super type; might want to return 'this' instead?
-      return traverseInstantiation(n, functionType, scope);
+      return traverseInstantiation(n, functionType, scopeAfterChildren);
     } else if (functionType.isFunctionType()) {
       FunctionType fnType = functionType.toMaybeFunctionType();
       n.setJSType(fnType.getReturnType());
-      backwardsInferenceFromCallSite(n, fnType, scope);
+      backwardsInferenceFromCallSite(n, fnType, scopeAfterChildren);
     } else if (functionType.equals(getNativeType(CHECKED_UNKNOWN_TYPE))) {
       n.setJSType(getNativeType(CHECKED_UNKNOWN_TYPE));
     } else if (left.getJSType() != null && left.getJSType().isUnknownType()) {
@@ -1688,7 +1701,7 @@ class TypeInference
       // lose some inference that TypeCheck does when given a null type.
       n.setJSType(unknownType);
     }
-    return scope;
+    return scopeAfterChildren;
   }
 
   private FlowScope tightenTypesAfterAssertions(FlowScope scope, Node callNode) {
@@ -2101,8 +2114,25 @@ class TypeInference
     return scope;
   }
 
-  private FlowScope traverseGetElem(Node n, FlowScope scope) {
-    scope = traverseChildren(n, scope);
+  private FlowScope traverseGetElem(Node n, FlowScope originalScope) {
+    FlowScope executedScope = traverseChildren(n, originalScope);
+    return setGetElemNodeTypeAfterChildrenTraversed(n, executedScope);
+  }
+
+  /**
+   * Sets the appropriate type on the GETELEM node `n` after its children have been traversed.
+   *
+   * @param n the node that we want to finishTraversing
+   * @param scopeAfterChildren scope after children are traversed
+   */
+  private FlowScope setGetElemNodeTypeAfterChildrenTraversed(Node n, FlowScope scopeAfterChildren) {
+    checkArgument(n.getToken() == Token.GETELEM || n.getToken() == Token.OPTCHAIN_GETELEM);
+    inferGetElemType(n);
+    scopeAfterChildren = tightenTypeAfterDereference(n.getFirstChild(), scopeAfterChildren);
+    return scopeAfterChildren;
+  }
+
+  private void inferGetElemType(Node n) {
     Node indexKey = n.getLastChild();
     JSType indexType = getJSType(indexKey);
     JSType inferredType = unknownType;
@@ -2118,18 +2148,142 @@ class TypeInference
       }
     }
     n.setJSType(inferredType != null ? inferredType : unknownType);
-    return tightenTypeAfterDereference(n.getFirstChild(), scope);
   }
 
   private FlowScope traverseGetProp(Node n, FlowScope scope) {
+    scope = traverseChildren(n, scope);
+    return setGetPropNodeTypeAfterChildrenTraversed(n, scope);
+  }
+
+  // Sets the appropriate type on the GETPROP node `n` after its children have been traversed.
+  private FlowScope setGetPropNodeTypeAfterChildrenTraversed(Node n, FlowScope scopeAfterChildren) {
+    checkArgument(n.isGetProp() || n.isOptChainGetProp());
     Node objNode = n.getFirstChild();
     Node property = n.getLastChild();
-    scope = traverseChildren(n, scope);
+    n.setJSType(getPropertyType(objNode.getJSType(), property.getString(), n, scopeAfterChildren));
+    return tightenTypeAfterDereference(n.getFirstChild(), scopeAfterChildren);
+  }
 
-    n.setJSType(
-        getPropertyType(
-            objNode.getJSType(), property.getString(), n, scope));
-    return tightenTypeAfterDereference(n.getFirstChild(), scope);
+  // Sets the appropriate type on the OptChain node `n` after its children have been traversed.
+  private FlowScope setOptChainNodeTypeAfterChildrenTraversed(
+      Node n, FlowScope scopeAfterChildren) {
+    switch (n.getToken()) {
+      case OPTCHAIN_GETPROP:
+        return setGetPropNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      case OPTCHAIN_GETELEM:
+        return setGetElemNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      case OPTCHAIN_CALL:
+        return setCallNodeTypeAfterChildrenTraversed(n, scopeAfterChildren);
+      default:
+        throw new IllegalStateException("Illegal token inside finishTraversingOptChain");
+    }
+  }
+
+  /**
+   * Holds flow scopes for conditional and unconditional parts during traversal of an optional chain
+   */
+  private static class OptChainInfo {
+    private final Node endOfChain;
+    private final Node startOfChain;
+    private FlowScope unconditionalScope;
+
+    OptChainInfo(Node endOfChain, Node startOfChain) {
+      this.endOfChain = endOfChain;
+      this.startOfChain = startOfChain;
+      this.unconditionalScope = null;
+    }
+  }
+
+  /**
+   * Traversal requires holding scopes from the unconditional start (lhs of the `?.`) and the
+   * conditional part (rhs of the `?.`), and using the startType to determine the resulting scope.
+   */
+  private FlowScope traverseOptChain(Node n, FlowScope scope) {
+    checkArgument(NodeUtil.isOptChainNode(n));
+
+    if (NodeUtil.isEndOfOptChain(n)) {
+      // Create new optional chain tracking object and push it onto the stack.
+      final Node startOfChain = NodeUtil.getStartOfOptChain(n);
+      OptChainInfo optChainInfo = new OptChainInfo(n, startOfChain);
+      optChainArrayDeque.addFirst(optChainInfo);
+    }
+
+    FlowScope lhsScope = traverse(n.getFirstChild(), scope);
+
+    if (n.isOptionalChainStart()) {
+      // Store lhsScope into top-of-stack as unexecuted (unconditional) scope.
+      optChainArrayDeque.peekFirst().unconditionalScope = lhsScope;
+    }
+
+    // Traverse the remaining children and capture their changes into a new FlowScope var
+    // `aboutToExecuteScope`. This FlowScope must be constructed on top of the `lhsScope` and not
+    // the original scope `scope`, otherwise changes to outer variable that are preserved in the
+    // lhsScope would not be captured in the `aboutToExecuteScope`.
+    FlowScope aboutToExecuteScope = lhsScope;
+    Node nextChild = n.getSecondChild();
+    while (nextChild != null) {
+      aboutToExecuteScope = traverse(nextChild, aboutToExecuteScope);
+      nextChild = nextChild.getNext();
+    }
+
+    // Assigns the type to `n` assuming the entire chain executes and returns the the executed
+    // scope.
+    FlowScope executedScope = setOptChainNodeTypeAfterChildrenTraversed(n, aboutToExecuteScope);
+
+    // Unlike CALL, the OPTCHAIN_CALL nodes must not remain untyped when left child is untyped.
+    if (n.getJSType() == null) {
+      n.setJSType(unknownType);
+    }
+
+    if (NodeUtil.isEndOfOptChain(n)) {
+      // Use the startNode's type to selectively join the executed scope with the unexecuted scope,
+      // and update the type assigned to `n` in `setXAfterChildrenTraversed()`
+      final Node startOfChain = NodeUtil.getStartOfOptChain(n);
+
+      // Pop the stack to obtain the current chain.
+      OptChainInfo currentChain = optChainArrayDeque.removeFirst();
+
+      // Sanity check that the popped chain correctly corresponds to the current optional chain
+      checkState(currentChain.endOfChain == n);
+      checkState(currentChain.startOfChain == startOfChain);
+
+      final Node startNode = checkNotNull(startOfChain.getFirstChild());
+      return updateTypeWhenEndOfOptChain(n, startNode, currentChain, executedScope);
+    } else {
+      // `n` is just an inner node (i.e. not the end of the current chain). Simply return the
+      // executedScope.
+      return executedScope;
+    }
+  }
+
+  // Uses the startNode's type to selectively join the executed scope with the unexecuted scope, and
+  // updates the type assigned to `optChain` in `setXAfterChildrenTraversed()`
+  private FlowScope updateTypeWhenEndOfOptChain(
+      Node optChain, Node startNode, OptChainInfo currentChain, FlowScope executedScope) {
+
+    JSType startType = getJSType(startNode);
+    if (startType.isUnknownType()) {
+      // Unknown startType: Conditional part may execute. Result type must be unknown.
+      optChain.setJSType(unknownType);
+      return join(executedScope, currentChain.unconditionalScope);
+    } else if (startType.isNullType() || startType.isVoidType()) {
+      // Conditional part will not execute.
+      optChain.setJSType(registry.getNativeType(VOID_TYPE));
+      return currentChain.unconditionalScope;
+    } else if (!startType.isNullable()) {
+      // Conditional part will execute; `optChain` was assigned the right type in
+      // `setXAfterChildrenTraversed()`.
+      return executedScope;
+    } else {
+      // Nullable start: Conditional part may execute. Need to add a VOID_TYPE to the type
+      // assigned to `optChain` within `setXAfterChildrenTraversed()`.
+      optChain.setJSType(
+          registry.createUnionType(registry.getNativeType(VOID_TYPE), optChain.getJSType()));
+      final FlowScope unexecutedScope =
+          reverseInterpreter.getPreciserScopeKnowingConditionOutcome(
+              startNode, currentChain.unconditionalScope, Outcome.NULLISH);
+      return join(executedScope, unexecutedScope);
+    }
   }
 
   /**
@@ -2443,3 +2597,4 @@ class TypeInference
     return ((TypedScope) scope.getDeclarationScope()).getVar(name);
   }
 }
+

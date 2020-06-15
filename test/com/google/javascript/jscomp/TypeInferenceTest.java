@@ -345,6 +345,16 @@ public final class TypeInferenceTest {
         registry.getNativeType(type1), registry.getNativeType(type2));
   }
 
+  /** Returns a record type with a field `fieldName` and JSType specified by `fieldType`. */
+  private JSType createRecordType(String fieldName, JSType fieldType) {
+    Map<String, JSType> property = ImmutableMap.of(fieldName, fieldType);
+    return registry.createRecordType(property);
+  }
+
+  private JSType createRecordType(String fieldName, JSTypeNative fieldType) {
+    return createRecordType(fieldName, registry.getNativeType(fieldType));
+  }
+
   private JSType createMultiParamUnionType(JSTypeNative... variants) {
     return registry.createUnionType(variants);
   }
@@ -387,6 +397,359 @@ public final class TypeInferenceTest {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("x.y();");
     verify("x", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testSimpleGetProp_missingPropAccessedOnRecordType() {
+    assuming("x", createRecordType("y", STRING_TYPE));
+    inFunction("a = x.z;");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testSimpleGetProp_missingPropAccessedOnStringType() {
+    assuming("x", STRING_TYPE);
+    inFunction("a = x.z;");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  /**
+   * Tests property access on NULL_TYPE gives undefined see -
+   * https://github.com/tc39/proposal-optional-chaining#semantics
+   */
+  @Test
+  public void testOptChainGetProp_nullObj() {
+    assuming("x", NULL_TYPE);
+    inFunction("let a = x?.y;");
+    verify("a", VOID_TYPE);
+  }
+
+  // Tests inexistent prop accessed on UNKNOWN_TYPE gives UKNOWN_TYPE
+  @Test
+  public void testOptChain_accessingInexistentPropOnUnknownType() {
+    assuming("x", UNKNOWN_TYPE);
+    inFunction("a = x?.z");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  // Tests existing String property access on non-null object gives STRING_TYPE
+  @Test
+  public void testOptChainGetProp_stringProp() {
+    assuming("x", createRecordType("y", STRING_TYPE));
+    inFunction("let a = x?.y;");
+    verify("a", STRING_TYPE);
+  }
+
+  // Tests existing {?|STRING_TYPE} property access on non-null object gives {?|STRING_TYPE}
+  @Test
+  public void testOptChainGetProp_nullableStringProp() {
+    assuming("x", createRecordType("y", createUnionType(NULL_TYPE, STRING_TYPE)));
+    inFunction("let a = x?.y;");
+    verify("a", createUnionType(NULL_TYPE, STRING_TYPE));
+  }
+
+  // Tests existing FUNCTION_TYPE property access on non-null object gives FUNCTION_TYPE.
+  // Note - Although this test looks similar to the test above, this test is required to pass to
+  // make sure the OptChain_CALL tests pass.
+  @Test
+  public void testOptChainGetProp_functionProp() {
+    JSType funcType = registry.createFunctionType(registry.getNativeType(NUMBER_TYPE));
+    JSType lhsType = createRecordType("y", funcType);
+    assuming("x", lhsType);
+    inFunction("let a = x?.y;");
+    verify("x", lhsType);
+    verify("a", funcType); // not the function `y`'s return type
+  }
+
+  // Tests existing FUNCTION_TYPE property access on nullable object returns
+  // {VOID_TYPE|FUNCTION_TYPE}
+  @Test
+  public void testOptChainGetProp_functionProp_nullableObj() {
+    assuming("x", createNullableType(createRecordType("y", FUNCTION_TYPE)));
+    inFunction("let a = x?.y;");
+    verify("a", createUnionType(VOID_TYPE, FUNCTION_TYPE));
+  }
+
+  // Tests existing STRING_TYPE property access on nullable object returns {VOID_TYPE|STRING_TYPE}
+  @Test
+  public void testOptChainGetProp_stringProp_nullableObj() {
+    assuming("x", createNullableType(createRecordType("y", STRING_TYPE)));
+    inFunction("let a = x?.y;");
+    verify("a", createUnionType(STRING_TYPE, VOID_TYPE));
+  }
+
+  // Tests existing NUMBER_TYPE property access on non-null object returns NUMBER_TYPE
+  @Test
+  public void testOptChainGetProp_numberProp() {
+    assuming("x", createRecordType("y", NUMBER_TYPE));
+    inFunction("let a = x?.y;");
+    verify("a", NUMBER_TYPE);
+  }
+
+  // Tests existing Number property access on nullable object returns {VOID_TYPE|NUMBER_TYPE}
+  @Test
+  public void testOptChainGetProp_numberProp_nullableObj() {
+    assuming("x", createNullableType(createRecordType("y", NUMBER_TYPE)));
+    inFunction("let a = x?.y;");
+    verify("a", createUnionType(VOID_TYPE, NUMBER_TYPE));
+  }
+
+  // Tests valid, existing NULL_TYPE property access on non-null object gives NULL_TYPE
+  @Test
+  public void testOptChainGetProp_nullProp() {
+    assuming("x", createRecordType("y", NULL_TYPE));
+    inFunction("let a = x?.y;");
+    verify("a", NULL_TYPE);
+  }
+
+  // Tests that accessing inexistent property on existing object gives UNKNOWN_TYPE (bottom)
+  @Test
+  public void testOptChainGetProp_inexistentProp() {
+    assuming("x", createRecordType("y", STRING_TYPE));
+    inFunction("let a = x?.z;");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testSimpleOptChain_withUnsetType_trailingGetProp() {
+    assuming("x", UNKNOWN_TYPE);
+    inFunction("let a = (x?.y?.z).q;");
+    // NOTE: The parentheses breaks the optional chain,  so the `.q`  is not optional.
+    // We should issue a warning about this  in TypeCheck, but that isn't TypeInference's job,
+    // so we'll just assume `.q` is UNKNOWN_TYPE.
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  // Tests de-referencing `(x?.y).z` where `x` is `{VOID_TYPE|{y:{z:STRING_TYPE}}}}` returns
+  // STRING_TYPE
+  @Test
+  public void testGetProp_withOptionalChainObject_voidable() {
+    JSType recordType = createRecordType("y", createRecordType("z", STRING_TYPE));
+    JSType lhsType = registry.createUnionType(registry.getNativeType(VOID_TYPE), recordType);
+    assuming("x", lhsType);
+    inFunction("let a = (x?.y).z");
+    verify("x", recordType); // Dereferencing non-optionally (`.z`) tightens `x` here
+    verify("a", STRING_TYPE); // deliberate in TypeInf, must report in TypeChecking.
+  }
+
+  @Test
+  public void testOptChainGetProp_unconditionalAssignmentToObjInInnerNodes() {
+    assuming(
+        "x",
+        createRecordType("y", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE))));
+    inFunction("x?.y(x=5);");
+    verify("x", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetProp_conditionalAssignmentToObjInInnerNodes() {
+    JSType nullableRecordType =
+        createNullableType(
+            createRecordType(
+                "y", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE))));
+    assuming("x", nullableRecordType);
+    inFunction("x?.y(x=5);");
+    verify(
+        "x",
+        registry.createUnionType(
+            registry.getNativeType(NUMBER_TYPE), registry.getNativeType(NULL_TYPE)));
+  }
+
+  @Test
+  public void testOptChainGetProp_typeAnnotationOnObjInInnerNodes_unconditionalChain() {
+    JSType recordType =
+        createRecordType("y", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    assuming("x", recordType);
+    inFunction("x?.y(/** @type {number} */ (x)); ");
+    verify("x", recordType);
+  }
+
+  @Test
+  public void testGetProp_typeAnnotationOnObjInInnerNodes_unconditionalChain() {
+    JSType recordType =
+        createRecordType("y", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    assuming("x", recordType);
+    inFunction("x.y(/** @type {number} */ (x)); "); // regular GET_PROP
+    verify("x", recordType);
+  }
+
+  @Test
+  public void testOptChainGetProp_typeAnnotationOnObjInInnerNodes_conditionalChain() {
+    JSType nullableRecordType =
+        createNullableType(
+            createRecordType(
+                "y", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE))));
+    assuming("x", nullableRecordType);
+    inFunction("x?.y(/** @type {number} */ (x)); ");
+    verify("x", nullableRecordType);
+  }
+
+  // Since the type of objNode `a` is { ? | ...}, the statement `x=5` will conditionally execute and
+  // the type of `x` must be {STRING_TYPE|NUMBER_TYPE}
+  @Test
+  public void testOptChainGetProp_conditionalChangeToOuterVariable() {
+    JSType lhsNullableRecordType =
+        createNullableType(
+            createRecordType(
+                "b", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE))));
+    assuming("a", lhsNullableRecordType);
+    inFunction(lines("let x = 'x';", "a?.b(x=5);", "a; ", "x; "));
+    verify("a", lhsNullableRecordType);
+    verify("x", createUnionType(NUMBER_TYPE, STRING_TYPE));
+  }
+
+  // Tests optional chaining applied to a function call returning a nullable object
+  @Test
+  public void testOptChainGetProp_unconditionalChangeToOuterVariable_inNullableReceiver() {
+    JSType recordType = createRecordType("b", registry.getNativeType(NUMBER_TYPE));
+    JSType nullableRecordType = createNullableType(recordType);
+    JSType lhsType = registry.createFunctionType(nullableRecordType);
+
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "let res = a(x = 'some')?.b", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", STRING_TYPE);
+    verify("res", createUnionType(VOID_TYPE, NUMBER_TYPE));
+  }
+
+  // The receiver statement `a(x = 1)` conditionally executes and must change the type of `x`.
+  @Test
+  public void testRegularGetProp_unconditionalChangeToOuterVariable_inNullableReceiver() {
+    JSType funcType = registry.createFunctionType(registry.getNativeType(NUMBER_TYPE));
+    JSType recordType = createRecordType("b", funcType);
+    JSType nullableRecordType = createNullableType(recordType);
+    JSType lhsType = registry.createFunctionType(nullableRecordType);
+
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "let res = a(x = 1).b", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", NUMBER_TYPE);
+    verify("res", funcType);
+  }
+
+  // Tests optional chaining applied to a function call returning a non-nullable object
+  @Test
+  public void testOptChainGetProp_unconditionalChangeToOuterVariable_inNonNullableReceiver() {
+    JSType recordType = createRecordType("b", registry.getNativeType(NUMBER_TYPE));
+    JSType lhsType = registry.createFunctionType(recordType);
+
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "let res = a(x = 'some')?.b", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", STRING_TYPE);
+    verify("res", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testRegularGetProp_changeToOuterVariable_inNonNullableReceiver_andOptNodes() {
+    JSType funcType = registry.createFunctionType(registry.getNativeType(NUMBER_TYPE));
+    JSType recordType = createRecordType("b", funcType);
+    JSType lhsType = registry.createFunctionType(recordType);
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "let res = a(x = 1).b(x = 'x')", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", STRING_TYPE);
+    verify("res", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetProp_changeToOuterVariable_inNonNullableReceiver_andOptNodes() {
+    JSType funcType = registry.createFunctionType(registry.getNativeType(NUMBER_TYPE));
+    JSType recordType = createRecordType("b", funcType);
+    JSType lhsType = registry.createFunctionType(recordType);
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "let res = a(x = 1)?.b(x = 'x')", "a; ", "x; res; "));
+    verify("a", lhsType);
+    verify("x", STRING_TYPE);
+    verify("res", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testRegularGetProp_changeToOuterVariable_inNullableReceiver_andOptNodes() {
+    JSType funcType = registry.createFunctionType(registry.getNativeType(NUMBER_TYPE));
+    JSType recordType = createRecordType("b", funcType);
+    JSType nullableRecordType = createNullableType(recordType);
+    JSType lhsType = registry.createFunctionType(nullableRecordType);
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "let res = a(x = 1).b(x = 'x')", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", registry.createUnionType(STRING_TYPE));
+    verify("res", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetProp_changeToOuterVariable_inNullableReceiver_andOptNodes() {
+    JSType funcType = registry.createFunctionType(registry.getNativeType(NUMBER_TYPE));
+    JSType recordType = createRecordType("b", funcType);
+    JSType nullableRecordType = createNullableType(recordType);
+    JSType lhsType = registry.createFunctionType(nullableRecordType);
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "let res = a(x = 1)?.b(x = 'x')", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", registry.createUnionType(NUMBER_TYPE, STRING_TYPE));
+    verify("res", createUnionType(VOID_TYPE, NUMBER_TYPE));
+  }
+
+  // Since the type of objNode `a` is well-defined (not nullable), the statement `x=5` will
+  // unconditionally execute and the type of `x` must get changed to NUMBER_TYPE
+  @Test
+  public void testOptChainGetProp_unconditionalChangeToOuterVariable() {
+    JSType lhsType =
+        createRecordType("b", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "a?.b(x=5);", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testRegularGetProp_unconditionalChangeToOuterVariable() {
+    JSType lhsType =
+        createRecordType("b", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    assuming("a", lhsType);
+    inFunction(lines("let x = 'x';", "a.b(x=5);", "a; ", "x; "));
+    verify("a", lhsType);
+    verify("x", NUMBER_TYPE);
+  }
+
+  // Changing an outer variable `x` after accessing an inexistent property `c` should update the
+  // type of the outer variable
+  @Test
+  public void testOptChainGetProp_invalidChangeToOuterVariable() {
+    JSType lhsType =
+        createRecordType("b", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    assuming("a", lhsType);
+    inFunction(
+        lines(
+            "let x = 'x';",
+            "a?.c(x=5);", // even though prop `c` is inexistent, x=5 will run, and typeOf(x) will
+            // change.
+            "a; ",
+            "x; "));
+    verify("a", lhsType);
+    verify("x", NUMBER_TYPE);
+  }
+
+  // a?.b(x?.y.z).c with non-nullable object
+  @Test
+  public void testOptChainGetProp_multipleChains() {
+    JSType lhsType =
+        createRecordType("b", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE)));
+    assuming("a", lhsType);
+    inFunction("let res = a?.b(x?.y.z);");
+    verify("res", NUMBER_TYPE);
+  }
+
+  // a?.b(x?.y.z).c with nullable object
+  @Test
+  public void testOptChainGetProp_multipleChains_nullableReceiver() {
+    JSType lhsType =
+        createNullableType(
+            createRecordType(
+                "b", registry.createFunctionType(registry.getNativeType(NUMBER_TYPE))));
+    assuming("a", lhsType);
+    inFunction("let res = a?.b(x?.y.z);");
+    verify("res", registry.createUnionType(VOID_TYPE, NUMBER_TYPE));
   }
 
   @Test
