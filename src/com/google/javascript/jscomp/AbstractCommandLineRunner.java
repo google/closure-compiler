@@ -64,8 +64,6 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -334,27 +332,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Validates whether --browser_featureset_year input is legal
+   * Validates whether --browser_featureset_year input value is legal
    *
    * @param inputYear integer value passed as input
    */
   @GwtIncompatible("java.time")
   public void validateBrowserFeaturesetYearFlag(Integer inputYear) {
-    int currentYear = LocalDateTime.now(ZoneId.systemDefault()).getYear();
-    if (inputYear > currentYear) {
+    boolean validInputYear = inputYear == 2020 || inputYear == 2019 || inputYear == 2012;
+    if (!validInputYear) {
       throw new FlagUsageException(
           SimpleFormat.format(
-              "--browser_featureset_year=%d is the latest meaningful value to use", currentYear));
-    } else if (inputYear < 2019 && inputYear > 2012) {
-      throw new FlagUsageException(
-          SimpleFormat.format(
-              "--browser_featureset_year=2019 is the earliest meaningful value"
-                  + " to use after 2012"));
-    } else if (inputYear < 2012) {
-      throw new FlagUsageException(
-          SimpleFormat.format(
-              "Illegal --browser_featureset_year=%d. --browser_featureset_year=2012 is the"
-                  + " earliest meaningful value to use",
+              "Illegal browser_featureset_year=%d. We support values 2012, 2019, and 2020 only",
               inputYear));
     }
   }
