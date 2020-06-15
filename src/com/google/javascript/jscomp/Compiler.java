@@ -3195,6 +3195,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     CompilerInput input = synthesizedCodeInput;
     Node astRoot = input.getAstRoot(this);
     checkState(astRoot.isFirstChildOf(jsRoot));
+    checkState(SYNTHETIC_CODE_INPUT_ID.equals(input.getInputId()));
+
     if (mergeContentIntoFirstInput && astRoot.hasChildren()) {
       // If we've inserted anything into the synthetic AST, move it into the top of the next script.
       Node next = astRoot.getNext();
@@ -3204,13 +3206,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       next.addChildrenToFront(astRoot.removeChildren());
       reportChangeToChangeScope(next);
     }
-    checkState(SYNTHETIC_CODE_INPUT_ID.equals(input.getInputId()));
+
     jsRoot.removeChild(astRoot);
-    input.getModule().remove(input);
-    inputsById.remove(input.getInputId());
+
+    // bookkeeping to mark scopes and nodes as deleted
     reportChangeToChangeScope(astRoot);
     astRoot.setDeleted(true);
-    synthesizedCodeInput = null;
+    NodeUtil.markFunctionsDeleted(astRoot, this);
+
+    input.getModule().remove(input);
+    inputsById.remove(input.getInputId());
+    this.synthesizedCodeInput = null;
   }
 
   @Override

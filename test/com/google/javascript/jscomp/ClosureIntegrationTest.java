@@ -311,8 +311,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testDisableModuleRewriting_doesntCrashWhenFirstInputIsModule() {
-    CompilerOptions options = new CompilerOptions();
+  public void testDisableModuleRewriting_doesntCrashWhenFirstInputIsModule_andGoogScopeUsed() {
+    CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
@@ -329,6 +329,17 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
               "  /** @constructor */ function Outer() {}",
               "});")
         });
+  }
+
+  @Test
+  public void testDisableModuleRewriting_doesntCrashWhenFirstInputIsModule_andPolyfillIsInjected() {
+    CompilerOptions options = createCompilerOptions();
+    options.setEnableModuleRewriting(false);
+    options.setClosurePass(true);
+    options.setChecksOnly(true);
+    options.setForceLibraryInjection(ImmutableList.of("es6/string/startswith"));
+
+    testNoWarnings(options, "goog.module('foo.bar');");
   }
 
   @Test
