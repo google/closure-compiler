@@ -2869,7 +2869,7 @@ public class Node implements Serializable {
    */
   public final void setSideEffectFlags(int flags) {
     checkState(
-        this.isCall() || this.isNew() || this.isTaggedTemplateLit(),
+        this.isCall() || this.isOptChainCall() || this.isNew() || this.isTaggedTemplateLit(),
         "Side-effect flags can only be set on invocation nodes; got %s",
         this);
 

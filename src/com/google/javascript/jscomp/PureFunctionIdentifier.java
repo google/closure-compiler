@@ -211,6 +211,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     switch (expr.getToken()) {
       case FUNCTION:
       case GETPROP:
+      case OPTCHAIN_GETPROP:
       case NAME:
         results.add(expr);
         return true;
@@ -293,6 +294,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         // Functions can be usefully compared for equality / existence.
       case ARRAYLIT:
       case CALL:
+      case OPTCHAIN_CALL:
       case NEW:
       case TAGGED_TEMPLATELIT:
         // Functions are the callees and parameters of an invocation.
@@ -300,7 +302,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       case TYPEOF:
         // Often used to determine if a ctor/method exists/matches.
       case GETELEM:
+      case OPTCHAIN_GETELEM:
       case GETPROP:
+      case OPTCHAIN_GETPROP:
         // Many functions, especially ctors, have properties.
       case RETURN:
       case YIELD:
@@ -866,8 +870,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           }
           break;
 
+        case OPTCHAIN_GETPROP:
         case GETPROP:
-          // Assumption: GETELEM is never side-effectful.
+          // Assumption: GETELEM and OPTCHAIN_GETELEM are never side-effectful.
           if (getPropertyKind(node.getLastChild().getString()).hasGetterOrSetter()) {
             setSideEffectsForUnknownCall(encloserSummary);
           }
@@ -1102,7 +1107,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   }
 
   private static boolean isCallOrTaggedTemplateLit(Node invocation) {
-    return invocation.isCall() || invocation.isTaggedTemplateLit();
+    return invocation.isCall() || invocation.isOptChainCall() || invocation.isTaggedTemplateLit();
   }
 
   /**
@@ -1116,6 +1121,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       case NAME:
         return nameRef.getString();
       case GETPROP:
+      case OPTCHAIN_GETPROP:
         return PROP_NAME_PREFIX + nameRef.getSecondChild().getString();
       default:
         throw new IllegalStateException("Unexpected name reference: " + nameRef.toStringTree());

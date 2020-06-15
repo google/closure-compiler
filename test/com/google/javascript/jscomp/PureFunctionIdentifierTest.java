@@ -200,6 +200,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
+    // Allow testing of features that are not yet fully supported.
+    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     enableNormalize();
     enableGatherExternProperties();
     enableTypeCheck();
@@ -252,6 +254,58 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         }
       }
     }
+  }
+
+  @Test
+  public void testOptionalChainGetProp() {
+    assertNoPureCalls("externObj?.sef1()");
+    assertPureCallsMarked("externObj?.nsef1()", ImmutableList.of("externObj?.nsef1"));
+  }
+
+  @Test
+  public void testOptionalChainGetElem() {
+    assertNoPureCalls("externObj?.['sef1']()");
+    // The use of `[]` hides the exact method being called from the compiler,
+    // so it will assume there are side-effects.
+    assertNoPureCalls("externObj?.['nsef1']()");
+  }
+
+  @Test
+  public void testOptionalChainCall() {
+    assertNoPureCalls("externObj.sef1?.()");
+    assertNoPureCalls("externObj?.sef1?.()");
+    assertPureCallsMarked("externObj.nsef1?.()", ImmutableList.of("externObj.nsef1"));
+    assertPureCallsMarked("externObj?.nsef1?.()", ImmutableList.of("externObj?.nsef1"));
+  }
+
+  @Test
+  public void testOptionalGetterAccess_hasSideEffects() {
+    assertNoPureCalls(
+        lines(
+            "class Foo { get getter() { } }", //
+            "",
+            "function foo(a) { a?.getter; }",
+            "foo(x);"));
+  }
+
+  @Test
+  public void testOptionalNormalPropAccess_hasNoSideEffects() {
+    assertPureCallsMarked(
+        lines(
+            "", //
+            "function foo(a) { a?.prop; }",
+            "foo(x);"),
+        ImmutableList.of("foo"));
+  }
+
+  @Test
+  public void testOptionalElementAccess_hasNoSideEffects() {
+    assertPureCallsMarked(
+        lines(
+            "", //
+            "function foo(a) { a?.['prop']; }",
+            "foo(x);"),
+        ImmutableList.of("foo"));
   }
 
   @Test
