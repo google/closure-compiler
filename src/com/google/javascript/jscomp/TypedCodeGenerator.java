@@ -76,7 +76,8 @@ class TypedCodeGenerator extends CodeGenerator {
           add(getTypeAnnotation(rhs));
         }
       } else if (NodeUtil.isNameDeclaration(n) && n.getFirstFirstChild() != null) {
-        if (NodeUtil.isNamespaceDecl(n.getFirstChild())) {
+        // All namespace declarations except `const x = {};` are signified by @const JSDoc.
+        if (NodeUtil.isNamespaceDecl(n.getFirstChild()) && n.getJSDocInfo() != null) {
           add(jsDocInfoPrinter.print(n.getJSDocInfo()));
         } else {
           add(getTypeAnnotation(n.getFirstFirstChild()));

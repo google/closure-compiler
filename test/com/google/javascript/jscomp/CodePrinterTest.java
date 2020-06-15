@@ -1495,15 +1495,84 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void testTypeAnnotationsNamespace() {
+  public void testTypeAnnotationsNamespace_varWithoutJSDoc() {
     assertTypeAnnotations(
         LINE_JOINER.join(
+            "var a = {};", //
+            "/** @constructor */ a.Foo = function(){}"),
+        LINE_JOINER.join(
+            "var a = {};", //
+            "/**",
+            " * @constructor",
+            " */",
+            "a.Foo = function() {",
+            "};\n"));
+  }
+
+  @Test
+  public void testTypeAnnotationsNamespace_varWithConstJSDoc() {
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @const */", //
             "var a = {};",
             "/** @constructor */ a.Foo = function(){}"),
         LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/**",
+            " * @constructor",
+            " */",
+            "a.Foo = function() {",
+            "};\n"));
+  }
+
+  @Test
+  public void testTypeAnnotationsNamespace_constDeclarationWithoutJSDoc() {
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "const a = {};", //
+            "/** @constructor */ a.Foo = function(){}"),
+        LINE_JOINER.join(
+            "const a = {};", //
+            "/**",
+            " * @constructor",
+            " */",
+            "a.Foo = function() {",
+            "};\n"));
+  }
+
+  @Test
+  public void testTypeAnnotationsNamespace_constDeclarationWithJSDoc() {
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @export */",
+            "const a = {};", //
+            "/** @constructor */ a.Foo = function(){}"),
+        LINE_JOINER.join(
+            "/** @export */ const a = {};", //
+            "/**",
+            " * @constructor",
+            " */",
+            "a.Foo = function() {",
+            "};\n"));
+  }
+
+  @Test
+  public void testTypeAnnotationsNamespace_qnameWithConstJSDoc() {
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @const */",
             "var a = {};",
-            "/**\n * @constructor\n */",
-            "a.Foo = function() {\n};\n"));
+            "/** @const */",
+            "a.b = {};",
+            "/** @constructor */ a.b.Foo = function(){}"),
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/** @const */ a.b = {};",
+            "/**",
+            " * @constructor",
+            " */",
+            "a.b.Foo = function() {",
+            "};\n"));
   }
 
   @Test
