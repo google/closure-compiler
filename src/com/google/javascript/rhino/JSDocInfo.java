@@ -124,6 +124,7 @@ public class JSDocInfo implements Serializable {
     // Other information
     private String description;
     private String meaning;
+    private String alternateMessageId;
     private String deprecated;
     private String license;
     private ImmutableSet<String> suppressions;
@@ -189,6 +190,7 @@ public class JSDocInfo implements Serializable {
       other.modifies = modifies == null ? null : ImmutableSet.copyOf(modifies);
       other.closurePrimitiveId = closurePrimitiveId;
       other.propertyBitField = propertyBitField;
+      other.alternateMessageId = alternateMessageId;
       return other;
     }
 
@@ -781,6 +783,7 @@ public class JSDocInfo implements Serializable {
         && Objects.equals(jsDoc1.getVersion(), jsDoc2.getVersion())
         && Objects.equals(jsDoc1.getVisibility(), jsDoc2.getVisibility())
         && Objects.equals(jsDoc1.getClosurePrimitiveId(), jsDoc2.getClosurePrimitiveId())
+        && Objects.equals(jsDoc1.getAlternateMessageId(), jsDoc2.getAlternateMessageId())
         && jsDoc1.bitset == jsDoc2.bitset;
   }
 
@@ -1871,6 +1874,24 @@ public class JSDocInfo implements Serializable {
   void setMeaning(String meaning) {
     lazyInitInfo();
     info.meaning = meaning;
+  }
+
+  /**
+   * Gets the alternate message ID specified by the {@code @alternateMessageId} annotation.
+   *
+   * <p>In localization systems, if we migrate from one message ID algorithm to another, we can
+   * specify the old one via {@code @alternateMessageId}. This allows the product to use the
+   * previous translation while waiting for the new one to be translated.
+   *
+   * <p>Some code generators (like Closure Templates) inject this.
+   */
+  public String getAlternateMessageId() {
+    return (info == null) ? null : info.alternateMessageId;
+  }
+
+  void setAlternateMessageId(String alternateMessageId) {
+    lazyInitInfo();
+    info.alternateMessageId = alternateMessageId;
   }
 
   /**

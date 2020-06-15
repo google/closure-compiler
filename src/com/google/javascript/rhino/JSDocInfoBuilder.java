@@ -855,6 +855,21 @@ public final class JSDocInfoBuilder {
   }
 
   /**
+   * Records an ID for an alternate message to be used if this message is not yet translated.
+   *
+   * @return {@code true} If the alternate message ID was successfully updated.
+   */
+  public boolean recordAlternateMessageId(String alternateMessageId) {
+    if (alternateMessageId != null && currentInfo.getAlternateMessageId() == null) {
+      currentInfo.setAlternateMessageId(alternateMessageId);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records an identifier for a Closure Primitive. function.
    *
    * @return {@code true} If the id was successfully updated.

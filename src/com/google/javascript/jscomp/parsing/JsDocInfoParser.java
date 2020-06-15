@@ -676,6 +676,15 @@ public final class JsDocInfoParser {
           }
           return token;
 
+        case ALTERNATE_MESSAGE_ID:
+          ExtractionInfo alternateMessageIdInfo = extractSingleLineBlock();
+          String alternateMessageId = alternateMessageIdInfo.string;
+          token = alternateMessageIdInfo.token;
+          if (!jsdocBuilder.recordAlternateMessageId(alternateMessageId)) {
+            addParserWarning("msg.jsdoc.alternateMessageId.extra");
+          }
+          return token;
+
         case CLOSURE_PRIMITIVE:
           skipEOLs();
           return parseClosurePrimitiveTag(next());

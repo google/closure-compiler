@@ -72,6 +72,157 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMissingAlternateMessage() {
+    test(
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = goog.getMsg('asdf');",
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A='asdf'",
+        warning(ReplaceMessages.MISSING_ALTERNATE_MESSAGE_ID));
+  }
+
+  @Test
+  public void testAlternateMessageWithMismatchedParts() {
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .setDesc("B desc")
+            .setMeaning("B meaning")
+            .appendStringPart("Hello, ")
+            .appendPlaceholderReference("name")
+            .appendStringPart("!")
+            .appendStringPart(" Welcome!")
+            .build((meaning, messageParts) -> "1984"));
+
+    testError(
+        "/**\n    @desc B desc"
+            + "\n    @meaning B meaning"
+            + "\n    @alternateMessageId 1984"
+            + "\n*/"
+            + "\n var MSG_A = goog.getMsg('Hello, {$name}!', {name: name});",
+        ReplaceMessages.INVALID_ALTERNATE_MESSAGE_PARTS);
+  }
+
+  @Test
+  public void testAlternateMessageWithMismatchedPlaceholders() {
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .setDesc("B desc")
+            .setMeaning("B meaning")
+            .appendStringPart("Hello, ")
+            .appendPlaceholderReference("first_name")
+            .appendStringPart("!")
+            .build((meaning, messageParts) -> "1984"));
+
+    testError(
+        "/**\n    @desc B desc"
+            + "\n    @meaning B meaning"
+            + "\n    @alternateMessageId 1984"
+            + "\n*/"
+            + "\n var MSG_A = goog.getMsg('Hello, {$name}!', {name: name});",
+        ReplaceMessages.INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS);
+  }
+
+  @Test
+  public void testReplaceValidAlternateMessage() {
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .appendStringPart("Howdy\npardner")
+            .build((meaning, messageParts) -> "1984"));
+
+    test(
+        "/**\n    @desc B desc"
+            + "\n    @alternateMessageId 1984"
+            + "\n*/"
+            + "\n var MSG_A = goog.getMsg('asdf');",
+        "/**\n    @desc B desc"
+            + "\n    @alternateMessageId 1984"
+            + "\n*/"
+            + "\n var MSG_A='Howdy\\npardner'");
+  }
+
+  @Test
+  public void testIgnoreUnnecessaryAlternateMessage() {
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .appendStringPart("Howdy\npardner")
+            .build((meaning, messageParts) -> "1984"));
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .setDesc("Greeting.")
+            .setAlternateId("1984")
+            .appendStringPart("Hi\nthere")
+            .build());
+
+    test(
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = goog.getMsg('asdf');",
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A='Hi\\nthere'");
+  }
+
+  @Test
+  public void testAlternateTrumpsFallback() {
+    registerMessage(
+        new JsMessage.Builder("MSG_C")
+            .appendStringPart("Howdy\npardner")
+            .build((meaning, messageParts) -> "1984"));
+
+    registerMessage(new JsMessage.Builder("MSG_B").appendStringPart("Good\nmorrow, sir").build());
+
+    test(
+        lines(
+            "/**",
+            "    @desc d",
+            "    @alternateMessageId 1984",
+            "*/",
+            "var MSG_A = goog.getMsg('asdf');",
+            "/**",
+            "    @desc d",
+            "*/",
+            "var MSG_B = goog.getMsg('ghjk');",
+            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
+        lines(
+            "/**",
+            "    @desc d",
+            "    @alternateMessageId 1984",
+            "*/",
+            "var MSG_A = 'Howdy\\npardner';",
+            "/**",
+            "    @desc d",
+            "*/",
+            "var MSG_B = 'Good\\nmorrow, sir';",
+            "var x = MSG_A;"));
+  }
+
+  @Test
+  public void testFallbackWithAlternate() {
+    registerMessage(
+        new JsMessage.Builder("MSG_C")
+            .appendStringPart("Howdy\npardner")
+            .build((meaning, messageParts) -> "1984"));
+
+    test(
+        lines(
+            "/**",
+            "    @desc d",
+            "*/",
+            "var MSG_A = goog.getMsg('asdf');",
+            "/**",
+            "    @desc d",
+            "    @alternateMessageId 1984",
+            "*/",
+            "var MSG_B = goog.getMsg('ghjk');",
+            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
+        lines(
+            "/**",
+            "    @desc d",
+            "*/",
+            "var MSG_A = 'asdf';",
+            "/**",
+            "    @desc d",
+            "    @alternateMessageId 1984",
+            "*/",
+            "var MSG_B = 'Howdy\\npardner';",
+            "var x = MSG_B;"));
+  }
+
+  @Test
   public void testNameReplacement() {
     registerMessage(new JsMessage.Builder("MSG_B")
         .appendStringPart("One ")

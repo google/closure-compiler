@@ -25,6 +25,7 @@ import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -40,8 +41,25 @@ final class ReplaceMessages extends JsMessageVisitor {
       DiagnosticType.error("JSC_BUNDLE_DOES_NOT_HAVE_THE_MESSAGE",
           "Message with id = {0} could not be found in replacement bundle");
 
-  ReplaceMessages(AbstractCompiler compiler, MessageBundle bundle,
-      boolean checkDuplicatedMessages, JsMessage.Style style,
+  static final DiagnosticType MISSING_ALTERNATE_MESSAGE_ID =
+      DiagnosticType.warning(
+          "JSC_MISSING_ALTERNATE_MESSAGE_ID", "Alternate message ID={0} not found, for {1}.");
+
+  static final DiagnosticType INVALID_ALTERNATE_MESSAGE_PARTS =
+      DiagnosticType.error(
+          "JSC_INVALID_ALTERNATE_MESSAGE_PARTS",
+          "Alternate message ID={0} with {1} parts differs from {2} with {3} parts.");
+
+  static final DiagnosticType INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS =
+      DiagnosticType.error(
+          "JSC_INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS",
+          "Alternate message ID={0} placeholders ({1}) differs from {2} placeholders ({3}).");
+
+  ReplaceMessages(
+      AbstractCompiler compiler,
+      MessageBundle bundle,
+      boolean checkDuplicatedMessages,
+      JsMessage.Style style,
       boolean strictReplacement) {
     super(compiler, checkDuplicatedMessages, style, bundle.idGenerator());
 
@@ -49,13 +67,55 @@ final class ReplaceMessages extends JsMessageVisitor {
     this.strictReplacement = strictReplacement;
   }
 
+  private JsMessage lookupMessage(Node callNode, MessageBundle bundle, JsMessage message) {
+    JsMessage translatedMessage = bundle.getMessage(message.getId());
+    if (translatedMessage != null) {
+      return translatedMessage;
+    }
+
+    String alternateId = message.getAlternateId();
+    if (alternateId == null) {
+      return null;
+    }
+
+    JsMessage alternateMessage = bundle.getMessage(alternateId);
+    if (alternateMessage == null) {
+      compiler.report(
+          JSError.make(callNode, MISSING_ALTERNATE_MESSAGE_ID, alternateId, message.getKey()));
+    } else {
+      // Validate that the alternate message is compatible with this message. Ideally we'd also
+      // check meaning and description, but they're not populated by `MessageBundle.getMessage`.
+      if (message.parts().size() != alternateMessage.parts().size()) {
+        compiler.report(
+            JSError.make(
+                callNode,
+                INVALID_ALTERNATE_MESSAGE_PARTS,
+                alternateId,
+                String.valueOf(alternateMessage.parts().size()),
+                message.getKey(),
+                String.valueOf(message.parts().size())));
+        return null;
+      }
+      if (!Objects.equals(message.placeholders(), alternateMessage.placeholders())) {
+        compiler.report(
+            JSError.make(
+                callNode,
+                INVALID_ALTERNATE_MESSAGE_PLACEHOLDERS,
+                alternateId,
+                String.valueOf(alternateMessage.placeholders()),
+                message.getKey(),
+                String.valueOf(message.placeholders())));
+        return null;
+      }
+    }
+    return alternateMessage;
+  }
+
   @Override
   void processMessageFallback(
       Node callNode, JsMessage message1, JsMessage message2) {
-    boolean isFirstMessageTranslated =
-        (bundle.getMessage(message1.getId()) != null);
-    boolean isSecondMessageTranslated =
-        (bundle.getMessage(message2.getId()) != null);
+    boolean isFirstMessageTranslated = (lookupMessage(callNode, bundle, message1) != null);
+    boolean isSecondMessageTranslated = (lookupMessage(callNode, bundle, message2) != null);
     Node replacementNode =
         (isSecondMessageTranslated && !isFirstMessageTranslated)
             ? callNode.getChildAtIndex(2)
@@ -72,12 +132,11 @@ final class ReplaceMessages extends JsMessageVisitor {
       JsMessageDefinition definition) {
 
     // Get the replacement.
-    JsMessage replacement = bundle.getMessage(message.getId());
+    Node callNode = definition.getMessageNode();
+    JsMessage replacement = lookupMessage(callNode, bundle, message);
     if (replacement == null) {
       if (strictReplacement) {
-        compiler.report(JSError.make(
-            definition.getMessageNode(), BUNDLE_DOES_NOT_HAVE_THE_MESSAGE,
-            message.getId()));
+        compiler.report(JSError.make(callNode, BUNDLE_DOES_NOT_HAVE_THE_MESSAGE, message.getId()));
         // Fallback to the default message
         return;
       } else {

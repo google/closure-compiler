@@ -80,6 +80,7 @@ public final class JsMessage {
   private final List<CharSequence> parts;
   private final Set<String> placeholders;
   private final String desc;
+  private final String alternateId;
   private final boolean hidden;
   private final String meaning;
 
@@ -90,18 +91,26 @@ public final class JsMessage {
   /**
    * Creates an instance. Client code should use a {@link JsMessage.Builder}.
    *
-   * @param key a key that should identify this message in sources; typically
-   *     it is the message's name (e.g. {@code "MSG_HELLO"}).
-   * @param id an id that *uniquely* identifies the message in the bundle.
-   *     It could be either the message name or id generated from the message
-   *     content.
-   * @param meaning The user-specified meaning of the message. May be null if
-   *     the user did not specify an explicit meaning.
+   * @param key a key that should identify this message in sources; typically it is the message's
+   *     name (e.g. {@code "MSG_HELLO"}).
+   * @param id an id that *uniquely* identifies the message in the bundle. It could be either the
+   *     message name or id generated from the message content.
+   * @param meaning The user-specified meaning of the message. May be null if the user did not
+   *     specify an explicit meaning.
+   * @param alternateId Alternate ID to be used if a translation for {@code id} is missing.
    */
-  private JsMessage(String sourceName, String key,
-      boolean isAnonymous, boolean isExternal,
-      String id, List<CharSequence> parts, Set<String> placeholders,
-      String desc, boolean hidden, String meaning) {
+  private JsMessage(
+      String sourceName,
+      String key,
+      boolean isAnonymous,
+      boolean isExternal,
+      String id,
+      List<CharSequence> parts,
+      Set<String> placeholders,
+      String desc,
+      boolean hidden,
+      String meaning,
+      String alternateId) {
 
     checkState(key != null);
     checkState(id != null);
@@ -111,6 +120,8 @@ public final class JsMessage {
     this.parts = Collections.unmodifiableList(parts);
     this.placeholders = Collections.unmodifiableSet(placeholders);
     this.desc = desc;
+    this.alternateId = alternateId;
+
     this.hidden = hidden;
     this.meaning = meaning;
 
@@ -146,6 +157,15 @@ public final class JsMessage {
    */
   public String getId() {
     return id;
+  }
+
+  /**
+   * Gets the message's alternate ID (e.g. {@code "92430284230902938293"}), if available. This will
+   * be used if a translation for `id` is not available.
+   */
+  @Nullable
+  public String getAlternateId() {
+    return alternateId;
   }
 
   /**
@@ -323,6 +343,8 @@ public final class JsMessage {
     private String desc;
     private boolean hidden;
 
+    private String alternateId;
+
     private final List<CharSequence> parts = new ArrayList<>();
     private final Set<String> placeholders = new HashSet<>();
 
@@ -396,6 +418,12 @@ public final class JsMessage {
       return this;
     }
 
+    /** Sets the alternate message ID, to be used if the primary ID is not yet translated. */
+    public Builder setAlternateId(String alternateId) {
+      this.alternateId = alternateId;
+      return this;
+    }
+
     /** Sets whether the message should be hidden from volunteer translators. */
     public Builder setIsHidden(boolean hidden) {
       this.hidden = hidden;
@@ -440,8 +468,18 @@ public final class JsMessage {
         id = idGenerator == null ? defactoMeaning : idGenerator.generateId(defactoMeaning, parts);
       }
 
-      return new JsMessage(sourceName, key, isAnonymous, isExternal, id, parts,
-          placeholders, desc, hidden, meaning);
+      return new JsMessage(
+          sourceName,
+          key,
+          isAnonymous,
+          isExternal,
+          id,
+          parts,
+          placeholders,
+          desc,
+          hidden,
+          meaning,
+          alternateId);
     }
 
     /**

@@ -1666,6 +1666,29 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testParseAlternateMessageId1() {
+    assertThat(parse("@alternateMessageId A   */").getAlternateMessageId()).isEqualTo("A");
+  }
+
+  @Test
+  public void testParseAlternateMessageId2() {
+    assertThat(parse("@alternateMessageId A\n * B\n * C */").getAlternateMessageId())
+        .isEqualTo("A");
+  }
+
+  @Test
+  public void testParseAlternateMessageId3() {
+    JSDocInfo info = parse("@alternateMessageId  A\n * B\n * @desc  C */");
+    assertThat(info.getAlternateMessageId()).isEqualTo("A");
+    assertThat(info.getDescription()).isEqualTo("C");
+  }
+
+  @Test
+  public void testParseAlternateMessageId4() {
+    parse("@alternateMessageId  A\n * @alternateMessageId B  */", "extra @alternateMessageId tag");
+  }
+
+  @Test
   public void testParseClosurePrimitive() {
     JSDocInfo info = parse("@closurePrimitive {id} */");
     assertThat(info.getClosurePrimitiveId()).isEqualTo("id");

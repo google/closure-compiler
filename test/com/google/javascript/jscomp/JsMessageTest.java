@@ -54,4 +54,28 @@ public final class JsMessageTest {
     final long answerEmpty64 = 0x468d9ea2c42361aaL;
     assertThat(JsMessage.Hash.hash64("")).isEqualTo(answerEmpty64);
   }
+
+  @Test
+  public void testNoAlternateId() {
+    JsMessage msg = new JsMessage.Builder().setDesc("Hello.").build();
+    assertThat(msg.getDesc()).isEqualTo("Hello.");
+    assertThat(msg.getAlternateId()).isNull();
+  }
+
+  @Test
+  public void testAlternateId() {
+    JsMessage msg =
+        new JsMessage.Builder()
+            .setDesc("Hello.")
+            .setAlternateId("foo")
+            .setMeaning("meaning")
+            .appendPlaceholderReference("placeholder0")
+            .appendPlaceholderReference("placeholder1")
+            .appendStringPart("part0")
+            .appendStringPart("part1")
+            .appendStringPart("part2")
+            .build();
+    assertThat(msg.getDesc()).isEqualTo("Hello.");
+    assertThat(msg.getAlternateId()).isEqualTo("foo");
+  }
 }

@@ -37,8 +37,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   public static final DiagnosticType MISPLACED_MSG_ANNOTATION =
       DiagnosticType.disabled(
           "JSC_MISPLACED_MSG_ANNOTATION",
-          "Misplaced message annotation. @desc, @hidden, and @meaning annotations should only "
-              + "be on message nodes.\nMessage constants must be prefixed with 'MSG_'.");
+          "Misplaced message annotation. @desc, @hidden, @meaning, and @alternateMessageId"
+              + " annotations should be only on message nodes."
+              + "\nMessage constants must be prefixed with 'MSG_'.");
 
   public static final DiagnosticType MISPLACED_ANNOTATION =
       DiagnosticType.warning("JSC_MISPLACED_ANNOTATION",
@@ -523,20 +524,20 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   /**
-   * Checks that annotations for messages ({@code @desc}, {@code @hidden},
-   * and {@code @meaning})
-   * are in the proper place, namely on names starting with MSG_ which
-   * indicates they should be
-   * extracted for translation. A later pass checks that the right side is
+   * Checks that annotations for messages ({@code @desc}, {@code @hidden}, {@code @meaning} and
+   * {@code @alternateMessageId}) are in the proper place, namely on names starting with MSG_ which
+   * indicates they should be extracted for translation. A later pass checks that the right side is
    * a call to goog.getMsg.
    */
-  private void validateMsgJsDoc(Node n,
-      JSDocInfo info) {
+  private void validateMsgJsDoc(Node n, JSDocInfo info) {
     if (info == null) {
       return;
     }
 
-    if (info.getDescription() != null || info.isHidden() || info.getMeaning() != null) {
+    if (info.getDescription() != null
+        || info.isHidden()
+        || info.getMeaning() != null
+        || info.getAlternateMessageId() != null) {
       boolean descOkay = false;
       switch (n.getToken()) {
         case ASSIGN:

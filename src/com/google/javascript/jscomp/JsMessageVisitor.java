@@ -563,6 +563,9 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
       if (info.getMeaning() != null) {
         builder.setMeaning(info.getMeaning());
       }
+      if (info.getAlternateMessageId() != null) {
+        builder.setAlternateId(info.getAlternateMessageId());
+      }
     }
 
     return messageHasDesc;

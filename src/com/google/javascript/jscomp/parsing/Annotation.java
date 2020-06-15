@@ -25,6 +25,7 @@ import java.util.Map;
 enum Annotation {
   NG_INJECT,
   ABSTRACT,
+  ALTERNATE_MESSAGE_ID,
   AUTHOR,
   CLOSURE_PRIMITIVE,
   CONSTANT,
@@ -86,6 +87,7 @@ enum Annotation {
       new ImmutableMap.Builder<String, Annotation>()
           .put("ngInject", Annotation.NG_INJECT)
           .put("abstract", Annotation.ABSTRACT)
+          .put("alternateMessageId", Annotation.ALTERNATE_MESSAGE_ID)
           .put("argument", Annotation.PARAM)
           .put("author", Annotation.AUTHOR)
           .put("closurePrimitive", Annotation.CLOSURE_PRIMITIVE)
@@ -135,7 +137,6 @@ enum Annotation {
           .put("return", Annotation.RETURN)
           .put("returns", Annotation.RETURN)
           .put("see", Annotation.SEE)
-
           .put("struct", Annotation.STRUCT)
           .put("suppress", Annotation.SUPPRESS)
           .put("template", Annotation.TEMPLATE)
