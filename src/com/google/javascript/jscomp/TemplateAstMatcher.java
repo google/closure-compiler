@@ -46,6 +46,7 @@ public final class TemplateAstMatcher {
   private static final Token TEMPLATE_LOCAL_NAME = Token.PLACEHOLDER2;
   private static final Token TEMPLATE_STRING_LITERAL = Token.PLACEHOLDER3;
 
+  private final TypedScope topScope;
   private final JSTypeRegistry typeRegistry;
 
   /**
@@ -92,21 +93,22 @@ public final class TemplateAstMatcher {
   private final TypeMatchingStrategy typeMatchingStrategy;
 
   /**
-   * Constructs this matcher with a Function node that serves as the template
-   * to match all other nodes against. The body of the function will be used
-   * to match against.
+   * Constructs this matcher with a Function node that serves as the template to match all other
+   * nodes against. The body of the function will be used to match against.
    */
   public TemplateAstMatcher(
-      JSTypeRegistry typeRegistry,
+      AbstractCompiler compiler,
       Node templateFunctionNode,
       TypeMatchingStrategy typeMatchingStrategy) {
-    checkNotNull(typeRegistry);
     Preconditions.checkState(
         templateFunctionNode.isFunction(),
         "Template node must be a function node. Received: %s",
         templateFunctionNode);
 
-    this.typeRegistry = typeRegistry;
+    // TopScope may be null if the template is used before type checking, which is useful if
+    // just check code structure.
+    this.topScope = compiler.getTopScope();
+    this.typeRegistry = checkNotNull(compiler.getTypeRegistry());
     this.templateStart = initTemplate(templateFunctionNode);
     this.typeMatchingStrategy = checkNotNull(typeMatchingStrategy);
   }
@@ -217,7 +219,7 @@ public final class TemplateAstMatcher {
       Preconditions.checkNotNull(expression,
           "Missing JSDoc for parameter %s of template function %s",
           name, fnName);
-      JSType type = typeRegistry.evaluateTypeExpressionInGlobalScope(expression);
+      JSType type = typeRegistry.evaluateTypeExpression(expression, topScope);
       checkNotNull(type);
       params.add(name);
       paramTypes.put(name, type);

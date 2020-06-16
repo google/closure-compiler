@@ -574,6 +574,31 @@ public final class TemplateAstMatcherTest {
         TypeMatchingStrategy.EXACT);
   }
 
+  @Test
+  public void testMatches_namespace_method() {
+    String externs =
+        lines(
+            "",
+            "/** @const */ const ns = {};",
+            "/** @const */ ns.sub = {};",
+            "/** @return {boolean} */ ns.sub.method = function() {};",
+            "");
+
+    String template =
+        lines(
+            "/**",
+            " * @param {typeof ns.sub} target",
+            " */",
+            "function template(target) {",
+            "  target.method();",
+            "}");
+
+    TestNodePair pair = compile(externs, template, "var alias = ns.sub; alias.method();");
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
+    assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
+  }
+
   private void assertMatch(Node templateRoot, Node testNode, boolean shouldMatch) {
     assertMatch(templateRoot, testNode, shouldMatch, TypeMatchingStrategy.LOOSE);
   }
@@ -584,8 +609,7 @@ public final class TemplateAstMatcherTest {
       boolean shouldMatch,
       TypeMatchingStrategy typeMatchingStrategy) {
     TemplateAstMatcher matcher =
-        new TemplateAstMatcher(
-            lastCompiler.getTypeRegistry(), templateRoot.getFirstChild(), typeMatchingStrategy);
+        new TemplateAstMatcher(lastCompiler, templateRoot.getFirstChild(), typeMatchingStrategy);
     StringBuilder sb = new StringBuilder();
     sb.append("The nodes should").append(shouldMatch ? "" : " not").append(" have matched.\n");
     sb.append("Template node:\n").append(templateRoot.toStringTree()).append("\n");
@@ -611,6 +635,7 @@ public final class TemplateAstMatcherTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
+    options.setPreserveDetailedSourceInfo(true);
 
     Node templateNode = compiler.parse(SourceFile.fromCode("template", template));
 
