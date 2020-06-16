@@ -279,12 +279,22 @@ public final class NamedType extends ProxyObjectType {
     if (isSuccessfullyResolved()) {
       this.resolutionScope = null;
 
-      if (!result.isObjectType() || resolvedTypeArgs.isEmpty()) {
+      ObjectType resultAsObject = result.toMaybeObjectType();
+
+      if (resultAsObject == null) {
+        // For non-object types there is no need to handle template parameters or
+        // interface aliases, so we can just return now.
         return result;
       }
 
-      ObjectType asObject = result.toMaybeObjectType();
-      if (asObject == null || !asObject.isRawTypeOfTemplatizedType()) {
+      if (resultAsObject.isInstanceType() && resultAsObject.getConstructor().isInterface()) {
+        // Make sure the registry considers classes that declare they implement
+        // this NamedType as also implementing the resolved type.
+        registry.registerInterfaceAlias(this, resultAsObject);
+      }
+
+      if (resolvedTypeArgs.isEmpty() || !resultAsObject.isRawTypeOfTemplatizedType()) {
+        // No template parameters need to be resolved.
         return result;
       }
 
@@ -294,7 +304,7 @@ public final class NamedType extends ProxyObjectType {
         resolvedTypeArgs = resolvedTypeArgs.subList(0, numKeys);
       }
 
-      result = registry.createTemplatizedType(asObject, resolvedTypeArgs);
+      result = registry.createTemplatizedType(resultAsObject, resolvedTypeArgs);
       setReferencedType(result.resolve(reporter));
     }
 

@@ -42,6 +42,134 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
+  public void testDisambiguationOfForwardReferenedAliasedInterface() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setDisambiguateProperties(true);
+    options.setPrettyPrint(true);
+    options.setPreserveTypeAnnotations(true);
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "",
+            // base class doesn't say it implements AliasedInterface,
+            // but it does have a matching `foo()` method.
+            "class MyBaseClass {",
+            "    /** @return {void} */",
+            "    foo() {",
+            "        console.log('I should exist');",
+            "    }",
+            "}",
+            "",
+            // subclass claims to implement the interface, relying on the superclass implementation
+            // of `foo()`.
+            // Note that `AliasedInterface` isn't defined yet.
+            "/** @implements {AliasedInterface} */",
+            "class MyClass extends MyBaseClass {",
+            "}",
+            "",
+            // AliasedInterface is originally defined using a different name.
+            // This can happen due to module rewriting even if the original
+            // code doesn't appear to do this.
+            "/** @record */",
+            "function OriginalInterface() { }",
+            "/** @return {void} */",
+            "OriginalInterface.prototype.foo = function () { };",
+            "",
+            // AliasedInterface is defined after it was used above.
+            // Because of this the compiler previously failed to connect the `foo()` property
+            // on `OriginalInterface` with the one on `MyBaseClass`, leading to a disambiguation
+            // error.
+            "/** @const */",
+            "const AliasedInterface = OriginalInterface;",
+            "",
+            // Factory function ensures that the call to `foo()` below
+            // is seen as `AliasedInterface.prototype.foo` rather than
+            // `MyClass.prototype.foo`.
+            "/** @return {!AliasedInterface} */",
+            "function magicFactory() {",
+            "    return new MyClass();",
+            "}",
+            "",
+            "magicFactory().foo();"),
+        // Compiler correctly recognises the call to `foo()` as referencing
+        // the implementation in MyBaseClass, so that implementation ends
+        // up inlined as the only output statement.
+        "console.log('I should exist');");
+  }
+
+  @Test
+  public void testDisambiguationOfForwardReferenedTemplatizedAliasedInterface() {
+    // This test case is nearly identical to the one above.
+    // The only difference here is the interfaces are templatized to makes sure
+    // resolving the templates doesn't interfere with handling the aliasing
+    // of the interface.
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setDisambiguateProperties(true);
+    options.setPrettyPrint(true);
+    options.setPreserveTypeAnnotations(true);
+    externs =
+        ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "",
+            // base class doesn't say it implements AliasedInterface,
+            // but it does have a matching `foo()` method.
+            "class MyBaseClass {",
+            "    /** @return {string} */",
+            "    foo() {",
+            "        console.log('I should exist');",
+            "        return 'return value';",
+            "    }",
+            "}",
+            "",
+            // subclass claims to implement the interface, relying on the superclass implementation
+            // of `foo()`.
+            // Note that `AliasedInterface` isn't defined yet.
+            "/** @implements {AliasedInterface<string>} */",
+            "class MyClass extends MyBaseClass {",
+            "}",
+            "",
+            // AliasedInterface is originally defined using a different name.
+            // This can happen due to module rewriting even if the original
+            // code doesn't appear to do this.
+            "/**",
+            " * @record",
+            " * @template T",
+            " */",
+            "function OriginalInterface() { }",
+            "/** @return {T} */",
+            "OriginalInterface.prototype.foo = function () { };",
+            "",
+            // AliasedInterface is defined after it was used above.
+            // Because of this the compiler previously failed to connect the `foo()` property
+            // on `OriginalInterface` with the one on `MyBaseClass`, leading to a disambiguation
+            // error.
+            "/** @const */",
+            "const AliasedInterface = OriginalInterface;",
+            "",
+            // Factory function ensures that the call to `foo()` below
+            // is seen as `AliasedInterface.prototype.foo` rather than
+            // `MyClass.prototype.foo`.
+            "/** @return {!AliasedInterface<string>} */",
+            "function magicFactory() {",
+            "    return new MyClass();",
+            "}",
+            "",
+            "magicFactory().foo();"),
+        // Compiler correctly recognises the call to `foo()` as referencing
+        // the implementation in MyBaseClass, so that implementation ends
+        // up inlined as the only output statement.
+        "console.log('I should exist');");
+  }
+
+  @Test
   public void testBigInt() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

@@ -1254,6 +1254,18 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
+   * Record that {@code aliasingType} is defined to be an alias for {@code originalInterface}.
+   *
+   * <p>Specifically, any class that declares it implements {@code aliasingType}, should
+   * also be considered an implementation of {@code originalInterface}.
+   */
+  public void registerInterfaceAlias(NamedType aliasingType, ObjectType originalInterface) {
+    interfaceToImplementors.putAll(
+        originalInterface.getReferenceName(),
+        interfaceToImplementors.get(aliasingType.getReferenceName()));
+  }
+
+  /**
    * Returns a collection of types that directly implement {@code
    * interfaceInstance}.  Subtypes of implementing types are not guaranteed to
    * be returned.  {@code interfaceInstance} must be an ObjectType for the
