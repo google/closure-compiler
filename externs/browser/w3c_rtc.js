@@ -722,6 +722,14 @@ RTCRtpContributingSource.prototype.audioLevel;
 RTCRtpContributingSource.prototype.rtpTimestamp;
 
 /**
+ * This is a relatively new field and browsers may not yet be compliant to the
+ * spec.
+ * @type {number|undefined}
+ * @see https://w3c.github.io/webrtc-extensions/#dictionary-rtcrtpcontributingsource-members
+ */
+RTCRtpContributingSource.prototype.captureTimestamp;
+
+/**
  * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcrtpreceiver-interface
  */
