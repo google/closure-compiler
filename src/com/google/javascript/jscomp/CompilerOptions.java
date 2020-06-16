@@ -415,9 +415,6 @@ public class CompilerOptions implements Serializable {
   // Optimizations
   //--------------------------------
 
-  /** Prefer commas over semicolons when doing statement fusion */
-  boolean aggressiveFusion;
-
   /** Folds constants (e.g. (2 + 3) to 5) */
   public boolean foldConstants;
 
@@ -2952,7 +2949,6 @@ public class CompilerOptions implements Serializable {
     String strValue =
         MoreObjects.toStringHelper(this)
             .omitNullValues()
-            .add("aggressiveFusion", aggressiveFusion)
             .add("aliasableStrings", aliasableStrings)
             .add("aliasAllStrings", aliasAllStrings)
             .add("aliasHandler", getAliasTransformationHandler())

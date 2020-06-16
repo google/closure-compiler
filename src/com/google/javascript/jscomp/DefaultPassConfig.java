@@ -1689,7 +1689,7 @@ public final class DefaultPassConfig extends PassConfig {
                 return new PeepholeOptimizationsPass(
                     compiler,
                     "latePeepholeOptimizations",
-                    new StatementFusion(options.aggressiveFusion),
+                    new StatementFusion(),
                     new PeepholeRemoveDeadCode(),
                     new PeepholeMinimizeConditions(late),
                     new PeepholeSubstituteAlternateSyntax(late),

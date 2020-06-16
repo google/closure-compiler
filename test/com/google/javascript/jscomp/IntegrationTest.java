@@ -2990,13 +2990,8 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setFoldConstants(true);
     options.syntheticBlockStartMarker = "START";
     options.syntheticBlockEndMarker = "END";
-    options.aggressiveFusion = false;
     testSame(options, "for(;;) { x = 1; {START(); {z = 3} END()} }");
     testSame(options, "x = 1; y = 2; {START(); {z = 3} END()} f()");
-    options.aggressiveFusion = true;
-    testSame(options, "x = 1; {START(); {z = 3} END()} f()");
-    test(options, "x = 1; y = 3; {START(); {z = 3} END()} f()",
-                  "x = 1, y = 3; {START(); {z = 3} END()} f()");
   }
 
   @Test
