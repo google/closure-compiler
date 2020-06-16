@@ -354,11 +354,11 @@ public class BigIntTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testMatchesXxx() {
-    assertThat(BIGINT_TYPE.matchesNumberContext()).isTrue();
+    assertThat(BIGINT_TYPE.matchesNumberContext()).isFalse();
     assertThat(BIGINT_TYPE.matchesObjectContext()).isTrue();
     assertThat(BIGINT_TYPE.matchesStringContext()).isTrue();
     assertThat(BIGINT_TYPE.matchesSymbolContext()).isFalse();
-    assertThat(BIGINT_OBJECT_TYPE.matchesNumberContext()).isTrue();
+    assertThat(BIGINT_OBJECT_TYPE.matchesNumberContext()).isFalse();
     assertThat(BIGINT_OBJECT_TYPE.matchesObjectContext()).isTrue();
     assertThat(BIGINT_OBJECT_TYPE.matchesStringContext()).isTrue();
     assertThat(BIGINT_OBJECT_TYPE.matchesSymbolContext()).isFalse();

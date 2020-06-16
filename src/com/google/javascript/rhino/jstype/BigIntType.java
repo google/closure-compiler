@@ -80,7 +80,8 @@ public class BigIntType extends ValueType {
 
   @Override
   public boolean matchesNumberContext() {
-    return true;
+    // BigInt cannot be coerced to a Number
+    return false;
   }
 
   @Override

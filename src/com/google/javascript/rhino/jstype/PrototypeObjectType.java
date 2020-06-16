@@ -242,11 +242,11 @@ public class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean matchesNumberContext() {
+    // BigInt is intentionally left out here. It cannot be coerced to a Number.
     return isNumberObjectType()
         || isDateType()
         || isBooleanObjectType()
         || isStringObjectType()
-        || isBigIntObjectType()
         || hasOverriddenNativeProperty("valueOf");
   }
 
