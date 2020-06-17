@@ -2126,7 +2126,7 @@ class TypeInference
    * @param scopeAfterChildren scope after children are traversed
    */
   private FlowScope setGetElemNodeTypeAfterChildrenTraversed(Node n, FlowScope scopeAfterChildren) {
-    checkArgument(n.getToken() == Token.GETELEM || n.getToken() == Token.OPTCHAIN_GETELEM);
+    checkArgument(n.isGetElem() || n.isOptChainGetElem());
     inferGetElemType(n);
     scopeAfterChildren = tightenTypeAfterDereference(n.getFirstChild(), scopeAfterChildren);
     return scopeAfterChildren;
