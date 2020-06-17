@@ -568,7 +568,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testExportOnClassGetter() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.declaredGlobalExternsOnWindow = true;
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
@@ -583,7 +582,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testExportOnClassSetter() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.declaredGlobalExternsOnWindow = true;
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
@@ -598,7 +596,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testExportOnStaticGetter() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.declaredGlobalExternsOnWindow = true;
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
@@ -622,7 +619,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testExportOnStaticSetter() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.declaredGlobalExternsOnWindow = true;
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);

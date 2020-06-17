@@ -131,9 +131,8 @@ class PeepholeSubstituteAlternateSyntax
       "Math");
 
   private Node tryMinimizeWindowRefs(Node node) {
-    // Normalization needs to be done to ensure there's no shadowing. The window prefix is also
-    // required if the global externs are not on the window.
-    if (!isASTNormalized() || !areDeclaredGlobalExternsOnWindow()) {
+    // Normalization needs to be done to ensure there's no shadowing.
+    if (!isASTNormalized()) {
       return node;
     }
 

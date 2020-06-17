@@ -299,9 +299,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkVariableReferences);
 
-    if (options.declaredGlobalExternsOnWindow) {
-      checks.add(declaredGlobalExternsOnWindow);
-    }
+    checks.add(declaredGlobalExternsOnWindow);
 
     if (!options.processCommonJSModules) {
       // TODO(ChadKillingsworth): move CommonJS module rewriting after VarCheck

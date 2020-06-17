@@ -708,9 +708,6 @@ public class CompilerOptions implements Serializable {
   /** Whether to export test functions. */
   public boolean exportTestFunctions;
 
-  /** Whether to declare globals declared in externs as properties on window */
-  boolean declaredGlobalExternsOnWindow;
-
   /** Shared name generator */
   NameGenerator nameGenerator;
 
@@ -1388,7 +1385,6 @@ public class CompilerOptions implements Serializable {
     ambiguateProperties = false;
     anonymousFunctionNaming = AnonymousFunctionNamingPolicy.OFF;
     exportTestFunctions = false;
-    declaredGlobalExternsOnWindow = true;
     nameGenerator = new DefaultNameGenerator();
 
     // Alterations
@@ -2992,7 +2988,6 @@ public class CompilerOptions implements Serializable {
             .add("dartPass", dartPass)
             .add("deadAssignmentElimination", deadAssignmentElimination)
             .add("debugLogDirectory", debugLogDirectory)
-            .add("declaredGlobalExternsOnWindow", declaredGlobalExternsOnWindow)
             .add("defineReplacements", getDefineReplacements())
             .add("dependencyOptions", getDependencyOptions())
             .add("devirtualizeMethods", devirtualizeMethods)

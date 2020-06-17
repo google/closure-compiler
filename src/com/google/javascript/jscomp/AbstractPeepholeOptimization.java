@@ -173,11 +173,6 @@ abstract class AbstractPeepholeOptimization {
     return compiler.getCodingConvention();
   }
 
-  protected final boolean areDeclaredGlobalExternsOnWindow() {
-    checkNotNull(compiler);
-    return compiler.getOptions().declaredGlobalExternsOnWindow;
-  }
-
   protected final void reportChangeToEnclosingScope(Node n) {
     compiler.reportChangeToEnclosingScope(n);
   }
