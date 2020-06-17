@@ -188,5 +188,8 @@ public enum JSTypeNative {
   NUMBER_STRING,
 
   /** (number,string,symbol) */
-  NUMBER_STRING_SYMBOL;
+  NUMBER_STRING_SYMBOL,
+
+  /** (bigint, number) */
+  BIGINT_NUMBER;
 }

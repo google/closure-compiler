@@ -73,6 +73,7 @@ public abstract class BaseJSTypeTestCase {
   protected ObjectType NO_RESOLVED_TYPE;
   protected FunctionType ARRAY_FUNCTION_TYPE;
   protected ObjectType ARRAY_TYPE;
+  protected JSType BIGINT_NUMBER;
   protected ObjectType BIGINT_OBJECT_TYPE;
   protected JSType BIGINT_TYPE;
   protected JSType BOOLEAN_OBJECT_FUNCTION_TYPE;
@@ -134,6 +135,7 @@ public abstract class BaseJSTypeTestCase {
     NO_RESOLVED_TYPE = registry.getNativeObjectType(JSTypeNative.NO_RESOLVED_TYPE);
     ARRAY_FUNCTION_TYPE = registry.getNativeFunctionType(JSTypeNative.ARRAY_FUNCTION_TYPE);
     ARRAY_TYPE = registry.getNativeObjectType(JSTypeNative.ARRAY_TYPE);
+    BIGINT_NUMBER = registry.getNativeType(JSTypeNative.BIGINT_NUMBER);
     BIGINT_OBJECT_TYPE = registry.getNativeObjectType(JSTypeNative.BIGINT_OBJECT_TYPE);
     BIGINT_TYPE = registry.getNativeType(JSTypeNative.BIGINT_TYPE);
     BOOLEAN_OBJECT_FUNCTION_TYPE =
