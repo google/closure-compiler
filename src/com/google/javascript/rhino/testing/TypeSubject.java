@@ -98,6 +98,14 @@ public final class TypeSubject extends Subject {
     check("isNumberValueType()").that(actualNonNull().isNumberValueType()).isTrue();
   }
 
+  public void isOnlyBigInt() {
+    check("isOnlyBigInt()").that(actualNonNull().isOnlyBigInt()).isTrue();
+  }
+
+  public void isNotOnlyBigInt() {
+    check("isOnlyBigInt()").that(actualNonNull().isOnlyBigInt()).isFalse();
+  }
+
   public void isString() {
     check("isStringValueType()").that(actualNonNull().isStringValueType()).isTrue();
   }

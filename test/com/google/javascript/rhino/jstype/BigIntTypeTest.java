@@ -39,8 +39,10 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.rhino.jstype.JSType.BigIntPresence;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
@@ -152,6 +154,157 @@ public class BigIntTypeTest extends BaseJSTypeTestCase {
     assertThat(BIGINT_OBJECT_TYPE.isSymbolValueType()).isFalse();
     assertThat(BIGINT_OBJECT_TYPE.isUnionType()).isFalse();
     assertThat(BIGINT_OBJECT_TYPE.isVoidType()).isFalse();
+  }
+
+  @Test
+  public void testIsOnlyBigInt() {
+    assertType(BIGINT_TYPE).isOnlyBigInt();
+    assertType(BIGINT_OBJECT_TYPE).isOnlyBigInt();
+    assertType(ALL_TYPE).isNotOnlyBigInt();
+    assertType(UNKNOWN_TYPE).isNotOnlyBigInt();
+    assertType(NO_TYPE).isNotOnlyBigInt();
+    assertType(createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE)).isNotOnlyBigInt();
+    assertType(createUnionType(BIGINT_TYPE, NUMBER_TYPE)).isNotOnlyBigInt();
+    assertType(registry.createEnumType("Enum", null, BIGINT_TYPE).getElementsType())
+        .isNotOnlyBigInt();
+    ;
+    assertType(registry.createEnumType("Enum", null, NUMBER_TYPE).getElementsType())
+        .isNotOnlyBigInt();
+    ;
+    assertType(
+            registry
+                .createEnumType("Enum", null, createUnionType(BIGINT_TYPE, NUMBER_TYPE))
+                .getElementsType())
+        .isNotOnlyBigInt();
+    ;
+    assertType(
+            registry
+                .createEnumType("Enum", null, createUnionType(STRING_TYPE, NUMBER_TYPE))
+                .getElementsType())
+        .isNotOnlyBigInt();
+    ;
+  }
+
+  @Test
+  public void testBigIntPresence() {
+    // Standard types
+    assertThat(BIGINT_TYPE.getBigIntPresence()).isEqualTo(BigIntPresence.ALL_BIGINT);
+    assertThat(BIGINT_OBJECT_TYPE.getBigIntPresence()).isEqualTo(BigIntPresence.ALL_BIGINT);
+    assertThat(NUMBER_TYPE.getBigIntPresence()).isEqualTo(BigIntPresence.NO_BIGINT);
+    assertThat(STRING_TYPE.getBigIntPresence()).isEqualTo(BigIntPresence.NO_BIGINT);
+    assertThat(ALL_TYPE.getBigIntPresence()).isEqualTo(BigIntPresence.NO_BIGINT);
+    assertThat(UNKNOWN_TYPE.getBigIntPresence()).isEqualTo(BigIntPresence.NO_BIGINT);
+    assertThat(ALL_TYPE.getBigIntPresence()).isEqualTo(BigIntPresence.NO_BIGINT);
+
+    // Unions
+    assertThat(createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE).getBigIntPresence())
+        .isEqualTo(BigIntPresence.ALL_BIGINT);
+    assertThat(createUnionType(BIGINT_TYPE, NUMBER_TYPE).getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+    assertThat(createUnionType(BIGINT_TYPE, STRING_TYPE).getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_OTHER);
+    assertThat(createUnionType(NUMBER_TYPE, STRING_TYPE).getBigIntPresence())
+        .isEqualTo(BigIntPresence.NO_BIGINT);
+
+    // Union within union
+    assertThat(
+            createUnionType(NUMBER_TYPE, createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE))
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+    assertThat(
+            createUnionType(NUMBER_OBJECT_TYPE, createUnionType(BIGINT_TYPE, NUMBER_TYPE))
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+    assertThat(
+            createUnionType(BIGINT_OBJECT_TYPE, createUnionType(BIGINT_TYPE, NUMBER_TYPE))
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+    assertThat(
+            createUnionType(BIGINT_TYPE, createUnionType(NUMBER_TYPE, NUMBER_OBJECT_TYPE))
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+    assertThat(
+            createUnionType(BIGINT_TYPE, createUnionType(STRING_TYPE, STRING_OBJECT_TYPE))
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_OTHER);
+    assertThat(
+            createUnionType(BIGINT_TYPE, createUnionType(STRING_TYPE, NUMBER_TYPE))
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_OTHER);
+
+    // Enum within union
+    assertThat(
+            createUnionType(
+                    BIGINT_OBJECT_TYPE,
+                    registry.createEnumType("Enum", null, BIGINT_TYPE).getElementsType())
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.ALL_BIGINT);
+    assertThat(
+            createUnionType(
+                    BIGINT_TYPE,
+                    registry.createEnumType("Enum", null, NUMBER_TYPE).getElementsType())
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+    assertThat(
+            createUnionType(
+                    BIGINT_TYPE,
+                    registry.createEnumType("Enum", null, STRING_TYPE).getElementsType())
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_OTHER);
+
+    // Standard enum
+    assertThat(
+            registry
+                .createEnumType("Enum", null, BIGINT_TYPE)
+                .getElementsType()
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.ALL_BIGINT);
+    assertThat(
+            registry
+                .createEnumType("Enum", null, NUMBER_TYPE)
+                .getElementsType()
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.NO_BIGINT);
+
+    // Enum within enum
+    assertThat(
+            registry
+                .createEnumType(
+                    "Enum",
+                    null,
+                    registry.createEnumType("Enum", null, BIGINT_TYPE).getElementsType())
+                .getElementsType()
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.ALL_BIGINT);
+    assertThat(
+            registry
+                .createEnumType(
+                    "Enum",
+                    null,
+                    registry.createEnumType("Enum", null, NUMBER_TYPE).getElementsType())
+                .getElementsType()
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.NO_BIGINT);
+
+    // Union within enum
+    assertThat(
+            registry
+                .createEnumType("Enum", null, createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE))
+                .getElementsType()
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.ALL_BIGINT);
+    assertThat(
+            registry
+                .createEnumType("Enum", null, createUnionType(BIGINT_TYPE, NUMBER_TYPE))
+                .getElementsType()
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+    assertThat(
+            registry
+                .createEnumType("Enum", null, createUnionType(BIGINT_TYPE, STRING_TYPE))
+                .getElementsType()
+                .getBigIntPresence())
+        .isEqualTo(BigIntPresence.BIGINT_OR_OTHER);
   }
 
   @Test
