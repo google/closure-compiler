@@ -1115,6 +1115,19 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testBigIntWithLogicalNOT() {
+    assuming("x", BIGINT_TYPE);
+    assuming("y", BIGINT_OBJECT_TYPE);
+    assuming("z", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+
+    inFunction("valueType = !x; objectType = !y; unionType = !z;");
+
+    verify("valueType", BOOLEAN_TYPE);
+    verify("objectType", BOOLEAN_TYPE);
+    verify("unionType", BOOLEAN_TYPE);
+  }
+
+  @Test
   public void testBigIntWithUnaryMinus() {
     assuming("x", BIGINT_TYPE);
     assuming("y", BIGINT_OBJECT_TYPE);
