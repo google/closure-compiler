@@ -3248,4 +3248,19 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             "}",
             "foo();"));
   }
+
+  @Test
+  public void testRemovalFromRHSOfComma() {
+    // This is the repro for github issue 3612
+    test(
+        lines(
+            "function a() {",
+            "    var a = {}, b = null;",
+            "    a.a = 1,",
+            "    b.a = 2,", // Note the comma here.
+            "    Object.defineProperties(a, b);",
+            "}; ",
+            "alert(a);"),
+        lines("function a() {", "}; ", "alert(a);"));
+  }
 }

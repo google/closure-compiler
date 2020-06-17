@@ -2619,11 +2619,23 @@ class RemoveUnusedCode implements CompilerPass {
       } else if (parent.isExprResult()) {
         NodeUtil.deleteNode(parent, compiler);
       } else {
-        // `(goog.inherits(A, B), something)` -> `something`
         checkState(parent.isComma());
-        Node rhs = checkNotNull(callNode.getNext());
-        compiler.reportChangeToEnclosingScope(parent);
-        parent.replaceWith(rhs.detach());
+        if (parent.getFirstChild() == callNode) {
+          // `(goog.inherits(A, B), something)` -> `something`
+          Node rhs = checkNotNull(callNode.getNext());
+          compiler.reportChangeToEnclosingScope(parent);
+          parent.replaceWith(rhs.detach());
+        } else {
+
+          // As we have been asked to remove the RHS of the comma expression, we know the value is
+          // unused, as such it is safe to expose the LHS's value as the result of the
+          // expression.
+
+          // `(something, Object.defineProperties(A, B))` -> `something`
+          Node lhs = parent.getFirstChild();
+          compiler.reportChangeToEnclosingScope(parent);
+          parent.replaceWith(lhs.detach());
+        }
       }
     }
 
