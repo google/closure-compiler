@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -148,6 +149,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_BAD_TYPE_FOR_BIT_OPERATION",
           "operator {0} cannot be applied to {1}");
+
+  static final DiagnosticType UNARY_OPERATION =
+      DiagnosticType.warning(
+          "JSC_BAD_TYPE_FOR_UNARY_OPERATION", "unary operator {0} cannot be applied to {1}");
 
   static final DiagnosticType NOT_CALLABLE =
       DiagnosticType.warning(
@@ -336,6 +341,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           NOT_A_CONSTRUCTOR,
           INSTANTIATE_ABSTRACT_CLASS,
           BIT_OPERATION,
+          UNARY_OPERATION,
           NOT_CALLABLE,
           CONSTRUCTOR_NOT_CALLABLE,
           FUNCTION_MASKS_VARIABLE,
@@ -714,12 +720,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case POS:
+        visitUnaryPlus(n);
+        break;
+
       case NEG:
         left = n.getFirstChild();
-        if (n.getToken() == Token.NEG) {
-          // We are more permissive with +, because it is used to coerce to number
-          validator.expectNumber(left, getJSType(left), "sign operator");
-        }
+        // We are more permissive with + than -, because it is used to coerce to number
+        // TODO(b/140132715): Update to handle bigint
+        validator.expectNumber(left, getJSType(left), "sign operator");
         ensureTyped(n, NUMBER_TYPE);
         break;
 
@@ -2917,6 +2925,20 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Validate the remaining parameters (the template literal substitutions)
     checkArgumentsMatchParameters(
         n, tagFnType, NodeUtil.getInvocationArgsAsIterable(n).iterator(), parameters, 1);
+  }
+
+  private void visitUnaryPlus(Node n) {
+    if (getJSType(n).isNoType()) {
+      // Unary + can't be applied to a bigint since it can't be coerced to a number
+      report(
+          n,
+          UNARY_OPERATION,
+          NodeUtil.opToStr(n.getToken()),
+          getJSType(n.getFirstChild()).toString());
+      ensureTyped(n, NO_TYPE);
+    } else {
+      ensureTyped(n, NUMBER_TYPE);
+    }
   }
 
   /**

@@ -22,6 +22,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -50,6 +51,7 @@ import com.google.javascript.rhino.jstype.BooleanLiteralSet;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSType.BigIntPresence;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -648,6 +650,9 @@ class TypeInference
         break;
 
       case POS:
+        scope = traverseUnaryPlus(n, scope);
+        break;
+
       case NEG:
         scope = traverse(n.getFirstChild(), scope);  // Find types.
         n.setJSType(getNativeType(NUMBER_TYPE));
@@ -1468,6 +1473,19 @@ class TypeInference
       }
     }
     n.setJSType(type);
+    return scope;
+  }
+
+  /** Check for BigInt with a unary plus. */
+  private FlowScope traverseUnaryPlus(Node n, FlowScope scope) {
+    scope = traverseChildren(n, scope); // Find types.
+    BigIntPresence bigintPresence = getJSType(n.getFirstChild()).getBigIntPresence();
+    if (bigintPresence != BigIntPresence.NO_BIGINT) {
+      // Unary plus throws an exception when applied to a bigint
+      n.setJSType(getNativeType(NO_TYPE));
+    } else {
+      n.setJSType(getNativeType(NUMBER_TYPE));
+    }
     return scope;
   }
 

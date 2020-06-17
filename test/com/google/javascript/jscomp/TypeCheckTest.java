@@ -560,6 +560,22 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testUnaryPlusWithAllType() {
+    testTypes("/** @type {*} */var x; +x;");
+  }
+
+  @Test
+  public void testUnaryPlusWithNoType() {
+    // TODO(bradfordcsmith): Should we be reporting an error for operating on a NO_TYPE?
+    testTypes("/** @type {!null} */var x; +x;");
+  }
+
+  @Test
+  public void testUnaryPlusWithUnknownType() {
+    testTypes("/** @type {?} */var x; +x;");
+  }
+
+  @Test
   public void testOptionalUnknownNamedType() {
     testTypes("/** @param {!T} opt_x\n@return {undefined} */\n" +
         "function f(opt_x) { return opt_x; }\n" +
@@ -23718,6 +23734,34 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "operator >>>",
             "found   : string",
             "required: number"));
+  }
+
+  @Test
+  public void testBigIntValueOperators_unaryPlusIsForbidden() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("var x = 1n; +x;", "unary operator + cannot be applied to bigint");
+  }
+
+  @Test
+  public void testBigIntObjectOperators_unaryPlusIsForbidden() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("var x = BigInt(1); +x;", "unary operator + cannot be applied to bigint");
+  }
+
+  @Test
+  public void testBigIntUnionOperators_unaryPlusIsForbidden() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|number} */ var x; +x;",
+        "unary operator + cannot be applied to (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntEnumOperators_unaryPlusIsForbidden() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @enum {bigint} */ const BIGINTS = {ONE: 1n, TWO: 2n}; +BIGINTS.ONE;",
+        "unary operator + cannot be applied to BIGINTS<bigint>");
   }
 
   @Test

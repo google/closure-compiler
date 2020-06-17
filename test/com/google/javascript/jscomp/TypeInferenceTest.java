@@ -24,11 +24,13 @@ import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_RESOLVED_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -58,6 +60,7 @@ import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -1076,6 +1079,39 @@ public final class TypeInferenceTest {
 
     verify("out1", startType);
     verify("out2", BIGINT_TYPE);
+  }
+
+  @Test
+  public void testBigIntWithUnaryPlus() {
+    assuming("x", BIGINT_TYPE);
+    assuming("y", BIGINT_OBJECT_TYPE);
+    assuming("z", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+
+    inFunction("valueType = +x; objectType = +y; unionType = +z;");
+
+    // Unary plus throws an exception when applied to a BigInt, so there is no valid type for its
+    // result.
+    verify("valueType", NO_TYPE);
+    verify("objectType", NO_TYPE);
+    verify("unionType", NO_TYPE);
+  }
+
+  @Test
+  public void testBigIntEnumWithUnaryPlus() {
+    EnumElementType enumElementBigIntType = createEnumType("MyEnum", BIGINT_TYPE).getElementsType();
+    EnumElementType enumElementUnionType =
+        createEnumType("MyEnum", createUnionType(BIGINT_TYPE, NUMBER_TYPE)).getElementsType();
+    assuming("x", enumElementBigIntType);
+    assuming("y", registry.createUnionType(enumElementBigIntType, getNativeType(NUMBER_TYPE)));
+    assuming("z", enumElementUnionType);
+
+    inFunction("enumElementBigIntType = +x; unionEnumType = +y; enumElementUnionType = +z;");
+
+    // Unary plus throws an exception when applied to a BigInt, so there is no valid type for its
+    // result.
+    verify("enumElementBigIntType", NO_TYPE);
+    verify("unionEnumType", NO_TYPE);
+    verify("enumElementUnionType", NO_TYPE);
   }
 
   @Test
