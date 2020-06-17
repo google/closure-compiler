@@ -75,8 +75,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testMissingAlternateMessage() {
     test(
         "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = goog.getMsg('asdf');",
-        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A='asdf'",
-        warning(ReplaceMessages.MISSING_ALTERNATE_MESSAGE_ID));
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A='asdf'");
   }
 
   @Test

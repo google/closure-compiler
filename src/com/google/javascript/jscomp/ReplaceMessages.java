@@ -41,10 +41,6 @@ final class ReplaceMessages extends JsMessageVisitor {
       DiagnosticType.error("JSC_BUNDLE_DOES_NOT_HAVE_THE_MESSAGE",
           "Message with id = {0} could not be found in replacement bundle");
 
-  static final DiagnosticType MISSING_ALTERNATE_MESSAGE_ID =
-      DiagnosticType.warning(
-          "JSC_MISSING_ALTERNATE_MESSAGE_ID", "Alternate message ID={0} not found, for {1}.");
-
   static final DiagnosticType INVALID_ALTERNATE_MESSAGE_PARTS =
       DiagnosticType.error(
           "JSC_INVALID_ALTERNATE_MESSAGE_PARTS",
@@ -79,10 +75,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     }
 
     JsMessage alternateMessage = bundle.getMessage(alternateId);
-    if (alternateMessage == null) {
-      compiler.report(
-          JSError.make(callNode, MISSING_ALTERNATE_MESSAGE_ID, alternateId, message.getKey()));
-    } else {
+    if (alternateMessage != null) {
       // Validate that the alternate message is compatible with this message. Ideally we'd also
       // check meaning and description, but they're not populated by `MessageBundle.getMessage`.
       if (message.parts().size() != alternateMessage.parts().size()) {
