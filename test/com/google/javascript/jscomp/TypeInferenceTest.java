@@ -34,6 +34,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NO_RESOLVED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_OBJECT_TYPE;
@@ -52,6 +53,7 @@ import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.TypeInference.BigIntPresence;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.testing.ScopeSubject;
@@ -1080,6 +1082,68 @@ public final class TypeInferenceTest {
 
     verify("out1", startType);
     verify("out2", BIGINT_TYPE);
+  }
+
+  @Test
+  public void testBigIntPresence() {
+    // Standard types
+    testForAllBigInt(getNativeType(BIGINT_TYPE));
+    testForAllBigInt(getNativeType(BIGINT_OBJECT_TYPE));
+    testForNoBigInt(getNativeType(NUMBER_TYPE));
+    testForNoBigInt(getNativeType(STRING_TYPE));
+    testForNoBigInt(getNativeType(ALL_TYPE));
+    testForNoBigInt(getNativeType(UNKNOWN_TYPE));
+    testForNoBigInt(getNativeType(NO_TYPE));
+
+    // Unions
+    testForAllBigInt(createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE));
+    testForBigIntOrNumber(getNativeType(BIGINT_NUMBER));
+    testForBigIntOrOther(createUnionType(BIGINT_TYPE, STRING_TYPE));
+    testForNoBigInt(getNativeType(NUMBER_STRING));
+
+    // Union within union
+    testForBigIntOrNumber(createUnionType(NUMBER_OBJECT_TYPE, BIGINT_NUMBER));
+    testForBigIntOrNumber(createUnionType(BIGINT_OBJECT_TYPE, BIGINT_NUMBER));
+    testForBigIntOrNumber(
+        registry.createUnionType(
+            getNativeType(NUMBER_TYPE), createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE)));
+    testForBigIntOrNumber(
+        registry.createUnionType(
+            getNativeType(BIGINT_TYPE), createUnionType(NUMBER_TYPE, NUMBER_OBJECT_TYPE)));
+    testForBigIntOrOther(
+        registry.createUnionType(
+            getNativeType(BIGINT_TYPE), createUnionType(STRING_TYPE, STRING_OBJECT_TYPE)));
+
+    // Enum within union
+    testForAllBigInt(
+        registry.createUnionType(
+            getNativeType(BIGINT_OBJECT_TYPE),
+            createEnumType("Enum", BIGINT_TYPE).getElementsType()));
+    testForBigIntOrNumber(
+        registry.createUnionType(
+            getNativeType(BIGINT_TYPE), createEnumType("Enum", NUMBER_TYPE).getElementsType()));
+    testForBigIntOrOther(
+        registry.createUnionType(
+            getNativeType(BIGINT_TYPE), createEnumType("Enum", STRING_TYPE).getElementsType()));
+
+    // Standard enum
+    testForAllBigInt(createEnumType("Enum", BIGINT_TYPE).getElementsType());
+    testForNoBigInt(createEnumType("Enum", NUMBER_TYPE).getElementsType());
+
+    // Enum within enum
+    testForAllBigInt(
+        createEnumType("Enum", createEnumType("Enum", BIGINT_TYPE).getElementsType())
+            .getElementsType());
+    testForNoBigInt(
+        createEnumType("Enum", createEnumType("Enum", NUMBER_TYPE).getElementsType())
+            .getElementsType());
+
+    // Union within enum
+    testForAllBigInt(
+        createEnumType("Enum", createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE)).getElementsType());
+    testForBigIntOrNumber(createEnumType("Enum", BIGINT_NUMBER).getElementsType());
+    testForBigIntOrOther(
+        createEnumType("Enum", createUnionType(BIGINT_TYPE, STRING_TYPE)).getElementsType());
   }
 
   @Test
@@ -3405,6 +3469,22 @@ public final class TypeInferenceTest {
 
     assertTypeOfExpression("FOO").isNumber();
     assertTypeOfExpression("BAR").isNumber();
+  }
+
+  private static void testForAllBigInt(JSType type) {
+    assertThat(TypeInference.getBigIntPresence(type)).isEqualTo(BigIntPresence.ALL_BIGINT);
+  }
+
+  private static void testForNoBigInt(JSType type) {
+    assertThat(TypeInference.getBigIntPresence(type)).isEqualTo(BigIntPresence.NO_BIGINT);
+  }
+
+  private static void testForBigIntOrNumber(JSType type) {
+    assertThat(TypeInference.getBigIntPresence(type)).isEqualTo(BigIntPresence.BIGINT_OR_NUMBER);
+  }
+
+  private static void testForBigIntOrOther(JSType type) {
+    assertThat(TypeInference.getBigIntPresence(type)).isEqualTo(BigIntPresence.BIGINT_OR_OTHER);
   }
 
   private ObjectType getNativeObjectType(JSTypeNative t) {

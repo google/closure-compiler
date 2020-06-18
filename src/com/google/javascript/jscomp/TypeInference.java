@@ -49,10 +49,10 @@ import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.BooleanLiteralSet;
+import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSType.BigIntPresence;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -1474,10 +1474,70 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     return scope;
   }
 
+  /**
+   * Now that BigInt is a factor, we need a better understanding of which types are involved in any
+   * given operation. In most cases, simply knowing that BigInt is involved is not enough
+   * information to determine that we should report an error, for example. So, we have designed this
+   * enumeration (and a respective utility function below) to aid in providing more context for
+   * cases that are more complex. Currently, there are four possibilities that concern us. This is
+   * subject to change as we add more support for type inference with BigInts.
+   */
+  public enum BigIntPresence {
+    NO_BIGINT,
+    ALL_BIGINT,
+    BIGINT_OR_NUMBER,
+    BIGINT_OR_OTHER
+  }
+
+  /** Utility function for determining the BigIntPresence for any type. */
+  static BigIntPresence getBigIntPresence(JSType type) {
+    // Base case
+    if (type.isOnlyBigInt()) {
+      return BigIntPresence.ALL_BIGINT;
+    }
+
+    // Checking enum case
+    EnumElementType typeAsEnumElement = type.toMaybeEnumElementType();
+    if (typeAsEnumElement != null) {
+      // No matter what type the enum element is, this function can resolve it to a BigIntPresence
+      return getBigIntPresence(typeAsEnumElement.getPrimitiveType());
+    }
+
+    // Union case
+    UnionType typeAsUnion = type.toMaybeUnionType();
+    if (typeAsUnion != null) {
+      boolean containsBigInt = false;
+      boolean containsNumber = false;
+      boolean containsOther = false;
+      for (JSType alternate : typeAsUnion.getAlternates()) {
+        if (getBigIntPresence(alternate) != BigIntPresence.NO_BIGINT) {
+          containsBigInt = true;
+        } else if (alternate.isNumber() && !alternate.isUnknownType()) {
+          containsNumber = true;
+        } else {
+          containsOther = true;
+        }
+      }
+      if (containsBigInt) {
+        if (containsOther) {
+          return BigIntPresence.BIGINT_OR_OTHER;
+        } else if (containsNumber) {
+          return BigIntPresence.BIGINT_OR_NUMBER;
+        } else {
+          return BigIntPresence.ALL_BIGINT;
+        }
+      }
+    }
+
+    // If it’s not a bigint object, bigint value, enum containing either, or a union, then we can
+    // safely assume that it’s not a bigint in anyway
+    return BigIntPresence.NO_BIGINT;
+  }
+
   /** Check for BigInt with a unary plus. */
   private FlowScope traverseUnaryPlus(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope); // Find types.
-    BigIntPresence bigintPresence = getJSType(n.getFirstChild()).getBigIntPresence();
+    BigIntPresence bigintPresence = getBigIntPresence(getJSType(n.getFirstChild()));
     if (bigintPresence != BigIntPresence.NO_BIGINT) {
       // Unary plus throws an exception when applied to a bigint
       n.setJSType(getNativeType(NO_TYPE));
@@ -1490,7 +1550,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   /** Traverse unary minus and bitwise NOT */
   private FlowScope traverseUnaryNegation(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope); // Find types.
-    BigIntPresence presence = getJSType(n.getFirstChild()).getBigIntPresence();
+    BigIntPresence presence = getBigIntPresence(getJSType(n.getFirstChild()));
     if (presence == BigIntPresence.ALL_BIGINT) {
       n.setJSType(getNativeType(BIGINT_TYPE));
     } else if (presence == BigIntPresence.NO_BIGINT) {

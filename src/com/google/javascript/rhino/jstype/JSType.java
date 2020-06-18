@@ -274,67 +274,6 @@ public abstract class JSType implements Serializable {
     return isBigIntValueType() || isBigIntObjectType();
   }
 
-  /**
-   * Now that BigInt is a factor, we need a better understanding of which types are involved in any
-   * given operation. In most cases, simply knowing that BigInt is involved is not enough
-   * information to determine that we should report an error, for example. So, we have designed this
-   * enumeration (and a respective utility function below) to aide in providing more context for
-   * cases that are more complex. Currently, there are four possibilities that concern us. This is
-   * subject to change as we add more support for type checking with BigInts.
-   */
-  public enum BigIntPresence {
-    NO_BIGINT,
-    ALL_BIGINT,
-    BIGINT_OR_NUMBER,
-    BIGINT_OR_OTHER
-  }
-
-  /** Utility function for determining the BigIntPresence for any type. */
-  // TODO(b/140132715): this method (and the enum above) should not be defined in this class
-  public final BigIntPresence getBigIntPresence() {
-    // Base case
-    if (isOnlyBigInt()) {
-      return BigIntPresence.ALL_BIGINT;
-    }
-
-    // Checking enum case
-    EnumElementType thisAsEnumElement = toMaybeEnumElementType();
-    if (thisAsEnumElement != null) {
-      // No matter what type the enum element is, this function can resolve it to a BigIntPresence
-      return thisAsEnumElement.getPrimitiveType().getBigIntPresence();
-    }
-
-    // Union case
-    UnionType thisAsUnion = this.toMaybeUnionType();
-    if (thisAsUnion != null) {
-      boolean containsBigInt = false;
-      boolean containsNumber = false;
-      boolean containsOther = false;
-      for (JSType type : thisAsUnion.getAlternates()) {
-        if (type.getBigIntPresence() != BigIntPresence.NO_BIGINT) {
-          containsBigInt = true;
-        } else if (type.isNumber() && !type.isUnknownType()) {
-          containsNumber = true;
-        } else {
-          containsOther = true;
-        }
-      }
-      if (containsBigInt) {
-        if (containsOther) {
-          return BigIntPresence.BIGINT_OR_OTHER;
-        } else if (containsNumber) {
-          return BigIntPresence.BIGINT_OR_NUMBER;
-        } else {
-          return BigIntPresence.ALL_BIGINT;
-        }
-      }
-    }
-
-    // If it’s not a bigint object, bigint value, enum containing either, or a union, then we can
-    // safely assume that it’s not a bigint in anyway
-    return BigIntPresence.NO_BIGINT;
-  }
-
   public boolean isArrayType() {
     return false;
   }
