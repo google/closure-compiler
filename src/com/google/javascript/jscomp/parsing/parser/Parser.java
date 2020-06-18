@@ -836,17 +836,8 @@ public class Parser {
           eat(TokenType.SEMI_COLON);
           continue;
 
-        case IDENTIFIER:
-        case NUMBER:
-        case BIGINT:
-        case STAR:
-        case STATIC:
-        case STRING:
-        case OPEN_SQUARE:
-          break;
-
         default:
-          if (Keywords.isKeyword(token.type)) {
+          if (isClassElementStart(token)) {
             break;
           } else {
             return result.build();
@@ -854,6 +845,25 @@ public class Parser {
       }
       result.add(parseClassElement(isAmbient));
     }
+  }
+
+  private boolean isClassElementStart(Token token) {
+    switch (token.type) {
+        case IDENTIFIER:
+        case NUMBER:
+        case BIGINT:
+        case STAR:
+        case STATIC:
+        case STRING:
+        case OPEN_SQUARE:
+        return true;
+
+        default:
+          if (Keywords.isKeyword(token.type)) {
+          return true;
+        }
+    }
+    return false;
   }
 
   private static class PartialClassElement {
@@ -880,9 +890,19 @@ public class Parser {
 
       partialElement.isAmbient = isAmbient;
       partialElement.accessModifier = maybeParseAccessibilityModifier();
-      partialElement.isStatic = eatOpt(TokenType.STATIC) != null;
+      partialElement.isStatic = eatStaticIfNotElementName();
       return parseClassElement(partialElement);
     }
+  }
+
+  private boolean eatStaticIfNotElementName() {
+    // only eat `static` if it being used as a keyword and not
+    // a member name.
+    if (peek(TokenType.STATIC) && isClassElementStart(peekToken(1))) {
+      eat(TokenType.STATIC);
+      return true;
+    }
+    return false;
   }
 
   private ParseTree parseClassElement(PartialClassElement partialElement) {

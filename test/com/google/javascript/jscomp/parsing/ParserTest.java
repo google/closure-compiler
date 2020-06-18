@@ -583,6 +583,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testMethodNamedStatic() {
+    parse("class C { static(a, b) {} }");
+  }
+
+  @Test
   public void testLinenoCharnoAssign1() {
     Node assign = parse("a = b").getFirstFirstChild();
 
