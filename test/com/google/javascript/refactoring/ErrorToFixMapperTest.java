@@ -1259,8 +1259,9 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  @Ignore("This has a bug, but hopefully it's uncommon enough that we never need to fix")
+  @Ignore
   public void testMissingRequire_inJSDoc_withWhitespace() {
+    // TODO(b/159336400): Fix this test so the fix is valid
     preexistingCode = "goog.provide('some.really.very.long.namespace.SuperInt');";
     assertExpectedFixes(
         lines(
