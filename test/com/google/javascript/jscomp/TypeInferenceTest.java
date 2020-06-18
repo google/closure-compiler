@@ -1155,6 +1155,19 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testBigIntWithVoidOperation() {
+    assuming("x", BIGINT_TYPE);
+    assuming("y", BIGINT_OBJECT_TYPE);
+    assuming("z", createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE));
+
+    inFunction("valueType = void x; objectType = void y; unionType = void z;");
+
+    verify("valueType", VOID_TYPE);
+    verify("objectType", VOID_TYPE);
+    verify("unionType", VOID_TYPE);
+  }
+
+  @Test
   public void testBigIntWithUnaryMinus() {
     assuming("x", BIGINT_TYPE);
     assuming("y", BIGINT_OBJECT_TYPE);
