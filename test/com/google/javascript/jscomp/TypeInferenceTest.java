@@ -1254,6 +1254,28 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testBigIntWithBitwiseNOT() {
+    assuming("x", BIGINT_TYPE);
+    assuming("y", BIGINT_OBJECT_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("a", ALL_TYPE);
+    assuming("z1", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    // testing for a union between bigint and anything but number
+    assuming("z2", createUnionType(BIGINT_TYPE, STRING_TYPE));
+
+    inFunction(
+        "valueType = ~x; objectType = ~y; unknownType = ~u; allType = ~a; bigintOrNumber = ~z1;"
+            + " bigintOrOther = ~z2;");
+
+    verify("valueType", BIGINT_TYPE);
+    verify("objectType", BIGINT_TYPE);
+    verify("unknownType", NUMBER_TYPE);
+    verify("allType", NUMBER_TYPE);
+    verify("bigintOrNumber", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    verify("bigintOrOther", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
     includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));

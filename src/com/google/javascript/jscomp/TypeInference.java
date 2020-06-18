@@ -654,6 +654,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         break;
 
       case NEG:
+      case BITNOT:
         scope = traverseUnaryNegation(n, scope);
         break;
 
@@ -692,7 +693,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case SUB:
       case DEC:
       case INC:
-      case BITNOT:
       case EXPONENT:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(NUMBER_TYPE));
