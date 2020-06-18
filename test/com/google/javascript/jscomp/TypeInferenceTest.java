@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -1059,7 +1060,7 @@ public final class TypeInferenceTest {
   }
 
   @Test
-  public void testAssertBigInt_narrowsFromUnknownType() {
+  public void testBigIntTypeAssignment() {
     assuming("x", UNKNOWN_TYPE);
     assuming("y", UNKNOWN_TYPE);
 
@@ -1085,7 +1086,7 @@ public final class TypeInferenceTest {
   public void testBigIntWithUnaryPlus() {
     assuming("x", BIGINT_TYPE);
     assuming("y", BIGINT_OBJECT_TYPE);
-    assuming("z", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    assuming("z", BIGINT_NUMBER);
 
     inFunction("valueType = +x; objectType = +y; unionType = +z;");
 
@@ -1100,7 +1101,7 @@ public final class TypeInferenceTest {
   public void testBigIntEnumWithUnaryPlus() {
     EnumElementType enumElementBigIntType = createEnumType("MyEnum", BIGINT_TYPE).getElementsType();
     EnumElementType enumElementUnionType =
-        createEnumType("MyEnum", createUnionType(BIGINT_TYPE, NUMBER_TYPE)).getElementsType();
+        createEnumType("MyEnum", BIGINT_NUMBER).getElementsType();
     assuming("x", enumElementBigIntType);
     assuming("y", registry.createUnionType(enumElementBigIntType, getNativeType(NUMBER_TYPE)));
     assuming("z", enumElementUnionType);
@@ -1118,7 +1119,7 @@ public final class TypeInferenceTest {
   public void testBigIntWithLogicalNOT() {
     assuming("x", BIGINT_TYPE);
     assuming("y", BIGINT_OBJECT_TYPE);
-    assuming("z", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    assuming("z", BIGINT_NUMBER);
 
     inFunction("valueType = !x; objectType = !y; unionType = !z;");
 
@@ -1133,7 +1134,7 @@ public final class TypeInferenceTest {
     assuming("y", BIGINT_OBJECT_TYPE);
     assuming("u", UNKNOWN_TYPE);
     assuming("a", ALL_TYPE);
-    assuming("z1", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    assuming("z1", BIGINT_NUMBER);
     // testing for a union between bigint and anything but number
     assuming("z2", createUnionType(BIGINT_TYPE, STRING_TYPE));
 
@@ -1145,8 +1146,8 @@ public final class TypeInferenceTest {
     verify("objectType", BIGINT_TYPE);
     verify("unknownType", NUMBER_TYPE);
     verify("allType", NUMBER_TYPE);
-    verify("bigintNum", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
-    verify("bigintOther", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    verify("bigintNum", BIGINT_NUMBER);
+    verify("bigintOther", BIGINT_NUMBER);
   }
 
   @Test
