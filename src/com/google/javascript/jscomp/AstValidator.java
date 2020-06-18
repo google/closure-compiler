@@ -1572,7 +1572,7 @@ public final class AstValidator implements CompilerPass {
     validateFeature(Feature.OPTIONAL_CHAINING, node);
     checkArgument(node.isOptChainGetElem(), node);
     validateChildCount(node, 2);
-    validatePropertyReferenceTarget(node.getFirstChild());
+    validateExpression(node.getFirstChild());
     validateExpression(node.getLastChild());
     validateFirstNodeOfOptChain(node);
   }
@@ -1590,7 +1590,7 @@ public final class AstValidator implements CompilerPass {
     validateFeature(Feature.OPTIONAL_CHAINING, node);
     validateNodeType(Token.OPTCHAIN_GETPROP, node);
     validateChildCount(node);
-    validatePropertyReferenceTarget(node.getFirstChild());
+    validateExpression(node.getFirstChild());
     Node prop = node.getLastChild();
     validateNodeType(Token.STRING, prop);
     validateNonEmptyString(prop);
