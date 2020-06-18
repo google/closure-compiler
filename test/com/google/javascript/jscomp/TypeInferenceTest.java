@@ -1142,6 +1142,19 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testBigIntWithDeleteOperation() {
+    assuming("x", BIGINT_TYPE);
+    assuming("y", BIGINT_OBJECT_TYPE);
+    assuming("z", createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE));
+
+    inFunction("valueType = delete x; objectType = delete y; unionType = delete z;");
+
+    verify("valueType", BOOLEAN_TYPE);
+    verify("objectType", BOOLEAN_TYPE);
+    verify("unionType", BOOLEAN_TYPE);
+  }
+
+  @Test
   public void testBigIntWithUnaryMinus() {
     assuming("x", BIGINT_TYPE);
     assuming("y", BIGINT_OBJECT_TYPE);
