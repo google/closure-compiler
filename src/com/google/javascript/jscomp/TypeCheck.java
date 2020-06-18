@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -1074,6 +1073,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     checkJsdocInfoContainsObjectWithBadKey(n);
+  }
+
+  private void visitUnaryPlus(Node n) {
+    if (getJSType(n).isNoType()) {
+      report(
+          n,
+          UNARY_OPERATION,
+          NodeUtil.opToStr(n.getToken()),
+          getJSType(n.getFirstChild()).toString());
+    } else {
+      ensureTyped(n, NUMBER_TYPE);
+    }
   }
 
   private void checkSpread(Node spreadNode) {
@@ -2925,20 +2936,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Validate the remaining parameters (the template literal substitutions)
     checkArgumentsMatchParameters(
         n, tagFnType, NodeUtil.getInvocationArgsAsIterable(n).iterator(), parameters, 1);
-  }
-
-  private void visitUnaryPlus(Node n) {
-    if (getJSType(n).isNoType()) {
-      // Unary + can't be applied to a bigint since it can't be coerced to a number
-      report(
-          n,
-          UNARY_OPERATION,
-          NodeUtil.opToStr(n.getToken()),
-          getJSType(n.getFirstChild()).toString());
-      ensureTyped(n, NO_TYPE);
-    } else {
-      ensureTyped(n, NUMBER_TYPE);
-    }
   }
 
   /**

@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -1537,8 +1538,8 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   /** Check for BigInt with a unary plus. */
   private FlowScope traverseUnaryPlus(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope); // Find types.
-    BigIntPresence bigintPresence = getBigIntPresence(getJSType(n.getFirstChild()));
-    if (bigintPresence != BigIntPresence.NO_BIGINT) {
+    BigIntPresence bigintPresenceInOperand = getBigIntPresence(getJSType(n.getFirstChild()));
+    if (bigintPresenceInOperand != BigIntPresence.NO_BIGINT) {
       // Unary plus throws an exception when applied to a bigint
       n.setJSType(getNativeType(NO_TYPE));
     } else {
@@ -1550,13 +1551,16 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   /** Traverse unary minus and bitwise NOT */
   private FlowScope traverseUnaryNegation(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope); // Find types.
-    BigIntPresence presence = getBigIntPresence(getJSType(n.getFirstChild()));
-    if (presence == BigIntPresence.ALL_BIGINT) {
-      n.setJSType(getNativeType(BIGINT_TYPE));
-    } else if (presence == BigIntPresence.NO_BIGINT) {
-      n.setJSType(getNativeType(NUMBER_TYPE));
-    } else {
-      n.setJSType(registry.createUnionType(getNativeType(BIGINT_TYPE), getNativeType(NUMBER_TYPE)));
+    switch (getBigIntPresence(getJSType(n.getFirstChild()))) { // BigIntPresence in operand
+      case ALL_BIGINT:
+        n.setJSType(getNativeType(BIGINT_TYPE));
+        break;
+      case NO_BIGINT:
+        n.setJSType(getNativeType(NUMBER_TYPE));
+        break;
+      default:
+        n.setJSType(getNativeType(BIGINT_NUMBER));
+        break;
     }
     return scope;
   }
