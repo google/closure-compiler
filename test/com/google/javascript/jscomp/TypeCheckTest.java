@@ -23737,6 +23737,14 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntOperators_logicalNot() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; !x;");
+    testTypes("const x = BigInt(1); !x;");
+    testTypes("/** @type {bigint|string} */var x; !x;");
+  }
+
+  @Test
   public void testBigIntValueOperators_unaryPlusIsForbidden() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("var x = 1n; +x;", "unary operator + cannot be applied to bigint");
