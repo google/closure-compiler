@@ -696,10 +696,13 @@ public class CommandLineRunner extends
         usage = "A file (or files) containing additional command-line options.")
     private List<String> flagFiles = new ArrayList<>();
 
-    @Option(name = "--warnings_whitelist_file",
-        usage = "A file containing warnings to suppress. Each line should be "
-            + "of the form\n"
-            + "<file-name>:<line-number>?  <warning-description>")
+    @Option(
+        name = "--warnings_allowlist_file",
+        usage =
+            "A file containing warnings to suppress. Each line should be "
+                + "of the form\n"
+                + "<file-name>:<line-number>?  <warning-description>",
+        aliases = {"--warnings_whitelist_file"})
     private String warningsWhitelistFile = "";
 
     @Option(name = "--hide_warnings_for",
@@ -873,6 +876,7 @@ public class CommandLineRunner extends
             "conformance_configs",
             "error_format",
             "warnings_whitelist_file",
+            "warnings_allowlist_file",
             "output_wrapper_file",
             "output_manifest",
             "output_chunk_dependencies",
@@ -909,7 +913,7 @@ public class CommandLineRunner extends
                     "jscomp_off",
                     "jscomp_warning",
                     "strict_mode_input",
-                    "warnings_whitelist_file"))
+                    "warnings_allowlist_file"))
             .putAll(
                 "Output",
                 ImmutableList.of(
