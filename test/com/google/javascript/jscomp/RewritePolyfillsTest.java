@@ -400,7 +400,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   // NOTE(sdh): it's not clear what makes the most sense here.  At one point we
   // took care to avoid installing these, but it may make sense to instead leave
   // this distinction to a type-based optimization.  As such, I've simplified the
-  // logic to no longer look at variables' scope and instead just blacklist known
+  // logic to no longer look at variables' scope and instead just skiplist known
   // symbols like goog.string and goog.array.
   @Test
   public void testPrototypeMethodsInstalledIfActuallyStatic() {

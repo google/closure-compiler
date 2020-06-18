@@ -33,7 +33,7 @@ public final class RequireAliasGeneratorTest {
     return new Object[][] {
       {"ns.Name", ImmutableList.of("Name", "NsName", "NsName0", "NsName1")},
       {"ns.name", ImmutableList.of("name", "nsName", "nsName0", "nsName1")},
-      // Blacklisted aliases
+      // Skiplisted aliases
       {"Array", ImmutableList.of("Array0")},
       {"array", ImmutableList.of("array0")},
       {"goog.Promise", ImmutableList.of("GoogPromise")},

@@ -213,12 +213,12 @@ public class NodeModuleResolver extends ModuleResolver {
       String canonicalizedCandidatePath = canonicalizePath(scriptAddress, moduleAddressCandidate);
 
       // Also look for mappings in packageJsonMainEntries because browser field
-      // advanced usage allows to override / blacklist specific files, including
+      // advanced usage allows to override / skip specific files, including
       // the main entry.
       if (packageJsonMainEntries.containsKey(canonicalizedCandidatePath)) {
         moduleAddressCandidate = packageJsonMainEntries.get(canonicalizedCandidatePath);
 
-        if (ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER.equals(moduleAddressCandidate)) {
+        if (ModuleLoader.JSC_BROWSER_SKIPLISTED_MARKER.equals(moduleAddressCandidate)) {
           return null;
         }
       }

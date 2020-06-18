@@ -273,12 +273,12 @@ class InlineVariables implements CompilerPass {
     }
 
     /**
-     * If there are any variable references in the given node tree, blacklist
-     * them to prevent the pass from trying to inline the variable.
+     * If there are any variable references in the given node tree, skiplist them to prevent the
+     * pass from trying to inline the variable.
      */
-    private void blacklistVarReferencesInTree(Node root, Scope scope) {
+    private void recordStaleVarReferencesInTree(Node root, Scope scope) {
       for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
-        blacklistVarReferencesInTree(c, scope);
+        recordStaleVarReferencesInTree(c, scope);
       }
 
       if (root.isName()) {
@@ -399,7 +399,7 @@ class InlineVariables implements CompilerPass {
       } else {
         replaceChildPreserveCast(ref.getParent(), ref.getNode(), value);
       }
-      blacklistVarReferencesInTree(value, v.getScope());
+      recordStaleVarReferencesInTree(value, v.getScope());
     }
 
     private void replaceChildPreserveCast(Node parent, Node child, Node replacement) {

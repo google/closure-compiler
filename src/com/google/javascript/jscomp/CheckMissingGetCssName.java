@@ -30,7 +30,7 @@ class CheckMissingGetCssName
     extends AbstractPostOrderCallback implements CompilerPass {
   private final AbstractCompiler compiler;
   private final CheckLevel level;
-  private final Matcher blacklist;
+  private final Matcher skiplist;
 
   static final String GET_CSS_NAME_FUNCTION = "goog.getCssName";
   static final String GET_UNIQUE_ID_FUNCTION = ".getUniqueId";
@@ -40,12 +40,10 @@ class CheckMissingGetCssName
           "JSC_MISSING_GETCSSNAME",
           "missing goog.getCssName around literal ''{0}''");
 
-  CheckMissingGetCssName(AbstractCompiler compiler, CheckLevel level,
-      String blacklistRegex) {
+  CheckMissingGetCssName(AbstractCompiler compiler, CheckLevel level, String skiplistRegex) {
     this.compiler = compiler;
     this.level = level;
-    this.blacklist =
-        Pattern.compile("\\b(?:" + blacklistRegex + ")").matcher("");
+    this.skiplist = Pattern.compile("\\b(?:" + skiplistRegex + ")").matcher("");
   }
 
   @Override
@@ -58,7 +56,7 @@ class CheckMissingGetCssName
     if ((n.isString() || n.isTemplateLitString()) && !parent.isGetProp() && !parent.isRegExp()) {
       String s = n.isString() ? n.getString() : n.getCookedString();
 
-      for (blacklist.reset(s); blacklist.find();) {
+      for (skiplist.reset(s); skiplist.find(); ) {
         if (parent.isTemplateLit()) {
           if (parent.hasMoreThanOneChild()) {
             // Ignore template string with substitutions
@@ -76,7 +74,7 @@ class CheckMissingGetCssName
         if (insideAssignmentToIdConstant(n)) {
           continue;
         }
-        compiler.report(JSError.make(n, level, MISSING_GETCSSNAME, blacklist.group()));
+        compiler.report(JSError.make(n, level, MISSING_GETCSSNAME, skiplist.group()));
       }
     }
   }

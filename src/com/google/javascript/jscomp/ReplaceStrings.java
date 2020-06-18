@@ -118,7 +118,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
    * @param functionsToInspect A list of function configurations in the form of
    *     function($,,,):exclued_filename_suffix1,excluded_filename_suffix2,... or
    *     class.prototype.method($,,,):exclued_filename_suffix1,excluded_filename_suffix2,...
-   * @param blacklisted A set of names that should not be used as replacement strings. Useful to
+   * @param skiplisted A set of names that should not be used as replacement strings. Useful to
    *     prevent unwanted strings for appearing in the final output. where '$' is used to indicate
    *     which parameter should be replaced.
    *     <p>excluded_filename_suffix is a list of files whose callsites for a given function pattern
@@ -128,18 +128,18 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
       AbstractCompiler compiler,
       String placeholderToken,
       List<String> functionsToInspect,
-      Set<String> blacklisted,
+      Set<String> skiplisted,
       VariableMap previousMappings) {
     this.compiler = compiler;
     this.placeholderToken =
         placeholderToken.isEmpty() ? DEFAULT_PLACEHOLDER_TOKEN : placeholderToken;
     this.registry = compiler.getTypeRegistry();
 
-    Iterable<String> reservedNames = blacklisted;
+    Iterable<String> reservedNames = skiplisted;
     if (previousMappings != null) {
       Set<String> previous = previousMappings.getOriginalNameToNewNameMap().keySet();
-      reservedNames = Iterables.concat(blacklisted, previous);
-      initMapping(previousMappings, blacklisted);
+      reservedNames = Iterables.concat(skiplisted, previous);
+      initMapping(previousMappings, skiplisted);
     }
     this.nameGenerator = createNameGenerator(reservedNames);
 

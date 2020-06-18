@@ -36,7 +36,7 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
         "JSC_MALFORMED_REGEXP",
         "Malformed Regular Expression: {0}");
 
-  private static final ImmutableSet<String> REGEXP_PROPERTY_BLACKLIST =
+  private static final ImmutableSet<String> REGEXP_PROPERTY_SKIPLIST =
       ImmutableSet.of(
           "$1",
           "$2",
@@ -49,7 +49,7 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
           "$9",
           "$_",
           "$input",
-          // The following would also be blacklisted, but they aren't valid
+          // The following would also be skiplisted, but they aren't valid
           // identifiers, so can't be accessed with the '.' operator anyway.
           // "$*", "$&", "$+", "$`", "$'",
           "input",
@@ -89,12 +89,14 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
         if (!((parentType == Token.NEW && first)
             || (parentType == Token.CALL && first)
             || (parentType == Token.INSTANCEOF && !first)
-            || parentType == Token.EQ || parentType == Token.NE
-            || parentType == Token.SHEQ || parentType == Token.SHNE
+            || parentType == Token.EQ
+            || parentType == Token.NE
+            || parentType == Token.SHEQ
+            || parentType == Token.SHNE
             || parentType == Token.CASE
-            || (parentType == Token.GETPROP && first
-            && !REGEXP_PROPERTY_BLACKLIST.contains(
-            parent.getLastChild().getString())))) {
+            || (parentType == Token.GETPROP
+                && first
+                && !REGEXP_PROPERTY_SKIPLIST.contains(parent.getLastChild().getString())))) {
           t.report(n, REGEXP_REFERENCE);
           globalRegExpPropertiesUsed = true;
         }

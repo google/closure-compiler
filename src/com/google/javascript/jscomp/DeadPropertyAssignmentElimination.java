@@ -77,22 +77,20 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       return;
     }
 
-    Set<String> blacklistedPropNames =
+    Set<String> skiplistedPropNames =
         Sets.union(
             compiler.getAccessorSummary().getAccessors().keySet(), compiler.getExternProperties());
 
-    NodeTraversal.traverseChangedFunctions(compiler, new FunctionVisitor(blacklistedPropNames));
+    NodeTraversal.traverseChangedFunctions(compiler, new FunctionVisitor(skiplistedPropNames));
   }
 
   private static class FunctionVisitor implements ChangeScopeRootCallback {
 
-    /**
-     * A set of properties names that are potentially unsafe to remove duplicate writes to.
-     */
-    private final Set<String> blacklistedPropNames;
+    /** A set of properties names that are potentially unsafe to remove duplicate writes to. */
+    private final Set<String> skiplistedPropNames;
 
-    FunctionVisitor(Set<String> blacklistedPropNames) {
-      this.blacklistedPropNames = blacklistedPropNames;
+    FunctionVisitor(Set<String> skiplistedPropNames) {
+      this.skiplistedPropNames = skiplistedPropNames;
     }
 
     @Override
@@ -107,7 +105,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       }
 
       FindCandidateAssignmentTraversal traversal =
-          new FindCandidateAssignmentTraversal(blacklistedPropNames, NodeUtil.isConstructor(root));
+          new FindCandidateAssignmentTraversal(skiplistedPropNames, NodeUtil.isConstructor(root));
       NodeTraversal.traverse(compiler, body, traversal);
 
       // Any candidate property assignment can have a write removed if that write is never read
@@ -237,18 +235,16 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
      */
     Map<String, Property> propertyMap = new HashMap<>();
 
-    /**
-     * A set of properties names that are potentially unsafe to remove duplicate writes to.
-     */
-    private final Set<String> blacklistedPropNames;
+    /** A set of properties names that are potentially unsafe to remove duplicate writes to. */
+    private final Set<String> skiplistedPropNames;
 
     /**
      * Whether or not the function being analyzed is a constructor.
      */
     private final boolean isConstructor;
 
-    FindCandidateAssignmentTraversal(Set<String> blacklistedPropNames, boolean isConstructor) {
-      this.blacklistedPropNames = blacklistedPropNames;
+    FindCandidateAssignmentTraversal(Set<String> skiplistedPropNames, boolean isConstructor) {
+      this.skiplistedPropNames = skiplistedPropNames;
       this.isConstructor = isConstructor;
     }
 
@@ -385,8 +381,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       switch (n.getToken()) {
         case GETPROP:
           // Handle potential getters/setters.
-          if (n.isGetProp()
-              && blacklistedPropNames.contains(n.getLastChild().getString())) {
+          if (n.isGetProp() && skiplistedPropNames.contains(n.getLastChild().getString())) {
             // We treat getters/setters as if they were a call, thus we mark all properties as read.
             markAllPropsRead();
             return true;

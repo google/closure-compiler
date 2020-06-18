@@ -1558,7 +1558,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   // End impure literal
 
   @Test
-  public void testKnownDynamicFunctions_areBlacklistedForAliasing() {
+  public void testKnownDynamicFunctions_areSkiplistedForAliasing() {
     for (String name : ImmutableList.of("call", "apply", "constructor")) {
       assertNoPureCalls(
           lines(

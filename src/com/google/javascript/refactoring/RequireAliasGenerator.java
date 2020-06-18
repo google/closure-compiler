@@ -36,16 +36,16 @@ import java.util.Iterator;
  * in priority order:
  *
  * <ul>
- *   <li>Alias is not blacklisted
+ *   <li>Alias is not skiplisted
  *   <li>Alias is always only composed of segments of the full namespace
  *   <li>Shorter aliases are preferred over longer ones
  * </ul>
  */
 final class RequireAliasGenerator implements Iterable<String> {
 
-  private static final ImmutableSet<String> BLACKLISTED_ALIASES = createBlacklistedAliases();
+  private static final ImmutableSet<String> SKIPLISTED_ALIASES = createSkiplistedAliases();
 
-  private static ImmutableSet<String> createBlacklistedAliases() {
+  private static ImmutableSet<String> createSkiplistedAliases() {
     ImmutableSet<String> seeds =
         ImmutableSet.of(
             "", //
@@ -97,7 +97,7 @@ final class RequireAliasGenerator implements Iterable<String> {
       String next;
       do {
         next = this.computeNextWithoutFiltering();
-      } while (BLACKLISTED_ALIASES.contains(next));
+      } while (SKIPLISTED_ALIASES.contains(next));
 
       return next;
     }

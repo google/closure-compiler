@@ -419,7 +419,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
   /**
    * For a name and its set of references, record the set of functions that may define that name or
-   * blacklist the name if there are unclear definitions.
+   * skiplist the name if there are unclear definitions.
    *
    * @param name A variable or property name,
    * @param references The set of all nodes representing R- and L-value references to {@code name}.
@@ -439,7 +439,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             .map(NodeUtil::getRValueOfLValue)
             // If the assigned R-value is an analyzable expression, collect all the possible
             // FUNCTIONs that could result from that expression. If the expression isn't analyzable,
-            // represent that with `null` so we can blacklist `name`.
+            // represent that with `null` so we can skiplist `name`.
             .map((n) -> (n == null) ? null : collectCallableLeaves(n))
             .collect(toList());
 
@@ -646,7 +646,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * <p>This callback also fills {@link #allFunctionCalls}
    */
   private final class FunctionBodyAnalyzer implements ScopedCallback {
-    private final SetMultimap<Node, Var> blacklistedVarsByFunction = HashMultimap.create();
+    private final SetMultimap<Node, Var> skiplistedVarsByFunction = HashMultimap.create();
     private final SetMultimap<Node, Var> taintedVarsByFunction = HashMultimap.create();
 
     /**
@@ -817,11 +817,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           Node value = node.getFirstChild();
           // Assignment to local, if the value isn't a safe local value,
           // new object creation or literal or known primitive result
-          // value, add it to the local blacklist.
+          // value, add it to the local skiplist.
           if (value != null && !NodeUtil.evaluatesToLocalValue(value)) {
             Scope scope = traversal.getScope();
             Var var = scope.getVar(node.getString());
-            blacklistedVarsByFunction.put(enclosingFunction, var);
+            skiplistedVarsByFunction.put(enclosingFunction, var);
           }
           break;
 
@@ -963,7 +963,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
         for (Var v : t.getScope().getVarIterable()) {
           if (v.isParam()
-              && !blacklistedVarsByFunction.containsEntry(function, v)
+              && !skiplistedVarsByFunction.containsEntry(function, v)
               && taintedVarsByFunction.containsEntry(function, v)) {
             sideEffectInfo.setMutatesArguments();
             continue;
@@ -978,7 +978,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           }
 
           // Take care of locals that might have been tainted.
-          if (!localVar || blacklistedVarsByFunction.containsEntry(function, v)) {
+          if (!localVar || skiplistedVarsByFunction.containsEntry(function, v)) {
             if (taintedVarsByFunction.containsEntry(function, v)) {
               // If the function has global side-effects
               // don't bother with the local side-effects.
@@ -991,7 +991,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       // Clean up memory after exiting out of the function scope where we will no longer need these.
       if (t.getScopeRoot().isFunction()) {
-        blacklistedVarsByFunction.removeAll(function);
+        skiplistedVarsByFunction.removeAll(function);
         taintedVarsByFunction.removeAll(function);
       }
     }
@@ -1046,7 +1046,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               // Assigned value is not guaranteed to be a local value,
               // so if we see any property assignments on this variable,
               // they could be tainting a non-local value.
-              blacklistedVarsByFunction.put(enclosingFunction, var);
+              skiplistedVarsByFunction.put(enclosingFunction, var);
             }
           } else {
             sideEffectInfo.setMutatesGlobalState();

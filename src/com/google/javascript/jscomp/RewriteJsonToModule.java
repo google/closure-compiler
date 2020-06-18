@@ -191,7 +191,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       String replacement =
           value.isString()
               ? dirName + value.getString()
-              : ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER;
+              : ModuleLoader.JSC_BROWSER_SKIPLISTED_MARKER;
 
       packageJsonMainEntries.put(dirName + path, replacement);
     }

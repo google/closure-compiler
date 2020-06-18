@@ -20,8 +20,7 @@ import com.google.javascript.rhino.Node;
 
 /** GWT compatible no-op replacement for {@code CheckMissingGetCssName} */
 class CheckMissingGetCssName implements CompilerPass {
-  CheckMissingGetCssName(AbstractCompiler compiler, CheckLevel level, String blacklistRegex) {
-  }
+  CheckMissingGetCssName(AbstractCompiler compiler, CheckLevel level, String skiplistRegex) {}
 
   @Override
   public void process(Node externs, Node root) {

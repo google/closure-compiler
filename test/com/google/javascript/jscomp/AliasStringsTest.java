@@ -253,7 +253,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testBlackList() {
+  public void testSkipList() {
     // The 'TOPseCreT' string is configured to be ignored even though it fits the aliasing
     // conditions.
     test(

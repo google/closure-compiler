@@ -354,11 +354,14 @@ public final class ModuleLoaderTest {
     //                "replace/other.js": "with/alternative.js"}}
     ImmutableMap<String, String> packageJsonMainEntries =
         ImmutableMap.of(
-            "/node_modules/mymodule/package.json", "/node_modules/mymodule/server.js",
-            "/node_modules/mymodule/server.js", "/node_modules/mymodule/client.js",
-            "/node_modules/mymodule/override/relative.js", "/node_modules/mymodule/./with/this.js",
+            "/node_modules/mymodule/package.json",
+            "/node_modules/mymodule/server.js",
+            "/node_modules/mymodule/server.js",
+            "/node_modules/mymodule/client.js",
+            "/node_modules/mymodule/override/relative.js",
+            "/node_modules/mymodule/./with/this.js",
             "/node_modules/mymodule/exclude/this.js",
-                ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER,
+            ModuleLoader.JSC_BROWSER_SKIPLISTED_MARKER,
             "/node_modules/mymodule/replace/other.js",
             "/node_modules/mymodule/with/alternative.js");
 
@@ -391,7 +394,9 @@ public final class ModuleLoaderTest {
         loader.resolve("/foo.js").resolveJsModule("mymodule/override/relative.js"));
     assertUri(
         "/node_modules/mymodule/with/this.js",
-        loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./override/relative.js"));
+        loader
+            .resolve("/node_modules/mymodule/client.js")
+            .resolveJsModule("./override/relative.js"));
     assertThat(
             loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./exclude/this.js"))
         .isNull();

@@ -146,7 +146,7 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     // NodeModuleResolver knows how to normalize this entry's value
     assertThat(packageJsonMainEntries).containsEntry("/override/relative.js", "/./with/this.js");
     assertThat(packageJsonMainEntries)
-        .containsEntry("/dont/include.js", ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER);
+        .containsEntry("/dont/include.js", ModuleLoader.JSC_BROWSER_SKIPLISTED_MARKER);
     assertThat(packageJsonMainEntries).containsEntry("/override/explicitly.js", "/with/other.js");
   }
 
