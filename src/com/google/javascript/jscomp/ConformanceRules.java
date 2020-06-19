@@ -68,11 +68,11 @@ import javax.annotation.Nullable;
 @GwtIncompatible("java.lang.reflect, java.util.regex")
 public final class ConformanceRules {
 
-  private static final Whitelist ALL_TS_WHITELIST = createTsWhitelist();
+  private static final AllowList ALL_TS_ALLOWLIST = createTsAllowlist();
 
-  private static Whitelist createTsWhitelist() {
+  private static AllowList createTsAllowlist() {
     try {
-      return new Whitelist(ImmutableList.of(), ImmutableList.of(".*\\.closure\\.js"));
+      return new AllowList(ImmutableList.of(), ImmutableList.of(".*\\.closure\\.js"));
     } catch (Throwable t) {
       throw new AssertionError(t);
     }
@@ -152,21 +152,21 @@ public final class ConformanceRules {
     return pattern;
   }
 
-  private static class Whitelist {
+  private static class AllowList {
     @Nullable final ImmutableList<String> prefixes;
     @Nullable final Pattern regexp;
-    @Nullable final Requirement.WhitelistEntry whitelistEntry;
+    @Nullable final Requirement.WhitelistEntry allowlistEntry;
 
-    Whitelist(List<String> prefixes, List<String> regexps) throws InvalidRequirementSpec {
+    AllowList(List<String> prefixes, List<String> regexps) throws InvalidRequirementSpec {
       this.prefixes = ImmutableList.<String>copyOf(prefixes);
       this.regexp = buildPattern(regexps);
-      this.whitelistEntry = null;
+      this.allowlistEntry = null;
     }
 
-    Whitelist(Requirement.WhitelistEntry whitelistEntry) throws InvalidRequirementSpec {
-      this.prefixes = ImmutableList.copyOf(whitelistEntry.getPrefixList());
-      this.regexp = buildPattern(whitelistEntry.getRegexpList());
-      this.whitelistEntry = whitelistEntry;
+    AllowList(Requirement.WhitelistEntry allowlistEntry) throws InvalidRequirementSpec {
+      this.prefixes = ImmutableList.copyOf(allowlistEntry.getPrefixList());
+      this.regexp = buildPattern(allowlistEntry.getRegexpList());
+      this.allowlistEntry = allowlistEntry;
     }
 
     /**
@@ -186,15 +186,15 @@ public final class ConformanceRules {
   }
 
   /**
-   * A conformance rule implementation to support things common to all rules such as whitelisting
+   * A conformance rule implementation to support things common to all rules such as allowlisting
    * and reporting.
    */
   public abstract static class AbstractRule implements Rule {
     final AbstractCompiler compiler;
     final String message;
     final Severity severity;
-    final ImmutableList<Whitelist> whitelists;
-    @Nullable final Whitelist onlyApplyTo;
+    final ImmutableList<AllowList> allowlists;
+    @Nullable final AllowList onlyApplyTo;
     final boolean reportLooseTypeViolations;
     final TypeMatchingStrategy typeMatchingStrategy;
     final Requirement requirement;
@@ -217,26 +217,26 @@ public final class ConformanceRules {
         severity = requirement.getSeverity();
       }
 
-      // build whitelists
-      ImmutableList.Builder<Whitelist> whitelistsBuilder = new ImmutableList.Builder<>();
+      // build allowlists
+      ImmutableList.Builder<AllowList> allowlistsBuilder = new ImmutableList.Builder<>();
       for (Requirement.WhitelistEntry entry : requirement.getWhitelistEntryList()) {
-        whitelistsBuilder.add(new Whitelist(entry));
+        allowlistsBuilder.add(new AllowList(entry));
       }
 
-      if (this.tsIsWhitelisted()) {
-        whitelistsBuilder.add(ALL_TS_WHITELIST);
+      if (this.tsIsAllowlisted()) {
+        allowlistsBuilder.add(ALL_TS_ALLOWLIST);
       }
 
       if (requirement.getWhitelistCount() > 0 || requirement.getWhitelistRegexpCount() > 0) {
-        Whitelist whitelist =
-            new Whitelist(requirement.getWhitelistList(), requirement.getWhitelistRegexpList());
-        whitelistsBuilder.add(whitelist);
+        AllowList allowlist =
+            new AllowList(requirement.getWhitelistList(), requirement.getWhitelistRegexpList());
+        allowlistsBuilder.add(allowlist);
       }
-      whitelists = whitelistsBuilder.build();
+      allowlists = allowlistsBuilder.build();
 
       if (requirement.getOnlyApplyToCount() > 0 || requirement.getOnlyApplyToRegexpCount() > 0) {
         onlyApplyTo =
-            new Whitelist(requirement.getOnlyApplyToList(), requirement.getOnlyApplyToRegexpList());
+            new AllowList(requirement.getOnlyApplyToList(), requirement.getOnlyApplyToRegexpList());
       } else {
         onlyApplyTo = null;
       }
@@ -245,7 +245,7 @@ public final class ConformanceRules {
       this.requirement = requirement;
     }
 
-    protected boolean tsIsWhitelisted() {
+    protected boolean tsIsAllowlisted() {
       return false;
     }
 
@@ -271,17 +271,17 @@ public final class ConformanceRules {
     protected abstract ConformanceResult checkConformance(
         NodeTraversal t, Node n);
 
-    /** Returns the first Whitelist entry that matches the given path, and null otherwise. */
+    /** Returns the first AllowList entry that matches the given path, and null otherwise. */
     @Nullable
-    private Whitelist findWhitelistForPath(String path) {
+    private AllowList findAllowListForPath(String path) {
       Optional<Pattern> pathRegex = compiler.getOptions().getConformanceRemoveRegexFromPath();
       if (pathRegex.isPresent()) {
         path = pathRegex.get().matcher(path).replaceFirst("");
       }
 
-      for (Whitelist whitelist : whitelists) {
-        if (whitelist.matches(path)) {
-          return whitelist;
+      for (AllowList allowlist : allowlists) {
+        if (allowlist.matches(path)) {
+          return allowlist;
         }
       }
       return null;
@@ -321,18 +321,18 @@ public final class ConformanceRules {
       JSError err = JSError.make(n, msg, message, separator, result.note);
 
       String path = NodeUtil.getSourceName(n);
-      Whitelist whitelist = path != null ? findWhitelistForPath(path) : null;
+      AllowList allowlist = path != null ? findAllowListForPath(path) : null;
       boolean shouldReport =
           compiler
               .getErrorManager()
               .shouldReportConformanceViolation(
                   requirement,
-                  whitelist != null
-                      ? Optional.fromNullable(whitelist.whitelistEntry)
+                  allowlist != null
+                      ? Optional.fromNullable(allowlist.allowlistEntry)
                       : Optional.absent(),
                   err);
 
-      if (shouldReport && whitelist == null && (onlyApplyTo == null || onlyApplyTo.matches(path))) {
+      if (shouldReport && allowlist == null && (onlyApplyTo == null || onlyApplyTo.matches(path))) {
         compiler.report(err);
       }
     }
@@ -358,24 +358,24 @@ public final class ConformanceRules {
 
   abstract static class AbstractTypeRestrictionRule extends AbstractRule {
     private final JSType nativeObjectType;
-    private final JSType whitelistedTypes;
+    private final JSType allowlistedTypes;
     private final AssertionFunctionLookup assertionFunctions;
 
     public AbstractTypeRestrictionRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
       nativeObjectType = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
-      List<String> whitelistedTypeNames = requirement.getValueList();
-      whitelistedTypes = union(whitelistedTypeNames);
+      List<String> allowlistedTypeNames = requirement.getValueList();
+      allowlistedTypes = union(allowlistedTypeNames);
 
       assertionFunctions =
           AssertionFunctionLookup.of(compiler.getCodingConvention().getAssertionFunctions());
     }
 
-    protected boolean isWhitelistedType(Node n) {
-      if (whitelistedTypes != null && n.getJSType() != null) {
+    protected boolean isAllowlistedType(Node n) {
+      if (allowlistedTypes != null && n.getJSType() != null) {
         JSType targetType = n.getJSType().restrictByNotNullOrUndefined();
-        if (targetType.isSubtypeOf(whitelistedTypes)) {
+        if (targetType.isSubtypeOf(allowlistedTypes)) {
           return true;
         }
       }
@@ -1469,10 +1469,7 @@ public final class ConformanceRules {
     }
 
     boolean report(Node n) {
-      return n.getJSType() != null
-          && isKnown(n)
-          && invalidDeref(n)
-          && !isWhitelistedType(n);
+      return n.getJSType() != null && isKnown(n) && invalidDeref(n) && !isAllowlistedType(n);
     }
 
     // Whether the type is known to be invalid to dereference.
@@ -1567,7 +1564,7 @@ public final class ConformanceRules {
     }
 
     @Override
-    protected boolean tsIsWhitelisted() {
+    protected boolean tsIsAllowlisted() {
       return true;
     }
 
@@ -1595,7 +1592,7 @@ public final class ConformanceRules {
           && !isTop(n)
           && isClassType(n)
           && !isNativeObjectType(n)
-          && !isWhitelistedType(n);
+          && !isAllowlistedType(n);
     }
 
     private boolean isClassType(Node n) {
@@ -1725,7 +1722,7 @@ public final class ConformanceRules {
       if (t.inGlobalScope()
           && NodeUtil.isDeclaration(n)
           && !n.getBooleanProp(Node.IS_NAMESPACE)
-          && !isWhitelisted(n)) {
+          && !isAllowlisted(n)) {
         Node enclosingScript = NodeUtil.getEnclosingScript(n);
         if (enclosingScript != null
             && (enclosingScript.getBooleanProp(Node.GOOG_MODULE)
@@ -1738,18 +1735,18 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private boolean isWhitelisted(Node n) {
+    private boolean isAllowlisted(Node n) {
       if (n.isFromExterns()) {
         return true;
       }
 
       if (n.isFunction()) {
-        return isWhitelistedName(n.getFirstChild().getString());
+        return isAllowlistedName(n.getFirstChild().getString());
       }
 
       if (NodeUtil.isNameDeclaration(n)) {
         for (Node name : NodeUtil.findLhsNodesInNode(n)) {
-          if (!isWhitelistedName(name.getString())) {
+          if (!isAllowlistedName(name.getString())) {
             return false;
           }
         }
@@ -1759,7 +1756,7 @@ public final class ConformanceRules {
       return false;
     }
 
-    private boolean isWhitelistedName(String name) {
+    private boolean isAllowlistedName(String name) {
       return name.equals("$jscomp")
           || name.startsWith("$jscomp$compprop")
           || ClosureRewriteModule.isModuleContent(name)

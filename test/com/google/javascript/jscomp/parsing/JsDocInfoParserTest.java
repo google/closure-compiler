@@ -4983,7 +4983,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testWhitelistedNewAnnotations() {
+  public void testAllowlistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");
     extraAnnotations.add("foobar");
@@ -4991,7 +4991,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testWhitelistedConflictingAnnotation() {
+  public void testAllowlistedConflictingAnnotation() {
     extraAnnotations.add("param");
     JSDocInfo info = parse("@param {number} index */");
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
@@ -5005,7 +5005,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testNonIdentifierAnnotation() {
-    // Try to whitelist an annotation that is not a valid JS identifier.
+    // Try to allowlist an annotation that is not a valid JS identifier.
     // It should not work.
     extraAnnotations.add("123");
     parse("@123 */", "illegal use of unknown JSDoc tag \"\"; ignoring it");
@@ -5034,7 +5034,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testWhitelistedAnnotations() {
+  public void testAllowlistedAnnotations() {
     parse(
       "* @addon \n" +
       "* @augments \n" +

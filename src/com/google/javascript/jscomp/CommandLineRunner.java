@@ -703,15 +703,16 @@ public class CommandLineRunner extends
                 + "of the form\n"
                 + "<file-name>:<line-number>?  <warning-description>",
         aliases = {"--warnings_whitelist_file"})
-    private String warningsWhitelistFile = "";
+    private String warningsAllowlistFile = "";
 
     @Option(name = "--hide_warnings_for",
         usage = "If specified, files whose path contains this string will "
             + "have their warnings hidden. You may specify multiple.")
     private List<String> hideWarningsFor = new ArrayList<>();
 
-    @Option(name = "--extra_annotation_name",
-        usage = "A whitelist of tag names in JSDoc. You may specify multiple")
+    @Option(
+        name = "--extra_annotation_name",
+        usage = "A allowlist of tag names in JSDoc. You may specify multiple")
     private List<String> extraAnnotationName = new ArrayList<>();
 
     @Option(name = "--tracer_mode",
@@ -1710,7 +1711,7 @@ public class CommandLineRunner extends
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
-          .setWarningsWhitelistFile(flags.warningsWhitelistFile)
+          .setWarningsWhitelistFile(flags.warningsAllowlistFile)
           .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
           .setJsonStreamMode(flags.jsonStreamMode)
@@ -1721,9 +1722,8 @@ public class CommandLineRunner extends
   }
 
   @Override
-  protected void addWhitelistWarningsGuard(
-      CompilerOptions options, File whitelistFile) {
-    options.addWarningsGuard(WhitelistWarningsGuard.fromFile(whitelistFile));
+  protected void addWhitelistWarningsGuard(CompilerOptions options, File allowlistFile) {
+    options.addWarningsGuard(WhitelistWarningsGuard.fromFile(allowlistFile));
   }
 
   @Override
@@ -2028,9 +2028,8 @@ public class CommandLineRunner extends
   private static List<String> findJsFiles(Collection<String> patterns, boolean sortAlphabetically)
       throws IOException {
     // A map from normalized absolute paths to original paths. We need to return original paths to
-    // support whitelist files that depend on them.
-    Map<String, String> allJsInputs = sortAlphabetically
-        ? new TreeMap<>() : new LinkedHashMap<>();
+    // support allowlist files that depend on them.
+    Map<String, String> allJsInputs = sortAlphabetically ? new TreeMap<>() : new LinkedHashMap<>();
     Set<String> excludes = new HashSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {

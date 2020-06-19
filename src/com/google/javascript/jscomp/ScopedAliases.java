@@ -731,9 +731,8 @@ class ScopedAliases implements HotSwapCompilerPass {
 
       if (hasNamespaceShadows) {
         MakeDeclaredNamesUnique.Renamer renamer =
-            new MakeDeclaredNamesUnique.WhitelistedRenamer(
-                new MakeDeclaredNamesUnique.ContextualRenamer(),
-                forbiddenLocals);
+            new MakeDeclaredNamesUnique.TargettedRenamer(
+                new MakeDeclaredNamesUnique.ContextualRenamer(), forbiddenLocals);
         for (String s : forbiddenLocals) {
           renamer.addDeclaredName(s, false);
         }

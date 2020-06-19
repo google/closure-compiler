@@ -614,27 +614,26 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     }
   }
 
-  /** Only rename things that match the whitelist. Wraps another renamer. */
-  static class WhitelistedRenamer implements Renamer {
+  /** Only rename things that match specific names. Wraps another renamer. */
+  static class TargettedRenamer implements Renamer {
     private final Renamer delegate;
-    private final Set<String> whitelist;
+    private final Set<String> targets;
 
-    WhitelistedRenamer(Renamer delegate, Set<String> whitelist) {
+    TargettedRenamer(Renamer delegate, Set<String> targets) {
       this.delegate = delegate;
-      this.whitelist = whitelist;
+      this.targets = targets;
     }
 
     @Override
     public void addDeclaredName(String name, boolean hoisted) {
-      if (whitelist.contains(name)) {
+      if (targets.contains(name)) {
         delegate.addDeclaredName(name, hoisted);
       }
     }
 
     @Override
     public String getReplacementName(String oldName) {
-      return whitelist.contains(oldName)
-          ? delegate.getReplacementName(oldName) : null;
+      return targets.contains(oldName) ? delegate.getReplacementName(oldName) : null;
     }
 
     @Override
@@ -644,8 +643,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
     @Override
     public Renamer createForChildScope(Node scopeRoot, boolean hoistingTargetScope) {
-      return new WhitelistedRenamer(
-          delegate.createForChildScope(scopeRoot, hoistingTargetScope), whitelist);
+      return new TargettedRenamer(
+          delegate.createForChildScope(scopeRoot, hoistingTargetScope), targets);
     }
 
     @Override

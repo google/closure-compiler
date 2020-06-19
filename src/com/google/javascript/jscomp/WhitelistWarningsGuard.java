@@ -50,8 +50,8 @@ import java.util.regex.Pattern;
 public class WhitelistWarningsGuard extends WarningsGuard {
   private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 
-  /** The set of white-listed warnings, same format as {@code formatWarning}. */
-  private final Set<String> whitelist;
+  /** The set of allowlisted warnings, same format as {@code formatWarning}. */
+  private final Set<String> allowlist;
 
   /** Pattern to match line number in error descriptions. */
   private static final Pattern LINE_NUMBER = Pattern.compile(":-?\\d+");
@@ -61,28 +61,27 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   }
 
   /**
-   * This class depends on an input set that contains the white-list. The format
-   * of each white-list string is:
-   * {@code <file-name>:<line-number>?  <warning-description>}
-   * {@code # <optional-comment>}
+   * This class depends on an input set that contains the white-list. The format of each white-list
+   * string is: {@code <file-name>:<line-number>? <warning-description>} {@code #
+   * <optional-comment>}
    *
-   * @param whitelist The set of JS-warnings that are white-listed. This is
-   *     expected to have similar format as {@code formatWarning(JSError)}.
+   * @param allowlist The set of JS-warnings that are white-listed. This is expected to have similar
+   *     format as {@code formatWarning(JSError)}.
    */
-  public WhitelistWarningsGuard(Set<String> whitelist) {
-    checkNotNull(whitelist);
-    this.whitelist = normalizeWhitelist(whitelist);
+  public WhitelistWarningsGuard(Set<String> allowlist) {
+    checkNotNull(allowlist);
+    this.allowlist = normalizeWhitelist(allowlist);
   }
 
   /**
-   * Loads legacy warnings list from the set of strings. During development line
-   * numbers are changed very often - we just cut them and compare without ones.
+   * Loads legacy warnings list from the set of strings. During development line numbers are changed
+   * very often - we just cut them and compare without ones.
    *
    * @return known legacy warnings without line numbers.
    */
-  protected Set<String> normalizeWhitelist(Set<String> whitelist) {
+  protected Set<String> normalizeWhitelist(Set<String> allowlist) {
     Set<String> result = new HashSet<>();
-    for (String line : whitelist) {
+    for (String line : allowlist) {
       String trimmed = line.trim();
       if (trimmed.isEmpty() || trimmed.charAt(0) == '#') {
         // strip out empty lines and comments.
@@ -115,7 +114,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    * @return whether the given warning is white-listed or not.
    */
   protected boolean containWarning(String formattedWarning) {
-    return whitelist.contains(formattedWarning);
+    return allowlist.contains(formattedWarning);
   }
 
   @Override
@@ -217,13 +216,13 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       return this;
     }
 
-    /** Fill in instructions on how to generate this whitelist. */
+    /** Fill in instructions on how to generate this allowlist. */
     public WhitelistBuilder setGeneratorTarget(String name) {
       this.generatorTarget = name;
       return this;
     }
 
-    /** A note to include at the top of the whitelist file. */
+    /** A note to include at the top of the allowlist file. */
     public WhitelistBuilder setNote(String note) {
       this.headerNote  = note;
       return this;
@@ -279,7 +278,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
 
       for (DiagnosticType type : warningsByType.keySet()) {
         if (DiagnosticGroups.DEPRECATED.matches(type)) {
-          // Deprecation warnings are not raisable to error, so we don't need them in whitelists.
+          // Deprecation warnings are not raisable to error, so we don't need them in allowlists.
           continue;
         }
         out.append("\n# Warning ")

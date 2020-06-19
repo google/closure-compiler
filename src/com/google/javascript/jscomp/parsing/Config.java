@@ -186,11 +186,11 @@ public abstract class Config {
     public abstract Builder setAnnotations(ImmutableMap<String, Annotation> names);
   }
 
-  /** Create the annotation names from the user-specified annotation whitelist. */
-  private static ImmutableMap<String, Annotation> buildAnnotations(Iterable<String> whitelist) {
+  /** Create the annotation names from the user-specified annotation allowlist. */
+  private static ImmutableMap<String, Annotation> buildAnnotations(Iterable<String> allowlist) {
     ImmutableMap.Builder<String, Annotation> annotationsBuilder = ImmutableMap.builder();
     annotationsBuilder.putAll(Annotation.recognizedAnnotations);
-    for (String unrecognizedAnnotation : whitelist) {
+    for (String unrecognizedAnnotation : allowlist) {
       if (!unrecognizedAnnotation.isEmpty()
           && !Annotation.recognizedAnnotations.containsKey(unrecognizedAnnotation)) {
         annotationsBuilder.put(unrecognizedAnnotation, Annotation.NOT_IMPLEMENTED);

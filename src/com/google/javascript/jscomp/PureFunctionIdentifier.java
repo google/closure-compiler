@@ -272,7 +272,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    *
    * <p>It's very important that this never returns {@code true} for an L-value, including when new
    * syntax is added to the language. That would cause some impure functions to be considered pure.
-   * Therefore, this method is a very explict whitelist. Anything that's unrecognized is considered
+   * Therefore, this method is a very explict allowed. Anything that's unrecognized is considered
    * not an R-value. This is insurance against new syntax.
    *
    * <p>New cases can be added as needed to increase the accuracy of the analysis. They just have to

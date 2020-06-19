@@ -2579,8 +2579,8 @@ public class CompilerOptions implements Serializable {
     this.cssRenamingMap = cssRenamingMap;
   }
 
-  public void setCssRenamingWhitelist(Set<String> whitelist) {
-    this.cssRenamingWhitelist = whitelist;
+  public void setCssRenamingWhitelist(Set<String> skiplist) {
+    this.cssRenamingWhitelist = skiplist;
   }
 
   public void setReplaceStringsFunctionDescriptions(

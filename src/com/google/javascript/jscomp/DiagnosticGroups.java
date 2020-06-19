@@ -660,7 +660,7 @@ public class DiagnosticGroups {
   // In the future, we may carve out a subset of the conformance checks that is
   // OK to suppress.
   // For now, the only way to suppress a check at a granularity smaller than
-  // the file level is by using a whitelist file.
+  // the file level is by using a allowlist file.
   @GwtIncompatible("Conformance")
   public static final DiagnosticGroup CONFORMANCE_VIOLATIONS =
       DiagnosticGroups.registerGroup(

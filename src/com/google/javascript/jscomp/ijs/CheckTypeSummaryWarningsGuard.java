@@ -44,7 +44,7 @@ public class CheckTypeSummaryWarningsGuard extends WarningsGuard {
 
   @Override
   protected int getPriority() {
-    // Treat warnings in .i.js files as though they are whitelisted.
+    // Treat warnings in .i.js files as though they are allowlisted.
     return Priority.SUPPRESS_BY_WHITELIST.getValue();
   }
 
