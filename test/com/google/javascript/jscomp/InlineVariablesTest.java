@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -244,7 +245,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
   @Test
   public void testInlineAcrossModules() {
     // TODO(kushal): Make decision about overlap with CrossChunkCodeMotion
-    test(createModules("var a = 2;", "var b = a;"), new String[] {"", "var b = 2;"});
+    test(
+        JSChunkGraphBuilder.forUnordered().addChunk("var a = 2;").addChunk("var b = a;").build(),
+        new String[] {"", "var b = 2;"});
   }
 
   @Test

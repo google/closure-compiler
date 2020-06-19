@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -39,8 +40,9 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
 
   @Test
   public void testFunctionDeclarationsInModule() {
-    test(createModules("a; function f(){} function g(){}"),
-         new String[] { "var f = function(){}; var g = function(){}; a" });
+    test(
+        JSChunkGraphBuilder.forUnordered().addChunk("a; function f(){} function g(){}").build(),
+        new String[] {"var f = function(){}; var g = function(){}; a"});
   }
 
   @Test

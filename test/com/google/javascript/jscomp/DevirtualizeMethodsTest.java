@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth8.assertThat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.FunctionType.Parameter;
@@ -1201,11 +1202,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   @Test
   public void testRewriteSameModule1() {
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE),
+            .addChunk(semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE))
             // m2
-            "");
+            .addChunk("")
+            .build();
 
     test(
         modules,
@@ -1220,11 +1222,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   @Test
   public void testRewriteSameModule2() {
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "",
+            .addChunk("")
             // m2
-            semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE));
+            .addChunk(semicolonJoin(ModuleTestInput.DEFINITION, ModuleTestInput.USE))
+            .build();
 
     test(
         modules,
@@ -1239,11 +1242,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   @Test
   public void testRewriteSameModule3() {
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            semicolonJoin(ModuleTestInput.USE, ModuleTestInput.DEFINITION),
+            .addChunk(semicolonJoin(ModuleTestInput.USE, ModuleTestInput.DEFINITION))
             // m2
-            "");
+            .addChunk("")
+            .build();
 
     test(
         modules,
@@ -1258,11 +1262,12 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   @Test
   public void testRewrite_definitionModule_beforeUseModule() {
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            ModuleTestInput.DEFINITION,
+            .addChunk(ModuleTestInput.DEFINITION)
             // m2
-            ModuleTestInput.USE);
+            .addChunk(ModuleTestInput.USE)
+            .build();
 
     test(
         modules,
@@ -1277,11 +1282,10 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   @Test
   public void testNoRewrite_definitionModule_afterUseModule() {
     JSModule[] modules =
-        createModuleStar(
-            // m1
-            ModuleTestInput.USE,
-            // m2
-            ModuleTestInput.DEFINITION);
+        JSChunkGraphBuilder.forStar()
+            .addChunk(ModuleTestInput.USE)
+            .addChunk(ModuleTestInput.DEFINITION)
+            .build();
 
     testSame(modules);
   }

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,18 +68,20 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     // 6) f4 declared in m1 and used in m2 as var. It moves to m2
 
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            lines(
-                "function f1(a) { alert(a); }",
-                "function f2(a) { alert(a); }",
-                "function f3(a) { alert(a); }",
-                "function f4() { alert(1); }",
-                "function g() { alert('ciao'); }"),
+            .addChunk(
+                lines(
+                    "function f1(a) { alert(a); }",
+                    "function f2(a) { alert(a); }",
+                    "function f3(a) { alert(a); }",
+                    "function f4() { alert(1); }",
+                    "function g() { alert('ciao'); }"))
             // m2
-            "f1('hi'); f3('bye'); var a = f4; function h(a) { alert('h:' + a); }",
+            .addChunk("f1('hi'); f3('bye'); var a = f4; function h(a) { alert('h:' + a); }")
             // m3
-            "f2('hi'); f2('hi'); f3('bye');");
+            .addChunk("f2('hi'); f2('hi'); f3('bye');")
+            .build();
 
     test(
         modules,
@@ -101,11 +104,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement2() {
     // having f declared as a local variable should block the migration to m2
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "function f(a) { alert(a); } function g() {var f = 1; f++}",
+            .addChunk("function f(a) { alert(a); } function g() {var f = 1; f++}")
             // m2
-            "f(1);");
+            .addChunk("f(1);")
+            .build();
 
     test(
         modules,
@@ -121,11 +125,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement3() {
     // having f declared as a arg should block the migration to m2
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "function f(a) { alert(a); } function g(f) {f++}",
+            .addChunk("function f(a) { alert(a); } function g(f) {f++}")
             // m2
-            "f(1);");
+            .addChunk("f(1);")
+            .build();
 
     test(
         modules,
@@ -141,11 +146,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement4() {
     // Try out moving a function which returns a closure
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "function f(){return function(a){}}",
+            .addChunk("function f(){return function(a){}}")
             // m2
-            "var a = f();");
+            .addChunk("var a = f();")
+            .build();
 
     test(
         modules,
@@ -161,11 +167,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement5() {
     // Try moving a recursive function [using factorials for kicks]
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "function f(n){return (n<1)?1:f(n-1)}",
+            .addChunk("function f(n){return (n<1)?1:f(n-1)}")
             // m2
-            "var a = f(4);");
+            .addChunk("var a = f(4);")
+            .build();
 
     test(
         modules,
@@ -181,11 +188,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement5b() {
     // Try moving a recursive function declared differently.
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var f = function(n){return (n<1)?1:f(n-1)};",
+            .addChunk("var f = function(n){return (n<1)?1:f(n-1)};")
             // m2
-            "var a = f(4);");
+            .addChunk("var a = f(4);")
+            .build();
 
     test(
         modules,
@@ -201,11 +209,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement5c() {
     // Try moving a recursive function declared differently, in a nested block scope.
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var f = function(n){if(true){if(true){return (n<1)?1:f(n-1)}}};",
+            .addChunk("var f = function(n){if(true){if(true){return (n<1)?1:f(n-1)}}};")
             // m2
-            "var a = f(4);");
+            .addChunk("var a = f(4);")
+            .build();
 
     test(
         modules,
@@ -222,13 +231,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement6() {
     // Try out moving to the common ancestor
     JSModule[] modules =
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "function f(){return 1}",
+            .addChunk("function f(){return 1}")
             // m2
-            "var a = f();",
+            .addChunk("var a = f();")
             // m3
-            "var b = f();");
+            .addChunk("var b = f();")
+            .build();
 
     test(
         modules,
@@ -246,17 +256,18 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement7() {
     // Try out moving to the common ancestor with deeper ancestry chain
     JSModule[] modules =
-        createModules(
+        JSChunkGraphBuilder.forUnordered()
             // m1
-            "function f(){return 1}",
+            .addChunk("function f(){return 1}")
             // m2
-            "",
+            .addChunk("")
             // m3
-            "var a = f();",
+            .addChunk("var a = f();")
             // m4
-            "var b = f();",
+            .addChunk("var b = f();")
             // m5
-            "var c = f();");
+            .addChunk("var c = f();")
+            .build();
 
     modules[1].addDependency(modules[0]);
     modules[2].addDependency(modules[1]);
@@ -283,11 +294,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testFunctionMovement8() {
     // Check what happens with named functions
     JSModule[] modules =
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var v = function f(){return 1}",
+            .addChunk("var v = function f(){return 1}")
             // m2
-            "v();");
+            .addChunk("v();")
+            .build();
 
     test(
         modules,
@@ -308,14 +320,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     // block elements]
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame(
-        createModuleStar(
-            // m1
-            lines(
-                "function f(){};f.prototype.bar=new f;",
-                "if(a)function f2(){}",
-                "{{while(a)function f3(){}}}"),
-            // m2
-            "var a = new f();f2();f3();"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk(
+                lines(
+                    "function f(){};f.prototype.bar=new f;",
+                    "if(a)function f2(){}",
+                    "{{while(a)function f3(){}}}"))
+            .addChunk("var a = new f();f2();f3();")
+            .build());
   }
 
   @Test
@@ -323,41 +335,36 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     // A generic case where 2 modules depend on the first one. But it's the
     // common ancestor, so we can't move.
     testSame(
-        createModuleStar(
-            // m1
-            "function f(){return 1}",
-            // m2
-            "var a = f();",
-            // m3
-            "var b = f();"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){return 1}")
+            .addChunk("var a = f();")
+            .addChunk("var b = f();")
+            .build());
   }
 
   @Test
   public void testEs6ClassMovement1() {
     test(
-        createModuleStar(
-            // m1
-            "class f { bar() {} }",
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("class f { bar() {} }")
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {"", "class f { bar() {} } var a = new f();"});
     test(
-        createModuleStar(
-            // m1
-            "var f = class { bar() {} };",
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("var f = class { bar() {} };")
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {"", "var f = class { bar() {} }; var a = new f();"});
   }
 
   @Test
   public void testClassMovement1() {
     test(
-        createModuleStar(
-            // m1
-            "function f(){} f.prototype.bar=function (){};",
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){} f.prototype.bar=function (){};")
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {"", "function f(){} f.prototype.bar=function (){}; var a = new f();"});
   }
 
@@ -365,14 +372,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testEs6ClassMovement_instanceof() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(
-        createModuleStar(
-            // m1
-            "class f { bar(){} } 1 instanceof f;",
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("class f { bar(){} } 1 instanceof f;")
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {
-            "'undefined' != typeof f && 1 instanceof f;",
-            "class f { bar(){} } var a = new f();"
+          "'undefined' != typeof f && 1 instanceof f;", "class f { bar(){} } var a = new f();"
         });
   }
 
@@ -380,11 +385,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testClassMovement_instanceof() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(
-        createModuleStar(
-            // m1
-            "function f(){} f.prototype.bar=function (){}; 1 instanceof f;",
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){} f.prototype.bar=function (){}; 1 instanceof f;")
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {
           "'undefined' != typeof f && 1 instanceof f;",
           "function f(){} f.prototype.bar=function (){}; var a = new f();"
@@ -395,33 +399,30 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testEs6ClassMovement_instanceofTurnedOff() {
     parentModuleCanSeeSymbolsDeclaredInChildren = false;
     testSame(
-        createModuleStar(
-            // m1
-            "class f { bar(){} } 1 instanceof f;",
-            // m2
-            "var a = new f();"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk("class f { bar(){} } 1 instanceof f;")
+            .addChunk("var a = new f();")
+            .build());
   }
 
   @Test
   public void testClassMovement_instanceofTurnedOff() {
     parentModuleCanSeeSymbolsDeclaredInChildren = false;
     testSame(
-        createModuleStar(
-            // m1
-            "function f(){} f.prototype.bar=function (){}; 1 instanceof f;",
-            // m2
-            "var a = new f();"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){} f.prototype.bar=function (){}; 1 instanceof f;")
+            .addChunk("var a = new f();")
+            .build());
   }
 
   @Test
   public void testEs6ClassMovement_instanceof2() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(
-        createModuleStar(
-            // m1
-            "class f { bar(){} } (true && 1 instanceof f);",
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("class f { bar(){} } (true && 1 instanceof f);")
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {
           "(true && ('undefined' != typeof f && 1 instanceof f));",
           "class f { bar(){} } var a = new f();"
@@ -432,11 +433,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testClassMovement_instanceof2() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(
-        createModuleStar(
-            // m1
-            "function f(){} f.prototype.bar=function (){}; (true && 1 instanceof f);",
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){} f.prototype.bar=function (){}; (true && 1 instanceof f);")
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {
           "(true && ('undefined' != typeof f && 1 instanceof f));",
           "function f(){} f.prototype.bar=function (){}; var a = new f();"
@@ -447,13 +447,13 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testClassMovement_alreadyGuardedInstanceof() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(
-        createModuleStar(
-            // m1
-            lines(
-                "function f(){} f.prototype.bar=function (){};",
-                "(true && ('undefined' != typeof f && 1 instanceof f));"),
-            // m2
-            "var a = new f();"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk(
+                lines(
+                    "function f(){} f.prototype.bar=function (){};",
+                    "(true && ('undefined' != typeof f && 1 instanceof f));"))
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {
           "(true && ('undefined' != typeof f && 1 instanceof f));",
           "function f(){} f.prototype.bar=function (){}; var a = new f();"
@@ -464,79 +464,77 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testClassMovement_instanceof3() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     testSame(
-        createModuleStar(
-            // m1
-            "function f(){} f.prototype.bar=function (){}; f instanceof 1",
-            // m2
-            "var a = new f();"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){} f.prototype.bar=function (){}; f instanceof 1")
+            .addChunk("var a = new f();")
+            .build());
   }
 
   @Test
   public void testClassMovement_instanceof_noRewriteRequired() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     testSame(
-        createModuleStar(
-            // m1
-            "function f(){} f.prototype.bar=function (){}; 1 instanceof f; new f;",
-            // m2
-            "var a = new f();"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){} f.prototype.bar=function (){}; 1 instanceof f; new f;")
+            .addChunk("var a = new f();")
+            .build());
   }
 
   @Test
   public void testClassMovement_instanceof_noRewriteRequired2() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     testSame(
-        createModuleChain(
-            // m1
-            "function f(){} f.prototype.bar=function (){}; new f;",
-            // m2
-            "1 instanceof f;",
-            // m3
-            "var a = new f();"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk("function f(){} f.prototype.bar=function (){}; new f;")
+            .addChunk("1 instanceof f;")
+            .addChunk("var a = new f();")
+            .build());
   }
 
   @Test
   public void testEs6ClassMovement2() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "class f {} f.prototype.bar=3; f.prototype.baz=5;",
+            .addChunk("class f {} f.prototype.bar=3; f.prototype.baz=5;")
             // m2
-            "f.prototype.baq = 7;",
+            .addChunk("f.prototype.baq = 7;")
             // m3
-            "f.prototype.baz = 9;",
+            .addChunk("f.prototype.baz = 9;")
             // m4
-            "var a = new f();"),
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {
-            // m1
-            "",
-            // m2
-            "",
-            // m3
-            "",
-            // m4
-            lines(
-                "class f {}",
-                "f.prototype.bar = 3;",
-                "f.prototype.baz = 5;",
-                "f.prototype.baq = 7;",
-                "f.prototype.baz = 9;",
-                "var a = new f();")
+          // m1
+          "",
+          // m2
+          "",
+          // m3
+          "",
+          // m4
+          lines(
+              "class f {}",
+              "f.prototype.bar = 3;",
+              "f.prototype.baz = 5;",
+              "f.prototype.baq = 7;",
+              "f.prototype.baz = 9;",
+              "var a = new f();")
         });
   }
 
   @Test
   public void testClassMovement2() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "function f(){} f.prototype.bar=3; f.prototype.baz=5;",
+            .addChunk("function f(){} f.prototype.bar=3; f.prototype.baz=5;")
             // m2
-            "f.prototype.baq = 7;",
+            .addChunk("f.prototype.baq = 7;")
             // m3
-            "f.prototype.baz = 9;",
+            .addChunk("f.prototype.baz = 9;")
             // m4
-            "var a = new f();"),
+            .addChunk("var a = new f();")
+            .build(),
         new String[] {
           // m1
           "",
@@ -558,15 +556,16 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClassMovement3() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var f = function() {}; f.prototype.bar=3; f.prototype.baz=5;",
+            .addChunk("var f = function() {}; f.prototype.bar=3; f.prototype.baz=5;")
             // m2
-            "f = 7;",
+            .addChunk("f = 7;")
             // m3
-            "f = 9;",
+            .addChunk("f = 9;")
             // m4
-            "f = 11;"),
+            .addChunk("f = 11;")
+            .build(),
         new String[] {
           // m1
           "",
@@ -588,27 +587,26 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClassMovement4() {
     testSame(
-        createModuleStar(
-            // m1
-            "function f(){} f.prototype.bar=3; f.prototype.baz=5;",
-            // m2
-            "f.prototype.baq = 7;",
-            // m3
-            "var a = new f();"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f(){} f.prototype.bar=3; f.prototype.baz=5;")
+            .addChunk("f.prototype.baq = 7;")
+            .addChunk("var a = new f();")
+            .build());
   }
 
   @Test
   public void testClassMovement5() {
     JSModule[] modules =
-        createModules(
+        JSChunkGraphBuilder.forUnordered()
             // m1
-            "function f(){} f.prototype.bar=3; f.prototype.baz=5;",
+            .addChunk("function f(){} f.prototype.bar=3; f.prototype.baz=5;")
             // m2
-            "",
+            .addChunk("")
             // m3
-            "f.prototype.baq = 7;",
+            .addChunk("f.prototype.baq = 7;")
             // m4
-            "var a = new f();");
+            .addChunk("var a = new f();")
+            .build();
 
     modules[1].addDependency(modules[0]);
     modules[2].addDependency(modules[1]);
@@ -631,11 +629,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClassMovement6() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "function Foo(){} function Bar(){} goog.inherits(Bar, Foo); new Foo();",
+            .addChunk("function Foo(){} function Bar(){} goog.inherits(Bar, Foo); new Foo();")
             // m2
-            "new Bar();"),
+            .addChunk("new Bar();")
+            .build(),
         new String[] {
           // m1
           "function Foo(){} new Foo();",
@@ -647,11 +646,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testEs6ClassMovement6() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "class Foo{} class Bar extends Foo {} new Foo();",
+            .addChunk("class Foo{} class Bar extends Foo {} new Foo();")
             // m2
-            "new Bar();"),
+            .addChunk("new Bar();")
+            .build(),
         new String[] {
           // m1
           "class Foo {} new Foo();",
@@ -663,33 +663,40 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClassMovement7() {
     testSame(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "function Foo(){} function Bar(){} goog.inherits(Bar, Foo); new Bar();",
+            .addChunk("function Foo(){} function Bar(){} goog.inherits(Bar, Foo); new Bar();")
             // m2
-            "new Foo();"));
+            .addChunk("new Foo();")
+            .build());
   }
 
   @Test
   public void testEs6ClassMovement7() {
     testSame(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
+
             // m1
-            "class Foo {} class Bar extends Foo {} new Bar();",
+            .addChunk("class Foo {} class Bar extends Foo {} new Bar();")
+
             // m2
-            "new Foo();"));
+            .addChunk("new Foo();")
+            .build());
   }
 
   @Test
   public void testClassMovement8() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            lines(
-                "function Foo(){}",
-                "Object.defineProperties(Foo.prototype, {a: {get:function(){return 0;}}});"),
+            .addChunk(
+                lines(
+                    "function Foo(){}",
+                    "Object.defineProperties(Foo.prototype, {a: {get:function(){return 0;}}});"))
+
             // m2
-            "new Foo();"),
+            .addChunk("new Foo();")
+            .build(),
         new String[] {
           "", // m1
           lines(
@@ -702,11 +709,10 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testEs6ClassMovement8() {
     test(
-        createModuleChain(
-            // m1
-            "class Foo { get test() { return 0; }}",
-            // m2
-            "new Foo();"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("class Foo { get test() { return 0; }}")
+            .addChunk("new Foo();")
+            .build(),
         new String[] {
           "", // m1
           "class Foo { get test() { return 0; }} new Foo();" // m2
@@ -720,13 +726,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     // CrossChunkMethodMotion is responsible for putting the unstub definitions
     // in the right places.
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            "function Foo(){} Foo.prototype.bar = JSCompiler_stubMethod(x);",
+            .addChunk("function Foo(){} Foo.prototype.bar = JSCompiler_stubMethod(x);")
             // m1
-            "Foo.prototype.bar = JSCompiler_unstubMethod(x);",
+            .addChunk("Foo.prototype.bar = JSCompiler_unstubMethod(x);")
             // m2
-            "new Foo();"),
+            .addChunk("new Foo();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -742,45 +749,50 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testNoMoveSideEffectProperty() {
     testSame(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "function Foo(){}  Foo.prototype.bar = createSomething();",
+            .addChunk("function Foo(){}  Foo.prototype.bar = createSomething();")
             // m2
-            "new Foo();"));
+            .addChunk("new Foo();")
+            .build());
   }
 
   @Test
   public void testNoMoveSideEffectDefineProperties() {
     testSame(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            lines(
-                "function Foo(){}",
-                "Object.defineProperties(Foo.prototype, {a: {get: createSomething()}})"),
+            .addChunk(
+                lines(
+                    "function Foo(){}",
+                    "Object.defineProperties(Foo.prototype, {a: {get: createSomething()}})"))
             // m2
-            "new Foo();"));
+            .addChunk("new Foo();")
+            .build());
   }
 
   @Test
   public void testNoMoveSideEffectDefinePropertiesComputed() {
     testSame(
-        createModuleChain(
-            // m1
-            lines(
-                "function Foo(){}",
-                "Object.defineProperties(Foo.prototype,{[test()]:{get: function() {return 10;}}})"),
-            // m2
-            "new Foo();"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                lines(
+                    "function Foo(){}",
+                    "Object.defineProperties(Foo.prototype,{[test()]:{get: function() {return"
+                        + " 10;}}})"))
+            .addChunk("new Foo();")
+            .build());
   }
 
   @Test
   public void testAssignMovement() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var f = 3; f = 5;",
+            .addChunk("var f = 3; f = 5;")
             // m2
-            "var h = f;"),
+            .addChunk("var h = f;")
+            .build(),
         new String[] {
           // m1
           "",
@@ -790,21 +802,21 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
     // don't move nested assigns
     testSame(
-        createModuleChain(
-            // m1
-            "var f = 3; var g = f = 5;",
-            // m2
-            "var h = f;"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk("var f = 3; var g = f = 5;")
+            .addChunk("var h = f;")
+            .build());
   }
 
   @Test
   public void testNoClassMovement2() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var f = {}; f.h = 5;",
+            .addChunk("var f = {}; f.h = 5;")
             // m2
-            "var h = f;"),
+            .addChunk("var h = f;")
+            .build(),
         new String[] {
           // m1
           "",
@@ -814,21 +826,21 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
     // don't move nested getprop assigns
     testSame(
-        createModuleChain(
-            // m1
-            "var f = {}; var g = f.h = 5;",
-            // m2
-            "var h = f;"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk("var f = {}; var g = f.h = 5;")
+            .addChunk("var h = f;")
+            .build());
   }
 
   @Test
   public void testLiteralMovement1() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var f = {'hi': 'mom', 'bye': function() {}};",
+            .addChunk("var f = {'hi': 'mom', 'bye': function() {}};")
             // m2
-            "var h = f;"),
+            .addChunk("var h = f;")
+            .build(),
         new String[] {
           // m1
           "",
@@ -840,21 +852,21 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testLiteralMovement2() {
     testSame(
-        createModuleChain(
-            // m1
-            "var f = {'hi': 'mom', 'bye': goog.nullFunction};",
-            // m2
-            "var h = f;"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk("var f = {'hi': 'mom', 'bye': goog.nullFunction};")
+            .addChunk("var h = f;")
+            .build());
   }
 
   @Test
   public void testLiteralMovement3() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var f = ['hi', function() {}];",
+            .addChunk("var f = ['hi', function() {}];")
             // m2
-            "var h = f;"),
+            .addChunk("var h = f;")
+            .build(),
         new String[] {
           // m1
           "",
@@ -866,21 +878,21 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testLiteralMovement4() {
     testSame(
-        createModuleChain(
-            // m1
-            "var f = ['hi', goog.nullFunction];",
-            // m2
-            "var h = f;"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk("var f = ['hi', goog.nullFunction];")
+            .addChunk("var h = f;")
+            .build());
   }
 
   @Test
   public void testStringTemplateLiteralMovement1() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var s = 'world'; var f = `hi ${s}`;",
+            .addChunk("var s = 'world'; var f = `hi ${s}`;")
             // m2
-            "var h = f;"),
+            .addChunk("var h = f;")
+            .build(),
         new String[] {
           // m1
           "",
@@ -892,22 +904,22 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testStringTemplateLiteralMovement2() {
     testSame(
-        createModuleChain(
-            // m1
-            "var f = `hi ${goog.nullFunction()}`;",
-            // m2
-            "var h = f;"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk("var f = `hi ${goog.nullFunction()}`;")
+            .addChunk("var h = f;")
+            .build());
   }
 
   @Test
   public void testVarMovement1() {
     // test moving a variable
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var a = 0;",
+            .addChunk("var a = 0;")
             // m2
-            "var x = a;");
+            .addChunk("var x = a;")
+            .build();
 
     test(
         modules,
@@ -923,11 +935,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testLetConstMovement() {
     // test moving a variable
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "const a = 0;",
+            .addChunk("const a = 0;")
             // m2
-            "let x = a;");
+            .addChunk("let x = a;")
+            .build();
 
     test(
         modules,
@@ -943,11 +956,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testVarMovement2() {
     // Test moving 1 variable out of the block
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var a = 0; var b = 1; var c = 2;",
+            .addChunk("var a = 0; var b = 1; var c = 2;")
             // m2
-            "var x = b;");
+            .addChunk("var x = b;")
+            .build();
 
     test(
         modules,
@@ -963,11 +977,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testLetConstMovement2() {
     // Test moving 1 variable out of the block
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "const a = 0; const b = 1; const c = 2;",
+            .addChunk("const a = 0; const b = 1; const c = 2;")
             // m2
-            "let x = b;");
+            .addChunk("let x = b;")
+            .build();
 
     test(
         modules,
@@ -983,11 +998,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testVarMovement3() {
     // Test moving all variables out of the block
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var a = 0; var b = 1;",
+            .addChunk("var a = 0; var b = 1;")
             // m2
-            "var x = a + b;");
+            .addChunk("var x = a + b;")
+            .build();
 
     test(
         modules,
@@ -1003,11 +1019,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testLetConstMovement3() {
     // Test moving all variables out of the block
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "const a = 0; const b = 1;",
+            .addChunk("const a = 0; const b = 1;")
             // m2
-            "let x = a + b;");
+            .addChunk("let x = a + b;")
+            .build();
 
     test(
         modules,
@@ -1023,11 +1040,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testVarMovement4() {
     // Test moving a function
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var a = function(){alert(1)};",
+            .addChunk("var a = function(){alert(1)};")
             // m2
-            "var x = a;");
+            .addChunk("var x = a;")
+            .build();
 
     test(
         modules,
@@ -1043,11 +1061,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testLetConstMovement4() {
     // Test moving a function
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "const a = function(){alert(1)};",
+            .addChunk("const a = function(){alert(1)};")
             // m2
-            "let x = a;");
+            .addChunk("let x = a;")
+            .build();
 
     test(
         modules,
@@ -1063,33 +1082,26 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testVarMovement5() {
     // Don't move a function outside of scope
     testSame(
-        createModuleStar(
-            // m1
-            "var a = alert;",
-            // m2
-            "var x = a;"));
+        JSChunkGraphBuilder.forStar().addChunk("var a = alert;").addChunk("var x = a;").build());
   }
 
   @Test
   public void testLetConstMovement5() {
     // Don't move a function outside of scope
     testSame(
-        createModuleStar(
-            // m1
-            "const a = alert;",
-            // m2
-            "let x = a;"));
+        JSChunkGraphBuilder.forStar().addChunk("const a = alert;").addChunk("let x = a;").build());
   }
 
   @Test
   public void testVarMovement6() {
     // Test moving a var with no assigned value
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var a;",
+            .addChunk("var a;")
             // m2
-            "var x = a;");
+            .addChunk("var x = a;")
+            .build();
 
     test(
         modules,
@@ -1105,11 +1117,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testLetMovement6() {
     // Test moving a let with no assigned value
     JSModule[] modules =
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "let a;",
+            .addChunk("let a;")
             // m2
-            "let x = a;");
+            .addChunk("let x = a;")
+            .build();
 
     test(
         modules,
@@ -1125,25 +1138,25 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testVarMovement7() {
     // Don't move a variable higher in the dependency tree
     testSame(
-        createModuleStar(
-            // m1
-            "function f() {g();} f();",
-            // m2
-            "function g(){};"));
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function f() {g();} f();")
+            .addChunk("function g(){};")
+            .build());
   }
 
   @Test
   public void testVarMovement8() {
     JSModule[] modules =
-        createModuleBush(
+        JSChunkGraphBuilder.forBush()
             // m1
-            "var a = 0;",
+            .addChunk("var a = 0;")
             // m2 -> m1
-            "",
+            .addChunk("")
             // m3 -> m2
-            "var x = a;",
+            .addChunk("var x = a;")
             // m4 -> m2
-            "var y = a;");
+            .addChunk("var y = a;")
+            .build();
 
     test(
         modules,
@@ -1162,15 +1175,16 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testLetConstMovement8() {
     JSModule[] modules =
-        createModuleBush(
+        JSChunkGraphBuilder.forBush()
             // m1
-            "const a = 0;",
+            .addChunk("const a = 0;")
             // m2 -> m1
-            "",
+            .addChunk("")
             // m3 -> m2
-            "let x = a;",
+            .addChunk("let x = a;")
             // m4 -> m2
-            "let y = a;");
+            .addChunk("let y = a;")
+            .build();
 
     test(
         modules,
@@ -1189,21 +1203,22 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testVarMovement9() {
     JSModule[] modules =
-        createModuleTree(
+        JSChunkGraphBuilder.forTree()
             // m1
-            "var a = 0; var b = 1; var c = 3;",
+            .addChunk("var a = 0; var b = 1; var c = 3;")
             // m2 -> m1
-            "",
+            .addChunk("")
             // m3 -> m1
-            "",
+            .addChunk("")
             // m4 -> m2
-            "a;",
+            .addChunk("a;")
             // m5 -> m2
-            "a;c;",
+            .addChunk("a;c;")
             // m6 -> m3
-            "b;",
+            .addChunk("b;")
             // m7 -> m4
-            "b;c;");
+            .addChunk("b;c;")
+            .build();
 
     test(
         modules,
@@ -1228,21 +1243,22 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testConstMovement9() {
     JSModule[] modules =
-        createModuleTree(
+        JSChunkGraphBuilder.forTree()
             // m1
-            "const a = 0; const b = 1; const c = 3;",
+            .addChunk("const a = 0; const b = 1; const c = 3;")
             // m2 -> m1
-            "",
+            .addChunk("")
             // m3 -> m1
-            "",
+            .addChunk("")
             // m4 -> m2
-            "a;",
+            .addChunk("a;")
             // m5 -> m2
-            "a;c;",
+            .addChunk("a;c;")
             // m6 -> m3
-            "b;",
+            .addChunk("b;")
             // m7 -> m4
-            "b;c;");
+            .addChunk("b;c;")
+            .build();
 
     test(
         modules,
@@ -1267,11 +1283,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClinit1() {
     JSModule[] modules =
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "function Foo$clinit() { Foo$clinit = function() {}; }",
+            .addChunk("function Foo$clinit() { Foo$clinit = function() {}; }")
             // m2
-            "Foo$clinit();");
+            .addChunk("Foo$clinit();")
+            .build();
     test(
         modules,
         new String[] {
@@ -1285,11 +1302,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClinit2() {
     JSModule[] modules =
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "var Foo$clinit = function() { Foo$clinit = function() {}; };",
+            .addChunk("var Foo$clinit = function() { Foo$clinit = function() {}; };")
             // m2
-            "Foo$clinit();");
+            .addChunk("Foo$clinit();")
+            .build();
     test(
         modules,
         new String[] {
@@ -1303,11 +1321,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClone1() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m1
-            "function f(){} f.prototype.clone = function() { return new f };",
+            .addChunk("function f(){} f.prototype.clone = function() { return new f };")
             // m2
-            "var a = (new f).clone();"),
+            .addChunk("var a = (new f).clone();")
+            .build(),
         new String[] {
           // m1
           "",
@@ -1323,15 +1342,15 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testClone2() {
     test(
-        createModuleChain(
-            // m1
-            lines(
-                "function f(){}",
-                "f.prototype.cloneFun = function() {",
-                "  return function() {new f}",
-                "};"),
-            // m2
-            "var a = (new f).cloneFun();"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                lines(
+                    "function f(){}",
+                    "f.prototype.cloneFun = function() {",
+                    "  return function() {new f}",
+                    "};"))
+            .addChunk("var a = (new f).cloneFun();")
+            .build(),
         new String[] {
           // m1
           "",
@@ -1347,15 +1366,15 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testBug4118005() {
     testSame(
-        createModuleChain(
-            // m1
-            "var m = 1;\n"
-                + "(function () {\n"
-                + " var x = 1;\n"
-                + " m = function() { return x };\n"
-                + "})();\n",
-            // m2
-            "m();"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                "var m = 1;\n"
+                    + "(function () {\n"
+                    + " var x = 1;\n"
+                    + " m = function() { return x };\n"
+                    + "})();\n")
+            .addChunk("m();")
+            .build());
   }
 
   @Test
@@ -1386,15 +1405,17 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testAbstractMethod() {
     test(
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // m1
-            "var abstractMethod = function () {};"
-                + "function F(){} F.prototype.bar=abstractMethod;"
-                + "function G(){} G.prototype.bar=abstractMethod;",
-            // m2
-            "var f = new F();",
-            // m3
-            "var g = new G();"),
+            .addChunk(
+                "var abstractMethod = function () {};"
+                    + "function F(){} F.prototype.bar=abstractMethod;"
+                    + "function G(){} G.prototype.bar=abstractMethod;")
+            // m2 -> m1
+            .addChunk("var f = new F();")
+            // m3 -> m1
+            .addChunk("var g = new G();")
+            .build(),
         new String[] {
           "var abstractMethod = function () {};",
           "function F(){} F.prototype.bar=abstractMethod; var f = new F();",
@@ -1405,11 +1426,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testMovableUseBeforeDeclaration() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            "function f() { g(); } function g() {}",
+            .addChunk("function f() { g(); } function g() {}")
             // m1
-            "f();"),
+            .addChunk("f();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -1421,37 +1443,42 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testImmovableUseBeforeDeclaration() {
     testSame(
-        createModuleChain(
-            // m0
-            lines(
-                "g();", // must recognize this as a reference to the following declaration
-                "function g() {}"),
-            // m1
-            "g();"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk(
+                lines(
+                    "g();", // must recognize this as a reference to the following declaration
+                    "function g() {}"))
+            .addChunk("g();")
+            .build());
 
     testSame(
-        createModuleChain(
-            // m0
-            lines(
-                "function f() { g(); }",
-                "function g() {}",
-                "f();"), // f() cannot move, so neither can g()
+        JSChunkGraphBuilder.forChain()
             // m1
-            "g();"));
+            .addChunk(
+                lines(
+                    "function f() { g(); }",
+                    "function g() {}",
+                    // f() cannot move, so neither can g()
+                    "f();"))
+            // m2
+            .addChunk("g();")
+            .build());
   }
 
   @Test
   public void testSplitDeclaration() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            lines(
-                "function a() { b(); }",
-                "function b() {}",
-                "function c() {}",
-                "a.prototype.x = function() { c(); };"),
+            .addChunk(
+                lines(
+                    "function a() { b(); }",
+                    "function b() {}",
+                    "function c() {}",
+                    "a.prototype.x = function() { c(); };"))
             // m1
-            "a();"),
+            .addChunk("a();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -1468,16 +1495,18 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testOutOfOrderAfterSplitDeclaration() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            lines(
-                "function a() { c(); }",
-                "function b() {}",
-                "a.prototype.x = function() { c(); };",
-                "function c() {}",
-                ""),
+            .addChunk(
+                lines(
+                    "function a() { c(); }",
+                    "function b() {}",
+                    "a.prototype.x = function() { c(); };",
+                    "function c() {}",
+                    ""))
             // m1
-            "a();"),
+            .addChunk("a();")
+            .build(),
         new String[] {
           // m0
           "function b() {}",
@@ -1494,11 +1523,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testOutOfOrderWithInterveningReferrer() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            "function a() { c(); } function b() { a(); } function c() {}",
+            .addChunk("function a() { c(); } function b() { a(); } function c() {}")
             // m1
-            "b();"),
+            .addChunk("b();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -1510,13 +1540,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testOutOfOrderWithDifferentReferrers() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            "function a() { b(); } function b() {}",
+            .addChunk("function a() { b(); } function b() {}")
             // m1
-            "b();",
+            .addChunk("b();")
             // m2
-            "a();"),
+            .addChunk("a();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -1529,13 +1560,14 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testCircularWithDifferentReferrers() {
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            "function a() { b(); } function b() { a(); }",
+            .addChunk("function a() { b(); } function b() { a(); }")
             // m1
-            "b();",
+            .addChunk("b();")
             // m2
-            "a();"),
+            .addChunk("a();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -1556,21 +1588,15 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     //  /  |/ \ /
     // m4  m5  m6  // references in m5 and m6
     JSModule[] m =
-        createModules(
-            // m0
-            "",
-            // m1
-            "function f() {}",
-            // m2
-            "",
-            // m3
-            "",
-            // m4
-            "",
-            // m5
-            "f();",
-            // m6
-            "f();");
+        JSChunkGraphBuilder.forUnordered()
+            .addChunk("") // m0
+            .addChunk("function f() {}") // m1
+            .addChunk("") // m2
+            .addChunk("") // m3
+            .addChunk("") // m4
+            .addChunk("f();") // m5
+            .addChunk("f();") // m6
+            .build();
 
     m[1].addDependency(m[0]);
     m[2].addDependency(m[0]);
@@ -1604,30 +1630,31 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   @Test
   public void testEarlyReferencesPinLateDeclarations() {
     testSame(
-        createModuleChain(
-            // m0
-            "function C() {} C.prototype.x = 1; var globalC = new C();",
-            // m1
-            "C.prototype.x = 2; globalC.x;", // globalC.x == 2 - not safe to move declaration
-            // m2
-            "new C().x;"));
+        JSChunkGraphBuilder.forChain()
+            .addChunk("function C() {} C.prototype.x = 1; var globalC = new C();")
+            // globalC.x == 2 - not safe to move declaration
+            .addChunk("C.prototype.x = 2; globalC.x;")
+            .addChunk("new C().x;")
+            .build());
   }
 
   @Test
   public void testMovedInstanceofIsHandledCorrectly() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            lines(
-                "function C() {}",
-                "function X() {}",
-                "X.prototype.a = function(x) { return x instanceof C; }",
-                ""),
+            .addChunk(
+                lines(
+                    "function C() {}",
+                    "function X() {}",
+                    "X.prototype.a = function(x) { return x instanceof C; }",
+                    ""))
             // m1
-            "new C();",
+            .addChunk("new C();")
             // m2
-            "new X();"),
+            .addChunk("new X();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -1642,17 +1669,19 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
               ""),
         });
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            lines(
-                "function C() {}",
-                "function X() {}",
-                "X.prototype.a = function(x) { return x instanceof C; }",
-                ""),
+            .addChunk(
+                lines(
+                    "function C() {}",
+                    "function X() {}",
+                    "X.prototype.a = function(x) { return x instanceof C; }",
+                    ""))
             // m1
-            "new X();",
+            .addChunk("new X();")
             // m2
-            "new C();"),
+            .addChunk("new C();")
+            .build(),
         new String[] {
           // m0
           "",
@@ -1675,11 +1704,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     // B is blocked from moving because A is used before it is defined.
     // See ReferenceCollection#isWellDefined and CrossChunkReferenceCollector#canMoveValue
     test(
-        createModuleChain(
+        JSChunkGraphBuilder.forChain()
             // m0
-            "function f() { return A; } var A = 1; var B = A;",
+            .addChunk("function f() { return A; } var A = 1; var B = A;")
             // m1
-            "f(); function f2() { return B; }"),
+            .addChunk("f(); function f2() { return B; }")
+            .build(),
         new String[] {
           // m0
           "var A = 1; var B = A;",
@@ -1690,34 +1720,59 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Test
   public void testDestructuringDeclarationsNotMovable() {
-    testSame(createModuleChain("const [a] = [];", "a;"));
-    testSame(createModuleChain("const {a} = { a: 1 };", "a;"));
+    testSame(JSChunkGraphBuilder.forChain().addChunk("const [a] = [];").addChunk("a;").build());
+    testSame(
+        JSChunkGraphBuilder.forChain().addChunk("const {a} = { a: 1 };").addChunk("a;").build());
   }
 
   @Test
   public void testDestructuringAssignmentsAreReferences() {
-    testSame(createModuleChain("let a = 1; [a] = [5];", "a;"));
-    testSame(createModuleChain("let a = 1; ({x: a} = {x: 5});", "a;"));
+    testSame(
+        JSChunkGraphBuilder.forChain().addChunk("let a = 1; [a] = [5];").addChunk("a;").build());
+    testSame(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = 1; ({x: a} = {x: 5});")
+            .addChunk("a;")
+            .build());
     test(
-        createModuleChain("let a = 1;", "[a] = [5];", "a;"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = 1;")
+            .addChunk("[a] = [5];")
+            .addChunk("a;")
+            .build(),
         new String[] {"", "let a = 1; [a] = [5];", "a;"});
     test(
-        createModuleChain("let a = 1;", "({x: a} = {x: 5});", "a;"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = 1;")
+            .addChunk("({x: a} = {x: 5});")
+            .addChunk("a;")
+            .build(),
         new String[] {"", "let a = 1; ({x: a} = {x: 5});", "a;"});
   }
 
   @Test
   public void testDefaultParamValuesAreReferences() {
-    testSame(createModuleChain("let a = 1; function f(x = a) {} f();", "a;"));
+    testSame(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = 1; function f(x = a) {} f();")
+            .addChunk("a;")
+            .build());
     test(
-        createModuleChain("let a = 1; function f(x = a) {}", "f();"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = 1; function f(x = a) {}")
+            .addChunk("f();")
+            .build(),
         new String[] {"", "let a = 1; function f(x = a) {} f();"});
   }
 
   @Test
   public void testSpreadCountsAsAReference() {
     test(
-        createModuleChain("let a = [];", "function f(...args) {} f(...a);", "a;"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = [];")
+            .addChunk("function f(...args) {} f(...a);")
+            .addChunk("a;")
+            .build(),
         new String[] {"", "let a = []; function f(...args) {} f(...a);", "a;"});
   }
 
@@ -1726,11 +1781,12 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
     // Object literal methods, getters, and setters are movable and references within them are
     // handled correctly.
     test(
-        createModuleChain(
-            "const a = 1;",
-            "const o = { foo() {return a;}, get x() {}, set x(v) {a = v;} };",
-            "o;",
-            "a;"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("const a = 1;")
+            .addChunk("const o = { foo() {return a;}, get x() {}, set x(v) {a = v;} };")
+            .addChunk("o;")
+            .addChunk("a;")
+            .build(),
         new String[] {
           "",
           "",
@@ -1743,27 +1799,44 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
   public void testComputedProperties() {
     // Computed properties are movable if the key expression is a literal.
     test(
-        createModuleChain("let a = { ['something']: 1};", "a;"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = { ['something']: 1};")
+            .addChunk("a;")
+            .build(),
         new String[] {"", "let a = { ['something']: 1}; a;"});
 
     // Computed properties are movable if the key is a well defined variable
-    test(createModuleChain(
-        "const x = 1; let a = { [x]: 1};", "a;"),
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("const x = 1; let a = { [x]: 1};")
+            .addChunk("a;")
+            .build(),
         new String[] {"", "const x = 1; let a = { [x]: 1}; a;"});
-    test(createModuleChain(
-        "const x = 1; let a = class { [x]() {} };", "a;"),
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("const x = 1; let a = class { [x]() {} };")
+            .addChunk("a;")
+            .build(),
         new String[] {"", "const x = 1; let a = class { [x]() {} }; a;"});
 
     // Computed properties are not movable if the key is an unknown variable
-    testSame(createModuleChain("let a = { [x]: 1};", "a;"));
-    testSame(createModuleChain("let a = class { [x]() {} };", "a;"));
+    testSame(JSChunkGraphBuilder.forChain().addChunk("let a = { [x]: 1};").addChunk("a;").build());
+    testSame(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = class { [x]() {} };")
+            .addChunk("a;")
+            .build());
 
     // Computed properties are not movable if the key is a
-    testSame(createModuleChain("let a = { [x]: 1};", "a;"));
+    testSame(JSChunkGraphBuilder.forChain().addChunk("let a = { [x]: 1};").addChunk("a;").build());
 
     // references in computed properties are honored
     test(
-        createModuleChain("let a = 1;", "let b = { [a + 1]: 2 };", "a;"),
+        JSChunkGraphBuilder.forChain()
+            .addChunk("let a = 1;")
+            .addChunk("let b = { [a + 1]: 2 };")
+            .addChunk("a;")
+            .build(),
         new String[] {"", "let a = 1; let b = { [a + 1]: 2 };", "a;"});
  }
 }

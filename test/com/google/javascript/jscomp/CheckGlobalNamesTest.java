@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.CheckGlobalNames.NAME_DEFINED_LATE_WA
 import static com.google.javascript.jscomp.CheckGlobalNames.STRICT_MODULE_DEP_QNAME;
 import static com.google.javascript.jscomp.CheckGlobalNames.UNDEFINED_NAME_WARNING;
 
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -313,97 +314,89 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   @Test
   public void testNoWarningForSimpleVarModuleDep1() {
-    testSame(createModuleChain(
-        NAMES,
-        "var c = a;"
-    ));
+    testSame(JSChunkGraphBuilder.forChain().addChunk(NAMES).addChunk("var c = a;").build());
   }
 
   @Test
   public void testNoWarningForSimpleVarModuleDep2() {
-    testSame(createModuleChain(
-        "var c = a;",
-        NAMES
-    ));
+    testSame(JSChunkGraphBuilder.forChain().addChunk("var c = a;").addChunk(NAMES).build());
   }
 
   @Test
   public void testNoWarningForGoodModuleDep1() {
-    testSame(createModuleChain(
-        NAMES,
-        "var c = a.b;"
-    ));
+    testSame(JSChunkGraphBuilder.forChain().addChunk(NAMES).addChunk("var c = a.b;").build());
   }
 
   @Test
   public void testNoWarningForModuleDep_onUnknownOriginNamespace() {
     testSame(
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // root module, e.g. a legacy namespace goog.module.
-            "const ns = {}; class C { static m() {} }; ns.C = C;",
+            .addChunk("const ns = {}; class C { static m() {} }; ns.C = C;")
             // leaf 1, uses ns.C.
-            "alert(ns.C.m);",
+            .addChunk("alert(ns.C.m);")
             // leaf 2, a mod.
-            "ns.C.m = function() { return 0; };"));
+            .addChunk("ns.C.m = function() { return 0; };")
+            .build());
   }
 
   @Test
   public void testBadModuleDep1() {
-    testSame(createModuleChain(
-        "var c = a.b;",
-        NAMES
-    ), STRICT_MODULE_DEP_QNAME);
+    testSame(
+        JSChunkGraphBuilder.forChain().addChunk("var c = a.b;").addChunk(NAMES).build(),
+        STRICT_MODULE_DEP_QNAME);
   }
 
   @Test
   public void testBadModuleDep2() {
-    testSame(createModuleStar(
-        NAMES,
-        "a.xxx = 3;",
-        "var x = a.xxx;"
-    ), STRICT_MODULE_DEP_QNAME);
+    testSame(
+        JSChunkGraphBuilder.forStar()
+            .addChunk(NAMES)
+            .addChunk("a.xxx = 3;")
+            .addChunk("var x = a.xxx;")
+            .build(),
+        STRICT_MODULE_DEP_QNAME);
   }
 
   @Test
   public void testGlobalNameSetTwiceInSiblingModulesAllowed() {
     testSame(
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // root module
-            "class C {};",
+            .addChunk("class C {};")
             // leaf 1
-            "C.m = 1; alert(C.m);",
+            .addChunk("C.m = 1; alert(C.m);")
             // leaf 2
-            "C.m = 1; alert(C.m);"));
+            .addChunk("C.m = 1; alert(C.m);")
+            .build());
   }
 
   @Test
   public void testGlobalNameSetOnlyInOtherSiblingModuleNotAllowed() {
     testSame(
-        createModuleStar(
+        JSChunkGraphBuilder.forStar()
             // root module
-            "class C {};",
+            .addChunk("class C {};")
             // leaf 1 sets than uses C.m
-            "C.m = 1; alert(C.m);",
+            .addChunk("C.m = 1; alert(C.m);")
             // leaf 2 also sets then uses C.m
-            "C.m = 1; alert(C.m);",
+            .addChunk("C.m = 1; alert(C.m);")
             // leaf 3 uses C.m without it having been set
-            "alert(C.m);"),
+            .addChunk("alert(C.m);")
+            .build(),
         STRICT_MODULE_DEP_QNAME);
   }
 
   @Test
   public void testSelfModuleDep() {
-    testSame(createModuleChain(
-        NAMES + "var c = a.b;"
-    ));
+    testSame(JSChunkGraphBuilder.forChain().addChunk(NAMES + "var c = a.b;").build());
   }
 
   @Test
   public void testUndefinedModuleDep1() {
-    testSame(createModuleChain(
-        "var c = a.xxx;",
-        NAMES
-    ), UNDEFINED_NAME_WARNING);
+    testSame(
+        JSChunkGraphBuilder.forChain().addChunk("var c = a.xxx;").addChunk(NAMES).build(),
+        UNDEFINED_NAME_WARNING);
   }
 
   @Test

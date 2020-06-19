@@ -27,6 +27,7 @@ import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.util.List;
@@ -600,8 +601,12 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testStarStrictModuleDependencyCheck() {
     strictModuleDepErrorLevel = CheckLevel.WARNING;
-    testSame(createModuleStar("function a() {}", "function b() { a(); c(); }",
-        "function c() { a(); }"),
+    testSame(
+        JSChunkGraphBuilder.forStar()
+            .addChunk("function a() {}")
+            .addChunk("function b() { a(); c(); }")
+            .addChunk("function c() { a(); }")
+            .build(),
         VarCheck.STRICT_MODULE_DEP_ERROR);
   }
 

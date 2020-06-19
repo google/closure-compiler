@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ProcessClosureProvidesAndRequires.ProvidedName;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
@@ -704,7 +705,12 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   @Test
   public void testBadCrossModuleRequire() {
     test(
-        createModuleStar(CLOSURE_DEFS, "", "goog.provide('goog.ui');", "goog.require('goog.ui');"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk(CLOSURE_DEFS)
+            .addChunk("")
+            .addChunk("goog.provide('goog.ui');")
+            .addChunk("goog.require('goog.ui');")
+            .build(),
         new String[] {CLOSURE_DEFS, "", "/** @const */ goog.ui = {};", ""},
         warning(XMODULE_REQUIRE_ERROR));
   }
@@ -712,7 +718,11 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   @Test
   public void testGoodCrossModuleRequire1() {
     test(
-        createModuleStar(CLOSURE_DEFS + "goog.provide('goog.ui');", "", "goog.require('goog.ui');"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk(CLOSURE_DEFS + "goog.provide('goog.ui');")
+            .addChunk("")
+            .addChunk("goog.require('goog.ui');")
+            .build(),
         new String[] {
           CLOSURE_DEFS + "/** @const */ goog.ui = {};", "", "",
         });
@@ -721,7 +731,12 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   @Test
   public void testGoodCrossModuleRequire2() {
     test(
-        createModuleStar(CLOSURE_DEFS, "", "", "goog.provide('goog.ui'); goog.require('goog.ui');"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk(CLOSURE_DEFS)
+            .addChunk("")
+            .addChunk("")
+            .addChunk("goog.provide('goog.ui'); goog.require('goog.ui');")
+            .build(),
         new String[] {
           CLOSURE_DEFS, "", "", "/** @const */ goog.ui = {};",
         });
@@ -730,12 +745,20 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   @Test
   public void testCrossModuleRequireType() {
     test(
-        createModuleStar(
-            CLOSURE_DEFS, "goog.requireType('goog.ui');", "", "goog.provide('goog.ui')"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk(CLOSURE_DEFS)
+            .addChunk("goog.requireType('goog.ui');")
+            .addChunk("")
+            .addChunk("goog.provide('goog.ui')")
+            .build(),
         new String[] {CLOSURE_DEFS, "", "", "/** @const */ goog.ui = {};"});
     test(
-        createModuleStar(
-            CLOSURE_DEFS, "", "goog.provide('goog.ui');", "goog.requireType('goog.ui');"),
+        JSChunkGraphBuilder.forStar()
+            .addChunk(CLOSURE_DEFS)
+            .addChunk("")
+            .addChunk("goog.provide('goog.ui');")
+            .addChunk("goog.requireType('goog.ui');")
+            .build(),
         new String[] {CLOSURE_DEFS, "", "/** @const */ goog.ui = {};", ""});
   }
 
@@ -1538,6 +1561,6 @@ public class ProcessClosureProvidesAndRequiresTest extends CompilerTestCase {
   }
 
   private void testModule(String[] moduleInputs, String[] expected) {
-    test(createModuleStar(moduleInputs), expected);
+    test(JSChunkGraphBuilder.forStar().addChunks(moduleInputs).build(), expected);
   }
 }

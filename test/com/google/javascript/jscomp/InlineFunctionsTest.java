@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.Reach;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -2783,79 +2784,71 @@ public class InlineFunctionsTest extends CompilerTestCase {
   // Inline a single reference function into deeper modules
   @Test
   public void testCrossModuleInlining1() {
-    test(createModuleChain(
-             // m1
-             "function foo(){return f(1)+g(2)+h(3);}",
-             // m2
-             "foo()"
-             ),
-         new String[] {
-             // m1
-             "",
-             // m2
-             "f(1)+g(2)+h(3);"
-            }
-        );
+    test(
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("function foo(){return f(1)+g(2)+h(3);}")
+            // m2
+            .addChunk("foo()")
+            .build(),
+        new String[] {
+          // m1
+          "",
+          // m2
+          "f(1)+g(2)+h(3);"
+        });
   }
 
   // Inline a single reference function into shallow modules, only if it
   // is cheaper than the call itself.
   @Test
   public void testCrossModuleInlining2() {
-    testSame(createModuleChain(
-                // m1
-                "foo()",
-                // m2
-                "function foo(){return f(1)+g(2)+h(3);}"
-                )
-            );
+    testSame(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("foo()")
+            .addChunk("function foo(){return f(1)+g(2)+h(3);}")
+            .build());
 
-    test(createModuleChain(
-             // m1
-             "foo()",
-             // m2
-             "function foo(){return f();}"
-             ),
-         new String[] {
-             // m1
-             "f();",
-             // m2
-             ""
-            }
-        );
+    test(
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("foo()")
+            // m2
+            .addChunk("function foo(){return f();}")
+            .build(),
+        new String[] {
+          // m1
+          "f();",
+          // m2
+          ""
+        });
   }
 
   // Inline a multi-reference functions into shallow modules, only if it
   // is cheaper than the call itself.
   @Test
   public void testCrossModuleInlining3() {
-    testSame(createModuleChain(
-                // m1
-                "foo()",
-                // m2
-                "function foo(){return f(1)+g(2)+h(3);}",
-                // m3
-                "foo()"
-                )
-            );
+    testSame(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("foo()")
+            .addChunk("function foo(){return f(1)+g(2)+h(3);}")
+            .addChunk("foo()")
+            .build());
 
-    test(createModuleChain(
-             // m1
-             "foo()",
-             // m2
-             "function foo(){return f();}",
-             // m3
-             "foo()"
-             ),
-         new String[] {
-             // m1
-             "f();",
-             // m2
-             "",
-             // m3
-             "f();"
-            }
-         );
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("foo()")
+            .addChunk("function foo(){return f();}")
+            .addChunk("foo()")
+            .build(),
+        new String[] {
+          // m1
+          "f();",
+          // m2
+          "",
+          // m3
+          "f();"
+        });
   }
 
   @Test
