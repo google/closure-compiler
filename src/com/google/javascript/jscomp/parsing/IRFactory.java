@@ -738,8 +738,11 @@ class IRFactory {
       }
     }
 
-    NonJSDocComment nonJSDocComment =
-        new NonJSDocComment(completeCommentBegin, completeCommentEnd, result);
+    SourcePosition start = comments.get(0).location.start;
+    SourcePosition end = Iterables.getLast(comments).location.end;
+
+    NonJSDocComment nonJSDocComment = new NonJSDocComment(start, end, result);
+    nonJSDocComment.setEndsAsLineComment(Iterables.getLast(comments).type == Comment.Type.LINE);
     return nonJSDocComment;
   }
 
@@ -870,6 +873,7 @@ class IRFactory {
       ArrayList<Comment> nonJSDocComments = getNonJSDocComments(tree);
       if (!nonJSDocComments.isEmpty()) {
         associatedNonJSDocComment = combineCommentsIntoSingleComment(nonJSDocComments);
+        associatedNonJSDocComment.setIsInline(true);
       }
     }
     Node node = transformDispatcher.process(tree);
@@ -1583,7 +1587,7 @@ class IRFactory {
       NonJSDocComment trailingComment = null;
       if (hasPendingNonJSDocCommentBefore(endZone)) {
         trailingComment = combineCommentsIntoSingleComment(getNonJSDocCommentsBefore(endZone));
-
+        trailingComment.setIsInline(true);
         NonJSDocComment nonTrailingComment = paramNode.getNonJSDocComment();
         if (nonTrailingComment != null) {
           // This node has both trailing and non-trailing comment

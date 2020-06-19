@@ -246,6 +246,7 @@ public class CompilerOptions implements Serializable {
 
   private boolean allowHotswapReplaceScript = false;
   private boolean preserveDetailedSourceInfo = false;
+  private boolean preserveNonJSDocComments = false;
   private boolean continueAfterErrors = false;
 
   public enum IncrementalCheckMode {
@@ -2168,6 +2169,14 @@ public class CompilerOptions implements Serializable {
     return preserveDetailedSourceInfo;
   }
 
+  public void setPreserveNonJSDocComments(boolean preserveNonJSDocComments) {
+    this.preserveNonJSDocComments = preserveNonJSDocComments;
+  }
+
+  boolean getPreserveNonJSDocComments() {
+    return preserveNonJSDocComments;
+  }
+
   public void setContinueAfterErrors(boolean continueAfterErrors) {
     this.continueAfterErrors = continueAfterErrors;
   }
@@ -3067,6 +3076,7 @@ public class CompilerOptions implements Serializable {
             .add("preferSingleQuotes", preferSingleQuotes)
             .add("preferStableNames", preferStableNames)
             .add("preserveDetailedSourceInfo", preservesDetailedSourceInfo())
+            .add("preserveNonJSDocComments", getPreserveNonJSDocComments())
             .add("preserveGoogProvidesAndRequires", preserveClosurePrimitives)
             .add("preserveTypeAnnotations", preserveTypeAnnotations)
             .add("prettyPrint", prettyPrint)

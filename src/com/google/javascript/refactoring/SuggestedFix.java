@@ -19,6 +19,7 @@ package com.google.javascript.refactoring;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Streams.stream;
+import static java.lang.Math.min;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Joiner;
@@ -854,7 +855,7 @@ public final class SuggestedFix {
       start = jsdoc.getOriginalCommentPosition();
     }
     if (associatedNonJSDocComment != null) {
-      start = Math.min(start, associatedNonJSDocComment.getBeginOffset());
+      start = min(start, associatedNonJSDocComment.getStartPosition().getOffset());
     }
     return start;
   }

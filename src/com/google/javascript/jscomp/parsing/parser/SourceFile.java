@@ -16,12 +16,14 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import java.io.Serializable;
+
 /**
  * A source file.
  *
  * <p>Immutable.
  */
-public final class SourceFile {
+public final class SourceFile implements Serializable {
   public final String name;
   public final String contents;
 

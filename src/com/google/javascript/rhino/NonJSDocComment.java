@@ -38,20 +38,33 @@
  * ***** END LICENSE BLOCK ***** */
 
 package com.google.javascript.rhino;
+
+import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import java.io.Serializable;
 
 /** Minimal class holding information about a nonJSDoc comment's source location and contents */
 public class NonJSDocComment implements Serializable {
-  private final int beginOffset;
-  private int endOffset;
+  private final SourcePosition startPosition;
+  // Ideally the `endPosition` should be final, but it needs to get updated during
+  // parsing for nodes in which there is both a trailing and a non-trailing comment. E.g.
+  // ```
+  // function foo( // first
+  //                 x // second
+  // ) {}
+  // ```
+  private SourcePosition endPosition;
   private String contents;
   private boolean isTrailing;
+  private boolean endsAsLineComment;
+  private boolean isInline;
 
-  public NonJSDocComment(int begin, int end, String s) {
-    beginOffset = begin;
-    endOffset = end;
+  public NonJSDocComment(SourcePosition start, SourcePosition end, String s) {
+    startPosition = start;
+    endPosition = end;
     contents = s;
     this.isTrailing = false;
+    this.endsAsLineComment = false;
+    this.isInline = false;
   }
 
   public String getCommentString() {
@@ -61,16 +74,24 @@ public class NonJSDocComment implements Serializable {
     return contents;
   }
 
-  public int getBeginOffset() {
-    return beginOffset;
+  public SourcePosition getStartPosition() {
+    return this.startPosition;
   }
 
-  public int getEndOffset() {
-    return endOffset;
+  public SourcePosition getEndPosition() {
+    return this.endPosition;
   }
 
-  public void setIsTrailing(boolean b) {
-    this.isTrailing = b;
+  public void setIsTrailing(boolean isTrailing) {
+    this.isTrailing = isTrailing;
+  }
+
+  public void setEndsAsLineComment(boolean endsAsLineComment) {
+    this.endsAsLineComment = endsAsLineComment;
+  }
+
+  public void setIsInline(boolean isInline) {
+    this.isInline = isInline;
   }
 
   /**
@@ -79,6 +100,14 @@ public class NonJSDocComment implements Serializable {
    */
   public boolean isTrailing() {
     return this.isTrailing;
+  }
+
+  public boolean isEndingAsLineComment() {
+    return this.endsAsLineComment;
+  }
+
+  public boolean isInline() {
+    return isInline;
   }
 
   /*
@@ -94,6 +123,6 @@ public class NonJSDocComment implements Serializable {
    */
   public void appendTrailingCommentToNonTrailing(NonJSDocComment trailingComment) {
     this.contents = this.contents + trailingComment.contents;
-    this.endOffset = trailingComment.getEndOffset();
+    this.endPosition = trailingComment.endPosition;
   }
 }

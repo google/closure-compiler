@@ -1290,6 +1290,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     NonJSDocComment nonJSDocComment = letNode.getFirstChild().getNonJSDocComment();
     assertThat(nonJSDocComment).isNotNull();
+    assertThat(nonJSDocComment.isInline()).isTrue();
+    assertThat(nonJSDocComment.isEndingAsLineComment()).isFalse();
     assertThat(nonJSDocComment.getCommentString()).contains("/* blah */");
   }
 
@@ -3456,6 +3458,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node n = parse("/* Hi mom! */ \n function Foo() {}");
     assertNode(n.getFirstChild()).hasType(Token.FUNCTION);
     assertThat(n.getFirstChild().getNonJSDocCommentString()).isEqualTo("/* Hi mom! */");
+    assertThat(n.getFirstChild().getNonJSDocComment().isInline()).isFalse();
   }
 
   @Test

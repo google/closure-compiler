@@ -20,13 +20,17 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.parsing.parser.SourceFile;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import java.io.Serializable;
 
-/**
- * A position in a source string - includes offset, line and column.
- */
-public class SourcePosition {
+/** A position in a source string - includes offset, line and column. */
+public class SourcePosition implements Serializable {
 
   public final SourceFile source;
+
+  public int getOffset() {
+    return offset;
+  }
+
   public final int offset;
   public final int line;
   public final int column;

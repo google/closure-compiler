@@ -2052,6 +2052,85 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrint(js, js);
   }
 
+  @Test
+  public void testNonJSDocCommentsPrinted_nonTrailing_blockComment() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint(
+        "/* testComment */ function Foo(){}", "/* testComment */ function Foo() {\n}\n");
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_nonTrailing_lineComment() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint("// testComment\nfunction Foo(){}", "// testComment\nfunction Foo() {\n}\n");
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_betweenCode_sameLine() {
+    preserveNonJSDocComments = true;
+
+    assertPrettyPrint(
+        "function /* testComment */ Foo(){}", "function/* testComment */ Foo() {\n}\n");
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_betweenCode_differentLines() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint(
+        "function /* testComment */\nFoo(){}", "function/* testComment */\nFoo() {\n}\n");
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_nonTrailing_inlineComments() {
+    preserveNonJSDocComments = true;
+    // tests inline comments in parameter lists are parsed and printed
+    assertPrettyPrint(
+        "function Foo(/*first*/ x, /* second*/ y) {}",
+        "function Foo(/*first*/ x, /* second*/ y) {\n}\n");
+  }
+
+  // Args on new line are condensed onto the same line by prettyPrint
+  @Test
+  public void testArgs_noComments_newLines() {
+    assertPrettyPrint(
+        lines(" var rpcid = new RpcId(a,\n b, \nc);"), lines("var rpcid = new RpcId(a, b, c);\n"));
+  }
+
+  // Comments are printed when args on new line are condensed onto the same line by prettyPrint
+  @Test
+  public void testNonJSDocCommentsPrinted_nonTrailing_inlineComments_newLines() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint(
+        lines(" var rpcid = new RpcId(a,\n /* comment1 */ b, \n/* comment1 */ c);"),
+        lines("var rpcid = new RpcId(a, /* comment1 */ b, /* comment1 */ c);\n"));
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_trailing_and_nonTrailing_inlineComments() {
+    preserveNonJSDocComments = true;
+    // tests inline trailing comments in parameter lists are parsed and printed
+    assertPrettyPrint(
+        "function Foo(x //first\n, /* second*/ y) {}",
+        "function Foo(x //first\n, /* second*/ y) {\n}\n");
+  }
+
+  @Test
+  public void testNonJSDocCommentsPrinted_trailing_inlineComments_paramList() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint("function Foo(x) {}", "function Foo(x) {\n}\n");
+    assertPrettyPrint("function Foo(x /*first*/) {}", "function Foo(x /*first*/) {\n}\n");
+    assertPrettyPrint("function Foo(x //first\n) {}", "function Foo(x //first\n) {\n}\n");
+  }
+
+  // Same as above, but tests argList instead of Param list
+  @Test
+  public void testNonJSDocCommentsPrinted_trailing_inlineComments_callArgList() {
+    preserveNonJSDocComments = true;
+    assertPrettyPrint("foo(x);", "foo(x);\n");
+    assertPrettyPrint("foo(x /*first*/);", "foo(x /*first*/);\n");
+    assertPrettyPrint("foo(x //first\n);", "foo(x //first\n);\n");
+  }
+
   private void assertPrettyPrintSame(String js) {
     assertPrettyPrint(js, js);
   }
