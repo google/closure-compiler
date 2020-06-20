@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
@@ -476,6 +477,12 @@ class TypeValidator implements Serializable {
     if (!type.isSubtypeOf(getNativeType(NUMBER_STRING_SYMBOL))) {
       registerMismatchAndReport(
           n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING_SYMBOL), null, null);
+    }
+  }
+
+  void expectBigIntOrNumber(Node n, JSType type, String msg) {
+    if (!type.isSubtypeOf(getNativeType(BIGINT_NUMBER))) {
+      mismatch(n, msg, type, getNativeType(BIGINT_NUMBER));
     }
   }
 
