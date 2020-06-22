@@ -209,7 +209,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
         }
 
         // Look for calls to class methods.
-        if (NodeUtil.isGet(calledFn)) {
+        if (NodeUtil.isNormalGet(calledFn)) {
           Node rhs = calledFn.getLastChild();
           if (rhs.isName() || rhs.isString()) {
             String methodName = rhs.getString();

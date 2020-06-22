@@ -163,7 +163,7 @@ final class CheckSuper implements HotSwapCompilerPass, NodeTraversal.Callback {
   private boolean isSuperPropertyAccess(Node superNode) {
     checkState(superNode.isSuper(), superNode);
     Node parent = superNode.getParent();
-    return NodeUtil.isGet(parent) && superNode.isFirstChildOf(parent);
+    return NodeUtil.isNormalGet(parent) && superNode.isFirstChildOf(parent);
   }
 
   /** Tracks lexical context and determines correct traversal behavior based on it. */

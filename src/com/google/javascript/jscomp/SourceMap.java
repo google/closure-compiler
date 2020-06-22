@@ -80,9 +80,9 @@ public final class SourceMap {
             || node.isNew()
             || node.isFunction()
             || node.isName()
-            || NodeUtil.isGet(node)
+            || NodeUtil.isNormalGet(node)
             || NodeUtil.mayBeObjectLitKey(node)
-            || (node.isString() && NodeUtil.isGet(node.getParent()))
+            || (node.isString() && NodeUtil.isNormalGet(node.getParent()))
             || node.isTaggedTemplateLit();
       }
     }

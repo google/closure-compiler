@@ -337,7 +337,7 @@ final class MustBeReachingVariableDef extends
             addToDefIfLocal(
                 name.getString(), conditional ? null : cfgNode, n.getLastChild(), output);
             return;
-          } else if (NodeUtil.isGet(n.getFirstChild())) {
+          } else if (NodeUtil.isNormalGet(n.getFirstChild())) {
             // Treat all assignments to arguments as redefining the
             // parameters itself.
             Node obj = n.getFirstFirstChild();

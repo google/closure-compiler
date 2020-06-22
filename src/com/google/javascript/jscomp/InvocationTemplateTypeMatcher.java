@@ -77,7 +77,7 @@ final class InvocationTemplateTypeMatcher {
     }
 
     Node target = this.invocation.getFirstChild();
-    if (NodeUtil.isGet(target)) {
+    if (NodeUtil.isNormalGet(target)) {
       Node obj = target.getFirstChild();
       JSType typeOfThisRequiredByTheFunction = this.calleeType.getTypeOfThis();
       // The type placed on a SUPER node is the superclass type, which allows us to infer the right

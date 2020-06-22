@@ -1089,7 +1089,7 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (NodeUtil.isGet(n)
+      if (NodeUtil.isNormalGet(n)
           && ConformanceUtil.isCallTarget(n)
           && n.getLastChild().isString()) {
         for (int i = 0; i < restrictions.size(); i++) {

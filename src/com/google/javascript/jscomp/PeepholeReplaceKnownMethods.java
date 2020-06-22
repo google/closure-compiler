@@ -72,7 +72,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       checkState(subtree.isCall(), subtree);
       Node callTarget = checkNotNull(subtree.getFirstChild());
 
-      if (NodeUtil.isGet(callTarget)) {
+      if (NodeUtil.isNormalGet(callTarget)) {
         if (isASTNormalized() && callTarget.getFirstChild().isQualifiedName()) {
           switch (callTarget.getFirstChild().getQualifiedName()) {
             case "Array":
@@ -113,7 +113,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
   /** Tries to evaluate a method on the Math object */
   private strictfp Node tryFoldKnownMathMethods(Node subtree, Node callTarget) {
-    checkArgument(NodeUtil.isGet(callTarget), callTarget);
+    checkArgument(NodeUtil.isNormalGet(callTarget), callTarget);
     Node methodNode = callTarget.getLastChild();
     // Method node might not be a string if callTarget is a GETELEM.
     // e.g. Math[something]()

@@ -2624,7 +2624,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
 
       // Functions with explicit 'this' types must be called in a GETPROP or GETELEM.
-      if (functionType.isOrdinaryFunction() && !NodeUtil.isGet(child)) {
+      if (functionType.isOrdinaryFunction() && !NodeUtil.isNormalGet(child)) {
         JSType receiverType = functionType.getTypeOfThis();
         if (receiverType.isUnknownType()
             || receiverType.isAllType()

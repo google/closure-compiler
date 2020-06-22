@@ -1923,14 +1923,17 @@ public final class NodeUtil {
     return false;
   }
 
-  /**
-   * Is this a GETPROP or GETELEM node?
-   */
-  public static boolean isGet(Node n) {
+  /** Is this a GETPROP, OPTCHAIN_GETPROP, GETELEM, or OPTCHAIN_GETELEM? */
+  public static boolean isNormalOrOptChainGet(Node n) {
+    return isNormalGet(n) || isOptChainGet(n);
+  }
+
+  /** Is this a GETPROP or GETELEM node? */
+  public static boolean isNormalGet(Node n) {
     return n.isGetProp() || n.isGetElem();
   }
 
-  /** Is this a OPTCHAIN_GETPROP or OPTCHAIN_GETELEM node? */
+  /** Is this an OPTCHAIN_GETPROP or OPTCHAIN_GETELEM node? */
   public static boolean isOptChainGet(Node n) {
     return n.isOptChainGetProp() || n.isOptChainGetElem();
   }
@@ -2907,7 +2910,7 @@ public final class NodeUtil {
   static boolean isObjectCallMethod(Node callNode, String methodName) {
     if (callNode.isCall()) {
       Node functionIndentifyingExpression = callNode.getFirstChild();
-      if (isGet(functionIndentifyingExpression)) {
+      if (isNormalGet(functionIndentifyingExpression)) {
         Node last = functionIndentifyingExpression.getLastChild();
         if (last != null && last.isString()) {
           String propName = last.getString();
@@ -4620,7 +4623,7 @@ public final class NodeUtil {
   static boolean isConstantDeclaration(JSDocInfo info, Node node) {
     if (isObjectLitKey(node)
         || (node.getParent().isAssign() && node.isFirstChildOf(node.getParent()))
-        || (node.getParent().isExprResult() && isGet(node))) {
+        || (node.getParent().isExprResult() && isNormalGet(node))) {
       return info != null && info.isConstant();
     }
     checkArgument(node.isName(), node);
@@ -4694,7 +4697,7 @@ public final class NodeUtil {
    * A new CALL node with the "FREE_CALL" set based on call target.
    */
   static Node newCallNode(Node callTarget, Node... parameters) {
-    boolean isFreeCall = !isGet(callTarget);
+    boolean isFreeCall = !isNormalGet(callTarget);
     Node call = IR.call(callTarget);
     call.putBooleanProp(Node.FREE_CALL, isFreeCall);
     for (Node parameter : parameters) {
@@ -4932,7 +4935,7 @@ public final class NodeUtil {
 
   private static boolean isToStringMethodCall(Node call) {
     Node getNode = call.getFirstChild();
-    if (isGet(getNode) || isOptChainGet(getNode)) {
+    if (isNormalOrOptChainGet(getNode)) {
       Node propNode = getNode.getLastChild();
       return propNode.isString() && "toString".equals(propNode.getString());
     }
@@ -5066,7 +5069,7 @@ public final class NodeUtil {
     }
     if (mayBeObjectLitKey(lValue) || lValue.isComputedProp()) {
       return getBestLValue(lValue.getParent());
-    } else if (isGet(lValue)) {
+    } else if (isNormalGet(lValue)) {
       return lValue.getFirstChild();
     }
 

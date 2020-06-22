@@ -249,7 +249,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       case ASSIGN:
         {
           Node lValue = parent.getFirstChild();
-          if (NodeUtil.isGet(lValue)) {
+          if (NodeUtil.isNormalGet(lValue)) {
             // We have an assignment of the form `a.b = ...`.
             JSType lValueType = lValue.getJSType();
             if (lValueType != null && (lValueType.isConstructor() || lValueType.isInterface())) {

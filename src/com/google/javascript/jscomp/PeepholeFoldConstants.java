@@ -1529,7 +1529,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
-    checkArgument(NodeUtil.isGet(n));
+    checkArgument(NodeUtil.isNormalGet(n));
 
     if (!left.isObjectLit() || !right.isString()) {
       return n;

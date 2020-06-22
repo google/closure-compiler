@@ -55,7 +55,9 @@ class GatherRawExports extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     Node sibling = n.getNext();
-    if (sibling != null && sibling.isString() && NodeUtil.isGet(parent)
+    if (sibling != null
+        && sibling.isString()
+        && NodeUtil.isNormalGet(parent)
         && isGlobalThisObject(t, n)) {
       exportedVariables.add(sibling.getString());
     }

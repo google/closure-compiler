@@ -158,7 +158,7 @@ final class CheckGlobalThis implements Callback {
       } else {
         // Only traverse the right side if it's not an assignment to a prototype
         // property or subproperty.
-        if (NodeUtil.isGet(lhs)) {
+        if (NodeUtil.isNormalGet(lhs)) {
           if (lhs.isGetProp() &&
               lhs.getLastChild().getString().equals("prototype")) {
             return false;
@@ -193,6 +193,6 @@ final class CheckGlobalThis implements Callback {
     }
 
     // Also report a THIS with a property access.
-    return parent != null && NodeUtil.isGet(parent);
+    return parent != null && NodeUtil.isNormalGet(parent);
   }
 }

@@ -425,7 +425,7 @@ public class AstAnalyzer {
             return true;
           }
 
-          if (NodeUtil.isGet(assignTarget)) {
+          if (NodeUtil.isNormalGet(assignTarget)) {
             // If the object being assigned to is a local object, don't
             // consider this a side-effect as it can't be referenced
             // elsewhere.  Don't do this recursively as the property might
@@ -440,7 +440,7 @@ public class AstAnalyzer {
             // other objects.
             // If the root object is a literal don't consider this a
             // side-effect.
-            while (NodeUtil.isGet(current)) {
+            while (NodeUtil.isNormalGet(current)) {
               current = current.getFirstChild();
             }
 

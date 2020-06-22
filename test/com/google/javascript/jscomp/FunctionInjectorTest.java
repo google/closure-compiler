@@ -2062,7 +2062,7 @@ public final class FunctionInjectorTest {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         Node callee;
-        if (NodeUtil.isGet(n.getFirstChild())) {
+        if (NodeUtil.isNormalGet(n.getFirstChild())) {
           callee = n.getFirstFirstChild();
         } else {
           callee = n.getFirstChild();

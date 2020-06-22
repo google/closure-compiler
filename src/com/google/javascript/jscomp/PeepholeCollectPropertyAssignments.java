@@ -114,7 +114,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
 
     // to a property...
     Node lhs = expr.getFirstChild();
-    if (!NodeUtil.isGet(lhs)) {
+    if (!NodeUtil.isNormalGet(lhs)) {
       return false;
     }
 

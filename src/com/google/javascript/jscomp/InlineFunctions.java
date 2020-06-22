@@ -428,7 +428,7 @@ class InlineFunctions implements CompilerPass {
           } else if (child.isFunction()) {
             name = anonFunctionMap.get(child);
           } else if (NodeUtil.isFunctionObjectCall(n)) {
-            checkState(NodeUtil.isGet(child));
+            checkState(NodeUtil.isNormalGet(child));
             Node fnIdentifyingNode = child.getFirstChild();
             if (fnIdentifyingNode.isName()) {
               name = fnIdentifyingNode.getString();
@@ -475,7 +475,7 @@ class InlineFunctions implements CompilerPass {
     //     This-Value
     //     Function-parameter-1
     //     ...
-    if (NodeUtil.isGet(parent)
+    if (NodeUtil.isNormalGet(parent)
         && name == parent.getFirstChild()
         && name.getNext().isString()
         && name.getNext().getString().equals("call")) {

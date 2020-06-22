@@ -931,8 +931,7 @@ public class CodeGenerator {
           // that means it was originally an call without an explicit this and
           // that must be preserved.
           if (isIndirectEval(first)
-              || (node.getBooleanProp(Node.FREE_CALL)
-                  && (NodeUtil.isGet(first) || NodeUtil.isOptChainGet(first)))) {
+              || (node.getBooleanProp(Node.FREE_CALL) && NodeUtil.isNormalOrOptChainGet(first))) {
             add("(0,");
             addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
             add(")");
@@ -962,8 +961,7 @@ public class CodeGenerator {
         {
           boolean needsParens = NodeUtil.isOptChainNode(first);
           if (isIndirectEval(first)
-              || (node.getBooleanProp(Node.FREE_CALL)
-                  && (NodeUtil.isGet(first) || NodeUtil.isOptChainGet(first)))) {
+              || (node.getBooleanProp(Node.FREE_CALL) && NodeUtil.isNormalOrOptChainGet(first))) {
             add("(0,");
           addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
           add(")");

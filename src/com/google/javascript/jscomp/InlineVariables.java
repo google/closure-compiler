@@ -192,7 +192,7 @@ class InlineVariables implements CompilerPass {
             Node refParent = ref.getParent();
             // Any reference that is not a read of the arguments property
             // consider a escape of the arguments object.
-            if (!(NodeUtil.isGet(refParent)
+            if (!(NodeUtil.isNormalGet(refParent)
                 && refNode == ref.getParent().getFirstChild()
                 && !NodeUtil.isLValue(refParent))) {
               return true;

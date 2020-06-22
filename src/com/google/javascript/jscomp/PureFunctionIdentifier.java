@@ -1019,7 +1019,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         List<Node> lhsNodes,
         Predicate<Node> hasLocalRhs) {
       for (Node lhs : lhsNodes) {
-        if (NodeUtil.isGet(lhs)) {
+        if (NodeUtil.isNormalGet(lhs)) {
           if (lhs.getFirstChild().isThis()) {
             sideEffectInfo.setMutatesThis();
           } else {

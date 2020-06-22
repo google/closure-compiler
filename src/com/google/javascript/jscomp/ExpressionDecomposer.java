@@ -206,7 +206,8 @@ class ExpressionDecomposer {
               throw new IllegalStateException("Expected a property access: " + left.toStringTree());
           }
         }
-      } else if (expressionParent.isCall() && NodeUtil.isGet(expressionParent.getFirstChild())) {
+      } else if (expressionParent.isCall()
+          && NodeUtil.isNormalGet(expressionParent.getFirstChild())) {
         Node callee = expressionParent.getFirstChild();
         decomposeSubExpressions(callee.getNext(), expressionToExpose, state);
 
@@ -491,7 +492,7 @@ class ExpressionDecomposer {
     // If we've rewritten a call of one of these forms
     // obj.method?.() or obj[methodExpr]?.()
     // we must rewrite using 'call' and supply the correct value for `this`
-    if (optChainStart.isCall() && NodeUtil.isGet(receiverNode)) {
+    if (optChainStart.isCall() && NodeUtil.isNormalGet(receiverNode)) {
       final Node callNode = optChainNode; // for readability
       // break call receiver off from tmpReceiver that was created above
       // var tmpCallReceiver = callReceiver;
@@ -691,7 +692,7 @@ class ExpressionDecomposer {
     // becomes:
     //    var t1 = next();
     //    t1.foo = t1.foo + 2;
-    if (isLhsOfAssignOp && NodeUtil.isGet(expr)) {
+    if (isLhsOfAssignOp && NodeUtil.isNormalGet(expr)) {
       for (Node n : expr.children()) {
         if (!n.isString() && !isConstantNameNode(n)) {
           Node extractedNode = extractExpression(n, injectionPoint);
@@ -711,7 +712,7 @@ class ExpressionDecomposer {
     // If it is ASSIGN_XXX, keep the assignment in place and extract the
     // original value of the LHS operand.
     if (isLhsOfAssignOp) {
-      checkState(expr.isName() || NodeUtil.isGet(expr), expr);
+      checkState(expr.isName() || NodeUtil.isNormalGet(expr), expr);
       // Transform "x += 2" into "x = temp + 2"
       Node opNode =
           withType(new Node(NodeUtil.getOpFromAssignmentOp(parent)), parent.getJSType())
@@ -792,7 +793,7 @@ class ExpressionDecomposer {
   private Node rewriteCallExpression(Node call, DecompositionState state) {
     checkArgument(call.isCall(), call);
     Node first = call.getFirstChild();
-    checkArgument(NodeUtil.isGet(first), first);
+    checkArgument(NodeUtil.isNormalGet(first), first);
 
     // Find the type of (fn expression).call
     JSType fnType = first.getJSType();
@@ -812,7 +813,7 @@ class ExpressionDecomposer {
     // Extracts the object reference to be used as "this". For example:
     //   "a['b']" from "a['b'].c"
     Node getExprNode = getVarNode.getFirstFirstChild();
-    checkArgument(NodeUtil.isGet(getExprNode), getExprNode);
+    checkArgument(NodeUtil.isNormalGet(getExprNode), getExprNode);
     Node thisVarNode = extractExpression(getExprNode.getFirstChild(), state.extractBeforeStatement);
     state.extractBeforeStatement = thisVarNode;
 
@@ -1129,7 +1130,7 @@ class ExpressionDecomposer {
           // type information.
           //
           Node first = parent.getFirstChild();
-          if (requiresDecomposition && parent.isCall() && NodeUtil.isGet(first)) {
+          if (requiresDecomposition && parent.isCall() && NodeUtil.isNormalGet(first)) {
             if (allowMethodCallDecomposing) {
               return DecompositionType.DECOMPOSABLE;
             } else {

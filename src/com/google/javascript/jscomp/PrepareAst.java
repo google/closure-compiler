@@ -141,7 +141,7 @@ class PrepareAst implements CompilerPass {
         first = first.getFirstChild();
       }
 
-      if (!(NodeUtil.isGet(first) || NodeUtil.isOptChainGet(first))) {
+      if (!NodeUtil.isNormalOrOptChainGet(first)) {
         n.putBooleanProp(Node.FREE_CALL, true);
       }
 

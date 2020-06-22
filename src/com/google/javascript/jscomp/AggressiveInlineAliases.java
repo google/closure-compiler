@@ -299,7 +299,7 @@ class AggressiveInlineAliases implements CompilerPass {
     for (Reference innerNameRef : innerNameRefs) {
       // replace all references to the inner name other than its declaration
       final Node innerNameRefNode = innerNameRef.getNode();
-      if (NodeUtil.isGet(innerNameRefNode.getParent())) {
+      if (NodeUtil.isNormalGet(innerNameRefNode.getParent())) {
         // Replace `innerName` with `globalName` for `innerName.prop` and `innerName[expr]`
         //
         // TODO(b/148237949): We are intentionally ignoring cases where the inner name

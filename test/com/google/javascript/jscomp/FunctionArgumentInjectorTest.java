@@ -656,7 +656,7 @@ public final class FunctionArgumentInjectorTest {
   private static Node findCall(Node n, String name) {
     if (n.isCall()) {
       Node callee;
-      if (NodeUtil.isGet(n.getFirstChild())) {
+      if (NodeUtil.isNormalGet(n.getFirstChild())) {
         callee = n.getFirstFirstChild();
         Node prop = callee.getNext();
         // Only "call" is supported at this point.
