@@ -43,7 +43,6 @@ public class CoverageInstrumenter extends CompilerBasedTransformer {
       options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
       options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_NEXT);
       options.setStrictModeInput(false);
-      options.setShadowVariables(false);
       // Setting the path to any non-null value will trigger source map generation.
       // CompilerBasedTransformer attachs the sourcemap to the result.
       options.setSourceMapOutputPath("/dev/null");

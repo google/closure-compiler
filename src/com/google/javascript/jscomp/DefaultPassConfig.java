@@ -2714,7 +2714,6 @@ public final class DefaultPassConfig extends PassConfig {
         options.variableRenaming == VariableRenamingPolicy.LOCAL,
         preserveAnonymousFunctionNames,
         options.generatePseudoNames,
-        options.shadowVariables,
         options.preferStableNames,
         prevVariableMap,
         reservedChars,

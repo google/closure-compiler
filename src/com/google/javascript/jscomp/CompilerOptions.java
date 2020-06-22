@@ -590,9 +590,6 @@ public class CompilerOptions implements Serializable {
   /** Reserve property names on the global this object. */
   public boolean reserveRawExports;
 
-  /** Should shadow variable names in outer scope. */
-  boolean shadowVariables;
-
   /**
    * Use a renaming heuristic with better stability across source
    * changes.  With this option each symbol is more likely to receive
@@ -1376,7 +1373,6 @@ public class CompilerOptions implements Serializable {
     propertyRenaming = PropertyRenamingPolicy.OFF;
     labelRenaming = false;
     generatePseudoNames = false;
-    shadowVariables = false;
     preferStableNames = false;
     renamePrefix = null;
     collapsePropertiesLevel = PropertyCollapseLevel.NONE;
@@ -1633,9 +1629,8 @@ public class CompilerOptions implements Serializable {
   }
 
   /** Should shadow outer scope variable name during renaming. */
-  public void setShadowVariables(boolean shadow) {
-    this.shadowVariables = shadow;
-  }
+  @Deprecated
+  public void setShadowVariables(boolean shadow) {}
 
   /**
    * @param replaceIdGenerators the replaceIdGenerators to set
@@ -3117,7 +3112,6 @@ public class CompilerOptions implements Serializable {
             .add("rewritePolyfills", rewritePolyfills)
             .add("runtimeTypeCheckLogFunction", runtimeTypeCheckLogFunction)
             .add("runtimeTypeCheck", runtimeTypeCheck)
-            .add("shadowVariables", shadowVariables)
             .add("rewriteModulesBeforeTypechecking", rewriteModulesBeforeTypechecking)
             .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
             .add("smartNameRemoval", smartNameRemoval)

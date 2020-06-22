@@ -2220,16 +2220,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testShadowVaribles() {
-    CompilerOptions options = createCompilerOptions();
-    options.setVariableRenaming(VariableRenamingPolicy.LOCAL);
-    options.shadowVariables = true;
-    String code =     "var f = function(x) { return function(y) {}}";
-    String expected = "var f = function(a) { return function(a) {}}";
-    test(options, code, expected);
-  }
-
-  @Test
   public void testRenameLabels() {
     CompilerOptions options = createCompilerOptions();
     String code = "longLabel: for(;true;) { break longLabel; }";
@@ -3396,7 +3386,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "function some_function() {",
             "  if (any_expression) {",
             "    var b = external_ref;",
-            "    var a = function(a) {",
+            "    var a = function(c) {",
             "      return b()",
             "    };",
             "  }",
