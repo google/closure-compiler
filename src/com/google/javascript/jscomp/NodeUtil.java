@@ -4775,6 +4775,9 @@ public final class NodeUtil {
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         // TODO(johnlenz): remove this case.
+      case NEW_TARGET:
+        // Returns an alias of a constructor (current or subclass).
+        return false;
       case YIELD:
       case AWAIT:
         // TODO(johnlenz): we can do better for await if we use type information.  That is,

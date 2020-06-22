@@ -4316,4 +4316,32 @@ public final class IntegrationTest extends IntegrationTestCase {
         lines("const array = Array.of('1', '2', '3');", "if (array[0] - 1) {}"),
         TypeValidator.INVALID_OPERAND_TYPE);
   }
+
+  @Test
+  public void testNewTarget() {
+    // Repro case for Github issue 3607.  Don't crash with a reference to new.target
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
+    WarningLevel.QUIET.setOptionsForWarningLevel(options);
+    test(
+        options,
+        lines(
+            "",
+            "window.Class = class {",
+            "  constructor() {",
+            "    let newTarget = new.target;",
+            "    return Object.create(newTarget.prototype);",
+            "  }",
+            "};"),
+        lines(
+            "",
+            "window.a = class {",
+            "  constructor() {",
+            "    let b = new.target;",
+            "    return Object.create(b.prototype);",
+            "  }",
+            "};"));
+  }
 }

@@ -1481,6 +1481,11 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("o.valueOf()"))).isFalse();
 
       assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("delete a.b"))).isTrue();
+
+      assertThat(
+              NodeUtil.evaluatesToLocalValue(
+                  parseFirst(Token.NEW_TARGET, "function f() { new.target; }")))
+          .isFalse();
     }
 
     @Test
