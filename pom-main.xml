@@ -327,7 +327,7 @@
         <executions>
           <execution>
             <id>bundle-manifest</id>
-            <phase>process-classes</phase>
+            <phase>package</phase>
             <goals>
               <goal>manifest</goal>
             </goals>
