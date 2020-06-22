@@ -1093,7 +1093,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         lines(
             "/**",
             " * @param {number} a",
-            " * @return {!AsyncGenerator<number>}",
+            " * @return {!AsyncGenerator<number,?,?>}",
             " */",
             "var externalName = function(a) {",
             "};",

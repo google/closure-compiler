@@ -136,8 +136,11 @@ public class JSTypeRegistry implements Serializable {
    */
   private TemplateType generatorValueTemplate;
 
-  /** The template variable corresponding to the VALUE type in {@code AsyncGenerator<VALUE>} */
-  private TemplateType asyncGeneratorTemplate;
+  /**
+   * The template variable corresponding to the VALUE type in {@code AsyncGenerator<VALUE,
+   * UNUSED_RETURN_T, UNUSED_NEXT_T>}
+   */
+  private TemplateType asyncGeneratorValueTemplate;
 
   /** The template variable corresponding to the VALUE type in {@code IThenable<VALUE>} */
   private TemplateType iThenableTemplateKey;
@@ -384,7 +387,9 @@ public class JSTypeRegistry implements Serializable {
     generatorValueTemplate = new TemplateType(this, "VALUE");
     TemplateType generatorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
     TemplateType generatorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
-    asyncGeneratorTemplate = new TemplateType(this, "VALUE");
+    asyncGeneratorValueTemplate = new TemplateType(this, "VALUE");
+    TemplateType asyncGeneratorReturnTemplate = new TemplateType(this, "UNUSED_RETURN_T");
+    TemplateType asyncGeneratorNextTemplate = new TemplateType(this, "UNUSED_NEXT_T");
     iterableTemplate = new TemplateType(this, "VALUE");
     asyncIterableTemplate = new TemplateType(this, "VALUE");
     iThenableTemplateKey = new TemplateType(this, "TYPE");
@@ -559,7 +564,11 @@ public class JSTypeRegistry implements Serializable {
         JSTypeNative.ASYNC_ITERABLE_TYPE, asyncIterableFunctionType.getInstanceType());
 
     FunctionType asyncGeneratorFunctionType =
-        nativeInterface("AsyncGenerator", asyncGeneratorTemplate);
+        nativeInterface(
+            "AsyncGenerator",
+            asyncGeneratorValueTemplate,
+            asyncGeneratorReturnTemplate,
+            asyncGeneratorNextTemplate);
     registerNativeType(JSTypeNative.ASYNC_GENERATOR_FUNCTION_TYPE, asyncGeneratorFunctionType);
     registerNativeType(
         JSTypeNative.ASYNC_GENERATOR_TYPE, asyncGeneratorFunctionType.getInstanceType());

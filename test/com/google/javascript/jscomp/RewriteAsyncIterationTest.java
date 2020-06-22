@@ -185,7 +185,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
 
-    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<?>");
+    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<?,?,?>");
     assertType(wrapper.getJSType())
         .toStringIsEqualTo(
             "function(new:$jscomp.AsyncGeneratorWrapper,"
@@ -219,7 +219,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
 
-    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<undefined>");
+    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<undefined,?,?>");
     assertType(wrapper.getJSType())
         .toStringIsEqualTo(
             "function(new:$jscomp.AsyncGeneratorWrapper, "
@@ -269,7 +269,7 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
     Node newExpr = wrapper.getParent();
     Node innerGeneratorCall = newExpr.getSecondChild();
 
-    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<number>");
+    assertType(baz.getJSType()).toStringIsEqualTo("function(): AsyncGenerator<number,?,?>");
     assertType(wrapper.getJSType())
         .toStringIsEqualTo(
             "function(new:$jscomp.AsyncGeneratorWrapper, "

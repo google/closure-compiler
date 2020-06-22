@@ -1877,14 +1877,14 @@ function AsyncIterable() {}
 
 
 /**
- * @return {!AsyncIterator<VALUE>}
+ * @return {!AsyncIterator<VALUE, ?, *>}
  */
 AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
 
 
 /**
  * @interface
- * @extends {AsyncIterator<VALUE>}
+ * @extends {AsyncIterator<VALUE, ?, *>}
  * @extends {AsyncIterable<VALUE>}
  * @template VALUE
  * @see https://tc39.github.io/proposal-async-iteration/
@@ -1892,10 +1892,12 @@ AsyncIterable.prototype[Symbol.asyncIterator] = function() {};
 function AsyncIteratorIterable() {}
 
 /**
+ * TODO(b/142881197): UNUSED_RETURN_T and UNUSED_NEXT_T are not yet used for
+ * anything. https://github.com/google/closure-compiler/issues/3489
  * @interface
  * @see https://tc39.github.io/proposal-async-iteration/
  * @extends {AsyncIteratorIterable<VALUE>}
- * @template VALUE
+ * @template VALUE, UNUSED_RETURN_T, UNUSED_NEXT_T
  */
 function AsyncGenerator() {}
 
