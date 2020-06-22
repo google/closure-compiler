@@ -2120,26 +2120,21 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
                 "console.log(new someGlobal.Map());")));
 
-    // With proper type information we can tell that notGlobal.Map is not Map.
-    test(
+    // We cannot tell that notGlobal.Map is not Map.
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
-                "console.log(new notGlobal.Map());")),
-        expected("console.log(new notGlobal.Map());"));
+                "console.log(new notGlobal.Map());")));
 
     // Global polyfills may be accessed as properties on the global object.
-    test(
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Map', function() {}, 'es6', 'es3');",
                 "var alsoNotGlobal = {Map: /** @constructor */ function() {}};",
-                "console.log(new alsoNotGlobal.Map());")),
-        expected(
-            lines(
-                "var alsoNotGlobal = {Map: /** @constructor */ function() {}};", //
                 "console.log(new alsoNotGlobal.Map());")));
   }
 
@@ -2172,17 +2167,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "console.log(goog.global.Array.from());")));
 
-    // Unused polyfill is removed if there's sufficient type information.
-    test(
+    // Unused polyfill is not removed if there is another static property with the same name
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "class NotArray { static from() {} }",
-                "console.log(NotArray.from());")),
-        expected(
-            lines(
-                "class NotArray { static from() {} }", //
                 "console.log(NotArray.from());")));
 
     // Without type information, we can't correctly remove this polyfill.
@@ -2196,16 +2187,12 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     // Without type information, we don't recognize the aliased call.
     // https://github.com/google/closure-compiler/issues/3171
-    test(
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "/** @const */ var MyArray = Array;",
-                "console.log(MyArray.from());")),
-        expected(
-            lines(
-                "/** @const */ var MyArray = Array;", //
                 "console.log(MyArray.from());")));
 
     // Without type information, we don't recognize the subclass call.
@@ -2216,23 +2203,15 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "class SubArray extends Array {}",
-                "console.log(SubArray.from());")),
-        expected(
-            lines(
-                "class SubArray extends Array {}", //
                 "console.log(SubArray.from());")));
 
-    // Heurisitic is still able to remove Set.from while retaining Array.from.
+    // Cannot distinguish between Set.from and Array.from.
     test(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "$jscomp.polyfill('Set.from', function() {}, 'es6', 'es3');",
-                "console.log(Array.from());")),
-        expected(
-            lines(
-                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
                 "console.log(Array.from());")));
   }
 
@@ -2279,20 +2258,17 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "console.log(NotArray.from());")),
         expected(
             lines(
+                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "class NotArray { static from() {} }", //
                 "console.log(NotArray.from());")));
 
-    // Unused polyfill is deleted since compiler knows `x` is not the global object.
-    test(
+    // Unused polyfill is kept since compiler doesn't know `x` is not the global object.
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "var x = {Array: {from: function() {}}};",
-                "console.log(x.Array.from());")),
-        expected(
-            lines(
-                "var x = {Array: {from: function() {}}};", //
                 "console.log(x.Array.from());")));
 
     // Used polyfill via aliased owner: retains definition.
@@ -2313,17 +2289,13 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "class SubArray extends Array {}",
                 "console.log(SubArray.from([]));")));
 
-    // Distinguish static polyfills on different types: remove the unused one.
-    test(
+    // Cannot distinguish static polyfills on different types.
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "$jscomp.polyfill('Set.from', function() {}, 'es6', 'es3');",
-                "console.log(Array.from([]));")),
-        expected(
-            lines(
-                "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');", //
                 "console.log(Array.from([]));")));
   }
 
@@ -2468,27 +2440,22 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "var x = externFunction();",
                 "x.repeat();")));
 
-    // Calling a prototype property like a static allows removing the prototype.
-    test(
+    // Calling a prototype property like a static also prevents removing the prototype.
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('String.prototype.repeat', function() {}, 'es6', 'es3');",
                 "String.repeat();")),
-        expected("String.repeat();"),
         warning(TypeCheck.INEXISTENT_PROPERTY));
 
-    // Correctly discern between string and array.
-    test(
+    // Cannot discern between string and array.
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
                 "var x = [];",
-                "x.includes(1);")),
-        expected(
-            lines(
-                "var x = [];", //
                 "x.includes(1);")));
 
     // Union type prevents removal.
@@ -2500,31 +2467,39 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "var /** string|Array */ x = [];",
                 "x.includes(1);")));
 
-    // Multiple same-name methods removes the right one.
-    test(
+    // Multiple same-name methods prevent removal of unused polyfills.
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
                 "$jscomp.polyfill('Array.prototype.includes', function() {}, 'es6', 'es3');",
-                "'x'.includes(5);")),
-        expected(
-            lines(
-                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
                 "'x'.includes(5);")));
 
-    // Multiple same-name methods removes the right one.
-    test(
+    // Multiple same-name methods cannot be disambiguated.
+    testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
                 "$jscomp.polyfill('Array.prototype.includes', function() {}, 'es6', 'es3');",
                 "Array.prototype.includes.call('x', 1);")),
-        expected(
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
+
+    // Multiple same-name methods cannot be disambiguated. This is actually safer because code will
+    // continue to work in the presence of type mismatches.
+    testSame(
+        externs,
+        srcs(
             lines(
+                "$jscomp.polyfill('String.prototype.includes', function() {}, 'es6', 'es3');",
                 "$jscomp.polyfill('Array.prototype.includes', function() {}, 'es6', 'es3');",
-                "Array.prototype.includes.call('x', 1);")),
+                "function f(/** string */ s) {",
+                // The compiler will think this is String.prototype.includes when it is in fact
+                // Array.prototype.includes.
+                " return s.includes('1');",
+                "}",
+                "f([]); // type mismatch")),
         warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
@@ -2633,7 +2608,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');",
                 "console.log(Promise.resolve());")));
 
-    // Calls a different finally so both polyfills can be removed.
+    // Calls a different finally preventing removal of the polyfill
     test(
         externs,
         srcs(
@@ -2642,7 +2617,11 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
                 "const p = {finally() {}};",
                 "p.finally();")),
-        expected(lines("const p = {finally() {}};", "p.finally();")));
+        expected(
+            lines(
+                "$jscomp.polyfill('Promise.prototype.finally', function() {}, 'es8', 'es3');",
+                "const p = {finally() {}};",
+                "p.finally();")));
 
     // Retain both the base and the extra method when both are used.
     testSame(
