@@ -1276,6 +1276,36 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testIncrementOnBigInt() {
+    assuming("x", BIGINT_TYPE);
+    assuming("y", BIGINT_OBJECT_TYPE);
+    assuming("z", BIGINT_NUMBER);
+    assuming("a", createUnionType(BIGINT_TYPE, STRING_TYPE));
+
+    inFunction("valueType = x++; objectType = y++; bigintNumber = z++; bigintOther = a++;");
+
+    verify("valueType", BIGINT_TYPE);
+    verify("objectType", BIGINT_TYPE);
+    verify("bigintNumber", BIGINT_NUMBER);
+    verify("bigintOther", BIGINT_NUMBER);
+  }
+
+  @Test
+  public void testDecrementOnBigInt() {
+    assuming("x", BIGINT_TYPE);
+    assuming("y", BIGINT_OBJECT_TYPE);
+    assuming("z", BIGINT_NUMBER);
+    assuming("a", createUnionType(BIGINT_TYPE, STRING_TYPE));
+
+    inFunction("valueType = x--; objectType = y--; bigintNumber = z++; bigintOther = a++;");
+
+    verify("valueType", BIGINT_TYPE);
+    verify("objectType", BIGINT_TYPE);
+    verify("bigintNumber", BIGINT_NUMBER);
+    verify("bigintOther", BIGINT_NUMBER);
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
     includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));

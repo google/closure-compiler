@@ -655,7 +655,9 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
       case NEG:
       case BITNOT:
-        scope = traverseUnaryNegation(n, scope);
+      case DEC:
+      case INC:
+        scope = traverseUnaryNumericOperation(n, scope);
         break;
 
       case ARRAYLIT:
@@ -691,8 +693,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case BITOR:
       case MUL:
       case SUB:
-      case DEC:
-      case INC:
       case EXPONENT:
         scope = traverseChildren(n, scope);
         n.setJSType(getNativeType(NUMBER_TYPE));
@@ -1549,7 +1549,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   /** Traverse unary minus and bitwise NOT */
-  private FlowScope traverseUnaryNegation(Node n, FlowScope scope) {
+  private FlowScope traverseUnaryNumericOperation(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope); // Find types.
     switch (getBigIntPresence(getJSType(n.getFirstChild()))) { // BigIntPresence in operand
       case ALL_BIGINT:
@@ -1558,7 +1558,8 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case NO_BIGINT:
         n.setJSType(getNativeType(NUMBER_TYPE));
         break;
-      default:
+      case BIGINT_OR_NUMBER:
+      case BIGINT_OR_OTHER:
         n.setJSType(getNativeType(BIGINT_NUMBER));
         break;
     }
