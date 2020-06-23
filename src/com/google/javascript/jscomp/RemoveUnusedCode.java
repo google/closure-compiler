@@ -1305,6 +1305,10 @@ class RemoveUnusedCode implements CompilerPass {
     if (classNameNode.isName()) {
       // We may be able to remove the name node if nothing ends up referring to it.
       VarInfo varInfo = traverseNameNode(classNameNode, classScope);
+      // The class is non-local, because it is accessible by unknown code outside
+      // of the scope where InnerName is defined.
+      // e.g. `use(class InnerName {})`
+      varInfo.hasNonLocalOrNonLiteralValue = true;
       varInfo.addRemovable(new RemovableBuilder().buildNamedClassExpression(classNode));
     }
     // If we're traversing the class expression, we've already decided we cannot remove it.

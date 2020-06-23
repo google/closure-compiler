@@ -691,6 +691,33 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInnerClassNameInstanceofCheck() {
+    testSame(
+        lines(
+            "", //
+            "window.Class = class MyClass {",
+            "  constructor() {",
+            "    if (this instanceof MyClass) {",
+            "      console.log(\"test\");",
+            "    }",
+            "  }",
+            "};",
+            "new window.Class();",
+            ""));
+    testSame(
+        lines(
+            "", //
+            "/** @constructor */",
+            "window.Class = function MyClass() {",
+            "  if (this instanceof MyClass) {",
+            "    console.log(\"test\");",
+            "  }",
+            "};",
+            "new window.Class();",
+            ""));
+  }
+
+  @Test
   public void testEs6ClassExtends() {
     testSame("class D {} class C extends D {} var c = new C; c.g();");
     test("class D {} class C extends D {}", "");
