@@ -407,7 +407,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     printStream.println(warningsGuard);
   }
 
-  void initWarningsGuard(WarningsGuard warningsGuard) {
+  private void initWarningsGuard(WarningsGuard warningsGuard) {
     ImmutableList.Builder<WarningsGuard> guards = ImmutableList.builder();
     guards
         .add(new J2clSuppressWarningsGuard())

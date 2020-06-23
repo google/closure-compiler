@@ -1201,7 +1201,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       compiler.initWebpackMap(emptyMap);
     }
 
-    compiler.initWarningsGuard(options.getWarningsGuard());
+    compiler.initOptions(options);
 
     List<SourceFile> inputs =
         createSourceInputs(jsModuleSpecs, config.mixedJsSources, jsonFiles, config.moduleRoots);
