@@ -2582,6 +2582,104 @@ HTMLVideoElement.prototype.getVideoPlaybackQuality = function() {};
 
 
 /**
+ * The metadata provided by the callback given to
+ * HTMLVideoElement.requestVideoFrameCallback().
+ *
+ * See https://wicg.github.io/video-rvfc/#video-frame-metadata
+ *
+ * @record
+ */
+function VideoFrameMetadata() {};
+
+/**
+ * The time at which the user agent submitted the frame for composition.
+ * @const {number}
+ */
+VideoFrameMetadata.prototype.presentationTime;
+
+/**
+ * The time at which the user agent expects the frame to be visible.
+ * @const {number}
+ */
+VideoFrameMetadata.prototype.expectedDisplayTime;
+
+/**
+ * The width of the video frame, in media pixels.
+ * @const {number}
+ */
+VideoFrameMetadata.prototype.width;
+
+/**
+ * The height of the video frame, in media pixels.
+ * @const {number}
+ */
+VideoFrameMetadata.prototype.height;
+
+/**
+ * The media presentation timestamp (PTS) in seconds of the frame presented
+ * (e.g. its timestamp on the video.currentTime timeline).
+ * @const {number}
+ */
+VideoFrameMetadata.prototype.mediaTime;
+
+/**
+ * A count of the number of frames submitted for composition.
+ * @const {number}
+ */
+VideoFrameMetadata.prototype.presentedFrames;
+
+/**
+ * The elapsed duration in seconds from submission of the encoded packet with
+ * the same presentation timestamp (PTS) as this frame (e.g. same as the
+ * mediaTime) to the decoder until the decoded frame was ready for presentation.
+ * @const {number|undefined}
+ */
+VideoFrameMetadata.prototype.processingDuration;
+
+/**
+ * For video frames coming from either a local or remote source, this is the
+ * time at which the frame was captured by the camera.
+ * @const {number|undefined}
+ */
+VideoFrameMetadata.prototype.captureTime;
+
+/**
+ * For video frames coming from a remote source, this is the time the encoded
+ * frame was received by the platform, i.e., the time at which the last packet
+ * belonging to this frame was received over the network.
+ * @const {number|undefined}
+ */
+VideoFrameMetadata.prototype.receiveTime;
+
+/**
+ * The RTP timestamp associated with this video frame.
+ * @const {number|undefined}
+ */
+VideoFrameMetadata.prototype.rtpTimestamp;
+
+/**
+ * @typedef {function(number,  ?VideoFrameMetadata): undefined}
+ * @see https://wicg.github.io/video-rvfc/#dom-htmlvideoelement-requestvideoframecallback
+ */
+var VideoFrameRequestCallback;
+
+/**
+ * Registers a callback to be fired the next time a frame is presented to the
+ * compositor.
+ * @param {!VideoFrameRequestCallback} callback
+ * @return {number}
+ */
+HTMLVideoElement.prototype.requestVideoFrameCallback = function(callback) {};
+
+/**
+ * Cancels an existing video frame request callback given its handle.
+ * @param {number} handle
+ * @return {undefined}
+ */
+HTMLVideoElement.prototype.cancelVideoFrameCallback = function(handle) {};
+
+
+/**
  * @constructor
  * @see https://html.spec.whatwg.org/multipage/media.html#error-codes
  */
