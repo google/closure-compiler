@@ -23773,6 +23773,18 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntOperators_unaryMinus() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; -x;");
+    testTypes("const x = BigInt(1); -x;");
+    testTypes("/** @type {?} */var x; -x;");
+    testTypes("/** @type {bigint|number} */var x; -x;");
+    testTypes(
+        "/** @type {bigint|string} */var x; -x;",
+        lines("unary minus operator", "found   : (bigint|string)", "required: (bigint|number)"));
+  }
+
+  @Test
   public void testStrictComparison1() {
     testTypes(
         "var x = true < 'asdf';",

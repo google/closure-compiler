@@ -723,11 +723,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case NEG:
-        left = n.getFirstChild();
-        // We are more permissive with + than -, because it is used to coerce to number
-        // TODO(b/140132715): Update to handle bigint
-        validator.expectNumber(left, getJSType(left), "sign operator");
-        ensureTyped(n, NUMBER_TYPE);
+        visitUnaryMinus(n);
         break;
 
       case EQ:
@@ -1084,6 +1080,18 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           getJSType(n.getFirstChild()).toString());
     } else {
       ensureTyped(n, NUMBER_TYPE);
+    }
+  }
+
+  private void visitUnaryMinus(Node n) {
+    JSType operatorType = getJSType(n);
+    JSType childType = getJSType(n.getFirstChild());
+    if (operatorType.isNumber()) {
+      // This condition is meant to catch any old cases (where bigint isn't involved)
+      validator.expectNumber(n, childType, "sign operator");
+      ensureTyped(n, NUMBER_TYPE);
+    } else {
+      validator.expectBigIntOrNumber(n, childType, "unary minus operator");
     }
   }
 
