@@ -29,10 +29,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
+import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
-import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
@@ -571,6 +571,14 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.instrumentForCoverage) {
+      if (options.instrumentBranchCoverage) {
+        options.setInstrumentForCoverageOption(InstrumentOption.BRANCH_ONLY);
+      } else {
+        options.setInstrumentForCoverageOption(InstrumentOption.LINE_ONLY);
+      }
+    }
+
+    if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
       passes.add(instrumentForCodeCoverage);
     }
 
@@ -2760,12 +2768,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 // TODO(johnlenz): make global instrumentation an option
-                if (options.instrumentBranchCoverage) {
-                  return new CoverageInstrumentationPass(
-                      compiler, CoverageReach.CONDITIONAL, InstrumentOption.BRANCH_ONLY);
-                } else {
-                  return new CoverageInstrumentationPass(compiler, CoverageReach.CONDITIONAL);
-                }
+                return new CoverageInstrumentationPass(compiler, CoverageReach.CONDITIONAL, options.getInstrumentForCoverageOption());
               })
           .setFeatureSetForOptimizations()
           .build();

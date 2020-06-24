@@ -2533,6 +2533,36 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testInstrumentCodeByLine() {
+    args.add("--instrument_code=LINE");
+
+    test(
+        "function foo(){ const answerToAll = 42; }",
+        lines(
+            "self.window||(self.window=self,self.window.top=self);var __jscov=window.top.__jscov||",
+            "(window.top.__jscov={fileNames:[],instrumentedLines:[],executedLines:[]}),",
+            "JSCompiler_lcov_data_input0=[];",
+            "__jscov.executedLines.push(JSCompiler_lcov_data_input0);",
+            "__jscov.instrumentedLines.push(\"01\");",
+            "__jscov.fileNames.push(\"input0\");",
+            "function foo(){JSCompiler_lcov_data_input0[0]=!0}"));
+  }
+
+  @Test
+  public void testInstrumentCodeByBranch() {
+    args.add("--instrument_code=BRANCH");
+
+    test(
+        "function foo(){ const answerToAll = 42; }",
+        lines(
+            "self.window||(self.window=self,self.window.top=self);",
+            "var __jscov=window.top.__jscov||(window.top.__jscov= ",
+            "{fileNames:[],branchPresent:[],branchesInLine:[],branchesTaken:[]}); ",
+            "function foo(){}"));
+
+  }
+
+  @Test
   public void testEscapeDollarInTemplateLiteralInOutput() {
     args.add("--language_in=ECMASCRIPT6");
     args.add("--language_out=ECMASCRIPT6");

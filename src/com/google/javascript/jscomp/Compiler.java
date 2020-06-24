@@ -35,7 +35,7 @@ import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
-import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
+import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
@@ -892,18 +892,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         () -> {
           checkState(options.getInstrumentForCoverageOnly());
           checkState(!hasErrors());
-          instrumentForCoverageInternal(options.instrumentBranchCoverage);
+          if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
+            instrumentForCoverageInternal(options.getInstrumentForCoverageOption());
+          } else if (options.instrumentForCoverage) {
+            instrumentForCoverageInternal(InstrumentOption.LINE_ONLY);
+          } else if (options.instrumentForCoverage && options.instrumentBranchCoverage) {
+            instrumentForCoverageInternal(InstrumentOption.BRANCH_ONLY);
+          }
           return null;
         });
   }
 
-  private void instrumentForCoverageInternal(boolean instrumentBranchCoverage) {
+  private void instrumentForCoverageInternal(InstrumentOption instrumentForCoverageOption) {
     Tracer tracer = newTracer("instrumentationPass");
-    InstrumentOption instrumentOption = InstrumentOption.LINE_ONLY;
-    if (instrumentBranchCoverage) {
-      instrumentOption = InstrumentOption.BRANCH_ONLY;
-    }
-    process(new CoverageInstrumentationPass(this, CoverageReach.ALL, instrumentOption));
+    process(new CoverageInstrumentationPass(this, CoverageReach.ALL, instrumentForCoverageOption));
     stopTracer(tracer, "instrumentationPass");
   }
 

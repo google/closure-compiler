@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
+import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 
 /** GWT compatible no-op replacement for {@code CoverageInstrumentationPass} */
 public class CoverageInstrumentationPass implements CompilerPass {
@@ -24,13 +25,6 @@ public class CoverageInstrumentationPass implements CompilerPass {
   public enum CoverageReach {
     ALL,
     CONDITIONAL
-  }
-
-  /** Instrument Option */
-  public enum InstrumentOption {
-    ALL,   // Instrument to collect both line coverage and branch coverage.
-    LINE_ONLY,  // Collect coverage for every executable statement.
-    BRANCH_ONLY  // Collect coverage for control-flow branches.
   }
 
   public CoverageInstrumentationPass(AbstractCompiler compiler, CoverageReach reach) {

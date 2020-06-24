@@ -19,14 +19,14 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * This code implements the instrumentation pass over the AST
- * (returned by JSCompiler).
+ * This code implements the instrumentation pass over the AST (returned by JSCompiler).
  */
 @GwtIncompatible("FileInstrumentationData")
 class CoverageInstrumentationPass implements CompilerPass {
@@ -36,11 +36,6 @@ class CoverageInstrumentationPass implements CompilerPass {
   private final CoverageReach reach;
   private final InstrumentOption instrumentOption;
 
-  public enum InstrumentOption {
-    LINE_ONLY,  // Collect coverage for every executable statement.
-    BRANCH_ONLY  // Collect coverage for control-flow branches.
-  }
-
   public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
 
   public enum CoverageReach {
@@ -48,8 +43,8 @@ class CoverageInstrumentationPass implements CompilerPass {
     CONDITIONAL  // Do not instrument global statements.
   }
 
+
   /**
-   *
    * @param compiler the compiler which generates the AST.
    */
   public CoverageInstrumentationPass(
@@ -60,13 +55,14 @@ class CoverageInstrumentationPass implements CompilerPass {
     instrumentationData = new LinkedHashMap<>();
   }
 
+  @Deprecated
   public CoverageInstrumentationPass(AbstractCompiler compiler, CoverageReach reach) {
     this(compiler, reach, InstrumentOption.LINE_ONLY);
   }
 
   /**
-   * Creates the js code to be added to source. This code declares and
-   * initializes the variables required for collection of coverage data.
+   * Creates the js code to be added to source. This code declares and initializes the variables
+   * required for collection of coverage data.
    */
   private void addHeaderCode(Node script) {
     script.addChildToFront(createConditionalObjectDecl(JS_INSTRUMENTATION_OBJECT_NAME, script));
@@ -75,8 +71,8 @@ class CoverageInstrumentationPass implements CompilerPass {
     script.addChildToFront(
         compiler.parseSyntheticCode(
             "if (!self.window) { self.window = self; self.window.top = self; }")
-        .removeFirstChild()
-        .useSourceInfoIfMissingFromForTree(script));
+            .removeFirstChild()
+            .useSourceInfoIfMissingFromForTree(script));
   }
 
   @Override

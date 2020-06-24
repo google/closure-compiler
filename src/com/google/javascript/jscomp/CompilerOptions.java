@@ -1186,12 +1186,24 @@ public class CompilerOptions implements Serializable {
    */
   transient ErrorHandler errorHandler;
 
+  private InstrumentOption instrumentForCoverageOption;
+
   /**
    * Instrument code for the purpose of collecting coverage data.
+   *
+   * @deprecated Please use setInstrumentForCoverageOption with LINE_ONLY InstrumentationOption
+   * instead
    */
+  @Deprecated
   public boolean instrumentForCoverage;
 
-  /** Instrument branch coverage data - valid only if instrumentForCoverage is True */
+  /**
+   * Instrument branch coverage data - valid only if instrumentForCoverage is True
+   *
+   * @deprecated Please use setInstrumentForCoverageOption with BRANCH_ONLY InstrumentationOption
+   * instead
+   */
+  @Deprecated
   public boolean instrumentBranchCoverage;
 
   private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
@@ -1426,6 +1438,8 @@ public class CompilerOptions implements Serializable {
     // Instrumentation
     instrumentForCoverage = false;  // instrument lines
     instrumentBranchCoverage = false; // instrument branches
+
+    instrumentForCoverageOption = InstrumentOption.NONE;
 
     // Output
     preserveTypeAnnotations = false;
@@ -2850,6 +2864,14 @@ public class CompilerOptions implements Serializable {
     }
   }
 
+  public void setInstrumentForCoverageOption(InstrumentOption instrumentForCoverageOption) {
+    this.instrumentForCoverageOption = instrumentForCoverageOption;
+  }
+
+  public InstrumentOption getInstrumentForCoverageOption() {
+    return this.instrumentForCoverageOption;
+  }
+
   public final ImmutableList<ConformanceConfig> getConformanceConfigs() {
     return conformanceConfigs;
   }
@@ -3037,6 +3059,7 @@ public class CompilerOptions implements Serializable {
             .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
             .add("instrumentBranchCoverage", instrumentBranchCoverage)
+            .add("instrumentForCoverageOption", instrumentForCoverageOption.toString())
             .add("isolatePolyfills", isolatePolyfills)
             .add("j2clMinifierEnabled", j2clMinifierEnabled)
             .add("j2clMinifierPruningManifest", j2clMinifierPruningManifest)
@@ -3144,6 +3167,31 @@ public class CompilerOptions implements Serializable {
 
   //////////////////////////////////////////////////////////////////////////////
   // Enums
+
+  /**
+   * An option to determine what level of code instrumentation is performed, if any
+   */
+  public enum InstrumentOption {
+    NONE, // No coverage instrumentation is performed
+    LINE_ONLY,  // Collect coverage for every executable statement.
+    BRANCH_ONLY;  // Collect coverage for control-flow branches.
+
+    public static InstrumentOption fromString(String value) {
+      if (value == null) {
+        return null;
+      }
+      switch (value) {
+        case "NONE":
+          return InstrumentOption.NONE;
+        case "LINE":
+          return InstrumentOption.LINE_ONLY;
+        case "BRANCH":
+          return InstrumentOption.BRANCH_ONLY;
+        default:
+          return null;
+      }
+    }
+  }
 
   /**
    * A language mode applies to the whole compilation job.
