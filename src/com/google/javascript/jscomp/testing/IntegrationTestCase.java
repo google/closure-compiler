@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -23,20 +23,20 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
-import com.google.javascript.jscomp.testing.TestExternsBuilder;
+import com.google.javascript.jscomp.BlackHoleErrorManager;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 
-/**
- * Framework for end-to-end test cases.
- *
- * @author nicksantos@google.com (Nick Santos)
- */
-abstract class IntegrationTestCase {
+/** Framework for end-to-end test cases. */
+public abstract class IntegrationTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
   protected static final Joiner EMPTY_JOINER = Joiner.on("");
 
@@ -181,7 +181,7 @@ abstract class IntegrationTestCase {
       String[] original, String[] compiled) {
     Compiler compiler = compile(options, original);
 
-    Node root = compiler.getJsRoot();
+    Node root = compiler.getRoot().getLastChild();
 
     // Verify that there are no unexpected errors before checking the compiled output
     assertWithMessage(
@@ -271,7 +271,7 @@ abstract class IntegrationTestCase {
       String original, String compiled) {
     Compiler compiler = compile(options, original);
     for (JSError error : compiler.getErrors()) {
-      if (!error.getType().equals(RhinoErrorReporter.PARSE_ERROR)) {
+      if (!DiagnosticGroups.PARSING.matches(error)) {
         assertWithMessage("Found unexpected error type " + error.getType() + ":\n" + error).fail();
       }
     }
@@ -339,10 +339,10 @@ abstract class IntegrationTestCase {
    * commonjs code).
    */
   protected Node parseExpectedCode(String[] original, CompilerOptions options) {
-    boolean oldProcessCommonJsModules = options.processCommonJSModules;
-    options.processCommonJSModules = false;
+    boolean oldProcessCommonJsModules = options.getProcessCommonJSModules();
+    options.setProcessCommonJSModules(false);
     Node expectedRoot = parse(original, options);
-    options.processCommonJSModules = oldProcessCommonJsModules;
+    options.setProcessCommonJSModules(oldProcessCommonJsModules);
     return expectedRoot;
   }
 
@@ -354,12 +354,12 @@ abstract class IntegrationTestCase {
     }
     compiler.init(externs, inputs, options);
     checkUnexpectedErrorsOrWarnings(compiler, 0);
-    Node all = compiler.parseInputs();
+    compiler.parse();
     checkUnexpectedErrorsOrWarnings(compiler, 0);
 
-    return all.getLastChild();
+    return compiler.getRoot().getLastChild();
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
-  abstract CompilerOptions createCompilerOptions();
+  protected abstract CompilerOptions createCompilerOptions();
 }

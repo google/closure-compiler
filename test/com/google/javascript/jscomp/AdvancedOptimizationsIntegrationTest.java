@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -37,7 +38,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Integration tests for the compiler running with {@link CompilationLevel.ADVANCED}. */
+/**
+ * Integration tests for the compiler running with {@link CompilationLevel#ADVANCED_OPTIMIZATIONS}.
+ */
 @RunWith(JUnit4.class)
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
@@ -1653,7 +1656,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
-  protected CompilerOptions createCompilerOptions() {
+  public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);

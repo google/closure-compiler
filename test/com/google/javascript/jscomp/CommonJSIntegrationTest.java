@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.TypeCheck.INEXISTENT_PROPERTY;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -421,7 +422,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
   }
 
   @Override
-  protected CompilerOptions createCompilerOptions() {
+  public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);

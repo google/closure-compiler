@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -53,7 +54,7 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
 
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
-  protected CompilerOptions createCompilerOptions() {
+  public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

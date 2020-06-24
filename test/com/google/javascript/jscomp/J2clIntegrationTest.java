@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,7 +72,7 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
   }
 
   @Override
-  CompilerOptions createCompilerOptions() {
+  public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);

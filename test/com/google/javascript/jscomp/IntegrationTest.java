@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
+import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -3896,7 +3897,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
-  protected CompilerOptions createCompilerOptions() {
+  public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);

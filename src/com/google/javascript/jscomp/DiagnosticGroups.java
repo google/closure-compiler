@@ -696,6 +696,14 @@ public class DiagnosticGroups {
           RhinoErrorReporter.UNSUPPORTED_BOUNDED_GENERIC_TYPES,
           RhinoErrorReporter.BOUNDED_GENERIC_TYPE_ERROR);
 
+  // This diagnostic group is intentionally absent in ParserConfig.properties. User code should
+  // never suppress parse errors but it is useful occasionally for tooling to check whether a
+  // given error is from parsing.
+  public static final DiagnosticGroup PARSING =
+      DiagnosticGroups.registerGroup(
+          "parsing", // undocumented
+          RhinoErrorReporter.PARSE_ERROR);
+
   // For internal use only, so there are no constants for these groups.
   static {
     DiagnosticGroups.registerGroup(

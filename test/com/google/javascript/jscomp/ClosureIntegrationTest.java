@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
+import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
@@ -1099,10 +1100,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         (String[]) null);
   }
 
-
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
-  protected CompilerOptions createCompilerOptions() {
+  public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
