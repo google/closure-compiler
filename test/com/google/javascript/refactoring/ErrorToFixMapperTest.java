@@ -67,6 +67,8 @@ public class ErrorToFixMapperTest {
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, WARNING);
     options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE, ERROR);
     options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE, ERROR);
+    options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE_IN_PROVIDES_FILE, ERROR);
+    options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE, ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, ERROR);
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_CHECKS, WARNING);
     options.setCodingConvention(new GoogleCodingConvention());
@@ -1412,6 +1414,16 @@ public class ErrorToFixMapperTest {
             "",
             "/** @constructor @extends {Animal} */",
             "function Cat() {}"));
+  }
+
+  @Test
+  public void testMissingRequire_inProvidesFile() {
+    preexistingCode = "goog.provide('world.util.Animal');";
+    assertChanges(
+        lines("var f = world.util.Animal.create();"),
+        lines(
+            "goog.require('world.util.Animal');", //
+            "var f = world.util.Animal.create();"));
   }
 
   @Test

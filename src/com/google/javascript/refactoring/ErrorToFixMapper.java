@@ -48,9 +48,7 @@ public final class ErrorToFixMapper {
   private static final Pattern EARLY_REF =
       Pattern.compile("Variable referenced before declaration: (.*)");
   private static final Pattern MISSING_REQUIRE =
-      Pattern.compile(
-          "'([^']+)' references a fully qualified namespace, which is disallowed .*",
-          Pattern.DOTALL);
+      Pattern.compile("'([^']+)' references a .*", Pattern.DOTALL);
   private static final Pattern FULLY_QUALIFIED_NAME =
       Pattern.compile("Reference to fully qualified import name '([^']+)'.*");
   private static final Pattern USE_SHORT_NAME =
@@ -111,6 +109,7 @@ public final class ErrorToFixMapper {
       case "JSC_INVALID_SUPER_CALL_WITH_SUGGESTION":
         return getFixForInvalidSuper(error);
       case "JSC_MISSING_REQUIRE":
+      case "JSC_MISSING_REQUIRE_IN_PROVIDES_FILE":
         return getFixForMissingRequire(error);
       case "JSC_MISSING_REQUIRE_TYPE":
         // Adding a requireType is not (yet) supported, but should be
@@ -338,18 +337,17 @@ public final class ErrorToFixMapper {
   private SuggestedFix getFixForMissingRequire(JSError error) {
     Matcher regexMatcher = MISSING_REQUIRE.matcher(error.getDescription());
     checkState(regexMatcher.matches(), "Unexpected error description: %s", error.getDescription());
-    Node errorNode = error.getNode();
     String namespaceToRequire = regexMatcher.group(1);
 
-    String oldName =
+    String qName =
         error.getNode().isQualifiedName()
             ? error.getNode().getQualifiedName()
             : error.getNode().getString();
 
     checkState(
-        oldName.startsWith(namespaceToRequire),
+        qName.startsWith(namespaceToRequire),
         "Expected error location %s to start with namespace <%s>",
-        errorNode,
+        error.getNode(),
         namespaceToRequire);
 
     Node script = compiler.getScriptNode(error.getSourceName());
@@ -362,13 +360,15 @@ public final class ErrorToFixMapper {
             .attachMatchedNodeInfo(error.getNode(), compiler)
             .addGoogRequire(match, namespaceToRequire, scriptMetadata);
 
-    String shortName = scriptMetadata.getAlias(namespaceToRequire);
+    String alias = scriptMetadata.getAlias(namespaceToRequire);
+    if (alias != null) {
+      fix.replace(
+          error.getNode(),
+          NodeUtil.newQName(compiler, qName.replace(namespaceToRequire, alias)),
+          compiler);
+    }
 
-    return fix.replace(
-            error.getNode(),
-            NodeUtil.newQName(compiler, oldName.replace(namespaceToRequire, shortName)),
-            compiler)
-        .build();
+    return fix.build();
   }
 
   private SuggestedFix getFixForExtraRequire(JSError error) {
