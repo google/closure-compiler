@@ -36,6 +36,16 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     };
   }
 
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(
+        DiagnosticGroups.STRICTER_MISSING_REQUIRE_IN_PROVIDES_FILE, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE, CheckLevel.WARNING);
+    return options;
+  }
+
   @Test
   public void testNoWarning_existingRequire_withAlias() throws Exception {
     checkNoWarning(
@@ -63,8 +73,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequire_inProvide() throws Exception {
-    checkNoWarning(
+  public void testWarning_missingRequire_inProvide() throws Exception {
+    checkRequireInProvidesFileWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",
@@ -76,8 +87,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequire_inScript() throws Exception {
-    checkNoWarning(
+  public void testWarning_missingRequire_inScript() throws Exception {
+    checkRequireInProvidesFileWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",
@@ -155,6 +167,19 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoWarning_missingRequire_underlappingProvide() throws Exception {
+    checkRequireInProvidesFileWarning(
+        "a.b.C",
+        lines(
+            "goog.provide('a.b');", //
+            "goog.provide('a.b.C');"),
+        lines(
+            "goog.require('a.b');", //
+            "goog.requireType('a.b.C');",
+            "new a.b.C;"));
+  }
+
+  @Test
   public void testNoWarning_missingRequire_sameModule() throws Exception {
     checkNoWarning(
         lines(
@@ -215,8 +240,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequireType_inProvide() throws Exception {
-    checkNoWarning(
+  public void testWarning_missingRequireType_inProvide() throws Exception {
+    checkRequireTypeInProvidesFileWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",
@@ -229,8 +255,9 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequireType_inScript() throws Exception {
-    checkNoWarning(
+  public void testWarning_missingRequireType_inScript() throws Exception {
+    checkRequireTypeInProvidesFileWarning(
+        "foo.Bar",
         lines(
             "goog.module('foo.Bar');",
             "goog.module.declareLegacyNamespace();",
@@ -1007,6 +1034,20 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
     testSame(
         srcs(js),
         warning(CheckMissingRequires.MISSING_REQUIRE_TYPE)
+            .withMessageContaining("'" + namespace + "'"));
+  }
+
+  private void checkRequireInProvidesFileWarning(String namespace, String... js) {
+    testSame(
+        srcs(js),
+        warning(CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE)
+            .withMessageContaining("'" + namespace + "'"));
+  }
+
+  private void checkRequireTypeInProvidesFileWarning(String namespace, String... js) {
+    testSame(
+        srcs(js),
+        warning(CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE)
             .withMessageContaining("'" + namespace + "'"));
   }
 }

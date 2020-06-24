@@ -46,6 +46,18 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
               + " guide.\nPlease add a goog.requireType, assign or destructure it into an alias, "
               + "and use the alias instead.");
 
+  public static final DiagnosticType MISSING_REQUIRE_IN_PROVIDES_FILE =
+      DiagnosticType.disabled(
+          "JSC_MISSING_REQUIRE_IN_PROVIDES_FILE",
+          "''{0}'' references a namespace which was not required by this file.\n"
+              + "Please add a goog.require.");
+
+  public static final DiagnosticType MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE =
+      DiagnosticType.disabled(
+          "JSC_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE",
+          "''{0}'' references a namespace which was not required by this file.\n"
+              + "Please add a goog.requireType.");
+
   /** The set of template parameter names found so far in the file currently being checked. */
   private final HashSet<String> templateParamNames = new HashSet<>();
 
@@ -68,10 +80,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
     if (currentModule == null) {
       return true;
     }
-    if (n == currentModule.rootNode() && !currentModule.isModule()) {
-      // Only check inside modules.
-      return false;
-    }
+
     // Traverse nodes in preorder to collect `@template` parameter names before their use.
     visitNode(t, n, checkNotNull(currentModule));
     return true;
@@ -156,7 +165,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
   private void visitQualifiedName(
       NodeTraversal t,
       Node n,
-      ModuleMetadata currentModule,
+      ModuleMetadata currentFile,
       QualifiedName qualifiedName,
       boolean isStrongReference) {
     if (qualifiedName.isSimple() && templateParamNames.contains(qualifiedName.getRoot())) {
@@ -172,6 +181,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       // TODO(user): fix the remaining code involving xid and remove this workaround.
       return;
     }
+
     Var var = t.getScope().getVar(qualifiedName.getRoot());
     if (var != null && var.getScope().isLocal()) {
       // If the name refers to a nonexisting variable, the error will be caught elsewhere.
@@ -179,25 +189,55 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       // by the aliasing and destructuring forms of `goog.require` and `goog.requireType`.
       return;
     }
+
     // Look for the longest prefix match against a provided namespace.
-    while (qualifiedName != null) {
-      String namespace = qualifiedName.join();
+    for (QualifiedName subName = qualifiedName; subName != null; subName = subName.getOwner()) {
+      String namespace = subName.join();
       if (namespace.equals("goog.module")) {
         // We must special case `goog.module` because Closure Library provides a namespace with that
         // name, but it's (confusingly) unrelated to the `goog.module` primitive.
         return;
       }
-      ModuleMetadata module = moduleByNamespace.get(namespace);
-      if (module != null) {
-        // Do not report references to a namespace provided in the same file, but do not recurse
-        // into parent namespaces either.
-        // TODO(tjgq): Also check for these references.
-        if (module.rootNode() != currentModule.rootNode()) {
-          t.report(n, isStrongReference ? MISSING_REQUIRE : MISSING_REQUIRE_TYPE, namespace);
-        }
+
+      // Do not report references to a namespace provided in the same file, and do not recurse
+      // into parent namespaces either.
+      // TODO(tjgq): Also check for these references.
+      if (currentFile.googNamespaces().contains(namespace)) {
         return;
       }
-      qualifiedName = qualifiedName.getOwner();
+
+      ModuleMetadata requiredFile = moduleByNamespace.get(namespace);
+      if (requiredFile == null) {
+        continue;
+      }
+
+      final DiagnosticType toReport;
+      if (currentFile.isModule()) {
+        /**
+         * In files that represent modules, report a require without an alias the same as a totally
+         * missing require.
+         */
+        toReport = isStrongReference ? MISSING_REQUIRE : MISSING_REQUIRE_TYPE;
+      } else {
+        /**
+         * In files that aren't modules, report a qualified name reference only if there's no
+         * require to satisfy it.
+         */
+        if (currentFile.stronglyRequiredGoogNamespaces().contains(namespace)) {
+          return; // Strong requires always satisfy a reference.
+        } else if (!isStrongReference
+            && currentFile.weaklyRequiredGoogNamespaces().contains(namespace)) {
+          return; // Weak requires only satisfy a weak reference.
+        }
+
+        toReport =
+            isStrongReference
+                ? MISSING_REQUIRE_IN_PROVIDES_FILE
+                : MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE;
+      }
+
+      t.report(n, toReport, namespace);
+      return;
     }
   }
 }
