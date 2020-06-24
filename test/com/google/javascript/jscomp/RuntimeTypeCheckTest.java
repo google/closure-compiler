@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import javax.annotation.Nullable;
@@ -750,12 +751,12 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   private void testChecks(String js, String expected) {
     test(js, expected);
-    assertThat(getLastCompiler().injected).containsExactly("runtime_type_check");
+    assertThat(getLastCompiler().getInjected()).containsExactly("runtime_type_check");
   }
 
   private void testChecksSame(String js) {
     testSame(js);
-    assertThat(getLastCompiler().injected).containsExactly("runtime_type_check");
+    assertThat(getLastCompiler().getInjected()).containsExactly("runtime_type_check");
   }
 
   @Override

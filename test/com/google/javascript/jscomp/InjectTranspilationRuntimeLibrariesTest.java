@@ -19,7 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,11 +43,11 @@ public class InjectTranspilationRuntimeLibrariesTest {
         ImmutableList.of(SourceFile.fromCode("externs", "")),
         ImmutableList.of(SourceFile.fromCode("testcode", js)),
         options);
-    compiler.parseInputs();
+    compiler.parse();
     new InjectTranspilationRuntimeLibraries(compiler)
         .process(compiler.getExternsRoot(), compiler.getJsRoot());
 
-    return compiler.injected;
+    return compiler.getInjected();
   }
 
   @Test

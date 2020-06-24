@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -521,7 +521,8 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     assertThat(lastCompiler.getResult().errors).isEmpty();
     assertThat(lastCompiler.getResult().warnings).isEmpty();
-    assertThat(((NoninjectingCompiler) lastCompiler).injected).containsExactly("es6/array/values");
+    assertThat(((NoninjectingCompiler) lastCompiler).getInjected())
+        .containsExactly("es6/array/values");
   }
 
   @Test

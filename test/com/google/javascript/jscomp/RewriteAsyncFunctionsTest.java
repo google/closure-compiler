@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -104,7 +105,8 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
    * last compile.
    */
   private CodeSubTree findClassDefinition(String wantedClassName) {
-    return new CodeSubTree(getLastCompiler().getJsRoot()).findClassDefinition(wantedClassName);
+    return new CodeSubTree(getLastCompiler().getRoot().getSecondChild())
+        .findClassDefinition(wantedClassName);
   }
 
   /** Return a list of all Nodes matching the given predicate starting at the given root. */

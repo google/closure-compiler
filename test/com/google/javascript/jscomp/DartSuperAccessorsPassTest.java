@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,7 +82,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     checkConversionWithinMembers(
         "return super['prop']",
         "return $jscomp.superGet(this, 'prop')");
-    assertThat(getLastCompiler().injected).containsExactly("es6_dart_runtime");
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6_dart_runtime");
   }
 
   @Test

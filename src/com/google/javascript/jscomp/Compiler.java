@@ -2071,7 +2071,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private int syntheticCodeId = 0;
 
   @Override
-  Node parseSyntheticCode(String js) {
+  protected Node parseSyntheticCode(String js) {
     return parseSyntheticCode(" [synthetic:" + (++syntheticCodeId) + "] ", js);
   }
 
@@ -2494,12 +2494,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return indexProvider.get();
   }
 
-  Node getExternsRoot() {
+  protected Node getExternsRoot() {
     return externsRoot;
   }
 
   @Override
-  Node getJsRoot() {
+  protected Node getJsRoot() {
     return jsRoot;
   }
 
@@ -2923,12 +2923,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return null;
   }
 
-  //------------------------------------------------------------------------
-  // Package-private helpers
-  //------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
+  // Package-private and Protected helpers
+  // ------------------------------------------------------------------------
 
   @Override
-  Node getNodeForCodeInsertion(@Nullable JSModule module) {
+  protected Node getNodeForCodeInsertion(@Nullable JSModule module) {
     if (synthesizedCodeInput != null) {
       return synthesizedCodeInput.getAstRoot(this);
     }
@@ -3354,7 +3354,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  Node ensureLibraryInjected(String resourceName, boolean force) {
+  protected Node ensureLibraryInjected(String resourceName, boolean force) {
     boolean shouldInject =
         force || (!options.skipNonTranspilationPasses && !options.preventLibraryInjection);
     if (injectedLibraries.containsKey(resourceName) || !shouldInject) {

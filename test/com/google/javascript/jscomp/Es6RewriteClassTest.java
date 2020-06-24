@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -2499,7 +2500,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor */",
             "let C = function() {};",
             "C.prototype.foo = function*() { yield 1;};"));
-    assertThat(getLastCompiler().injected).isEmpty();
+    assertThat(getLastCompiler().getInjected()).isEmpty();
   }
 
   @Test

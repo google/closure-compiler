@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -78,7 +79,7 @@ public final class Es6ForOfConverterTest extends CompilerTestCase {
             "    console.log(i);",
             "  }",
             "}"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/makeiterator");
 
     // With simple assign instead of var declaration in bound variable.
     test(

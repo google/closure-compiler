@@ -24,7 +24,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -44,10 +43,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -885,8 +880,8 @@ public abstract class CompilerTestCase {
   /**
    * When comparing expected to actual, ignore nodes created through compiler.ensureLibraryInjected
    *
-   * <p>This differs from using a NonInjecting compiler in that the compiler still injects the
-   * polyfills when requested.
+   * <p>This differs from using a {@link com.google.javascript.jscomp.testing.NoninjectingCompiler}
+   * in that the compiler still injects the polyfills when requested.
    */
   protected final void disableCompareSyntheticCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
@@ -2167,44 +2162,6 @@ public abstract class CompilerTestCase {
     return null;
   }
 
-  /** A Compiler that records requested runtime libraries, rather than injecting. */
-  protected static class NoninjectingCompiler extends Compiler {
-
-    NoninjectingCompiler(ErrorManager em) {
-      super(em);
-    }
-
-    NoninjectingCompiler() {
-      super();
-    }
-
-    protected final Set<String> injected = new HashSet<>();
-
-    @Override
-    Node ensureLibraryInjected(String library, boolean force) {
-      injected.add(library);
-      return null;
-    }
-
-    @Override
-    @GwtIncompatible
-    public void saveState(OutputStream outputStream) throws IOException {
-      super.saveState(outputStream);
-      ObjectOutputStream out = new ObjectOutputStream(outputStream);
-      out.writeObject(injected);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @GwtIncompatible
-    public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {
-      super.restoreState(inputStream);
-      ObjectInputStream in = new ObjectInputStream(inputStream);
-      injected.clear();
-      injected.addAll((Set<String>) in.readObject());
-    }
-  }
-
   public static String lines(String line) {
     return line;
   }
@@ -2504,12 +2461,6 @@ public abstract class CompilerTestCase {
 
   protected interface Postcondition extends TestPart {
     void verify(Compiler compiler);
-  }
-
-  protected static Postcondition expectRuntimeLibraries(String... expected) {
-    return (compiler) -> {
-      assertThat(((NoninjectingCompiler) compiler).injected).containsExactlyElementsIn(expected);
-    };
   }
 
   private static Function<Node, String> createPrettyPrinter(Compiler compiler) {

@@ -20,6 +20,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,8 +84,8 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
       Node lastInjected = null;
 
       @Override
-      Node ensureLibraryInjected(String library, boolean force) {
-        if (injected.contains(library)) {
+      public Node ensureLibraryInjected(String library, boolean force) {
+        if (getInjected().contains(library)) {
           // already injected
           return lastInjected;
         } else {

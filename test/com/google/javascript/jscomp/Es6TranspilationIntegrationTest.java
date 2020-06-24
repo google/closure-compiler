@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -141,13 +142,13 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   @Test
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
-    assertThat(getLastCompiler().injected).isEmpty();
+    assertThat(getLastCompiler().getInjected()).isEmpty();
   }
 
   @Test
   public void testSpreadLibInjection() {
     test("var x = [...a];", "var x=[].concat($jscomp.arrayFromIterable(a))");
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6/util/arrayfromiterable");
   }
 
   @Test
@@ -155,7 +156,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
         "var x = {/** @return {number} */ a: function() { return 0; } };");
-    assertThat(getLastCompiler().injected).isEmpty();
+    assertThat(getLastCompiler().getInjected()).isEmpty();
   }
 
   @Test
@@ -444,7 +445,7 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " */",
             "var C = function() { D.apply(this, arguments); };",
             "$jscomp.inherits(C, D);"));
-    assertThat(getLastCompiler().injected)
+    assertThat(getLastCompiler().getInjected())
         .containsExactly("es6/util/inherits", "es6/util/construct", "es6/util/arrayfromiterable");
 
     test(
@@ -1842,10 +1843,10 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
   @Test
   public void testInitSymbol() {
     test("let a = alert(Symbol.thimble);", "var a = alert(Symbol.thimble)");
-    assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
 
     test("let a = alert(Symbol.iterator);", "var a = alert(Symbol.iterator)");
-    assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
+    assertThat(getLastCompiler().getInjected()).containsExactly("es6/symbol");
 
     test(
         lines(
