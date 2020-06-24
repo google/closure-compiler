@@ -1347,6 +1347,49 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testBigIntCompatibleBinaryOperator() {
+    assuming("b", BIGINT_TYPE);
+    assuming("B", BIGINT_OBJECT_TYPE);
+    assuming("n", NUMBER_TYPE);
+    assuming("bn", BIGINT_NUMBER);
+    assuming("s", STRING_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("ns", NUMBER_STRING);
+
+    inFunction(
+        lines(
+            "valueTypeWithSelf = b * b;",
+            "objectTypeWithSelf = B * B;",
+            "valueWithObject = b * B;",
+            "bigintWithNumber = b * n;",
+            "bigintNumberWithSelf = bn * bn;",
+            "bigintWithOther = b *s;",
+            "bigintWithUnknown = b * u;",
+            "bigintWithNumberString = b * ns;"));
+
+    verify("valueTypeWithSelf", BIGINT_TYPE);
+    verify("objectTypeWithSelf", BIGINT_TYPE);
+    verify("valueWithObject", BIGINT_TYPE);
+    verify("bigintWithNumber", NO_TYPE);
+    verify("bigintNumberWithSelf", BIGINT_NUMBER);
+    verify("bigintWithOther", NO_TYPE);
+    verify("bigintWithUnknown", NO_TYPE);
+    verify("bigintWithNumberString", NO_TYPE);
+  }
+
+  @Test
+  public void testUnsignedRightShiftWithBigInt() {
+    assuming("b", BIGINT_TYPE);
+    assuming("n", NUMBER_TYPE);
+
+    inFunction("bigintOnLeft = b >>> n; bigintOnRight = n >>> b; bigintOnBothSides = b >>> b;");
+
+    verify("bigintOnLeft", NO_TYPE);
+    verify("bigintOnRight", NO_TYPE);
+    verify("bigintOnBothSides", NO_TYPE);
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
     includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));

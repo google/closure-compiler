@@ -684,19 +684,22 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
         break;
 
-      case LSH:
-      case RSH:
-      case URSH:
-      case DIV:
-      case MOD:
       case BITAND:
       case BITXOR:
       case BITOR:
-      case MUL:
+      case LSH:
+      case RSH:
       case SUB:
+      case MUL:
+      case DIV:
+      case MOD:
       case EXPONENT:
-        scope = traverseChildren(n, scope);
-        n.setJSType(getNativeType(NUMBER_TYPE));
+        scope = traverseBigIntCompatibleBinaryOperator(n, scope);
+        break;
+
+      case URSH:
+        // >>> is not compatible with BigInt
+        scope = traverseUnsignedRightShift(n, scope);
         break;
 
       case COMMA:
@@ -890,6 +893,18 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   // types when the invocation target is such a name.
   private static final ImmutableSet<Token> TOKENS_ALLOWING_NULL_TYPES =
       ImmutableSet.of(Token.NAME, Token.CALL, Token.NEW);
+
+  private FlowScope traverseUnsignedRightShift(Node n, FlowScope scope) {
+    scope = traverseChildren(n, scope);
+    if (getBigIntPresence(getJSType(n.getFirstChild())) != BigIntPresence.NO_BIGINT
+        || getBigIntPresence(getJSType(n.getLastChild())) != BigIntPresence.NO_BIGINT) {
+      // The spec does not allow for BigInts in an unsigned right shift, so we will report an error
+      n.setJSType(getNativeType(NO_TYPE));
+    } else {
+      n.setJSType(getNativeType(NUMBER_TYPE));
+    }
+    return scope;
+  }
 
   private FlowScope traverseCall(Node callNode, FlowScope originalScope) {
     checkArgument(callNode.isCall() || callNode.isOptChainCall(), callNode);
