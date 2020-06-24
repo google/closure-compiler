@@ -358,6 +358,13 @@ jasmine.Spy.prototype.reset = function() {};
 jasmine.Spy.prototype.calls;
 
 
+/**
+ * @param {...*} var_args
+ * @return {!jasmine.Spy}
+ */
+jasmine.Spy.prototype.withArgs = function(...var_args) {};
+
+
 
 /**
  * @constructor
