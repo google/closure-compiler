@@ -1306,6 +1306,47 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testAdditionWithBigInt() {
+    assuming("b", BIGINT_TYPE);
+    assuming("B", BIGINT_OBJECT_TYPE);
+    assuming("n", NUMBER_TYPE);
+    assuming("bn", BIGINT_NUMBER);
+    assuming("bs", createUnionType(BIGINT_TYPE, STRING_TYPE));
+    assuming("s", STRING_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("ns", NUMBER_STRING);
+
+    inFunction(
+        lines(
+            "valueTypePlusSelf = b + b;",
+            "objectTypePlusSelf = B + B;",
+            "valuePlusObject = b + B;",
+            "bigintPlusNumber = b + n;",
+            "bigintNumberPlusSelf = bn + bn;",
+            "bigintStringConcat = b + s;",
+            "bigintNumberStringConcat = bn + s",
+            "bigintOtherStringConcat = bs + s",
+            "bigintStringConcatWithSelf = bs + bs",
+            "bigintPlusUnknown = b + u;",
+            "bigintPlusNumberString = b + ns;"));
+
+    verify("valueTypePlusSelf", BIGINT_TYPE);
+    verify("objectTypePlusSelf", BIGINT_TYPE);
+    verify("valuePlusObject", BIGINT_TYPE);
+    verify("bigintPlusNumber", NO_TYPE);
+    verify("bigintNumberPlusSelf", BIGINT_NUMBER);
+    verify("bigintStringConcat", STRING_TYPE);
+    verify("bigintNumberStringConcat", STRING_TYPE);
+    verify("bigintOtherStringConcat", STRING_TYPE);
+    // In reality if you use '+' on 2 bigint|string operands, then the result will be bigint|string.
+    // However, code that does that is almost certainly wrong and we should complain about it.
+    // It also keeps the TypeInference logic simpler if we pretend this operation is an error.
+    verify("bigintStringConcatWithSelf", NO_TYPE);
+    verify("bigintPlusUnknown", NO_TYPE);
+    verify("bigintPlusNumberString", NO_TYPE);
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
     includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));

@@ -27,6 +27,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
@@ -657,7 +658,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case BITNOT:
       case DEC:
       case INC:
-        scope = traverseUnaryNumericOperation(n, scope);
+        scope = traverseBigIntCompatibleUnaryOperator(n, scope);
         break;
 
       case ARRAYLIT:
@@ -1548,8 +1549,8 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     return scope;
   }
 
-  /** Traverse unary minus and bitwise NOT */
-  private FlowScope traverseUnaryNumericOperation(Node n, FlowScope scope) {
+  /** Traverse unary minus, bitwise NOT, increment, and decrement */
+  private FlowScope traverseBigIntCompatibleUnaryOperator(Node n, FlowScope scope) {
     scope = traverseChildren(n, scope); // Find types.
     switch (getBigIntPresence(getJSType(n.getFirstChild()))) { // BigIntPresence in operand
       case ALL_BIGINT:
@@ -1562,6 +1563,36 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case BIGINT_OR_OTHER:
         n.setJSType(getNativeType(BIGINT_NUMBER));
         break;
+    }
+    return scope;
+  }
+
+  /** Traverse all binary numeric operations (except for URSH and string concatenation with ADD) */
+  private FlowScope traverseBigIntCompatibleBinaryOperator(Node n, FlowScope scope) {
+    scope = traverseChildren(n, scope); // Find types.
+    BigIntPresence leftBigIntPresence = getBigIntPresence(getJSType(n.getFirstChild()));
+    BigIntPresence rightBigIntPresence = getBigIntPresence(getJSType(n.getLastChild()));
+    if (leftBigIntPresence != rightBigIntPresence) {
+      // disallowed mixture of bigint and non-bigint operands
+      n.setJSType(getNativeType(NO_TYPE));
+    } else {
+      switch (leftBigIntPresence) {
+        case NO_BIGINT:
+          n.setJSType(getNativeType(NUMBER_TYPE));
+          break;
+        case ALL_BIGINT:
+          n.setJSType(getNativeType(BIGINT_TYPE));
+          break;
+        case BIGINT_OR_NUMBER:
+          n.setJSType(getNativeType(BIGINT_NUMBER));
+          break;
+        case BIGINT_OR_OTHER:
+          // In the case of arithmetic operations, BigInts are only compatible with other BigInts.
+          // So if bigint is in a union with anything but number (and even then they both have to be
+          // {bigint|number}), then an error is reported.
+          n.setJSType(getNativeType(NO_TYPE));
+          break;
+      }
     }
     return scope;
   }
@@ -1660,17 +1691,17 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     if (leftType != null && rightType != null) {
       boolean leftIsUnknown = leftType.isUnknownType();
       boolean rightIsUnknown = rightType.isUnknownType();
-      if (leftIsUnknown && rightIsUnknown) {
-        type = unknownType;
-      } else if ((!leftIsUnknown && leftType.isString())
-          || (!rightIsUnknown && rightType.isString())) {
+      if ((!leftIsUnknown && leftType.isString()) || (!rightIsUnknown && rightType.isString())) {
         type = getNativeType(STRING_TYPE);
+      } else if (getBigIntPresence(leftType) != BigIntPresence.NO_BIGINT
+          || getBigIntPresence(rightType) != BigIntPresence.NO_BIGINT) {
+        return traverseBigIntCompatibleBinaryOperator(n, scope);
       } else if (leftIsUnknown || rightIsUnknown) {
         type = unknownType;
       } else if (isAddedAsNumber(leftType) && isAddedAsNumber(rightType)) {
         type = getNativeType(NUMBER_TYPE);
       } else {
-        type = registry.createUnionType(STRING_TYPE, NUMBER_TYPE);
+        type = getNativeType(NUMBER_STRING);
       }
     }
     n.setJSType(type);
