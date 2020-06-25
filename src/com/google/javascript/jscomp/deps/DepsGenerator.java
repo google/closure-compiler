@@ -19,10 +19,8 @@ package com.google.javascript.jscomp.deps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -96,10 +94,6 @@ public class DepsGenerator {
   static final DiagnosticType MULTIPLE_PROVIDES_ERROR = DiagnosticType.error(
       "DEPS_DUPE_PROVIDES",
       "Namespace \"{0}\" is already provided in other file {1}");
-
-  static final DiagnosticType DUPE_REQUIRE_WARNING = DiagnosticType.warning(
-      "DEPS_DUPE_REQUIRES",
-      "Namespace \"{0}\" is required multiple times");
 
   static final DiagnosticType NO_DEPS_WARNING = DiagnosticType.warning(
       "DEPS_NO_DEPS",
@@ -272,13 +266,6 @@ public class DepsGenerator {
     addToProvideMap(parsedFileDependencies, providesMap, false);
     // For each require in the parsed sources:
     for (DependencyInfo depInfo : parsedFileDependencies) {
-      Multiset<String> symbols = ImmutableMultiset.copyOf(depInfo.getRequiredSymbols());
-      for (String symbol : symbols.elementSet()) {
-        if (symbols.count(symbol) > 1) {
-          reportDuplicateRequire(symbol, depInfo);
-        }
-      }
-
       for (Require require : depInfo.getRequires()) {
         String namespace = require.getSymbol();
         // Check for missing provides.
@@ -347,13 +334,6 @@ public class DepsGenerator {
           JSError.make(secondDep.getName(), -1, -1,
               MULTIPLE_PROVIDES_ERROR, namespace, firstDep.getName()));
     }
-  }
-
-  private void reportDuplicateRequire(
-      String namespace, DependencyInfo depInfo) {
-    errorManager.report(CheckLevel.WARNING,
-        JSError.make(depInfo.getName(), -1, -1,
-            DUPE_REQUIRE_WARNING, namespace));
   }
 
   private void reportNoDepsInDepsFile(String filePath) {

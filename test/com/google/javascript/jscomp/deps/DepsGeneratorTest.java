@@ -547,18 +547,6 @@ public final class DepsGeneratorTest {
   }
 
   @Test
-  public void testDuplicateRequire() throws Exception {
-    SourceFile dep1 = SourceFile.fromCode("dep1.js",
-        "goog.addDependency('a.js', ['a'], []);\n");
-    SourceFile src1 =
-        SourceFile.fromCode(
-            "src1.js", LINE_JOINER.join("goog.require('a');", "goog.require('a');", ""));
-
-    doErrorMessagesRun(ImmutableList.of(dep1), ImmutableList.of(src1), false /* fatal */,
-        "Namespace \"a\" is required multiple times");
-  }
-
-  @Test
   public void testSameFileProvideRequire() throws Exception {
     SourceFile dep1 = SourceFile.fromCode("dep1.js",
         "goog.addDependency('a.js', ['a'], []);\n");
