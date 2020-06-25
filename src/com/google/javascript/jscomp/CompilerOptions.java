@@ -1612,18 +1612,6 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * The emergency fail safe removes all strict and ERROR-escalating
-   * warnings guards.
-   */
-  void useEmergencyFailSafe() {
-    this.warningsGuard = this.warningsGuard.makeEmergencyFailSafeGuard();
-  }
-
-  void useNonStrictWarningsGuard() {
-    this.warningsGuard = this.warningsGuard.makeNonStrict();
-  }
-
-  /**
    * Add a guard to the set of warnings guards.
    */
   public void addWarningsGuard(WarningsGuard guard) {

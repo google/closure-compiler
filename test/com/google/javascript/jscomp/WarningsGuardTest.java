@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
@@ -271,40 +270,6 @@ public final class WarningsGuardTest {
   }
 
   @Test
-  public void testEmergencyComposeGuard1() {
-    ComposeWarningsGuard guard = new ComposeWarningsGuard();
-    guard.addGuard(new StrictWarningsGuard());
-    assertThat(guard.level(makeErrorWithLevel(WARNING))).isEqualTo(ERROR);
-    assertThat(guard.makeEmergencyFailSafeGuard().level(makeErrorWithLevel(WARNING)))
-        .isEqualTo(WARNING);
-  }
-
-  @Test
-  public void testEmergencyComposeGuard2() {
-    ComposeWarningsGuard guard = new ComposeWarningsGuard();
-    guard.addGuard(
-        new DiagnosticGroupWarningsGuard(
-            DiagnosticGroups.ACCESS_CONTROLS, ERROR));
-    assertThat(guard.level(makeErrorWithType(VISIBILITY_MISMATCH))).isEqualTo(ERROR);
-    assertThat(guard.makeEmergencyFailSafeGuard().level(makeErrorWithType(VISIBILITY_MISMATCH)))
-        .isEqualTo(WARNING);
-  }
-
-  @Test
-  public void testEmergencyComposeGuard3() {
-    ComposeWarningsGuard guard = new ComposeWarningsGuard();
-    guard.addGuard(
-        new DiagnosticGroupWarningsGuard(
-            DiagnosticGroups.ACCESS_CONTROLS, ERROR));
-    guard.addGuard(
-        new DiagnosticGroupWarningsGuard(
-            DiagnosticGroups.ACCESS_CONTROLS, OFF));
-    assertThat(guard.level(makeErrorWithType(VISIBILITY_MISMATCH))).isEqualTo(OFF);
-    assertThat(guard.makeEmergencyFailSafeGuard().level(makeErrorWithType(VISIBILITY_MISMATCH)))
-        .isEqualTo(OFF);
-  }
-
-  @Test
   public void testDiagnosticGuard1() {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, ERROR);
@@ -523,18 +488,5 @@ public final class WarningsGuardTest {
 
   private static JSError makeError(String sourcePath, int lineno) {
     return JSError.make(sourcePath, lineno, -1, BAR_WARNING);
-  }
-
-  private static JSError makeErrorWithType(DiagnosticType type) {
-    Node n = new Node(Token.EMPTY);
-    n.setSourceFileForTesting("input");
-    return JSError.make(n, type);
-  }
-
-  private static JSError makeErrorWithLevel(CheckLevel level) {
-    Node n = new Node(Token.EMPTY);
-    n.setSourceFileForTesting("input");
-    return JSError.make(n,
-        DiagnosticType.make("FOO", level, "Foo description"));
   }
 }

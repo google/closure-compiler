@@ -3280,19 +3280,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testStrictWarningsGuardEmergencyMode() {
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckTypes(true);
-    options.addWarningsGuard(new StrictWarningsGuard());
-    options.useEmergencyFailSafe();
-
-    Compiler compiler = compile(options,
-        "/** @return {number} */ function f() { return true; }");
-    assertThat(compiler.getErrors()).isEmpty();
-    assertThat(compiler.getWarnings()).hasSize(1);
-  }
-
-  @Test
   public void testCheckConstants1() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;

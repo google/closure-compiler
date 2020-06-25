@@ -37,10 +37,4 @@ public final class StrictWarningsGuard extends WarningsGuard {
   protected int getPriority() {
     return WarningsGuard.Priority.STRICT.value; // applied last
   }
-
-  @Override
-  protected WarningsGuard makeNonStrict() {
-    throw new UnsupportedOperationException(
-        "Cannot make a StrictWarningsGuard non-strict");
-  }
 }

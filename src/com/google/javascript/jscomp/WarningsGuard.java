@@ -97,14 +97,6 @@ public abstract class WarningsGuard implements Serializable {
     return false;
   }
 
-  /**
-   * Make a warnings guard that's the same as this one but with
-   * all escalating guards turned down.
-   */
-  protected WarningsGuard makeNonStrict() {
-    return this;
-  }
-
   enum DiagnosticGroupState {
     ON,
     OFF,
