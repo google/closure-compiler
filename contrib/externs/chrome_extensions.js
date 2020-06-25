@@ -8104,11 +8104,23 @@ ProxyConfig.prototype.mode;
  * Listener will receive an object that maps each key to its StorageChange,
  * and the namespace ("sync" or "local") of the storage area the changes
  * are for.
- * @see https://developer.chrome.com/extensions/storage.html
+ * @see https://developer.chrome.com/extensions/storage#event-onChanged
  * @interface
  * @extends {ChromeBaseEvent<function(!Object<string, !StorageChange>, string)>}
  */
 function StorageChangeEvent() {}
+
+
+/**
+ * The event listener for StorageArea receives an Object mapping each
+ * key that changed to its corresponding StorageChange for that item.
+ *
+ * Listener will receive an object that maps each key to its StorageChange.
+ * @see https://developer.chrome.com/extensions/storage#type-StorageArea
+ * @interface
+ * @extends {ChromeBaseEvent<function(!Object<string, !StorageChange>)>}
+ */
+function StorageAreaChangeEvent() {}
 
 
 /**
@@ -8185,6 +8197,12 @@ StorageArea.prototype.remove = function(keys, opt_callback) {};
  */
 StorageArea.prototype.clear = function(opt_callback) {};
 
+
+/**
+ * Fired when one or more items change.
+ * @type {!StorageAreaChangeEvent}
+ */
+StorageArea.prototype.onChanged;
 
 
 /**
