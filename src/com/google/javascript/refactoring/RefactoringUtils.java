@@ -33,7 +33,9 @@ public class RefactoringUtils {
     Node child = script.getFirstChild();
     while (child != null) {
       if (NodeUtil.isExprCall(child)) {
-        if (Matchers.googRequire().matches(child.getFirstChild(), metadata)) {
+        Node firstChild = child.getFirstChild();
+        if (Matchers.googRequire().matches(firstChild, metadata)
+            || Matchers.googModuleOrProvide().matches(firstChild, metadata)) {
           return true;
         }
         // goog.require or goog.module.
