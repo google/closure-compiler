@@ -2201,18 +2201,27 @@ public final class JsDocInfoParser {
       return null;
     }
 
+    final int startLineno = stream.getLineno();
+    final int startCharno = stream.getCharno();
+    final int startOffset = stream.getCursor() - stream.getString().length();
+
     String typeName = stream.getString();
-    int lineno = stream.getLineno();
-    int charno = stream.getCharno();
+    int endOffset = stream.getCursor();
     while (match(JsDocToken.EOL) && typeName.endsWith(".")) {
       skipEOLs();
       if (match(JsDocToken.STRING)) {
         next();
+        endOffset = stream.getCursor();
         typeName += stream.getString();
       }
     }
 
-    return newStringNode(typeName, lineno, charno);
+    // What we're doing by concatenating these tokens is really hacky. We want that to be obvious.
+    Node str = newStringNode(typeName);
+    str.setLineno(startLineno);
+    str.setCharno(startCharno);
+    str.setLength(endOffset - startOffset);
+    return str;
   }
 
   /**
@@ -2635,11 +2644,7 @@ public final class JsDocInfoParser {
   }
 
   private Node newStringNode(String s) {
-    return newStringNode(s, stream.getLineno(), stream.getCharno());
-  }
-
-  private Node newStringNode(String s, int lineno, int charno) {
-    Node n = Node.newString(s, lineno, charno).clonePropsFrom(templateNode);
+    Node n = Node.newString(s, stream.getLineno(), stream.getCharno()).clonePropsFrom(templateNode);
     n.setLength(s.length());
     return n;
   }

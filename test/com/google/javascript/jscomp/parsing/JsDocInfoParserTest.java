@@ -878,6 +878,48 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNode(fooNode).hasLineno(1);
   }
 
+  @Test
+  public void testTypenameSourceInfo_simpleName() {
+    Node node = parse("@type {Foo} */").getType().getRoot();
+    assertNode(node).hasToken(Token.STRING);
+    assertThat(node.getLineno()).isEqualTo(0);
+    assertThat(node.getCharno()).isEqualTo(7);
+    assertThat(node.getLength()).isEqualTo(3);
+  }
+
+  @Test
+  public void testTypenameSourceInfo_qualifiedName() {
+    Node node = parse("@type {bar.baz.Foo} */").getType().getRoot();
+    assertNode(node).hasToken(Token.STRING);
+    assertThat(node.getLineno()).isEqualTo(0);
+    assertThat(node.getCharno()).isEqualTo(7);
+    assertThat(node.getLength()).isEqualTo(11);
+  }
+
+  @Test
+  public void testTypenameSourceInfo_qualifiedName_multiline() {
+    Node node = parse(lines("@type {bar.", "       baz.Foo} */")).getType().getRoot();
+    assertNode(node).hasToken(Token.STRING);
+    assertThat(node.getLineno()).isEqualTo(0);
+    assertThat(node.getCharno()).isEqualTo(7);
+    assertThat(node.getLength()).isEqualTo(19); // Including newline and spaces.
+  }
+
+  @Test
+  public void testTypenameSourceInfo_qualifiedName_leadingWhitespace() {
+    Node node =
+        parse(
+                lines(
+                    "@type {", //
+                    "    Foo} */"))
+            .getType()
+            .getRoot();
+    assertNode(node).hasToken(Token.STRING);
+    assertThat(node.getLineno()).isEqualTo(1);
+    assertThat(node.getCharno()).isEqualTo(4);
+    assertThat(node.getLength()).isEqualTo(3);
+  }
+
   private JSType testParseType(String type) {
     return testParseType(type, type);
   }
