@@ -793,6 +793,7 @@ public final class SuggestedFix {
       CompilerOptions compilerOptions = new CompilerOptions();
       compilerOptions.setPreferSingleQuotes(true);
       compilerOptions.setUseOriginalNamesInOutput(true);
+      compilerOptions.setPreserveNonJSDocComments(true);
       // We're refactoring existing code, so no need to escape values inside strings.
       compilerOptions.setTrustedStrings(true);
       return new CodePrinter.Builder(node)
