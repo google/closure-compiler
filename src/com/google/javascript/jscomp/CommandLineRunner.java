@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
+import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DependencyOptions.DependencyMode;
@@ -851,6 +852,17 @@ public class CommandLineRunner extends
     )
     private boolean helpMarkdown = false;
 
+    @Option(
+        name = "--instrument_code",
+        usage =
+            "Enable code instrumentation to perform code coverage analysis. Options are:\n"
+                + " 1. NONE (deault)\n"
+                + " 2. LINE - Instrument code by line.\n"
+                + " 3. BRANCH - Instrument code by branch.\n")
+    private String instrumentCode = "NONE";
+
+    private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
@@ -869,6 +881,11 @@ public class CommandLineRunner extends
       if (compilationLevelParsed == null) {
         throw new CmdLineException(
             parser, "Bad value for --compilation_level: " + compilationLevel);
+      }
+
+      instrumentCodeParsed = InstrumentOption.fromString(Ascii.toUpperCase(instrumentCode));
+      if (instrumentCodeParsed == null) {
+        throw new CmdLineException(parser, "Bad value for --instrument_code: " + instrumentCode);
       }
     }
 
@@ -1910,6 +1927,8 @@ public class CommandLineRunner extends
       options.setVariableRenaming(VariableRenamingPolicy.OFF);
       options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     }
+
+    options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
 
     return options;
   }
