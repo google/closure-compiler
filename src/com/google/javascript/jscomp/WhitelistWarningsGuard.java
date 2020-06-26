@@ -119,7 +119,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
 
   @Override
   public int getPriority() {
-    return WarningsGuard.Priority.SUPPRESS_BY_WHITELIST.getValue();
+    return WarningsGuard.Priority.SUPPRESS_BY_ALLOWLIST.getValue();
   }
 
   /** Creates a warnings guard from a file. */

@@ -40,7 +40,7 @@ public abstract class WarningsGuard implements Serializable {
     MIN(100),
     STRICT(100),
     DEFAULT(50),
-    SUPPRESS_BY_WHITELIST(40),
+    SUPPRESS_BY_ALLOWLIST(40),
     SUPPRESS_DOC(20),
     FILTER_BY_PATH(1);
 
