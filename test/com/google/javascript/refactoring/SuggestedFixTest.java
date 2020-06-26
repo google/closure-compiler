@@ -1102,6 +1102,33 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testAddRequireTypeModule() {
+    String input =
+        lines(
+            "goog.module('js.Foo');", //
+            "",
+            "/** @private */",
+            "function foo_() {",
+            "}");
+    String expected =
+        lines(
+            "goog.module('js.Foo');",
+            "const Bar = goog.requireType('b.Bar');",
+            "",
+            "/** @private */",
+            "function foo_() {",
+            "}");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    ScriptMetadata scriptMetadata = ScriptMetadata.create(root, compiler);
+
+    SuggestedFix fix =
+        new SuggestedFix.Builder().addGoogRequireType(match, "b.Bar", scriptMetadata).build();
+    assertChanges(fix, "", input, expected);
+  }
+
+  @Test
   public void testAddRequireModule_requireTypeAlreadyExists() {
     String input =
         lines(

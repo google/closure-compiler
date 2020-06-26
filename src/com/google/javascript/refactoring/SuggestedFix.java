@@ -51,6 +51,10 @@ import javax.annotation.Nullable;
  * functions.
  */
 public final class SuggestedFix {
+  static enum ImportType {
+    REQUIRE,
+    REQUIRE_TYPE;
+  }
 
   private final MatchedNodeInfo matchedNodeInfo;
   // Multimap of filename to a modification to that file.
@@ -601,8 +605,41 @@ public final class SuggestedFix {
       return this;
     }
 
-    /** Adds a goog.require for the given namespace to the file if it does not already exist. */
+    private static Node createImportNode(
+        ImportType importType, @Nullable String alias, String namespace) {
+      final String requireFlavor;
+      switch (importType) {
+        case REQUIRE:
+          requireFlavor = "require";
+          break;
+        case REQUIRE_TYPE:
+          requireFlavor = "requireType";
+          break;
+        default:
+          throw new AssertionError();
+      }
+
+      Node callNode =
+          IR.call(IR.getprop(IR.name("goog"), IR.string(requireFlavor)), IR.string(namespace));
+
+      if (alias != null) {
+        return IR.constNode(IR.name(alias), callNode);
+      } else {
+        return IR.exprResult(callNode);
+      }
+    }
+
     public Builder addGoogRequire(Match m, String namespace, ScriptMetadata scriptMetadata) {
+      return addImport(m, namespace, ImportType.REQUIRE, scriptMetadata);
+    }
+
+    public Builder addGoogRequireType(Match m, String namespace, ScriptMetadata scriptMetadata) {
+      return addImport(m, namespace, ImportType.REQUIRE_TYPE, scriptMetadata);
+    }
+
+    /** Adds a goog.require/requireType for the given namespace if it does not already exist. */
+    public Builder addImport(
+        Match m, String namespace, ImportType importType, ScriptMetadata scriptMetadata) {
       final String alias;
       if (scriptMetadata.supportsRequireAliases()) {
         String existingAlias = scriptMetadata.getAlias(namespace);
@@ -625,6 +662,7 @@ public final class SuggestedFix {
                   .findFirst()
                   .orElseThrow(AssertionError::new);
         }
+        scriptMetadata.addAlias(namespace, alias);
       } else {
         alias = null;
       }
@@ -649,17 +687,6 @@ public final class SuggestedFix {
       Node script = scriptMetadata.getScript();
       if (script.getFirstChild().isModuleBody()) {
         script = script.getFirstChild();
-      }
-
-      Node googRequireNode = IR.call(
-          IR.getprop(IR.name("goog"), IR.string("require")),
-          IR.string(namespace));
-
-      if (alias != null) {
-        googRequireNode = IR.constNode(IR.name(alias), googRequireNode);
-        scriptMetadata.addAlias(namespace, alias);
-      } else {
-        googRequireNode = IR.exprResult(googRequireNode);
       }
 
       Node lastModuleOrProvideNode = null;
@@ -700,6 +727,8 @@ public final class SuggestedFix {
         }
         child = child.getNext();
       }
+
+      Node newImportNode = createImportNode(importType, alias, namespace);
       if (nodeToInsertBefore == null) {
         // The file has goog.provide or goog.require nodes but they come before
         // the new goog.require node alphabetically.
@@ -713,7 +742,7 @@ public final class SuggestedFix {
               CodeReplacement.create(
                   startPosition,
                   0,
-                  generateCode(m.getMetadata().getCompiler(), googRequireNode),
+                  generateCode(m.getMetadata().getCompiler(), newImportNode),
                   namespace));
           return this;
         } else {
@@ -724,14 +753,14 @@ public final class SuggestedFix {
             replacements.put(
                 script.getSourceFileName(),
                 CodeReplacement.create(
-                    0, 0, generateCode(m.getMetadata().getCompiler(), googRequireNode), namespace));
+                    0, 0, generateCode(m.getMetadata().getCompiler(), newImportNode), namespace));
             return this;
           }
         }
       }
 
       return insertBefore(
-          nodeToInsertBefore, googRequireNode, m.getMetadata().getCompiler(), namespace);
+          nodeToInsertBefore, newImportNode, m.getMetadata().getCompiler(), namespace);
     }
 
     /**

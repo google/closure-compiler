@@ -1707,6 +1707,23 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testMissingRequireTypeInGoogModule_atType_qname() {
+    preexistingCode = "goog.provide('world.util.Animal');";
+    assertChanges(
+        lines(
+            "goog.module('m');", //
+            "",
+            "/** @type {?world.util.Animal} */",
+            "let x = null;"),
+        lines(
+            "goog.module('m');",
+            "const Animal = goog.requireType('world.util.Animal');",
+            "",
+            "/** @type {?Animal} */",
+            "let x = null;"));
+  }
+
+  @Test
   public void testMissingRequireInGoogModule_googString() {
     preexistingCode = "goog.provide('goog.string');";
     assertChanges(

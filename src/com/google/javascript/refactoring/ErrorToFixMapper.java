@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.lint.CheckProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckRequiresSorted;
+import com.google.javascript.refactoring.SuggestedFix.ImportType;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -110,10 +111,10 @@ public final class ErrorToFixMapper {
         return getFixForInvalidSuper(error);
       case "JSC_MISSING_REQUIRE":
       case "JSC_MISSING_REQUIRE_IN_PROVIDES_FILE":
-        return getFixForMissingRequire(error);
+        return getFixForMissingRequire(error, ImportType.REQUIRE);
       case "JSC_MISSING_REQUIRE_TYPE":
-        // Adding a requireType is not (yet) supported, but should be
-        return null;
+      case "JSC_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE":
+        return getFixForMissingRequire(error, ImportType.REQUIRE_TYPE);
       case "JSC_EXTRA_REQUIRE_WARNING":
         return getFixForExtraRequire(error);
       case "JSC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME":
@@ -334,7 +335,7 @@ public final class ErrorToFixMapper {
     return null;
   }
 
-  private SuggestedFix getFixForMissingRequire(JSError error) {
+  private SuggestedFix getFixForMissingRequire(JSError error, ImportType importType) {
     Matcher regexMatcher = MISSING_REQUIRE.matcher(error.getDescription());
     checkState(regexMatcher.matches(), "Unexpected error description: %s", error.getDescription());
     String namespaceToRequire = regexMatcher.group(1);
@@ -358,7 +359,7 @@ public final class ErrorToFixMapper {
     SuggestedFix.Builder fix =
         new SuggestedFix.Builder()
             .attachMatchedNodeInfo(error.getNode(), compiler)
-            .addGoogRequire(match, namespaceToRequire, scriptMetadata);
+            .addImport(match, namespaceToRequire, importType, scriptMetadata);
 
     String alias = scriptMetadata.getAlias(namespaceToRequire);
     if (alias != null) {
