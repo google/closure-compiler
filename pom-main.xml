@@ -278,7 +278,8 @@
             <exclude>**/super-gwt/**</exclude>
             <exclude>**/super/**</exclude>
             <exclude>**/testing/**</exclude>
-            <exclude>**/webservice/**</exclude>
+	    <exclude>**/webservice/**</exclude>
+	    <exclude>**/super-j2cl/**</exclude>
           </excludes>
         </configuration>
       </plugin>

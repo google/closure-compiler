@@ -23,7 +23,7 @@
   <inherits name="com.google.re2j.RE2J"/>
   <inherits name="elemental2.core.Core"/>
   <source path="debugging/sourcemap"/>
-  <source path="javascript/jscomp" excludes=".svn,.git,**/ant/**,**/refactoring/**,**/webservice/**,**/testing/**,**/transpile/**,**/linker/**,**/j2cl/**"/>
+  <source path="javascript/jscomp" excludes=".svn,.git,**/ant/**,**/refactoring/**,**/webservice/**,**/testing/**,**/transpile/**,**/linker/**,**/j2cl/**,**/super-j2cl/**"/>
   <source path="javascript/rhino" excludes=".svn,.git,**/testing/**"/>
   <super-source path="javascript/jscomp/gwt/super"/>
   <super-source path="javascript/jscomp/resources/super-gwt"/>

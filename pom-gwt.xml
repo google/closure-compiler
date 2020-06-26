@@ -288,7 +288,8 @@
             <exclude>**/super-gwt/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/transpile/**</exclude>
-            <exclude>**/webservice/**</exclude>
+	    <exclude>**/webservice/**</exclude>
+	    <exclude>**/super-j2cl/**</exclude>
           </excludes>
           <testExcludes>
             <testExclude>**/bundle/**</testExclude>
