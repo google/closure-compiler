@@ -167,15 +167,57 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoWarning_missingRequire_underlappingProvide() throws Exception {
+  public void testWarning_missingRequire_strongRef_withRequireType() throws Exception {
     checkRequireInProvidesFileWarning(
         "a.b.C",
+        lines(
+            "goog.provide('a.b.C');", //
+            "",
+            "/** @constructor */",
+            "a.b.C = function() { };"),
+        lines(
+            "goog.requireType('a.b.C');", //
+            "",
+            "new a.b.C;"));
+  }
+
+  @Test
+  public void testNoWarning_missingRequire_withParentRequire_fromSameFile() throws Exception {
+    checkNoWarning(
         lines(
             "goog.provide('a.b');", //
             "goog.provide('a.b.C');"),
         lines(
             "goog.require('a.b');", //
-            "goog.requireType('a.b.C');",
+            "",
+            "new a.b.C;"));
+  }
+
+  @Test
+  public void testWarning_missingRequire_withSiblingRequire_fromSameFile() throws Exception {
+    checkRequireInProvidesFileWarning(
+        "a.b.D",
+        lines(
+            "goog.provide('a.b');",
+            "goog.provide('a.b.C');", //
+            "goog.provide('a.b.D');"),
+        lines(
+            "goog.require('a.b.C');", //
+            "",
+            "new a.b.D;"));
+  }
+
+  @Test
+  public void testWarning_missingRequire_withParentRequire_fromDifferentFile() throws Exception {
+    checkRequireInProvidesFileWarning(
+        "a.b.C",
+        lines("goog.provide('a.b');"),
+        lines(
+            "goog.require('a.b');", //
+            "goog.provide('a.b.C');"),
+        lines(
+            "goog.require('a.b');", //
+            "",
             "new a.b.C;"));
   }
 

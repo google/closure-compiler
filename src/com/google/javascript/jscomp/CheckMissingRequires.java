@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
@@ -27,6 +28,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
 import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /** A pass to detect references to fully qualified Closure namespaces. */
@@ -218,26 +220,49 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
          * missing require.
          */
         toReport = isStrongReference ? MISSING_REQUIRE : MISSING_REQUIRE_TYPE;
-      } else {
+      } else if (!hasAcceptableRequire(currentFile, subName, requiredFile, isStrongReference)) {
         /**
          * In files that aren't modules, report a qualified name reference only if there's no
          * require to satisfy it.
          */
-        if (currentFile.stronglyRequiredGoogNamespaces().contains(namespace)) {
-          return; // Strong requires always satisfy a reference.
-        } else if (!isStrongReference
-            && currentFile.weaklyRequiredGoogNamespaces().contains(namespace)) {
-          return; // Weak requires only satisfy a weak reference.
-        }
-
         toReport =
             isStrongReference
                 ? MISSING_REQUIRE_IN_PROVIDES_FILE
                 : MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE;
+      } else {
+        return;
       }
 
       t.report(n, toReport, namespace);
       return;
     }
+  }
+
+  /**
+   * Does `rdep` contain an acceptable require for `namespace` from `dep`?
+   *
+   * <p>Any require for a parent of `namespace` from `rdep` onto `dep`, which declares that parent,
+   * is sufficient. This constraint still ensures correct dependency ordering.
+   *
+   * <p>We loosen the check in this way because we want to make it easy to migrate multi-provide
+   * files into modules. That includes deleting obsolete provides and splitting provides into
+   * different files.
+   */
+  private static boolean hasAcceptableRequire(
+      ModuleMetadata rdep, QualifiedName namespace, ModuleMetadata dep, boolean isStrongReference) {
+    Set<String> acceptableRequires = rdep.stronglyRequiredGoogNamespaces().elementSet();
+    if (!isStrongReference) {
+      acceptableRequires =
+          Sets.union(acceptableRequires, rdep.weaklyRequiredGoogNamespaces().elementSet());
+    }
+    acceptableRequires = Sets.intersection(acceptableRequires, dep.googNamespaces().elementSet());
+
+    for (QualifiedName parent = namespace; parent != null; parent = parent.getOwner()) {
+      if (acceptableRequires.contains(parent.join())) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
