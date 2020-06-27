@@ -671,7 +671,6 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
       case ASSIGN_LSH:
       case ASSIGN_RSH:
-      case ASSIGN_URSH:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case ASSIGN_BITAND:
@@ -680,8 +679,12 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case ASSIGN_MUL:
       case ASSIGN_SUB:
       case ASSIGN_EXPONENT:
-        scope = traverseAssignOp(n, scope, getNativeType(NUMBER_TYPE));
+        scope = traverseAssignOp(n, scope);
+        break;
 
+      case ASSIGN_URSH:
+        // >>> is not compatible with BigInt
+        scope = traverseAssignUnsignedRightShift(n, scope);
         break;
 
       case BITAND:
@@ -906,6 +909,13 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     return scope;
   }
 
+  private FlowScope traverseAssignUnsignedRightShift(Node n, FlowScope scope) {
+    Node left = n.getFirstChild();
+    scope = traverseUnsignedRightShift(n, scope);
+    return updateScopeForAssignment(
+        scope, left, getJSType(n), /* updateNode= */ null, AssignmentType.ASSIGN);
+  }
+
   private FlowScope traverseCall(Node callNode, FlowScope originalScope) {
     checkArgument(callNode.isCall() || callNode.isOptChainCall(), callNode);
     FlowScope scopeAfterChildren = traverseChildren(callNode, originalScope);
@@ -1064,15 +1074,13 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   @CheckReturnValue
-  private FlowScope traverseAssignOp(Node n, FlowScope scope, JSType resultType) {
+  private FlowScope traverseAssignOp(Node n, FlowScope scope) {
     Node left = n.getFirstChild();
-    scope = traverseChildren(n, scope);
-
-    n.setJSType(resultType);
+    scope = traverseBigIntCompatibleBinaryOperator(n, scope);
 
     // The lhs is both an input and an output, so don't update the input type here.
     return updateScopeForAssignment(
-        scope, left, resultType, /* updateNode= */ null, AssignmentType.ASSIGN);
+        scope, left, getJSType(n), /* updateNode= */ null, AssignmentType.ASSIGN);
   }
 
   private static boolean isInExternFile(Node n) {

@@ -1363,7 +1363,7 @@ public final class TypeInferenceTest {
             "valueWithObject = b * B;",
             "bigintWithNumber = b * n;",
             "bigintNumberWithSelf = bn * bn;",
-            "bigintWithOther = b *s;",
+            "bigintWithOther = b * s;",
             "bigintWithUnknown = b * u;",
             "bigintWithNumberString = b * ns;"));
 
@@ -1378,15 +1378,68 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testAssignOpWithBigInt() {
+    assuming("b", BIGINT_TYPE);
+    assuming("n", NUMBER_TYPE);
+    assuming("s", STRING_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("bn", BIGINT_NUMBER);
+    assuming("bigintWithSelf", BIGINT_TYPE);
+    assuming("bigintWithNumber", BIGINT_TYPE);
+    assuming("bigintWithOther", BIGINT_TYPE);
+    assuming("bigintConcatString", BIGINT_TYPE);
+    assuming("stringConcatBigInt", STRING_TYPE);
+    assuming("bigintWithUnknown", BIGINT_TYPE);
+    assuming("bigintNumberWithSelf", BIGINT_NUMBER);
+    assuming("bigintNumberWithBigInt", BIGINT_NUMBER);
+    assuming("bigintNumberWithNumber", BIGINT_NUMBER);
+
+    inFunction(
+        lines(
+            "bigintWithSelf *= b;",
+            "bigintWithNumber *= n;",
+            "bigintWithOther *= s;",
+            "bigintConcatString += s",
+            "stringConcatBigInt += b",
+            "bigintWithUnknown *= u;",
+            "bigintNumberWithSelf *= bn;",
+            "bigintNumberWithBigInt *= b",
+            "bigintNumberWithNumber *= n"));
+
+    verify("bigintWithSelf", BIGINT_TYPE);
+    verify("bigintWithNumber", NO_TYPE);
+    verify("bigintWithOther", NO_TYPE);
+    verify("bigintConcatString", STRING_TYPE);
+    verify("stringConcatBigInt", STRING_TYPE);
+    verify("bigintWithUnknown", NO_TYPE);
+    verify("bigintNumberWithSelf", BIGINT_NUMBER);
+    verify("bigintNumberWithBigInt", NO_TYPE);
+    verify("bigintNumberWithNumber", NO_TYPE);
+  }
+
+  @Test
   public void testUnsignedRightShiftWithBigInt() {
     assuming("b", BIGINT_TYPE);
     assuming("n", NUMBER_TYPE);
+    assuming("assignBigIntOnLeft", BIGINT_TYPE);
+    assuming("assignBigIntOnRight", NUMBER_TYPE);
+    assuming("assignBigIntOnBothSides", BIGINT_TYPE);
 
-    inFunction("bigintOnLeft = b >>> n; bigintOnRight = n >>> b; bigintOnBothSides = b >>> b;");
+    inFunction(
+        lines(
+            "bigintOnLeft = b >>> n;",
+            "bigintOnRight = n >>> b;",
+            "bigintOnBothSides = b >>> b;",
+            "assignBigIntOnLeft >>>= n",
+            "assignBigIntOnRight >>>= b",
+            "assignBigIntOnBothSides >>>= b"));
 
     verify("bigintOnLeft", NO_TYPE);
     verify("bigintOnRight", NO_TYPE);
     verify("bigintOnBothSides", NO_TYPE);
+    verify("assignBigIntOnLeft", NO_TYPE);
+    verify("assignBigIntOnRight", NO_TYPE);
+    verify("assignBigIntOnBothSides", NO_TYPE);
   }
 
   @Test
