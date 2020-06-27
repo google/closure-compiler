@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import java.util.List;
@@ -941,7 +942,10 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testGoogModule_withDefaultExports() {
-    testSame(srcs(CLOSURE_DEFS, "goog.module('a.b'); exports = function() {};"));
+    testSame(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "goog.module('a.b'); exports = function() {};"));
   }
 
   @Test
@@ -949,54 +953,80 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame(
         srcs(
             // Referencing 'exports' inside a function is strange but allowed.
-            CLOSURE_DEFS, "goog.module('a.b'); exports.f = function() { exports.f(); };"));
+            new TestExternsBuilder().addClosureExterns().build(),
+            "goog.module('a.b'); exports.f = function() { exports.f(); };"));
   }
 
   @Test
   public void testGoogModule_withNamedExports() {
-    testSame(srcs(CLOSURE_DEFS, "goog.module('a.b'); exports.f = function() {}; exports.x = 0;"));
+    testSame(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "goog.module('a.b'); exports.f = function() {}; exports.x = 0;"));
   }
 
   @Test
   public void testGoogProvide_simpleName() {
-    testSame(CLOSURE_DEFS + "goog.provide('A'); var A = class {};");
-    testSame(CLOSURE_DEFS + "goog.provide('A'); A = class {};");
+    testSame(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('A'); var A = class {};");
+    testSame(
+        new TestExternsBuilder().addClosureExterns().build() + "goog.provide('A'); A = class {};");
   }
 
   @Test
   public void testGoogProvide_simpleName_earlyReference() {
-    testSame(CLOSURE_DEFS + "A.B = class {}; goog.provide('A');");
-    testSame(CLOSURE_DEFS + "A.B = class {}; goog.provide('A'); var A = class {};");
+    testSame(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "A.B = class {}; goog.provide('A');");
+    testSame(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "A.B = class {}; goog.provide('A'); var A = class {};");
   }
 
   @Test
   public void testGoogProvide_multipleRootsInSameFile() {
     testSame(
-        CLOSURE_DEFS + "goog.provide('A'); goog.provide('B'); var A = class {}; var B = class {};");
-    testSame(CLOSURE_DEFS + "goog.provide('A.a'); goog.provide('B.b'); A.a = 0; B.b = 1");
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('A'); goog.provide('B'); var A = class {}; var B = class {};");
+    testSame(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('A.a'); goog.provide('B.b'); A.a = 0; B.b = 1");
   }
 
   @Test
   public void testGoogProvide_complexName() {
-    testSame(CLOSURE_DEFS + "goog.provide('foo.A'); foo.A = class {};");
-    testSame(CLOSURE_DEFS + "goog.provide('foo.bar.A'); foo.bar.A = class {};");
+    testSame(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('foo.A'); foo.A = class {};");
+    testSame(
+        new TestExternsBuilder().addClosureExterns().build()
+            + "goog.provide('foo.bar.A'); foo.bar.A = class {};");
   }
 
   @Test
   public void testGoogLegacyModule() {
     testSame(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             "goog.module('foo.A'); goog.module.declareLegacyNamespace(); exports = class {};",
             "new foo.A();"));
   }
 
   @Test
   public void testGoogNonLegacyModule() {
-    testError(srcs(CLOSURE_DEFS, "goog.module('foo.A');", "foo.A();"), error(UNDEFINED_VAR_ERROR));
+    testError(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "goog.module('foo.A');",
+            "foo.A();"),
+        error(UNDEFINED_VAR_ERROR));
 
     testError(
-        srcs(CLOSURE_DEFS, "goog.module('foo.A'); exports = class {};", "new foo.A();"),
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "goog.module('foo.A'); exports = class {};",
+            "new foo.A();"),
         error(UNDEFINED_VAR_ERROR));
   }
 
@@ -1004,7 +1034,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogLegacyModule_inLoadModule() {
     testSame(
         new String[] {
-          CLOSURE_DEFS,
+          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.loadModule(function(exports) {", //
               "  goog.module('foo.A');",
@@ -1020,7 +1050,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogNonLegacyModule_inLoadModule() {
     testError(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.loadModule(function(exports) {", //
                 "  goog.module('foo.A');",
@@ -1117,7 +1147,7 @@ public final class VarCheckTest extends CompilerTestCase {
         SourceFile.fromCode(
             "weak.js",
             lines(
-                CLOSURE_DEFS, //
+                new TestExternsBuilder().addClosureExterns().build(), //
                 "goog.provide('foo.bar');"),
             SourceKind.WEAK));
 
@@ -1142,7 +1172,9 @@ public final class VarCheckTest extends CompilerTestCase {
 
     strongModule.add(
         SourceFile.fromCode(
-            "strong0.js", lines(CLOSURE_DEFS, "goog.provide('foo.qux');"), SourceKind.STRONG));
+            "strong0.js",
+            lines(new TestExternsBuilder().addClosureExterns().build(), "goog.provide('foo.qux');"),
+            SourceKind.STRONG));
     strongModule.add(SourceFile.fromCode("strong1.js", lines("foo();"), SourceKind.STRONG));
 
     testSame(

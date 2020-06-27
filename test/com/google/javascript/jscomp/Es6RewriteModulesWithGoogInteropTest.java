@@ -32,6 +32,7 @@ import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAME
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import org.junit.Before;
@@ -43,7 +44,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase {
   private static final SourceFile CLOSURE_BASE =
-      SourceFile.fromCode("closure_base.js", CLOSURE_DEFS);
+      SourceFile.fromCode("closure_base.js", new TestExternsBuilder().addClosureExterns().build());
 
   private static final SourceFile CLOSURE_PROVIDE =
       SourceFile.fromCode(
@@ -148,7 +149,8 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   void testModules(String input, String expected) {
     test(
         srcs(
-            SourceFile.fromCode("closure_base.js", CLOSURE_DEFS),
+            SourceFile.fromCode(
+                "closure_base.js", new TestExternsBuilder().addClosureExterns().build()),
             CLOSURE_PROVIDE,
             CLOSURE_MODULE,
             CLOSURE_MODULE_DESTRUCTURE,
@@ -156,7 +158,8 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             CLOSURE_LEGACY_DESTRUCTURED_MODULE,
             SourceFile.fromCode("testcode", input)),
         expected(
-            SourceFile.fromCode("closure_base.js", CLOSURE_DEFS),
+            SourceFile.fromCode(
+                "closure_base.js", new TestExternsBuilder().addClosureExterns().build()),
             CLOSURE_PROVIDE,
             CLOSURE_MODULE,
             CLOSURE_MODULE_DESTRUCTURE,
@@ -182,33 +185,51 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
   @Test
   public void testGoogRequireInNonEs6ModuleUnchanged() {
-    testSame(srcs(CLOSURE_DEFS, "goog.require('foo.bar');"));
-    testSame(srcs(CLOSURE_DEFS, "var bar = goog.require('foo.bar');"));
+    testSame(
+        srcs(new TestExternsBuilder().addClosureExterns().build(), "goog.require('foo.bar');"));
+    testSame(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "var bar = goog.require('foo.bar');"));
   }
 
   @Test
   public void testGoogRequireTypeInNonEs6ModuleUnchanged() {
-    testSame(srcs(CLOSURE_DEFS, "goog.requireType('foo.bar');"));
-    testSame(srcs(CLOSURE_DEFS, "var bar = goog.requireType('foo.bar');"));
+    testSame(
+        srcs(new TestExternsBuilder().addClosureExterns().build(), "goog.requireType('foo.bar');"));
+    testSame(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "var bar = goog.requireType('foo.bar');"));
   }
 
   @Test
   public void testForwardDeclareInNonEs6ModuleUnchanged() {
-    testSame(srcs(CLOSURE_DEFS, "goog.forwardDeclare('foo.bar');"));
-    testSame(srcs(CLOSURE_DEFS, "var bar = goog.forwardDeclare('foo.bar');"));
+    testSame(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "goog.forwardDeclare('foo.bar');"));
+    testSame(
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "var bar = goog.forwardDeclare('foo.bar');"));
   }
 
   @Test
   public void testGoogRequireInEs6ModuleDoesNotExistIsError() {
     testError(
-        srcs(CLOSURE_DEFS, "export var x; goog.require('foo.bar');"),
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "export var x; goog.require('foo.bar');"),
         error(MISSING_MODULE_OR_PROVIDE));
   }
 
   @Test
   public void testGoogRequireTypeInEs6ModuleDoesNotExistIsError() {
     testError(
-        srcs(CLOSURE_DEFS, "export var x; goog.requireType('foo.bar');"),
+        srcs(
+            new TestExternsBuilder().addClosureExterns().build(),
+            "export var x; goog.requireType('foo.bar');"),
         error(MISSING_MODULE_OR_PROVIDE));
   }
 
@@ -1084,39 +1105,39 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
 
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "const missing = goog.require('is.missing');", //
                 "use(missing, missing.x);",
                 "export {};")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "use(is.missing, is.missing.x);", //
                 "/** @const */ var module$input1 = {};")));
 
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "const {prop} = goog.require('is.missing');", //
                 "use(prop, prop.x);",
                 "export {};")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "use(is.missing.prop, is.missing.prop.x);", //
                 "/** @const */ var module$input1 = {};")));
 
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "import missing, {y} from 'goog:is.missing';", //
                 "use(missing, missing.x, y);",
                 "export {};")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "use(is.missing, is.missing.x, is.missing.y);", //
                 "/** @const */ var module$input1 = {};")));

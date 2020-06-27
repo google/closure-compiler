@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.CLOSURE_DEFS;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
@@ -29,6 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
@@ -1312,7 +1312,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     externs =
         ImmutableList.<SourceFile>builder()
             .addAll(externs)
-            .add(SourceFile.fromCode("closure_externs.js", CLOSURE_DEFS))
+            .add(
+                SourceFile.fromCode(
+                    "closure_externs.js", new TestExternsBuilder().addClosureExterns().build()))
             .build();
 
     test(
@@ -1334,7 +1336,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     externs =
         ImmutableList.<SourceFile>builder()
             .addAll(externs)
-            .add(SourceFile.fromCode("closure_externs.js", CLOSURE_DEFS))
+            .add(
+                SourceFile.fromCode(
+                    "closure_externs.js", new TestExternsBuilder().addClosureExterns().build()))
             .build();
 
     ImmutableMap<String, ModuleType> namespaces =

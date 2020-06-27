@@ -29,6 +29,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -49,7 +50,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   private boolean preserveClosurePrimitives = false;
 
   public ClosureRewriteModuleTest() {
-    super(CLOSURE_DEFS);
+    super(new TestExternsBuilder().addClosureExterns().build());
   }
 
   @Override

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerTestCase.CLOSURE_DEFS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 
 import com.google.common.collect.ImmutableList;
@@ -26,6 +25,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -302,7 +302,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
 
     String[] srcs =
         new String[] {
-          CLOSURE_DEFS,
+          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "Polymer({", //
               "  is: 'x',",
@@ -315,7 +315,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
           lines(
               "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
               "var XElement = function() {};",
-              CLOSURE_DEFS),
+              new TestExternsBuilder().addClosureExterns().build()),
           lines(
               "Polymer(/** @lends {X.prototype} */ {", //
               "  is: 'x',",
@@ -384,41 +384,41 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(
         options,
         new String[] {
-            CLOSURE_DEFS,
-            lines(
-                "goog.module('A');",
-                "/** @polymerBehavior */",
-                "const FunBehavior = {",
-                "  properties: {",
-                "    isFun: Boolean",
-                "  },",
-                "};",
-                "",
-                "/** @polymerBehavior */",
-                "const RadBehavior = {",
-                "  properties: {",
-                "    howRad: Number",
-                "  },",
-                "};",
-                "",
-                "/** @polymerBehavior */",
-                "const SuperCoolBehaviors = [FunBehavior, RadBehavior];",
-                "exports = {SuperCoolBehaviors, FunBehavior}"
-            ),
-            lines(
-                "goog.module('B')",
-                "const {SuperCoolBehaviors, FunBehavior} = goog.require('A')",
-                "A = Polymer({",
-                "  is: 'x-element',",
-                "  properties: {",
-                "    isFun: {",
-                "      type: Array,",
-                "      notify: true,",
-                "    },",
-                "    name: String,",
-                "  },",
-                "  behaviors: [ SuperCoolBehaviors, FunBehavior ],",
-                "});")});
+          new TestExternsBuilder().addClosureExterns().build(),
+          lines(
+              "goog.module('A');",
+              "/** @polymerBehavior */",
+              "const FunBehavior = {",
+              "  properties: {",
+              "    isFun: Boolean",
+              "  },",
+              "};",
+              "",
+              "/** @polymerBehavior */",
+              "const RadBehavior = {",
+              "  properties: {",
+              "    howRad: Number",
+              "  },",
+              "};",
+              "",
+              "/** @polymerBehavior */",
+              "const SuperCoolBehaviors = [FunBehavior, RadBehavior];",
+              "exports = {SuperCoolBehaviors, FunBehavior}"),
+          lines(
+              "goog.module('B')",
+              "const {SuperCoolBehaviors, FunBehavior} = goog.require('A')",
+              "A = Polymer({",
+              "  is: 'x-element',",
+              "  properties: {",
+              "    isFun: {",
+              "      type: Array,",
+              "      notify: true,",
+              "    },",
+              "    name: String,",
+              "  },",
+              "  behaviors: [ SuperCoolBehaviors, FunBehavior ],",
+              "});")
+        });
   }
 
   /**
@@ -437,7 +437,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     testNoWarnings(
         options,
         new String[] {
-          CLOSURE_DEFS,
+          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('Data');",
               "class Item {",

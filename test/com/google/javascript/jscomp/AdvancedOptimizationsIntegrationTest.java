@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.CLOSURE_DEFS;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
@@ -421,7 +420,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          CLOSURE_DEFS,
+          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('a.b.c');",
               "exports = class Foo {",
@@ -1962,7 +1961,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          CLOSURE_DEFS,
+          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('mod');",
               "function alwaysNull() { return null; }",
@@ -1984,7 +1983,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     test(
         options,
         new String[] {
-          CLOSURE_DEFS,
+          new TestExternsBuilder().addClosureExterns().build(),
           lines(
               "goog.module('mod');",
               "function alwaysNull() { return null; }",

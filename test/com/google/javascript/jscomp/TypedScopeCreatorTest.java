@@ -43,6 +43,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -2492,7 +2493,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     processClosurePrimitives = true;
     testSame(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.provide('my.alert');",
                 "/** @param {string} msg */",
@@ -7046,7 +7047,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testGoogModule_exportsPropertyIsObjectLit_whosePropertiesNotInferredConst() {
     testSame(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('a.b.c');",
                 "function modifyThings() {",
@@ -7083,7 +7084,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "var a = {};",
                 "a.Foo = class {};")),
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('a.Foo');",
                 "goog.module.declareLegacyNamespace();",

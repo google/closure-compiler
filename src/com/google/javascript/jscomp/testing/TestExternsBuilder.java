@@ -29,7 +29,33 @@ import java.util.List;
  * definitions (es3.js, etc.) as a model when you need to add something for a test case.
  */
 public class TestExternsBuilder {
+
   private static final Joiner LINE_JOINER = Joiner.on('\n');
+
+  private static final String lines(String... lines) {
+    return LINE_JOINER.join(lines);
+  }
+
+  // Closure definitions that are not technically externs but serve a similar purpose.
+  private static final String CLOSURE_EXTERNS =
+      lines(
+          "/** @const */ var goog = {};",
+          "goog.module = function(ns) {};",
+          "goog.module.declareLegacyNamespace = function() {};",
+          "/** @return {?} */",
+          "goog.module.get = function(ns) {};",
+          "goog.provide = function(ns) {};",
+          "/** @return {?} */",
+          "goog.require = function(ns) {};",
+          "/** @return {?} */",
+          "goog.requireType = function(ns) {};",
+          "goog.loadModule = function(ns) {};",
+          "/** @return {?} */",
+          "goog.forwardDeclare = function(ns) {};",
+          "goog.setTestOnly = function() {};",
+          "goog.scope = function(fn) {};",
+          "goog.defineClass = function(superClass, clazz) {};",
+          "goog.declareModuleId = function(ns) {};");
 
   private static final String BIGINT_EXTERNS =
       lines(
@@ -663,6 +689,7 @@ public class TestExternsBuilder {
   private boolean includeAsyncIterableExterns = false;
   private boolean includeEs6ClassTranspilationExterns = false;
   private boolean includeReflectExterns = false;
+  private boolean includeClosureExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
   public TestExternsBuilder addBigInt() {
@@ -749,6 +776,11 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addClosureExterns() {
+    includeClosureExterns = true;
+    return this;
+  }
+
   public TestExternsBuilder addExtra(String... lines) {
     Collections.addAll(extraExterns, lines);
     return this;
@@ -795,6 +827,9 @@ public class TestExternsBuilder {
     if (includeEs6ClassTranspilationExterns) {
       externSections.add(ES6_CLASS_TRANSPILATION_EXTERNS);
     }
+    if (includeClosureExterns) {
+      externSections.add(CLOSURE_EXTERNS);
+    }
     externSections.addAll(extraExterns);
     return LINE_JOINER.join(externSections);
   }
@@ -802,9 +837,5 @@ public class TestExternsBuilder {
   public SourceFile buildExternsFile(String filePath) {
     String externsString = build();
     return SourceFile.fromCode(filePath, externsString);
-  }
-
-  private static String lines(String... lines) {
-    return LINE_JOINER.join(lines);
   }
 }

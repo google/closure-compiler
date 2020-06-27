@@ -32,6 +32,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -186,7 +187,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclarationOutsideLoadModule() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.loadModule(function(exports) {",
                 "  goog.module('ytu.app.ui.shared.YtuIcon');",
@@ -195,7 +196,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  return exports;",
                 "})")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.loadModule(function(exports) {",
                 "goog.module('ytu.app.ui.shared.YtuIcon');",
@@ -215,7 +216,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclarationOutsideLoadModule2() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.loadModule(function(exports) {",
                 "  goog.module('ytu.app.ui.shared.YtuIcon');",
@@ -230,7 +231,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 " * @implements {PolymerYtuIconElementInterface0}",
                 " */",
                 "  var YtuIconElement = function(){}",
-                CLOSURE_DEFS),
+                new TestExternsBuilder().addClosureExterns().build()),
             lines(
                 "goog.loadModule(function(exports) {",
                 "goog.module('ytu.app.ui.shared.YtuIcon');",
@@ -243,14 +244,14 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testAssignToGoogModuleExports() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('modOne');", //
                 "exports = Polymer({",
                 "  is: 'x-element',",
                 "});")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('modOne');",
                 "/** @constructor @extends {PolymerElement}",
@@ -268,7 +269,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testAssignToGoogLoadModuleExports() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.loadModule(function(exports) {",
                 "goog.module('modOne');", //
@@ -277,7 +278,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "});",
                 "});")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.loadModule(function(exports) {",
                 "goog.module('modOne');",
@@ -297,7 +298,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testSameNamedPolymerClassesInTwoModules() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('modOne');", //
                 "const Button = Polymer({",
@@ -309,7 +310,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  is: 'y-element',",
                 "});")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('modOne');",
                 "/** @constructor @extends {PolymerElement} @implements {PolymerButtonInterface0}"
@@ -332,14 +333,14 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclaration_OutsideGoogModule() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');", //
                 "var X = Polymer({",
                 "  is: 'x-element',",
                 "});")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');",
                 "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface0} */",
@@ -353,7 +354,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclaration_OutsideGoogModule2() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');", //
                 "Polymer({",
@@ -364,7 +365,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/** @constructor @extends {PolymerElement} @implements"
                     + " {PolymerXElementElementInterface0} */",
                 "var XElementElement = function() {};",
-                CLOSURE_DEFS),
+                new TestExternsBuilder().addClosureExterns().build()),
             lines(
                 "goog.module('mod');",
                 "Polymer(/** @lends {XElementElement.prototype} */ {",
@@ -377,7 +378,7 @@ public class PolymerPassTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-                CLOSURE_DEFS,
+                new TestExternsBuilder().addClosureExterns().build(),
                 "goog.provide('a.UnpluggedCancelOfferRenderer');",
                 "goog.provide('a.b');",
                 "/** @constructor */",
@@ -402,7 +403,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 " * @implements {PolymerYtuCancelOfferElementInterface0} ",
                 " */",
                 "var YtuCancelOfferElement = function() {};",
-                CLOSURE_DEFS,
+                new TestExternsBuilder().addClosureExterns().build(),
                 "goog.provide('a.UnpluggedCancelOfferRenderer');",
                 "goog.provide('a.b');",
                 "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};"),
@@ -424,7 +425,7 @@ public class PolymerPassTest extends CompilerTestCase {
     test(
         srcs(
             lines(
-                CLOSURE_DEFS,
+                new TestExternsBuilder().addClosureExterns().build(),
                 "goog.provide('a.UnpluggedCancelOfferRenderer');",
                 "/** @constructor */",
                 "a.UnpluggedCancelOfferRenderer = function() {",
@@ -442,7 +443,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/** @constructor @extends {PolymerElement} @implements",
                 " {PolymerYtuCancelOfferElementInterface0} */",
                 "var YtuCancelOfferElement = function() {};",
-                CLOSURE_DEFS,
+                new TestExternsBuilder().addClosureExterns().build(),
                 "goog.provide('a.UnpluggedCancelOfferRenderer');",
                 "/** @constructor */ a.UnpluggedCancelOfferRenderer = function() {};"),
             lines(
@@ -503,7 +504,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclaration_OutsideModule_IIFE() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');", //
                 "(function() {",
@@ -512,7 +513,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  });",
                 "})();")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');",
                 "(function() {",
@@ -528,7 +529,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testPolymerRewriterGeneratesDeclaration_OutsideModule_IIFE2() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');", //
                 "(function() {",
@@ -541,7 +542,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/** @constructor @extends {PolymerElement} @implements"
                     + " {PolymerXElementElementInterface0} */",
                 "var XElementElement = function() {};",
-                CLOSURE_DEFS),
+                new TestExternsBuilder().addClosureExterns().build()),
             lines(
                 "goog.module('mod');",
                 "(function() {",
@@ -556,7 +557,7 @@ public class PolymerPassTest extends CompilerTestCase {
     ignoreWarnings(MISSING_NAMESPACE_IMPORT);
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');", //
                 "const Component = goog.require('a');",
@@ -566,7 +567,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  is: 'x-element',",
                 "});")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');",
                 "const Component = goog.require('a');",
@@ -584,7 +585,7 @@ public class PolymerPassTest extends CompilerTestCase {
     ignoreWarnings(MISSING_NAMESPACE_IMPORT);
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('mod');", //
                 "const Component = goog.require('a');",
@@ -598,7 +599,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "/** @constructor @extends {PolymerElement} @implements"
                     + " {PolymerXElementElementInterface0} */",
                 "var XElementElement = function() {};",
-                CLOSURE_DEFS),
+                new TestExternsBuilder().addClosureExterns().build()),
             lines(
                 "goog.module('mod');",
                 "const Component = goog.require('a');",
@@ -2251,7 +2252,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testBehaviorInModule_NoBehaviorProps() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('Data');\n",
                 "class Item {\n",
@@ -2283,7 +2284,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testBehaviorInModule_WithBehaviorProps() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('Data');",
                 "class Item {}",
@@ -3485,7 +3486,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testBehaviorInModule() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('behaviors.CoolBehavior');",
                 "goog.module.declareLegacyNamespace();",
@@ -3532,7 +3533,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  behaviors: [ Polymer.VeryFunBehavior, behaviors.CoolBehavior ],",
                 "});")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('behaviors.CoolBehavior');",
                 "goog.module.declareLegacyNamespace();",
@@ -3607,7 +3608,7 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testBehaviorInModule_destructuringRestParams() {
     test(
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('behaviors.CoolBehavior');",
                 "goog.module.declareLegacyNamespace();",
@@ -3631,7 +3632,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "  behaviors: [ behaviors.CoolBehavior ],",
                 "});")),
         expected(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "goog.module('behaviors.CoolBehavior');",
                 "goog.module.declareLegacyNamespace();",
@@ -5135,7 +5136,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "return exports;",
                 "});")),
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "function fn(/** !FooElement */ elem) {", //
                 "  elem.toggle();",
@@ -5177,7 +5178,7 @@ public class PolymerPassTest extends CompilerTestCase {
                 "return exports;",
                 "});")),
         srcs(
-            CLOSURE_DEFS,
+            new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "function fn(/** !FooElement */ elem) {", //
                 "  elem.toggle();",

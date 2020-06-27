@@ -243,17 +243,9 @@ public abstract class CompilerTestCase {
   protected static final String VAR_CHECK_EXTERNS =
       Joiner.on("").join(Iterables.transform(VarCheck.REQUIRED_SYMBOLS, s -> "var " + s + ";\n"));
 
-  protected static final String ACTIVE_X_OBJECT_DEF =
-      lines(
-          "/**",
-          " * @param {string} progId",
-          " * @param {string=} opt_location",
-          " * @constructor",
-          " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx",
-          " */",
-          "function ActiveXObject(progId, opt_location) {}");
-
-  /** A minimal set of externs, consisting of only those needed for NTI not to blow up. */
+  /**
+   * A minimal set of externs, consisting of only those needed for the typechecker not to blow up.
+   */
   protected static final String MINIMAL_EXTERNS =
       lines(
           "/** @type {undefined} */",
@@ -599,29 +591,14 @@ public abstract class CompilerTestCase {
           " * @extends {Array<string>}",
           " */",
           "function ITemplateArray() {}",
-          ACTIVE_X_OBJECT_DEF);
-
-  protected static final String CLOSURE_DEFS_WITHOUT_GOOG =
-      lines(
-          "goog.module = function(ns) {};",
-          "goog.module.declareLegacyNamespace = function() {};",
-          "/** @return {?} */",
-          "goog.module.get = function(ns) {};",
-          "goog.provide = function(ns) {};",
-          "/** @return {?} */",
-          "goog.require = function(ns) {};",
-          "/** @return {?} */",
-          "goog.requireType = function(ns) {};",
-          "goog.loadModule = function(ns) {};",
-          "/** @return {?} */",
-          "goog.forwardDeclare = function(ns) {};",
-          "goog.setTestOnly = function() {};",
-          "goog.scope = function(fn) {};",
-          "goog.defineClass = function(superClass, clazz) {};",
-          "goog.declareModuleId = function(ns) {};");
-
-  protected static final String CLOSURE_DEFS =
-      "/** @const */ var goog = {};" + CLOSURE_DEFS_WITHOUT_GOOG;
+          lines(
+              "/**",
+              " * @param {string} progId",
+              " * @param {string=} opt_location",
+              " * @constructor",
+              " * @see http://msdn.microsoft.com/en-us/library/7sw4ddf8.aspx",
+              " */",
+              "function ActiveXObject(progId, opt_location) {}"));
 
   /**
    * Constructs a test.
