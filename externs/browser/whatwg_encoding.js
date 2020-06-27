@@ -52,3 +52,10 @@ function TextEncoder(utfLabel) {}
  * @return {!Uint8Array}
  */
 TextEncoder.prototype.encode = function(input) {};
+
+/**
+ * @param {string} input
+ * @param {!Uint8Array} uint8Array
+ * @return {{read: number, written: number}}
+ */
+TextEncoder.prototype.encodeInto = function(input, uint8Array) {};
