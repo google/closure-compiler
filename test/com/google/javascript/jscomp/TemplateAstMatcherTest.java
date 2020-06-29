@@ -635,6 +635,7 @@ public final class TemplateAstMatcherTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
+    options.setChecksOnly(true);
     options.setPreserveDetailedSourceInfo(true);
 
     Node templateNode = compiler.parse(SourceFile.fromCode("template", template));

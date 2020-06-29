@@ -3691,8 +3691,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "}); // goog.scope\n";
     String expectedCode =
         ""
-            + "/** @const */ var $jscomp = $jscomp || {};\n"
-            + "/** @const */ $jscomp.scope = {};\n"
             + "/** @const */ var foo = {};\n"
             + "/** @const */ foo.bar = {};\n"
             + "goog.provide('foo.bar');\n"
@@ -3711,6 +3709,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             + "var STR = '3';\n";
 
     CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.setChecksOnly(true);
     compilerOptions.setClosurePass(true);
     compilerOptions.setPreserveDetailedSourceInfo(true);
     compilerOptions.setCheckTypes(true);

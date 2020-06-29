@@ -1437,6 +1437,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void clearJSTypeRegistry() {
     typeRegistry = null;
+    typeValidator = null;
+    abstractInterpreter = null;
   }
 
   @Override

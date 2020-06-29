@@ -871,6 +871,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(latePeepholeOptimizations);
     }
 
+    passes.add(removeTypes);
+
     if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.UNMAPPED) {
       passes.add(nameUnmappedAnonymousFunctions);
     }
@@ -2932,6 +2934,14 @@ public final class DefaultPassConfig extends PassConfig {
                   new CheckConformance(
                       compiler, ImmutableList.copyOf(options.getConformanceConfigs())))
           .setFeatureSetForChecks()
+          .build();
+
+  /** Remove types */
+  private final PassFactory removeTypes =
+      PassFactory.builder()
+          .setName("removeTypes")
+          .setInternalFactory(RemoveTypes::new)
+          .setFeatureSetForOptimizations()
           .build();
 
   /** Optimizations that output ES6 features. */
