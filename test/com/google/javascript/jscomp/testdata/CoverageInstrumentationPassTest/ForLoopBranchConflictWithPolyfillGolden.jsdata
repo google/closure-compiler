@@ -1,0 +1,27 @@
+if (!self.window) {
+  self.window = self;
+  self.window.top = self;
+}
+var __jscov = window.top["__jscov"] || (window.top["__jscov"] = {"fileNames":[], "branchPresent":[], "branchesInLine":[], "branchesTaken":[]});
+var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchConflictWithPolyfill_jsdata = [];
+__jscov["branchesTaken"].push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchConflictWithPolyfill_jsdata);
+__jscov["branchPresent"].push("000010");
+{
+  var JSCompiler_lcov_branchesInLine = [];
+  JSCompiler_lcov_branchesInLine[0] = 2;
+}
+__jscov["branchesInLine"].push(JSCompiler_lcov_branchesInLine);
+__jscov["fileNames"].push("CoverageInstrumentationPassTest/ForLoopBranchConflictWithPolyfill.jsdata");
+function containsThree(x) {
+  var y = x.find(function(element) {
+    return element === 3;
+  });
+  if (y === 3) {
+    JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchConflictWithPolyfill_jsdata[0] = true;
+    return true;
+  } else {
+    JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchConflictWithPolyfill_jsdata[1] = true;
+  }
+  return false;
+}
+;

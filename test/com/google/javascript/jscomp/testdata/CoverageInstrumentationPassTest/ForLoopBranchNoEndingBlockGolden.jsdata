@@ -1,0 +1,24 @@
+if (!self.window) {
+  self.window = self;
+  self.window.top = self;
+}
+var __jscov = window.top["__jscov"] || (window.top["__jscov"] = {"fileNames":[], "branchPresent":[], "branchesInLine":[], "branchesTaken":[]});
+var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchNoEndingBlock_jsdata = [];
+__jscov["branchesTaken"].push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchNoEndingBlock_jsdata);
+__jscov["branchPresent"].push("02");
+{
+  var JSCompiler_lcov_branchesInLine = [];
+  JSCompiler_lcov_branchesInLine[0] = 2;
+}
+__jscov["branchesInLine"].push(JSCompiler_lcov_branchesInLine);
+__jscov["fileNames"].push("CoverageInstrumentationPassTest/ForLoopBranchNoEndingBlock.jsdata");
+function addLoop(y, x) {
+  for (var i = 0; i < x; ++i) {
+    JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchNoEndingBlock_jsdata[0] = true;
+    y += i;
+  }
+  {
+    JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_ForLoopBranchNoEndingBlock_jsdata[1] = true;
+  }
+}
+;

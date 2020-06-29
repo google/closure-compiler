@@ -1,0 +1,25 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function containsThree(x){
+	var y = x.find(element => element === 3);
+	if(y === 3){
+		return true;
+	}
+	return false
+}

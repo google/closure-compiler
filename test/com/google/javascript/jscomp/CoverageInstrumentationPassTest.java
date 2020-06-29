@@ -165,4 +165,31 @@ public final class CoverageInstrumentationPassTest {
             LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT_NEXT, /* coverageOnly= */ true),
         "CoverageInstrumentationPassTest/EsModule.jsdata");
   }
+
+  @Test
+  public void testNestedForLoop() throws Exception {
+    GoldenFileComparer.compileAndCompare(
+        "CoverageInstrumentationPassTest/NestedForLoopBranchGolden.jsdata",
+        branchOptions(LanguageMode.STABLE),
+        "CoverageInstrumentationPassTest/NestedForLoopBranch.jsdata");
+  }
+
+  @Test
+  public void testForLoopNoEndingBlock() throws Exception {
+    GoldenFileComparer.compileAndCompare(
+        "CoverageInstrumentationPassTest/ForLoopBranchNoEndingBlockGolden.jsdata",
+        branchOptions(LanguageMode.STABLE),
+        "CoverageInstrumentationPassTest/ForLoopBranchNoEndingBlock.jsdata");
+  }
+
+  @Test
+  public void testForLoopConflictWithPolyfill() throws Exception {
+    CompilerOptions options = branchOptions(LanguageMode.STABLE);
+    options.setRewritePolyfills(true);
+    GoldenFileComparer.compileAndCompareSubsetOfActualToExpected(
+        "CoverageInstrumentationPassTest/ForLoopBranchConflictWithPolyfillGolden.jsdata",
+        options,
+        "CoverageInstrumentationPassTest/ForLoopBranchConflictWithPolyfill.jsdata");
+  }
+
 }

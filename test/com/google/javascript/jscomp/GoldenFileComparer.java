@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -102,6 +103,33 @@ public class GoldenFileComparer {
     String compiledSource = compile(externsFiles, sourceFiles, options);
     String referenceSource = readFile(toFullPath(goldenFileName));
     compare(compiledSource, referenceSource);
+  }
+
+  /**
+   * Compile sourceFileName with given CompilerOptions and check that all lines of code from
+   * goldenFileName are present in compiled sourceFile.
+   */
+  public static void compileAndCompareSubsetOfActualToExpected(
+      String goldenFileName, CompilerOptions options, String sourceFileName) throws Exception {
+    List<SourceFile> sourceFiles = ImmutableList.of(readSource(sourceFileName));
+    List<SourceFile> externsFiles = ImmutableList.of();
+    String compiledSource = compile(externsFiles, sourceFiles, options);
+    String referenceSource = readFile(toFullPath(goldenFileName));
+
+    String[] compiledLines = compiledSource.split("\n");
+    String[] goldenLines = referenceSource.split("\n");
+
+    int expectedNumberOfIdenticalLines = goldenLines.length;
+
+    int identicalLinesBetweenFiles = 0;
+
+    for (int i = 0; i < compiledLines.length; i++) {
+      if (goldenLines[identicalLinesBetweenFiles].equals(compiledLines[i])) {
+        identicalLinesBetweenFiles++;
+      }
+    }
+
+    assertThat(identicalLinesBetweenFiles).isEqualTo(expectedNumberOfIdenticalLines);
   }
 
   /**

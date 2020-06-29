@@ -1,0 +1,5 @@
+function addLoop(y,x){
+	for(let i = 0 ; i < x ; ++i){
+		y += i;
+	}
+}

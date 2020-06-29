@@ -49,6 +49,11 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   public void visit(NodeTraversal traversal, Node node, Node parent) {
     String fileName = traversal.getSourceName();
 
+    // If origin of node is not from sourceFile, do not instrument
+    if (fileName != node.getSourceFileName()) {
+      return;
+    }
+
     if (node.isScript()) {
       if (instrumentationData.get(fileName) != null) {
         Node toAddTo =
@@ -89,11 +94,16 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
       for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {
         if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
           Node destination = outEdge.getDestination().getValue();
-          if (destination.isBlock()) {
+          if (destination != null && destination.isBlock()) {
             blocks.add(destination);
           } else {
             Node exitBlock = IR.block();
-            destination.getParent().addChildBefore(exitBlock, destination);
+            if (destination != null && destination.getParent().isBlock()) {
+              destination.getParent().addChildBefore(exitBlock, destination);
+            } else {
+              outEdge.getSource().getValue().getParent()
+                  .addChildAfter(exitBlock, outEdge.getSource().getValue());
+            }
             blocks.add(exitBlock);
           }
         }
