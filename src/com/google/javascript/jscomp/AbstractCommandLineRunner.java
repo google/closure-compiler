@@ -2717,7 +2717,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     private String warningsAllowFile = "";
 
     /** Sets a allowlist file that suppresses warnings. */
-    public CommandLineConfig setWarningsWhitelistFile(String fileName) {
+    public CommandLineConfig setWarningsAllowlistFile(String fileName) {
       this.warningsAllowFile = fileName;
       return this;
     }
