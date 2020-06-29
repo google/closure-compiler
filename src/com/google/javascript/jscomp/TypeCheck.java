@@ -688,8 +688,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case INC:
         left = n.getFirstChild();
         checkPropCreation(left);
-        validator.expectNumber(left, getJSType(left), "increment/decrement");
-        ensureTyped(n, NUMBER_TYPE);
+        if (getJSType(n).isNumber()) {
+          validator.expectNumber(left, getJSType(left), "increment/decrement");
+          ensureTyped(n, NUMBER_TYPE);
+        } else {
+          validator.expectBigIntOrNumber(left, getJSType(left), "increment/decrement");
+        }
         break;
 
       case VOID:
