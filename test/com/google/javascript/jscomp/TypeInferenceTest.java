@@ -1443,6 +1443,17 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testBigIntComparison() {
+    assuming("b", BIGINT_TYPE);
+    assuming("n", NUMBER_TYPE);
+
+    inFunction("bigintOnly = b > b; bigintAndOther = b > n");
+
+    verify("bigintOnly", BOOLEAN_TYPE);
+    verify("bigintAndOther", BOOLEAN_TYPE);
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
     includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));
@@ -2468,6 +2479,18 @@ public final class TypeInferenceTest {
     verify("x", NUMBER_TYPE);
     inFunction("var x = 'foo'; var y = (x = 3) >= 4;");
     verify("x", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testComparisonWithBigInt() {
+    inFunction("var x = 'foo'; var y = (x = 3n) < 4;");
+    verify("x", BIGINT_TYPE);
+    inFunction("var x = 'foo'; var y = (x = 3n) > 4;");
+    verify("x", BIGINT_TYPE);
+    inFunction("var x = 'foo'; var y = (x = 3n) <= 4;");
+    verify("x", BIGINT_TYPE);
+    inFunction("var x = 'foo'; var y = (x = 3n) >= 4;");
+    verify("x", BIGINT_TYPE);
   }
 
   @Test
