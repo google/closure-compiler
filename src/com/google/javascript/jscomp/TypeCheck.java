@@ -153,6 +153,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_BAD_TYPE_FOR_UNARY_OPERATION", "unary operator {0} cannot be applied to {1}");
 
+  static final DiagnosticType BINARY_OPERATION =
+      DiagnosticType.warning(
+          "JSC_BAD_TYPES_FOR_BINARY_OPERATION", "operator {0} cannot be applied to {1} and {2}");
+
   static final DiagnosticType NOT_CALLABLE =
       DiagnosticType.warning(
           "JSC_NOT_FUNCTION_TYPE",
@@ -341,6 +345,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           INSTANTIATE_ABSTRACT_CLASS,
           BIT_OPERATION,
           UNARY_OPERATION,
+          BINARY_OPERATION,
           NOT_CALLABLE,
           CONSTRUCTOR_NOT_CALLABLE,
           FUNCTION_MASKS_VARIABLE,
@@ -2969,10 +2974,21 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param n The node being checked.
    */
   private void visitBinaryOperator(Token op, Node n) {
+    JSType operatorType = getJSType(n);
     Node left = n.getFirstChild();
     JSType leftType = getJSType(left);
     Node right = n.getLastChild();
     JSType rightType = getJSType(right);
+    if (operatorType.isNoType()) {
+      // An attempt to mix bigint with other types
+      report(
+          n,
+          BINARY_OPERATION,
+          NodeUtil.opToStr(n.getToken()),
+          leftType.toString(),
+          rightType.toString());
+      return;
+    }
     switch (op) {
       case ASSIGN_LSH:
       case ASSIGN_RSH:
@@ -3003,8 +3019,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case MUL:
       case SUB:
       case EXPONENT:
-        validator.expectNumber(left, leftType, "left operand");
-        validator.expectNumber(right, rightType, "right operand");
+        if (operatorType.isNumber()) {
+          // This condition is meant to catch any old cases (where bigint isn't involved)
+          validator.expectNumber(left, leftType, "left operand");
+          validator.expectNumber(right, rightType, "right operand");
+        } else {
+          validator.expectBigIntOrNumber(left, leftType, "left operand");
+          validator.expectBigIntOrNumber(right, rightType, "right operand");
+        }
         break;
 
       case ASSIGN_BITAND:
@@ -3013,8 +3035,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case BITAND:
       case BITXOR:
       case BITOR:
-        validator.expectBitwiseable(left, leftType, "bad left operand to bitwise operator");
-        validator.expectBitwiseable(right, rightType, "bad right operand to bitwise operator");
+        if (operatorType.isNumber()) {
+          // This condition is meant to catch any old cases (where bigint isn't involved)
+          validator.expectBitwiseable(left, leftType, "bad left operand to bitwise operator");
+          validator.expectBitwiseable(right, rightType, "bad right operand to bitwise operator");
+        } else {
+          validator.expectBigIntOrNumber(left, leftType, "bad left operand to bitwise operator");
+          validator.expectBigIntOrNumber(right, rightType, "bad right operand to bitwise operator");
+        }
         break;
 
       case ASSIGN_ADD:

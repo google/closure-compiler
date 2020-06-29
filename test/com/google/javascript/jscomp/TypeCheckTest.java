@@ -23819,6 +23819,204 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntOperators_binaryOperationWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; const y = 1n; x * y");
+  }
+
+  @Test
+  public void testBigIntOperators_assignOpWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; const y = 1n; x *= y");
+  }
+
+  @Test
+  public void testBigIntOperators_binaryBitwiseOperationWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; const y = 1n; x | y");
+  }
+
+  @Test
+  public void testBigIntOperators_additionWithString() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; const y = 'str'; x + y");
+  }
+
+  @Test
+  public void testBigIntOperators_assignAddWithString() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; const y = 'str'; x += y");
+  }
+
+  @Test
+  public void testBigIntOperators_binaryOperationWithString() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "const x = 1n; const y = 'str'; x * y",
+        "operator * cannot be applied to bigint and string");
+  }
+
+  @Test
+  public void testBigIntOperators_assignOpWithString() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "const x = 1n; const y = 'str'; x *= y",
+        "operator *= cannot be applied to bigint and string");
+  }
+
+  @Test
+  public void testBigIntOperators_binaryOperationWithUnknown() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "var x = 1n; /** @type {?} */var y; x * y", "operator * cannot be applied to bigint and ?");
+  }
+
+  @Test
+  public void testBigIntOperators_assignOpWithUnknown() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "var x = 1n; /** @type {?} */var y; x *= y",
+        "operator *= cannot be applied to bigint and ?");
+  }
+
+  @Test
+  public void testBigIntOperators_binaryOperationWithNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "const x = 1n; const y = 1; x * y", "operator * cannot be applied to bigint and number");
+  }
+
+  @Test
+  public void testBigIntOperators_assignOpWithNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "const x = 1n; const y = 1; x *= y", "operator *= cannot be applied to bigint and number");
+  }
+
+  @Test
+  public void testBigIntOperators_binaryBitwiseOperationWithNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "const x = 1n; const y = 1; x | y", "operator | cannot be applied to bigint and number");
+  }
+
+  @Test
+  public void testBigIntOperators_unsignedRightShift() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; x >>> x;", "operator >>> cannot be applied to bigint and bigint");
+  }
+
+  @Test
+  public void testBigIntOperators_assignUnsignedRightShift() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("const x = 1n; x >>>= x;", "operator >>>= cannot be applied to bigint and bigint");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_binaryOperationWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/** @type {bigint|number} */ var x; x * x;");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_assignOpWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/** @type {bigint|number} */ var x; x *= x;");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_binaryBitwiseOperationWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/** @type {bigint|number} */ var x; x | x;");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_binaryOperationWithBigInt() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "var x = 1n; /** @type {bigint|number} */ var y; x * y;",
+        "operator * cannot be applied to bigint and (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_assignOpWithBigInt() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "var x = 1n; /** @type {bigint|number} */ var y; x *= y;",
+        "operator *= cannot be applied to bigint and (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_binaryBitwiseOperationWithBigInt() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "var x = 1n; /** @type {bigint|number} */ var y; x | y;",
+        "operator | cannot be applied to bigint and (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_unsignedRightShift() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|number} */ var x = 1n; x >>> x;",
+        "operator >>> cannot be applied to (bigint|number) and (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntOrNumberOperators_assignUnsignedRightShift() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|number} */ var x = 1n; x >>>= x;",
+        "operator >>>= cannot be applied to (bigint|number) and (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntOrOtherOperators_binaryOperationWithBigInt() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|string} */ var x; var y = 1n; x * y;",
+        "operator * cannot be applied to (bigint|string) and bigint");
+  }
+
+  @Test
+  public void testBigIntOrOtherOperators_assignOpWithBigInt() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|string} */ var x; var y = 1n; x *= y;",
+        "operator *= cannot be applied to (bigint|string) and bigint");
+  }
+
+  @Test
+  public void testBigIntOrOtherOperators_binaryOperationWithBigIntOrNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|string} */ var x; /** @type {bigint|number} */ var y; x * y;",
+        "operator * cannot be applied to (bigint|string) and (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntOrOtherOperators_assignOpWithBigIntOrNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|string} */ var x; /** @type {bigint|number} */ var y; x *= y;",
+        "operator *= cannot be applied to (bigint|string) and (bigint|number)");
+  }
+
+  @Test
+  public void testBigIntEnumOperators_binaryOperationWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @enum {bigint} */ const BIGINTS = {ONE: 1n, TWO: 2n}; BIGINTS.ONE * BIGINTS.TWO;");
+  }
+
+  @Test
+  public void testBigIntEnumOperators_assignOpWithSelf() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @enum {bigint} */ const BIGINTS = {ONE: 1n, TWO: 2n}; BIGINTS.ONE *= BIGINTS.TWO;");
+  }
+
+  @Test
   public void testStrictComparison1() {
     testTypes(
         "var x = true < 'asdf';",
