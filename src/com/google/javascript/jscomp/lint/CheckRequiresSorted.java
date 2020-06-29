@@ -276,8 +276,6 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
   private final List<ImportStatement> originalImports = new ArrayList<>();
 
   // The import statements in canonical order.
-  @Nullable private List<ImportStatement> canonicalImports = null;
-
   @Nullable private Node firstNode = null;
   @Nullable private Node lastNode = null;
   private boolean finished = false;
@@ -393,7 +391,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
   }
 
   private void checkCanonical(NodeTraversal t) {
-    canonicalImports = canonicalizeImports(importsByNamespace);
+    @Nullable List<ImportStatement> canonicalImports = canonicalizeImports(importsByNamespace);
     if (!originalImports.equals(canonicalImports)) {
       needsFix = true;
       replacement =

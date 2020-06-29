@@ -2323,11 +2323,10 @@ public class ErrorToFixMapperTest {
       assertWithMessage("Actual fix[" + i + "]: " + actualFix)
           .that(actualFix.getDescription())
           .isEqualTo(expectedFix.description());
-      String newCode =
-          ApplySuggestedFixes.applySuggestedFixesToCode(
-                  ImmutableList.of(fixes[i]), getInputMap(originalCode))
-              .get("test");
-      assertThat(newCode).isEqualTo(expectedFix.fixedCode());
+      assertThat(
+              ApplySuggestedFixes.applySuggestedFixesToCode(
+                  ImmutableList.of(fixes[i]), getInputMap(originalCode)))
+          .containsEntry("test", expectedFix.fixedCode());
     }
   }
 

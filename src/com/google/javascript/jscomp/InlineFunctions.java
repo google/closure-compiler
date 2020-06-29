@@ -23,6 +23,7 @@ import static com.google.common.base.Predicates.alwaysTrue;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
@@ -31,7 +32,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -111,11 +111,7 @@ class InlineFunctions implements CompilerPass {
   }
 
   FunctionState getOrCreateFunctionState(String fnName) {
-    FunctionState functionState = fns.get(fnName);
-    if (functionState == null) {
-      functionState = new FunctionState();
-      fns.put(fnName, functionState);
-    }
+    FunctionState functionState = fns.computeIfAbsent(fnName, (String k) -> new FunctionState());
     return functionState;
   }
 
@@ -934,7 +930,7 @@ class InlineFunctions implements CompilerPass {
 
     private Map<Node, Reference> getReferencesInternal() {
       if (references == null) {
-        return Collections.emptyMap();
+        return ImmutableMap.of();
       }
       return references;
     }

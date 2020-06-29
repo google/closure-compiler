@@ -1668,7 +1668,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     // `$jscomp$destructuring$var0` has the same type as `obj`
     assertThat(
             getAllNodesMatchingQName(jsRoot, "$jscomp$destructuring$var0").stream()
-                .map(node -> node.getJSType())
+                .map(Node::getJSType)
                 .collect(Collectors.toSet()))
         .containsExactly(objType);
   }

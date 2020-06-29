@@ -226,11 +226,11 @@ final class DestructuredTarget {
   }
 
   Supplier<JSType> getInferredTypeSupplier() {
-    return () -> inferType();
+    return this::inferType;
   }
 
   Supplier<JSType> getInferredTypeSupplierWithoutDefaultValue() {
-    return () -> inferTypeWithoutUsingDefaultValue();
+    return this::inferTypeWithoutUsingDefaultValue;
   }
 
   /**

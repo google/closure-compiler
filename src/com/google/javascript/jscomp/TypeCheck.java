@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Streams.stream;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -35,7 +36,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.modules.Module;
@@ -1740,7 +1740,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     boolean declaredOverride = declaresOverride(info);
     @Nullable
     ObjectType supertypeWithProperty =
-        Streams.stream(receiverType.getImplicitPrototypeChain())
+        stream(receiverType.getImplicitPrototypeChain())
             // We want to report the supertype that actually had the overidden declaration.
             .filter((type) -> type.hasOwnProperty(propertyName))
             // We only care about the lowest match in the chain because it must be the most
@@ -2748,7 +2748,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             call,
             WRONG_ARGUMENT_COUNT,
             typeRegistry.getReadableTypeNameNoDeref(call.getFirstChild()),
-            "at least " + String.valueOf(normalArgumentCount),
+            "at least " + normalArgumentCount,
             String.valueOf(minArity),
             maxArity == Integer.MAX_VALUE ? "" : " and no more than " + maxArity + " argument(s)");
       }

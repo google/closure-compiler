@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,12 +72,12 @@ public abstract class PassConfig {
    * not to have any processing - specifically introduced to support goog.module() usage.
    */
   protected List<PassFactory> getWhitespaceOnlyPasses() {
-    return Collections.emptyList();
+    return ImmutableList.of();
   }
 
   /** Gets the transpilation passes */
   protected List<PassFactory> getTranspileOnlyPasses() {
-    return Collections.emptyList();
+    return ImmutableList.of();
   }
 
   /**

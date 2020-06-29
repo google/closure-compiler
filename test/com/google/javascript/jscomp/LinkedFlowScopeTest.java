@@ -41,8 +41,8 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   private final Node rootNode = new Node(Token.ROOT, functionNode);
   private static final int LONG_CHAIN_LENGTH = 1050;
 
-  private TypedScope globalScope;
   private TypedScope localScope;
+
   @SuppressWarnings("unused")
   private FlowScope globalEntry;
   private FlowScope localEntry;
@@ -52,7 +52,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
-    globalScope = TypedScope.createGlobalScope(rootNode);
+    TypedScope globalScope = TypedScope.createGlobalScope(rootNode);
     globalScope.declare("globalA", null, null, null, true);
     globalScope.declare("globalB", null, null, null, true);
 

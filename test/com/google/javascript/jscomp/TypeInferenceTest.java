@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Streams.stream;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
@@ -48,7 +49,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.types;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
@@ -296,7 +296,7 @@ public final class TypeInferenceTest {
     Node node = checkNotNull(declaration.getNode(), declaration);
 
     assertNode(node).hasType(Token.NAME);
-    Streams.stream(node.getAncestors())
+    stream(node.getAncestors())
         .filter(Node::isParamList)
         .findFirst()
         .orElseThrow(AssertionError::new);

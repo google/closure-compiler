@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.FULL;
 import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.LINE;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -202,7 +204,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     if (errorNode == null) {
       b.append("^");
     } else {
-      int length = Math.max(1, Math.min(errLength, sourceExcerpt.length() - charno));
+      int length = max(1, min(errLength, sourceExcerpt.length() - charno));
       for (int i = 0; i < length; i++) {
         b.append("^");
       }

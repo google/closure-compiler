@@ -2701,7 +2701,7 @@ public final class CommandLineRunnerTest {
     File weakFile = new File(outDir, JSModule.WEAK_MODULE_NAME + ".js");
 
     args.add("--chunk_output_path_prefix");
-    args.add(outDir.toString() + "/");
+    args.add(outDir + "/");
     args.add("--chunk=a:1");
     args.add("--chunk=b:1");
     args.add("--js");
@@ -2858,7 +2858,7 @@ public final class CommandLineRunnerTest {
     try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(tempZipFile))) {
       for (Entry<String, String> entry : entryContentsByName.entrySet()) {
         zipOutputStream.putNextEntry(new ZipEntry(entry.getKey()));
-        zipOutputStream.write(entry.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        zipOutputStream.write(entry.getValue().getBytes(UTF_8));
       }
     }
 
@@ -2870,7 +2870,7 @@ public final class CommandLineRunnerTest {
     File tempJsFile = File.createTempFile(filename, ".js",
         java.nio.file.Files.createTempDirectory("jscomp").toFile());
     try (FileOutputStream fileOutputStream = new FileOutputStream(tempJsFile)) {
-      fileOutputStream.write(fileContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      fileOutputStream.write(fileContent.getBytes(UTF_8));
     }
 
     return new FlagEntry<>(JsSourceType.JS, tempJsFile.getAbsolutePath());

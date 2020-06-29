@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Streams.stream;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
@@ -50,7 +52,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
@@ -3535,7 +3536,8 @@ public final class NodeUtilTest {
             ast, allVariables, orderedVars, compiler, scopeCreator, globalScope);
         throw new RuntimeException("getAllVarsDeclaredInModule should throw an exception");
       } catch (IllegalStateException e) {
-        assertThat(e.getMessage())
+        assertThat(e)
+            .hasMessageThat()
             .isEqualTo("getAllVarsDeclaredInModule expects a module body node");
       }
       assertThat(allVariables).isEmpty();
@@ -3903,8 +3905,8 @@ public final class NodeUtilTest {
     @Test
     public void testIteratePreOrder() {
       List<String> nodeNames =
-          Streams.stream(NodeUtil.preOrderIterable(buildTestTree()))
-              .map(n -> n.getString())
+          stream(NodeUtil.preOrderIterable(buildTestTree()))
+              .map(Node::getString)
               .collect(Collectors.toList());
 
       assertThat(nodeNames).containsExactly("A", "B", "C", "D", "E", "F", "G").inOrder();
@@ -3914,8 +3916,8 @@ public final class NodeUtilTest {
     public void testIteratePreOrderWithPredicate() {
       Predicate<Node> isNotE = n -> !n.getString().equals("E");
       List<String> nodeNames =
-          Streams.stream(NodeUtil.preOrderIterable(buildTestTree(), isNotE))
-              .map(n -> n.getString())
+          stream(NodeUtil.preOrderIterable(buildTestTree(), isNotE))
+              .map(Node::getString)
               .collect(Collectors.toList());
 
       assertThat(nodeNames).containsExactly("A", "B", "C", "D", "E").inOrder();
@@ -3967,9 +3969,7 @@ public final class NodeUtilTest {
         NodeUtil.Visitor mockVisitor) {
       ArgumentCaptor<Node> captor = ArgumentCaptor.forClass(Node.class);
       verify(mockVisitor, Mockito.atLeastOnce()).visit(captor.capture());
-      return captor.getAllValues().stream()
-          .map(n -> n.getString())
-          .collect(ImmutableList.toImmutableList());
+      return captor.getAllValues().stream().map(Node::getString).collect(toImmutableList());
     }
   }
 

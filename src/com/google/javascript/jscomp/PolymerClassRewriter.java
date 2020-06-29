@@ -455,7 +455,7 @@ final class PolymerClassRewriter {
         propertySinks.addAll(addComplexObserverReflectionCalls(cls));
       }
 
-      if (propertySinks.size() > 0) {
+      if (!propertySinks.isEmpty()) {
         if (!propertySinkExternInjected
             && traversal.getScope().getVar(CheckSideEffects.PROTECTOR_FN) == null) {
           CheckSideEffects.addExtern(compiler);
@@ -1362,7 +1362,7 @@ final class PolymerClassRewriter {
         nextParamDelimeter = ",";
       }
 
-      if (methodParams.size() == 0) {
+      if (methodParams.isEmpty()) {
         reflectedSignature = IR.add(reflectedSignature, IR.string("()"));
       } else {
         reflectedSignature = IR.add(reflectedSignature, IR.string(")"));

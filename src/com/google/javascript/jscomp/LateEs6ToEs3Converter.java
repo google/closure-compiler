@@ -52,7 +52,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
           Feature.TEMPLATE_LITERALS);
   // addTypes indicates whether we should add type information when transpiling.
   private final boolean addTypes;
-  private final JSTypeRegistry registry;
   private final JSType stringType;
 
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
@@ -63,7 +62,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     this.templateLiteralConverter = new Es6TemplateLiterals(compiler);
     // Only add type information if typechecking has been run.
     this.addTypes = compiler.hasTypeCheckingRun();
-    this.registry = compiler.getTypeRegistry();
+    JSTypeRegistry registry = compiler.getTypeRegistry();
     this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
   }
 

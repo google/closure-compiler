@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -1444,7 +1445,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     // return 0 if no errors, the error count otherwise
-    return Math.min(result.errors.size(), 0x7f);
+    return min(result.errors.size(), 0x7f);
   }
 
   @GwtIncompatible("Unnecessary")

@@ -51,8 +51,6 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
   private final List<String> originalProvides = new ArrayList<>();
 
   // The provided namespaces in canonical order.
-  @Nullable private List<String> canonicalProvides = null;
-
   @Nullable private Node firstNode = null;
   @Nullable private Node lastNode = null;
   private boolean finished = false;
@@ -135,7 +133,9 @@ public final class CheckProvidesSorted implements NodeTraversal.Callback {
   }
 
   private void checkCanonical(NodeTraversal t) {
-    canonicalProvides = originalProvides.stream().distinct().sorted().collect(toImmutableList());
+    @Nullable
+    List<String> canonicalProvides =
+        originalProvides.stream().distinct().sorted().collect(toImmutableList());
     if (!originalProvides.equals(canonicalProvides)) {
       needsFix = true;
       replacement =

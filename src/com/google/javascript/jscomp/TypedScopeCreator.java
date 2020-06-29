@@ -779,7 +779,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
     private InputId inputId;
 
     /** The Module object for this scope, if any. */
-    private Module module;
+    private final Module module;
 
     /**
      * Some actions need to be deferred, such as analyzing object literals with
@@ -959,11 +959,11 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         attachLiteralTypes(n);
         visitPostorder(t, n, parent);
         if (deferredActions.containsKey(n)) { // streams are expensive, only make if needed
-          deferredActions.removeAll(n).stream().forEach(Runnable::run);
+          deferredActions.removeAll(n).forEach(Runnable::run);
         }
       } else if (!deferredActions.isEmpty()) {
         // Run *all* remaining deferred actions, in case any were missed.
-        deferredActions.values().stream().forEach(Runnable::run);
+        deferredActions.values().forEach(Runnable::run);
       }
     }
 

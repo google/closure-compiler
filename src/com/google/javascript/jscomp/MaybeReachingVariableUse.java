@@ -49,7 +49,6 @@ class MaybeReachingVariableUse extends
   // The scope of the function that we are analyzing.
   private final Set<Var> escaped;
   private final Map<String, Var> allVarsInFn;
-  private final List<Var> orderedVars;
 
   MaybeReachingVariableUse(
       ControlFlowGraph<Node> cfg,
@@ -59,7 +58,7 @@ class MaybeReachingVariableUse extends
     super(cfg, new ReachingUsesJoinOp());
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
-    this.orderedVars = new ArrayList<>();
+    List<Var> orderedVars = new ArrayList<>();
 
     // TODO(user): Maybe compute it somewhere else and re-use the escape
     // local set here.

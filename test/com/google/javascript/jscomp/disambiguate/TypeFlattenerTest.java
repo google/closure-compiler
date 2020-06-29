@@ -353,7 +353,7 @@ public final class TypeFlattenerTest {
 
   private final Correspondence<FlatType, JSTypeNative> isBoxingTypeFor =
       Correspondence.transforming(
-          (f) -> f.getTypeSingle(),
+          FlatType::getTypeSingle,
           (n) -> this.registry.getNativeType(n).autobox(),
           "is a boxing object type for");
 

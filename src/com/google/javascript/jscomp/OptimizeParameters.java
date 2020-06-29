@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
@@ -171,7 +173,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           if (!c.isUnusedParameter()) {
             used.set(index);
             if (c.isRest()) {
-              lowestUsedRest = Math.min(lowestUsedRest, index);
+              lowestUsedRest = min(lowestUsedRest, index);
               if (lowestUsedRest == 0) {
                 // don't bother doing anything more, all the parameters are used.
                 return;
@@ -180,7 +182,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
           }
         }
 
-        maxFormalsCount = Math.max(maxFormalsCount, index + 1);
+        maxFormalsCount = max(maxFormalsCount, index + 1);
       }
 
       // every argument slot after the earliest rest is used
@@ -235,7 +237,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
             }
 
             if (param.isSpread()) {
-              lowestSpread = Math.min(lowestSpread, paramIndex);
+              lowestSpread = min(lowestSpread, paramIndex);
               break;
             }
 
@@ -849,7 +851,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       }
 
       // process the rest.
-      lastParameter = Math.min(parameters.size() - 1, restIndex - 1);
+      lastParameter = min(parameters.size() - 1, restIndex - 1);
     }
 
     for (int i = lastParameter; i >= 0; i--) {

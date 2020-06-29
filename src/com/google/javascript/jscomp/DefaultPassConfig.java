@@ -1196,7 +1196,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName("checkExtraRequires")
           .setFeatureSetForChecks()
-          .setInternalFactory((compiler) -> new CheckExtraRequires(compiler))
+          .setInternalFactory(CheckExtraRequires::new)
           .build();
 
   /** Checks that all constructed classes are goog.require()d. */
@@ -1204,7 +1204,7 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName("checkMissingAndExtraRequires")
           .setFeatureSetForChecks()
-          .setInternalFactory((compiler) -> new CheckMissingAndExtraRequires(compiler))
+          .setInternalFactory(CheckMissingAndExtraRequires::new)
           .build();
 
   private final PassFactory checkMissingRequires =
@@ -1954,13 +1954,12 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builderForHotSwap()
           .setName("checkRequiresAndProvidesSorted")
           .setInternalFactory(
-              (compiler) -> {
-                return combineChecks(
-                    compiler,
-                    ImmutableList.of(
-                        new CheckProvidesSorted(CheckProvidesSorted.Mode.COLLECT_AND_REPORT),
-                        new CheckRequiresSorted(CheckRequiresSorted.Mode.COLLECT_AND_REPORT)));
-              })
+              (compiler) ->
+                  combineChecks(
+                      compiler,
+                      ImmutableList.of(
+                          new CheckProvidesSorted(CheckProvidesSorted.Mode.COLLECT_AND_REPORT),
+                          new CheckRequiresSorted(CheckRequiresSorted.Mode.COLLECT_AND_REPORT))))
           .setFeatureSetForChecks()
           .build();
 
@@ -2269,13 +2268,12 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName(PassNames.DEVIRTUALIZE_METHODS)
           .setInternalFactory(
-              (compiler) -> {
-                return OptimizeCalls.builder()
-                    .setCompiler(compiler)
-                    .setConsiderExterns(false)
-                    .addPass(new DevirtualizeMethods(compiler))
-                    .build();
-              })
+              (compiler) ->
+                  OptimizeCalls.builder()
+                      .setCompiler(compiler)
+                      .setConsiderExterns(false)
+                      .addPass(new DevirtualizeMethods(compiler))
+                      .build())
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2288,16 +2286,15 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.OPTIMIZE_CALLS)
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
-              (compiler) -> {
-                return OptimizeCalls.builder()
-                    .setCompiler(compiler)
-                    .setConsiderExterns(false)
-                    // Remove unused return values.
-                    .addPass(new OptimizeReturns(compiler))
-                    // Remove all parameters that are constants or unused.
-                    .addPass(new OptimizeParameters(compiler))
-                    .build();
-              })
+              (compiler) ->
+                  OptimizeCalls.builder()
+                      .setCompiler(compiler)
+                      .setConsiderExterns(false)
+                      // Remove unused return values.
+                      .addPass(new OptimizeReturns(compiler))
+                      // Remove all parameters that are constants or unused.
+                      .addPass(new OptimizeParameters(compiler))
+                      .build())
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2652,10 +2649,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory invertContextualRenaming =
       PassFactory.builder()
           .setName("invertContextualRenaming")
-          .setInternalFactory(
-              (compiler) -> {
-                return MakeDeclaredNamesUnique.getContextualRenameInverter(compiler);
-              })
+          .setInternalFactory(MakeDeclaredNamesUnique::getContextualRenameInverter)
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2768,11 +2762,12 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("instrumentForCodeCoverage")
           .setInternalFactory(
-              (compiler) -> {
-                // TODO(johnlenz): make global instrumentation an option
-                return new CoverageInstrumentationPass(
-                    compiler, CoverageReach.CONDITIONAL, options.getInstrumentForCoverageOption());
-              })
+              (compiler) ->
+                  // TODO(johnlenz): make global instrumentation an option
+                  new CoverageInstrumentationPass(
+                      compiler,
+                      CoverageReach.CONDITIONAL,
+                      options.getInstrumentForCoverageOption()))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2792,10 +2787,7 @@ public final class DefaultPassConfig extends PassConfig {
   private PassFactory getCustomPasses(final CustomPassExecutionTime executionTime) {
     return PassFactory.builder()
         .setName("runCustomPasses")
-        .setInternalFactory(
-            (compiler) -> {
-              return runInSerial(options.customPasses.get(executionTime));
-            })
+        .setInternalFactory((compiler) -> runInSerial(options.customPasses.get(executionTime)))
         .setFeatureSetForOptimizations()
         .build();
   }

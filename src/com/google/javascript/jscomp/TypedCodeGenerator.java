@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
@@ -32,7 +33,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * A code generator that outputs type annotations for functions and
@@ -292,7 +292,7 @@ class TypedCodeGenerator extends CodeGenerator {
       StringBuilder sb, Collection<? extends JSType> typeParams) {
     if (!typeParams.isEmpty()) {
       sb.append(" * @template ");
-      sb.append(typeParams.stream().map(this::formatTypeVar).collect(Collectors.joining(",")));
+      sb.append(typeParams.stream().map(this::formatTypeVar).collect(joining(",")));
       sb.append("\n");
     }
   }

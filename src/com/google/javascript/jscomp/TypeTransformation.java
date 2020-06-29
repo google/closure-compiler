@@ -34,6 +34,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -351,9 +352,7 @@ class TypeTransformation {
     // a templatized type. For instance, if the base type is Array then there
     // must be just one parameter.
     JSType[] templatizedTypes = new JSType[params.size() - 1];
-    for (int i = 0; i < templatizedTypes.length; i++) {
-      templatizedTypes[i] = evalInternal(params.get(i + 1), nameResolver);
-    }
+    Arrays.setAll(templatizedTypes, i -> evalInternal(params.get(i + 1), nameResolver));
     ObjectType baseType = firstParam.toMaybeObjectType();
     return registry.createTemplatizedType(baseType, templatizedTypes);
   }

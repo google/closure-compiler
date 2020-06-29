@@ -907,10 +907,7 @@ public final class AstValidatorTest extends CompilerTestCase {
                 ""));
 
     Node superNode =
-        stream(NodeUtil.preOrderIterable(scriptNode))
-            .filter(node -> node.isSuper())
-            .findFirst()
-            .get();
+        stream(NodeUtil.preOrderIterable(scriptNode)).filter(Node::isSuper).findFirst().get();
     // Erase the type information to make the super node invalid
     superNode.setJSType(null);
 

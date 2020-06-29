@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
 
-import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.graph.Graph.GraphEdge;
 import com.google.javascript.jscomp.graph.GraphColoring.Color;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
@@ -172,8 +172,7 @@ public final class GraphColoringTest {
     graph.connect("D", "-->", "E");
     graph.connect("E", "-->", "A");
 
-    GraphColoring<String, String> coloring =
-        new GreedyGraphColoring<>(graph, Ordering.<String>natural());
+    GraphColoring<String, String> coloring = new GreedyGraphColoring<>(graph, naturalOrder());
     assertThat(coloring.color()).isEqualTo(3);
     validateColoring(graph);
     assertThat(coloring.getPartitionSuperNode("A")).isEqualTo("A");

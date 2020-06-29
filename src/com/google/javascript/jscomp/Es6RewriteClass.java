@@ -61,14 +61,13 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   static final String INHERITS = "$jscomp.inherits";
 
   private final AbstractCompiler compiler;
-  private final JSTypeRegistry registry;
   private final AstFactory astFactory;
   private final JSType objectPropertyDescriptorType;
   private final Es6ConvertSuperConstructorCalls convertSuperConstructorCalls;
 
   public Es6RewriteClass(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.registry = compiler.getTypeRegistry();
+    JSTypeRegistry registry = compiler.getTypeRegistry();
     this.astFactory = compiler.createAstFactory();
 
     // Finds the type for `ObjectPropertyDescriptor`. Fallback to the unknown type if it's not

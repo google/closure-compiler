@@ -530,7 +530,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(compiler.getErrors()).hasSize(1);
-    assertThat(defs).hasSize(0);
+    assertThat(defs).isEmpty();
   }
 
   @Test
@@ -543,7 +543,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
     ImmutableList<BehaviorDefinition> defs = extractor.extractBehaviors(behaviorArray, null);
     assertThat(compiler.getErrors()).hasSize(1);
-    assertThat(defs).hasSize(0);
+    assertThat(defs).isEmpty();
   }
 
   private String createBehaviorDefinition(String name) {

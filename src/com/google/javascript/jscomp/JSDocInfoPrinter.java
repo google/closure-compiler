@@ -16,10 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static java.util.Comparator.naturalOrder;
+
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -287,7 +288,7 @@ public final class JSDocInfoPrinter {
     if (!suppressions.isEmpty()) {
       // Print suppressions in sorted order to avoid non-deterministic output.
       String[] arr = suppressions.toArray(new String[0]);
-      Arrays.sort(arr, Ordering.natural());
+      Arrays.sort(arr, naturalOrder());
       parts.add("@suppress {" + Joiner.on(',').join(arr) + "}");
       multiline = true;
     }
@@ -349,7 +350,7 @@ public final class JSDocInfoPrinter {
     }
     // Ensure all lines start with " *", and then ensure all non blank lines have a space after
     // the *.
-    String s = sb.toString().replaceAll("\n", "\n *").replaceAll("\n \\*([^ \n])", "\n * $1");
+    String s = sb.toString().replace("\n", "\n *").replaceAll("\n \\*([^ \n])", "\n * $1");
     if (multiline) {
       s += "\n */\n";
     } else {

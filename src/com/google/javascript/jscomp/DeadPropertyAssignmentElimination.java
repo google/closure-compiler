@@ -262,7 +262,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       String propName =
           propNode.isGetProp() ? propNode.getLastChild().getString() : propNode.getQualifiedName();
 
-      Property property = propertyMap.computeIfAbsent(propName, name -> new Property(name));
+      Property property = propertyMap.computeIfAbsent(propName, Property::new);
 
       /* Using the GETPROP chain, build out the tree of children properties.
 

@@ -30,6 +30,7 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.undefinedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.voidType;
 import static java.lang.Integer.parseInt;
+import static java.lang.Math.min;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -2301,9 +2302,8 @@ class IRFactory {
         // will be encoded with a \v.
         int start = token.location.start.offset;
         int end = token.location.end.offset;
-        if (start < sourceString.length() &&
-            (sourceString.substring(
-                start, Math.min(sourceString.length(), end)).contains("\\v"))) {
+        if (start < sourceString.length()
+            && (sourceString.substring(start, min(sourceString.length(), end)).contains("\\v"))) {
           n.putBooleanProp(Node.SLASH_V, true);
         }
       }
