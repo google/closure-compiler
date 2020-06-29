@@ -709,13 +709,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case BITNOT:
-        childType = getJSType(n.getFirstChild());
-        if (!childType.matchesNumberContext()) {
-          report(n, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), childType.toString());
-        } else {
-          this.validator.expectNumberStrict(n, childType, "bitwise NOT");
-        }
-        ensureTyped(n, NUMBER_TYPE);
+        visitBitwiseNOT(n);
         break;
 
       case POS:
@@ -1092,6 +1086,22 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ensureTyped(n, NUMBER_TYPE);
     } else {
       validator.expectBigIntOrNumber(n, childType, "unary minus operator");
+    }
+  }
+
+  private void visitBitwiseNOT(Node n) {
+    JSType operatorType = getJSType(n);
+    JSType childType = getJSType(n.getFirstChild());
+    if (operatorType.isNumber()) {
+      // This condition is meant to catch any old cases (where bigint isn't involved)
+      if (!childType.matchesNumberContext()) {
+        report(n, BIT_OPERATION, NodeUtil.opToStr(n.getToken()), childType.toString());
+      } else {
+        validator.expectNumberStrict(n, childType, "bitwise NOT");
+      }
+      ensureTyped(n, NUMBER_TYPE);
+    } else {
+      validator.expectBigIntOrNumber(n, childType, "bitwise NOT");
     }
   }
 
