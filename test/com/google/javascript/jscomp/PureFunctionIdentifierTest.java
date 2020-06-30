@@ -930,6 +930,12 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testOptionalCall() {
+    String source = lines("function f() {return g?.()}", "function g() {return 42}", "f?.()");
+    assertPureCallsMarked(source, ImmutableList.of("g", "f"));
+  }
+
+  @Test
   public void testInference1() {
     String source = lines(
         "function f() {return g()}",
@@ -1839,6 +1845,23 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAmbiguousDefinitionsBothCallThisWithOptionalChain() {
+    String source =
+        lines(
+            "B.f = function() {",
+            "  this.x = 1;",
+            "}",
+            "/** @constructor */ function C() {",
+            "  this.f?.apply(this);",
+            "}",
+            "C.prototype.f = function() {",
+            "  this.x = 2;",
+            "}",
+            "new C();");
+    assertPureCallsMarked(source, ImmutableList.of("C"));
+  }
+
+  @Test
   public void testAmbiguousDefinitionsAllCallThis() {
     String source =
         lines(
@@ -2055,6 +2078,17 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         "function f() {return new A}",
         "f()"
     );
+    assertPureCallsMarked(source, ImmutableList.of("A", "f"));
+  }
+
+  @Test
+  public void testOptCallInConstructorThatModifiesThis() {
+    String source =
+        lines(
+            "/**@constructor*/function A(){this?.foo()}",
+            "A.prototype.foo = function(){this.data=24};",
+            "function f() {return new A}",
+            "f()");
     assertPureCallsMarked(source, ImmutableList.of("A", "f"));
   }
 

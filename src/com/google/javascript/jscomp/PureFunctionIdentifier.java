@@ -789,6 +789,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               RHS_IS_ALWAYS_LOCAL);
           break;
 
+        case OPTCHAIN_CALL:
         case CALL:
         case NEW:
         case TAGGED_TEMPLATELIT:
@@ -1099,7 +1100,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
   private static boolean isInvocationViaCallOrApply(Node callSite) {
     Node receiver = callSite.getFirstFirstChild();
-    if (receiver == null || (!receiver.isName() && !receiver.isGetProp())) {
+    if (receiver == null
+        || !(receiver.isName() || receiver.isGetProp() || receiver.isOptChainGetProp())) {
       return false;
     }
 
@@ -1209,7 +1211,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       if (isInvocationViaCallOrApply(invocation)) {
         // If the call site is actually a `.call` or `.apply`, then `this` will be an argument.
         thisArg = invocation.getSecondChild();
-      } else if (callee.isGetProp()) {
+      } else if (callee.isGetProp() || callee.isOptChainGetProp()) {
         thisArg = callee.getFirstChild();
       } else {
         thisArg = null;
