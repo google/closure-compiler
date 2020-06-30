@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -107,7 +106,9 @@ public class GoldenFileComparer {
 
   /**
    * Compile sourceFileName with given CompilerOptions and check that all lines of code from
-   * goldenFileName are present in compiled sourceFile.
+   * goldenFileName are present and in the same order as in compiled sourceFile. When comparing a
+   * compiled version of the sourceFile which contains polyfill code, we only wish to compare the
+   * original instrumented source code to the golden.
    */
   public static void compileAndCompareSubsetOfActualToExpected(
       String goldenFileName, CompilerOptions options, String sourceFileName) throws Exception {
@@ -129,7 +130,10 @@ public class GoldenFileComparer {
       }
     }
 
-    assertThat(identicalLinesBetweenFiles).isEqualTo(expectedNumberOfIdenticalLines);
+    assertWithMessage(
+        "Line " + (identicalLinesBetweenFiles + 1)
+            + " from Golden was not found in compiled version of source file")
+        .that(identicalLinesBetweenFiles).isEqualTo(expectedNumberOfIdenticalLines);
   }
 
   /**

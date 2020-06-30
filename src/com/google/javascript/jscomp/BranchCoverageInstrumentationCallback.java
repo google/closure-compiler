@@ -49,7 +49,11 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   public void visit(NodeTraversal traversal, Node node, Node parent) {
     String fileName = traversal.getSourceName();
 
-    // If origin of node is not from sourceFile, do not instrument
+    /** If origin of node is not from sourceFile, do not instrument. This typically occurs when
+     * polyfill code is injected into the sourceFile AST and this check avoids instrumenting it.
+     * We avoid instrumentation as this callback does not distinguish between sourceFile code and
+     * injected code and can result in an error.
+     */
     if (fileName != node.getSourceFileName()) {
       return;
     }
@@ -99,8 +103,17 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
           } else {
             Node exitBlock = IR.block();
             if (destination != null && destination.getParent().isBlock()) {
+              /**
+               * When the destination of an outEdge of the CFG is not null and the source node's
+               * parent is a block. If parent is not a block it may result in an illegal state
+               * exception
+               */
               destination.getParent().addChildBefore(exitBlock, destination);
             } else {
+              /**
+               * When the destination of an outEdge of the CFG is null then we need to add an empty
+               * block directly after the loop structure that we can later instrument
+               */
               outEdge.getSource().getValue().getParent()
                   .addChildAfter(exitBlock, outEdge.getSource().getValue());
             }

@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.testing;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;

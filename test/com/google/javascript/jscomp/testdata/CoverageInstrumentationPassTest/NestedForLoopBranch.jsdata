@@ -4,4 +4,7 @@ function doubleLoop(y,x){
 			y += j;
 		}
 	}
+	{
+		y = 5;
+	}
 }
