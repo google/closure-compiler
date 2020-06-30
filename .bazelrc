@@ -9,3 +9,4 @@ build --spawn_strategy=local
 build --strategy=J2cl=worker
 build --strategy=Closure=worker
 build --experimental_persistent_javac
+
