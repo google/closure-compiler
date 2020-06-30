@@ -26,6 +26,7 @@ function doubleLoop(y, x) {
   }
   {
     JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_NestedForLoopBranch_jsdata[1] = true;
+    y = 5;
   }
 }
 ;
