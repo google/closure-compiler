@@ -3016,10 +3016,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.cssNames = cssNames;
   }
 
-  Map<String, Integer> getCssNames() {
-    return cssNames;
-  }
-
   @Override
   public void setIdGeneratorMap(String serializedIdMappings) {
     this.idGeneratorMap = serializedIdMappings;

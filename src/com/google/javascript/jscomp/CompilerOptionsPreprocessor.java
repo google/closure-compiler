@@ -21,16 +21,15 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 /**
- * Checks for combinations of options that are incompatible, i.e. will produce
- * incorrect code.
+ * Checks for combinations of options that are incompatible, i.e. will produce incorrect code.
  *
- * This is run by Compiler#compileInternal, which is not run during unit tests.
- * The catch is that it's run after Compiler#initOptions, so if for example
- * you want to change the warningsGuard, you can't do it here.
+ * <p>This is run by Compiler#compileInternal, which is not run during unit tests. The catch is that
+ * it's run after Compiler#initOptions, so if for example you want to change the warningsGuard, you
+ * can't do it here.
  *
  * <p>Also, turns off options if the provided options don't make sense together.
  */
-final class CompilerOptionsPreprocessor {
+public final class CompilerOptionsPreprocessor {
 
   static void preprocess(CompilerOptions options) {
     if (options.checkMissingGetCssNameLevel.isOn()
@@ -70,9 +69,7 @@ final class CompilerOptionsPreprocessor {
     }
   }
 
-  /**
-   * Exception to indicate incompatible options in the CompilerOptions.
-   */
+  /** Exception to indicate incompatible options in the CompilerOptions. */
   public static class InvalidOptionsException extends RuntimeException {
     private InvalidOptionsException(String message, Object... args) {
       super(SimpleFormat.format(message, args));
