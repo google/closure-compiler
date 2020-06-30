@@ -1,6 +1,6 @@
 # Required to be able to use JDK 8.
 # See https://github.com/google/closure-compiler/issues/3448
-dist: xenial
+dist: trusty
 
 language: java
 jdk:
@@ -25,6 +25,10 @@ before_install:
     fi
     wget -O "${HOME}/bin/bazel" "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-${OS}-amd64"
     chmod +x "${HOME}/bin/bazel"
+
+# Skip the "installation" step:
+# https://docs.travis-ci.com/user/customizing-the-build#Skipping-the-Installation-Step
+install: true
 
 before_script:
   - echo "startup --output_base=$HOME/.cache/bazel" >> .bazelrc
