@@ -26,6 +26,10 @@ before_install:
     wget -O "${HOME}/bin/bazel" "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-${OS}-amd64"
     chmod +x "${HOME}/bin/bazel"
 
+# Skip the "installation" step:
+# https://docs.travis-ci.com/user/customizing-the-build#Skipping-the-Installation-Step
+install: true
+
 before_script:
   - echo "startup --output_base=$HOME/.cache/bazel" >> .bazelrc
   - echo "common --noshow_progress" >> .bazelrc
