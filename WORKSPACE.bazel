@@ -1,0 +1,105 @@
+workspace(name = "com_google_javascript_jscomp")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+
+## Load J2CL repo ##
+
+http_archive(
+    name = "com_google_j2cl",
+    strip_prefix = "j2cl-master",
+    # TODO(goktug): Pin J2CL version before making J2CL compiled releases
+    # of Closure Compiler.
+    url = "https://github.com/google/j2cl/archive/master.zip",
+)
+
+load("@com_google_j2cl//build_defs:repository.bzl", "load_j2cl_repo_deps")
+
+load_j2cl_repo_deps()
+
+load("@com_google_j2cl//build_defs:rules.bzl", "setup_j2cl_workspace", "j2cl_maven_import_external")
+
+setup_j2cl_workspace()
+
+
+## Load Elemental2 repo ##
+
+http_archive(
+    name = "com_google_elemental2",
+    strip_prefix = "elemental2-master",
+    # TODO(goktug): Pin Elemental2 version before making J2CL compiled releases
+    # of Closure Compiler.
+    url = "https://github.com/google/elemental2/archive/master.zip",
+)
+
+# TODO(goktug): remove com_google_jsinterop_generator version downgrade after
+# pinning Elemental2 version.
+http_archive(
+    name = "com_google_jsinterop_generator",
+    url = "https://github.com/google/jsinterop-generator/archive/88ca406a6d1c37c47e4ba2783df31296273e0c58.zip",
+    strip_prefix = "jsinterop-generator-88ca406a6d1c37c47e4ba2783df31296273e0c58",
+)
+
+load("@com_google_elemental2//build_defs:repository.bzl", "load_elemental2_repo_deps")
+
+load_elemental2_repo_deps()
+
+load("@com_google_elemental2//build_defs:workspace.bzl", "setup_elemental2_workspace")
+
+setup_elemental2_workspace()
+
+
+## Load Maven dependencies ##
+
+_MAVEN_CENTRAL_URLS = ["https://repo1.maven.org/maven2/"]
+
+j2cl_maven_import_external(
+    name = "org_checkerframework_checker_qual-j2cl",
+    annotation_only = True,
+    artifact = "org.checkerframework:checker-qual:2.5.3",
+    artifact_sha256= "7be622bd25208ccfbb9b634af8bd37aef54368403a1fdce84d908078330a189d",
+    server_urls = _MAVEN_CENTRAL_URLS,
+)
+
+j2cl_maven_import_external(
+    name = "com_google_errorprone_error_prone_annotations-j2cl",
+    annotation_only = True,
+    artifact = "com.google.errorprone:error_prone_annotations:2.4.0",
+    artifact_sha256= "5f2a0648230a662e8be049df308d583d7369f13af683e44ddf5829b6d741a228",
+    server_urls = _MAVEN_CENTRAL_URLS,
+)
+
+j2cl_maven_import_external(
+    name = "com_google_code_findbugs_jsr305-j2cl",
+    annotation_only = True,
+    artifact = "com.google.code.findbugs:jsr305:3.0.2",
+    server_urls = _MAVEN_CENTRAL_URLS,
+)
+
+j2cl_maven_import_external(
+    name = "com_google_j2objc_annotations-j2cl",
+    annotation_only = True,
+    artifact = "com.google.j2objc:j2objc-annotations:jar:1.3",
+    artifact_sha256= "21af30c92267bd6122c0e0b4d20cccb6641a37eaf956c6540ec471d584e64a7b",
+    server_urls = _MAVEN_CENTRAL_URLS,
+)
+
+j2cl_maven_import_external(
+    name = "com_google_guava-j2cl",
+    artifact = "com.google.guava:guava-gwt:29.0-jre",
+    artifact_sha256= "39e899acd9f9f09da2871eaaab0024cae2506da24457c9542955ed754f653292",
+    server_urls = _MAVEN_CENTRAL_URLS,
+    deps = [
+        "@com_google_elemental2//:elemental2-promise-j2cl",
+        "@com_google_errorprone_error_prone_annotations-j2cl",
+        "@com_google_j2cl//:jsinterop-annotations-j2cl",
+        "@com_google_j2objc_annotations-j2cl",
+        "@org_checkerframework_checker_qual-j2cl",
+    ],
+)
+
+j2cl_maven_import_external(
+    name = "com_google_re2j-j2cl",
+    artifact = "com.google.re2j:re2j:1.3",
+    server_urls = _MAVEN_CENTRAL_URLS,
+)
