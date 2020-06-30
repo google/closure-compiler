@@ -1,6 +1,6 @@
 # Required to be able to use JDK 8.
 # See https://github.com/google/closure-compiler/issues/3448
-dist: xenial
+dist: trusty
 
 language: java
 jdk:
