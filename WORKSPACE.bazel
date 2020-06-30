@@ -7,10 +7,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "com_google_j2cl",
-    strip_prefix = "j2cl-master",
-    # TODO(goktug): Pin J2CL version before making J2CL compiled releases
-    # of Closure Compiler.
-    url = "https://github.com/google/j2cl/archive/master.zip",
+    strip_prefix = "j2cl-dc37ec4ce78e58258001cdef1af6387bf232f82e",
+    url = "https://github.com/google/j2cl/archive/dc37ec4ce78e58258001cdef1af6387bf232f82e.zip",
+    sha256 = "9b43896bba24602d83a08a9a1d660fc990830a90bdae556eeed6dfe1bbfa569a",
 )
 
 load("@com_google_j2cl//build_defs:repository.bzl", "load_j2cl_repo_deps")
@@ -25,20 +24,19 @@ setup_j2cl_workspace()
 ## Load Elemental2 repo ##
 
 http_archive(
-    name = "com_google_elemental2",
-    strip_prefix = "elemental2-master",
-    # TODO(goktug): Pin Elemental2 version before making J2CL compiled releases
-    # of Closure Compiler.
-    url = "https://github.com/google/elemental2/archive/master.zip",
+    name = "com_google_jsinterop_generator",
+    url = "https://github.com/google/jsinterop-generator/archive/5a7ea33bcfcac3f640604b822277d7090d54d101.zip",
+    strip_prefix = "jsinterop-generator-5a7ea33bcfcac3f640604b822277d7090d54d101",
+    sha256 = "d9ec405cc6177ff230660a64a7b182c6ffab580d2512980adb32dfa9a73a9885",
 )
 
-# TODO(goktug): remove com_google_jsinterop_generator version downgrade after
-# pinning Elemental2 version.
 http_archive(
-    name = "com_google_jsinterop_generator",
-    url = "https://github.com/google/jsinterop-generator/archive/88ca406a6d1c37c47e4ba2783df31296273e0c58.zip",
-    strip_prefix = "jsinterop-generator-88ca406a6d1c37c47e4ba2783df31296273e0c58",
+    name = "com_google_elemental2",
+    strip_prefix = "elemental2-12b55c5fb798603201320d03206aa926508c3278",
+    url = "https://github.com/google/elemental2/archive/12b55c5fb798603201320d03206aa926508c3278.zip",
+    sha256 = "e5de4402ea7a034118d34019284be84b7002cbf06ad70722ea8a1e43657e98f7",
 )
+
 
 load("@com_google_elemental2//build_defs:repository.bzl", "load_elemental2_repo_deps")
 
