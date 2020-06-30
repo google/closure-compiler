@@ -16779,6 +16779,24 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testOptChainGetPropProvidesThisForMethodCall() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        lines(
+            "class A {",
+            "  foo() {}",
+            "}",
+            "/** @param {?A} a */",
+            "function f(a) {",
+            // TypeCheck should not complain that foo() is getting called without a correctly typed
+            // `this` value.
+            "  a?.foo();",
+            "}",
+            "",
+            ""));
+  }
+
+  @Test
   public void testReflectObject1() {
     testClosureTypes(
         "var goog = {}; goog.reflect = {}; " +
