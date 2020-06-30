@@ -457,6 +457,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testArgumentSpreadNonIterable_optChainCall() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypesWithExtraExterns(
+        "function use(x) {}",
+        "use?.(...1);",
+        lines(
+            "Spread operator only applies to Iterable types",
+            "found   : number",
+            "required: Iterable"));
+  }
+
+  @Test
   public void testTypecheckExpressionInArgumentSpread() {
     testTypesWithExtraExterns(
         "function use(x) {}",

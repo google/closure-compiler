@@ -553,7 +553,7 @@ class TypeValidator implements Serializable {
    * @param indexType The type inside the brackets of the GETELEM/COMPUTED_PROP.
    */
   void expectIndexMatch(Node n, JSType objType, JSType indexType) {
-    checkState(n.isGetElem() || n.isComputedProp(), n);
+    checkState(n.isGetElem() || n.isOptChainGetElem() || n.isComputedProp(), n);
     Node indexNode = n.isGetElem() ? n.getLastChild() : n.getFirstChild();
     if (indexType.isSymbolValueType()) {
       // For now, allow symbols definitions/access on any type. In the future only allow them

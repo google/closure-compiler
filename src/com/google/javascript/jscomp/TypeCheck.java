@@ -643,10 +643,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
 
       case OPTCHAIN_GETPROP:
-      case OPTCHAIN_CALL:
+        visitOptChainGetProp(n);
+        break;
+
       case OPTCHAIN_GETELEM:
-        // TODO(b/151248857) Calculate appropriate type here
-        ensureTyped(n);
+        visitOptChainGetElem(n);
         break;
 
       case GETELEM:
@@ -666,6 +667,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case NEW:
         visitNew(n);
+        break;
+
+      case OPTCHAIN_CALL:
+        // We reuse the `visitCall` functionality for OptChain call nodes because we don't report
+        // an error for regular calls when the callee is null or undefined. However, we make sure
+        // `typeable` isn't explicitly unset as OptChain nodes are always typed during inference.
+        visitCall(t, n);
         break;
 
       case CALL:
@@ -1127,9 +1135,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case ARRAYLIT:
       case CALL:
+      case OPTCHAIN_CALL:
       case NEW:
         // Case: `var x = [a, b, ...itr]`
         // Case: `var x = fn(a, b, ...itr)`
+        // Case: `var x = fn?.(a, b, ...itr)`
         validator.expectAutoboxesToIterable(
             target, targetType, "Spread operator only applies to Iterable types");
         break;
@@ -2020,8 +2030,28 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     ensureTyped(n);
   }
 
+  /**
+   * Visits a OPTCHAIN_GETPROP node.
+   *
+   * @param optChainGetProp The node being visited.
+   */
+  private void visitOptChainGetProp(Node optChainGetProp) {
+    // obj?.prop
+    // Unlike GETPROP, a call to a void function can also be on the lhs for an OPTCHAIN_GETPROP.
+    Node property = optChainGetProp.getLastChild();
+    Node objNode = optChainGetProp.getFirstChild();
+    JSType childType = getJSType(objNode);
+
+    if (childType.isDict()) {
+      report(property, TypeValidator.ILLEGAL_PROPERTY_ACCESS, "'?.'", "dict");
+    } else if (!childType.isUnknownType()) {
+      checkPropertyAccessForGetProp(optChainGetProp);
+    }
+    ensureTyped(optChainGetProp);
+  }
+
   private void checkPropertyAccessForGetProp(Node getProp) {
-    checkArgument(getProp.isGetProp(), getProp);
+    checkArgument(getProp.isGetProp() || getProp.isOptChainGetProp(), getProp);
     Node objNode = getProp.getFirstChild();
     JSType objType = getJSType(objNode);
     Node propNode = getProp.getSecondChild();
@@ -2288,6 +2318,23 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void visitGetElem(Node n) {
     validator.expectIndexMatch(n, getJSType(n.getFirstChild()), getJSType(n.getLastChild()));
     ensureTyped(n);
+  }
+
+  /**
+   * Visits a OPTCHAIN_GETELEM node.
+   *
+   * @param optChainGetElem The node being visited.
+   */
+  private void visitOptChainGetElem(Node optChainGetElem) {
+    Node obj = optChainGetElem.getFirstChild();
+    JSType objType = getJSType(obj);
+    if (objType.isNullType() || objType.isVoidType()) {
+      // no error reported when conditionally checking a null or void lhs object.
+      // e.g. `a?.[b]` should not report if `a` is null`
+      ensureTyped(optChainGetElem, VOID_TYPE);
+    } else {
+      visitGetElem(optChainGetElem);
+    }
   }
 
   /**

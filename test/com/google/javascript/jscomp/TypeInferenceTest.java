@@ -406,6 +406,30 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testOptChainGetProp_nullObject() {
+    inFunction("let x = null; let a = x?.y;");
+    verify("a", VOID_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetElem_accessedByName() {
+    inFunction("let x = { y : 5}; let a = x?.[y];");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetElem_accessedByString() {
+    inFunction("let x = { y : 5}; let a = x?.['y'];");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testNormalGetElem_accessedByString() {
+    inFunction("let x = { y : 5}; let a = x['y'];");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  @Test
   public void testSimpleGetProp_missingPropAccessedOnRecordType() {
     assuming("x", createRecordType("y", STRING_TYPE));
     inFunction("a = x.z;");
