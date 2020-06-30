@@ -336,9 +336,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
    * </pre>
    */
   private void visitRequire(String localName, Node node) {
-    if (!requires.containsKey(localName)) {
-      requires.put(localName, node);
-    }
+    requires.putIfAbsent(localName, node);
 
     // For goog.require('example.Outer.Inner'), add example.Outer as well.
     for (String className : getClassNames(localName)) {

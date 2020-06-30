@@ -169,9 +169,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
    * </pre>
    */
   private void visitRequire(String localName, Node node) {
-    if (!requires.containsKey(localName)) {
-      requires.put(localName, node);
-    }
+    requires.putIfAbsent(localName, node);
   }
 
   private void visitImportNode(Node importNode) {

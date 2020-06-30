@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.ClassMemberFunction;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.NameInfo;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Property;
@@ -29,10 +30,8 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.Iterator;
 
-/**
- * Move prototype methods into later chunks.
- */
-class CrossChunkMethodMotion implements CompilerPass {
+/** Move prototype methods into later chunks. */
+public class CrossChunkMethodMotion implements CompilerPass {
 
   // Internal errors
   static final DiagnosticType NULL_COMMON_MODULE_ERROR = DiagnosticType.error(
@@ -49,20 +48,20 @@ class CrossChunkMethodMotion implements CompilerPass {
   static final String STUB_METHOD_NAME = "JSCompiler_stubMethod";
   static final String UNSTUB_METHOD_NAME = "JSCompiler_unstubMethod";
 
-  // Visible for testing
-  static final String STUB_DECLARATIONS =
-      "var JSCompiler_stubMap = [];" +
-      "function JSCompiler_stubMethod(JSCompiler_stubMethod_id) {" +
-      "  return function() {" +
-      "    return JSCompiler_stubMap[JSCompiler_stubMethod_id].apply(" +
-      "        this, arguments);" +
-      "  };" +
-      "}" +
-      "function JSCompiler_unstubMethod(" +
-      "    JSCompiler_unstubMethod_id, JSCompiler_unstubMethod_body) {" +
-      "  return JSCompiler_stubMap[JSCompiler_unstubMethod_id] = " +
-      "      JSCompiler_unstubMethod_body;" +
-      "}";
+  @VisibleForTesting
+  public static final String STUB_DECLARATIONS =
+      "var JSCompiler_stubMap = [];"
+          + "function JSCompiler_stubMethod(JSCompiler_stubMethod_id) {"
+          + "  return function() {"
+          + "    return JSCompiler_stubMap[JSCompiler_stubMethod_id].apply("
+          + "        this, arguments);"
+          + "  };"
+          + "}"
+          + "function JSCompiler_unstubMethod("
+          + "    JSCompiler_unstubMethod_id, JSCompiler_unstubMethod_body) {"
+          + "  return JSCompiler_stubMap[JSCompiler_unstubMethod_id] = "
+          + "      JSCompiler_unstubMethod_body;"
+          + "}";
 
   /**
    * Creates a new pass for moving prototype properties.

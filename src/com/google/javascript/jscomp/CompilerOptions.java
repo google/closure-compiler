@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
@@ -619,7 +620,9 @@ public class CompilerOptions implements Serializable {
    */
   boolean renamePrefixNamespaceAssumeCrossChunkNames = false;
 
-  void setRenamePrefixNamespaceAssumeCrossChunkNames(boolean assume) {
+  /** Useful for tests to avoid having to declare two chunks */
+  @VisibleForTesting
+  public void setRenamePrefixNamespaceAssumeCrossChunkNames(boolean assume) {
     renamePrefixNamespaceAssumeCrossChunkNames = assume;
   }
 

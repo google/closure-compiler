@@ -52,8 +52,7 @@ public final class ScopeSubject extends Subject {
   public static ScopeSubject assertScope(AbstractScope<?, ?> scope) {
     // NB: Eclipse's Java compiler bails on just passing ScopeSubject::new below, so wrap it in a
     // Closure.
-    return assertAbout((FailureMetadata fm, AbstractScope<?, ?> s) -> new ScopeSubject(fm, s))
-        .that(scope);
+    return assertAbout(ScopeSubject::new).that(scope);
   }
 
   private final AbstractScope<?, ?> actual;

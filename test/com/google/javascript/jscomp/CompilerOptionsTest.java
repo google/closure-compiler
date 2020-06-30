@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -24,7 +25,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -102,7 +102,7 @@ public final class CompilerOptionsTest {
     options.setAliasableStrings(new HashSet<>(Arrays.asList("AliasA", "AliasB")));
     options.setOptimizeArgumentsArray(true);
     options.setAmbiguateProperties(false);
-    options.setOutputCharset(StandardCharsets.US_ASCII);
+    options.setOutputCharset(US_ASCII);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     options.serialize(byteArrayOutputStream);
@@ -119,6 +119,6 @@ public final class CompilerOptionsTest {
         .isEqualTo(new HashSet<>(Arrays.asList("AliasA", "AliasB")));
     assertThat(options.shouldAmbiguateProperties()).isFalse();
     assertThat(options.optimizeArgumentsArray).isTrue();
-    assertThat(options.getOutputCharset()).isEqualTo(StandardCharsets.US_ASCII);
+    assertThat(options.getOutputCharset()).isEqualTo(US_ASCII);
   }
 }

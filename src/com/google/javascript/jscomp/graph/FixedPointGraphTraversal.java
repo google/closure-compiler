@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.graph;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Math.max;
 
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -92,7 +93,7 @@ public final class FixedPointGraphTraversal<N, E> {
 
     // Choose a bail-out heuristically in case the computation
     // doesn't converge.
-    long maxIterations = Math.max(nodeCount * nodeCount * nodeCount, 100);
+    long maxIterations = max(nodeCount * nodeCount * nodeCount, 100);
 
     // Use a LinkedHashSet, so that the traversal is deterministic.
     LinkedHashSet<DiGraphNode<N, E>> workSet = new LinkedHashSet<>();

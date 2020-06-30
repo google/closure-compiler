@@ -2217,7 +2217,7 @@ public abstract class CompilerTestCase {
                     throw new RuntimeException(e);
                   }
                 })
-            .collect(ImmutableList.toImmutableList()));
+            .collect(toImmutableList()));
   }
 
   protected static Externs externs(List<SourceFile> files) {

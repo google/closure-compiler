@@ -345,11 +345,8 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      Iterable<ObjectType> interfaces = ancestorInterfaces.get(constructor);
-      if (interfaces == null) {
-        interfaces = constructor.getAncestorInterfaces();
-        ancestorInterfaces.put(constructor, interfaces);
-      }
+      Iterable<ObjectType> interfaces =
+          ancestorInterfaces.computeIfAbsent(constructor, FunctionType::getAncestorInterfaces);
       for (ObjectType itype : interfaces) {
         JSType top = getRepresentativeType(name, itype);
         if (top != null) {
@@ -401,9 +398,7 @@ class DisambiguateProperties implements CompilerPass {
 
   /** Returns the property for the given name, creating it if necessary. */
   protected Property getProperty(String name) {
-    if (!properties.containsKey(name)) {
-      properties.put(name, new Property(name));
-    }
+    properties.computeIfAbsent(name, Property::new);
     return properties.get(name);
   }
 

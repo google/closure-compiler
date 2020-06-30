@@ -38,7 +38,7 @@ public final class TypedVarSubject extends Subject {
   public static TypedVarSubject assertThat(TypedVar var) {
     // NB: Eclipse's Java compiler bails on just passing TypedVarSubject::new below, so wrap it in a
     // Closure.
-    return assertAbout((FailureMetadata fm, TypedVar v) -> new TypedVarSubject(fm, v)).that(var);
+    return assertAbout(TypedVarSubject::new).that(var);
   }
 
   private final TypedVar actual;

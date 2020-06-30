@@ -482,7 +482,12 @@ class TypeValidator implements Serializable {
 
   void expectBigIntOrNumber(Node n, JSType type, String msg) {
     if (!type.isSubtypeOf(getNativeType(BIGINT_NUMBER))) {
-      mismatch(n, msg, type, getNativeType(BIGINT_NUMBER));
+      registerMismatchAndReport(
+          // INVALID_OPERAND_TYPE may seem like the right diagnostic type here, but that diagnostic
+          // group is only enabled if strict type checking is requested. By using
+          // TYPE_MISMATCH_WARNING instead, we ensure that the error will be reported to all users
+          // that enable type checking. We want to always be strict when BigInt is involved.
+          n, TYPE_MISMATCH_WARNING, msg, type, getNativeType(BIGINT_NUMBER), null, null);
     }
   }
 
@@ -548,7 +553,7 @@ class TypeValidator implements Serializable {
    * @param indexType The type inside the brackets of the GETELEM/COMPUTED_PROP.
    */
   void expectIndexMatch(Node n, JSType objType, JSType indexType) {
-    checkState(n.isGetElem() || n.isComputedProp(), n);
+    checkState(n.isGetElem() || n.isOptChainGetElem() || n.isComputedProp(), n);
     Node indexNode = n.isGetElem() ? n.getLastChild() : n.getFirstChild();
     if (indexType.isSymbolValueType()) {
       // For now, allow symbols definitions/access on any type. In the future only allow them

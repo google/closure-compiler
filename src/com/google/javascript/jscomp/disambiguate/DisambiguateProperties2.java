@@ -125,7 +125,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .collect(
                     toImmutableSortedMap(
                         naturalOrder(),
-                        (e) -> e.getKey(),
+                        Map.Entry::getKey,
                         (e) -> ImmutableSortedSet.copyOf(e.getValue()))));
   }
 

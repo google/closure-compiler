@@ -1,6 +1,6 @@
 # Required to be able to use JDK 8.
 # See https://github.com/google/closure-compiler/issues/3448
-dist: trusty
+dist: xenial
 
 language: java
 jdk:
@@ -10,9 +10,27 @@ cache:
   directories:
   - $HOME/.m2
 
-# Skip the "installation" step:
-# https://docs.travis-ci.com/user/customizing-the-build#Skipping-the-Installation-Step
-install: true
+before_install:
+  - |
+    if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+      OS=darwin
+    else
+      sysctl kernel.unprivileged_userns_clone=1
+      OS=linux
+    fi
+
+    BAZELISK_VERSION=v1.5.0
+    if [ ! -d "${HOME}/bin" ]; then
+      mkdir "${HOME}/bin"
+    fi
+    wget -O "${HOME}/bin/bazel" "https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-${OS}-amd64"
+    chmod +x "${HOME}/bin/bazel"
+
+before_script:
+  - echo "startup --output_base=$HOME/.cache/bazel" >> .bazelrc
+  - echo "common --noshow_progress" >> .bazelrc
+  - echo "common --noshow_loading_progress" >> .bazelrc
+  - echo "build --verbose_failures" >> .bazelrc
 
 script:
   # Builds the compiler and runs tests
@@ -29,6 +47,9 @@ script:
   - travis_util/test_npm.sh
   # Checks for JavaDoc errors
   - mvn -Dstyle.color=always -pl com.google.javascript:closure-compiler javadoc:javadoc
+  # Test new Bazel based J2CL build
+  - ./bazel_build_test.sh
+
 
 # Causes the build to run on a VM instead of in a container, to avoid OOM errors.
 sudo: required

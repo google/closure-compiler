@@ -1728,7 +1728,7 @@ public class CommandLineRunner extends
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
-          .setWarningsWhitelistFile(flags.warningsAllowlistFile)
+          .setWarningsAllowlistFile(flags.warningsAllowlistFile)
           .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
           .setJsonStreamMode(flags.jsonStreamMode)

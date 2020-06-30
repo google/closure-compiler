@@ -46,7 +46,6 @@ public final class RenameVarsTest extends CompilerTestCase {
   private boolean preserveFunctionExpressionNames = false;
   private boolean useGoogleCodingConvention = true;
   private boolean generatePseudoNames = false;
-  private boolean shouldShadow = false;
   private boolean preferStableNames = false;
   private boolean withNormalize = false;
 
@@ -119,7 +118,6 @@ public final class RenameVarsTest extends CompilerTestCase {
     localRenamingOnly = false;
     preserveFunctionExpressionNames = false;
     generatePseudoNames = false;
-    shouldShadow = false;
     preferStableNames = false;
     nameGenerator = null;
   }

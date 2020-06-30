@@ -1437,6 +1437,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public void clearJSTypeRegistry() {
     typeRegistry = null;
+    typeValidator = null;
+    abstractInterpreter = null;
   }
 
   @Override
@@ -3014,10 +3016,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     this.cssNames = cssNames;
   }
 
-  Map<String, Integer> getCssNames() {
-    return cssNames;
-  }
-
   @Override
   public void setIdGeneratorMap(String serializedIdMappings) {
     this.idGeneratorMap = serializedIdMappings;
@@ -3363,9 +3361,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return lastInjectedLibrary;
     }
 
-    if (hasTypeCheckingRun()) {
-      throw new RuntimeException("runtime library injected after type checking:" + resourceName);
-    }
+    checkState(!hasTypeCheckingRun(), "runtime library injected after type checking");
+    checkState(!getLifeCycleStage().isNormalized(), "runtime library injected after normalization");
 
     // Load/parse the code.
     String originalCode = ResourceLoader.loadTextResource(
@@ -3391,11 +3388,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           throw new RuntimeException("Bad directive: " + directive);
       }
       ast.removeChild(node);
-    }
-
-    // If we've already started optimizations, then we need to normalize this.
-    if (getLifeCycleStage().isNormalized()) {
-      Normalize.normalizeSyntheticCode(this, ast, "jscomp_" + resourceName + "_");
     }
 
     // Insert the code immediately after the last-inserted runtime library.

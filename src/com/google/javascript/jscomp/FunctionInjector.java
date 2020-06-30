@@ -244,20 +244,17 @@ class FunctionInjector {
             block, "arguments", NodeUtil.MATCH_ANYTHING_BUT_NON_ARROW_FUNCTION);
 
     Predicate<Node> blocksInjection =
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node n) {
-            if (n.isName()) {
-              // References "eval" or one of its names anywhere.
-              return n.getString().equals("eval")
-                  || (!fnName.isEmpty() && n.getString().equals(fnName))
-                  || (!fnRecursionName.isEmpty() && n.getString().equals(fnRecursionName));
-            } else if (n.isSuper()) {
-              // Don't inline if this function or its inner functions contains super
-              return true;
-            }
-            return false;
+        (Node n) -> {
+          if (n.isName()) {
+            // References "eval" or one of its names anywhere.
+            return n.getString().equals("eval")
+                || (!fnName.isEmpty() && n.getString().equals(fnName))
+                || (!fnRecursionName.isEmpty() && n.getString().equals(fnRecursionName));
+          } else if (n.isSuper()) {
+            // Don't inline if this function or its inner functions contains super
+            return true;
           }
+          return false;
         };
 
     return !referencesArguments && !NodeUtil.has(block, blocksInjection, Predicates.alwaysTrue());

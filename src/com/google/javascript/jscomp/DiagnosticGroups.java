@@ -64,7 +64,8 @@ public class DiagnosticGroups {
           "reportUnknownTypes",
           "analyzerChecks",
           "analyzerChecksInternal",
-          "missingSourcesWarnings");
+          "missingSourcesWarnings",
+          "parsing");
 
   public DiagnosticGroups() {}
 

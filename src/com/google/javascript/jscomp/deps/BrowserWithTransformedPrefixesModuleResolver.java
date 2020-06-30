@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
+import static java.util.stream.Collectors.joining;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -30,7 +31,6 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
 import java.util.Comparator;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -105,7 +105,7 @@ public class BrowserWithTransformedPrefixesModuleResolver extends ModuleResolver
         this.prefixReplacements.stream()
             .map(PrefixReplacement::prefix)
             .sorted()
-            .collect(Collectors.joining(", "));
+            .collect(joining(", "));
   }
 
   @Nullable

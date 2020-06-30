@@ -177,10 +177,7 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
       return;
     }
     if (qualifiedName.isSimple() && qualifiedName.getRoot().equals("xid")) {
-      // Specifically don't report the name 'xid', which is a function that is widely used
-      // within Google without an accompanying goog.require, and which makes it hard to roll out
-      // this check.
-      // TODO(user): fix the remaining code involving xid and remove this workaround.
+      // TODO(b/160167649): Decide if we should report `xid` which initially was too common to fix.
       return;
     }
 

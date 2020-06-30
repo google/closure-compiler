@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -559,7 +558,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     private Node script = null;
 
     boolean isCommonJsModule() {
-      return (exports.size() > 0 || moduleExports.size() > 0) && !hasGoogProvideOrModule;
+      return (!exports.isEmpty() || !moduleExports.isEmpty()) && !hasGoogProvideOrModule;
     }
 
     List<UmdPattern> umdPatterns = new ArrayList<>();
@@ -1357,13 +1356,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 // var angular = angular;  // value is global ref
                 Node enclosingDeclaration =
                     NodeUtil.getEnclosingNode(
-                        n,
-                        new Predicate<Node>() {
-                          @Override
-                          public boolean apply(Node node) {
-                            return node == nameDeclaration.getNameNode();
-                          }
-                        });
+                        n, (Node node) -> node == nameDeclaration.getNameNode());
 
                 if (enclosingDeclaration == null
                     || enclosingDeclaration == n

@@ -540,9 +540,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
       if (hoisted && hoistRenamer != this) {
         hoistRenamer.addDeclaredName(name, hoisted);
       } else {
-        if (!declarations.containsKey(name)) {
-          declarations.put(name, getUniqueName(name));
-        }
+        declarations.computeIfAbsent(name, this::getUniqueName);
       }
     }
 

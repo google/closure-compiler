@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Streams.stream;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
@@ -48,7 +49,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.types;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
@@ -296,7 +296,7 @@ public final class TypeInferenceTest {
     Node node = checkNotNull(declaration.getNode(), declaration);
 
     assertNode(node).hasType(Token.NAME);
-    Streams.stream(node.getAncestors())
+    stream(node.getAncestors())
         .filter(Node::isParamList)
         .findFirst()
         .orElseThrow(AssertionError::new);
@@ -403,6 +403,30 @@ public final class TypeInferenceTest {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("x.y();");
     verify("x", OBJECT_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetProp_nullObject() {
+    inFunction("let x = null; let a = x?.y;");
+    verify("a", VOID_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetElem_accessedByName() {
+    inFunction("let x = { y : 5}; let a = x?.[y];");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testOptChainGetElem_accessedByString() {
+    inFunction("let x = { y : 5}; let a = x?.['y'];");
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  @Test
+  public void testNormalGetElem_accessedByString() {
+    inFunction("let x = { y : 5}; let a = x['y'];");
+    verify("a", UNKNOWN_TYPE);
   }
 
   @Test
@@ -1443,6 +1467,17 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testBigIntComparison() {
+    assuming("b", BIGINT_TYPE);
+    assuming("n", NUMBER_TYPE);
+
+    inFunction("bigintOnly = b > b; bigintAndOther = b > n");
+
+    verify("bigintOnly", BOOLEAN_TYPE);
+    verify("bigintAndOther", BOOLEAN_TYPE);
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
     includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));
@@ -2468,6 +2503,18 @@ public final class TypeInferenceTest {
     verify("x", NUMBER_TYPE);
     inFunction("var x = 'foo'; var y = (x = 3) >= 4;");
     verify("x", NUMBER_TYPE);
+  }
+
+  @Test
+  public void testComparisonWithBigInt() {
+    inFunction("var x = 'foo'; var y = (x = 3n) < 4;");
+    verify("x", BIGINT_TYPE);
+    inFunction("var x = 'foo'; var y = (x = 3n) > 4;");
+    verify("x", BIGINT_TYPE);
+    inFunction("var x = 'foo'; var y = (x = 3n) <= 4;");
+    verify("x", BIGINT_TYPE);
+    inFunction("var x = 'foo'; var y = (x = 3n) >= 4;");
+    verify("x", BIGINT_TYPE);
   }
 
   @Test

@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.regex;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import java.util.Arrays;
 
 /**
@@ -192,18 +195,18 @@ final class CharRanges {
         // The last BBB run serves only as a bridge -- it overlaps two
         // disjoint ranges in the other one so establishes that they
         // transitively overlap.
-        int start = Math.min(a0, b0);
+        int start = min(a0, b0);
         // Guess at the end, and lookahead to come up with a more complete
         // estimate.
-        int end = Math.max(a1, b1);
+        int end = max(a1, b1);
         i += 2;
         j += 2;
         while (i < m || j < n) {
           if (i < m && q[i] <= end) {
-            end = Math.max(end, q[i + 1]);
+            end = max(end, q[i + 1]);
             i += 2;
           } else if (j < n && r[j] <= end) {
-            end = Math.max(end, r[j + 1]);
+            end = max(end, r[j + 1]);
             j += 2;
           } else {
             break;
@@ -235,24 +238,23 @@ final class CharRanges {
     if (aLen == 0) { return this; }
     if (bLen == 0) { return other; }
     int aIdx = 0, bIdx = 0;
-    int[] intersection = new int[Math.min(aLen, bLen)];
+    int[] intersection = new int[min(aLen, bLen)];
     int intersectionIdx = 0;
-    int pos = Math.min(aRanges[0], bRanges[0]);
+    int pos = min(aRanges[0], bRanges[0]);
     while (aIdx < aLen && bIdx < bLen) {
       if (aRanges[aIdx + 1] <= pos) {
         aIdx += 2;
       } else if (bRanges[bIdx + 1] <= pos) {
         bIdx += 2;
       } else {
-        int start = Math.max(aRanges[aIdx], bRanges[bIdx]);
-        if (pos < start) {  // Advance to start of common block.
+        int start = max(aRanges[aIdx], bRanges[bIdx]);
+        if (pos < start) { // Advance to start of common block.
           pos = start;
         } else {
           // Now we know that pos is less than the ends of the two ranges and
           // greater or equal to the starts of the two ranges.
-          int end = Math.min(aRanges[aIdx + 1], bRanges[bIdx + 1]);
-          if (intersectionIdx != 0
-              && pos == intersection[intersectionIdx - 1]) {
+          int end = min(aRanges[aIdx + 1], bRanges[bIdx + 1]);
+          if (intersectionIdx != 0 && pos == intersection[intersectionIdx - 1]) {
             intersection[intersectionIdx - 1] = end;
           } else {
             if (intersectionIdx == intersection.length) {
@@ -301,8 +303,7 @@ final class CharRanges {
       } else {
         // Now we know that pos is between [minuend[i], minuend[i + 1])
         // and outside [subtrahend[j], subtrahend[j + 1]).
-        int end = sIdx < sn
-            ? Math.min(minuend[mIdx + 1], subtrahend[sIdx]) : minuend[mIdx + 1];
+        int end = sIdx < sn ? min(minuend[mIdx + 1], subtrahend[sIdx]) : minuend[mIdx + 1];
         if (dIdx != 0 && difference[dIdx - 1] == pos) {
           difference[dIdx - 1] = pos;
         } else {
@@ -407,7 +408,7 @@ final class CharRanges {
   @Override
   public int hashCode() {
     int hc = 0;
-    for (int i = 0, n = Math.min(16, ranges.length); i < n; ++i) {
+    for (int i = 0, n = min(16, ranges.length); i < n; ++i) {
       hc = (hc << 2) + ranges[i];
     }
     return hc;

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +28,6 @@ import com.google.javascript.jscomp.SourceMap.Format;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -172,7 +172,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("'\u2028'", "\"\\u2028\"");
     assertPrint("\"\u2028\"", "\"\\u2028\"");
 
-    outputCharset = StandardCharsets.UTF_8;
+    outputCharset = UTF_8;
     // printed as a unicode escape for ES_2018 output
     assertPrint("'\u2028'", "\"\\u2028\"");
     assertPrint("\"\u2028\"", "\"\\u2028\"");
@@ -184,7 +184,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("'\u2028'", "\"\\u2028\"");
     assertPrint("\"\u2028\"", "\"\\u2028\"");
 
-    outputCharset = StandardCharsets.UTF_8;
+    outputCharset = UTF_8;
     // left unescaped for ES_2019 out
     assertPrint("'\u2028'", "\"\u2028\"");
     assertPrint("\"\u2028\"", "\"\u2028\"");
@@ -198,7 +198,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("'\u2029'", "\"\\u2029\"");
     assertPrint("\"\u2029\"", "\"\\u2029\"");
 
-    outputCharset = StandardCharsets.UTF_8;
+    outputCharset = UTF_8;
     // printed as a unicode escape for ES_2018 output
     assertPrint("'\u2029'", "\"\\u2029\"");
     assertPrint("\"\u2029\"", "\"\\u2029\"");
@@ -211,7 +211,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("'\u2029'", "\"\\u2029\"");
     assertPrint("\"\u2029\"", "\"\\u2029\"");
 
-    outputCharset = StandardCharsets.UTF_8;
+    outputCharset = UTF_8;
     // left unescaped for ES_2019 out
     assertPrint("'\u2029'", "\"\u2029\"");
     assertPrint("\"\u2029\"", "\"\u2029\"");
@@ -3691,8 +3691,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "}); // goog.scope\n";
     String expectedCode =
         ""
-            + "/** @const */ var $jscomp = $jscomp || {};\n"
-            + "/** @const */ $jscomp.scope = {};\n"
             + "/** @const */ var foo = {};\n"
             + "/** @const */ foo.bar = {};\n"
             + "goog.provide('foo.bar');\n"
@@ -3711,6 +3709,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             + "var STR = '3';\n";
 
     CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.setChecksOnly(true);
     compilerOptions.setClosurePass(true);
     compilerOptions.setPreserveDetailedSourceInfo(true);
     compilerOptions.setCheckTypes(true);

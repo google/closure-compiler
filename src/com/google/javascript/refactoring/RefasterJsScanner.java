@@ -17,6 +17,7 @@
 package com.google.javascript.refactoring;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Preconditions;
@@ -378,7 +379,7 @@ public final class RefasterJsScanner extends Scanner {
               getGoogRequiresFromNode(pattern, beforeTemplate).stream(),
               getGoogRequiresFromNode(pattern, afterTemplate).stream())
           .distinct()
-          .collect(ImmutableList.toImmutableList());
+          .collect(toImmutableList());
     }
 
     private static ImmutableList<String> getGoogRequiresFromNode(

@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.gson.stream.JsonWriter;
@@ -56,7 +60,7 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
   @GwtIncompatible
   public void generateReport(SortingErrorManager manager) {
     ByteArrayOutputStream bufferedStream = new ByteArrayOutputStream();
-    try (JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(bufferedStream, "UTF-8"))) {
+    try (JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(bufferedStream, UTF_8))) {
       jsonWriter.beginArray();
       for (ErrorWithLevel message : manager.getSortedDiagnostics()) {
         String sourceName = message.error.getSourceName();
@@ -98,10 +102,7 @@ public class JsonErrorReportGenerator implements ErrorReportGenerator {
               b.append("^");
             } else {
               int length =
-                  Math.max(
-                      1,
-                      Math.min(
-                          message.error.getNode().getLength(), sourceExcerpt.length() - charno));
+                  max(1, min(message.error.getNode().getLength(), sourceExcerpt.length() - charno));
               for (int i = 0; i < length; i++) {
                 b.append("^");
               }

@@ -455,9 +455,9 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
   /** A directed graph edge that stores the source and destination nodes at each edge. */
   public static class LinkedDiGraphEdge<N, E> implements DiGraphEdge<N, E>, GraphvizEdge {
 
-    private LinkedDiGraphNode<N, E> sourceNode;
+    private final LinkedDiGraphNode<N, E> sourceNode;
 
-    private LinkedDiGraphNode<N, E> destNode;
+    private final LinkedDiGraphNode<N, E> destNode;
 
     protected final E value;
 
@@ -512,12 +512,12 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
 
     @Override
     public String getNode1Id() {
-      return ((LinkedDiGraphNode<N, E>) sourceNode).getId();
+      return sourceNode.getId();
     }
 
     @Override
     public String getNode2Id() {
-      return ((LinkedDiGraphNode<N, E>) destNode).getId();
+      return destNode.getId();
     }
 
     @Override

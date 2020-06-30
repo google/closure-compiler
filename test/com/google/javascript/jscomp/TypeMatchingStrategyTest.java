@@ -138,6 +138,7 @@ public final class TypeMatchingStrategyTest {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
+    options.setChecksOnly(true);
 
     compiler.compile(
         ImmutableList.of(SourceFile.fromCode("externs", EXTERNS)),

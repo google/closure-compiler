@@ -2908,9 +2908,9 @@ public final class NodeUtil {
    *    a['f'](...)
    */
   static boolean isObjectCallMethod(Node callNode, String methodName) {
-    if (callNode.isCall()) {
+    if (callNode.isCall() || callNode.isOptChainCall()) {
       Node functionIndentifyingExpression = callNode.getFirstChild();
-      if (isNormalGet(functionIndentifyingExpression)) {
+      if (isNormalOrOptChainGet(functionIndentifyingExpression)) {
         Node last = functionIndentifyingExpression.getLastChild();
         if (last != null && last.isString()) {
           String propName = last.getString();

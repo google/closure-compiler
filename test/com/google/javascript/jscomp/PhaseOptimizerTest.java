@@ -44,7 +44,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class PhaseOptimizerTest {
   private final List<String> passesRun = new ArrayList<>();
-  private Node dummyExternsRoot;
   private Node dummyRoot;
   Node dummyScript;
   private PhaseOptimizer optimizer;
@@ -54,7 +53,7 @@ public final class PhaseOptimizerTest {
   @Before
   public void setUp() {
     passesRun.clear();
-    dummyExternsRoot = new Node(Token.ROOT);
+    Node dummyExternsRoot = new Node(Token.ROOT);
     dummyScript = IR.script();
     dummyRoot = IR.root(dummyScript);
     compiler = new Compiler();

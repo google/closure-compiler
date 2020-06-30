@@ -99,9 +99,7 @@ final class PreprocessorSymbolTable
   void addReference(Node node, String name) {
     checkNotNull(name);
 
-    if (!symbols.containsKey(name)) {
-      symbols.put(name, new SimpleSlot(name, null, true));
-    }
+    symbols.computeIfAbsent(name, (String k) -> new SimpleSlot(k, null, true));
 
     refs.put(name, new Reference(symbols.get(name), node));
   }

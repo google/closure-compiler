@@ -120,12 +120,11 @@ public final class GlobalVarReferenceMapTest {
     ReferenceCollection refs = map.getReferences(globalScope.getVar(VAR2));
     assertThat(refs.references).isEqualTo(var2Refs.references);
     refs = map.getReferences(globalScope.getVar(VAR1));
-    assertThat(refs.references).hasSize(2);
-    assertThat(refs.references.get(0)).isEqualTo(var1Refs.references.get(0));
-    assertThat(refs.references.get(1)).isEqualTo(var1Refs.references.get(2));
+    assertThat(refs.references)
+        .containsExactly(var1Refs.references.get(0), var1Refs.references.get(2))
+        .inOrder();
     refs = map.getReferences(globalScope.getVar(VAR3));
-    assertThat(refs.references).hasSize(1);
-    assertThat(refs.references.get(0)).isEqualTo(var3Refs.references.get(0));
+    assertThat(refs.references).containsExactly(var3Refs.references.get(0));
   }
 
   /** Changes variable references in second script. */
@@ -150,19 +149,17 @@ public final class GlobalVarReferenceMapTest {
     scriptMap.put(globalScope.getVar(VAR3), newVar3Refs);
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(VAR1));
-    assertThat(refs.references).hasSize(3);
-    assertThat(refs.references.get(0)).isEqualTo(var1Refs.references.get(0));
-    assertThat(refs.references.get(1)).isEqualTo(newVar1In2Ref);
-    assertThat(refs.references.get(2)).isEqualTo(var1Refs.references.get(2));
+    assertThat(refs.references)
+        .containsExactly(var1Refs.references.get(0), newVar1In2Ref, var1Refs.references.get(2))
+        .inOrder();
     refs = map.getReferences(globalScope.getVar(VAR2));
-    assertThat(refs.references).hasSize(3);
-    assertThat(refs.references.get(0)).isEqualTo(var2Refs.references.get(0));
-    assertThat(refs.references.get(1)).isEqualTo(newVar2In2Ref);
-    assertThat(refs.references.get(2)).isEqualTo(var2Refs.references.get(1));
+    assertThat(refs.references)
+        .containsExactly(var2Refs.references.get(0), newVar2In2Ref, var2Refs.references.get(1))
+        .inOrder();
     refs = map.getReferences(globalScope.getVar(VAR3));
-    assertThat(refs.references).hasSize(2);
-    assertThat(refs.references.get(0)).isEqualTo(var3Refs.references.get(0));
-    assertThat(refs.references.get(1)).isEqualTo(newVar3In2Ref);
+    assertThat(refs.references)
+        .containsExactly(var3Refs.references.get(0), newVar3In2Ref)
+        .inOrder();
   }
 
   /** Changes variable references in second script. */
@@ -177,8 +174,7 @@ public final class GlobalVarReferenceMapTest {
     scriptMap.put(globalScope.getVar(var4), newVar3Refs);
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(var4));
-    assertThat(refs.references).hasSize(1);
-    assertThat(refs.references.get(0)).isEqualTo(newVar3In2Ref);
+    assertThat(refs.references).containsExactly(newVar3In2Ref);
   }
 
   @Test

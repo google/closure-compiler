@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.regex;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Math.min;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -481,8 +482,7 @@ public abstract class RegExpTree {
               // \41 might be a group, but \041 is not a group.
               // We read, but do not emit octal literals since they
               // are deprecated in ES5.
-              int octLimit = Math.min(
-                  limit, pos + (ch <= '3' ? 2 : 1) + (ch == '0' ? 1 : 0));
+              int octLimit = min(limit, pos + (ch <= '3' ? 2 : 1) + (ch == '0' ? 1 : 0));
               while (pos < octLimit) {
                 ch = pattern.charAt(pos);
                 if ('0' <= ch && ch <= '7') {
@@ -1768,24 +1768,22 @@ public abstract class RegExpTree {
     }
 
     private static int complexityWordFolded(CharRanges ranges) {
-      return Math.min(
+      return min(
           complexityWordFoldedHelper(ranges),
-          1 + complexityWordFoldedHelper(
-              CharRanges.ALL_CODE_UNITS.difference(ranges)));
+          1 + complexityWordFoldedHelper(CharRanges.ALL_CODE_UNITS.difference(ranges)));
     }
 
     private static int complexityWordFoldedHelper(CharRanges ranges) {
       int complexity = DecomposedCharset.complexity(ranges);
       if (ranges.containsAll(WORD_CHARS)) {
-        complexity = Math.min(
-            complexity,
-            1 + DecomposedCharset.complexity(ranges.difference(WORD_CHARS)));
+        complexity =
+            min(complexity, 1 + DecomposedCharset.complexity(ranges.difference(WORD_CHARS)));
       }
       if (ranges.containsAll(INVERSE_WORD_CHARS)) {
-        complexity = Math.min(
-            complexity,
-            1 + DecomposedCharset.complexity(
-                ranges.difference(INVERSE_WORD_CHARS)));
+        complexity =
+            min(
+                complexity,
+                1 + DecomposedCharset.complexity(ranges.difference(INVERSE_WORD_CHARS)));
       }
       return complexity;
     }

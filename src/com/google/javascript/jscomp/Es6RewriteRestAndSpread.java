@@ -527,7 +527,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     Node call = IR.call(callee, args);
 
     JSType calleeType = callee.getJSType();
-    if (calleeType == null || !(calleeType instanceof FunctionType)) {
+    if (!(calleeType instanceof FunctionType)) {
       return call;
     }
 

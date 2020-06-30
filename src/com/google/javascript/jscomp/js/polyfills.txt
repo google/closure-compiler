@@ -10,6 +10,11 @@ Array.prototype.flatMap es9 es5 es6/array/flatmap
 Array.prototype.includes es7 es3 es6/array/includes
 Array.prototype.keys es6 es3 es6/array/keys
 Array.prototype.values es8 es3 es6/array/values
+Float32Array.prototype.fill es6 es5 es6/typedarray/fill
+Float64Array.prototype.fill es6 es5 es6/typedarray/fill
+Int16Array.prototype.fill es6 es5 es6/typedarray/fill
+Int32Array.prototype.fill es6 es5 es6/typedarray/fill
+Int8Array.prototype.fill es6 es5 es6/typedarray/fill
 Map es6 es3 es6/map
 Math.acosh es6 es3 es6/math/acosh
 Math.asinh es6 es3 es6/math/asinh
@@ -82,6 +87,10 @@ String.raw es6 es6
 Symbol es6 es3 es6/symbol
 Symbol.asyncIterator es9 es3 es6/symbol
 Symbol.iterator es6 es3 es6/symbol
+Uint16Array.prototype.fill es6 es5 es6/typedarray/fill
+Uint32Array.prototype.fill es6 es5 es6/typedarray/fill
+Uint8Array.prototype.fill es6 es5 es6/typedarray/fill
+Uint8ClampedArray.prototype.fill es6 es5 es6/typedarray/fill
 WeakMap es6 es3 es6/weakmap
 WeakSet es6 es3 es6/weakset
 globalThis es_2020 es3 es6/globalthis

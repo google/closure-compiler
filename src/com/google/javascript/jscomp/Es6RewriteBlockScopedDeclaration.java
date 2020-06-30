@@ -333,12 +333,12 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         }
         functionHandledMap.put(function, name);
 
-        if (!loopObjectMap.containsKey(loopNode)) {
-          loopObjectMap.put(loopNode,
-              new LoopObject(
-                  LOOP_OBJECT_NAME + "$" + compiler.getUniqueNameIdSupplier().get()));
-        }
-        LoopObject object = loopObjectMap.get(loopNode);
+        LoopObject object =
+            loopObjectMap.computeIfAbsent(
+                loopNode,
+                (Node k) ->
+                    new LoopObject(
+                        LOOP_OBJECT_NAME + "$" + compiler.getUniqueNameIdSupplier().get()));
         String newPropertyName = createUniquePropertyName(var);
         object.vars.add(var);
         propertyNameMap.put(var, newPropertyName);

@@ -15,7 +15,9 @@
  */
 package com.google.javascript.refactoring.testing;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,7 +31,6 @@ import com.google.javascript.refactoring.RefasterJsScanner;
 import com.google.javascript.refactoring.SuggestedFix;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /** Utilities for testing RefasterJs templates. */
@@ -85,14 +86,14 @@ public final class RefasterJsTestUtils {
                 fixes, ImmutableMap.of(originalFilePath, slurpFile(originalFilePath)))
             .stream()
             .map(m -> m.get(originalFilePath))
-            .collect(ImmutableList.toImmutableList());
+            .collect(toImmutableList());
     assertThat(newCode)
         .comparingElementsUsing(IGNORING_WHITESPACE_CORRESPONDENCE)
         .containsExactlyElementsIn(expectedCode);
   }
 
   private static String slurpFile(String originalFile) throws IOException {
-    return Files.asCharSource(new File(originalFile), StandardCharsets.UTF_8).read();
+    return Files.asCharSource(new File(originalFile), UTF_8).read();
   }
 
   private RefasterJsTestUtils() {}

@@ -1963,11 +1963,8 @@ public class CodeGenerator {
     if (useSlashV) {
       add(jsString(n.getString(), useSlashV));
     } else {
-      String cached = escapedJsStrings.get(s);
-      if (cached == null) {
-        cached = jsString(n.getString(), useSlashV);
-        escapedJsStrings.put(s, cached);
-      }
+      String cached =
+          escapedJsStrings.computeIfAbsent(s, (String k) -> jsString(n.getString(), useSlashV));
       add(cached);
     }
   }

@@ -15,6 +15,7 @@
  */
 package com.google.javascript.refactoring.examples;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -57,7 +58,7 @@ abstract class RefactoringTest {
                 fixes, ImmutableMap.of("input", originalCode))
             .stream()
             .map(m -> m.get("input"))
-            .collect(ImmutableList.toImmutableList());
+            .collect(toImmutableList());
     assertThat(newCode).containsExactlyElementsIn(ImmutableList.copyOf(expectedCodeChoices));
   }
 

@@ -1,0 +1,97 @@
+load("@com_google_j2cl//build_defs:rules.bzl", "j2cl_application", "j2cl_import", "j2cl_library")
+
+package(licenses = ["notice"])
+
+genrule(
+    name = "resources_gen_js",
+    srcs = ["src/com/google/javascript/jscomp/resources/resources.json"],
+    outs = ["resources.js"],
+    cmd = """echo 'goog.module(\"com.google.javascript.jscomp.Resources\");
+    let resources = ' > $@ &&
+    cat $(SRCS) >> $@ &&
+    echo ";exports = {resources: function() {return resources}};" >> $@
+    """,
+)
+
+filegroup(
+    name = "node_globals_externs",
+    srcs = [
+        "contrib/nodejs/events.js",
+        "contrib/nodejs/fs.js",
+        "contrib/nodejs/globals.js",
+        "contrib/nodejs/stream.js",
+    ],
+)
+
+j2cl_import(
+    name = "auto_value-j2cl",
+    jar = "@com_google_auto_value//jar",
+)
+
+SUPER_SRCS = glob(["**/super/**"])
+
+j2cl_library(
+    name = "app",
+    srcs = [
+        ":node_globals_externs",
+        ":resources.js",
+    ] + glob(
+        [
+            "src/com/google/debugging/**/*.java",
+            "src/com/google/debugging/**/*.js",
+            "src/com/google/javascript/rhino/**/*.java",
+            "src/com/google/javascript/jscomp/*.java",
+            "src/com/google/javascript/jscomp/deps/**/*.java",
+            "src/com/google/javascript/jscomp/lint/**/*.java",
+            "src/com/google/javascript/jscomp/ijs/**/*.java",
+            "src/com/google/javascript/jscomp/diagnostic/**/*.java",
+            "src/com/google/javascript/jscomp/disambiguate/**/*.java",
+            "src/com/google/javascript/jscomp/regex/**/*.java",
+            "src/com/google/javascript/jscomp/parsing/**/*.java",
+            "src/com/google/javascript/jscomp/modules/**/*.java",
+            "src/com/google/javascript/jscomp/type/**/*.java",
+            "src/com/google/javascript/jscomp/graph/**/*.java",
+            "src/com/google/javascript/jscomp/resources/GwtProperties.*",
+            "src/com/google/javascript/jscomp/resources/super-j2cl/**/*.java",
+            "src/com/google/javascript/jscomp/gwt/client/JsRunnerMain.*",
+            "src/com/google/javascript/jscomp/gwt/client/JsfileParserMain.*",
+            "src/com/google/javascript/jscomp/gwt/client/NodePrintStream.*",
+            "src/com/google/javascript/jscomp/gwt/super/**/*.java",
+            "src/com/google/javascript/jscomp/gwt/super/**/*.js",
+        ],
+        exclude = [
+            "**/super-gwt/**",
+            "**/testing/**",
+            "src/com/google/javascript/jscomp/deps/PathUtil.java",
+        ] + ["src/" + s.split("/super/")[1] for s in SUPER_SRCS],
+    ),
+    js_suppress = ["deprecated"],
+    deps = [
+        ":auto_value-j2cl",
+        "@com_google_code_findbugs_jsr305-j2cl",
+        "@com_google_elemental2//:elemental2-core-j2cl",
+        "@com_google_errorprone_error_prone_annotations-j2cl",
+        "@com_google_guava-j2cl",
+        "@com_google_j2cl//:jsinterop-annotations-j2cl",
+        "@com_google_jsinterop_base//:jsinterop-base-j2cl",
+        "@com_google_re2j-j2cl",
+    ],
+)
+
+# This is the bazel target that compiles and optimizes the J2CL app.
+#
+# It provides couple of convenient targets:
+#  :compiler produces the compiler.js that could be used for production.
+#  :compiler_dev produces the compiler_dev.js that could be used for development.
+#  :compiler_dev_server serves compiler_dev.js with couple of extras which you can
+#    use as a simple development server.
+#
+# If you like to just save a file and see the results, you can replace bazel w/ ibazel:
+#   $ ibazel run :compiler_dev_server
+#
+j2cl_application(
+    name = "compiler",
+    entry_points = ["com.google.javascript.jscomp.gwt.client.JsRunnerMain"],
+    jre_checks_check_level = "MINIMAL",
+    deps = [":app"],
+)

@@ -20,7 +20,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
+import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -196,7 +199,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           {
             double result = Double.NEGATIVE_INFINITY;
             for (Double d : args) {
-              result = Math.max(result, d);
+              result = max(result, d);
             }
             replacement = result;
             break;
@@ -205,7 +208,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           {
             double result = Double.POSITIVE_INFINITY;
             for (Double d : args) {
-              result = Math.min(result, d);
+              result = min(result, d);
             }
             replacement = result;
             break;
@@ -498,8 +501,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       newNode = IR.number(0);
     } else if (isParseInt) {
       if (radix == 0 || radix == 16) {
-        if (stringVal.length() > 1 &&
-            stringVal.substring(0, 2).equalsIgnoreCase("0x")) {
+        if (stringVal.length() > 1 && Ascii.equalsIgnoreCase(stringVal.substring(0, 2), "0x")) {
           radix = 16;
           stringVal = stringVal.substring(2);
         } else if (radix == 0) {
@@ -981,7 +983,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       Node arg2 = arg1.getNext();
       if (arg2 != null) {
         if (arg2.isNumber()) {
-          limit = Math.min((int) arg2.getDouble(), limit);
+          limit = min((int) arg2.getDouble(), limit);
           if (limit < 0) {
             return n;
           }

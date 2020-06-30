@@ -17,6 +17,8 @@
 package com.google.javascript.refactoring;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Streams.stream;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Joiner;
@@ -28,7 +30,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Streams;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -86,14 +87,14 @@ public final class ApplySuggestedFixes {
     }
     int alternativeCount = Iterables.getFirst(fixChoices, null).getAlternatives().size();
     Preconditions.checkArgument(
-        Streams.stream(fixChoices)
+        stream(fixChoices)
             .map(f -> f.getAlternatives().size())
             .allMatch(Predicate.isEqual(alternativeCount)),
         "All SuggestedFixAlternatives must offer an equal number of choices for this "
             + "utility to make sense");
     return IntStream.range(0, alternativeCount)
         .mapToObj(i -> applySuggestedFixChoicesToCode(fixChoices, i, fileNameToCodeMap))
-        .collect(ImmutableList.toImmutableList());
+        .collect(toImmutableList());
   }
 
   private static ImmutableMap<String, String> applySuggestedFixChoicesToCode(
@@ -101,9 +102,9 @@ public final class ApplySuggestedFixes {
       final int choiceIndex,
       Map<String, String> fileNameToCodeMap) {
     ImmutableList<SuggestedFix> chosenFixes =
-        Streams.stream(fixChoices)
+        stream(fixChoices)
             .map(choices -> choices.getAlternatives().get(choiceIndex))
-            .collect(ImmutableList.toImmutableList());
+            .collect(toImmutableList());
     return applySuggestedFixesToCode(chosenFixes, fileNameToCodeMap);
   }
 

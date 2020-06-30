@@ -508,11 +508,7 @@ class RenameProperties implements CompilerPass {
      * @param name The property name
      */
     private void countPropertyOccurrence(String name) {
-      Property prop = propertyMap.get(name);
-      if (prop == null) {
-        prop = new Property(name);
-        propertyMap.put(name, prop);
-      }
+      Property prop = propertyMap.computeIfAbsent(name, Property::new);
       prop.numOccurrences++;
     }
   }

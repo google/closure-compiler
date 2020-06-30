@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
@@ -200,32 +201,49 @@ public abstract class IntegrationTestCase {
     }
   }
 
-  /**
-   * Asserts that when compiling with the given compiler options,
-   * there is an error or warning.
-   */
-  protected void test(CompilerOptions options,
-      String original, DiagnosticType warning) {
-    test(options, new String[] { original }, warning);
+  // TODO(lharker): delete all the methods checking for a DiagnosticType after migrating existing
+  // usages.
+  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
+  protected void test(CompilerOptions options, String original, DiagnosticGroup warning) {
+    test(options, new String[] {original}, null, warning);
   }
 
-  protected void test(CompilerOptions options,
-      String original, String compiled, DiagnosticType warning) {
-    test(options, new String[] { original }, new String[] { compiled },
-         warning);
-  }
-
-  protected void test(CompilerOptions options,
-      String[] original, DiagnosticType warning) {
+  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
+  protected void test(CompilerOptions options, String[] original, DiagnosticGroup warning) {
     test(options, original, null, warning);
   }
 
   /**
-   * Asserts that when compiling with the given compiler options,
-   * there is an error or warning.
+   * Asserts that when compiling with the given compiler options, there is an error or warning.
+   *
+   * @deprecated prefer to check for the corresponding DiagnosticGroup
    */
-  protected void test(CompilerOptions options,
-      String[] original, String[] compiled, DiagnosticType warning) {
+  @Deprecated
+  protected void test(CompilerOptions options, String original, DiagnosticType warning) {
+    test(options, new String[] {original}, warning);
+  }
+
+  /** @deprecated prefer to check for the corresponding DiagnosticGroup */
+  @Deprecated
+  protected void test(
+      CompilerOptions options, String original, String compiled, DiagnosticType warning) {
+    test(options, new String[] {original}, new String[] {compiled}, warning);
+  }
+
+  /** @deprecated prefer to check for the corresponding DiagnosticGroup */
+  @Deprecated
+  protected void test(CompilerOptions options, String[] original, DiagnosticType warning) {
+    test(options, original, null, warning);
+  }
+
+  /**
+   * Asserts that when compiling with the given compiler options, there is an error or warning.
+   *
+   * @deprecated prefer to check for the corresponding DiagnosticGroup
+   */
+  @Deprecated
+  protected void test(
+      CompilerOptions options, String[] original, String[] compiled, DiagnosticType warning) {
     Compiler compiler = compile(options, original);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
     assertWithMessage("Expected exactly one warning or error")
@@ -244,7 +262,12 @@ public abstract class IntegrationTestCase {
     }
   }
 
-  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
+  /**
+   * Asserts that when compiling with the given compiler options, there is an error or warning.
+   *
+   * @deprecated prefer to check for the corresponding DiagnosticGroup
+   */
+  @Deprecated
   protected void test(
       CompilerOptions options, String[] original, String[] compiled, DiagnosticType[] warnings) {
     Compiler compiler = compile(options, original);
@@ -257,9 +280,34 @@ public abstract class IntegrationTestCase {
     }
   }
 
-  /**
-   * Asserts that there is at least one parse error.
-   */
+  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
+  protected void test(
+      CompilerOptions options, String[] original, String[] compiled, DiagnosticGroup warnings) {
+    Compiler compiler = compile(options, original);
+    checkUnexpectedErrorsOrWarnings(compiler, 1);
+
+    if (compiled != null) {
+      Node root = compiler.getRoot().getLastChild();
+      Node expectedRoot = parseExpectedCode(compiled, options);
+      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
+    }
+
+    DiagnosticType diagnostic;
+    if (compiler.getErrorCount() == 1) {
+      diagnostic = compiler.getErrors().get(0).getType();
+    } else {
+      diagnostic = compiler.getWarnings().get(0).getType();
+    }
+    assertWithMessage(
+            "Error not in expected diagnostic group. Error: "
+                + diagnostic.key
+                + "\nExpected group: "
+                + warnings)
+        .that(warnings.matches(diagnostic))
+        .isTrue();
+  }
+
+  /** Asserts that there is at least one parse error. */
   protected void testParseError(CompilerOptions options, String original) {
     testParseError(options, original, null);
   }

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.lang.Math.min;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -184,11 +186,8 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
             return;
           }
         }
-        Node varParent = moduleVarParentMap.get(module);
-        if (varParent == null) {
-          varParent = compiler.getNodeForCodeInsertion(module);
-          moduleVarParentMap.put(module, varParent);
-        }
+        Node varParent =
+            moduleVarParentMap.computeIfAbsent(module, compiler::getNodeForCodeInsertion);
         info.moduleToContainDecl = module;
         info.parentForNewVarDecl = varParent;
         info.siblingToInsertVarDeclBefore = varParent.getFirstChild();
@@ -378,7 +377,7 @@ class AliasStrings implements CompilerPass, NodeTraversal.Callback {
       // Limit to avoid generating very long identifiers
       final int maxLimit = 20;
       final int length = s.length();
-      final int limit = Math.min(length, maxLimit);
+      final int limit = min(length, maxLimit);
 
       StringBuilder sb = new StringBuilder();
       sb.append(prefix);

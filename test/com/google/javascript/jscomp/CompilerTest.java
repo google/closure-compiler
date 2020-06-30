@@ -19,6 +19,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -40,6 +41,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -48,6 +50,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -2653,5 +2656,34 @@ public final class CompilerTest {
     assertThat(compiler.getErrors()).hasSize(1);
     assertError(getOnlyElement(compiler.getErrors()))
         .hasMessage("File strongly reachable from an entry point must not be weak: weak.js");
+  }
+
+  @Test
+  public void testTypesAreRemoved() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    SourceFile input =
+        SourceFile.fromCode(
+            "input.js",
+            lines(
+                "/** @license @type {!Foo} */",
+                "class Foo {}",
+                "class Bar {}",
+                "/** @typedef {number} */ let Num;",
+                "const n = /** @type {!Num} */ (5);",
+                "var /** !Foo */ f = new Bar;"));
+    Compiler compiler = new Compiler();
+    WeakReference<JSTypeRegistry> registryWeakReference =
+        new WeakReference<>(compiler.getTypeRegistry());
+    compiler.compile(EMPTY_EXTERNS.get(0), input, options);
+
+    // Just making sure that typechecking ran and didn't crash.  It would be reasonable
+    // for there also to be other type errors in this code before the final null assignment.
+    assertThat(compiler.getWarnings()).hasSize(1);
+    assertError(compiler.getWarnings().get(0)).hasType(TYPE_MISMATCH_WARNING);
+
+    System.gc();
+    System.runFinalization();
+    assertThat(registryWeakReference.get()).isNull();
   }
 }

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Ascii;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -282,7 +283,7 @@ final class ReplaceMessages extends JsMessageVisitor {
           // We ignore the case here because the transconsole only supports
           // uppercase placeholder names, but function arguments in JavaScript
           // code can have mixed case.
-          if (arg.equalsIgnoreCase(phRef.getName())) {
+          if (Ascii.equalsIgnoreCase(arg, phRef.getName())) {
             partNode = IR.name(arg);
           }
         }

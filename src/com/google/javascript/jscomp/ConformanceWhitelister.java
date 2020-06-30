@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -31,14 +33,14 @@ public class ConformanceWhitelister {
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
     return getConformanceErrors(compiler, externs, ast, requirement).stream()
         .map(JSError::getSourceName)
-        .collect(ImmutableSet.toImmutableSet());
+        .collect(toImmutableSet());
   }
 
   public static ImmutableSet<Node> getViolatingNodes(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
     return getConformanceErrors(compiler, externs, ast, requirement).stream()
         .map(JSError::getNode)
-        .collect(ImmutableSet.toImmutableSet());
+        .collect(toImmutableSet());
   }
 
   public static ImmutableList<JSError> getConformanceErrors(

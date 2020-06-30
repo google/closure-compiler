@@ -17,6 +17,7 @@
 package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -24,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -62,7 +62,7 @@ public final class SourceMapConsumerGeneratorTest {
     String concatenatedFile =
         sourceFiles.entrySet().stream()
             .map((entry) -> String.format("// %s\n%s", entry.getKey(), entry.getValue()))
-            .collect(Collectors.joining("\n"));
+            .collect(joining("\n"));
 
     String sourcemap = generateSourceMap(concatenatedFile);
 

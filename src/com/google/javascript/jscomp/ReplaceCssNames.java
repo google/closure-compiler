@@ -248,11 +248,8 @@ class ReplaceCssNames implements CompilerPass {
         // done the full replace. The statistics are collected on a
         // per-part basis.
         for (String element : parts) {
-          Integer count = cssNames.get(element);
-          if (count == null) {
-            count = 0;
-          }
-          cssNames.put(element, count.intValue() + 1);
+          int count = cssNames.getOrDefault(element, 0);
+          cssNames.put(element, count + 1);
         }
       }
     }

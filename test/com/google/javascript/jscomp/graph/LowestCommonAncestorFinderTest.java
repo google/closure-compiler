@@ -248,7 +248,7 @@ public final class LowestCommonAncestorFinderTest {
   }
 
   private static final class CaseBuilder {
-    private LinkedDirectedGraph<Integer, Void> graph = LinkedDirectedGraph.create();
+    private final LinkedDirectedGraph<Integer, Void> graph = LinkedDirectedGraph.create();
     private ImmutableSet<Integer> roots;
     private ImmutableSet<Integer> expected;
     private ImmutableSet<Integer> actual;

@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -265,7 +266,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         // Found a good site here. The constructor will computes the chain of
         // declarations that is qualified for extraction.
         ExtractionInstance instance = new ExtractionInstance(prototypeMember, n);
-        cur = instance.declarations.get(instance.declarations.size() - 1).node;
+        cur = Iterables.getLast(instance.declarations).node;
 
         // Only add it to our work list if the extraction at this instance makes the code smaller.
         if (instance.isFavorable()) {
