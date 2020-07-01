@@ -1695,4 +1695,5 @@ public abstract class JSType implements Serializable {
   JSType simplifyForOptimizations() {
     return this;
   }
+
 }
