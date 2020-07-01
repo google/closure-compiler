@@ -14,15 +14,24 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISPLACED_PROPERTY_JSDOC;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.PolymerExportPolicy;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -121,12 +130,12 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     addPolymerExterns();
 
-    testNoWarnings(
+    test(
         options,
         lines(
             "(function() {",
@@ -139,10 +148,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "  });",
             "})();",
             "",
-            "const obj = {randomProperty: 0, otherProperty: 1};"));
-
-    String source = lastCompiler.getCurrentJsSource();
-    String expectedSource =
+            "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
             "var a=function(){};",
             "(function(){",
@@ -150,8 +156,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "Polymer({",
             "a:\"foo\",",
             "c:{value:Object}})})();",
-            "var b={randomProperty:0,b:1};");
-    assertThat(source).isEqualTo(expectedSource);
+            "var b={randomProperty:0,b:1};"));
   }
 
   @Test
@@ -164,12 +169,12 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     addPolymerExterns();
 
-    testNoWarnings(
+    test(
         options,
         lines(
             "(function() {",
@@ -182,18 +187,14 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
             "  });",
             "})();",
             "",
-            "const obj = {randomProperty: 0, otherProperty: 1};"));
-
-    String source = lastCompiler.getCurrentJsSource();
-    String expectedSource =
+            "const obj = {randomProperty: 0, otherProperty: 1};"),
         EMPTY_JOINER.join(
             "var a=function(){};",
             "(function(){a.prototype.value;",
             "Polymer({",
             "a:\"foo\",",
             "c:{value:Object}})})();",
-            "var b={randomProperty:0,b:1};");
-    assertThat(source).isEqualTo(expectedSource);
+            "var b={randomProperty:0,b:1};"));
   }
 
   @Test
@@ -774,7 +775,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setRenamingPolicy(
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
@@ -793,7 +794,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
                 "    return this.longUnusedProperty;",
                 "  }",
                 "}"));
-    String source = compiler.getCurrentJsSource();
+    String source = compiler.toSource();
 
     // If we see these identifiers anywhere in the output source, we know that we successfully
     // protected it against removal and renaming.
@@ -817,7 +818,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedPrototypeProperties(true);
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveDeadCode(true);
-    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
 
@@ -835,7 +836,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
                 "    return this.longUnusedProperty;",
                 "  },",
                 "});"));
-    String source = compiler.getCurrentJsSource();
+    String source = compiler.toSource();
 
     // If we see these identifiers anywhere in the output source, we know that we successfully
     // protected them against removal and renaming.
@@ -856,7 +857,7 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     // By setting the EXPORT_ALL export policy, all properties will be added to an interface that
     // is injected into the externs. We need to make sure the types of the properties on this
     // interface aligns with the types we declared in the constructor, or else we'll get an error.
-    options.polymerExportPolicy = PolymerExportPolicy.EXPORT_ALL;
+    options.setPolymerExportPolicy(PolymerExportPolicy.EXPORT_ALL);
     addPolymer2Externs();
 
     Compiler compiler =
@@ -907,7 +908,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     ImmutableList<JSError> warnings = compiler.getWarnings();
     assertThat(warnings).hasSize(1);
     JSError warning = warnings.get(0);
-    assertThat(warning.getType()).isEqualTo(POLYMER_MISPLACED_PROPERTY_JSDOC);
     assertThat(warning.getNode().getString()).isEqualTo("p1");
   }
 }
