@@ -285,6 +285,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private final Timeline<Node> deleteTimeline = new Timeline<>();
 
   /**
+   * When mapping symbols from a source map, we must repeatedly combine the path of the original
+   * file with the path from the source map to compute the SourceFile of the underlying code. When
+   * iterating through adjacent symbols this computation ends up computing the same thing.
+   *
+   * <p>This object tracks the last source map we resolved to reduce that work. It caches: for a
+   * given originalPath+sourceMapPath, what sourceFile did we find?
+   */
+  private static class ResolvedSourceMap {
+    public String originalPath;
+    public String sourceMapPath;
+    public SourceFile sourceFile;
+  }
+
+  /**
+   * There is exactly one cached resolvedSourceMap, which you can think of as a cache of size one.
+   */
+  private final ResolvedSourceMap resolvedSourceMap = new ResolvedSourceMap();
+
+  /**
    * Creates a Compiler that reports errors and warnings to its logger.
    */
   public Compiler() {
@@ -2873,20 +2892,32 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // First check to see if the original file was loaded from an input source map.
     String sourceMapOriginalPath = sourceMap.getOriginalPath();
     String resultOriginalPath = result.getOriginalFile();
-    String relativePath = resolveSibling(sourceMapOriginalPath, resultOriginalPath);
+    SourceFile source = null;
 
-    SourceFile source = getSourceFileByName(relativePath);
-    if (source == null && !isNullOrEmpty(resultOriginalPath)) {
-      source =
-          SourceMapResolver.getRelativePath(sourceMap.getOriginalPath(), result.getOriginalFile());
-      if (source != null) {
-        sourceMapOriginalSources.putIfAbsent(relativePath, source);
+    // Resolving the paths to a source file is expensive, so check the cache first.
+    if (sourceMapOriginalPath.equals(resolvedSourceMap.originalPath)
+        && resultOriginalPath.equals(resolvedSourceMap.sourceMapPath)) {
+      source = resolvedSourceMap.sourceFile;
+    } else {
+      String relativePath = resolveSibling(sourceMapOriginalPath, resultOriginalPath);
+      source = getSourceFileByName(relativePath);
+      if (source == null && !isNullOrEmpty(resultOriginalPath)) {
+        source =
+            SourceMapResolver.getRelativePath(
+                sourceMap.getOriginalPath(), result.getOriginalFile());
+        if (source != null) {
+          sourceMapOriginalSources.putIfAbsent(relativePath, source);
+        }
       }
+
+      // Cache this resolved source for the next caller.
+      resolvedSourceMap.originalPath = sourceMapOriginalPath;
+      resolvedSourceMap.sourceMapPath = resultOriginalPath;
+      resolvedSourceMap.sourceFile = source;
     }
 
-    return result
-        .toBuilder()
-        .setOriginalFile(relativePath)
+    return result.toBuilder()
+        .setOriginalFile(source.getOriginalPath())
         .setColumnPosition(result.getColumnPosition() - 1)
         .build();
   }
