@@ -23,7 +23,9 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
-  private static final String EXTERN = "Equality.$same = function(opt_a, opt_b) {};";
+  private static final String EXTERN =
+      "Equality.$same = function(opt_a, opt_b) {};\n"
+          + "String.m_equals__java_lang_String__java_lang_Object = function(opt_a, opt_b) {};";
 
   private static boolean useTypes;
 
@@ -203,9 +205,30 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
 
   @Test
   public void testNotRewriteEqualitySame_parametersOptimizedAway() {
+    testSame(lines("Equality.$same(null);", "Equality.$same();"));
+  }
+
+  @Test
+  public void testRewriteStringEquals() {
+    test(
+        LINE_JOINER.join(
+            "String.m_equals__java_lang_String__java_lang_Object('', 0);",
+            "var a = 'ABC';",
+            "String.m_equals__java_lang_String__java_lang_Object('ABC', a);"),
+        LINE_JOINER.join(
+            "'' === 0;", //
+            "var a = 'ABC';",
+            "'ABC' === a;"));
+  }
+
+  @Test
+  public void testNotRewriteStringEquals() {
     testSame(
-        lines(
-            "Equality.$same(null);",
-            "Equality.$same();"));
+        LINE_JOINER.join(
+            "/** @type {?string} */",
+            "var b = null;",
+            "String.m_equals__java_lang_String__java_lang_Object(b, null);",
+            "String.m_equals__java_lang_String__java_lang_Object(null, b);",
+            "String.m_equals__java_lang_String__java_lang_Object(c, d);"));
   }
 }

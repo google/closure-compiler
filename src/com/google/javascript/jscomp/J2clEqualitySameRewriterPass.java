@@ -43,11 +43,18 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
       return node;
     }
 
-    if (!isEqualitySameCall(node)) {
+    // Do not optimize if any parameters were removed during optimizations
+    if (!node.hasXChildren(3)) {
       return node;
     }
 
-    Node replacement = trySubstituteEqualitySame(node);
+    Node replacement = null;
+    if (isStringEqualsMethod(node)) {
+      replacement = trySubstituteStringEquals(node);
+    } else if (isEqualitySameCall(node)) {
+      replacement = trySubstituteEqualitySame(node);
+    }
+
     if (replacement == null) {
       return node;
     }
@@ -56,6 +63,16 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     node.replaceWith(replacement);
     reportChangeToEnclosingScope(replacement);
     return replacement;
+  }
+
+  private Node trySubstituteStringEquals(Node callNode) {
+    NodeValue firstExprValue = getKnownLiteralValue(callNode.getSecondChild());
+    if (firstExprValue == NodeValue.UNKNOWN || firstExprValue == NodeValue.NULL_OR_UNDEFINED) {
+      // Potential NPE, don't optimize.
+      return null;
+    }
+
+    return trySubstituteEqualitySame(callNode);
   }
 
   private Node trySubstituteEqualitySame(Node callNode) {
@@ -179,19 +196,21 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
   }
 
   private static boolean isEqualitySameCall(Node node) {
-    return node.isCall()
-        // Do not optimize if one or both parameters were removed
-        && node.hasXChildren(3)
-        && isEqualitySameMethodName(node.getFirstChild());
+    return node.isCall() && hasName(node.getFirstChild(), "Equality", "$same");
   }
 
-  private static boolean isEqualitySameMethodName(Node fnName) {
+  private static boolean isStringEqualsMethod(Node node) {
+    return node.isCall()
+        && hasName(node.getFirstChild(), "String", "m_equals__java_lang_String__java_lang_Object");
+  }
+
+  private static boolean hasName(Node fnName, String className, String methodName) {
     if (!fnName.isQualifiedName()) {
       return false;
     }
     // NOTE: This should be rewritten to use method name + file name of definition site
     // like other J2CL passes, which is more precise.
     String originalQname = fnName.getOriginalQualifiedName();
-    return originalQname.endsWith(".$same") && originalQname.contains("Equality");
+    return originalQname.endsWith(methodName) && originalQname.contains(className);
   }
 }
