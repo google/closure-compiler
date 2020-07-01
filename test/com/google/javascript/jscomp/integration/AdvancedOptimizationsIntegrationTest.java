@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -24,9 +24,25 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.primitives.Chars;
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.ClosureCodingConvention;
+import com.google.javascript.jscomp.CodingConvention;
+import com.google.javascript.jscomp.CodingConventions;
+import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DiagnosticGroup;
+import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.Es6ToEs3Util;
+import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.TypeCheck;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -44,7 +60,7 @@ import org.junit.runners.JUnit4;
 public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestCase {
 
   @Test
-  public void testDisambiguationOfForwardReferenedAliasedInterface() {
+  public void testDisambiguationOfForwardReferencedAliasedInterface() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_2015);
@@ -486,27 +502,35 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // TODO(tbreisacher): Re-enable dev mode and fix test failure.
     options.setDevMode(DevMode.OFF);
 
-    test(options,
-        new String[] {"var x = {eeny: 1, /** @expose */ meeny: 2};" +
-            "/** @constructor */ var Foo = function() {};" +
-            "/** @expose */  Foo.prototype.miny = 3;" +
-            "Foo.prototype.moe = 4;" +
-            "/** @expose */  Foo.prototype.tiger;" +
-            "function moe(a, b) { return a.meeny + b.miny + a.tiger; }" +
-            "window['x'] = x;" +
-            "window['Foo'] = Foo;" +
-            "window['moe'] = moe;"},
-        new String[] {"function a(){}" +
-            "a.prototype.miny=3;" +
-            "window.x={a:1,meeny:2};" +
-            "window.Foo=a;" +
-            "window.moe=function(b,c){" +
-            "  return b.meeny+c.miny+b.tiger" +
-            "}"},
-        new DiagnosticType[]{
-            CheckJSDoc.ANNOTATION_DEPRECATED,
-            CheckJSDoc.ANNOTATION_DEPRECATED,
-            CheckJSDoc.ANNOTATION_DEPRECATED});
+    test(
+        options,
+        new String[] {
+          lines(
+              "var x = {eeny: 1, /** @expose */ meeny: 2};",
+              "/** @constructor */ var Foo = function() {};",
+              "/** @expose */  Foo.prototype.miny = 3;",
+              "Foo.prototype.moe = 4;",
+              "/** @expose */  Foo.prototype.tiger;",
+              "function moe(a, b) { return a.meeny + b.miny + a.tiger; }",
+              "window['x'] = x;",
+              "window['Foo'] = Foo;",
+              "window['moe'] = moe;")
+        },
+        new String[] {
+          lines(
+              "function a(){}",
+              "a.prototype.miny=3;",
+              "window.x={a:1,meeny:2};",
+              "window.Foo=a;",
+              "window.moe=function(b,c){",
+              "  return b.meeny+c.miny+b.tiger",
+              "}")
+        },
+        new DiagnosticGroup[] {
+          DiagnosticGroups.DEPRECATED_ANNOTATIONS,
+          DiagnosticGroups.DEPRECATED_ANNOTATIONS,
+          DiagnosticGroups.DEPRECATED_ANNOTATIONS
+        });
   }
 
   @Test
@@ -540,7 +564,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         LINE_JOINER.join(
             "for (var x of []);", // Force injection of es6_runtime.js
             "var /** number */ y = window;"),
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -671,26 +695,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "}",
             "f(g);"),
         "window.a = g + 1;");
-  }
-
-  @Test
-  public void testCheckStrictMode() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
-
-    externs =
-        ImmutableList.of(
-            SourceFile.fromCode("externs", "var use; var arguments; arguments.callee;"));
-
-    String code =
-        "function App() {}\n"
-            + "App.prototype.method = function(){\n"
-            + "  use(arguments.callee)\n"
-            + "};";
-
-    test(options, code, "", StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#724
@@ -1138,7 +1142,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     assertThat(options.shouldInlineProperties()).isTrue();
     assertThat(options.shouldCollapseProperties()).isTrue();
     // CollapseProperties used to prevent inlining this property.
-    test(options, code, TypeValidator.TYPE_MISMATCH_WARNING);
+    test(options, code, DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -1233,7 +1237,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = compile(options, js);
     assertThat(compiler.getErrors()).isEmpty();
-    String result = compiler.toSource(compiler.getJsRoot());
+    String result = compiler.toSource(compiler.getRoot().getSecondChild());
     assertThat(result).isNotEmpty();
     assertThat(result).doesNotContain("No one ever calls me");
   }
@@ -1292,12 +1296,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setGenerateExports(true);
 
     // exports enabled, but not local exports
-    test(options,
-        "/** @constructor */ var X = function() {" +
-        "/** @export */ this.abc = 1;};\n",
-        FindExportableNodes.NON_GLOBAL_ERROR);
+    compile(
+        options, "/** @constructor */ var X = function() {" + "/** @export */ this.abc = 1;};\n");
+    assertThat(lastCompiler.getErrors()).hasSize(1);
 
-    options.exportLocalPropertyDefinitions = true;
+    options.setExportLocalPropertyDefinitions(true);
     options.setRemoveUnusedPrototypePropertiesInExterns(false);
 
     // property name preserved due to export
@@ -1323,7 +1326,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     options.setAmbiguateProperties(true);
-    options.propertyInvalidationErrors = ImmutableMap.of("abc", CheckLevel.ERROR);
+    options.setPropertyInvalidationErrors(ImmutableMap.of("abc", CheckLevel.ERROR));
 
     test(
         options,
@@ -1508,7 +1511,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     Node script = root.getFirstChild();
     assertThat(script).isNotNull();
     ImmutableSet<Character> restrictedChars =
-        ImmutableSet.copyOf(Chars.asList(CompilerOptions.ANGULAR_PROPERTY_RESERVED_FIRST_CHARS));
+        CompilerOptions.getAngularPropertyReservedFirstChars();
     for (Node expr : script.children()) {
       NodeSubject.assertNode(expr).hasType(Token.EXPR_RESULT);
       NodeSubject.assertNode(expr.getFirstChild()).hasType(Token.ASSIGN);
@@ -1524,7 +1527,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testCheckVarsOnInAdvancedMode() {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    test(options, "var x = foobar;", VarCheck.UNDEFINED_VAR_ERROR);
+    test(options, "var x = foobar;", DiagnosticGroups.UNDEFINED_VARIABLES);
   }
 
   @Test
@@ -1736,7 +1739,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
               "  return a;",
               "}({b:1, c:'hello', d:null}));")
         },
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test

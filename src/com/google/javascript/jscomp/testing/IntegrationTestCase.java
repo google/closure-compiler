@@ -262,14 +262,9 @@ public abstract class IntegrationTestCase {
     }
   }
 
-  /**
-   * Asserts that when compiling with the given compiler options, there is an error or warning.
-   *
-   * @deprecated prefer to check for the corresponding DiagnosticGroup
-   */
-  @Deprecated
+  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
   protected void test(
-      CompilerOptions options, String[] original, String[] compiled, DiagnosticType[] warnings) {
+      CompilerOptions options, String[] original, String[] compiled, DiagnosticGroup[] warnings) {
     Compiler compiler = compile(options, original);
     checkUnexpectedErrorsOrWarnings(compiler, warnings.length);
 
@@ -278,6 +273,14 @@ public abstract class IntegrationTestCase {
       Node expectedRoot = parseExpectedCode(compiled, options);
       assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
     }
+
+    assertThat(
+            ImmutableList.builder()
+                .addAll(compiler.getErrors())
+                .addAll(compiler.getWarnings())
+                .build())
+        .comparingElementsUsing(JSCompCorrespondences.OWNING_DIAGNOSTIC_GROUP)
+        .containsExactly(warnings);
   }
 
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */

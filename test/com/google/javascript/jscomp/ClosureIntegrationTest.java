@@ -251,10 +251,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCheckTypes(true);
-    DiagnosticType[] warnings = {
-      ProcessDefines.INVALID_DEFINE_TYPE,
-      ProcessDefines.INVALID_DEFINE_VALUE,
-      RhinoErrorReporter.TYPE_PARSE_ERROR
+    DiagnosticGroup[] warnings = {
+      DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_TYPE),
+      DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE),
+      DiagnosticGroups.CHECK_TYPES
     };
     String[] input = {
       "var goog = {};" + "goog.provide('foo.bar');" + "/** @define{foo.bar} */ foo.bar = {};"

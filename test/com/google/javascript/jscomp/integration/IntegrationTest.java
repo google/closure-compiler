@@ -477,6 +477,26 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testCheckStrictMode() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setChecksOnly(true);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("externs", "var use; var arguments; arguments.callee;"));
+
+    String code =
+        "function App() {}\n"
+            + "App.prototype.method = function(){\n"
+            + "  use(arguments.callee)\n"
+            + "};";
+
+    test(options, code, DiagnosticGroups.ES5_STRICT);
+  }
+
+  @Test
   public void testExportedNames() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

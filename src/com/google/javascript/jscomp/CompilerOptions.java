@@ -63,10 +63,14 @@ public class CompilerOptions implements Serializable {
   // The number of characters after which we insert a line break in the code
   static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
 
-  static final char[] POLYMER_PROPERTY_RESERVED_FIRST_CHARS =
+  private static final char[] POLYMER_PROPERTY_RESERVED_FIRST_CHARS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ$".toCharArray();
-  static final char[] POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
-  static final char[] ANGULAR_PROPERTY_RESERVED_FIRST_CHARS = {'$'};
+  private static final char[] POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS = "_$".toCharArray();
+  private static final char[] ANGULAR_PROPERTY_RESERVED_FIRST_CHARS = {'$'};
+
+  public static ImmutableSet<Character> getAngularPropertyReservedFirstChars() {
+    return ImmutableSet.copyOf(Chars.asList(ANGULAR_PROPERTY_RESERVED_FIRST_CHARS));
+  }
 
   public boolean shouldRunCrossChunkCodeMotion() {
     return crossChunkCodeMotion;

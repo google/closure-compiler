@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckGlobalNames.UNDEFINED_NAME_WARNING;
-import static com.google.javascript.jscomp.TypeCheck.INEXISTENT_PROPERTY;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -418,7 +416,9 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
               "module$i0.bar();", //
               "/** @const */ var module$i1 = {};")
         },
-        new DiagnosticType[] {UNDEFINED_NAME_WARNING, INEXISTENT_PROPERTY});
+        new DiagnosticGroup[] {
+          DiagnosticGroups.UNDEFINED_NAMES, DiagnosticGroups.MISSING_PROPERTIES
+        });
   }
 
   @Override
