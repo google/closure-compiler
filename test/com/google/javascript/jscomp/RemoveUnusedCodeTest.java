@@ -2185,33 +2185,31 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
                 "var x = {Array: {from: function() {}}};",
                 "console.log(x.Array.from());")));
 
-    // Without type information, we don't recognize the aliased call.
-    // https://github.com/google/closure-compiler/issues/3171
     testSame(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "/** @const */ var MyArray = Array;",
+                // polyfill is kept even though called via an alias
                 "console.log(MyArray.from());")));
 
-    // Without type information, we don't recognize the subclass call.
-    // https://github.com/google/closure-compiler/issues/3171
     test(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "class SubArray extends Array {}",
+                // polyfill is kept even though called via a subclass.
                 "console.log(SubArray.from());")));
 
-    // Cannot distinguish between Set.from and Array.from.
     test(
         externs,
         srcs(
             lines(
                 "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');",
                 "$jscomp.polyfill('Set.from', function() {}, 'es6', 'es3');",
+                // Cannot distinguish between Set.from and Array.from.
                 "console.log(Array.from());")));
   }
 
