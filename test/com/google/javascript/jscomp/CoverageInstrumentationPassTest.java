@@ -194,7 +194,7 @@ public final class CoverageInstrumentationPassTest {
   public void testForLoopConflictWithPolyfill() throws Exception {
     CompilerOptions options = branchOptions(LanguageMode.STABLE);
     //options.setRewritePolyfills(true);
-    options.setForceLibraryInjection(ImmutableList.of("find.js"));
+    options.setForceLibraryInjection(ImmutableList.of("es6/array/find"));
     GoldenFileComparer.compileAndCompareSubsetOfActualToExpected(
         "CoverageInstrumentationPassTest/ForLoopBranchConflictWithPolyfillGolden.jsdata",
         options,
