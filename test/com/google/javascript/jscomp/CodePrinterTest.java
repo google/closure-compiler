@@ -2455,6 +2455,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void optionalChainCalleeForNewRequiresParentheses() {
+    assertPrintSame("new (a?.b)");
+  }
+
+  @Test
   public void testFreeCall1() {
     assertPrint("foo(a);", "foo(a)");
     assertPrint("x.foo(a);", "x.foo(a)");
