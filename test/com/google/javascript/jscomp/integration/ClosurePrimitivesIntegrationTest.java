@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.integration;
 
+import com.google.javascript.jscomp.ClosureCodingConvention;
+import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests that the property renaming primitive goog.reflect.objectProperty is recognized across the
+ * Tests that the property-renaming primitive goog.reflect.objectProperty is recognized across the
  * optimization passes.
- *
- * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
 @RunWith(JUnit4.class)
 public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase {
