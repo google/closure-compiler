@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.integration;
 
-
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DiagnosticGroup;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
@@ -26,11 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for type-checking across commonjs modules.
- *
- * @author nicholas.j.santos@gmail.com (Nick Santos)
- */
+/** Tests for type-checking across commonjs modules. */
 @RunWith(JUnit4.class)
 public final class CommonJSIntegrationTest extends IntegrationTestCase {
   @Test
@@ -49,15 +49,13 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testCrossModuleCtorCall2() {
-    test(createCompilerOptions(),
-         new String[] {
-           "/** @constructor */ function Hello() {} " +
-           "module.exports = Hello;",
-
-           "var Hello = require('./i0');" +
-           "var hello = new Hello(1);"
-         },
-         TypeCheck.WRONG_ARGUMENT_COUNT);
+    test(
+        createCompilerOptions(),
+        new String[] {
+          "/** @constructor */ function Hello() {} " + "module.exports = Hello;",
+          "var Hello = require('./i0');" + "var hello = new Hello(1);"
+        },
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -98,7 +96,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
           "/** @constructor */ function Hello() {} module.exports = Hello;",
           "var Hello = require('./i0'); /** @type {!Hello} */ var hello = 1;"
         },
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
