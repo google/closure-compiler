@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.integration;
 
+import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
