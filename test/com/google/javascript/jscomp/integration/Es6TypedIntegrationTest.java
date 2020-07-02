@@ -13,17 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.integration;
 
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Integration tests for compilation in {@link LanguageMode#ECMASCRIPT6_TYPED} mode, with type
- * checking by {@link TypeValidator}.
+ * Integration tests for compilation in {@link LanguageMode#ECMASCRIPT6_TYPED} mode with
+ * typechecking done.
  */
 @RunWith(JUnit4.class)
 public final class Es6TypedIntegrationTest extends IntegrationTestCase {
@@ -35,7 +40,7 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testBasicTypeCheck_error() {
-    test(createCompilerOptions(), "var x: number = 'hello';", TypeValidator.TYPE_MISMATCH_WARNING);
+    test(createCompilerOptions(), "var x: number = 'hello';", DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -45,8 +50,10 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testFunctionType_error() {
-    test(createCompilerOptions(), "function x(): number { return 'hello'; }",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    test(
+        createCompilerOptions(),
+        "function x(): number { return 'hello'; }",
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -56,8 +63,10 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testFunctionParameter_error() {
-    test(createCompilerOptions(), "function x(x: number) {}; x('hello');",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    test(
+        createCompilerOptions(),
+        "function x(x: number) {}; x('hello');",
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -68,11 +77,10 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
             + "c.x = 12;\n"
             + "alert(c.x);",
         "var a=new function(){};a.a=12;alert(a.a);");
-    test(createCompilerOptions(),
-        "class C { x: number; }\n"
-            + "var c: C = new C();\n"
-            + "c.x = '12';",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    test(
+        createCompilerOptions(),
+        "class C { x: number; }\n" + "var c: C = new C();\n" + "c.x = '12';",
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -82,10 +90,10 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
             + "C.x = 12;\n"
             + "alert(C.x);",
         "alert(12);");
-    test(createCompilerOptions(),
-        "class C { static x: number; }\n"
-        + "C.x = '12';",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    test(
+        createCompilerOptions(),
+        "class C { static x: number; }\n" + "C.x = '12';",
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
