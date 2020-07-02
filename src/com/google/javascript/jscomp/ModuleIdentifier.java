@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static java.lang.Math.min;
+
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.deps.ModuleNames;
@@ -67,7 +69,7 @@ public abstract class ModuleIdentifier implements Serializable {
     int splitPoint = normalizedName.indexOf(':');
     if (splitPoint != -1) {
       moduleName = normalizedName.substring(0, splitPoint);
-      namespace = normalizedName.substring(Math.min(splitPoint + 1, normalizedName.length() - 1));
+      namespace = normalizedName.substring(min(splitPoint + 1, normalizedName.length() - 1));
     }
 
     return new AutoValue_ModuleIdentifier(normalizedName, namespace, moduleName);

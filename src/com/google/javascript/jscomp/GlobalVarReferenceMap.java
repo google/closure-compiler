@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -189,8 +191,8 @@ class GlobalVarReferenceMap implements ReferenceMap {
 
     SourceRefRange(List<Reference> refList, int lastBefore,
         int firstAfter) {
-      this.lastBefore = Math.max(lastBefore, -1);
-      this.firstAfter = Math.min(firstAfter, refList.size());
+      this.lastBefore = max(lastBefore, -1);
+      this.firstAfter = min(firstAfter, refList.size());
       this.refList = refList;
     }
 

@@ -1212,7 +1212,7 @@ class TypeValidator implements Serializable {
 
     @Override
     public Boolean caseEnumElementType(EnumElementType type) {
-      return type.getPrimitiveType() != null ? type.getPrimitiveType().visit(this) : true;
+      return type.getPrimitiveType() == null || type.getPrimitiveType().visit(this);
     }
 
     @Override

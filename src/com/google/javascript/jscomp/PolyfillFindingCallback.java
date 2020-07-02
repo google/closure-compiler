@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /** Detects all potential usages of polyfilled classes or methods */
@@ -98,7 +97,9 @@ final class PolyfillFindingCallback {
       this.statics = statics;
       this.suffixes =
           ImmutableSet.copyOf(
-              statics.keySet().stream().map(EXTRACT_SUFFIX).collect(Collectors.toList()));
+              statics.keySet().stream()
+                  .map(arg -> arg.substring(arg.lastIndexOf('.') + 1))
+                  .collect(Collectors.toList()));
     }
 
     /**
@@ -145,13 +146,10 @@ final class PolyfillFindingCallback {
      * of the name could possibly match a static polyfill.
      */
     boolean checkSuffix(Node node) {
-      return node.isGetProp() ? suffixes.contains(node.getLastChild().getString())
-          : node.isName() ? suffixes.contains(node.getString())
-          : false;
+      return node.isGetProp()
+          ? suffixes.contains(node.getLastChild().getString())
+          : node.isName() && suffixes.contains(node.getString());
     }
-
-    private static final Function<String, String> EXTRACT_SUFFIX =
-        arg -> arg.substring(arg.lastIndexOf('.') + 1);
   }
 
   @AutoValue

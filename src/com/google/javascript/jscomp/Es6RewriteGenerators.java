@@ -518,7 +518,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
           break;
 
         default:
-          checkState(false, "Unsupported token: %s ", statement.getToken());
+          throw new IllegalStateException("Unsupported token: " + statement.getToken());
       }
     }
 

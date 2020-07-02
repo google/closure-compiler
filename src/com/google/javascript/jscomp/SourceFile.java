@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -213,7 +215,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return search + 1; // lines are 1-based.
     } else {
       int insertionPoint = -1 * (search + 1);
-      return Math.min(insertionPoint - 1, lineOffsets.length - 1) + 1;
+      return min(insertionPoint - 1, lineOffsets.length - 1) + 1;
     }
   }
 
@@ -331,8 +333,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return null;
     }
     int pos = 0;
-    int startLine = Math.max(1,
-        lineNumber - (SOURCE_EXCERPT_REGION_LENGTH + 1) / 2 + 1);
+    int startLine = max(1, lineNumber - (SOURCE_EXCERPT_REGION_LENGTH + 1) / 2 + 1);
     for (int n = 1; n < startLine; n++) {
       int nextpos = js.indexOf('\n', pos);
       if (nextpos == -1) {

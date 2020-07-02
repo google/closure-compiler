@@ -5161,7 +5161,7 @@ public final class NodeUtil {
           }
         }
 
-        return (expr == parent.getFirstChild()) ? false : isExpressionResultUsed(parent);
+        return expr != parent.getFirstChild() && isExpressionResultUsed(parent);
       case FOR:
         // Only an expression whose result is in the condition part of the
         // expression is used.

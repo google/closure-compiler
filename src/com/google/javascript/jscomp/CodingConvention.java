@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -590,9 +591,7 @@ public interface CodingConvention extends Serializable {
      */
     static AssertionFunctionLookup of(Collection<AssertionFunctionSpec> specs) {
       ImmutableMap<Object, AssertionFunctionSpec> idToSpecMap =
-          specs.stream()
-              .collect(
-                  ImmutableMap.toImmutableMap(AssertionFunctionSpec::getId, Function.identity()));
+          specs.stream().collect(toImmutableMap(AssertionFunctionSpec::getId, Function.identity()));
 
       return new AssertionFunctionLookup(idToSpecMap);
     }

@@ -69,7 +69,7 @@ class OptimizeCalls implements CompilerPass {
 
   static final class Builder {
     private AbstractCompiler compiler;
-    private ImmutableList.Builder<CallGraphCompilerPass> passes = ImmutableList.builder();
+    private final ImmutableList.Builder<CallGraphCompilerPass> passes = ImmutableList.builder();
     @Nullable private Boolean considerExterns; // Nullable to force users to specify a value.
 
     public Builder setCompiler(AbstractCompiler compiler) {
@@ -157,11 +157,7 @@ class OptimizeCalls implements CompilerPass {
     private final LinkedHashMap<String, ArrayList<Node>> props = new LinkedHashMap<>();
 
     private void addReference(LinkedHashMap<String, ArrayList<Node>> data, String name, Node n) {
-      ArrayList<Node> refs = data.get(name);
-      if (refs == null) {
-        refs = new ArrayList<>();
-        data.put(name, refs);
-      }
+      ArrayList<Node> refs = data.computeIfAbsent(name, (String k) -> new ArrayList<>());
       refs.add(n);
     }
 
