@@ -1350,11 +1350,7 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * The nice API for this method is a single argument; dereference is a detail. In the old type
-   * checker, most calls to getReadableJSTypeName are with true (do dereferencing).
-   * When we implement this method in the new type checker, we won't do dereferencing, but that's
-   * fine because we are stricter about null/undefined checking.
-   * (So, null and undefined wouldn't be in the type in the first place.)
+   * First dereferences the JSType to remove null/undefined then returns a human-readable type name
    */
   public String getReadableTypeName(Node n) {
     return getReadableJSTypeName(n, true);
@@ -1407,15 +1403,16 @@ public class JSTypeRegistry implements Serializable {
   }
 
   /**
-   * Given a node, get a human-readable name for the type of that node so
-   * that will be easy for the programmer to find the original declaration.
+   * Given a node, get a human-readable name for the type of that node so that will be easy for the
+   * programmer to find the original declaration.
    *
-   * For example, if SubFoo's property "bar" might have the human-readable
-   * name "Foo.prototype.bar".
+   * <p>For example, if SubFoo's property "bar" might have the human-readable name
+   * "Foo.prototype.bar".
    *
    * @param n The node.
-   * @param dereference If true, the type of the node will be dereferenced
-   *     to an Object type, if possible.
+   * @param dereference If true, the type of the node will be dereferenced to an Object type, if
+   *     possible. Prefer to call #getReadableTypeName(String) or
+   *     #getReadableTypeNameNoDeref(String) instead of passing this as an argument.
    */
   @VisibleForTesting
   String getReadableJSTypeName(Node n, boolean dereference) {
@@ -2083,9 +2080,6 @@ public class JSTypeRegistry implements Serializable {
         }
 
       case STRING:
-        // TODO(martinprobst): The new type syntax resolution should be separate.
-        // Remove the NAME case then.
-      case NAME:
         {
           JSType nominalType =
               getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());
@@ -2189,10 +2183,8 @@ public class JSTypeRegistry implements Serializable {
             .build();
 
       default:
-        break;
+        throw new IllegalStateException("Unexpected node in type expression: " + n);
     }
-
-    throw new IllegalStateException("Unexpected node in type expression: " + n);
   }
 
   private JSType addNullabilityBasedOnParseContext(Node n, JSType type, StaticScope scope) {

@@ -236,9 +236,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract Node getNodeForCodeInsertion(@Nullable JSModule module);
 
-  /**
-   * Only used by passes in the old type checker.
-   */
   abstract TypeValidator getTypeValidator();
 
   /** Gets the central registry of type violations. */

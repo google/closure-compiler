@@ -32,10 +32,6 @@ import javax.annotation.Nullable;
  * Checks functions for missing return statements. Return statements are only
  * expected for functions with return type information. Functions with empty
  * bodies are ignored.
- *
- * NOTE(dimvar):
- * Do not convert this pass to use JSType. The pass is only used with the old type checker.
- * The new type inference checks missing returns on its own.
  */
 class CheckMissingReturn implements ScopedCallback {
 
