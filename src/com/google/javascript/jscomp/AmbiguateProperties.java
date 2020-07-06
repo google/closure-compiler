@@ -133,7 +133,6 @@ class AmbiguateProperties implements CompilerPass {
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
 
     this.invalidatingTypes = new InvalidatingTypes.Builder(compiler.getTypeRegistry())
-        .addTypesInvalidForPropertyRenaming()
         .addAllTypeMismatches(compiler.getTypeMismatches())
         .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
         .build();

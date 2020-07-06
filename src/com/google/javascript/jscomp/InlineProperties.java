@@ -64,7 +64,6 @@ final class InlineProperties implements CompilerPass {
         // TODO(sdh): consider allowing inlining properties of global this
         // (we already reserve extern'd names, so this should be safe).
         .disallowGlobalThis()
-        .addTypesInvalidForPropertyRenaming()
         // NOTE: Mismatches are less important to this pass than to (dis)ambiguate properties.
         // This pass doesn't remove values (it only inlines them when the type is known), so
         // it isn't necessary to invalidate due to implicit interface uses.

@@ -70,7 +70,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
             .build();
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry)
-            .addTypesInvalidForPropertyRenaming()
             .allowEnumsAndScalars()
             .setAlsoInvalidateRelatedTypes(false)
             .setAllowObjectLiteralTypes(true)

@@ -97,7 +97,6 @@ public final class InvalidatingTypes {
     private boolean allowEnums = false;
     private boolean allowScalars = false;
     private boolean allowGlobalThis = true;
-    private boolean allowTypesInvalidForRenaming = true;
     private boolean allowObjectLiteralTypes = false;
 
     private boolean alsoInvalidateRelatedTypes = true;
@@ -111,18 +110,16 @@ public final class InvalidatingTypes {
     public InvalidatingTypes build() {
       checkState(this.types == null);
       this.types = ImmutableSet.builder();
+      types.add(
+          registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
+          registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
+          registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
+          registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+          registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
+          registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE));
 
       if (!this.allowGlobalThis) {
         types.add(registry.getNativeType(JSTypeNative.GLOBAL_THIS));
-      }
-      if (!this.allowTypesInvalidForRenaming) {
-        types.add(
-            registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
-            registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
-            registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
-            registry.getNativeType(JSTypeNative.OBJECT_TYPE),
-            registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
-            registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE));
       }
 
       for (TypeMismatch mismatch : this.mismatches) {
@@ -160,11 +157,6 @@ public final class InvalidatingTypes {
 
     public Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
       mismatches.forEach(this.mismatches::add);
-      return this;
-    }
-
-    public Builder addTypesInvalidForPropertyRenaming() {
-      this.allowTypesInvalidForRenaming = false;
       return this;
     }
 

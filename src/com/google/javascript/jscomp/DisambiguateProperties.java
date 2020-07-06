@@ -374,7 +374,6 @@ class DisambiguateProperties implements CompilerPass {
 
     this.invalidatingTypes = new InvalidatingTypes.Builder(registry)
         .writeInvalidationsInto(this.invalidationMap)
-        .addTypesInvalidForPropertyRenaming()
         .addAllTypeMismatches(compiler.getTypeMismatches())
         .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
         .allowEnumsAndScalars()
