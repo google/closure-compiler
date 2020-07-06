@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /** Instrument branch coverage for javascript. */
 @GwtIncompatible("FileInstrumentationData")
@@ -48,6 +49,14 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
     String fileName = traversal.getSourceName();
+
+    // If origin of node is not from sourceFile, do not instrument. This typically occurs when
+    // polyfill code is injected into the sourceFile AST and this check avoids instrumenting it. We
+    // avoid instrumentation as this callback does not distinguish between sourceFile code and
+    // injected code and can result in an error.
+    if (!Objects.equals(fileName, node.getSourceFileName())) {
+      return;
+    }
 
     if (node.isScript()) {
       if (instrumentationData.get(fileName) != null) {
@@ -89,11 +98,24 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
       for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : cfg.getOutEdges(node)) {
         if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
           Node destination = outEdge.getDestination().getValue();
-          if (destination.isBlock()) {
+          if (destination != null && destination.isBlock()) {
             blocks.add(destination);
           } else {
             Node exitBlock = IR.block();
-            destination.getParent().addChildBefore(exitBlock, destination);
+            if (destination != null && destination.getParent().isBlock()) {
+              // When the destination of an outEdge of the CFG is not null and the source node's
+              // parent is a block. If parent is not a block it may result in an illegal state
+              // exception
+              destination.getParent().addChildBefore(exitBlock, destination);
+            } else {
+              // When the destination of an outEdge of the CFG is null then we need to add an empty
+              // block directly after the loop structure that we can later instrument
+              outEdge
+                  .getSource()
+                  .getValue()
+                  .getParent()
+                  .addChildAfter(exitBlock, outEdge.getSource().getValue());
+            }
             blocks.add(exitBlock);
           }
         }

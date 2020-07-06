@@ -1,0 +1,32 @@
+if (!self.window) {
+  self.window = self;
+  self.window.top = self;
+}
+var __jscov = window.top["__jscov"] || (window.top["__jscov"] = {"fileNames":[], "branchPresent":[], "branchesInLine":[], "branchesTaken":[]});
+var JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_NestedForLoopBranch_jsdata = [];
+__jscov["branchesTaken"].push(JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_NestedForLoopBranch_jsdata);
+__jscov["branchPresent"].push("06");
+{
+  var JSCompiler_lcov_branchesInLine = [];
+  JSCompiler_lcov_branchesInLine[0] = 2;
+  JSCompiler_lcov_branchesInLine[1] = 2;
+}
+__jscov["branchesInLine"].push(JSCompiler_lcov_branchesInLine);
+__jscov["fileNames"].push("CoverageInstrumentationPassTest/NestedForLoopBranch.jsdata");
+function doubleLoop(y, x) {
+  for (var i = 0; i < x; ++i) {
+    JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_NestedForLoopBranch_jsdata[0] = true;
+    for (var j = 0; j < i; ++j) {
+      JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_NestedForLoopBranch_jsdata[2] = true;
+      y += j;
+    }
+    {
+      JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_NestedForLoopBranch_jsdata[3] = true;
+    }
+  }
+  {
+    JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_NestedForLoopBranch_jsdata[1] = true;
+    y = 5;
+  }
+}
+;

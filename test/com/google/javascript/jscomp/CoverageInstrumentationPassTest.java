@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Test;
@@ -164,5 +165,38 @@ public final class CoverageInstrumentationPassTest {
         options(
             LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT_NEXT, /* coverageOnly= */ true),
         "CoverageInstrumentationPassTest/EsModule.jsdata");
+  }
+
+  @Test
+  public void testNestedForLoop() throws Exception {
+    GoldenFileComparer.compileAndCompare(
+        "CoverageInstrumentationPassTest/NestedForLoopBranchGolden.jsdata",
+        branchOptions(LanguageMode.STABLE),
+        "CoverageInstrumentationPassTest/NestedForLoopBranch.jsdata");
+  }
+
+  @Test
+  public void testForLoopNoEndingBlock() throws Exception {
+    GoldenFileComparer.compileAndCompare(
+        "CoverageInstrumentationPassTest/ForLoopBranchNoEndingBlockGolden.jsdata",
+        branchOptions(LanguageMode.STABLE),
+        "CoverageInstrumentationPassTest/ForLoopBranchNoEndingBlock.jsdata");
+  }
+
+  /**
+   * The unit test covers a case where a branch condition on line x of the source code matches a
+   * branching condition on the same line number X of an injected library and will cause a NPE. In
+   * this case, the if statement on line 21 of ForLoopBranchConflictWithPolyfill.jsdata matches an
+   * if statement on line 21 of find.js. If the branch in find.js is moved, this test case is no
+   * longer useful.
+   */
+  @Test
+  public void testForLoopConflictWithPolyfill() throws Exception {
+    CompilerOptions options = branchOptions(LanguageMode.STABLE);
+    options.setForceLibraryInjection(ImmutableList.of("es6/array/find"));
+    GoldenFileComparer.compileAndCompareSubsetOfActualToExpected(
+        "CoverageInstrumentationPassTest/ForLoopBranchConflictWithPolyfillGolden.jsdata",
+        options,
+        "CoverageInstrumentationPassTest/ForLoopBranchConflictWithPolyfill.jsdata");
   }
 }
