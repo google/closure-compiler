@@ -636,10 +636,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inferConsts);
     }
 
-    // TODO(mlourenco): Ideally this would be in getChecks() instead of getOptimizations(). But
-    // for that it needs to understand constant properties as well. See b/31301233#10.
-    // Needs to happen after inferConsts and collapseProperties. Detects whether invocations of
-    // the method goog.string.Const.from are done with an argument which is a string literal.
+    // Detects whether invocations of the method goog.string.Const.from are done with an argument
+    // which is a string literal. Needs to happen after inferConsts and collapseProperties.
+    // TODO(b/160616664): this should be in getChecks() instead of getOptimizations(). But
+    // for that the pass needs to understand constant properties as well. See b/31301233#comment10
     passes.add(checkConstParams);
 
     // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
