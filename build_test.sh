@@ -17,3 +17,5 @@
 set -e
 
 bazel build :all
+
+# TODO: Run other tests needed for open source verification
