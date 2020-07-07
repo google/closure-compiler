@@ -612,21 +612,14 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void propertiesAreDisambiguated_onObjectLiteralTypes() {
-    test(
+  public void propertiesAreNotDisambiguated_onObjectLiteralTypes() {
+    testSame(
         srcs(
             lines(
                 "const z = {ab: 0};", //
                 "",
                 "class Other {",
                 "  ab() { }",
-                "}")),
-        expected(
-            lines(
-                "const z = {JSC$1_ab: 0};", //
-                "",
-                "class Other {",
-                "  JSC$2_ab() { }",
                 "}")));
   }
 

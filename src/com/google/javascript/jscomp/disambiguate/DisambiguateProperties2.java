@@ -71,8 +71,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry)
             .allowEnumsAndScalars()
-            .setAlsoInvalidateRelatedTypes(false)
-            .setAllowObjectLiteralTypes(true)
             .build();
   }
 
