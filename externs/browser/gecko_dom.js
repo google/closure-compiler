@@ -473,7 +473,7 @@ Navigator.prototype.securityPolicy;
 
 /**
  * @param {string} url
- * @param {ArrayBufferView|Blob|string|FormData=} opt_data
+ * @param {ArrayBufferView|Blob|string|FormData|URLSearchParams=} opt_data
  * @return {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/navigator.sendBeacon
  */
