@@ -436,25 +436,14 @@ class TypeValidator implements Serializable {
     }
   }
 
-  /**
-   * Expect the type to be a number or string or symbol, or a type convertible to a number or
-   * string. If the expectation is not met, issue a warning at the provided node's source code
-   * position.
-   */
-  void expectStringOrNumber(Node n, JSType type, String msg) {
+  /** Expect the type to be unknown or a comparable type (number or string) */
+  void expectUnknownOrComparable(Node n, JSType type, String msg) {
     if (!type.matchesNumberContext()
-        && !type.matchesStringContext()
         && !type.matchesStringContext()) {
       mismatch(n, msg, type, NUMBER_STRING);
     } else {
+      // TODO(b/160694179): symbols are not comparable
       expectStringOrNumberOrSymbolStrict(n, type, msg);
-    }
-  }
-
-  void expectStringOrNumberStrict(Node n, JSType type, String msg) {
-    if (!type.isSubtypeOf(getNativeType(NUMBER_STRING))) {
-      registerMismatchAndReport(
-          n, INVALID_OPERAND_TYPE, msg, type, getNativeType(NUMBER_STRING), null, null);
     }
   }
 
