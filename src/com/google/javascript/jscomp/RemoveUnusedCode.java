@@ -33,7 +33,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -2484,8 +2483,8 @@ class RemoveUnusedCode implements CompilerPass {
       if (lhs.isGetProp()) {
         // something.propName = someValue
         Node getPropLhs = lhs.getFirstChild();
-        JSType typeI = getPropLhs.getJSType();
-        return typeI != null && (typeI.isConstructor() || typeI.isInterface());
+        JSType lhsType = getPropLhs.getJSType();
+        return lhsType != null && (lhsType.isConstructor() || lhsType.isInterface());
       } else {
         return false;
       }
@@ -2755,16 +2754,11 @@ class RemoveUnusedCode implements CompilerPass {
     }
     String owner = name.substring(0, lastDot);
     String prop = name.substring(lastDot + 1);
-    boolean typed = call.getJSType() != null;
     if (owner.endsWith(DOT_PROTOTYPE)) {
       owner = owner.substring(0, owner.length() - DOT_PROTOTYPE.length());
-      return new PrototypePropertyPolyfillInfo(
-          removable, prop, typed ? compiler.getTypeRegistry().getType(scope, owner) : null);
+      return new PrototypePropertyPolyfillInfo(removable, prop, owner);
     }
-    ObjectType ownerInstanceType =
-        typed ? ObjectType.cast(compiler.getTypeRegistry().getType(scope, owner)) : null;
-    JSType ownerCtorType = ownerInstanceType != null ? ownerInstanceType.getConstructor() : null;
-    return new StaticPropertyPolyfillInfo(removable, prop, ownerCtorType, owner);
+    return new StaticPropertyPolyfillInfo(removable, prop, owner);
   }
 
   private static final String DOT_PROTOTYPE = ".prototype";
@@ -2869,16 +2863,12 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private class StaticPropertyPolyfillInfo extends PolyfillInfo {
-    // Type of the owner, if available.
-    @Nullable final JSType polyfillOwnerType;
-    // Name of the owning type, used only when there's no type information.
+    // Name of the owning type, used only for debugging.
     final String polyfillOwnerName;
 
-    StaticPropertyPolyfillInfo(
-        Polyfill removable, String key, @Nullable JSType owner, String ownerName) {
+    StaticPropertyPolyfillInfo(Polyfill removable, String key, String ownerName) {
       super(removable, key);
       this.polyfillOwnerName = checkNotNull(ownerName);
-      this.polyfillOwnerType = owner;
     }
 
     @Override
@@ -2896,18 +2886,17 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private class PrototypePropertyPolyfillInfo extends PolyfillInfo {
-    @Nullable final JSType polyfillOwnerType;
+    // Name of the owning type, used only for debugging.
+    final String polyfillOwnerName;
 
-    PrototypePropertyPolyfillInfo(Polyfill removable, String key, @Nullable JSType owner) {
+    PrototypePropertyPolyfillInfo(Polyfill removable, String key, String polyfillOwnerName) {
       super(removable, key);
-      this.polyfillOwnerType = owner;
+      this.polyfillOwnerName = checkNotNull(polyfillOwnerName);
     }
 
     @Override
     String getName() {
-      String ownerName =
-          (polyfillOwnerType == null) ? "<anonymous>" : polyfillOwnerType.getDisplayName();
-      return ownerName + ".prototype." + key;
+      return polyfillOwnerName + ".prototype." + key;
     }
 
     @Override
