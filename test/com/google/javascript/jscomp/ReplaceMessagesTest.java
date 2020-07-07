@@ -84,19 +84,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         new JsMessage.Builder("MSG_B")
             .setDesc("B desc")
             .setMeaning("B meaning")
-            .appendStringPart("Hello, ")
-            .appendPlaceholderReference("name")
-            .appendStringPart("!")
+            .appendStringPart("Hello!")
             .appendStringPart(" Welcome!")
             .build((meaning, messageParts) -> "1984"));
 
-    testError(
-        "/**\n    @desc B desc"
-            + "\n    @meaning B meaning"
-            + "\n    @alternateMessageId 1984"
-            + "\n*/"
-            + "\n var MSG_A = goog.getMsg('Hello, {$name}!', {name: name});",
-        ReplaceMessages.INVALID_ALTERNATE_MESSAGE_PARTS);
+    test(
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = goog.getMsg('asdf');",
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = 'Hello!' + ' Welcome!';");
   }
 
   @Test
@@ -151,8 +145,18 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
             .build());
 
     test(
-        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = goog.getMsg('asdf');",
-        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A='Hi\\nthere'");
+        lines(
+            "/**", //
+            " * @desc d",
+            " * @alternateMessageId 1984",
+            " */",
+            "var MSG_A = goog.getMsg('asdf');"),
+        lines(
+            "/**", //
+            " * @desc d",
+            " * @alternateMessageId 1984",
+            " */",
+            "var MSG_A = 'Hi\\nthere';"));
   }
 
   @Test
