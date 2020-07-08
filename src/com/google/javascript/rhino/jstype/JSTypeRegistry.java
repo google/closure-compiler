@@ -45,6 +45,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeIterations.mapTypes;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_OBJECT;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
@@ -734,6 +735,10 @@ public class JSTypeRegistry implements Serializable {
     // (bigint,number)
     JSType bigintNumber = createUnionType(bigIntType, numberType);
     registerNativeType(BIGINT_NUMBER, bigintNumber);
+
+    // (BigInt,Number)
+    JSType bigintNumberObject = createUnionType(bigIntObjectType, numberObjectType);
+    registerNativeType(BIGINT_NUMBER_OBJECT, bigintNumberObject);
 
     // (string,number,symbol)
     JSType numberStringSymbol = createUnionType(numberType, stringType, symbolType);

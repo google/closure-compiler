@@ -23758,7 +23758,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBigIntOperators_increment() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; x++;");
-    testTypes("const x = BigInt(1); x++;");
+    testTypes("/** @type {!BigInt} */ var x; x++;");
     testTypes("/** @type {bigint|number} */var x; x++;");
     testTypes(
         "/** @type {bigint|string} */var x; x++;",
@@ -23769,7 +23769,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBigIntOperators_decrement() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; x--;");
-    testTypes("const x = BigInt(1); x--;");
+    testTypes("/** @type {!BigInt} */ var x; x--;");
     testTypes("/** @type {bigint|number} */var x; x--;");
     testTypes(
         "/** @type {bigint|string} */var x; x--;",
@@ -23780,7 +23780,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBigIntOperators_logicalNot() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; !x;");
-    testTypes("const x = BigInt(1); !x;");
+    testTypes("/** @type {!BigInt} */ var x; !x;");
     testTypes("/** @type {bigint|string} */var x; !x;");
   }
 
@@ -23788,12 +23788,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBigIntOperators_bitwiseNot() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; ~x;");
-    testTypes("const x = BigInt(1); ~x;");
+    testTypes("/** @type {!BigInt} */ var x; ~x;");
     testTypes("/** @type {?} */var x; ~x;");
     testTypes("/** @type {bigint|number} */var x; ~x;");
     testTypes(
         "/** @type {bigint|string} */var x; ~x;",
-        lines("bitwise NOT", "found   : (bigint|string)", "required: (bigint|number)"));
+        lines(
+            "bitwise NOT", //
+            "found   : (bigint|string)",
+            "required: (bigint|number)"));
   }
 
   @Test
@@ -23805,7 +23808,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBigIntObjectOperators_unaryPlusIsForbidden() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
-    testTypes("var x = BigInt(1); +x;", "unary operator + cannot be applied to bigint");
+    testTypes("/** @type {!BigInt} */ var x; +x;", "unary operator + cannot be applied to BigInt");
   }
 
   @Test
@@ -23828,7 +23831,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testBigIntOperators_unaryMinus() {
     compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; -x;");
-    testTypes("const x = BigInt(1); -x;");
+    testTypes("/** @type {!BigInt} */ var x; -x;");
     testTypes("/** @type {?} */var x; -x;");
     testTypes("/** @type {bigint|number} */var x; -x;");
     testTypes(

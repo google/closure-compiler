@@ -1283,7 +1283,7 @@ public final class TypeInferenceTest {
     assuming("y", BIGINT_OBJECT_TYPE);
     assuming("u", UNKNOWN_TYPE);
     assuming("a", ALL_TYPE);
-    assuming("z1", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    assuming("z1", BIGINT_NUMBER);
     // testing for a union between bigint and anything but number
     assuming("z2", createUnionType(BIGINT_TYPE, STRING_TYPE));
 
@@ -1295,8 +1295,8 @@ public final class TypeInferenceTest {
     verify("objectType", BIGINT_TYPE);
     verify("unknownType", NUMBER_TYPE);
     verify("allType", NUMBER_TYPE);
-    verify("bigintOrNumber", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
-    verify("bigintOrOther", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    verify("bigintOrNumber", BIGINT_NUMBER);
+    verify("bigintOrOther", BIGINT_NUMBER);
   }
 
   @Test
