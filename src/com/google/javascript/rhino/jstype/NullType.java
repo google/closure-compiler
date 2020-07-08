@@ -43,7 +43,6 @@ import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-
 /**
  * Null type.
  */

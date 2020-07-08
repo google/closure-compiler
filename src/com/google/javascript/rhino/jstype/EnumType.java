@@ -173,6 +173,10 @@ public class EnumType extends PrototypeObjectType {
     return true;
   }
 
+  public final Node getSource() {
+    return source;
+  }
+
   @Override
   JSType resolveInternal(ErrorReporter reporter) {
     elementsType = (EnumElementType) elementsType.resolve(reporter);
