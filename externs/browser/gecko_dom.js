@@ -72,11 +72,6 @@ Window.prototype.directories;
  */
 Window.prototype.fullScreen;
 
-/**
- * @see https://developer.mozilla.org/en/DOM/Storage#globalStorage
- */
-Window.prototype.globalStorage;
-
 /** @see https://developer.mozilla.org/en/DOM/window.pkcs11 */
 Window.prototype.pkcs11;
 
