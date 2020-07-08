@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -1475,6 +1476,37 @@ public final class TypeInferenceTest {
 
     verify("bigintOnly", BOOLEAN_TYPE);
     verify("bigintAndOther", BOOLEAN_TYPE);
+  }
+
+  @Test
+  public void testLogicalBinaryOperatorsWithBigInt() {
+    assuming("b", BIGINT_TYPE);
+    assuming("B", BIGINT_OBJECT_TYPE);
+    assuming("n", NUMBER_TYPE);
+    assuming("bn", BIGINT_NUMBER);
+    assuming("s", STRING_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("ns", NUMBER_STRING);
+
+    inFunction(
+        lines(
+            "valueTypeWithSelf = b && b;",
+            "objectTypeWithSelf = B && B;",
+            "valueWithObject = b && B;",
+            "bigintWithNumber = b && n;",
+            "bigintNumberWithSelf = bn && bn;",
+            "bigintWithOther = b && s;",
+            "bigintWithUnknown = b && u;",
+            "bigintWithNumberString = b && ns;"));
+
+    verify("valueTypeWithSelf", BIGINT_TYPE);
+    verify("objectTypeWithSelf", BIGINT_OBJECT_TYPE);
+    verify("valueWithObject", createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE));
+    verify("bigintWithNumber", BIGINT_NUMBER);
+    verify("bigintNumberWithSelf", BIGINT_NUMBER);
+    verify("bigintWithOther", createUnionType(BIGINT_TYPE, STRING_TYPE));
+    verify("bigintWithUnknown", createUnionType(BIGINT_TYPE, UNKNOWN_TYPE));
+    verify("bigintWithNumberString", BIGINT_NUMBER_STRING);
   }
 
   @Test
