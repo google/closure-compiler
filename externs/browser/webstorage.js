@@ -15,7 +15,7 @@
  */
 /**
  * @fileoverview Definitions for W3C's WebStorage specification.
- * This file depends on html5.js.
+ * This file depends on w3c_dom1.js and w3c_event.js.
  * @externs
  */
 
