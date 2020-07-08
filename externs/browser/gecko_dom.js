@@ -90,9 +90,6 @@ Window.prototype.scrollMaxX;
  */
 Window.prototype.scrollMaxY;
 
-/** @see https://developer.mozilla.org/en/DOM/Storage#sessionStorage */
-Window.prototype.sessionStorage;
-
 /** @see https://developer.mozilla.org/en/DOM/window.sidebar */
 Window.prototype.sidebar;
 
