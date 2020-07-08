@@ -23,13 +23,14 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_OBJECT;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_STRING;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_STRING_OBJECT;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ITERABLE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_SYMBOL;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_SYMBOL;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
@@ -437,14 +438,17 @@ class TypeValidator implements Serializable {
     }
   }
 
-  /** Expect the type to be unknown or a comparable type (number or string) */
+  /** Expect the type to be unknown or a comparable type (bigint, number, or string) */
   void expectUnknownOrComparable(Node n, JSType type, String msg) {
-    if (!type.matchesNumberContext()
-        && !type.matchesStringContext()) {
-      mismatch(n, msg, type, NUMBER_STRING);
-    } else {
-      // TODO(b/160694179): symbols are not comparable
-      expectStringOrNumberOrSymbolStrict(n, type, msg);
+    if (!type.isSubtypeOf(getNativeType(BIGINT_NUMBER_STRING))
+        && !type.isSubtypeOf(getNativeType(BIGINT_NUMBER_STRING_OBJECT))) {
+      if (type.matchesNumberContext() || type.matchesStringContext()) {
+        // INVALID_OPERAND_TYPE is suppressed unless strict type checking is enabled
+        registerMismatchAndReport(
+            n, INVALID_OPERAND_TYPE, msg, type, getNativeType(BIGINT_NUMBER_STRING), null, null);
+      } else {
+        mismatch(n, msg, type, BIGINT_NUMBER_STRING);
+      }
     }
   }
 
@@ -470,15 +474,20 @@ class TypeValidator implements Serializable {
     }
   }
 
+  /**
+   * Expect the type to be a bigint or number, or a type convertible to number. If the expectation
+   * is not met, issue a warning at the provided node's source code position.
+   */
   void expectBigIntOrNumber(Node n, JSType type, String msg) {
     if (!type.isSubtypeOf(getNativeType(BIGINT_NUMBER))
         && !type.isSubtypeOf(getNativeType(BIGINT_NUMBER_OBJECT))) {
-      registerMismatchAndReport(
-          // INVALID_OPERAND_TYPE may seem like the right diagnostic type here, but that diagnostic
-          // group is only enabled if strict type checking is requested. By using
-          // TYPE_MISMATCH_WARNING instead, we ensure that the error will be reported to all users
-          // that enable type checking. We want to always be strict when BigInt is involved.
-          n, TYPE_MISMATCH_WARNING, msg, type, getNativeType(BIGINT_NUMBER), null, null);
+      if (type.matchesNumberContext()) {
+        // INVALID_OPERAND_TYPE is suppressed unless strict type checking is enabled
+        registerMismatchAndReport(
+            n, INVALID_OPERAND_TYPE, msg, type, getNativeType(BIGINT_NUMBER), null, null);
+      } else {
+        mismatch(n, msg, type, BIGINT_NUMBER);
+      }
     }
   }
 

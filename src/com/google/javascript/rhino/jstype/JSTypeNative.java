@@ -194,5 +194,11 @@ public enum JSTypeNative {
   BIGINT_NUMBER,
 
   /** (BigInt,Number) */
-  BIGINT_NUMBER_OBJECT;
+  BIGINT_NUMBER_OBJECT,
+
+  /** (bigint,number,string) */
+  BIGINT_NUMBER_STRING,
+
+  /** (Bigint,Number,String) */
+  BIGINT_NUMBER_STRING_OBJECT;
 }

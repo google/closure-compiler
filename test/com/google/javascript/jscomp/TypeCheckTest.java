@@ -2478,10 +2478,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNumericComparison2() {
-    testTypes("/**@param {!Object} a*/ function f(a) {return a < 3;}",
-        "left side of numeric comparison\n" +
-        "found   : Object\n" +
-        "required: number");
+    testTypes(
+        "/**@param {!Object} a*/ function f(a) {return a < 3;}",
+        lines(
+            "left side of numeric comparison", //
+            "found   : Object",
+            "required: (bigint|number)"));
   }
 
   @Test
@@ -2501,18 +2503,22 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNumericComparison5() {
-    testTypes("/**@param {*} a*/ function f(a) {return a < 3;}",
-        "left side of numeric comparison\n" +
-        "found   : *\n" +
-        "required: number");
+    testTypes(
+        "/**@param {*} a*/ function f(a) {return a < 3;}",
+        lines(
+            "left side of numeric comparison", //
+            "found   : *",
+            "required: (bigint|number)"));
   }
 
   @Test
   public void testNumericComparison6() {
-    testTypes("/**@return {void} */ function foo() { if (3 >= foo()) return; }",
-        "right side of numeric comparison\n" +
-        "found   : undefined\n" +
-        "required: number");
+    testTypes(
+        "/**@return {void} */ function foo() { if (3 >= foo()) return; }",
+        lines(
+            "right side of numeric comparison",
+            "found   : undefined",
+            "required: (bigint|number)"));
   }
 
   @Test
@@ -23699,9 +23705,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         "var x = 1 < 'asdf';",
         lines(
-            "right side of numeric comparison",
+            "right side of numeric comparison", //
             "found   : string",
-            "required: number"));
+            "required: (bigint|number)"));
   }
 
   @Test
@@ -24038,6 +24044,85 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testValidBigIntComparisons() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("var x = 1n; var y = 2n; x < y");
+    testTypes("var x = 1n; /** @type {!BigInt} */ var y; x < y");
+    testTypes("var x = 1n; var y = 2; x < y");
+    testTypes("var x = 1n; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testBigIntComparisonWithString() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "const x = 1n; const y = 'asdf'; x < y;",
+        lines(
+            "right side of numeric comparison", //
+            "found   : string",
+            "required: (bigint|number)"));
+  }
+
+  @Test
+  public void testValidBigIntObjectComparisons() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/** @type {!BigInt} */ var x; var y = 2n; x < y");
+    testTypes("/** @type {!BigInt} */ var x; /** @type {!BigInt} */ var y; x < y");
+    testTypes("/** @type {!BigInt} */ var x; var y = 2; x < y");
+    testTypes("/** @type {!BigInt} */ var x; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testValidBigIntOrNumberComparisons() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/** @type {bigint|number} */ var x; /** @type {bigint|number} */ var y; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; var y = 2; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; var y = 2n; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; /** @type {!BigInt} */ var y; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testBigIntOrNumberComparisonWithString() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|number} */ var x; 'asdf' < x;",
+        lines(
+            "left side of numeric comparison", //
+            "found   : string",
+            "required: (bigint|number)"));
+  }
+
+  @Test
+  public void testValidBigIntOrOtherComparisons() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes("/** @type {bigint|string} */ var x; /** @type {bigint|string} */ var y; x < y;");
+    testTypes("/** @type {bigint|string} */ var x; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testBigIntOrOtherComparisonWithBigint() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|string} */ var x; var y = 2n; x < y;",
+        lines(
+            "left side of numeric comparison",
+            "found   : (bigint|string)",
+            "required: (bigint|number)"));
+  }
+
+  @Test
+  public void testBigIntOrOtherComparisonWithNumber() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "/** @type {bigint|string} */ var x; var y = 2; x < y;",
+        lines(
+            "left side of numeric comparison",
+            "found   : (bigint|string)",
+            "required: (bigint|number)"));
+  }
+
+  @Test
   public void testStrictComparison1() {
     testTypes(
         "var x = true < 'asdf';",
@@ -24057,6 +24142,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testComparisonWithUnknownAndSymbol() {
+    testTypes(
+        "/** @type {symbol} */ var x; /** @type {?} */ var y; x < y",
+        lines(
+            "left side of comparison", //
+            "found   : symbol",
+            "required: (bigint|number|string)"));
+  }
+
+  @Test
   public void testComparisonInStrictModeNoSpuriousWarning() {
     testTypes(
         lines(
@@ -24073,15 +24168,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes(
         lines(
-        "/** @constructor */",
-        "function Foo() {}",
-        "function f(/** ? */ x) {",
-        "  return (new Foo) < x;",
-        "}"),
+            "/** @constructor */",
+            "function Foo() {}",
+            "function f(/** ? */ x) {",
+            "  return (new Foo) < x;",
+            "}"),
         lines(
-            "left side of comparison",
+            "left side of comparison", //
             "found   : Foo",
-            "required: (number|string)"));
+            "required: (bigint|number|string)"));
   }
 
   @Test
@@ -24091,15 +24186,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes(
         lines(
-        "/** @constructor */",
-        "function Bar() {}",
-        "function f(/** ? */ x) {",
-        "  return x < (new Bar);",
-        "}"),
+            "/** @constructor */",
+            "function Bar() {}",
+            "function f(/** ? */ x) {",
+            "  return x < (new Bar);",
+            "}"),
         lines(
-            "right side of comparison",
+            "right side of comparison", //
             "found   : Bar",
-            "required: (number|string)"));
+            "required: (bigint|number|string)"));
   }
 
   @Test

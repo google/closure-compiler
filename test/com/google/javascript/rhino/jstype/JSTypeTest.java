@@ -3378,6 +3378,22 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(createUnionType(NUMBER_TYPE, VOID_TYPE).isVoidable()).isTrue();
   }
 
+  /** Tests operation of {@code isBigIntOrNumber}. */
+  @Test
+  public void testIsBigIntOrNumber() {
+    assertThat(BIGINT_TYPE.isBigIntOrNumber()).isTrue();
+    assertThat(BIGINT_OBJECT_TYPE.isBigIntOrNumber()).isTrue();
+    // testing {bigint,number}
+    assertThat(BIGINT_NUMBER.isBigIntOrNumber()).isTrue();
+    // testing {BigInt,Number}
+    assertThat(BIGINT_NUMBER_OBJECT.isBigIntOrNumber()).isTrue();
+    assertThat(BIGINT_NUMBER_STRING.isBigIntOrNumber()).isFalse();
+    // This check is designed to return false when mixing object and primitive types, e.g.
+    // (bigint|BigInt). Even though it should technically be true, these situation are usually a
+    // result of user error, so we want to report them when encountered.
+    assertThat(createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE).isBigIntOrNumber()).isFalse();
+  }
+
   /** Tests the behavior of the void type. */
   @Test
   public void testVoidType() {
