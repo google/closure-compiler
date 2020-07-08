@@ -858,3 +858,4 @@ Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onunhandledrejection;
 /** @type {?function (Event)} */ Window.prototype.onunload;
 /** @type {?function (Event)} */ Window.prototype.onwheel;
+/** @type {?function (Event)} */ Window.prototype.onstorage;
