@@ -1510,6 +1510,38 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testTernaryOperatorWithBigInt() {
+    assuming("b", BIGINT_TYPE);
+    assuming("B", BIGINT_OBJECT_TYPE);
+    assuming("n", NUMBER_TYPE);
+    assuming("bn", BIGINT_NUMBER);
+    assuming("s", STRING_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("v", VOID_TYPE);
+    assuming("ns", NUMBER_STRING);
+
+    inFunction(
+        lines(
+            "valueTypeWithSelf = v ? b : b;",
+            "objectTypeWithSelf = v ? B : B;",
+            "valueWithObject = v ? b : B;",
+            "bigintWithNumber = v ? b : n;",
+            "bigintNumberWithSelf = v ? bn : bn;",
+            "bigintWithOther = v ? b : s;",
+            "bigintWithUnknown = v ? b : u;",
+            "bigintWithNumberString = v ? b : ns;"));
+
+    verify("valueTypeWithSelf", BIGINT_TYPE);
+    verify("objectTypeWithSelf", BIGINT_OBJECT_TYPE);
+    verify("valueWithObject", createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE));
+    verify("bigintWithNumber", BIGINT_NUMBER);
+    verify("bigintNumberWithSelf", BIGINT_NUMBER);
+    verify("bigintWithOther", createUnionType(BIGINT_TYPE, STRING_TYPE));
+    verify("bigintWithUnknown", createUnionType(BIGINT_TYPE, UNKNOWN_TYPE));
+    verify("bigintWithNumberString", BIGINT_NUMBER_STRING);
+  }
+
+  @Test
   public void testAssertBoolean_narrowsAllTypeToBoolean() {
     JSType startType = createNullableType(ALL_TYPE);
     includeGoogAssertionFn("assertBoolean", getNativeType(BOOLEAN_TYPE));
