@@ -198,6 +198,22 @@ public class TestExternsBuilder {
           " * @return {string}",
           " */",
           "String.prototype.toLowerCase = function() {};",
+          "",
+          "/**",
+          " * @param {number} count",
+          " * @this {String|string}",
+          " * @return {string}",
+          " * @nosideeffects",
+          " */",
+          "String.prototype.repeat = function(count) {};",
+          "",
+          "/**",
+          " * @param {string} searchString",
+          " * @param {number=} position",
+          " * @return {boolean}",
+          " * @nosideeffects",
+          " */",
+          "String.prototype.includes = function(searchString, position) {};",
           "");
   private static final String FUNCTION_EXTERNS =
       lines(
@@ -429,6 +445,16 @@ public class TestExternsBuilder {
           "",
           "/** @return {!IteratorIterable<T>} */",
           "Array.prototype.values;",
+          "",
+          "/**",
+          " * @param {T} searchElement",
+          " * @param {number=} fromIndex",
+          " * @return {boolean}",
+          " * @this {!IArrayLike<T>|string}",
+          " * @template T",
+          " * @nosideeffects",
+          " */",
+          "Array.prototype.includes = function(searchElement, fromIndex) {};",
           "");
 
   private static final String ARGUMENTS_EXTERNS =
