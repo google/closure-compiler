@@ -55,6 +55,7 @@ public final class DefaultExterns {
           "ie_css.js",
           "webkit_css.js",
           "w3c_touch_event.js",
+          "webstorage.js",
           "whatwg_console.js",
           "nonstandard_console.js",
           // w3d_rtc.js must be evaluated before nonstandard_rtc.js
