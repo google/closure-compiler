@@ -18,7 +18,7 @@
  * @fileoverview Test that --isolate_polyfills prevents injection of polyfills
  * directly into the global scope.
  */
-goog.module('jscomp.runtime_tests.polyfill_tests.polyfill_isolation_test');
+goog.module('jscomp.runtime_tests.polyfill_tests.polyfill_isolation_ie_test');
 goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
