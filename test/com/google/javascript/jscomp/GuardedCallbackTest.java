@@ -60,9 +60,10 @@ public final class GuardedCallbackTest extends CompilerTestCase {
       if (n.isName() && isGuarded(n.getString())) {
         n.setString("GUARDED_NAME");
         traversal.reportCodeChange();
-      } else if (n.isGetProp()) {
+      } else if (n.isGetProp() || n.isOptChainGetProp()) {
         Node propNode = n.getSecondChild();
-        if (isGuarded(propNode.getString())) {
+        // prefix guarded resource name with "." to keep properties distinct from names
+        if (isGuarded("." + propNode.getString())) {
           propNode.setString("GUARDED_PROP");
           traversal.reportCodeChange();
         }
@@ -87,6 +88,64 @@ public final class GuardedCallbackTest extends CompilerTestCase {
   }
 
   @Test
+  public void ifGuardTest() {
+    final String externs = new TestExternsBuilder().addConsole().addPromise().build();
+    test(
+        externs(externs),
+        srcs(
+            lines(
+                "", //
+                "if (Promise && Promise.allSettled) {",
+                "  Promise.allSettled([]).then(() => console.log('done'));",
+                "}",
+                "")),
+        expected(
+            lines(
+                "", //
+                "if (GUARDED_NAME && GUARDED_NAME.GUARDED_PROP) {",
+                "  GUARDED_NAME.GUARDED_PROP([]).then(() => console.log('done'));",
+                "}",
+                "")));
+  }
+
+  @Test
+  public void ifGuardWithOptChainTest() {
+    final String externs = new TestExternsBuilder().addConsole().addPromise().build();
+    test(
+        externs(externs),
+        srcs(
+            lines(
+                "", //
+                "if (Promise?.allSettled) {",
+                "  Promise.allSettled([]).then(() => console.log('done'));",
+                "}",
+                "")),
+        expected(
+            lines(
+                "", //
+                "if (GUARDED_NAME?.GUARDED_PROP) {",
+                "  GUARDED_NAME.GUARDED_PROP([]).then(() => console.log('done'));",
+                "}",
+                "")));
+    test(
+        externs(externs),
+        srcs(
+            lines(
+                "", //
+                "if (Promise?.allSettled([])) {",
+                "  Promise.allSettled([]).then(() => console.log('done'));",
+                "}",
+                "")),
+        expected(
+            lines(
+                "", //
+                "if (GUARDED_NAME?.allSettled([])) {",
+                "  GUARDED_NAME.allSettled([]).then(() => console.log('done'));",
+                "}",
+                "")));
+  }
+
+  @Test
   public void guardedAndUnguardedTest() {
     final String externs = new TestExternsBuilder().addConsole().addPromise().build();
     test(
@@ -97,5 +156,41 @@ public final class GuardedCallbackTest extends CompilerTestCase {
         // getting passed to `console.log()`, so it is not guarded.
         expected(
             "console.log(GUARDED_NAME && GUARDED_NAME.GUARDED_PROP && GUARDED_NAME.finally)"));
+  }
+
+  @Test
+  public void optionalChainTest() {
+    final String externs = new TestExternsBuilder().addConsole().addPromise().build();
+    testSame(
+        externs(externs),
+        // Nothing guarded
+        srcs("console.log(Promise.allSettled([Promise.resolve(), x.allSettled]))"));
+    test(
+        externs(externs),
+        srcs("console.log(Promise?.allSettled([Promise.resolve(), x.allSettled]))"),
+        expected("console.log(GUARDED_NAME?.allSettled([GUARDED_NAME.resolve(), x.allSettled]))"));
+    test(
+        externs(externs),
+        srcs("console.log(Promise.allSettled?.([Promise.resolve(), x.allSettled]))"),
+        expected("console.log(Promise.GUARDED_PROP?.([Promise.resolve(), x.GUARDED_PROP]))"));
+    test(
+        externs(externs),
+        srcs("console.log(Promise?.allSettled?.([Promise.resolve(), x.allSettled]))"),
+        expected(
+            "console.log(GUARDED_NAME?.GUARDED_PROP?.([GUARDED_NAME.resolve(), x.GUARDED_PROP]))"));
+    test(
+        externs(externs),
+        srcs(
+            lines(
+                "console.log(",
+                "    Promise?.resolve(Promise)",
+                "        .then(x.finally)",
+                "        .finally?.(x.finally))")),
+        expected(
+            lines(
+                "console.log(",
+                "    GUARDED_NAME?.resolve(GUARDED_NAME)",
+                "        .then(x.finally)",
+                "        ?.GUARDED_PROP(x.GUARDED_PROP))")));
   }
 }
