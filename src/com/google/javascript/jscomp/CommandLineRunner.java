@@ -1739,8 +1739,8 @@ public class CommandLineRunner extends
   }
 
   @Override
-  protected void addWhitelistWarningsGuard(CompilerOptions options, File allowlistFile) {
-    options.addWarningsGuard(WhitelistWarningsGuard.fromFile(allowlistFile));
+  protected void addAllowlistWarningsGuard(CompilerOptions options, File allowlistFile) {
+    options.addWarningsGuard(AllowlistWarningsGuard.fromFile(allowlistFile));
   }
 
   @Override

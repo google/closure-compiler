@@ -40,14 +40,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * An extension of {@code WarningsGuard} that provides functionality to maintain
- * a list of warnings (white-list). It is subclasses' responsibility to decide
- * what to do with the white-list by implementing the {@code level} function.
- * Warnings are defined by the name of the JS file and the first line of
- * warnings description.
+ * An extension of {@code WarningsGuard} that provides functionality to maintain a list of warnings
+ * (white-list). It is subclasses' responsibility to decide what to do with the white-list by
+ * implementing the {@code level} function. Warnings are defined by the name of the JS file and the
+ * first line of warnings description.
  */
 @GwtIncompatible("java.io, java.util.regex")
-public class WhitelistWarningsGuard extends WarningsGuard {
+public class AllowlistWarningsGuard extends WarningsGuard {
   private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 
   /** The set of allowlisted warnings, same format as {@code formatWarning}. */
@@ -56,7 +55,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   /** Pattern to match line number in error descriptions. */
   private static final Pattern LINE_NUMBER = Pattern.compile(":-?\\d+");
 
-  public WhitelistWarningsGuard() {
+  public AllowlistWarningsGuard() {
     this(ImmutableSet.of());
   }
 
@@ -68,9 +67,9 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    * @param allowlist The set of JS-warnings that are white-listed. This is expected to have similar
    *     format as {@code formatWarning(JSError)}.
    */
-  public WhitelistWarningsGuard(Set<String> allowlist) {
+  public AllowlistWarningsGuard(Set<String> allowlist) {
     checkNotNull(allowlist);
-    this.allowlist = normalizeWhitelist(allowlist);
+    this.allowlist = normalizeAllowlist(allowlist);
   }
 
   /**
@@ -79,7 +78,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    *
    * @return known legacy warnings without line numbers.
    */
-  protected Set<String> normalizeWhitelist(Set<String> allowlist) {
+  protected Set<String> normalizeAllowlist(Set<String> allowlist) {
     Set<String> result = new HashSet<>();
     for (String line : allowlist) {
       String trimmed = line.trim();
@@ -102,7 +101,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     if (containWarning(formatWarning(error))) {
       // If the message matches the guard we use WARNING, so that it
       // - Shows up on stderr, and
-      // - Gets caught by the WhitelistBuilder downstream in the pipeline
+      // - Gets caught by the AllowlistBuilder downstream in the pipeline
       return CheckLevel.WARNING;
     }
     return null;
@@ -123,26 +122,27 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   }
 
   /** Creates a warnings guard from a file. */
-  public static WhitelistWarningsGuard fromFile(File file) {
-    return new WhitelistWarningsGuard(loadWhitelistedJsWarnings(file));
+  public static AllowlistWarningsGuard fromFile(File file) {
+    return new AllowlistWarningsGuard(loadAllowlistedJsWarnings(file));
   }
 
   /**
    * Loads legacy warnings list from the file.
+   *
    * @return The lines of the file.
    */
-  public static Set<String> loadWhitelistedJsWarnings(File file) {
-    return loadWhitelistedJsWarnings(
-        Files.asCharSource(file, UTF_8));
+  public static Set<String> loadAllowlistedJsWarnings(File file) {
+    return loadAllowlistedJsWarnings(Files.asCharSource(file, UTF_8));
   }
 
   /**
    * Loads legacy warnings list from the file.
+   *
    * @return The lines of the file.
    */
-  protected static Set<String> loadWhitelistedJsWarnings(CharSource supplier) {
+  protected static Set<String> loadAllowlistedJsWarnings(CharSource supplier) {
     try {
-      return loadWhitelistedJsWarnings(supplier.openStream());
+      return loadAllowlistedJsWarnings(supplier.openStream());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -150,11 +150,11 @@ public class WhitelistWarningsGuard extends WarningsGuard {
 
   /**
    * Loads legacy warnings list from the file.
+   *
    * @return The lines of the file.
    */
   // TODO(nicksantos): This is a weird API.
-  static Set<String> loadWhitelistedJsWarnings(Reader reader)
-      throws IOException {
+  static Set<String> loadAllowlistedJsWarnings(Reader reader) throws IOException {
     checkNotNull(reader);
     Set<String> result = new HashSet<>();
 
@@ -203,27 +203,27 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     return warning;
   }
 
-  /** Whitelist builder */
-  public class WhitelistBuilder implements ErrorHandler {
+  /** Allowlist builder */
+  public class AllowlistBuilder implements ErrorHandler {
     private final Set<JSError> warnings = new LinkedHashSet<>();
     private String productName = null;
     private String generatorTarget = null;
     private String headerNote = null;
 
     /** Fill in your product name to get a fun message! */
-    public WhitelistBuilder setProductName(String name) {
+    public AllowlistBuilder setProductName(String name) {
       this.productName = name;
       return this;
     }
 
     /** Fill in instructions on how to generate this allowlist. */
-    public WhitelistBuilder setGeneratorTarget(String name) {
+    public AllowlistBuilder setGeneratorTarget(String name) {
       this.generatorTarget = name;
       return this;
     }
 
     /** A note to include at the top of the allowlist file. */
-    public WhitelistBuilder setNote(String note) {
+    public AllowlistBuilder setNote(String note) {
       this.headerNote  = note;
       return this;
     }
@@ -231,27 +231,27 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     @Override
     public void report(CheckLevel level, JSError error) {
       if (error.getDefaultLevel().equals(CheckLevel.ERROR)) {
-        // ERROR-level diagnostics are ignored by WhitelistWarningsGuard (c.f. above getLevel).
+        // ERROR-level diagnostics are ignored by AllowlistWarningsGuard (c.f. above getLevel).
         return;
       }
       warnings.add(error);
     }
 
     /**
-     * Writes the warnings collected in a format that the WhitelistWarningsGuard
-     * can read back later.
+     * Writes the warnings collected in a format that the AllowlistWarningsGuard can read back
+     * later.
      */
-    public void writeWhitelist(File out) throws IOException {
+    public void writeAllowlist(File out) throws IOException {
       try (PrintStream stream = new PrintStream(out)) {
-        appendWhitelist(stream);
+        appendAllowlist(stream);
       }
     }
 
     /**
-     * Writes the warnings collected in a format that the WhitelistWarningsGuard
-     * can read back later.
+     * Writes the warnings collected in a format that the AllowlistWarningsGuard can read back
+     * later.
      */
-    public void appendWhitelist(PrintStream out) {
+    public void appendAllowlist(PrintStream out) {
       out.append(
           "# This is a list of legacy warnings that have yet to be fixed.\n");
 

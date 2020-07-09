@@ -309,7 +309,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   @GwtIncompatible("Unnecessary")
-  protected abstract void addWhitelistWarningsGuard(CompilerOptions options, File allowlistFile);
+  protected abstract void addAllowlistWarningsGuard(CompilerOptions options, File allowlistFile);
 
   @GwtIncompatible("Unnecessary")
   protected static void setWarningGuardOptions(
@@ -360,7 +360,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     setWarningGuardOptions(options, config.warningGuards, diagnosticGroups);
 
     if (!config.warningsAllowFile.isEmpty()) {
-      addWhitelistWarningsGuard(options, new File(config.warningsAllowFile));
+      addAllowlistWarningsGuard(options, new File(config.warningsAllowFile));
     }
 
     if (!config.hideWarningsFor.isEmpty()) {
