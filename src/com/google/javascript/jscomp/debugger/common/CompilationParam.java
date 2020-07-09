@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.parsing.Config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -965,11 +966,36 @@ public enum CompilationParam {
     }
   },
 
-  /** Configures the compiler for use as an IDE backend. */
-  IDE_MODE(ParamGroup.MISC) {
+  /** Attempt to continue compilation after halting errors. */
+  CONTINUE_AFTER_ERRORS(ParamGroup.MISC) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setIdeMode(value);
+      options.setContinueAfterErrors(value);
+    }
+  },
+
+  /** Preserve non-semantic details from the original source. */
+  PRESERVE_DETAILED_SOURCE_INFO(ParamGroup.MISC) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setPreserveDetailedSourceInfo(value);
+    }
+  },
+
+  /** Preserve more non-type-related information from JSDoc. */
+  PRESERVE_FULL_JSDOC_DESCRIPTIONS(ParamGroup.MISC) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setParseJsDocDocumentation(
+          value
+              ? Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE
+              : Config.JsDocParsing.TYPES_ONLY);
+    }
+
+    @Override
+    public String getJavaInfo() {
+      return "options.setParseJsDocDocumentation("
+          + "Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE);";
     }
   },
 
