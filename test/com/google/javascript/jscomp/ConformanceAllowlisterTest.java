@@ -32,9 +32,9 @@ import org.junit.runners.JUnit4;
 
 @GwtIncompatible("Conformance")
 @RunWith(JUnit4.class)
-public class ConformanceWhitelisterTest {
+public class ConformanceAllowlisterTest {
   @Test
-  public void testConformanceWhitelistAddNew() throws IOException {
+  public void testConformanceAllowlistAddNew() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
     sources.add(
@@ -49,12 +49,12 @@ public class ConformanceWhitelisterTest {
             .addValue("Object.prototype.innerHTML")
             .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement))
+    assertThat(testConformanceAllowlister(sources.build(), requirement))
         .containsExactly("/entry.js", 2);
   }
 
   @Test
-  public void testConformanceWhitelistRemove() throws IOException {
+  public void testConformanceAllowlistRemove() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
     sources.add(
@@ -70,11 +70,11 @@ public class ConformanceWhitelisterTest {
             .addWhitelist("/entry.js")
             .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement)).isEmpty();
+    assertThat(testConformanceAllowlister(sources.build(), requirement)).isEmpty();
   }
 
   @Test
-  public void testConformanceWhitelistPreserve() throws IOException {
+  public void testConformanceAllowlistPreserve() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
     sources.add(
@@ -90,15 +90,15 @@ public class ConformanceWhitelisterTest {
             .addWhitelist("/entry.js")
             .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement))
+    assertThat(testConformanceAllowlister(sources.build(), requirement))
         .containsExactly("/entry.js", 2);
   }
 
   // TODO(bangert): Evaluate if this is always the best behaviour.
-  // The current behaviour pushes the behaviour of how to cluster the whitelist to the program
-  // driving ConformanceWhitelister.
+  // The current behaviour pushes the behaviour of how to cluster the allowlist to the program
+  // driving ConformanceAllowlister.
   @Test
-  public void testConformanceWhitelistBreaksDownFolder() throws IOException {
+  public void testConformanceAllowlistBreaksDownFolder() throws IOException {
     ImmutableList.Builder<SourceFile> sources = ImmutableList.builder();
 
     sources.add(
@@ -114,11 +114,11 @@ public class ConformanceWhitelisterTest {
             .addWhitelist("/test/")
             .build();
 
-    assertThat(testConformanceWhitelister(sources.build(), requirement))
+    assertThat(testConformanceAllowlister(sources.build(), requirement))
         .containsExactly("/test/entry.js", 2);
   }
 
-  private ImmutableMultimap<String, Integer> testConformanceWhitelister(
+  private ImmutableMultimap<String, Integer> testConformanceAllowlister(
       ImmutableList<SourceFile> sources, Requirement config) throws IOException {
 
     CompilerOptions options = new CompilerOptions();
@@ -135,13 +135,13 @@ public class ConformanceWhitelisterTest {
 
     ImmutableMultimap.Builder<String, Integer> errors = ImmutableMultimap.builder();
     for (Node node :
-        ConformanceWhitelister.getViolatingNodes(
+        ConformanceAllowlister.getViolatingNodes(
             compiler, compiler.getExternsRoot(), compiler.getJsRoot(), config)) {
       errors.put(node.getSourceFileName(), node.getLineno());
     }
     assertThat(errors.build().keySet())
         .containsExactlyElementsIn(
-            ConformanceWhitelister.getViolatingPaths(
+            ConformanceAllowlister.getViolatingPaths(
                 compiler, compiler.getExternsRoot(), compiler.getJsRoot(), config));
     return errors.build();
   }
