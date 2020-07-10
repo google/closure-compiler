@@ -2285,12 +2285,12 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testBadBreakStatementInIdeMode() {
+  public void testBadBreakStatementInContinueAfterErrorsMode() {
     // Ensure that type-checking doesn't crash, even if the CFG is malformed.
-    // This can happen in IDE mode.
     CompilerOptions options = createCompilerOptions();
     options.setDevMode(DevMode.OFF);
-    options.setIdeMode(true);
+    options.setChecksOnly(true);
+    options.setContinueAfterErrors(true);
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
 
@@ -3039,7 +3039,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testBug5786871() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "function () {}");
   }
 
@@ -3292,23 +3293,26 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testIdeMode_doesntCrashOnIncompleteFunctionInObjectLit() {
+  public void testContinueAfterErrorsMode_doesntCrashOnIncompleteFunctionInObjectLit() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "var foo = {bar: function(e) }", "var foo = {bar: function(e){}};");
   }
 
   @Test
-  public void testIdeMode_doesntCrashOnIncompleteFunctionMissingParams() {
+  public void testContinueAfterErrorsMode_doesntCrashOnIncompleteFunctionMissingParams() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "function hi", "function hi() {}");
   }
 
   @Test
   public void testUnboundedArrayLiteralInfiniteLoop() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "var x = [1, 2", "var x = [1, 2]");
   }
 

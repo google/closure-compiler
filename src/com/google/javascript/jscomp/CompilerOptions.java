@@ -2127,35 +2127,6 @@ public class CompilerOptions implements Serializable {
          ImmutableMap.copyOf(propertyInvalidationErrors);
   }
 
-  /**
-   * Configures the compiler for use as an IDE backend.  In this mode:
-   * <ul>
-   *  <li>No optimization passes will run.</li>
-   *  <li>The last time custom passes are invoked is
-   *      {@link CustomPassExecutionTime#BEFORE_OPTIMIZATIONS}</li>
-   *  <li>The compiler will always try to process all inputs fully, even
-   *      if it encounters errors.</li>
-   *  <li>The compiler may record more information than is strictly
-   *      needed for codegen.</li>
-   * </ul>
-   *
-   * @deprecated Some "IDE" clients will need some of these options but not
-   * others. Consider calling setChecksOnly, setAllowRecompilation, etc,
-   * explicitly, instead of calling this method which does a variety of
-   * different things.
-   */
-  @Deprecated
-  public void setIdeMode(boolean ideMode) {
-    setChecksOnly(ideMode);
-    setContinueAfterErrors(ideMode);
-    setAllowHotswapReplaceScript(ideMode);
-    setPreserveDetailedSourceInfo(ideMode);
-    setParseJsDocDocumentation(
-        ideMode
-            ? Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE
-            : Config.JsDocParsing.TYPES_ONLY);
-  }
-
   public void setAllowHotswapReplaceScript(boolean allowRecompilation) {
     this.allowHotswapReplaceScript = allowRecompilation;
   }
