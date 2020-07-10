@@ -178,7 +178,7 @@ function LargestContentfulPaint() {}
 /**
  * https://w3c.github.io/user-timing/#performancemarkoptions-dictionary
  */
-function PerformanceMarkOptions = function() {}
+function PerformanceMarkOptions() {}
 /** @type {number} */ PerformanceMarkOptions.prototype.startTime;
 /** @type {*} */ PerformanceMarkOptions.prototype.detail;
 
