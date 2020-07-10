@@ -31,7 +31,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Override
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = super.getDefaultOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     options.setWarningLevel(DiagnosticGroups.TOO_MANY_TYPE_PARAMS, CheckLevel.WARNING);
     return options;
@@ -458,7 +457,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testArgumentSpreadNonIterable_optChainCall() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypesWithExtraExterns(
         "function use(x) {}",
         "use?.(...1);",
