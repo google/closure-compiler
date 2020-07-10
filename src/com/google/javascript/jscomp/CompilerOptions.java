@@ -859,8 +859,8 @@ public class CompilerOptions implements Serializable {
   /** Map used in the renaming of CSS class names. */
   public CssRenamingMap cssRenamingMap;
 
-  /** Whitelist used in the renaming of CSS class names. */
-  Set<String> cssRenamingWhitelist;
+  /** Skiplist used in the renaming of CSS class names. */
+  Set<String> cssRenamingSkiplist;
 
   /** Replace id generators */
   boolean replaceIdGenerators = true;  // true by default for legacy reasons.
@@ -1433,7 +1433,7 @@ public class CompilerOptions implements Serializable {
     generateExports = false;
     exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
-    cssRenamingWhitelist = null;
+    cssRenamingSkiplist = null;
     idGenerators = ImmutableMap.of();
     replaceStringsFunctionDescriptions = ImmutableList.of();
     replaceStringsPlaceholderToken = "";
@@ -2591,8 +2591,13 @@ public class CompilerOptions implements Serializable {
     this.cssRenamingMap = cssRenamingMap;
   }
 
+  @Deprecated
   public void setCssRenamingWhitelist(Set<String> skiplist) {
-    this.cssRenamingWhitelist = skiplist;
+    setCssRenamingSkiplist(skiplist);
+  }
+
+  public void setCssRenamingSkiplist(Set<String> skiplist) {
+    this.cssRenamingSkiplist = skiplist;
   }
 
   public void setReplaceStringsFunctionDescriptions(
@@ -3003,7 +3008,7 @@ public class CompilerOptions implements Serializable {
             .add("crossChunkCodeMotionNoStubMethods", crossChunkCodeMotionNoStubMethods)
             .add("crossChunkMethodMotion", crossChunkMethodMotion)
             .add("cssRenamingMap", cssRenamingMap)
-            .add("cssRenamingWhitelist", cssRenamingWhitelist)
+            .add("cssRenamingSkiplist", cssRenamingSkiplist)
             .add("customPasses", customPasses)
             .add("dartPass", dartPass)
             .add("deadAssignmentElimination", deadAssignmentElimination)

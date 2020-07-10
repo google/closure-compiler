@@ -1587,7 +1587,7 @@ public final class DefaultPassConfig extends PassConfig {
                         newCssNames = new HashMap<>();
                       }
                       ReplaceCssNames pass =
-                          new ReplaceCssNames(compiler, newCssNames, options.cssRenamingWhitelist);
+                          new ReplaceCssNames(compiler, newCssNames, options.cssRenamingSkiplist);
                       pass.process(externs, jsRoot);
                       compiler.setCssNames(newCssNames);
                     }
