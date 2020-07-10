@@ -24123,6 +24123,46 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntObjectIndex() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    // As is, TypeCheck allows for objects to be indexed with bigint. An error could be reported as
+    // is done with arrays, but for now we will avoid such restrictions.
+    testTypes(
+        lines(
+            "var obj = {};",
+            "/** @type {bigint} */ var b;",
+            "/** @type {bigint|number} */ var bn;",
+            "obj[b] = 1;",
+            "obj[bn] = 3;"));
+  }
+
+  @Test
+  public void testBigIntArrayIndex() {
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    // Even though the spec doesn't prohibit using bigint as an array index, we will report an error
+    // to maintain consistency with TypeScript.
+    testTypes(
+        "var arr = []; /** @type {bigint} */ var b; arr[b];",
+        lines(
+            "restricted index type", //
+            "found   : bigint",
+            "required: number"));
+  }
+
+  @Test
+  public void testBigIntOrNumberArrayIndex() {
+    // Even though the spec doesn't prohibit using bigint as an array index, we will report an error
+    // to maintain consistency with TypeScript.
+    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
+    testTypes(
+        "var arr = []; /** @type {bigint|number} */ var bn; arr[bn];",
+        lines(
+            "restricted index type", //
+            "found   : (bigint|number)",
+            "required: number"));
+  }
+
+  @Test
   public void testStrictComparison1() {
     testTypes(
         "var x = true < 'asdf';",
