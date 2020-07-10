@@ -19,7 +19,7 @@
  * symbols if present. (This is tested for by checking for a native Symbol
  * implementation.)
  */
-goog.module('jscomp.runtime_tests.polyfill_tests.polyfill_isolation_test');
+goog.module('jscomp.runtime_tests.polyfill_tests.polyfill_isolation_chrome_test');
 goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
