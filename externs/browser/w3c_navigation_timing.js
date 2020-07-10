@@ -176,6 +176,13 @@ function LargestContentfulPaint() {}
 /** @type {?Element} */ LargestContentfulPaint.prototype.element;
 
 /**
+ * https://w3c.github.io/user-timing/#performancemarkoptions-dictionary
+ */
+function PerformanceMarkOptions = function() {}
+/** @type {number} */ PerformanceMarkOptions.prototype.startTime;
+/** @type {*} */ PerformanceMarkOptions.prototype.detail;
+
+/**
  * https://wicg.github.io/event-timing/#sec-performance-event-timing
  * @constructor
  * @extends {PerformanceEntry}
@@ -253,9 +260,10 @@ Performance.prototype.now = function() {};
 
 /**
  * @param {string} markName
+ * @param {PerformanceMarkOptions=} markOptions
  * @return {undefined}
  */
-Performance.prototype.mark = function(markName) {};
+Performance.prototype.mark = function(markName, markOptions) {};
 
 /**
  * @param {string=} opt_markName
