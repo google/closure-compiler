@@ -24084,6 +24084,22 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntAsComputedPropForObjects() {
+    testTypes("/** @type {bigint} */ var x; ({[x]: 'value', 123n() {}});");
+  }
+
+  @Test
+  public void testBigIntAsComputedPropForClasses() {
+    testTypes("/** @unrestricted */ class C { 123n() {} }");
+    testTypes("/** @dict */ class C { 123n() {} }");
+  }
+
+  @Test
+  public void testBigIntAsComputedPropForStructClasses() {
+    testTypes("class C { 123n() {} }", "Cannot do '[]' access on a struct");
+  }
+
+  @Test
   public void testStrictComparison1() {
     testTypes(
         "var x = true < 'asdf';",

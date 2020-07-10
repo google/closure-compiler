@@ -2045,6 +2045,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @dict */", //
             "class C {",
             "  ['f']() {}",
+            "  [123]() {}",
+            "  [123n]() {}",
             "}"));
   }
 
