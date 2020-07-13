@@ -39,14 +39,11 @@ import com.google.javascript.jscomp.CompilerOptionsPreprocessor;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CrossChunkMethodMotion;
 import com.google.javascript.jscomp.CustomPassExecutionTime;
+import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.EmptyMessageBundle;
-import com.google.javascript.jscomp.Es6ToEs3Util;
 import com.google.javascript.jscomp.GoogleCodingConvention;
-import com.google.javascript.jscomp.MarkUntranspilableFeaturesAsRemoved;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.RenamingMap;
 import com.google.javascript.jscomp.SourceFile;
@@ -1355,7 +1352,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "Foo.prototype.a = function(x) {};",
             "function Bar(){}",
             "Bar.prototype.a=function(x){};"),
-        PropertyRenamingDiagnostics.INVALIDATION);
+        DiagnosticGroups.TYPE_INVALIDATION);
   }
 
   @Test
@@ -3777,9 +3774,18 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testDestructuringCannotConvert() {
     CompilerOptions options = createCompilerOptions();
 
-    test(options, "for (var   [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    test(options, "for (let   [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    test(options, "for (const [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
+    test(
+        options,
+        "for (var   [x] = [], {y} = {}, z = 2;;) {}",
+        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
+    test(
+        options,
+        "for (let   [x] = [], {y} = {}, z = 2;;) {}",
+        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
+    test(
+        options,
+        "for (const [x] = [], {y} = {}, z = 2;;) {}",
+        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
   }
 
   @Test
@@ -4224,8 +4230,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "const {foo,...bar}={foo:10,bar:20,...{baz:30}};console.log(foo);console.log(bar)");
 
     // But we won't emit ES 2018 regexp features.
-    DiagnosticType untranspilable =
-        MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
+    DiagnosticGroup untranspilable = DiagnosticGroups.UNSTRANSPILABLE_FEATURES;
     test(options, lines(googDefine, "/foo/s"), untranspilable);
     test(options, lines(googDefine, "/(?<foo>.)/"), untranspilable);
     test(options, lines(googDefine, "/(?<=foo)/"), untranspilable);

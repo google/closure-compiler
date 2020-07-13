@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -205,15 +204,11 @@ abstract class IntegrationTestCase {
     }
   }
 
-  // TODO(lharker): delete all the methods checking for a DiagnosticType after migrating existing
-  // usages.
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
   protected void test(CompilerOptions options, String original, DiagnosticGroup warning) {
     test(options, new String[] {original}, null, warning);
   }
 
-  // TODO(lharker): delete all the methods checking for a DiagnosticType after migrating existing
-  // usages.
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
   protected void test(
       CompilerOptions options, String original, String compiled, DiagnosticGroup warning) {
@@ -223,55 +218,6 @@ abstract class IntegrationTestCase {
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
   protected void test(CompilerOptions options, String[] original, DiagnosticGroup warning) {
     test(options, original, null, warning);
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options, there is an error or warning.
-   *
-   * @deprecated prefer to check for the corresponding DiagnosticGroup
-   */
-  @Deprecated
-  protected void test(CompilerOptions options, String original, DiagnosticType warning) {
-    test(options, new String[] {original}, warning);
-  }
-
-  /** @deprecated prefer to check for the corresponding DiagnosticGroup */
-  @Deprecated
-  protected void test(
-      CompilerOptions options, String original, String compiled, DiagnosticType warning) {
-    test(options, new String[] {original}, new String[] {compiled}, warning);
-  }
-
-  /** @deprecated prefer to check for the corresponding DiagnosticGroup */
-  @Deprecated
-  protected void test(CompilerOptions options, String[] original, DiagnosticType warning) {
-    test(options, original, null, warning);
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options, there is an error or warning.
-   *
-   * @deprecated prefer to check for the corresponding DiagnosticGroup
-   */
-  @Deprecated
-  protected void test(
-      CompilerOptions options, String[] original, String[] compiled, DiagnosticType warning) {
-    Compiler compiler = compile(options, original);
-    checkUnexpectedErrorsOrWarnings(compiler, 1);
-    assertWithMessage("Expected exactly one warning or error")
-        .that(compiler.getErrors().size() + compiler.getWarnings().size())
-        .isEqualTo(1);
-    if (!compiler.getErrors().isEmpty()) {
-      assertError(compiler.getErrors().get(0)).hasType(warning);
-    } else {
-      assertError(compiler.getWarnings().get(0)).hasType(warning);
-    }
-
-    if (compiled != null) {
-      Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parseExpectedCode(compiled, options);
-      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
-    }
   }
 
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */

@@ -148,6 +148,7 @@ public class DiagnosticGroups {
           + "missingReturn, "
           + "missingSourcesWarnings, "
           + "moduleLoad, "
+          + "moduleImports, "
           + "msgDescriptions, "
           + "nonStandardJsDocs, "
           + "partialAlias, "
@@ -182,11 +183,18 @@ public class DiagnosticGroups {
           "featuresNotSupportedByPass", PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS);
 
   public static final DiagnosticGroup MODULE_LOAD =
-      DiagnosticGroups.registerGroup("moduleLoad",
+      DiagnosticGroups.registerGroup(
+          "moduleLoad",
           ModuleLoader.LOAD_WARNING,
           ModuleMapCreator.MISSING_NAMESPACE_IMPORT,
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
           ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
+
+  public static final DiagnosticGroup MODULE_IMPORT =
+      DiagnosticGroups.registerGroup( // undocumented
+          "moduleImport",
+          ModuleMapCreator.DOES_NOT_HAVE_EXPORT,
+          ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -713,6 +721,10 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup INVALID_CONST_PARAM =
       DiagnosticGroups.registerUnsuppressibleGroup(ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+
+  public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
+      DiagnosticGroups.registerUnsuppressibleGroup(
+          Es6ToEs3Util.CANNOT_CONVERT, Es6ToEs3Util.CANNOT_CONVERT_YET);
 
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
