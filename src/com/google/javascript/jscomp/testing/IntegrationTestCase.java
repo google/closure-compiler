@@ -208,6 +208,14 @@ public abstract class IntegrationTestCase {
     test(options, new String[] {original}, null, warning);
   }
 
+  // TODO(lharker): delete all the methods checking for a DiagnosticType after migrating existing
+  // usages.
+  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
+  protected void test(
+      CompilerOptions options, String original, String compiled, DiagnosticGroup warning) {
+    test(options, new String[] {original}, new String[] {compiled}, warning);
+  }
+
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
   protected void test(CompilerOptions options, String[] original, DiagnosticGroup warning) {
     test(options, original, null, warning);

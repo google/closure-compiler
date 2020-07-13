@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -27,10 +28,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Generates goog.exportSymbol/goog.exportProperty for the @export annotation.
- */
-class GenerateExports implements CompilerPass {
+/** Generates goog.exportSymbol/goog.exportProperty for the @export annotation. */
+public class GenerateExports implements CompilerPass {
 
   private static final String PROTOTYPE_PROPERTY = "prototype";
 
@@ -44,7 +43,8 @@ class GenerateExports implements CompilerPass {
 
   private final Set<String> exportedVariables = new HashSet<>();
 
-  static final DiagnosticType MISSING_GOOG_FOR_EXPORT =
+  @VisibleForTesting
+  public static final DiagnosticType MISSING_GOOG_FOR_EXPORT =
       DiagnosticType.error(
           "JSC_MISSING_EXPORT_SYMBOL_DEFINITION",
           "@export cannot be used without including closure/base.js or other definition of"
