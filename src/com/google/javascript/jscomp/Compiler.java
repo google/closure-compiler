@@ -1469,7 +1469,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void forwardDeclareType(String typeName) {
+  public void forwardDeclareType(String typeName) {
     forwardDeclaredTypes.add(typeName);
   }
 
