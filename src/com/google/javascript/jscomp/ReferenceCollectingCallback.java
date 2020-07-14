@@ -337,6 +337,9 @@ public final class ReferenceCollectingCallback
         case OR:
         case SWITCH:
         case COALESCE:
+        case OPTCHAIN_GETPROP:
+        case OPTCHAIN_GETELEM:
+        case OPTCHAIN_CALL:
           // The first child of a conditional is not a boundary,
           // but all the rest of the children are.
           return n != parent.getFirstChild();
