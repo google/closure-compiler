@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.SourceMapConsumer;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapTestCase;
@@ -38,6 +39,7 @@ public final class SourceMapTest extends SourceMapTestCase {
   public SourceMapTest() {}
 
   private List<SourceMap.LocationMapping> mappings;
+  private ImmutableMap.Builder<String, SourceMapInput> inputMaps;
 
   @Test
   public void testPrefixReplacement1() throws IOException {
@@ -149,11 +151,40 @@ public final class SourceMapTest extends SourceMapTestCase {
                 "}\n"));
   }
 
+  // This is taken from SourceMapJsLangTest. That test can't run under J2CL because it
+  // uses a parameterized runner but we do want to test this basic behavior under J2CL.
+  @Test
+  public void testRepeatedCompilation() throws Exception {
+    // Run compiler twice feeding sourcemaps from the first run as input to the second run.
+    // This way we ensure that compiler works fine with its own sourcemaps and doesn't lose
+    // important information.
+    String fileContent = "function foo() {} alert(foo());";
+    String fileName = "foo.js";
+    RunResult firstCompilation = compile(fileContent, fileName);
+    String newFileName = fileName + ".compiled";
+    inputMaps.put(
+        newFileName,
+        new SourceMapInput(
+            SourceFile.fromCode("sourcemap", firstCompilation.sourceMapFileContent)));
+
+    RunResult secondCompilation = compile(firstCompilation.generatedSource, newFileName);
+    check(
+        fileName,
+        fileContent,
+        secondCompilation.generatedSource,
+        secondCompilation.sourceMapFileContent);
+  }
+
   @Override
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = super.getCompilerOptions();
     if (mappings != null) {
       options.sourceMapLocationMappings = mappings;
+    }
+
+    if (!this.inputMaps.build().isEmpty()) {
+      options.setApplyInputSourceMaps(true);
+      options.setInputSourceMaps(this.inputMaps.build());
     }
     return options;
   }
@@ -162,6 +193,7 @@ public final class SourceMapTest extends SourceMapTestCase {
   @Before
   public void setUp() {
     super.setUp();
+    this.inputMaps = ImmutableMap.builder();
   }
 
   private void checkSourceMap2(
