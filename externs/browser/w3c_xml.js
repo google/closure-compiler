@@ -416,7 +416,19 @@ XMLHttpRequest.UNSENT;
  * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
+XMLHttpRequest.prototype.UNSENT;
+
+/**
+ * @const {number}
+ * @see https://xhr.spec.whatwg.org/#states
+ */
 XMLHttpRequest.OPENED;
+
+/**
+ * @const {number}
+ * @see https://xhr.spec.whatwg.org/#states
+ */
+XMLHttpRequest.prototype.OPENED;
 
 /**
  * @const {number}
@@ -428,13 +440,31 @@ XMLHttpRequest.HEADERS_RECEIVED;
  * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
+XMLHttpRequest.prototype.HEADERS_RECEIVED;
+
+/**
+ * @const {number}
+ * @see https://xhr.spec.whatwg.org/#states
+ */
 XMLHttpRequest.LOADING;
 
 /**
  * @const {number}
  * @see https://xhr.spec.whatwg.org/#states
  */
+XMLHttpRequest.prototype.LOADING;
+
+/**
+ * @const {number}
+ * @see https://xhr.spec.whatwg.org/#states
+ */
 XMLHttpRequest.DONE;
+
+/**
+ * @const {number}
+ * @see https://xhr.spec.whatwg.org/#states
+ */
+XMLHttpRequest.prototype.DONE;
 
 
 /**
