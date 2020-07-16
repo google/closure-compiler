@@ -337,7 +337,7 @@ class ExpressionDecomposer {
       // result is currently `x?.y.z(subExpression)`, but we want it to be the full sub-chain
       // containing subExpression
       // `x?.y.z(subExpression).p.q`
-      result = NodeUtil.getEndOfOptChain(result);
+      result = NodeUtil.getEndOfOptChainSegment(result);
     }
 
     return result;
@@ -456,7 +456,7 @@ class ExpressionDecomposer {
     checkState(NodeUtil.isOptChainNode(optChainNode), optChainNode);
 
     // find the start of the chain & convert it to non-optional
-    final Node optChainStart = NodeUtil.getStartOfOptChain(optChainNode);
+    final Node optChainStart = NodeUtil.getStartOfOptChainSegment(optChainNode);
     optionalToNonOptionalChain(optChainStart);
 
     // Identify or create the statement that will need to go into the if-statement body

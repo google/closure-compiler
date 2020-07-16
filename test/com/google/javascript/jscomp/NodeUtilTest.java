@@ -3729,7 +3729,7 @@ public final class NodeUtilTest {
       // `expr?.prop`
       Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
 
-      assertThat(NodeUtil.getStartOfOptChain(optChainGet)).isEqualTo(optChainGet);
+      assertThat(NodeUtil.getStartOfOptChainSegment(optChainGet)).isEqualTo(optChainGet);
     }
 
     @Test
@@ -3738,7 +3738,7 @@ public final class NodeUtilTest {
       Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
       Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
 
-      assertThat(NodeUtil.getStartOfOptChain(outterGetProp)).isEqualTo(innerGetProp);
+      assertThat(NodeUtil.getStartOfOptChainSegment(outterGetProp)).isEqualTo(innerGetProp);
     }
 
     @Test
@@ -3750,8 +3750,8 @@ public final class NodeUtilTest {
       Node optCall = IR.continueOptChainCall(optGetProp);
       Node optGetElem = IR.continueOptChainGetelem(optCall, IR.name("prop3"));
 
-      assertThat(NodeUtil.getStartOfOptChain(optGetElem)).isEqualTo(optGetProp);
-      assertThat(NodeUtil.getStartOfOptChain(optCall)).isEqualTo(optGetProp);
+      assertThat(NodeUtil.getStartOfOptChainSegment(optGetElem)).isEqualTo(optGetProp);
+      assertThat(NodeUtil.getStartOfOptChainSegment(optCall)).isEqualTo(optGetProp);
     }
   }
 
@@ -3763,7 +3763,7 @@ public final class NodeUtilTest {
       // `expr?.prop`
       Node optChainGet = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
 
-      assertThat(NodeUtil.getEndOfOptChain(optChainGet)).isEqualTo(optChainGet);
+      assertThat(NodeUtil.getEndOfOptChainSegment(optChainGet)).isEqualTo(optChainGet);
     }
 
     @Test
@@ -3775,7 +3775,8 @@ public final class NodeUtilTest {
       Node innerOptChain = optChainCall.getLastChild(); // `x?.y`
       assertThat(innerOptChain.isOptChainGetProp()).isTrue();
       assertThat(innerOptChain.isOptionalChainStart()).isTrue();
-      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfOptChainSegment(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfFullOptChain(innerOptChain)).isTrue();
     }
 
     @Test
@@ -3783,19 +3784,23 @@ public final class NodeUtilTest {
       Node optChainGetProp = parseExpr("a?.b.x?.y");
       assertThat(optChainGetProp.isOptChainGetProp()).isTrue();
       assertThat(optChainGetProp.isOptionalChainStart()).isTrue();
-      assertThat(NodeUtil.isEndOfOptChain(optChainGetProp)).isTrue();
+      assertThat(NodeUtil.isEndOfOptChainSegment(optChainGetProp)).isTrue();
+      assertThat(NodeUtil.isEndOfFullOptChain(optChainGetProp)).isTrue();
 
-      // Check that `a?.b.x` is not the start of optChain, but it ends the chain `a?.b`.
+      // Check that `a?.b.x` is not the start of the optional chain, but it ends the segment that
+      // starts with `a?.b`.
       Node innerOptChain = optChainGetProp.getFirstChild(); // `a?.b.x`
       assertThat(innerOptChain.isOptChainGetProp()).isTrue();
       assertThat(innerOptChain.isOptionalChainStart()).isFalse();
-      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfOptChainSegment(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfFullOptChain(innerOptChain)).isFalse();
 
       // Check that `a?.b` is the start of optChain but not the end
       Node innerMostOptChain = innerOptChain.getFirstChild(); // `a?.b`
       assertThat(innerMostOptChain.isOptChainGetProp()).isTrue();
       assertThat(innerMostOptChain.isOptionalChainStart()).isTrue();
-      assertThat(NodeUtil.isEndOfOptChain(innerMostOptChain)).isFalse();
+      assertThat(NodeUtil.isEndOfOptChainSegment(innerMostOptChain)).isFalse();
+      assertThat(NodeUtil.isEndOfFullOptChain(innerMostOptChain)).isFalse();
     }
 
     @Test
@@ -3808,7 +3813,8 @@ public final class NodeUtilTest {
       Node innerOptChain = optChainCall.getLastChild();
       assertThat(innerOptChain.isOptChainGetProp()).isTrue();
       assertThat(innerOptChain.isOptionalChainStart()).isTrue();
-      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfOptChainSegment(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfFullOptChain(innerOptChain)).isTrue();
     }
 
     @Test
@@ -3821,13 +3827,15 @@ public final class NodeUtilTest {
       Node optChainCall = optChainGetProp.getFirstChild();
       assertThat(optChainCall.isOptChainCall()).isTrue();
       assertThat(optChainCall.isOptionalChainStart()).isFalse();
-      assertThat(NodeUtil.isEndOfOptChain(optChainCall)).isFalse();
+      assertThat(NodeUtil.isEndOfOptChainSegment(optChainCall)).isFalse();
+      assertThat(NodeUtil.isEndOfFullOptChain(optChainCall)).isFalse();
 
       // Check that `x?.y` is the start and end of the chain
       Node innerOptChain = optChainCall.getLastChild();
       assertThat(innerOptChain.isOptChainGetProp()).isTrue();
       assertThat(innerOptChain.isOptionalChainStart()).isTrue();
-      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfOptChainSegment(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfFullOptChain(innerOptChain)).isTrue();
     }
 
     @Test
@@ -3840,13 +3848,15 @@ public final class NodeUtilTest {
       Node optChainCall = optChainGetProp.getFirstChild();
       assertThat(optChainCall.isOptChainCall()).isTrue();
       assertThat(optChainCall.isOptionalChainStart()).isFalse();
-      assertThat(NodeUtil.isEndOfOptChain(optChainCall)).isFalse();
+      assertThat(NodeUtil.isEndOfOptChainSegment(optChainCall)).isFalse();
+      assertThat(NodeUtil.isEndOfFullOptChain(optChainCall)).isFalse();
 
       // Check that `x?.y` is the start and end of its chain
       Node innerOptChain = optChainCall.getSecondChild();
       assertThat(innerOptChain.isOptChainGetProp()).isTrue();
       assertThat(innerOptChain.isOptionalChainStart()).isTrue();
-      assertThat(NodeUtil.isEndOfOptChain(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfOptChainSegment(innerOptChain)).isTrue();
+      assertThat(NodeUtil.isEndOfFullOptChain(innerOptChain)).isTrue();
     }
 
     @Test
@@ -3855,7 +3865,7 @@ public final class NodeUtilTest {
       Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
       Node outerGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
 
-      assertThat(NodeUtil.getEndOfOptChain(innerGetProp)).isEqualTo(outerGetProp);
+      assertThat(NodeUtil.getEndOfOptChainSegment(innerGetProp)).isEqualTo(outerGetProp);
     }
 
     @Test
@@ -3867,7 +3877,7 @@ public final class NodeUtilTest {
       Node optCall = IR.continueOptChainCall(optGetProp);
       IR.startOptChainGetelem(optCall, IR.name("prop3"));
 
-      assertThat(NodeUtil.getEndOfOptChain(startOptGetProp)).isEqualTo(optCall);
+      assertThat(NodeUtil.getEndOfOptChainSegment(startOptGetProp)).isEqualTo(optCall);
     }
 
     @Test
@@ -3877,7 +3887,7 @@ public final class NodeUtilTest {
       Node optGetProp = IR.continueOptChainGetprop(startOptGetProp, IR.string("prop2"));
       IR.getprop(optGetProp, IR.string("prop3"));
 
-      assertThat(NodeUtil.getEndOfOptChain(startOptGetProp)).isEqualTo(optGetProp);
+      assertThat(NodeUtil.getEndOfOptChainSegment(startOptGetProp)).isEqualTo(optGetProp);
     }
   }
 

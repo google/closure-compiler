@@ -2336,9 +2336,9 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   private FlowScope traverseOptChain(Node n, FlowScope scope) {
     checkArgument(NodeUtil.isOptChainNode(n));
 
-    if (NodeUtil.isEndOfOptChain(n)) {
+    if (NodeUtil.isEndOfOptChainSegment(n)) {
       // Create new optional chain tracking object and push it onto the stack.
-      final Node startOfChain = NodeUtil.getStartOfOptChain(n);
+      final Node startOfChain = NodeUtil.getStartOfOptChainSegment(n);
       OptChainInfo optChainInfo = new OptChainInfo(n, startOfChain);
       optChainArrayDeque.addFirst(optChainInfo);
     }
@@ -2370,10 +2370,10 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       n.setJSType(unknownType);
     }
 
-    if (NodeUtil.isEndOfOptChain(n)) {
+    if (NodeUtil.isEndOfOptChainSegment(n)) {
       // Use the startNode's type to selectively join the executed scope with the unexecuted scope,
       // and update the type assigned to `n` in `setXAfterChildrenTraversed()`
-      final Node startOfChain = NodeUtil.getStartOfOptChain(n);
+      final Node startOfChain = NodeUtil.getStartOfOptChainSegment(n);
 
       // Pop the stack to obtain the current chain.
       OptChainInfo currentChain = optChainArrayDeque.removeFirst();
