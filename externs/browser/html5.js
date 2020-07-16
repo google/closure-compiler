@@ -3766,8 +3766,7 @@ XMLHttpRequest.prototype.response;
  *     refreshPolicy: string,
  *     signRequestData: string,
  *     includeTimestampHeader: boolean,
- *     additionalSignedHeaders: !Array<string>,
- *     additionalSigningData: string
+ *     additionalSignedHeaders: !Array<string>
  *   }}
  * @see https://docs.google.com/document/d/1qUjtKgA7nMv9YGMhi0xWKEojkSITKzGLdIcZgoz6ZkI
  */
