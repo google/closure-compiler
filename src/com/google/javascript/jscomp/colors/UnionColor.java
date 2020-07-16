@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
 @AutoValue
 public abstract class UnionColor implements Color {
 
-  static UnionColor create(ImmutableSet<Color> alternates) {
+  public static UnionColor create(ImmutableSet<Color> alternates) {
     checkArgument(
         alternates.size() > 1,
         "UnionColor alternates should have more than one element, found %s",

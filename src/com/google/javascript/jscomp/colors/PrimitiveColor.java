@@ -26,6 +26,7 @@ public enum PrimitiveColor implements Color {
   SYMBOL,
   NULL_OR_VOID,
   BIGINT,
+  BOOLEAN,
   // Equivalent to Closure '*'/'?' and TS unknown/any
   UNKNOWN;
 
