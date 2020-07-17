@@ -98,16 +98,10 @@ class ExpressionDecomposer {
   private static final int MAX_ITERATIONS = 100;
 
   /**
-   * Perform any rewriting necessary so that the specified expression is {@code MOVABLE}.
+   * If required, rewrite the statement containing the expression.
    *
-   * <p>This method is a primary entrypoint into this class. It performs expression decomposition
-   * such that {@code expression} can be moved to a preceding statement without changing behaviour.
-   *
-   * <p>Exposing {@code expression} generally doesn't mean that {@code expression} itself will
-   * moved. An expression is exposed within a larger statement if no preceding expression would
-   * interact with it.
-   *
-   * @see {@link #canExposeExpression}
+   * @param expression The expression to be exposed.
+   * @see #canExposeExpression
    */
   void maybeExposeExpression(Node expression) {
     // If the expression needs to exposed.
@@ -123,12 +117,19 @@ class ExpressionDecomposer {
   }
 
   /**
-   * Perform partial decomposition to get the given expression closer to being {@code MOVEABLE}.
+   * Perform any rewriting necessary so that the specified expression is {@code MOVABLE}.
    *
-   * <p>This method should not be called from outside of this class. Instead call {@link
-   * #maybeExposeExpression(Node)}.
+   * <p>This method is a primary entrypoint into this class. It performs a partial expression
+   * decomposition such that {@code expression} can be moved to a preceding statement without
+   * changing behaviour.
+   *
+   * <p>Exposing {@code expression} generally doesn't mean that {@code expression} itself will
+   * moved. An expression is exposed within a larger statement if no preceding expression would
+   * interact with it.
+   *
+   * @see {@link #canExposeExpression}
    */
-  private void exposeExpression(Node expression) {
+  void exposeExpression(Node expression) {
     Node expressionRoot = findExpressionRoot(expression);
     checkNotNull(expressionRoot);
     checkState(NodeUtil.isStatement(expressionRoot), expressionRoot);
@@ -1236,16 +1237,6 @@ class ExpressionDecomposer {
    *     incorrect.
    */
   private boolean isExpressionTreeUnsafe(Node tree, boolean followingSideEffectsExist) {
-    if (isTempConstantValueName(tree)) {
-      // Constant temporary values we created as part of decomposition are known to be safe.
-      // NOTE: We also put these variables into our list of known constants, so you might think
-      // explicitly checking the name is redundant with the use of this.knownConstants below.
-      // However, there are cases where one ExpressionDecomposer creates the variable, then another
-      // one (which doesn't have that variable in its list of known constants) sees it later when
-      // doing further decomposition.
-      return false;
-    }
-
     if (tree.isSpread()) {
       // Spread expressions would cause recursive rewriting if not special cased here.
       // When extracted, spreads can't be assigned to a single variable and instead are put into

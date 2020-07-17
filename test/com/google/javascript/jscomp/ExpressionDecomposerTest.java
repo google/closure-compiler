@@ -58,6 +58,7 @@ public final class ExpressionDecomposerTest {
   public void setUp() {
     allowMethodCallDecomposing = false;
     knownConstants.clear();
+    times = 1;
     shouldTestTypes = true;
   }
 
@@ -649,8 +650,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$2 = temp$jscomp$1;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2[foo()];",
+            "    var temp$jscomp$0 = temp$jscomp$1[foo()];",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -663,8 +663,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$2 = temp$jscomp$1(a).y.z;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2[foo()];",
+            "    var temp$jscomp$0 = temp$jscomp$1(a).y.z[foo()];",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -677,8 +676,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$0 = x;",
             "if (temp$jscomp$0 != null) {",
-            "    var temp_const$jscomp$1 = temp$jscomp$0(a)[y].z;",
-            "    temp_const$jscomp$1[foo()];",
+            "    temp$jscomp$0(a)[y].z[foo()];",
             "}"));
   }
 
@@ -690,8 +688,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$2 = temp$jscomp$1.y.z;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2[foo()];",
+            "    var temp$jscomp$0 = temp$jscomp$1.y.z[foo()];",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -704,21 +701,19 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$0 = x;",
             "if (temp$jscomp$0 != null) {",
-            "    var temp_const$jscomp$1 = temp$jscomp$0.y.z;",
-            "    temp_const$jscomp$1[foo()];",
+            "    temp$jscomp$0.y.z[foo()];",
             "}"));
   }
 
   @Test
   public void exposeExpressionOptionalGetElemChain() {
     helperExposeExpression(
-        "a = x?.[y].z[foo()];",
+        "a = x?.[y].z[foo()]",
         "foo",
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$2 = temp$jscomp$1[y].z;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2[foo()];",
+            "    var temp$jscomp$0 = temp$jscomp$1[y].z[foo()];",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -731,8 +726,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$0 = x;",
             "if (temp$jscomp$0 != null) {",
-            "    var temp_const$jscomp$1 = temp$jscomp$0[y].z;",
-            "    temp_const$jscomp$1[foo()];",
+            "    temp$jscomp$0[y].z[foo()];",
             "}"));
   }
 
@@ -745,9 +739,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x.y;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$3 = temp$jscomp$1;",
-            "    var temp_const$jscomp$2 = temp_const$jscomp$3[z];",
-            "    var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo());",
+            "  var temp$jscomp$0 = temp$jscomp$1[z](foo())",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -762,9 +754,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x.y;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$3 = temp$jscomp$1;",
-            "    var temp_const$jscomp$2 = temp_const$jscomp$3[z];",
-            "    var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo());",
+            "    var temp$jscomp$0 = temp$jscomp$1[z](foo())",
             "}",
             "a = temp$jscomp$0");
     String secondTimeExpose =
@@ -779,6 +769,7 @@ public final class ExpressionDecomposerTest {
 
     helperExposeExpression(originalSource, "foo", firstTimeExpose);
 
+    times = 2;
     helperExposeExpression(originalSource, "foo", secondTimeExpose);
   }
 
@@ -792,11 +783,7 @@ public final class ExpressionDecomposerTest {
             "var temp$jscomp$2 = x.y;",
             "var temp$jscomp$1 = temp$jscomp$2[z];",
             "if(temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$5 = temp$jscomp$1;",
-            "    var temp_const$jscomp$4 = temp_const$jscomp$5.call;",
-            "    var temp_const$jscomp$3 = temp$jscomp$2;",
-            "    var temp$jscomp$0 = ",
-            "        temp_const$jscomp$4.call(temp_const$jscomp$5, temp_const$jscomp$3, foo(), d);",
+            "    var temp$jscomp$0 = temp$jscomp$1.call(temp$jscomp$2, foo(), d);",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -810,9 +797,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x.y;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$3 = temp$jscomp$1;",
-            "    var temp_const$jscomp$2 = temp_const$jscomp$3.z;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo(1));",
+            "    var temp$jscomp$0 = temp$jscomp$1.z(foo(1));",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -821,9 +806,16 @@ public final class ExpressionDecomposerTest {
   public void exposeExpressionOptionalGetPropWithCallTwiceRewriteCall() {
     allowMethodCallDecomposing = true;
 
-    helperExposeExpression(
-        "a = x.y?.z(foo(1))",
-        "foo",
+    // 2 calls to exposeExpression() are needed to get full exposure
+    String originalSource = "a = x.y?.z(foo(1))";
+    String firstTimeExpose =
+        lines(
+            "var temp$jscomp$1 = x.y;",
+            "if (temp$jscomp$1 != null) {",
+            "  var temp$jscomp$0 = temp$jscomp$1.z(foo(1));",
+            "}",
+            "a = temp$jscomp$0");
+    String secondTimeExpose =
         lines(
             "var temp$jscomp$1 = x.y;",
             "if (temp$jscomp$1 != null) {",
@@ -831,7 +823,12 @@ public final class ExpressionDecomposerTest {
             "  var temp_const$jscomp$2 = temp_const$jscomp$3.z;",
             "  var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo(1));",
             "}",
-            "a = temp$jscomp$0"));
+            "a = temp$jscomp$0");
+
+    helperExposeExpression(originalSource, "foo", firstTimeExpose);
+
+    times = 2;
+    helperExposeExpression(originalSource, "foo", secondTimeExpose);
   }
 
   @Test
@@ -844,11 +841,7 @@ public final class ExpressionDecomposerTest {
             "var temp$jscomp$2 = x.y;",
             "var temp$jscomp$1 = temp$jscomp$2.z;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$5 = temp$jscomp$1;",
-            "    var temp_const$jscomp$4 = temp_const$jscomp$5.call;",
-            "    var temp_const$jscomp$3 = temp$jscomp$2;",
-            "    var temp$jscomp$0 =",
-            "        temp_const$jscomp$4.call(temp_const$jscomp$5, temp_const$jscomp$3, foo());",
+            "    var temp$jscomp$0 = temp$jscomp$1.call(temp$jscomp$2, foo())",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -862,9 +855,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$3 = temp$jscomp$1;",
-            "    var temp_const$jscomp$2 = temp_const$jscomp$3.y;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo());",
+            "    var temp$jscomp$0 = temp$jscomp$1.y(foo())",
             "}",
             "a = temp$jscomp$0?.z.q"));
   }
@@ -878,8 +869,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$2 = temp$jscomp$1.y;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2[foo()];",
+            "    var temp$jscomp$0 = temp$jscomp$1.y[foo()]",
             "}",
             "a = temp$jscomp$0?.z.q"));
   }
@@ -893,8 +883,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$2 = temp$jscomp$1.y;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2[foo()].z.q;",
+            "    var temp$jscomp$0 = temp$jscomp$1.y[foo()].z.q",
             "}",
             "a = temp$jscomp$0?.b.c"));
   }
@@ -908,8 +897,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$2 = temp$jscomp$1.y;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2[foo()];",
+            "    var temp$jscomp$0 = temp$jscomp$1.y[foo()]",
             "}",
             "a = temp$jscomp$0.z.q"));
   }
@@ -923,9 +911,7 @@ public final class ExpressionDecomposerTest {
         lines(
             "var temp$jscomp$1 = x?.y.z;",
             "if (temp$jscomp$1 != null) {",
-            "    var temp_const$jscomp$3 = temp$jscomp$1;",
-            "    var temp_const$jscomp$2 = temp_const$jscomp$3.q;",
-            "    var temp$jscomp$0 = temp_const$jscomp$2.call(temp_const$jscomp$3, foo());",
+            "    var temp$jscomp$0 = temp$jscomp$1.q(foo());",
             "}",
             "a = temp$jscomp$0"));
   }
@@ -1241,6 +1227,11 @@ public final class ExpressionDecomposerTest {
         "  return temp_const$jscomp$0.call(temp_const$jscomp$1, yield 1);",
         "}");
     helperExposeExpression(before, "yield", after);
+
+    // Check that we don't decompose again, which would result in an infinite loop when inlining
+    // functions.
+    times = 2;
+    helperExposeExpression(before, "yield", after);
   }
 
   @Test
@@ -1541,6 +1532,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeSuperCall() {
+    times = 2;
     helperExposeExpression(
         "class A { constructor() { super(goo(), foo()) } }",
         "foo",
@@ -1553,6 +1545,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeSuperCall_noSideEffects() {
+    times = 2;
     // String() is being used since it's known to not have side-effects.
     helperExposeExpression(
         "class A { constructor() { super(goo(), String()) } }",
@@ -1633,7 +1626,9 @@ public final class ExpressionDecomposerTest {
     Node expr = nodeFinder.apply(tree);
 
     compiler.resetUniqueNameId();
-    decomposer.maybeExposeExpression(expr);
+    for (int i = 0; i < times; i++) {
+      decomposer.exposeExpression(expr);
+    }
     processForTypecheck(compiler, tree);
 
     return tree;
@@ -1670,7 +1665,9 @@ public final class ExpressionDecomposerTest {
     assertThat(result).isEqualTo(DecompositionType.DECOMPOSABLE);
 
     compiler.resetUniqueNameId();
-    decomposer.maybeExposeExpression(expr);
+    for (int i = 0; i < times; i++) {
+      decomposer.exposeExpression(expr);
+    }
     validateSourceInfo(compiler, tree);
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
 
@@ -1716,7 +1713,9 @@ public final class ExpressionDecomposerTest {
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
     compiler.resetUniqueNameId();
-    decomposer.moveExpression(expr);
+    for (int i = 0; i < times; i++) {
+      decomposer.moveExpression(expr);
+    }
     validateSourceInfo(compiler, tree);
     assertNode(tree).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
 
@@ -1725,7 +1724,9 @@ public final class ExpressionDecomposerTest {
       Node originalExpr = nodeFinder.apply(originalTree);
 
       compiler.resetUniqueNameId();
-      decomposer.moveExpression(originalExpr);
+      for (int i = 0; i < times; i++) {
+        decomposer.moveExpression(originalExpr);
+      }
       processForTypecheck(compiler, originalTree);
 
       // TODO(bradfordcsmith): Don't assume type check + decompose gives the same results as

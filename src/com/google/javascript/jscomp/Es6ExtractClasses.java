@@ -179,7 +179,7 @@ public final class Es6ExtractClasses
 
   private void extractClass(NodeTraversal t, Node classNode) {
     if (expressionDecomposer.canExposeExpression(classNode) == DecompositionType.DECOMPOSABLE) {
-      expressionDecomposer.maybeExposeExpression(classNode);
+      expressionDecomposer.exposeExpression(classNode);
     }
     Node parent = classNode.getParent();
 
