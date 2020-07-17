@@ -799,8 +799,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(ambiguateProperties);
     }
 
-    passes.add(removeTypes);
-
     if (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.add(renameProperties);
     }
@@ -872,6 +870,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.foldConstants) {
       passes.add(latePeepholeOptimizations);
     }
+
+    passes.add(removeTypes);
 
     if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.UNMAPPED) {
       passes.add(nameUnmappedAnonymousFunctions);
