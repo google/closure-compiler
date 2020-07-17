@@ -1950,79 +1950,49 @@ public final class NodeUtil {
    * @param n A node in an optional chain
    * @return The start of the optional chain that `n` is part of.
    */
-  static Node getStartOfOptChainSegment(Node n) {
+  static Node getStartOfOptChain(Node n) {
     checkState(NodeUtil.isOptChainNode(n), n);
     if (n.isOptionalChainStart()) {
       return n;
     }
-    return getStartOfOptChainSegment(n.getFirstChild());
+    return getStartOfOptChain(n.getFirstChild());
   }
 
   /**
-   * Find the end of an optional chain segment.
-   *
-   * <p>Each `?.` ends one segment and starts another.
+   * Find the end of the optional chain.
    *
    * <p>Examples
    *
    * <pre>
-   *   a?.b.c.d   // end is the node with children `a?.b.c` and `d`
-   *   a?.b.c?.d  // given a?.b end is the node with children `a?.b` and `c`
-   *   a?.b.c?.d  // given a?.b.c end is the node with children `a?.b.c` and `d`
-   *   (a?.b.c).d // given a?.b end is the node with children `a?.b` and `c`
+   *   a?.b.c.d   // end is b.c
+   *   a?.b.c?.d  // given a?.b end is b.c
+   *   (a?.b.c).d // given a?.b end is b.c
    * </pre>
    *
    * @param n A node in an optional chain
    * @return The end of the optional chain that `n` is part of.
    */
-  static Node getEndOfOptChainSegment(Node n) {
+  static Node getEndOfOptChain(Node n) {
     checkState(NodeUtil.isOptChainNode(n), n);
-    if (isEndOfOptChainSegment(n)) {
+    if (isEndOfOptChain(n)) {
       return n;
     } else {
-      return getEndOfOptChainSegment(n.getParent());
+      return getEndOfOptChain(n.getParent());
     }
   }
 
-  /**
-   * Is this node the final node of a full optional chain?
-   *
-   * <p>e.g. for `a?.b.c?.d` this method returns true only for the Node with children `a?.b.c` and
-   * `d`. That node is the end of the whole chain, and also represents the whole chain in the AST.
-   */
-  static boolean isEndOfFullOptChain(Node n) {
+  static boolean isEndOfOptChain(Node n) {
     if (NodeUtil.isOptChainNode(n)) {
       Node parent = n.getParent();
-      // the chain continues if this is the first child of another optional chain node
-      return !(NodeUtil.isOptChainNode(parent) && n.isFirstChildOf(parent));
+      return parent == null
+          || !NodeUtil.isOptChainNode(parent)
+          || parent.isOptionalChainStart()
+          // if an optional chain node `n` is also a call's arg or an index into a GETELEM, it will
+          // be the end of its chain
+          // e.g. In `a?.(x?.y.z)`or `a?.[x?.y.z]`, the `x?.y.z` is the end node
+          || !n.isFirstChildOf(parent);
     } else {
-      // not even an optional chain node
       return false;
-    }
-  }
-
-  /**
-   * Is this node the end of an optional chain segment?
-   *
-   * <p>Each `?.` begins a new segment and ends the previous one, if any. The end of the whole chain
-   * is also the end of its final segment.
-   */
-  static boolean isEndOfOptChainSegment(Node n) {
-    if (!NodeUtil.isOptChainNode(n)) {
-      return false;
-    } else {
-      Node parent = n.getParent();
-      // Check for null so this method will work for a disconnected Node.
-      if (parent != null && n.isFirstChildOf(parent) && NodeUtil.isOptChainNode(parent)) {
-        // The parent is a continuation of this optional chain.
-        // If it starts a new segment, then this node is the end of a segment
-        return parent.isOptionalChainStart();
-      } else {
-        // The parent doesn't continue this node's optional chain, though it might be part of a
-        // different one.
-        // e.g. in `a?.(x?.y.z)` the parent of `x?.y.z` is part of a different optional chain.
-        return true;
-      }
     }
   }
 
