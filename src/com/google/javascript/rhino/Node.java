@@ -2776,7 +2776,9 @@ public class Node implements Serializable {
    * {@link Token#OPTCHAIN_GETELEM}, {@link Token#OPTCHAIN_GETPROP}, {@link Token#OPTCHAIN_CALL}
    */
   public final void setIsOptionalChainStart(boolean isOptionalChainStart) {
-    checkState(isOptChainGetElem() || isOptChainGetProp() || isOptChainCall());
+    checkState(
+        !isOptionalChainStart || isOptChainGetElem() || isOptChainGetProp() || isOptChainCall(),
+        "cannot make a non-optional node the start of an optional chain.");
     putBooleanProp(Prop.START_OF_OPT_CHAIN, isOptionalChainStart);
   }
 

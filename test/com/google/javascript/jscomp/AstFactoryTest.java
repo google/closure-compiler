@@ -1317,6 +1317,18 @@ public class AstFactoryTest {
   }
 
   @Test
+  public void testCreateEq() {
+    AstFactory astFactory = createTestAstFactory();
+
+    Node left = IR.string("left");
+    Node right = IR.number(0);
+
+    Node sheq = astFactory.createEq(left, right);
+    assertNode(sheq).hasToken(Token.EQ);
+    assertType(sheq.getJSType()).isEqualTo(getNativeType(JSTypeNative.BOOLEAN_TYPE));
+  }
+
+  @Test
   public void testCreateHook() {
     AstFactory astFactory = createTestAstFactory();
     JSType stringType = getNativeType(JSTypeNative.STRING_TYPE);
