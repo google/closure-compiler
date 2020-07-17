@@ -298,9 +298,20 @@ class LiveVariablesAnalysis
       case AND:
       case OR:
       case COALESCE:
+      case OPTCHAIN_GETELEM:
+      case OPTCHAIN_GETPROP:
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // May short circuit.
         computeGenKill(n.getLastChild(), gen, kill, true);
+        return;
+
+      case OPTCHAIN_CALL:
+        computeGenKill(n.getFirstChild(), gen, kill, conditional);
+        // Unlike OPTCHAIN_GETPROP and OPTCHAIN_GETELEM, the OPTCHAIN_CALLs can have multiple
+        // children on rhs which get executed conditionally
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          computeGenKill(c, gen, kill, true);
+        }
         return;
 
       case HOOK:
