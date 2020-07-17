@@ -138,6 +138,10 @@ public final class LiveVariablesAnalysisTest {
   public void optionalChainingCall() {
     // conditionally accessing var keeps it live
     assertLiveBeforeX("var a,b; X:if(b?.(a)){}", "a");
+
+    // unconditionally overwriting a var kills it
+    assertNotLiveAfterX("var a,b; X:a(); if((a=b)?.b()){} a()", "a");
+
     // conditionally overwriting var does not kill it
     assertLiveBeforeX("var a,b; X:if(b?.(a=c)){} a();", "a");
 
@@ -152,6 +156,10 @@ public final class LiveVariablesAnalysisTest {
   public void optionalChainingGetElem() {
     // conditionally accessing var keeps it live
     assertLiveBeforeX("var a,b; X:if(b?.[a]) {}", "a");
+
+    // unconditionally overwriting a var kills it
+    assertNotLiveAfterX("var a,b; X:a(); if((a=b)?.[b]){} a()", "a");
+
     // conditionally overwriting var does not kill it
     assertLiveBeforeX("var a,b; X:if(b?.[a=c]) {} a();", "a");
 

@@ -309,7 +309,7 @@ class LiveVariablesAnalysis
         computeGenKill(n.getFirstChild(), gen, kill, conditional);
         // Unlike OPTCHAIN_GETPROP and OPTCHAIN_GETELEM, the OPTCHAIN_CALLs can have multiple
         // children on rhs which get executed conditionally
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
           computeGenKill(c, gen, kill, true);
         }
         return;
