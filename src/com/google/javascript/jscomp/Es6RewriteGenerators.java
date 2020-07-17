@@ -191,7 +191,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
       }
       if (decomposer.canExposeExpression(n)
           != ExpressionDecomposer.DecompositionType.UNDECOMPOSABLE) {
-        decomposer.exposeExpression(n);
+        decomposer.maybeExposeExpression(n);
       } else {
         String link =
             "https://github.com/google/closure-compiler/wiki/FAQ"
