@@ -41,6 +41,8 @@ import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {@link ExpressionDecomposer}
+ *
+ * @author johnlenz@google.com (John Lenz)
  */
 // Note: functions "foo" and "goo" are external functions in the helper.
 @RunWith(JUnit4.class)
@@ -626,42 +628,6 @@ public final class ExpressionDecomposerTest {
         "goo() && foo()",
         "foo",
         "if (goo()) foo();");
-  }
-
-  @Test
-  public void testExposeDoubleAndExpression() {
-    helperExposeExpression(
-        "a = boo() && goo() && foo()",
-        "foo",
-        lines(
-            "var temp$jscomp$0;",
-            "if (temp$jscomp$0 = boo() && goo()) {",
-            "  temp$jscomp$0 = foo();",
-            "}",
-            "a = temp$jscomp$0;",
-            ""));
-  }
-
-  @Test
-  public void testExposeDoubleHookExpression() {
-    helperExposeExpression(
-        "a = boo() ? void 0 : goo() ? void 0 : foo()",
-        "foo",
-        lines(
-            "var temp$jscomp$0;",
-            "if (boo()) {",
-            "  temp$jscomp$0 = void 0;",
-            "} else {",
-            "  var temp$jscomp$1;",
-            "  if (goo()) {",
-            "  temp$jscomp$1 = void 0;",
-            "  } else {",
-            "  temp$jscomp$1 = foo();",
-            "  }",
-            "  temp$jscomp$0 = temp$jscomp$1;",
-            "}",
-            "a = temp$jscomp$0;",
-            ""));
   }
 
   @Test
