@@ -75,7 +75,7 @@ public final class RewriteNullishCoalesceOperator
     Node left = n.removeFirstChild();
     Node right = n.getLastChild().detach();
 
-    Node let = astFactory.declareSingleLet(tempVarName, left.getJSType());
+    Node let = astFactory.createSingleLetNameDeclaration(tempVarName);
     Node assignName = astFactory.createName(tempVarName, left.getJSType());
     Node assign = astFactory.createAssign(assignName, left);
     Node ne = astFactory.createNe(assign, astFactory.createNull());

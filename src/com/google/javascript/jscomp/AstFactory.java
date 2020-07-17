@@ -362,12 +362,12 @@ final class AstFactory {
   }
 
   /**
-   * Creates a new `let` declaration with a type but no value.
+   * Creates a new `let` declaration for a single variable name with a void type and no JSDoc.
    *
    * <p>e.g. `let variableName`
    */
-  Node declareSingleLet(String variableName, JSType type) {
-    return IR.let(createName(variableName, type));
+  Node createSingleLetNameDeclaration(String variableName) {
+    return IR.let(createName(variableName, JSTypeNative.VOID_TYPE));
   }
 
   /**
