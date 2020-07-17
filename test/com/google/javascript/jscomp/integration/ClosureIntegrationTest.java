@@ -14,25 +14,35 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+import static com.google.javascript.jscomp.DiagnosticGroups.CHECK_TYPES;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.ClosureCodingConvention;
+import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
-import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
-import com.google.javascript.jscomp.testing.IntegrationTestCase;
+import com.google.javascript.jscomp.DependencyOptions;
+import com.google.javascript.jscomp.DiagnosticGroup;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.GenerateExports;
+import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.ModuleIdentifier;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.Token;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -148,13 +158,11 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     test(
         options,
-        LINE_JOINER.join(
-            CLOSURE_BOILERPLATE,
+        lines(
+            CLOSURE_BOILERPLATE, //
             "goog.provide('FOO.BAR');",
             "FOO.BAR = 3;"),
-        LINE_JOINER.join(
-            CLOSURE_COMPILED,
-            "var FOO$BAR = 3;"));
+        lines(CLOSURE_COMPILED, "var FOO$BAR = 3;"));
   }
 
   /**
@@ -162,37 +170,38 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
    * without collapsed properties.
    */
   @Test
-  public void testBug22684459() {
+  public void testBug22684459_invalidConstFromParamCompatibleWithPropertyCollapsing() {
     String source =
-        ""
-            + "var goog = {};"
-            + "goog.string = {};"
-            + "goog.string.Const = {};"
-            + "goog.string.Const.from = function(x) {};"
-            + "var x = window.document.location;"
-            + "goog.string.Const.from(x);";
+        lines(
+            "var goog = {};",
+            "goog.string = {};",
+            "goog.string.Const = {};",
+            "goog.string.Const.from = function(x) {};",
+            "var x = window.document.location;",
+            "goog.string.Const.from(x);");
 
     // Without collapsed properties.
     CompilerOptions options = createCompilerOptions();
-    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
 
     // With collapsed properties.
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
   }
 
   @Test
-  public void testBug31301233() {
-    String source = LINE_JOINER.join(
-        "function Foo() {",
-        "  var x = window.document.location;",
-        "  goog.string.Const.from(x);",
-        "};");
+  public void testBug31301233_invalidConstFromParamFiresForUnusedLocal() {
+    String source =
+        lines(
+            "function Foo() {",
+            "  var x = window.document.location;",
+            "  goog.string.Const.from(x);",
+            "};");
 
     CompilerOptions options = createCompilerOptions();
     options.setSmartNameRemoval(true);
     options.setExtraSmartNameRemoval(true);
-    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
   }
 
   @Test
@@ -219,30 +228,30 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
-    test(options,
-        "var goog = {};" +
-        "goog.inherits = function(a,b) {};" +
-        "goog.defineClass = function(a,b) {};" +
-
-         "/** @template T */\n" +
-         "var ClassA = goog.defineClass(null, {\n" +
-         "  constructor: function() {},\n" +
-         "" +
-         "  /** @param {T} x */\n" +
-         "  fn: function(x) {}\n" +
-         "});\n" +
-         "" +
-         "/** @extends {ClassA.<string>} */\n" +
-         "var ClassB = goog.defineClass(ClassA, {\n" +
-         "  constructor: function() {},\n" +
-         "" +
-         "  /** @override */\n" +
-         "  fn: function(x) {}\n" +
-         "});\n" +
-         "" +
-         "(new ClassB).fn(3);\n" +
-         "",
-         TypeValidator.TYPE_MISMATCH_WARNING);
+    test(
+        options,
+        "var goog = {};"
+            + "goog.inherits = function(a,b) {};"
+            + "goog.defineClass = function(a,b) {};"
+            + "/** @template T */\n"
+            + "var ClassA = goog.defineClass(null, {\n"
+            + "  constructor: function() {},\n"
+            + ""
+            + "  /** @param {T} x */\n"
+            + "  fn: function(x) {}\n"
+            + "});\n"
+            + ""
+            + "/** @extends {ClassA.<string>} */\n"
+            + "var ClassB = goog.defineClass(ClassA, {\n"
+            + "  constructor: function() {},\n"
+            + ""
+            + "  /** @override */\n"
+            + "  fn: function(x) {}\n"
+            + "});\n"
+            + ""
+            + "(new ClassB).fn(3);\n"
+            + "",
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -252,8 +261,8 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
     DiagnosticGroup[] warnings = {
-      DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_TYPE),
-      DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE),
+      DiagnosticGroups.INVALID_DEFINES,
+      DiagnosticGroups.INVALID_DEFINES,
       DiagnosticGroups.CHECK_TYPES
     };
     String[] input = {
@@ -283,11 +292,11 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     // Without collapsed properties.
     CompilerOptions options = createCompilerOptions();
-    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
 
     // With collapsed properties.
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
-    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+    test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
   }
 
   @Test
@@ -368,7 +377,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         },
         // Just making sure that typechecking ran and didn't crash.  It would be reasonable
         // for there also to be other type errors in this code before the final null assignment.
-        TYPE_MISMATCH_WARNING);
+        CHECK_TYPES);
   }
 
   @Test
@@ -427,10 +436,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             ImmutableList.of(ModuleIdentifier.forClosure("a.C"))));
 
     Compiler compiler = new Compiler();
-    compiler.init(ImmutableList.of(extern), ImmutableList.of(entryPoint, aa, ab), options);
-    compiler.parse();
-    compiler.check();
-    compiler.performOptimizations();
+    compiler.compile(ImmutableList.of(extern), ImmutableList.of(entryPoint, aa, ab), options);
 
     assertThat(compiler.toSource())
         .isEqualTo(
@@ -453,12 +459,12 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     compile(
         options,
         new String[] {
-          LINE_JOINER.join(
+          lines(
               "var goog = {};",
               "goog.forwardDeclare = function(/** string */ t) {};",
               "goog.module = function(/** string */ t) {};"),
           "goog.module('fwd.declared.Type'); exports = class {}",
-          LINE_JOINER.join(
+          lines(
               "goog.module('a.b.c');",
               "const Type = goog.forwardDeclare('fwd.declared.Type');",
               "",
@@ -476,7 +482,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "goog.forwardDeclare = function(/** string */ typeName) {};",
             "goog.forwardDeclare('fwd.declared.Type');",
@@ -509,7 +515,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         "var goog = {}; goog.require = function(x) {}; goog.require('foo');",
-        ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE);
+        DiagnosticGroups.MISSING_SOURCES_WARNINGS);
     test(
         options,
         "/** @define {boolean} */ var COMPILED = false;" +
@@ -526,13 +532,13 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "goog.provide('foo.Bar.Type');",
             "goog.provide('foo.Bar');",
             "/** @typedef {number} */ foo.Bar.Type;",
             "foo.Bar = function() {};"),
-        LINE_JOINER.join(
-            "var foo = {};",
+        lines(
+            "var foo = {};", //
             "foo.Bar.Type;",
             "foo.Bar = function() {};"));
   }
@@ -544,13 +550,13 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             "goog.provide('foo.Bar.Type');",
             "goog.provide('foo.Bar');",
             "/** @typedef {number} */ foo.Bar.Type;",
             "foo.Bar = function() {};"),
-        LINE_JOINER.join(
-            "var foo$Bar$Type;",
+        lines(
+            "var foo$Bar$Type;", //
             "var foo$Bar = function() {};"));
   }
 
@@ -587,7 +593,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {"goog.require('x'); /** @constructor */ function Foo() {}", "new Foo();"},
-        CheckProvides.MISSING_PROVIDE_WARNING);
+        DiagnosticGroups.MISSING_PROVIDE);
   }
 
   @Test
@@ -662,12 +668,12 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        LINE_JOINER.join(
+        lines(
             CLOSURE_BOILERPLATE,
             "goog.provide('Foo');",
             "/** @constructor */ Foo = function() {};",
             "var x = new Foo();"),
-        LINE_JOINER.join(
+        lines(
             "var COMPILED=true;",
             "var goog = {};",
             "goog.exportSymbol=function() {};",
@@ -686,14 +692,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     test(
         options,
-        LINE_JOINER.join(
-            "var goog = {};",
-            "goog.provide('foo');",
-            "function f() { foo = {};}"),
-        LINE_JOINER.join(
-            "var foo = {};",
-            "function f() { foo = {}; }"),
-        ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+        lines("var goog = {};", "goog.provide('foo');", "function f() { foo = {};}"),
+        lines("var foo = {};", "function f() { foo = {}; }"),
+        DiagnosticGroups.CONST);
   }
 
   @Test
@@ -759,9 +760,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
-    test(options,
+    test(
+        options,
         "goog.require('x'); /** @constructor */ function f() { var arguments; }",
-        CheckProvides.MISSING_PROVIDE_WARNING);
+        DiagnosticGroups.MISSING_SOURCES_WARNINGS);
   }
 
   @Test
@@ -784,7 +786,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {"goog.require('goog.beer');", "goog.provide('goog.beer');"},
-        CheckClosureImports.LATE_PROVIDE_ERROR);
+        DiagnosticGroups.LATE_PROVIDE);
   }
 
   @Test
@@ -798,15 +800,15 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     test(
         options,
-        LINE_JOINER.join(
-            "goog.module('example');",
+        lines(
+            "goog.module('example');", //
             "",
             "class Foo {}",
             "exports = {",
             "  Foo,",
             "  Foo,",
             "};"),
-        StrictModeCheck.DUPLICATE_OBJECT_KEY);
+        DiagnosticGroups.ES5_STRICT);
   }
 
   @Test
@@ -939,14 +941,24 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     // Test in a regular script
     test(
         options,
-        new String[] {"goog.module('a.b');", "goog.module.get('a.b');"},
-        ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE);
+        new String[] {
+          // input 0
+          "goog.module('a.b');",
+          // input 1
+          "goog.module.get('a.b');"
+        },
+        DiagnosticGroups.CLOSURE_DEP_METHOD_USAGE_CHECKS);
 
     // Test in a file with a goog.provide
     test(
         options,
-        new String[] {"goog.module('a.b');", "goog.provide('c'); goog.module.get('a.b');"},
-        ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE);
+        new String[] {
+          // input 0
+          "goog.module('a.b');",
+          // input 1
+          "goog.provide('c'); goog.module.get('a.b');"
+        },
+        DiagnosticGroups.CLOSURE_DEP_METHOD_USAGE_CHECKS);
   }
 
   @GwtIncompatible // b/63595345
@@ -1039,14 +1051,14 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
         options,
         new String[] {
           "/** @typeSummary */ goog.provide('foo.bar'); /** @type {!Array<number>} */ foo.bar;",
-          LINE_JOINER.join(
+          lines(
               "goog.provide('foo.baz');",
               "",
               "/** @return {number} */",
               "foo.baz = function() { return foo.bar[0]; }"),
         },
         new String[] {
-            "/** @return {number} */ foo.baz = function() { return foo.bar[0]; }",
+          "/** @return {number} */ foo.baz = function() { return foo.bar[0]; }",
         });
   }
 
@@ -1059,16 +1071,16 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         new String[] {
-            LINE_JOINER.join(
-                "/** @typeSummary */",
-                "/** @constructor @template T */ function Bar() {}",
-                "/** @const {!Bar<!ns.Foo>} */ var B;",
-                ""),
-            LINE_JOINER.join(
-                "goog.module('ns');",
-                "",
-                "exports.Foo = class {}",
-                ""),
+          lines(
+              "/** @typeSummary */",
+              "/** @constructor @template T */ function Bar() {}",
+              "/** @const {!Bar<!ns.Foo>} */ var B;",
+              ""),
+          lines(
+              "goog.module('ns');", //
+              "",
+              "exports.Foo = class {}",
+              ""),
         },
         (String[]) null);
   }
@@ -1138,7 +1150,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             "module$contents$a_Bar.prototype.foo = ",
             "    function() { module$contents$a_Foo.method(); }"));
 
-    Node script = lastCompiler.getJsRoot().getFirstChild();
+    Node script = lastCompiler.getRoot().getSecondChild().getFirstChild();
 
     Node exprResult = script.getLastChild();
     Node anonFunction = exprResult.getFirstChild().getLastChild();
@@ -1168,7 +1180,7 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             "var ns = {};",
             // generally it's not allowed to access undefined namespaces
             "ns.subns.foo = function() {};"),
-        CheckGlobalNames.UNDEFINED_NAME_WARNING);
+        DiagnosticGroups.UNDEFINED_NAMES);
 
     testSame(
         options,
@@ -1323,9 +1335,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
             "goog.module('m');", //
             "var x;",
             "goog.module.declareLegacyNamespace();"),
-        ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
+        DiagnosticGroups.MALFORMED_GOOG_MODULE);
 
-    test(options, "var x; goog.module('m');", ClosureCheckModule.GOOG_MODULE_MISPLACED);
+    test(options, "var x; goog.module('m');", DiagnosticGroups.MALFORMED_GOOG_MODULE);
   }
 
   @Test
@@ -1341,23 +1353,16 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
                     "closure_externs.js", new TestExternsBuilder().addClosureExterns().build()))
             .build();
 
-    ImmutableMap<String, ModuleType> namespaces =
-        ImmutableMap.of(
-            "goog.provide('a.b.c');", ModuleType.GOOG_PROVIDE,
-            "goog.module('a.b.c');", ModuleType.GOOG_MODULE,
-            "goog.declareModuleId('a.b.c'); export {};", ModuleType.ES6_MODULE,
-            "goog.module('a.b.c'); goog.module.declareLegacyNamespace();",
-                ModuleType.LEGACY_GOOG_MODULE);
+    ImmutableList<String> namespaces =
+        ImmutableList.of(
+            "goog.provide('a.b.c');",
+            "goog.module('a.b.c');",
+            "goog.declareModuleId('a.b.c'); export {};",
+            "goog.module('a.b.c'); goog.module.declareLegacyNamespace();");
 
-    for (Map.Entry<String, ModuleType> firstNs : namespaces.entrySet()) {
-      for (Map.Entry<String, ModuleType> secondNs : namespaces.entrySet()) {
-        // Error is based on whether the namespace originally came from a module or a provide.
-        DiagnosticType expectedError =
-            firstNs.getValue().equals(ModuleType.GOOG_PROVIDE)
-                ? ClosurePrimitiveErrors.DUPLICATE_NAMESPACE
-                : ClosurePrimitiveErrors.DUPLICATE_MODULE;
-
-        test(options, new String[] {firstNs.getKey(), secondNs.getKey()}, expectedError);
+    for (String firstNs : namespaces) {
+      for (String secondNs : namespaces) {
+        test(options, new String[] {firstNs, secondNs}, DiagnosticGroups.DUPLICATE_NAMESPACES);
       }
     }
   }
@@ -1371,6 +1376,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         "/** @export */ function Foo() { alert('hi'); }",
-        GenerateExports.MISSING_GOOG_FOR_EXPORT);
+        DiagnosticGroup.forType(GenerateExports.MISSING_GOOG_FOR_EXPORT));
   }
 }

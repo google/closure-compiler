@@ -29,7 +29,7 @@ import java.io.Serializable;
  *
  * <p>For example there are could be several implementations: StrictGuard - {return ERROR}. All
  * warnings should be treat as errors. SilentGuard - {if (WARNING) return OFF}. Suppress all
- * warnings but still fail if JS has errors. WhitelistGuard (if !whitelistErrors.contains(error)
+ * warnings but still fail if JS has errors. AllowlistGuard (if !allowlistErrors.contains(error)
  * return ERROR) return error if it does not present in the allowlist.
  */
 public abstract class WarningsGuard implements Serializable {

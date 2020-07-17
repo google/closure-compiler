@@ -269,6 +269,17 @@ public abstract class JSType implements Serializable {
         || isSubtypeOf(getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE));
   }
 
+  public final boolean isBigIntOrNumber() {
+    // NOTE: This method will return false for unions that mix the primitive and object types, e.g.
+    // (bigint|BigInt). This is technically wrong, but is being done on purpose because 1) it
+    // maintains consistency with previously existing methods such as isNumber() above, 2) The
+    // object versions of numeric types are very rare in practice and shouldn't be used in general,
+    // and 3) a value that could be either the primitive or the object type seems likely to be the
+    // result of a coding error.
+    return isSubtypeOf(getNativeType(JSTypeNative.BIGINT_NUMBER))
+        || isSubtypeOf(getNativeType(JSTypeNative.BIGINT_NUMBER_OBJECT));
+  }
+
   /** Checks whether the type is a bigint and *only* a bigint (value or Object). */
   public final boolean isOnlyBigInt() {
     return isBigIntValueType() || isBigIntObjectType();
@@ -1687,13 +1698,4 @@ public abstract class JSType implements Serializable {
      */
     IMPLICIT,
   }
-
-  /**
-   * Returns a JSType representation of this type suitable for running optimizations.
-   * This may have certain features that are only useful at check-time omitted.
-   */
-  JSType simplifyForOptimizations() {
-    return this;
-  }
-
 }

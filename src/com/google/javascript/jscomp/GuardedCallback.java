@@ -317,7 +317,6 @@ abstract class GuardedCallback<T> implements Callback {
           return first ? link(parent, true) : this;
         case OR:
         case COALESCE:
-          // throw new RuntimeException("beeeeep");
           // `Promise || whatever` and `Promise ?? whatever`
           // may return Promise (unsafe), but is itself a conditional.
           // `whatever || Promise` and `whatever ?? Promise`
@@ -351,6 +350,20 @@ abstract class GuardedCallback<T> implements Callback {
         case ROOT:
           // This case causes problems for isStatement() so handle it separately.
           return EMPTY;
+        case OPTCHAIN_CALL:
+        case OPTCHAIN_GETELEM:
+        case OPTCHAIN_GETPROP:
+          if (first) {
+            // thisNode?.rest.of.chain
+            // OR firstChild?.thisNode.rest.of.chain
+            // For the first case `thisNode` should be considered intrinsically guarded.
+            return link(parent, parent.isOptionalChainStart());
+          } else {
+            // `first?.(thisNode)`
+            // or `first?.[thisNode]`
+            // or `first?.thisNode`
+            return propagate(false);
+          }
         default:
           // Expressions propagate linked conditionals; statements do not.
           return NodeUtil.isStatement(parent) ? EMPTY : propagate(false);
@@ -380,5 +393,14 @@ abstract class GuardedCallback<T> implements Callback {
   // any other type of node).
   private static final ImmutableSet<Token> CAN_HAVE_GUARDS =
       Sets.immutableEnumSet(
-          Token.AND, Token.OR, Token.COALESCE, Token.HOOK, Token.IF, Token.BLOCK, Token.SCRIPT);
+          Token.AND,
+          Token.OR,
+          Token.COALESCE,
+          Token.HOOK,
+          Token.IF,
+          Token.BLOCK,
+          Token.SCRIPT,
+          Token.OPTCHAIN_CALL,
+          Token.OPTCHAIN_GETELEM,
+          Token.OPTCHAIN_GETPROP);
 }

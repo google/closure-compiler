@@ -11,3 +11,4 @@ target/
 /bin
 /yarn.lock
 /node_modules
+/.metadata/

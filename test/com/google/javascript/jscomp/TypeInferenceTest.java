@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -1283,7 +1284,7 @@ public final class TypeInferenceTest {
     assuming("y", BIGINT_OBJECT_TYPE);
     assuming("u", UNKNOWN_TYPE);
     assuming("a", ALL_TYPE);
-    assuming("z1", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    assuming("z1", BIGINT_NUMBER);
     // testing for a union between bigint and anything but number
     assuming("z2", createUnionType(BIGINT_TYPE, STRING_TYPE));
 
@@ -1295,8 +1296,8 @@ public final class TypeInferenceTest {
     verify("objectType", BIGINT_TYPE);
     verify("unknownType", NUMBER_TYPE);
     verify("allType", NUMBER_TYPE);
-    verify("bigintOrNumber", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
-    verify("bigintOrOther", createUnionType(BIGINT_TYPE, NUMBER_TYPE));
+    verify("bigintOrNumber", BIGINT_NUMBER);
+    verify("bigintOrOther", BIGINT_NUMBER);
   }
 
   @Test
@@ -1475,6 +1476,69 @@ public final class TypeInferenceTest {
 
     verify("bigintOnly", BOOLEAN_TYPE);
     verify("bigintAndOther", BOOLEAN_TYPE);
+  }
+
+  @Test
+  public void testLogicalBinaryOperatorsWithBigInt() {
+    assuming("b", BIGINT_TYPE);
+    assuming("B", BIGINT_OBJECT_TYPE);
+    assuming("n", NUMBER_TYPE);
+    assuming("bn", BIGINT_NUMBER);
+    assuming("s", STRING_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("ns", NUMBER_STRING);
+
+    inFunction(
+        lines(
+            "valueTypeWithSelf = b && b;",
+            "objectTypeWithSelf = B && B;",
+            "valueWithObject = b && B;",
+            "bigintWithNumber = b && n;",
+            "bigintNumberWithSelf = bn && bn;",
+            "bigintWithOther = b && s;",
+            "bigintWithUnknown = b && u;",
+            "bigintWithNumberString = b && ns;"));
+
+    verify("valueTypeWithSelf", BIGINT_TYPE);
+    verify("objectTypeWithSelf", BIGINT_OBJECT_TYPE);
+    verify("valueWithObject", createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE));
+    verify("bigintWithNumber", BIGINT_NUMBER);
+    verify("bigintNumberWithSelf", BIGINT_NUMBER);
+    verify("bigintWithOther", createUnionType(BIGINT_TYPE, STRING_TYPE));
+    verify("bigintWithUnknown", createUnionType(BIGINT_TYPE, UNKNOWN_TYPE));
+    verify("bigintWithNumberString", BIGINT_NUMBER_STRING);
+  }
+
+  @Test
+  public void testTernaryOperatorWithBigInt() {
+    assuming("b", BIGINT_TYPE);
+    assuming("B", BIGINT_OBJECT_TYPE);
+    assuming("n", NUMBER_TYPE);
+    assuming("bn", BIGINT_NUMBER);
+    assuming("s", STRING_TYPE);
+    assuming("u", UNKNOWN_TYPE);
+    assuming("v", VOID_TYPE);
+    assuming("ns", NUMBER_STRING);
+
+    inFunction(
+        lines(
+            "valueTypeWithSelf = v ? b : b;",
+            "objectTypeWithSelf = v ? B : B;",
+            "valueWithObject = v ? b : B;",
+            "bigintWithNumber = v ? b : n;",
+            "bigintNumberWithSelf = v ? bn : bn;",
+            "bigintWithOther = v ? b : s;",
+            "bigintWithUnknown = v ? b : u;",
+            "bigintWithNumberString = v ? b : ns;"));
+
+    verify("valueTypeWithSelf", BIGINT_TYPE);
+    verify("objectTypeWithSelf", BIGINT_OBJECT_TYPE);
+    verify("valueWithObject", createUnionType(BIGINT_TYPE, BIGINT_OBJECT_TYPE));
+    verify("bigintWithNumber", BIGINT_NUMBER);
+    verify("bigintNumberWithSelf", BIGINT_NUMBER);
+    verify("bigintWithOther", createUnionType(BIGINT_TYPE, STRING_TYPE));
+    verify("bigintWithUnknown", createUnionType(BIGINT_TYPE, UNKNOWN_TYPE));
+    verify("bigintWithNumberString", BIGINT_NUMBER_STRING);
   }
 
   @Test

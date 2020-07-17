@@ -389,7 +389,7 @@ public class CodeGenerator {
 
       case HOOK:
         {
-          checkState(childCount == 3, node);
+          checkState(childCount == 3, "%s wrong number of children: %s", node, childCount);
           int p = NodeUtil.precedence(type);
           Context rhsContext = getContextForNoInOperator(context);
           addExpr(first, p + 1, context);

@@ -44,7 +44,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-
 /**
  * Symbol type.
  * @author johnlenz@google.com (John Lenz)

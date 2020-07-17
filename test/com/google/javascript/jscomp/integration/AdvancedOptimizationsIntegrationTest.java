@@ -36,14 +36,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.Es6ToEs3Util;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.TypeCheck;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
-import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -418,7 +415,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         options,
         new String[] {lines("var x = 1;"), lines("import * as y from './i0.js';", "const z = y.x")},
         // Property x never defined on module$i0
-        TypeCheck.INEXISTENT_PROPERTY);
+        DiagnosticGroups.MISSING_PROPERTIES);
   }
 
   @Test
@@ -1852,7 +1849,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
 
-    test(options, "import.meta", Es6ToEs3Util.CANNOT_CONVERT);
+    test(options, "import.meta", DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
   }
 
   @Test

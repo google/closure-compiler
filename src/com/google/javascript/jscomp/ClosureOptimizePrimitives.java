@@ -71,7 +71,6 @@ final class ClosureOptimizePrimitives implements CompilerPass {
           processObjectCreateSetCall(n);
         }
       }
-      maybeProcessDomTagName(n);
     }
   }
 
@@ -241,31 +240,5 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       // Not ES6, all keys must be strings or numbers.
       return curParam.isString() || curParam.isNumber();
     }
-  }
-
-  /**
-   * Converts the given node to string if it is safe to do so.
-   */
-  private void maybeProcessDomTagName(Node n) {
-    if (NodeUtil.isLValue(n)) {
-      return;
-    }
-    String prefix = "goog$dom$TagName$";
-    String tagName;
-    if (n.isName() && n.getString().startsWith(prefix)) {
-      tagName = n.getString().substring(prefix.length());
-    } else if (n.isGetProp() && !n.getParent().isGetProp()
-        && n.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
-      tagName =
-          n.getSecondChild()
-              .getString()
-              .replaceFirst("JSC\\$[0-9]+_", "") // Added by DisambiguateProperties2.
-              .replaceFirst(".*\\$", ""); // Added by DisambiguateProperties.
-    } else {
-      return;
-    }
-    Node stringNode = IR.string(tagName).srcref(n);
-    n.replaceWith(stringNode);
-    compiler.reportChangeToEnclosingScope(stringNode);
   }
 }

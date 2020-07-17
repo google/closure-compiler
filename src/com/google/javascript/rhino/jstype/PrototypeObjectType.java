@@ -522,5 +522,4 @@ public class PrototypeObjectType extends ObjectType {
       return System.identityHashCode(this);
     }
   }
-
 }

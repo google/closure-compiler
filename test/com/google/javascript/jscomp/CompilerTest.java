@@ -110,7 +110,9 @@ public final class CompilerTest {
         SourceFile.fromCode(
             "mix", "goog.require('gin'); goog.require('tonic');"));
     CompilerOptions options = new CompilerOptions();
-    options.setIdeMode(true);
+    options.setChecksOnly(true);
+    options.setContinueAfterErrors(true);
+    options.setAllowHotswapReplaceScript(true);
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of()));
     Compiler compiler = new Compiler();
     compiler.init(ImmutableList.<SourceFile>of(), inputs, options);
@@ -1126,10 +1128,10 @@ public final class CompilerTest {
   }
 
   @Test
-  public void testIdeModeSkipsOptimizations() {
+  public void testChecksOnlyModeSkipsOptimizations() {
     Compiler compiler = new Compiler();
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setIdeMode(true);
+    options.setChecksOnly(true);
 
     final boolean[] before = new boolean[1];
     final boolean[] after = new boolean[1];

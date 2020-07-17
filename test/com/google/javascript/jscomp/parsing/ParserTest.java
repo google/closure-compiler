@@ -5334,6 +5334,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void optionalChainingGetPropWithKeyword() {
+    mode = LanguageMode.UNSUPPORTED;
+    Node n = parse("a?.finally").getFirstFirstChild();
+
+    assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(n).isOptionalChainStart();
+    assertNode(n).hasLineno(1);
+    assertNode(n).hasCharno(1);
+    assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
+    assertNode(n.getSecondChild()).isEqualTo(IR.string("finally"));
+  }
+
+  @Test
   public void optionalChainingGetElem() {
     mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.[1]").getFirstFirstChild();

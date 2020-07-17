@@ -295,7 +295,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private static class ResolvedSourceMap {
     public String originalPath;
     public String sourceMapPath;
-    public SourceFile sourceFile;
+    public String relativePath;
   }
 
   /**
@@ -1469,7 +1469,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void forwardDeclareType(String typeName) {
+  public void forwardDeclareType(String typeName) {
     forwardDeclaredTypes.add(typeName);
   }
 
@@ -2891,15 +2891,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // First check to see if the original file was loaded from an input source map.
     String sourceMapOriginalPath = sourceMap.getOriginalPath();
     String resultOriginalPath = result.getOriginalFile();
-    SourceFile source = null;
+    final String relativePath;
 
     // Resolving the paths to a source file is expensive, so check the cache first.
     if (sourceMapOriginalPath.equals(resolvedSourceMap.originalPath)
         && resultOriginalPath.equals(resolvedSourceMap.sourceMapPath)) {
-      source = resolvedSourceMap.sourceFile;
+      relativePath = resolvedSourceMap.relativePath;
     } else {
-      String relativePath = resolveSibling(sourceMapOriginalPath, resultOriginalPath);
-      source = getSourceFileByName(relativePath);
+      relativePath = resolveSibling(sourceMapOriginalPath, resultOriginalPath);
+      SourceFile source = getSourceFileByName(relativePath);
       if (source == null && !isNullOrEmpty(resultOriginalPath)) {
         source =
             SourceMapResolver.getRelativePath(
@@ -2912,11 +2912,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // Cache this resolved source for the next caller.
       resolvedSourceMap.originalPath = sourceMapOriginalPath;
       resolvedSourceMap.sourceMapPath = resultOriginalPath;
-      resolvedSourceMap.sourceFile = source;
+      resolvedSourceMap.relativePath = relativePath;
     }
 
     return result.toBuilder()
-        .setOriginalFile(source.getOriginalPath())
+        .setOriginalFile(relativePath)
         .setColumnPosition(result.getColumnPosition() - 1)
         .build();
   }

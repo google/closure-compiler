@@ -685,6 +685,15 @@ function describe(description, handler) {}
 
 
 /**
+ * @param {?=} message Reason for the failure. NOTE: the type should
+ *     be (string|!Error=), however closure's goog.testing.asserts.fail is
+ *     aliased as a global and sometimes conflicts, and is typed with an
+ *     unknown parameter type.
+ */
+function fail(message) {}
+
+
+/**
  * @param {string} description
  * @param {function(this:jasmine.Suite)} handler
  */

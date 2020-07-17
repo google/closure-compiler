@@ -858,8 +858,9 @@ public class CommandLineRunner extends
             "Enable code instrumentation to perform code coverage analysis. Options are:\n"
                 + " 1. NONE (deault)\n"
                 + " 2. LINE - Instrument code by line.\n"
-                + " 3. BRANCH - Instrument code by branch.\n")
-    private String instrumentCode = "NONE";
+                + " 3. BRANCH - Instrument code by branch.\n"
+                + " 4. ADVANCED - Function Instrumentation on compiled JS code.\n")
+    private final String instrumentCode = "NONE";
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
@@ -1739,8 +1740,8 @@ public class CommandLineRunner extends
   }
 
   @Override
-  protected void addWhitelistWarningsGuard(CompilerOptions options, File allowlistFile) {
-    options.addWarningsGuard(WhitelistWarningsGuard.fromFile(allowlistFile));
+  protected void addAllowlistWarningsGuard(CompilerOptions options, File allowlistFile) {
+    options.addWarningsGuard(AllowlistWarningsGuard.fromFile(allowlistFile));
   }
 
   @Override

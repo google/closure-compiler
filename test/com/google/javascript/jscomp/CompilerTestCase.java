@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
+import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -207,6 +208,9 @@ public abstract class CompilerTestCase {
 
   /** How to interpret ES6 module imports */
   private ModuleLoader.ResolutionMode moduleResolutionMode;
+
+  /** How to parse JS Documentation. */
+  private JsDocParsing parseJsDocDocumentation;
 
   /**
    * Whether externs changes should be allowed for this pass.
@@ -630,6 +634,7 @@ public abstract class CompilerTestCase {
     // is changing them in the constructor, rather than in their own setUp method.
     this.acceptedLanguage = LanguageMode.ECMASCRIPT_NEXT; // TODO(nickreid): Consider ES_UNSUPPORTED
     this.moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    this.parseJsDocDocumentation = JsDocParsing.TYPES_ONLY;
     this.allowExternsChanges = false;
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
@@ -688,6 +693,7 @@ public abstract class CompilerTestCase {
     options.setEmitUseStrict(false);
     options.setLanguageOut(languageOut);
     options.setModuleResolutionMode(moduleResolutionMode);
+    options.setParseJsDocDocumentation(parseJsDocDocumentation);
     options.setPreserveTypeAnnotations(true);
     options.setAssumeGettersArePure(false); // Default to the complex case.
 
@@ -793,6 +799,11 @@ public abstract class CompilerTestCase {
   protected final void setModuleResolutionMode(ModuleLoader.ResolutionMode moduleResolutionMode) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.moduleResolutionMode = moduleResolutionMode;
+  }
+
+  protected final void setJsDocumentation(JsDocParsing parseJsDocDocumentation) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.parseJsDocDocumentation = parseJsDocDocumentation;
   }
 
   /**

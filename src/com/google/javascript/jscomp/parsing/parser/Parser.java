@@ -3716,18 +3716,19 @@ public class Parser {
               new OptionalMemberLookupExpressionTree(
                   getTreeLocation(start), operand, member, /* isStartOfOptionalChain = */ true);
           break;
-        case IDENTIFIER:
-          IdentifierToken id = eatIdOrKeywordAsId();
-          operand =
-              new OptionalMemberExpressionTree(
-                  getTreeLocation(start), operand, id, /* isStartOfOptionalChain = */ true);
-          break;
         case NO_SUBSTITUTION_TEMPLATE:
         case TEMPLATE_HEAD:
           reportError("template literal cannot be used within optional chaining");
           break;
         default:
-          reportError("syntax error: %s not allowed in optional chain", peekType());
+          if (peekIdOrKeyword()) {
+            IdentifierToken id = eatIdOrKeywordAsId();
+            operand =
+                new OptionalMemberExpressionTree(
+                    getTreeLocation(start), operand, id, /* isStartOfOptionalChain = */ true);
+          } else {
+            reportError("syntax error: %s not allowed in optional chain", peekType());
+          }
       }
       operand = parseOptionalChain(operand);
     }

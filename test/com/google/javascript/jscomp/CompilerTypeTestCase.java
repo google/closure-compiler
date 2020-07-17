@@ -98,7 +98,7 @@ abstract class CompilerTypeTestCase {
 
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
+    options.setLanguageIn(LanguageMode.UNSUPPORTED);
     options.setCodingConvention(getCodingConvention());
 
     options.setWarningLevel(

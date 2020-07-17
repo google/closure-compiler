@@ -73,6 +73,12 @@ URLSearchParams.prototype.delete = function(name) {};
 URLSearchParams.prototype.entries = function() {};
 
 /**
+ * @param {function(string, string)} callback
+ * @return {undefined}
+ */
+URLSearchParams.prototype.forEach = function(callback) {};
+
+/**
  * @param {string} name
  * @return {?string}
  */
@@ -91,6 +97,12 @@ URLSearchParams.prototype.getAll = function(name) {};
 URLSearchParams.prototype.has = function(name) {};
 
 /**
+ * @return {!IteratorIterable<string>}
+ */
+URLSearchParams.prototype.keys = function() {};
+
+
+/**
  * @param {string} name
  * @param {string} value
  * @return {undefined}
@@ -101,6 +113,11 @@ URLSearchParams.prototype.set = function(name, value) {};
  * @return {undefined}
  */
 URLSearchParams.prototype.sort = function() {};
+
+/**
+ * @return {!IteratorIterable<string>}
+ */
+URLSearchParams.prototype.values = function() {};
 
 /**
  * @see https://url.spec.whatwg.org

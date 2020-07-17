@@ -26,8 +26,8 @@ import com.google.javascript.rhino.Node;
 
 /** Creates or updates conformance whitelist entries. */
 @GwtIncompatible("Conformance")
-public class ConformanceWhitelister {
-  private ConformanceWhitelister() {}
+public class ConformanceAllowlister {
+  private ConformanceAllowlister() {}
 
   public static ImmutableSet<String> getViolatingPaths(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {

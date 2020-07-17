@@ -41,6 +41,7 @@ j2cl_library(
             "src/com/google/debugging/**/*.js",
             "src/com/google/javascript/rhino/**/*.java",
             "src/com/google/javascript/jscomp/*.java",
+            "src/com/google/javascript/jscomp/colors/**/*.java",
             "src/com/google/javascript/jscomp/deps/**/*.java",
             "src/com/google/javascript/jscomp/lint/**/*.java",
             "src/com/google/javascript/jscomp/ijs/**/*.java",

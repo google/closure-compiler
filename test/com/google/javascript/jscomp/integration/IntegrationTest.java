@@ -39,21 +39,17 @@ import com.google.javascript.jscomp.CompilerOptionsPreprocessor;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CrossChunkMethodMotion;
 import com.google.javascript.jscomp.CustomPassExecutionTime;
+import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.EmptyMessageBundle;
-import com.google.javascript.jscomp.Es6ToEs3Util;
 import com.google.javascript.jscomp.GoogleCodingConvention;
-import com.google.javascript.jscomp.MarkUntranspilableFeaturesAsRemoved;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.RenamingMap;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.StrictWarningsGuard;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
-import com.google.javascript.jscomp.testing.IntegrationTestCase;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
@@ -1356,7 +1352,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "Foo.prototype.a = function(x) {};",
             "function Bar(){}",
             "Bar.prototype.a=function(x){};"),
-        PropertyRenamingDiagnostics.INVALIDATION);
+        DiagnosticGroups.TYPE_INVALIDATION);
   }
 
   @Test
@@ -2285,12 +2281,12 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testBadBreakStatementInIdeMode() {
+  public void testBadBreakStatementInContinueAfterErrorsMode() {
     // Ensure that type-checking doesn't crash, even if the CFG is malformed.
-    // This can happen in IDE mode.
     CompilerOptions options = createCompilerOptions();
     options.setDevMode(DevMode.OFF);
-    options.setIdeMode(true);
+    options.setChecksOnly(true);
+    options.setContinueAfterErrors(true);
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
 
@@ -3039,7 +3035,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testBug5786871() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "function () {}");
   }
 
@@ -3292,23 +3289,26 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testIdeMode_doesntCrashOnIncompleteFunctionInObjectLit() {
+  public void testContinueAfterErrorsMode_doesntCrashOnIncompleteFunctionInObjectLit() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "var foo = {bar: function(e) }", "var foo = {bar: function(e){}};");
   }
 
   @Test
-  public void testIdeMode_doesntCrashOnIncompleteFunctionMissingParams() {
+  public void testContinueAfterErrorsMode_doesntCrashOnIncompleteFunctionMissingParams() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "function hi", "function hi() {}");
   }
 
   @Test
   public void testUnboundedArrayLiteralInfiniteLoop() {
     CompilerOptions options = createCompilerOptions();
-    options.setIdeMode(true);
+    options.setContinueAfterErrors(true);
+    options.setChecksOnly(true);
     testParseError(options, "var x = [1, 2", "var x = [1, 2]");
   }
 
@@ -3774,9 +3774,18 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testDestructuringCannotConvert() {
     CompilerOptions options = createCompilerOptions();
 
-    test(options, "for (var   [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    test(options, "for (let   [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
-    test(options, "for (const [x] = [], {y} = {}, z = 2;;) {}", Es6ToEs3Util.CANNOT_CONVERT_YET);
+    test(
+        options,
+        "for (var   [x] = [], {y} = {}, z = 2;;) {}",
+        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
+    test(
+        options,
+        "for (let   [x] = [], {y} = {}, z = 2;;) {}",
+        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
+    test(
+        options,
+        "for (const [x] = [], {y} = {}, z = 2;;) {}",
+        DiagnosticGroups.CANNOT_TRANSPILE_FEATURE);
   }
 
   @Test
@@ -4221,8 +4230,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "const {foo,...bar}={foo:10,bar:20,...{baz:30}};console.log(foo);console.log(bar)");
 
     // But we won't emit ES 2018 regexp features.
-    DiagnosticType untranspilable =
-        MarkUntranspilableFeaturesAsRemoved.UNTRANSPILABLE_FEATURE_PRESENT;
+    DiagnosticGroup untranspilable = DiagnosticGroups.UNSTRANSPILABLE_FEATURES;
     test(options, lines(googDefine, "/foo/s"), untranspilable);
     test(options, lines(googDefine, "/(?<foo>.)/"), untranspilable);
     test(options, lines(googDefine, "/(?<=foo)/"), untranspilable);

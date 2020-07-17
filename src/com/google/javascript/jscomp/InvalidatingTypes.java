@@ -99,7 +99,8 @@ public final class InvalidatingTypes {
     private boolean allowGlobalThis = true;
     private boolean allowObjectLiteralTypes = false;
 
-    private boolean alsoInvalidateRelatedTypes = true;
+    // TODO(b/160269908): Investigate making this always false, instead of always true.
+    private final boolean alsoInvalidateRelatedTypes = true;
 
     private ImmutableSet.Builder<JSType> types;
 
@@ -157,11 +158,6 @@ public final class InvalidatingTypes {
 
     public Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
       mismatches.forEach(this.mismatches::add);
-      return this;
-    }
-
-    public Builder setAlsoInvalidateRelatedTypes(boolean x) {
-      this.alsoInvalidateRelatedTypes = x;
       return this;
     }
 

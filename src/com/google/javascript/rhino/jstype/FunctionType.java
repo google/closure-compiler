@@ -1663,11 +1663,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     }
   }
 
-  @Override
-  JSType simplifyForOptimizations() {
-    return canonicalRepresentation != null
-        ? canonicalRepresentation
-        : super.simplifyForOptimizations();
+  public final FunctionType getCanonicalRepresentation() {
+    return canonicalRepresentation;
   }
 
   /**

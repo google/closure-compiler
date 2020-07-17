@@ -17,11 +17,13 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_CLOSURE_CALL_SCOPE_ERROR;
+import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MISSING_MODULE_OR_PROVIDE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,8 +66,7 @@ public class DiagnosticGroups {
           "reportUnknownTypes",
           "analyzerChecks",
           "analyzerChecksInternal",
-          "missingSourcesWarnings",
-          "parsing");
+          "missingSourcesWarnings");
 
   public DiagnosticGroups() {}
 
@@ -73,6 +74,15 @@ public class DiagnosticGroups {
 
   static DiagnosticGroup registerDeprecatedGroup(String name) {
     return registerGroup(name, new DiagnosticGroup(name, UNUSED));
+  }
+
+  /**
+   * Create a group that is unsuppressible via the command line or in code.
+   *
+   * <p>The resulting group is also undocumented.
+   */
+  static DiagnosticGroup registerUnsuppressibleGroup(DiagnosticType... types) {
+    return new DiagnosticGroup(types);
   }
 
   static DiagnosticGroup registerGroup(String name,
@@ -138,6 +148,7 @@ public class DiagnosticGroups {
           + "missingReturn, "
           + "missingSourcesWarnings, "
           + "moduleLoad, "
+          + "moduleImports, "
           + "msgDescriptions, "
           + "nonStandardJsDocs, "
           + "partialAlias, "
@@ -172,11 +183,18 @@ public class DiagnosticGroups {
           "featuresNotSupportedByPass", PhaseOptimizer.FEATURES_NOT_SUPPORTED_BY_PASS);
 
   public static final DiagnosticGroup MODULE_LOAD =
-      DiagnosticGroups.registerGroup("moduleLoad",
+      DiagnosticGroups.registerGroup(
+          "moduleLoad",
           ModuleLoader.LOAD_WARNING,
           ModuleMapCreator.MISSING_NAMESPACE_IMPORT,
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
           ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
+
+  public static final DiagnosticGroup MODULE_IMPORT =
+      DiagnosticGroups.registerGroup( // undocumented
+          "moduleImport",
+          ModuleMapCreator.DOES_NOT_HAVE_EXPORT,
+          ModuleMapCreator.DOES_NOT_HAVE_EXPORT_WITH_DETAILS);
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -654,8 +672,17 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "closureDepMethodUsageChecks",
           INVALID_CLOSURE_CALL_SCOPE_ERROR,
+          INVALID_GET_CALL_SCOPE,
           CLOSURE_CALL_CANNOT_BE_ALIASED_ERROR,
           CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR);
+
+  // This group exists so that tests can check for these warnings. It is intentionally not
+  // named so that it is is not suppressible via the command line or in code.
+  @VisibleForTesting
+  public static final DiagnosticGroup MALFORMED_GOOG_MODULE =
+      DiagnosticGroups.registerUnsuppressibleGroup(
+          ClosureCheckModule.GOOG_MODULE_MISPLACED,
+          ClosureCheckModule.LEGACY_NAMESPACE_NOT_AFTER_GOOG_MODULE);
 
   // This group exists so that generated code can suppress these
   // warnings. Not for general use. These diagnostics will most likely
@@ -684,6 +711,21 @@ public class DiagnosticGroups {
           "lateProvide", // undocumented
           CheckClosureImports.LATE_PROVIDE_ERROR);
 
+  public static final DiagnosticGroup DUPLICATE_NAMESPACES =
+      DiagnosticGroups.registerUnsuppressibleGroup(
+          ClosurePrimitiveErrors.DUPLICATE_MODULE, ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
+
+  public static final DiagnosticGroup INVALID_DEFINES =
+      DiagnosticGroups.registerUnsuppressibleGroup(
+          ProcessDefines.INVALID_DEFINE_VALUE, ProcessDefines.INVALID_DEFINE_TYPE);
+
+  public static final DiagnosticGroup INVALID_CONST_PARAM =
+      DiagnosticGroups.registerUnsuppressibleGroup(ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+
+  public static final DiagnosticGroup CANNOT_TRANSPILE_FEATURE =
+      DiagnosticGroups.registerUnsuppressibleGroup(
+          Es6ToEs3Util.CANNOT_CONVERT, Es6ToEs3Util.CANNOT_CONVERT_YET);
+
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
           "missingPolyfill", RewritePolyfills.INSUFFICIENT_OUTPUT_VERSION_ERROR);
@@ -697,13 +739,11 @@ public class DiagnosticGroups {
           RhinoErrorReporter.UNSUPPORTED_BOUNDED_GENERIC_TYPES,
           RhinoErrorReporter.BOUNDED_GENERIC_TYPE_ERROR);
 
-  // This diagnostic group is intentionally absent in ParserConfig.properties. User code should
-  // never suppress parse errors but it is useful occasionally for tooling to check whether a
+  // This diagnostic group is intentionally absent in ParserConfig.properties and unnamed. User code
+  // should never suppress parse errors but it is useful occasionally for tooling to check whether a
   // given error is from parsing.
   public static final DiagnosticGroup PARSING =
-      DiagnosticGroups.registerGroup(
-          "parsing", // undocumented
-          RhinoErrorReporter.PARSE_ERROR);
+      DiagnosticGroup.forType(RhinoErrorReporter.PARSE_ERROR);
 
   // For internal use only, so there are no constants for these groups.
   static {

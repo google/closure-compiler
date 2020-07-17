@@ -409,9 +409,4 @@ public class ProxyObjectType extends ObjectType {
   public TemplateTypeMap getTemplateTypeMap() {
     return referencedType.getTemplateTypeMap();
   }
-
-  @Override
-  JSType simplifyForOptimizations() {
-    return referencedType.simplifyForOptimizations();
-  }
 }

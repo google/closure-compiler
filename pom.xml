@@ -164,6 +164,7 @@
             <source>${jdk.version}</source>
             <target>${jdk.version}</target>
             <showDeprecation>true</showDeprecation>
+            <useIncrementalCompilation>false</useIncrementalCompilation>
             <compilerArgument>-Xlint:unchecked,deprecation,fallthrough,finally</compilerArgument>
             <fork>true</fork>
             <encoding>${project.build.sourceEncoding}</encoding>

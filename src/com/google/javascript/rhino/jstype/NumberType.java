@@ -42,7 +42,6 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-
 /**
  * Number type.
  */

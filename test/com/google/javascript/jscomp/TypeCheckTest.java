@@ -73,7 +73,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Override
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = super.getDefaultOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     return options;
   }
@@ -665,14 +664,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBooleanReduction1NullishCoalesce() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/**@type {string} */var x; x = null ?? \"a\";");
   }
 
   @Test
   public void optionalChaining() {
     // TODO(b/151248857): Calculate the appropriate type here
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/**@type {?} */var x = a?.b;");
   }
 
@@ -699,7 +696,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBooleanReduction4NullishCoalesce() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
            "/** @param {?Object} x\n @return {!Object} */",
@@ -753,7 +749,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNullishCoalesceWithAndExpressions() {
     // `(s && undefined)` = `undefined` because `s` is typed as `!Array`, triggering RHS
     // `(s && "a")` = `"a"` because `s` is typed as `!Array`
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "/** @param {!Array} s",
@@ -763,13 +758,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceShortCutsOnZero() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/**@type {number} */var x; x = 0 ?? \"a\";");
   }
 
   @Test
   public void testNullishCoalesceUnionsOperatorTypesWithNullRemoved() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "/**",
@@ -783,19 +776,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceShortCutsOnFalse() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/**@type {boolean} */var x; x = false ?? undefined ?? [];");
   }
 
   @Test
   public void testNullishCoalesceChaining() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/**@type {number} */var x; x = null ?? undefined ?? 3;");
   }
 
   @Test
   public void testNullishCoalesceOptionalNullable() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "/**",
@@ -809,7 +799,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceUseNonNullFunction() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     // if we are trying to evaluate the LHS then x must be null and useNonNull only takes non null
     // objects as inputs
     testTypes(
@@ -831,7 +820,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceLeftTypeNotDefined() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     // making sure we don't throw a NPE
     testTypes(lines("/** @type {number} */ var a = x ?? 1;"));
   }
@@ -2478,10 +2466,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNumericComparison2() {
-    testTypes("/**@param {!Object} a*/ function f(a) {return a < 3;}",
-        "left side of numeric comparison\n" +
-        "found   : Object\n" +
-        "required: number");
+    testTypes(
+        "/**@param {!Object} a*/ function f(a) {return a < 3;}",
+        lines(
+            "left side of numeric comparison", //
+            "found   : Object",
+            "required: (bigint|number)"));
   }
 
   @Test
@@ -2501,18 +2491,22 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNumericComparison5() {
-    testTypes("/**@param {*} a*/ function f(a) {return a < 3;}",
-        "left side of numeric comparison\n" +
-        "found   : *\n" +
-        "required: number");
+    testTypes(
+        "/**@param {*} a*/ function f(a) {return a < 3;}",
+        lines(
+            "left side of numeric comparison", //
+            "found   : *",
+            "required: (bigint|number)"));
   }
 
   @Test
   public void testNumericComparison6() {
-    testTypes("/**@return {void} */ function foo() { if (3 >= foo()) return; }",
-        "right side of numeric comparison\n" +
-        "found   : undefined\n" +
-        "required: number");
+    testTypes(
+        "/**@return {void} */ function foo() { if (3 >= foo()) return; }",
+        lines(
+            "right side of numeric comparison",
+            "found   : undefined",
+            "required: (bigint|number)"));
   }
 
   @Test
@@ -3439,7 +3433,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testInnerFunction6NullishCoalesce() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testClosureTypes(
         lines(
             CLOSURE_DEFS,
@@ -3470,7 +3463,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testInnerFunction7NullishCoalesce() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testClosureTypes(
         lines(
             CLOSURE_DEFS,
@@ -8097,7 +8089,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testVar15NullishCoalesce() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "/** @return {number} */", //
@@ -8161,7 +8152,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceNumber() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines("/** @type {number}  */var a; /** @type {number}  */var b; a + b ?? undefined;"));
   }
@@ -8180,7 +8170,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testNullishCoalesceNumberVar() {
     // Making sure that ?? returns LHS as long as it is not null/undefined
     // 0 is falsy but not null/undefined so c should always be a
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines("/** @type {number}  */var a;", "/** @type {number}  */var c = a ?? undefined;"));
   }
@@ -8192,7 +8181,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceNumberUndefined() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/** @type {(number|undefined)} */var a; /** @type {number}  */var c = a ?? 3;");
   }
 
@@ -8219,7 +8207,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceAssignment2() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/**@type {number} */var x;x=undefined ?? \"a\";",
         lines("assignment", "found   : string", "required: number"));
@@ -8242,7 +8229,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoaleceAssignment3() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "/** @param {!Array=} opt_x */",
@@ -11162,7 +11148,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testNullishCoalesceTypeIsFirstOrSecondArgument() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "/** @param {Function} opt_f ... */",
@@ -12153,7 +12138,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   public void testCall3NullishCoalesce() {
     // We are checking that an unresolved named type can successfully
     // meet with a functional type to produce a callable type.
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "/** @type {Function|undefined} */var opt_f;",
@@ -16664,7 +16648,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // about missing properties are emitted
   @Test
   public void optionalChainGetPropAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16678,7 +16661,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // emit a warning about missing properties
   @Test
   public void normalGetPropNotAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16693,7 +16675,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // about missing properties are emitted
   @Test
   public void optionalChainGetElemAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16707,7 +16688,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // a warning about missing properties
   @Test
   public void normalGetElemNotAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16722,7 +16702,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // about missing properties are emitted
   @Test
   public void optionalChainCallAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16736,7 +16715,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // a warning about missing properties
   @Test
   public void normalCallNotAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16751,7 +16729,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // but x?.(prop.access) is not
   @Test
   public void getNotFirstChildOfOptionalCallNotAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16767,7 +16744,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // but x?.[prop.access] is not
   @Test
   public void getNotFirstChildOfOptionalGetElemNotAllowLoosePropertyAccess() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16780,7 +16756,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testOptChainGetPropProvidesThisForMethodCall() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         lines(
             "class A {",
@@ -23699,9 +23674,9 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     testTypes(
         "var x = 1 < 'asdf';",
         lines(
-            "right side of numeric comparison",
+            "right side of numeric comparison", //
             "found   : string",
-            "required: number"));
+            "required: (bigint|number)"));
   }
 
   @Test
@@ -23756,9 +23731,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_increment() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; x++;");
-    testTypes("const x = BigInt(1); x++;");
+    testTypes("/** @type {!BigInt} */ var x; x++;");
     testTypes("/** @type {bigint|number} */var x; x++;");
     testTypes(
         "/** @type {bigint|string} */var x; x++;",
@@ -23767,9 +23741,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_decrement() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; x--;");
-    testTypes("const x = BigInt(1); x--;");
+    testTypes("/** @type {!BigInt} */ var x; x--;");
     testTypes("/** @type {bigint|number} */var x; x--;");
     testTypes(
         "/** @type {bigint|string} */var x; x--;",
@@ -23778,39 +23751,37 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_logicalNot() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; !x;");
-    testTypes("const x = BigInt(1); !x;");
+    testTypes("/** @type {!BigInt} */ var x; !x;");
     testTypes("/** @type {bigint|string} */var x; !x;");
   }
 
   @Test
   public void testBigIntOperators_bitwiseNot() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; ~x;");
-    testTypes("const x = BigInt(1); ~x;");
+    testTypes("/** @type {!BigInt} */ var x; ~x;");
     testTypes("/** @type {?} */var x; ~x;");
     testTypes("/** @type {bigint|number} */var x; ~x;");
     testTypes(
         "/** @type {bigint|string} */var x; ~x;",
-        lines("bitwise NOT", "found   : (bigint|string)", "required: (bigint|number)"));
+        lines(
+            "bitwise NOT", //
+            "found   : (bigint|string)",
+            "required: (bigint|number)"));
   }
 
   @Test
   public void testBigIntValueOperators_unaryPlusIsForbidden() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("var x = 1n; +x;", "unary operator + cannot be applied to bigint");
   }
 
   @Test
   public void testBigIntObjectOperators_unaryPlusIsForbidden() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
-    testTypes("var x = BigInt(1); +x;", "unary operator + cannot be applied to bigint");
+    testTypes("/** @type {!BigInt} */ var x; +x;", "unary operator + cannot be applied to BigInt");
   }
 
   @Test
   public void testBigIntUnionOperators_unaryPlusIsForbidden() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @type {bigint|number} */ var x; +x;",
         "unary operator + cannot be applied to (bigint|number)");
@@ -23818,7 +23789,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntEnumOperators_unaryPlusIsForbidden() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @enum {bigint} */ const BIGINTS = {ONE: 1n, TWO: 2n}; +BIGINTS.ONE;",
         "unary operator + cannot be applied to BIGINTS<bigint>");
@@ -23826,9 +23796,8 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_unaryMinus() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; -x;");
-    testTypes("const x = BigInt(1); -x;");
+    testTypes("/** @type {!BigInt} */ var x; -x;");
     testTypes("/** @type {?} */var x; -x;");
     testTypes("/** @type {bigint|number} */var x; -x;");
     testTypes(
@@ -23838,37 +23807,31 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_binaryOperationWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; const y = 1n; x * y");
   }
 
   @Test
   public void testBigIntOperators_assignOpWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; const y = 1n; x *= y");
   }
 
   @Test
   public void testBigIntOperators_binaryBitwiseOperationWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; const y = 1n; x | y");
   }
 
   @Test
   public void testBigIntOperators_additionWithString() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; const y = 'str'; x + y");
   }
 
   @Test
   public void testBigIntOperators_assignAddWithString() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; const y = 'str'; x += y");
   }
 
   @Test
   public void testBigIntOperators_binaryOperationWithString() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "const x = 1n; const y = 'str'; x * y",
         "operator * cannot be applied to bigint and string");
@@ -23876,7 +23839,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_assignOpWithString() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "const x = 1n; const y = 'str'; x *= y",
         "operator *= cannot be applied to bigint and string");
@@ -23884,14 +23846,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_binaryOperationWithUnknown() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "var x = 1n; /** @type {?} */var y; x * y", "operator * cannot be applied to bigint and ?");
   }
 
   @Test
   public void testBigIntOperators_assignOpWithUnknown() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "var x = 1n; /** @type {?} */var y; x *= y",
         "operator *= cannot be applied to bigint and ?");
@@ -23899,58 +23859,49 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOperators_binaryOperationWithNumber() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "const x = 1n; const y = 1; x * y", "operator * cannot be applied to bigint and number");
   }
 
   @Test
   public void testBigIntOperators_assignOpWithNumber() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "const x = 1n; const y = 1; x *= y", "operator *= cannot be applied to bigint and number");
   }
 
   @Test
   public void testBigIntOperators_binaryBitwiseOperationWithNumber() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "const x = 1n; const y = 1; x | y", "operator | cannot be applied to bigint and number");
   }
 
   @Test
   public void testBigIntOperators_unsignedRightShift() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; x >>> x;", "operator >>> cannot be applied to bigint and bigint");
   }
 
   @Test
   public void testBigIntOperators_assignUnsignedRightShift() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("const x = 1n; x >>>= x;", "operator >>>= cannot be applied to bigint and bigint");
   }
 
   @Test
   public void testBigIntOrNumberOperators_binaryOperationWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/** @type {bigint|number} */ var x; x * x;");
   }
 
   @Test
   public void testBigIntOrNumberOperators_assignOpWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/** @type {bigint|number} */ var x; x *= x;");
   }
 
   @Test
   public void testBigIntOrNumberOperators_binaryBitwiseOperationWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes("/** @type {bigint|number} */ var x; x | x;");
   }
 
   @Test
   public void testBigIntOrNumberOperators_binaryOperationWithBigInt() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "var x = 1n; /** @type {bigint|number} */ var y; x * y;",
         "operator * cannot be applied to bigint and (bigint|number)");
@@ -23958,7 +23909,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrNumberOperators_assignOpWithBigInt() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "var x = 1n; /** @type {bigint|number} */ var y; x *= y;",
         "operator *= cannot be applied to bigint and (bigint|number)");
@@ -23966,7 +23916,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrNumberOperators_binaryBitwiseOperationWithBigInt() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "var x = 1n; /** @type {bigint|number} */ var y; x | y;",
         "operator | cannot be applied to bigint and (bigint|number)");
@@ -23974,7 +23923,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrNumberOperators_unsignedRightShift() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @type {bigint|number} */ var x = 1n; x >>> x;",
         "operator >>> cannot be applied to (bigint|number) and (bigint|number)");
@@ -23982,7 +23930,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrNumberOperators_assignUnsignedRightShift() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @type {bigint|number} */ var x = 1n; x >>>= x;",
         "operator >>>= cannot be applied to (bigint|number) and (bigint|number)");
@@ -23990,7 +23937,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrOtherOperators_binaryOperationWithBigInt() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @type {bigint|string} */ var x; var y = 1n; x * y;",
         "operator * cannot be applied to (bigint|string) and bigint");
@@ -23998,7 +23944,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrOtherOperators_assignOpWithBigInt() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @type {bigint|string} */ var x; var y = 1n; x *= y;",
         "operator *= cannot be applied to (bigint|string) and bigint");
@@ -24006,7 +23951,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrOtherOperators_binaryOperationWithBigIntOrNumber() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @type {bigint|string} */ var x; /** @type {bigint|number} */ var y; x * y;",
         "operator * cannot be applied to (bigint|string) and (bigint|number)");
@@ -24014,7 +23958,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntOrOtherOperators_assignOpWithBigIntOrNumber() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @type {bigint|string} */ var x; /** @type {bigint|number} */ var y; x *= y;",
         "operator *= cannot be applied to (bigint|string) and (bigint|number)");
@@ -24022,16 +23965,138 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testBigIntEnumOperators_binaryOperationWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @enum {bigint} */ const BIGINTS = {ONE: 1n, TWO: 2n}; BIGINTS.ONE * BIGINTS.TWO;");
   }
 
   @Test
   public void testBigIntEnumOperators_assignOpWithSelf() {
-    compiler.getOptions().setLanguage(LanguageMode.UNSUPPORTED);
     testTypes(
         "/** @enum {bigint} */ const BIGINTS = {ONE: 1n, TWO: 2n}; BIGINTS.ONE *= BIGINTS.TWO;");
+  }
+
+  @Test
+  public void testValidBigIntComparisons() {
+    testTypes("var x = 1n; var y = 2n; x < y");
+    testTypes("var x = 1n; /** @type {!BigInt} */ var y; x < y");
+    testTypes("var x = 1n; var y = 2; x < y");
+    testTypes("var x = 1n; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testBigIntComparisonWithString() {
+    testTypes(
+        "const x = 1n; const y = 'asdf'; x < y;",
+        lines(
+            "right side of numeric comparison", //
+            "found   : string",
+            "required: (bigint|number)"));
+  }
+
+  @Test
+  public void testValidBigIntObjectComparisons() {
+    testTypes("/** @type {!BigInt} */ var x; var y = 2n; x < y");
+    testTypes("/** @type {!BigInt} */ var x; /** @type {!BigInt} */ var y; x < y");
+    testTypes("/** @type {!BigInt} */ var x; var y = 2; x < y");
+    testTypes("/** @type {!BigInt} */ var x; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testValidBigIntOrNumberComparisons() {
+    testTypes("/** @type {bigint|number} */ var x; /** @type {bigint|number} */ var y; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; var y = 2; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; var y = 2n; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; /** @type {!BigInt} */ var y; x < y;");
+    testTypes("/** @type {bigint|number} */ var x; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testBigIntOrNumberComparisonWithString() {
+    testTypes(
+        "/** @type {bigint|number} */ var x; 'asdf' < x;",
+        lines(
+            "left side of numeric comparison", //
+            "found   : string",
+            "required: (bigint|number)"));
+  }
+
+  @Test
+  public void testValidBigIntOrOtherComparisons() {
+    testTypes("/** @type {bigint|string} */ var x; /** @type {bigint|string} */ var y; x < y;");
+    testTypes("/** @type {bigint|string} */ var x; /** @type {?} */ var y; x < y");
+  }
+
+  @Test
+  public void testBigIntOrOtherComparisonWithBigint() {
+    testTypes(
+        "/** @type {bigint|string} */ var x; var y = 2n; x < y;",
+        lines(
+            "left side of numeric comparison",
+            "found   : (bigint|string)",
+            "required: (bigint|number)"));
+  }
+
+  @Test
+  public void testBigIntOrOtherComparisonWithNumber() {
+    testTypes(
+        "/** @type {bigint|string} */ var x; var y = 2; x < y;",
+        lines(
+            "left side of numeric comparison",
+            "found   : (bigint|string)",
+            "required: (bigint|number)"));
+  }
+
+  @Test
+  public void testBigIntObjectIndex() {
+    // As is, TypeCheck allows for objects to be indexed with bigint. An error could be reported as
+    // is done with arrays, but for now we will avoid such restrictions.
+    testTypes(
+        lines(
+            "var obj = {};",
+            "/** @type {bigint} */ var b;",
+            "/** @type {bigint|number} */ var bn;",
+            "obj[b] = 1;",
+            "obj[bn] = 3;"));
+  }
+
+  @Test
+  public void testBigIntArrayIndex() {
+    // Even though the spec doesn't prohibit using bigint as an array index, we will report an error
+    // to maintain consistency with TypeScript.
+    testTypes(
+        "var arr = []; /** @type {bigint} */ var b; arr[b];",
+        lines(
+            "restricted index type", //
+            "found   : bigint",
+            "required: number"));
+  }
+
+  @Test
+  public void testBigIntOrNumberArrayIndex() {
+    // Even though the spec doesn't prohibit using bigint as an array index, we will report an error
+    // to maintain consistency with TypeScript.
+    testTypes(
+        "var arr = []; /** @type {bigint|number} */ var bn; arr[bn];",
+        lines(
+            "restricted index type", //
+            "found   : (bigint|number)",
+            "required: number"));
+  }
+
+  @Test
+  public void testBigIntAsComputedPropForObjects() {
+    testTypes("/** @type {bigint} */ var x; ({[x]: 'value', 123n() {}});");
+  }
+
+  @Test
+  public void testBigIntAsComputedPropForClasses() {
+    testTypes("/** @unrestricted */ class C { 123n() {} }");
+    testTypes("/** @dict */ class C { 123n() {} }");
+  }
+
+  @Test
+  public void testBigIntAsComputedPropForStructClasses() {
+    testTypes("class C { 123n() {} }", "Cannot do '[]' access on a struct");
   }
 
   @Test
@@ -24054,6 +24119,16 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testComparisonWithUnknownAndSymbol() {
+    testTypes(
+        "/** @type {symbol} */ var x; /** @type {?} */ var y; x < y",
+        lines(
+            "left side of comparison", //
+            "found   : symbol",
+            "required: (bigint|number|string)"));
+  }
+
+  @Test
   public void testComparisonInStrictModeNoSpuriousWarning() {
     testTypes(
         lines(
@@ -24070,15 +24145,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes(
         lines(
-        "/** @constructor */",
-        "function Foo() {}",
-        "function f(/** ? */ x) {",
-        "  return (new Foo) < x;",
-        "}"),
+            "/** @constructor */",
+            "function Foo() {}",
+            "function f(/** ? */ x) {",
+            "  return (new Foo) < x;",
+            "}"),
         lines(
-            "left side of comparison",
+            "left side of comparison", //
             "found   : Foo",
-            "required: (number|string)"));
+            "required: (bigint|number|string)"));
   }
 
   @Test
@@ -24088,15 +24163,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         DiagnosticGroups.STRICT_PRIMITIVE_OPERATORS, CheckLevel.OFF);
     testTypes(
         lines(
-        "/** @constructor */",
-        "function Bar() {}",
-        "function f(/** ? */ x) {",
-        "  return x < (new Bar);",
-        "}"),
+            "/** @constructor */",
+            "function Bar() {}",
+            "function f(/** ? */ x) {",
+            "  return x < (new Bar);",
+            "}"),
         lines(
-            "right side of comparison",
+            "right side of comparison", //
             "found   : Bar",
-            "required: (number|string)"));
+            "required: (bigint|number|string)"));
   }
 
   @Test

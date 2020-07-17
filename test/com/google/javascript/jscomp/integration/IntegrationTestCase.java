@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.testing;
+package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -31,13 +30,17 @@ import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import com.google.javascript.jscomp.testing.JSCompCorrespondences;
+import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 
 /** Framework for end-to-end test cases. */
-public abstract class IntegrationTestCase {
+abstract class IntegrationTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
   protected static final Joiner EMPTY_JOINER = Joiner.on("");
 
@@ -201,65 +204,20 @@ public abstract class IntegrationTestCase {
     }
   }
 
-  // TODO(lharker): delete all the methods checking for a DiagnosticType after migrating existing
-  // usages.
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
   protected void test(CompilerOptions options, String original, DiagnosticGroup warning) {
     test(options, new String[] {original}, null, warning);
   }
 
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
-  protected void test(CompilerOptions options, String[] original, DiagnosticGroup warning) {
-    test(options, original, null, warning);
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options, there is an error or warning.
-   *
-   * @deprecated prefer to check for the corresponding DiagnosticGroup
-   */
-  @Deprecated
-  protected void test(CompilerOptions options, String original, DiagnosticType warning) {
-    test(options, new String[] {original}, warning);
-  }
-
-  /** @deprecated prefer to check for the corresponding DiagnosticGroup */
-  @Deprecated
   protected void test(
-      CompilerOptions options, String original, String compiled, DiagnosticType warning) {
+      CompilerOptions options, String original, String compiled, DiagnosticGroup warning) {
     test(options, new String[] {original}, new String[] {compiled}, warning);
   }
 
-  /** @deprecated prefer to check for the corresponding DiagnosticGroup */
-  @Deprecated
-  protected void test(CompilerOptions options, String[] original, DiagnosticType warning) {
+  /** Asserts that when compiling with the given compiler options, there is an error or warning. */
+  protected void test(CompilerOptions options, String[] original, DiagnosticGroup warning) {
     test(options, original, null, warning);
-  }
-
-  /**
-   * Asserts that when compiling with the given compiler options, there is an error or warning.
-   *
-   * @deprecated prefer to check for the corresponding DiagnosticGroup
-   */
-  @Deprecated
-  protected void test(
-      CompilerOptions options, String[] original, String[] compiled, DiagnosticType warning) {
-    Compiler compiler = compile(options, original);
-    checkUnexpectedErrorsOrWarnings(compiler, 1);
-    assertWithMessage("Expected exactly one warning or error")
-        .that(compiler.getErrors().size() + compiler.getWarnings().size())
-        .isEqualTo(1);
-    if (!compiler.getErrors().isEmpty()) {
-      assertError(compiler.getErrors().get(0)).hasType(warning);
-    } else {
-      assertError(compiler.getWarnings().get(0)).hasType(warning);
-    }
-
-    if (compiled != null) {
-      Node root = compiler.getRoot().getLastChild();
-      Node expectedRoot = parseExpectedCode(compiled, options);
-      assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
-    }
   }
 
   /** Asserts that when compiling with the given compiler options, there is an error or warning. */
