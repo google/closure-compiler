@@ -247,12 +247,9 @@ final class MustBeReachingVariableDef extends
       case WHILE:
       case DO:
       case IF:
+      case FOR:
         computeMustDef(
             NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
-        return;
-
-      case FOR:
-        computeMustDef(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
         return;
 
       case FOR_IN:
@@ -278,8 +275,17 @@ final class MustBeReachingVariableDef extends
       case AND:
       case OR:
       case COALESCE:
+      case OPTCHAIN_GETPROP:
+      case OPTCHAIN_GETELEM:
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         computeMustDef(n.getLastChild(), cfgNode, output, true);
+        return;
+
+      case OPTCHAIN_CALL:
+        computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
+        for (Node c = n.getSecondChild(); c != null; c = c.getNext()) {
+          computeMustDef(c, cfgNode, output, true);
+        }
         return;
 
       case HOOK:

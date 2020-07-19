@@ -31,6 +31,8 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link MustBeReachingVariableDef}.
  *
+ * <p>Tests in this class look for the labels 'D:' and 'U:' in the input code and check whether the
+ * definition of a var `x` at label `D:` is the must-reaching definition for its use at label `U:`.
  */
 @RunWith(JUnit4.class)
 public final class MustBeReachingVariableDefTest {
@@ -76,14 +78,31 @@ public final class MustBeReachingVariableDefTest {
   public void testConditional() {
     assertMatch("var x=0,y; D:(x=1)&&y; U:x");
     assertNotMatch("var x=0,y; D:y&&(x=1); U:x");
+    assertNotMatch("D:var x=0; var y; y&&(x=1); U:x");
   }
 
   @Test
   public void nullishCoalesce() {
-    // LHS is always executed so the definition of  x = 1 must be reached
+    // LHS is always executed so the definition of x = 1 must be reached
     assertMatch("var x=0,y; D:(x=1)??y; U:x");
     // definitions in RHS are not always executed
-    assertNotMatch("var x=0,y; D:y??(x=1); U:x");
+    assertNotMatch("var x=0; var y; D:y??(x=1); U:x");
+    assertNotMatch("D:var x=0; var y; y??(x=1); U:x");
+  }
+
+  @Test
+  public void optionalChaining() {
+    // LHS is always executed so the definition of x = 1 must be reached
+    assertMatch("var x=0,y; D:(x=1)?.y; U:x");
+    assertMatch("var x=0,y; D:(x=1)?.[y]; U:x");
+    assertMatch("var x=0,y; D:(x=1)?.(y); U:x");
+    assertMatch("var x=0,y,z; D:z(x=1)?.y; U:x");
+    assertMatch("var x=0,y,z; D:z[x=1]?.y; U:x");
+
+    // definitions in RHS are not always executed
+    assertNotMatch("var x = 0,y; D:y?.(x=1); U:x");
+    assertNotMatch("D:var x = 0; var y; y?.(x=1); U:x");
+    assertNotMatch("var x=0,y; D:y?.[x=1]; U:x");
   }
 
   @Test
