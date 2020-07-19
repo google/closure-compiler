@@ -901,8 +901,52 @@ public class Scanner {
         | (ch >= 0x03B1 & ch <= 0x03C9); // Greek lowercase letters
   }
 
+  /**
+    Implement ECMAScript grammar for isIdentifierPart.
+   */
+  private static boolean isCombiningMark(char ch) {
+    return Character.getType(ch) == Character.NON_SPACING_MARK;
+  }
+
+  // TODO (ctjl): Implement
+  private static boolean isConnectorPunctuation() {
+    return true;
+  }
+
+  // TODO (ctjl): Implement
+  private static boolean isZeroWidthJoiner() {
+    return true;
+  }
+
+  // TODO (ctjl): Implement
+  private static boolean isZeroWidthNonJoiner() {
+    return true;
+  }
+
   @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isIdentifierPart(char ch) {
+    /**
+      https://www.ecma-international.org/ecma-262/5.1/#sec-7.6
+      IdentifierPart ::
+        IdentifierStart
+        ✓ isIdentifierPart()
+
+        UnicodeCombiningMark
+        ✓ isCombiningMark()
+
+        UnicodeDigit
+        ✓ Character.isDigit()
+
+        UnicodeConnectorPunctuation
+        ✓ isConnectorPunctuation()
+
+        <ZWNJ>
+        ✓ isZeroWidthNonJoiner()
+          
+        <ZWJ>
+        ✓ isZeroWidthJoiner()
+     */
+
     // Most code is written in pure ASCII, so create a fast path here.
     if (ch <= 127) {
       return ((ch >= 'A' & ch <= 'Z')
@@ -913,8 +957,10 @@ public class Scanner {
 
     // Handle non-ASCII characters.
     // TODO(tjgq): This should include all characters with the ID_Continue property, plus
-    // Zero Width Non-Joiner and Zero Width Joiner.
-    return isIdentifierStart(ch) || Character.isDigit(ch);
+    // TODO(ctjl): Implement remaining grammar (zero-width joiners, etc.)
+    return isIdentifierStart(ch)
+        || isCombiningMark(ch)
+        || Character.isDigit(ch);
   }
 
   private Token scanStringLiteral(int beginIndex, char terminator) {
