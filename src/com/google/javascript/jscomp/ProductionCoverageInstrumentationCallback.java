@@ -74,11 +74,13 @@ class ProductionCoverageInstrumentationCallback extends
       return;
     }
 
-    // If Source File is base.js or INSTRUMENT_CODE_FILE_NAME, do not instrument as the instrument
-    // function has not yet been defined when base.js will be executing and the implementation file
-    // can not call the Code instrumentation function on itself
+    // If Source File INSTRUMENT_CODE_FILE_NAME has not yet been visited, do not instrument as
+    // the instrument function has not yet been defined and any call made to it will result in an
+    // error in the compiled JS code.
     if (!visitedInstrumentCodeFile || sourceFileName.endsWith(INSTRUMENT_CODE_FILE_NAME)) {
-      visitedInstrumentCodeFile = true;
+      if (sourceFileName.endsWith(INSTRUMENT_CODE_FILE_NAME)) {
+        visitedInstrumentCodeFile = true;
+      }
       return;
     }
 
