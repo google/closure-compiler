@@ -859,7 +859,7 @@ public class CommandLineRunner extends
                 + " 1. NONE (deault)\n"
                 + " 2. LINE - Instrument code by line.\n"
                 + " 3. BRANCH - Instrument code by branch.\n"
-                + " 4. ADVANCED - Function Instrumentation on compiled JS code.\n")
+                + " 4. PRODUCTION - Function Instrumentation on compiled JS code.\n")
     private String instrumentCode = "NONE";
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;

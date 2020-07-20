@@ -22,7 +22,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -79,11 +78,11 @@ class CoverageInstrumentationPass implements CompilerPass {
             compiler,
             rootNode,
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
-      } else if (instrumentOption == InstrumentOption.ADVANCED) {
+      } else if (instrumentOption == InstrumentOption.PRODUCTION) {
         NodeTraversal.traverse(
             compiler,
             rootNode,
-            new AdvancedCoverageInstrumentationCallback(compiler, new HashMap<>()));
+            new ProductionCoverageInstrumentationCallback(compiler));
 
         return;
       } else {
