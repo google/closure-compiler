@@ -12,3 +12,9 @@ target/
 /yarn.lock
 /node_modules
 /.metadata/
+
+# Bazel stuff
+/bazel-bin
+/bazel-closure-compiler
+/bazel-out
+/bazel-testlogs
