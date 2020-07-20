@@ -45,15 +45,33 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link GlobalNamespace}.
- *
- * @author nicksantos@google.com (Nick Santos)
- */
+/** Tests for {@link GlobalNamespace}. */
 @RunWith(JUnit4.class)
 public final class GlobalNamespaceTest {
 
   @Nullable private Compiler lastCompiler = null;
+
+  @Test
+  public void detectsPropertySetsInAssignmentOperators() {
+    GlobalNamespace namespace = parse("const a = {b: 0}; a.b += 1; a.b = 2;");
+
+    assertThat(namespace.getSlot("a.b").getGlobalSets()).isEqualTo(3);
+  }
+
+  @Test
+  public void detectsPropertySetsInDestructuring() {
+    GlobalNamespace namespace = parse("const a = {b: 0}; [a.b] = [1]; ({b: a.b} = {b: 2});");
+
+    // TODO(b/120303257): this should be 3
+    assertThat(namespace.getSlot("a.b").getGlobalSets()).isEqualTo(1);
+  }
+
+  @Test
+  public void detectsPropertySetsInIncDecOperators() {
+    GlobalNamespace namespace = parse("const a = {b: 0}; a.b++; a.b--;");
+
+    assertThat(namespace.getSlot("a.b").getGlobalSets()).isEqualTo(3);
+  }
 
   @Test
   public void firstGlobalAssignmentIsConsideredDeclaration() {

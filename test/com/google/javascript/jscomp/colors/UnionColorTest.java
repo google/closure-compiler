@@ -36,6 +36,14 @@ public class UnionColorTest {
   }
 
   @Test
+  public void isObjectReturnsFalse() {
+    UnionColor numberOrString =
+        UnionColor.create(ImmutableSet.of(PrimitiveColor.STRING, PrimitiveColor.NUMBER));
+
+    assertThat(numberOrString.isObject()).isFalse();
+  }
+
+  @Test
   public void isUnionHandlesReturnsTrue() {
     UnionColor union =
         UnionColor.create(ImmutableSet.of(PrimitiveColor.NUMBER, PrimitiveColor.STRING));
@@ -90,5 +98,15 @@ public class UnionColorTest {
 
     assertThat(union).isUnion();
     assertThat(union.getAlternates()).hasSize(2);
+  }
+
+  @Test
+  public void unionOfEquivalentObjectsNotAllowed() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            UnionColor.create(
+                ImmutableSet.of(
+                    ObjectColor.create("Foo", "test.js"), ObjectColor.create("Foo", "test.js"))));
   }
 }

@@ -41,6 +41,11 @@ public enum PrimitiveColor implements Color {
   }
 
   @Override
+  public boolean isObject() {
+    return false;
+  }
+
+  @Override
   public ImmutableCollection<Color> getAlternates() {
     // In theory we could consider a primitive a union of a single value. It's not clear whether
     // that would be simpler or not.

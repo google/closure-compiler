@@ -1250,6 +1250,48 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRelatedInstanceAndPrototypePropNotAmbiguated() {
+    test(
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    this.y = 0;",
+            "  }",
+            "  x() {}",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  constructor() {",
+            "    this.b = 0;",
+            "  }",
+            "  a() {}",
+            "}"));
+  }
+
+  @Test
+  public void testRelatedInstanceAndSuperclassPrototypePropNotAmbiguated() {
+    test(
+        lines(
+            "class Foo {", //
+            "  x() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    this.y = 0;",
+            "  }",
+            "}"),
+        lines(
+            "class Foo {", //
+            "  a() {}",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    this.b = 0;",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testPropertiesWithTypesThatHaveBeenNarrowed() {
     String js = lines(
         "/** @constructor */",

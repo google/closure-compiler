@@ -652,4 +652,28 @@ public class InlineAliasesTest extends CompilerTestCase {
             "  const proto = 0;",
             "}"));
   }
+
+  @Test
+  public void testQualifiedNameSetViaUnaryDecrementNotInlined() {
+    testSame(
+        lines(
+            "const a = {b: 0, c: 0};",
+            "const v1 = a.b;",
+            "a.b--;",
+            "const v2 = a.b;",
+            "a.b--;",
+            "use(v1 + v2);"));
+  }
+
+  @Test
+  public void testQualifiedNameSetViaUnaryIncrementNotInlined() {
+    testSame(
+        lines(
+            "const a = {b: 0};",
+            "const v1 = a.b;",
+            "a.b++;",
+            "const v2 = a.b;",
+            "a.b++;",
+            "use(v1 + v2);"));
+  }
 }

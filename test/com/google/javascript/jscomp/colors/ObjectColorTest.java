@@ -18,34 +18,37 @@ package com.google.javascript.jscomp.colors;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
-import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class PrimitiveColorTest {
+public class ObjectColorTest {
   @Test
-  public void isPrimitiveReturnsTrue() {
-    assertThat((Color) PrimitiveColor.NUMBER).isPrimitive();
-    assertThat((Color) PrimitiveColor.UNKNOWN).isPrimitive();
+  public void isPrimitiveReturnsFalse() {
+    ObjectColor foo = ObjectColor.create("Foo", "test.js");
+
+    assertThat(foo.isPrimitive()).isFalse();
   }
 
   @Test
-  public void isObjectReturnsFalse() {
-    assertThat(PrimitiveColor.UNKNOWN.isObject()).isFalse();
+  public void isObjectReturnsTrue() {
+    ObjectColor foo = ObjectColor.create("Foo", "test.js");
+
+    assertThat(foo).isObject();
   }
 
   @Test
-  public void isUnionReturnsFalse() {
-    assertThat(PrimitiveColor.NUMBER.isUnion()).isFalse();
-    assertThat(PrimitiveColor.NULL_OR_VOID.isUnion()).isFalse();
-    assertThat(PrimitiveColor.UNKNOWN.isUnion()).isFalse();
+  public void isUnionHandlesReturnsFalse() {
+    ObjectColor foo = ObjectColor.create("Foo", "test.js");
+
+    assertThat(foo.isUnion()).isFalse();
   }
 
   @Test
-  public void getAlternatesIsNotAllowed() {
-    assertThrows(Exception.class, PrimitiveColor.NUMBER::getAlternates);
+  public void objectEqualityBasedOnClassAndFileName() {
+    assertThat(ObjectColor.create("Foo", "test.js"))
+        .isEqualTo(ObjectColor.create("Foo", "test.js"));
   }
 }
