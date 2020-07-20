@@ -260,7 +260,7 @@ Element.prototype.insertAdjacentElement = function(where, element) {};
 
 /**
  * @param {string} position
- * @param {string} text
+ * @param {(!TrustedHTML|string)} text
  * @return {undefined}
  * @throws {DOMException}
  * @see https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
