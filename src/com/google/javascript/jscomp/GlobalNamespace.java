@@ -444,6 +444,7 @@ class GlobalNamespace
           type = getValueType(n.getFirstChild());
           break;
         case NAME:
+        case GETPROP:
           // TODO(b/127505242): CAST parents may indicate a set.
           // This may be a variable get or set.
           switch (parent.getToken()) {
@@ -492,7 +493,9 @@ class GlobalNamespace
             case ITER_REST:
             case OBJECT_REST:
               // This may be a set.
-              if (NodeUtil.isLhsByDestructuring(n)) {
+              // TODO(b/120303257): this should extend to qnames too, but doing
+              // so causes invalid output. Covered in CollapsePropertiesTest
+              if (n.isName() && NodeUtil.isLhsByDestructuring(n)) {
                 isSet = true;
                 type = NameType.OTHER;
               }
@@ -506,42 +509,12 @@ class GlobalNamespace
                 type = NameType.OTHER;
               }
           }
-          name = n.getString();
-          break;
-        case GETPROP:
-          // TODO(b/117673791): Merge this case with NAME case to fix.
-          // TODO(b/120303257): Merging this case with the NAME case makes this a breaking bug.
-          // TODO(b/127505242): CAST parents may indicate a set.
-          // This may be a namespaced name get or set.
-          if (parent != null) {
-            switch (parent.getToken()) {
-              case ASSIGN:
-                if (parent.getFirstChild() == n) {
-                  isSet = true;
-                  type = getValueType(n.getNext());
-                }
-                break;
-              case GETPROP:
-                // This is nested in another getprop. Return and only create a Ref for the outermost
-                // getprop in the chain.
-                return;
-              case INC:
-              case DEC:
-              case ITER_SPREAD:
-              case OBJECT_SPREAD:
-                break; // isSet = false, type = OTHER.
-              default:
-                if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
-                  isSet = true;
-                  type = NameType.OTHER;
-                }
-            }
-          }
           if (!n.isQualifiedName()) {
             return;
           }
           name = n.getQualifiedName();
           break;
+
         case CALL:
           if (isObjectHasOwnPropertyCall(n)) {
             String qname = n.getFirstFirstChild().getQualifiedName();
