@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import java.util.ArrayList;
+import java.lang.Character;
 import javax.annotation.Nullable;
 
 /**
@@ -901,11 +902,24 @@ public class Scanner {
         | (ch >= 0x03B1 & ch <= 0x03C9); // Greek lowercase letters
   }
 
-  /**
-    Implement ECMAScript grammar for isIdentifierPart.
-   */
+  // Check if char is Unicode Category "Combining spacing mark (Mc)"
+  // This list is not exhaustive!
+  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
   private static boolean isCombiningMark(char ch) {
-    return Character.getType(ch) == Character.NON_SPACING_MARK;
+    return (
+      // 0300-036F
+      (0x0300 <= ch & ch <= 0x036F) |
+      // 1AB0–1AFF
+      (0x1AB0 <= ch & ch <= 0x1AFF) |
+      // 1DC0–1DFF
+      (0x1DC0 <= ch & ch <= 0x1DFF) |
+      // 20D0–20FF
+      (0x20D0 <= ch & ch <= 0x20FF) |
+      // FE20–FE2F
+      (0xFE20 <= ch & ch <= 0xFE2F)
+    );
+    // TODO (ctjl): Implement in a more reliable and future-proofed way, i.e.:
+    // return Character.getType(ch) == Character.NON_SPACING_MARK;
   }
 
   // TODO (ctjl): Implement
