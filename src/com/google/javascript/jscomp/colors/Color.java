@@ -25,5 +25,7 @@ public interface Color {
 
   boolean isUnion();
 
+  boolean isObject();
+
   ImmutableCollection<Color> getAlternates();
 }
