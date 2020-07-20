@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 The Closure Compiler Authors.
+ * Copyright 2020 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import java.util.Objects;
 /**
  * Instrument advanced coverage for javascript.
  */
-class ProductionCoverageInstrumentationCallback extends
+final class ProductionCoverageInstrumentationCallback extends
     NodeTraversal.AbstractPostOrderCallback {
 
   private static final String INSTRUMENT_CODE_FUNCTION_NAME = "instrumentCode";
@@ -161,9 +161,7 @@ class ProductionCoverageInstrumentationCallback extends
       try {
         Base64VLQ.encode(sb, uniqueIdentifier.intValue());
       } catch (IOException e) {
-        // If encoding in Base64 VLQ fails, we will use the original identifier as it will still
-        // maintain obfuscation and partial optimization
-        sb.append(uniqueIdentifier.intValue());
+        throw new AssertionError("Encountered unexpected IOException error");
       }
 
       String result = sb.toString();

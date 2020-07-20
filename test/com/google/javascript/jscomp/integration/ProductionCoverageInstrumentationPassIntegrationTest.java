@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 The Closure Compiler Authors.
+ * Copyright 2020 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest extends
       lines(
           "goog.module('instrument.code');",
           "class InstrumentCode {",
-          "instrumentCode(a,b) {}",
+          "   instrumentCode(a,b) {}",
           "}",
           "const instrumentCodeInstance = new InstrumentCode();",
           "exports = {instrumentCodeInstance};");
@@ -58,7 +58,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest extends
     String source =
         lines(
             "function foo() { ",
-            "console.log('Hello'); ",
+            "   console.log('Hello'); ",
             "}");
 
     String[] sourceArr = {instrumentCodeSource, source};
@@ -66,8 +66,8 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest extends
     String expected =
         lines(
             "function foo() { ",
-            "module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
-            "console.log('Hello'); ",
+            "   module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
+            "   console.log('Hello'); ",
             "}");
 
     String[] expectedArr = {instrumentCodeExpected, expected};
@@ -79,12 +79,16 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest extends
     CompilerOptions options = createCompilerOptions();
 
     String source =
-        lines("var global = 23; console.log(global);");
+        lines(
+            "var global = 23;",
+            "console.log(global);");
 
     String[] sourceArr = {instrumentCodeSource, source};
 
     String expected =
-        lines("var global = 23; console.log(global);");
+        lines(
+            "var global = 23;",
+            "console.log(global);");
 
     String[] expectedArr = {instrumentCodeExpected, expected};
     test(options, sourceArr, expectedArr);
@@ -99,7 +103,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest extends
     String source =
         lines(
             "function foo() { ",
-            "console.log('Hello'); ",
+            "   console.log('Hello'); ",
             "}");
 
     String[] sourceArr = {instrumentCodeSource, source};
@@ -108,7 +112,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest extends
         lines(
             "var module$exports$instrument$code = {}",
             "class module$contents$instrument$code_InstrumentCode {",
-            "instrumentCode(a, b) {};",
+            "   instrumentCode(a, b) {};",
             "}",
             "module$exports$instrument$code.instrumentCodeInstance = ",
             "new module$contents$instrument$code_InstrumentCode;");
@@ -116,38 +120,14 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest extends
     String expected =
         lines(
             "function foo() { ",
-            "module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
-            "console.log('Hello'); ",
+            "   module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
+            "   console.log('Hello'); ",
             "}");
 
     String[] expectedArr = {noTranspilationInstrumentCodeExpected, expected};
     test(options, sourceArr, expectedArr);
   }
 
-  /*
-    protected void test(CompilerOptions options,
-        String[] original, String[] compiled) {
-      Compiler compiler = compile(options, original);
-
-      Node root = compiler.getRoot().getLastChild();
-
-      // Verify that there are no unexpected errors before checking the compiled output
-      assertWithMessage(
-          "Expected no warnings or errors\n"
-              + "Errors: \n"
-              + Joiner.on("\n").join(compiler.getErrors())
-              + "\n"
-              + "Warnings: \n"
-              + Joiner.on("\n").join(compiler.getWarnings()))
-          .that(compiler.getErrors().size() + compiler.getWarnings().size())
-          .isEqualTo(0);
-
-      if (compiled != null) {
-        Node expectedRoot = parseExpectedCode(compiled, options);
-        assertNode(root).usingSerializer(compiler::toSource).isEqualTo(expectedRoot);
-      }
-    }
-  */
   @Override
   protected Compiler compile(CompilerOptions options, String[] original) {
     Compiler compiler =

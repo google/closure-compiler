@@ -3143,7 +3143,7 @@ public class CompilerOptions implements Serializable {
     NONE, // No coverage instrumentation is performed
     LINE_ONLY, // Collect coverage for every executable statement.
     BRANCH_ONLY, // Collect coverage for control-flow branches.
-    PRODUCTION;
+    PRODUCTION; // Collect coverage for functions where code is compiled for production.
 
     public static InstrumentOption fromString(String value) {
       if (value == null) {
