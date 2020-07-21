@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
+import com.google.javascript.jscomp.parsing.parser.util.UnicodeMatch;
 import java.util.ArrayList;
 import javax.annotation.Nullable;
 
@@ -869,111 +870,18 @@ public class Scanner {
     return value;
   }
 
-  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
+  /**
+   * Interface from UnicodeRegex. Includes old optimizations.
+   */
   private static boolean isIdentifierStart(char ch) {
-    // Most code is written in pure ASCII, so create a fast path here.
-    if (ch <= 127) {
-      // Intentionally avoiding short circuiting behavior of "||" and "&&".
-      // This minimizes branches in this code which minimizes branch prediction misses.
-      return ((ch >= 'A' & ch <= 'Z') | (ch >= 'a' & ch <= 'z') | (ch == '_' | ch == '$'));
-    }
-
-    // Handle non-ASCII characters.
-    // TODO(tjgq): This should include all characters with the ID_Start property.
-    if (Character.isLetter(ch)) {
-      return true;
-    }
-
-    // Workaround for b/36459436.
-    // When running under GWT/J2CL, Character.isLetter only handles ASCII.
-    // Angular relies heavily on Latin Small Letter Barred O and Greek Capital Letter Delta.
-    // Greek letters are occasionally found in math code.
-    // Latin letters are found in our own tests.
-    return (ch >= 0x00C0 & ch <= 0x00D6) // Latin letters
-        // 0x00D7 = multiplication sign, not a letter
-        | (ch >= 0x00D8 & ch <= 0x00F6) // Latin letters
-        // 0x00F7 = division sign, not a letter
-        | (ch >= 0x00F8 & ch <= 0x00FF) // Latin letters
-        | ch == 0x0275 // Latin Barred O
-        | (ch >= 0x0391 & ch <= 0x03A1) // Greek uppercase letters
-        // 0x03A2 = unassigned
-        | (ch >= 0x03A3 & ch <= 0x03A9) // Remaining Greek uppercase letters
-        | (ch >= 0x03B1 & ch <= 0x03C9); // Greek lowercase letters
+    return UnicodeMatch.isJavascriptIdentifierStart(ch);
   }
-
-  // Check if char is Unicode Category "Combining spacing mark (Mc)"
-  // This list is not exhaustive!
-  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
-  private static boolean isCombiningMark(char ch) {
-    return (
-      // 0300-036F
-      (0x0300 <= ch & ch <= 0x036F) |
-      // 1AB0–1AFF
-      (0x1AB0 <= ch & ch <= 0x1AFF) |
-      // 1DC0–1DFF
-      (0x1DC0 <= ch & ch <= 0x1DFF) |
-      // 20D0–20FF
-      (0x20D0 <= ch & ch <= 0x20FF) |
-      // FE20–FE2F
-      (0xFE20 <= ch & ch <= 0xFE2F)
-    );
-    // TODO (ctjl): Implement in a more reliable and future-proofed way, i.e.:
-    // return Character.getType(ch) == Character.NON_SPACING_MARK;
-  }
-
-  // TODO (ctjl): Implement
-  private static boolean isConnectorPunctuation() {
-    return true;
-  }
-
-  // TODO (ctjl): Implement
-  private static boolean isZeroWidthJoiner() {
-    return true;
-  }
-
-  // TODO (ctjl): Implement
-  private static boolean isZeroWidthNonJoiner() {
-    return true;
-  }
-
-  @SuppressWarnings("ShortCircuitBoolean") // Intentional to minimize branches in this code
+  
+  /**
+   * Interface from UnicodeRegex. Includes old optimizations.
+   */
   private static boolean isIdentifierPart(char ch) {
-    /**
-      https://www.ecma-international.org/ecma-262/5.1/#sec-7.6
-      IdentifierPart ::
-        IdentifierStart
-        ✓ isIdentifierPart()
-
-        UnicodeCombiningMark
-        ✓ isCombiningMark()
-
-        UnicodeDigit
-        ✓ Character.isDigit()
-
-        UnicodeConnectorPunctuation
-        ✓ isConnectorPunctuation()
-
-        <ZWNJ>
-        ✓ isZeroWidthNonJoiner()
-          
-        <ZWJ>
-        ✓ isZeroWidthJoiner()
-     */
-
-    // Most code is written in pure ASCII, so create a fast path here.
-    if (ch <= 127) {
-      return ((ch >= 'A' & ch <= 'Z')
-          | (ch >= 'a' & ch <= 'z')
-          | (ch >= '0' & ch <= '9')
-          | (ch == '_' | ch == '$'));
-    }
-
-    // Handle non-ASCII characters.
-    // TODO(tjgq): This should include all characters with the ID_Continue property, plus
-    // TODO(ctjl): Implement remaining grammar (zero-width joiners, etc.)
-    return isIdentifierStart(ch)
-        || isCombiningMark(ch)
-        || Character.isDigit(ch);
+    return UnicodeMatch.isJavascriptIdentifierPart(ch);
   }
 
   private Token scanStringLiteral(int beginIndex, char terminator) {
