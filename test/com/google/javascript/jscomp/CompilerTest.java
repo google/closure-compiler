@@ -1428,6 +1428,31 @@ public final class CompilerTest {
     assertThat(result.errors).isEmpty();
   }
 
+  // ES6 Module Tests
+  @Test
+  public void testImportedNames() throws Exception {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
+  }
+
   // https://github.com/google/closure-compiler/issues/2692
   @Test
   public void testGoogNamespaceEntryPoint() throws Exception {
@@ -2686,6 +2711,7 @@ public final class CompilerTest {
 
     System.gc();
     System.runFinalization();
+
     assertThat(registryWeakReference.get()).isNull();
   }
 }
