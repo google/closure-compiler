@@ -504,9 +504,6 @@ public class CompilerOptions implements Serializable {
   /** Removes unused member prototypes */
   public boolean removeUnusedPrototypeProperties;
 
-  /** Tells AnalyzePrototypeProperties it can remove externed props. */
-  public boolean removeUnusedPrototypePropertiesInExterns;
-
   /** Removes unused member properties */
   public boolean removeUnusedClassProperties;
 
@@ -1373,7 +1370,6 @@ public class CompilerOptions implements Serializable {
     extractPrototypeMemberDeclarations =
         ExtractPrototypeMemberDeclarationsMode.OFF;
     removeUnusedPrototypeProperties = false;
-    removeUnusedPrototypePropertiesInExterns = false;
     removeUnusedClassProperties = false;
     removeUnusedVars = false;
     removeUnusedLocalVars = false;
@@ -2301,9 +2297,8 @@ public class CompilerOptions implements Serializable {
     this.inlineGetters = enabled;
   }
 
-  public void setRemoveUnusedPrototypePropertiesInExterns(boolean enabled) {
-    this.removeUnusedPrototypePropertiesInExterns = enabled;
-  }
+  @Deprecated
+  public void setRemoveUnusedPrototypePropertiesInExterns(boolean enabled) {}
 
   public void setCollapseVariableDeclarations(boolean enabled) {
     this.collapseVariableDeclarations = enabled;
@@ -3085,9 +3080,6 @@ public class CompilerOptions implements Serializable {
             .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
             .add("removeUnusedLocalVars", removeUnusedLocalVars)
             .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
-            .add(
-                "removeUnusedPrototypePropertiesInExterns",
-                removeUnusedPrototypePropertiesInExterns)
             .add("removeUnusedVars", removeUnusedVars)
             .add(
                 "renamePrefixNamespaceAssumeCrossChunkNames",

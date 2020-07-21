@@ -3438,15 +3438,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testRmUnusedProtoPropsInExternsUsage() {
-    CompilerOptions options = new CompilerOptions();
-    options.setRemoveUnusedPrototypePropertiesInExterns(true);
-    options.setRemoveUnusedPrototypeProperties(false);
-    assertThrows(
-        CompilerOptionsPreprocessor.InvalidOptionsException.class, () -> test(options, "", ""));
-  }
-
-  @Test
   public void testMaxFunSizeAfterInliningUsage() {
     CompilerOptions options = new CompilerOptions();
     options.setInlineFunctions(Reach.NONE);

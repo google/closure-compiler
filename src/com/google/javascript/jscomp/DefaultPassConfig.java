@@ -2420,8 +2420,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .removeGlobals(options.removeUnusedVars)
                     .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
                     .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
-                    .allowRemovalOfExternProperties(
-                        options.removeUnusedPrototypePropertiesInExterns)
+                    .allowRemovalOfExternProperties(false)
                     .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
                     .removeUnusedObjectDefinePropertiesDefinitions(
                         options.isRemoveUnusedClassProperties())
@@ -2462,9 +2461,7 @@ public final class DefaultPassConfig extends PassConfig {
                   new CrossChunkMethodMotion(
                       compiler,
                       compiler.getCrossModuleIdGenerator(),
-                      // Only move properties in externs if we're not treating
-                      // them as exports.
-                      options.removeUnusedPrototypePropertiesInExterns,
+                      /* canModifyExterns= */ false, // remove this
                       options.crossChunkCodeMotionNoStubMethods))
           .setFeatureSetForOptimizations()
           .build();

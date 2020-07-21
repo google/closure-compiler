@@ -708,19 +708,6 @@ public enum CompilationParam {
     }
   },
 
-  /** Tells AnalyzePrototypeProperties it can remove externed props. */
-  REMOVE_UNUSED_PROTOTYPE_PROPERTIES_IN_EXTERNS(ParamGroup.OPTIMIZATION) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setRemoveUnusedPrototypePropertiesInExterns(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.removeUnusedPrototypePropertiesInExterns;
-    }
-  },
-
   /** Removes unused variables */
   REMOVE_UNUSED_VARIABLES(ParamGroup.OPTIMIZATION) {
     @Override

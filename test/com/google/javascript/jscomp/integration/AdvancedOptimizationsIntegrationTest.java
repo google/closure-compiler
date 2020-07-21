@@ -1275,8 +1275,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
-    options.setRemoveUnusedPrototypePropertiesInExterns(true);
-
     String code =
         ""
         + "/** @constructor */ var X = function() {"
@@ -1284,11 +1282,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         + "/** @constructor */ var Y = function() {"
         + "/** @export */ this.abc = 1;};\n"
         + "alert(new X().abc + new Y().abc);";
-
-    // no export enabled, property name not preserved
-    test(options, code,
-        "alert((new function(){this.a = 1}).a + " +
-            "(new function(){this.a = 1}).a);");
 
     options.setGenerateExports(true);
 
@@ -1298,7 +1291,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     assertThat(lastCompiler.getErrors()).hasSize(1);
 
     options.setExportLocalPropertyDefinitions(true);
-    options.setRemoveUnusedPrototypePropertiesInExterns(false);
 
     // property name preserved due to export
     test(options, code,

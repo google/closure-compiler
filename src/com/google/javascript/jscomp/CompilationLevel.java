@@ -174,7 +174,6 @@ public enum CompilationLevel {
     options.setReserveRawExports(true);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setRemoveUnusedPrototypePropertiesInExterns(false);
     options.setRemoveUnusedClassProperties(true);
     options.setCollapseAnonymousFunctions(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
