@@ -18,3 +18,6 @@ target/
 /bazel-closure-compiler
 /bazel-out
 /bazel-testlogs
+
+# IDE
+.vscode
