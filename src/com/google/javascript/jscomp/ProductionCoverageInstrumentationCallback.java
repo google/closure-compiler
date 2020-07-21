@@ -22,18 +22,23 @@ import com.google.debugging.sourcemap.Base64VLQ;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 
 /**
- * Instrument advanced coverage for javascript.
+ * Instrument production coverage for javascript. This type of coverage will instrument different
+ * levels of source code such as function and branch instrumentation. This instrumentation differs
+ * from the previous implementations ({@link CoverageInstrumentationCallback} and {@link
+ * BranchCoverageInstrumentationCallback}) in that it is properly optimized and obfuscated so that
+ * it can be run on client browsers with the goal of better detecting dead code. The callback will
+ * instrument with a function call which is provided in the source code as opposed to an array.
  */
 final class ProductionCoverageInstrumentationCallback extends
     NodeTraversal.AbstractPostOrderCallback {
 
+  // TODO(psokol): Make this dynamic so that instrumentation does not rely on hardcoded files
   private static final String INSTRUMENT_CODE_FUNCTION_NAME = "instrumentCode";
   private static final String INSTRUMENT_CODE_FILE_NAME = "InstrumentCode.js";
 
@@ -106,7 +111,10 @@ final class ProductionCoverageInstrumentationCallback extends
   }
 
   /**
-   * Create a function call to the Instrument Code function with properly encoded parameters.
+   * Create a function call to the Instrument Code function with properly encoded parameters. The
+   * instrumented function call will be of the following form: MODULE_RENAMING.INSTRUMENT_CODE_INSTANCE.INSTRUMENT_CODE_FUNCTION_NAME(param1,
+   * param2). This with the given constants evaluates to: module$exports$instrument$code.instrumentCodeInstance.instrumentCode(encodedParam,
+   * lineNum);
    *
    * @param traversal The context of the current traversal.
    * @param node      The block node to be instrumented.
@@ -119,10 +127,10 @@ final class ProductionCoverageInstrumentationCallback extends
 
     String encodedParam = parameterMapping.getEncodedParam(traversal.getSourceName(), fnName, type);
 
-    Node inner_prop = IR
+    Node innerProp = IR
         .getprop(IR.name(MODULE_RENAMING), IR.string(INSTRUMENT_CODE_INSTANCE));
-    Node outer_prop = IR.getprop(inner_prop, IR.string(INSTRUMENT_CODE_FUNCTION_NAME));
-    Node functionCall = IR.call(outer_prop, IR.string(encodedParam), IR.number(node.getLineno()));
+    Node outerProp = IR.getprop(innerProp, IR.string(INSTRUMENT_CODE_FUNCTION_NAME));
+    Node functionCall = IR.call(outerProp, IR.string(encodedParam), IR.number(node.getLineno()));
     Node exprNode = IR.exprResult(functionCall);
 
     return exprNode.useSourceInfoIfMissingFromForTree(node);
@@ -137,10 +145,10 @@ final class ProductionCoverageInstrumentationCallback extends
 
     private final List<String> uniqueIdentifier;
     private final List<String> paramValue;
-    private BigInteger nextUniqueIdentifier;
+    private long nextUniqueIdentifier;
 
     ParameterMapping() {
-      nextUniqueIdentifier = new BigInteger("0");
+      nextUniqueIdentifier = 0;
       uniqueIdentifier = new ArrayList<>();
       paramValue = new ArrayList<>();
     }
@@ -148,10 +156,9 @@ final class ProductionCoverageInstrumentationCallback extends
     public String getEncodedParam(String fileName, String functionName, String type) {
       String combinedParam = lenientFormat("%s %s %s", fileName, functionName, type);
 
-      BigInteger uniqueIdentifier = getUniqueIdentifier(combinedParam);
-      BigInteger maxInteger = new BigInteger(Integer.toString(Integer.MAX_VALUE));
+      long uniqueIdentifier = getUniqueIdentifier(combinedParam);
 
-      if (uniqueIdentifier.compareTo(maxInteger) > 0) {
+      if (uniqueIdentifier > Integer.MAX_VALUE) {
         throw new ArithmeticException(
             "Unique Identifier exceeds value of Integer.MAX_VALUE, could not encode with Base 64 VLQ");
       }
@@ -159,7 +166,7 @@ final class ProductionCoverageInstrumentationCallback extends
       StringBuilder sb = new StringBuilder();
 
       try {
-        Base64VLQ.encode(sb, uniqueIdentifier.intValue());
+        Base64VLQ.encode(sb, Math.toIntExact(uniqueIdentifier));
       } catch (IOException e) {
         throw new AssertionError("Encountered unexpected IOException error");
       }
@@ -172,9 +179,9 @@ final class ProductionCoverageInstrumentationCallback extends
 
     }
 
-    private BigInteger getUniqueIdentifier(String param) {
+    private long getUniqueIdentifier(String param) {
 
-      nextUniqueIdentifier = nextUniqueIdentifier.add(new BigInteger("1"));
+      nextUniqueIdentifier++;
       return nextUniqueIdentifier;
     }
 
