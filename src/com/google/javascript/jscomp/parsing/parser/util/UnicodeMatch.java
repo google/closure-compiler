@@ -26,6 +26,13 @@ import java.util.regex.Pattern;
  * 
  * Unicode category patterns with /u flag compiled to vanilla regex with
  * regexpu: https://github.com/mathiasbynens/regexpu
+ * 
+ * IdentifierStart and IdentifierPart regex patterns based on ECMA's
+ * documentation:
+ * https://github.com/tc39/proposal-regexp-unicode-property-escapes#other-examples
+ * 
+ * const regexIdentifierStart = /[$_\p{ID_Start}]/u;
+ * const regexIdentifierPart = /[$_\u200C\u200D\p{ID_Continue}]/u;
  */
 public class UnicodeMatch {
   // Intentional to minimize branches in this code
