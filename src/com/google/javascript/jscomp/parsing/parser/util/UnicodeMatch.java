@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
  * with ECMAScript spec. Retains old optimizations for commonly-used characters,
  * namely ASCII and Latin/Greek charsets. Uses regex for remaining characters
  * (which would throw errors otherwise).
+ * 
+ * Unicode category patterns with /u flag compiled to vanilla regex with
+ * regexpu: https://github.com/mathiasbynens/regexpu
  */
 public class UnicodeMatch {
   // Intentional to minimize branches in this code
