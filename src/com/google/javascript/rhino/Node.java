@@ -2087,6 +2087,7 @@ public class Node implements Serializable {
           Node::isAsyncFunction,
           Node::isAsyncGeneratorFunction,
           Node::isGeneratorFunction,
+          Node::isOptionalChainStart,
           Node::isStaticMember,
           Node::isYieldAll,
           (n) -> n.getIntProp(Prop.SLASH_V),

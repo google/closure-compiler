@@ -73,6 +73,18 @@ public class NodeTest {
   }
 
   @Test
+  public void isEquivalentToConsidersStartOfOptionalChainProperty() {
+    // `a?.b.c`
+    Node singleSegmentOptChain = IR.continueOptChainGetprop(
+        IR.startOptChainGetprop(IR.name("a"), IR.string("b")), IR.string("c"));
+    assertNode(singleSegmentOptChain).isEquivalentTo(singleSegmentOptChain.cloneTree());
+
+    Node twoSegmentOptChain = singleSegmentOptChain.cloneTree();
+    twoSegmentOptChain.setIsOptionalChainStart(true);
+    assertNode(singleSegmentOptChain).isNotEquivalentTo(twoSegmentOptChain);
+  }
+
+  @Test
   public void isEquivalentToForFunctionsConsidersKindOfFunction() {
     Node normalFunction = IR.function(IR.name(""), IR.paramList(), IR.block());
     assertNode(normalFunction).isEquivalentTo(normalFunction.cloneTree());
