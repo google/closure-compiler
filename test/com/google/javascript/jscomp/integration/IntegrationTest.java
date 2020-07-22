@@ -25,6 +25,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCommandLineRunner;
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ClosureCodingConvention;
@@ -39,13 +40,16 @@ import com.google.javascript.jscomp.CompilerOptionsPreprocessor;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CrossChunkMethodMotion;
 import com.google.javascript.jscomp.CustomPassExecutionTime;
+import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.EmptyMessageBundle;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.RenamingMap;
+import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.StrictWarningsGuard;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -54,6 +58,7 @@ import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -4179,6 +4184,58 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setBadRewriteModulesBeforeTypecheckingThatWeWantToGetRidOf(false);
 
     testNoWarnings(options, "/** @typedef {number} */ export let Foo;");
+  }
+
+  @Test
+  @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
+  public void testEs6ModuleEntryPoint() throws Exception {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
+    assertThat(result.errors).isEmpty();
+  }
+
+  @Test
+  @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
+  public void testEs6ModuleEntryPointWithSquareBracketsInFilename() throws Exception {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
+    assertThat(result.errors).isEmpty();
   }
 
   @Test
