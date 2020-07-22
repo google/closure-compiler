@@ -128,7 +128,7 @@ class ExpressionDecomposer {
    * <p>This method should not be called from outside of this class. Instead call {@link
    * #maybeExposeExpression(Node)}.
    */
-  void exposeExpression(Node expression) {
+  private void exposeExpression(Node expression) {
     Node expressionRoot = findExpressionRoot(expression);
     checkNotNull(expressionRoot);
     checkState(NodeUtil.isStatement(expressionRoot), expressionRoot);
