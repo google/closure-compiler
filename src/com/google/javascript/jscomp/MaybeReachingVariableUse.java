@@ -199,7 +199,8 @@ class MaybeReachingVariableUse extends
       case DO:
       case IF:
       case FOR:
-        computeMayUse(NodeUtil.getConditionExpression(n), cfgNode, output, conditional);
+        Node condExpr = NodeUtil.getConditionExpression(n);
+        computeMayUse(condExpr, cfgNode, output, conditional);
         return;
 
       case FOR_IN:

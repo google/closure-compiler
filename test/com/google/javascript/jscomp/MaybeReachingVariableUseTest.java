@@ -68,6 +68,8 @@ public final class MaybeReachingVariableUseTest {
   @Test
   public void testLoops() {
     assertMatch("var x=0; while(a){ D:x=1 }; U:x");
+    assertMatch("var x=0; for(;cond;) { D:x=1 }; U:x");
+
     assertNotMatch("var x=0; for(;;) { D:x=1 }; U:x");
     assertNotMatch("var x=0; for(;true;) { D:x=1 }; U:x");
     assertNotMatch("var x=0; while (true) { D:x=1 }; U:x");
@@ -216,7 +218,8 @@ public final class MaybeReachingVariableUseTest {
   /** The def of x at D: is not used by the read of x at U:. */
   private void assertNotMatch(String src, boolean async) {
     computeUseDef(src, async);
-    assertThat(useDef.getUses("x", def)).doesNotContain(uses);
+    Collection<Node> result = useDef.getUses("x", def);
+    assertThat(result.containsAll(uses)).isFalse();
   }
 
   /** Computes reaching use on given source. */
