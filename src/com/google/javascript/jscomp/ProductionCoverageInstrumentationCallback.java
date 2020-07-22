@@ -58,7 +58,11 @@ final class ProductionCoverageInstrumentationCallback extends
   private final AbstractCompiler compiler;
   private final ParameterMapping parameterMapping;
   boolean visitedInstrumentCodeFile = false;
-  private String functionName = "Anonymous";
+
+  /**
+   * Stores the name of the current function that encapsulates the node being instrumented
+   */
+  private String cachedFunctionName = "Anonymous";
 
   public ProductionCoverageInstrumentationCallback(
       AbstractCompiler compiler) {
@@ -90,8 +94,8 @@ final class ProductionCoverageInstrumentationCallback extends
     }
 
     if (node.isFunction()) {
-      functionName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(node));
-      instrumentCode(traversal, node.getLastChild(), functionName);
+      cachedFunctionName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(node));
+      instrumentCode(traversal, node.getLastChild(), cachedFunctionName);
     }
   }
 
