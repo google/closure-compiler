@@ -23,7 +23,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link MoveFunctionDeclarations}
- *
  */
 @RunWith(JUnit4.class)
 public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
@@ -36,6 +35,22 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
   @Test
   public void testFunctionDeclarations() {
     test("a; function f(){} function g(){}", "var f = function(){}; var g = function(){}; a;");
+  }
+
+  @Test
+  public void testFunctionDeclarationsInBlock() {
+    testSame("a; if (1) { function f(){} function g(){} }");
+  }
+
+  @Test
+  public void testClassDeclarations() {
+    // classes don't hoist
+    test("a; class B{} class C{}", "a; var B = class{}; var C = class{};");
+  }
+
+  @Test
+  public void testClassDeclarationsInBlock() {
+    testSame("a; if (1) { class B{} class C{} }");
   }
 
   @Test
