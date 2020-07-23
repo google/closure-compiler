@@ -156,7 +156,8 @@ class OptionalChainRewriter {
     // did.
     final Node enclosingScript = NodeUtil.getEnclosingScript(enclosingStatement);
     NodeUtil.addFeatureToScript(enclosingScript, Feature.LET_DECLARATIONS, compiler);
-    compiler.reportChangeToChangeScope(enclosingScript);
+
+    compiler.reportChangeToEnclosingScope(chainParent);
   }
 
   /**
@@ -177,7 +178,7 @@ class OptionalChainRewriter {
    * @param fullChainEnd The very last optional chain node.
    * @return The hook expression that replaced the chain.
    */
-  Node rewriteInitialSegment(final Node fullChainStart, final Node fullChainEnd) {
+  private Node rewriteInitialSegment(final Node fullChainStart, final Node fullChainEnd) {
     // `receiverNode?.restOfChain`
     Node receiverNode = fullChainStart.getFirstChild();
     // for `a?.b.c?.d`, this will be `a?.b.c`, because the NodeUtil method finds the end
