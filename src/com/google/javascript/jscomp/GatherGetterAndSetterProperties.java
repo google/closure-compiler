@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
  *
  * <p>Used to back off certain optimizations, e.g. code removal.
  */
-final class GatherGetterAndSetterProperties implements CompilerPass {
+public final class GatherGetterAndSetterProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
@@ -42,7 +42,7 @@ final class GatherGetterAndSetterProperties implements CompilerPass {
   }
 
   /** Gathers all getters and setters in the AST. */
-  static void update(AbstractCompiler compiler, Node externs, Node root) {
+  public static void update(AbstractCompiler compiler, Node externs, Node root) {
     // TODO(nickreid): We probably don't need to re-gather from the externs. They don't change so
     // the first collection should be good forever.
     // For now we traverse both trees every time because there's no reason we have to treat them

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -24,7 +24,17 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DefaultNameGenerator;
+import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
+import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.NameGenerator;
+import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.GraphColoring;
@@ -49,29 +59,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Renames unrelated properties to the same name, using type information.
- * This allows better compression as more properties can be given short names.
+ * Renames unrelated properties to the same name, using type information. This allows better
+ * compression as more properties can be given short names.
  *
- * <p>Properties are considered unrelated if they are never referenced from the
- * same type or from a subtype of each others' types, thus this pass is only
- * effective if type checking is enabled.
+ * <p>Properties are considered unrelated if they are never referenced from the same type or from a
+ * subtype of each others' types, thus this pass is only effective if type checking is enabled.
  *
- * Example:
- * <code>
+ * <p>Example: <code>
  *   Foo.fooprop = 0;
  *   Foo.fooprop2 = 0;
  *   Bar.barprop = 0;
- * </code>
- *
- * becomes:
- *
- * <code>
+ * </code> becomes: <code>
  *   Foo.a = 0;
  *   Foo.b = 0;
  *   Bar.a = 0;
  * </code>
  */
-class AmbiguateProperties implements CompilerPass {
+public class AmbiguateProperties implements CompilerPass {
   private static final Logger logger = Logger.getLogger(
       AmbiguateProperties.class.getName());
 
@@ -123,10 +127,11 @@ class AmbiguateProperties implements CompilerPass {
   /** A set of types that invalidate properties from ambiguation. */
   private final InvalidatingTypes invalidatingTypes;
 
-  AmbiguateProperties(
+  public AmbiguateProperties(
       AbstractCompiler compiler,
       char[] reservedFirstCharacters,
-      char[] reservedNonFirstCharacters) {
+      char[] reservedNonFirstCharacters,
+      Set<String> externProperties) {
     checkState(compiler.getLifeCycleStage().isNormalized());
     this.compiler = compiler;
     this.reservedFirstCharacters = reservedFirstCharacters;
@@ -138,18 +143,17 @@ class AmbiguateProperties implements CompilerPass {
         .build();
 
     this.externedNames =
-        ImmutableSet.<String>builder()
-            .add("prototype")
-            .addAll(compiler.getExternProperties())
-            .build();
+        ImmutableSet.<String>builder().add("prototype").addAll(externProperties).build();
   }
 
   static AmbiguateProperties makePassForTesting(
       AbstractCompiler compiler,
       char[] reservedFirstCharacters,
-      char[] reservedNonFirstCharacters) {
+      char[] reservedNonFirstCharacters,
+      Set<String> externProperties) {
     AmbiguateProperties ap =
-        new AmbiguateProperties(compiler, reservedFirstCharacters, reservedNonFirstCharacters);
+        new AmbiguateProperties(
+            compiler, reservedFirstCharacters, reservedNonFirstCharacters, externProperties);
     ap.renamingMap = new HashMap<>();
     return ap;
   }
@@ -232,6 +236,7 @@ class AmbiguateProperties implements CompilerPass {
     }
 
     // We may have renamed getter / setter properties.
+    // TODO(b/161947315): this shouldn't be the responsibility of AmbiguateProperties
     GatherGetterAndSetterProperties.update(compiler, externs, root);
 
     if (logger.isLoggable(Level.FINE)) {

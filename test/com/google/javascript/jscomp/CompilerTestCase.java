@@ -1005,6 +1005,11 @@ public abstract class CompilerTestCase {
     gatherExternPropertiesEnabled = true;
   }
 
+  protected final Set<String> getGatheredExternProperties() {
+    checkState(this.gatherExternPropertiesEnabled, "Must enable gatherExternProperties");
+    return lastCompiler.getExternProperties();
+  }
+
   /** Disables verification that getters and setters were correctly updated by the pass. */
   protected final void disableGetterAndSetterUpdateValidation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");

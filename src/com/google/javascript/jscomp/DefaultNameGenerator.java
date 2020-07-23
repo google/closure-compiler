@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  *
  * <p>This class is not thread safe.
  */
-final class DefaultNameGenerator implements NameGenerator {
+public final class DefaultNameGenerator implements NameGenerator {
 
   /**
    * Represents a char that can be used in renaming as well as how often that char appears in the

@@ -47,9 +47,10 @@ import javax.annotation.Nullable;
  * <p>This transformation simplifies the call graph so smart name removal, cross module code motion
  * and other passes can do more.
  *
- * <p>To work effectively, this pass depends on {@link DisambiguateProperties} running first to do a
- * lot of heavy-lifting. It assumes that different methods will have unique names which in general
- * isn't true for source JavaScript.
+ * <p>To work effectively, this pass depends on {@link
+ * com.google.javascript.jscomp.disambiguate.DisambiguateProperties} running first to do a lot of
+ * heavy-lifting. It assumes that different methods will have unique names which in general isn't
+ * true for source JavaScript.
  *
  * <p>This pass should only be used in production code if property and variable renaming are turned
  * on. Resulting code may also benefit from `--collapse_anonymous_functions` and

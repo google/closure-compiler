@@ -29,9 +29,10 @@ import javax.annotation.Nullable;
 
 /**
  * Keeps track of "invalidating types" that force type-based optimizations to back off, specifically
- * for {@link InlineProperties}, {@link AmbiguateProperties}, and {@link DisambiguateProperties}.
- * Note that disambiguation has slightly different behavior from the other two, as pointed out in
- * implementation comments.
+ * for {@link InlineProperties}, {@link
+ * com.google.javascript.jscomp.disambiguate.AmbiguateProperties}, and {@link
+ * com.google.javascript.jscomp.disambiguate.DisambiguateProperties}. Note that disambiguation has
+ * slightly different behavior from the other two, as pointed out in implementation comments.
  */
 public final class InvalidatingTypes {
   private final ImmutableSet<JSType> types;

@@ -36,6 +36,8 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
+import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
@@ -2601,7 +2603,8 @@ public final class DefaultPassConfig extends PassConfig {
                   new AmbiguateProperties(
                       compiler,
                       options.getPropertyReservedNamingFirstChars(),
-                      options.getPropertyReservedNamingNonFirstChars()))
+                      options.getPropertyReservedNamingNonFirstChars(),
+                      compiler.getExternProperties()))
           .setFeatureSetForOptimizations()
           .build();
 

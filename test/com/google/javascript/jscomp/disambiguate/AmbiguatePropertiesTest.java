@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroups;
+import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,10 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit test for AmbiguateProperties Compiler pass.
- *
- */
+/** Unit test for {@link AmbiguateProperties} Compiler pass. */
 @RunWith(JUnit4.class)
 public final class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
@@ -65,7 +67,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
       @Override
       public void process(Node externs, Node root) {
         lastPass =
-            AmbiguateProperties.makePassForTesting(compiler, new char[] {'$'}, new char[] {'$'});
+            AmbiguateProperties.makePassForTesting(
+                compiler, new char[] {'$'}, new char[] {'$'}, getGatheredExternProperties());
         lastPass.process(externs, root);
       }
     };
@@ -692,8 +695,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testTypeMismatch() {
-    ignoreWarnings(
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     testSame(lines(
         "/** @constructor */var Foo = function(){};",
         "/** @constructor */var Bar = function(){};",
@@ -837,8 +839,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testInterfaceWithSubInterfaceAndDirectImplementors() {
-    ignoreWarnings(
-        TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED);
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     test(
         lines(
             "/** @interface */ function Foo(){};",
@@ -1730,7 +1731,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   public void testObjectPatternQuotedStringKey_notAmbiguated() {
     // this emits a warning for a computed property access on a struct, since property ambiguation
     // will break this code.
-    ignoreWarnings(TypeValidator.ILLEGAL_PROPERTY_ACCESS);
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     test(
         lines(
             "class Foo {", //
@@ -1748,7 +1749,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   public void testObjectPatternComputedProperty_notAmbiguated() {
     // this emits a warning for a computed property access on a struct, since property ambiguation
     // will break this code.
-    ignoreWarnings(TypeValidator.ILLEGAL_PROPERTY_ACCESS);
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     test(
         lines(
             "class Foo {", //
