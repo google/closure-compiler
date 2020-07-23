@@ -121,17 +121,23 @@ public final class InvalidatingTypes {
       return new InvalidatingTypes(this, types);
     }
 
-    // TODO(sdh): Investigate whether this can be consolidated between all three passes.
-    // In particular, mutation testing suggests allowEnums=true should work everywhere.
-    // We should revisit what breaks when we disallow scalars everywhere.
     public Builder writeInvalidationsInto(@Nullable Multimap<JSType, Node> invalidationMap) {
       this.invalidationMap = invalidationMap;
       return this;
     }
 
-    public Builder allowEnumsAndScalars() {
-      // Ambiguate and Inline do not allow enums or scalars.
-      this.allowEnums = this.allowScalars = true;
+    // TODO(sdh): Investigate whether this can be consolidated between all three passes.
+    // In particular, mutation testing suggests allowEnums=true should work everywhere.
+    // We should revisit what breaks when we disallow scalars everywhere.
+    public Builder allowEnums() {
+      // Ambiguate and Inline do not allow enums
+      this.allowEnums = true;
+      return this;
+    }
+
+    public Builder allowScalars() {
+      // Ambiguate and Inline do not allow scalars.
+      this.allowScalars = true;
       return this;
     }
 

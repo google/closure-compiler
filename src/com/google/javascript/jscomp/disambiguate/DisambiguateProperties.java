@@ -377,12 +377,14 @@ public class DisambiguateProperties implements CompilerPass {
     this.propertiesToErrorFor = propertiesToErrorFor;
     this.invalidationMap = propertiesToErrorFor.isEmpty() ? null : LinkedHashMultimap.create();
 
-    this.invalidatingTypes = new InvalidatingTypes.Builder(registry)
-        .writeInvalidationsInto(this.invalidationMap)
-        .addAllTypeMismatches(compiler.getTypeMismatches())
-        .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
-        .allowEnumsAndScalars()
-        .build();
+    this.invalidatingTypes =
+        new InvalidatingTypes.Builder(registry)
+            .writeInvalidationsInto(this.invalidationMap)
+            .addAllTypeMismatches(compiler.getTypeMismatches())
+            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
+            .allowEnums()
+            .allowScalars()
+            .build();
   }
 
   @Override
