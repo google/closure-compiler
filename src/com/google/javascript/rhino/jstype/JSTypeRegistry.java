@@ -618,7 +618,7 @@ public class JSTypeRegistry implements Serializable {
     // BigInt
     FunctionType bigIntObjectFunctionType =
         nativeConstructorBuilder("BigInt")
-            .withParameters(createOptionalParameters(allType))
+            .withParameters(createParameters(allType))
             .withReturnType(bigIntType)
             .build();
     bigIntObjectFunctionType.getPrototype(); // Force initialization
