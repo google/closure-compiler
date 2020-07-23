@@ -53,6 +53,8 @@ script:
   - mvn -Dstyle.color=always -pl com.google.javascript:closure-compiler javadoc:javadoc
   # Test new Bazel based J2CL build
   - ./build_test.sh
+  # Kill Bazel workers to clean up their memory usage
+  - bazel shutdown
 
 
 # Causes the build to run on a VM instead of in a container, to avoid OOM errors.
