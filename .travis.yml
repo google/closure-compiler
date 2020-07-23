@@ -33,7 +33,7 @@ install: true
 before_script:
   - echo "startup --output_base=$HOME/.cache/bazel" >> .bazelrc
   - echo "common --noshow_progress" >> .bazelrc
-  - echo "common --noshow_loading_progress" >> .bazelrc
+  - echo "build --noshow_loading_progress" >> .bazelrc
   - echo "build --verbose_failures" >> .bazelrc
 
 script:
