@@ -78,6 +78,13 @@ class CoverageInstrumentationPass implements CompilerPass {
             compiler,
             rootNode,
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
+      } else if (instrumentOption == InstrumentOption.PRODUCTION) {
+        NodeTraversal.traverse(
+            compiler, rootNode, new ProductionCoverageInstrumentationCallback(compiler));
+
+        // Does not require any additional header code as it relies on the instrumentation function
+        // being part of the source code.
+        return;
       } else {
         NodeTraversal.traverse(
             compiler, rootNode, new CoverageInstrumentationCallback(instrumentationData, reach));

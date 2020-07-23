@@ -3134,7 +3134,8 @@ public class CompilerOptions implements Serializable {
   public enum InstrumentOption {
     NONE, // No coverage instrumentation is performed
     LINE_ONLY, // Collect coverage for every executable statement.
-    BRANCH_ONLY; // Collect coverage for control-flow branches.
+    BRANCH_ONLY, // Collect coverage for control-flow branches.
+    PRODUCTION; // Collect coverage for functions where code is compiled for production.
 
     public static InstrumentOption fromString(String value) {
       if (value == null) {
@@ -3147,6 +3148,8 @@ public class CompilerOptions implements Serializable {
           return InstrumentOption.LINE_ONLY;
         case "BRANCH":
           return InstrumentOption.BRANCH_ONLY;
+        case "PRODUCTION":
+          return InstrumentOption.PRODUCTION;
         default:
           return null;
       }
