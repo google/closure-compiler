@@ -146,4 +146,30 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
         "var y=()=>startMarker();",
         CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
+
+  @Test
+  public void testFunctionDeclaration1() {
+    test(
+        "startMarker(); a(); function fn() {}; b(); endMarker()",
+        "startMarker();var fn=function(){};a();b();endMarker()");
+  }
+
+  @Test
+  public void testFunctionDeclaration2() {
+    testSame("startMarker();a();var fn=function(){};b();endMarker()");
+  }
+
+  @Test
+  public void testClassDeclaration1() {
+    // Document that classes are mishandled with regard to block scoping
+    testSame("startMarker();class C{}endMarker()");
+  }
+
+  @Test
+  public void testVariableDeclaration1() {
+    // Document that let and const are mishandled with regard to block scoping
+    testSame("startMarker();var x=1;endMarker()");
+    testSame("startMarker();let x=1;endMarker()");
+    testSame("startMarker();const x=1;endMarker()");
+  }
 }

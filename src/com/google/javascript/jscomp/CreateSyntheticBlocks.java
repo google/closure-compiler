@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -27,7 +28,13 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * Creates synthetic blocks to optimizations from moving code past markers in the source.
+ * Creates synthetic blocks to simplify preventing optimizations from moving code past "markers" in
+ * the source.
+ *
+ * <p>This supports a serving infrastructure that selectively removes parts that the code, that are
+ * tagged using the start/end section markers. This removal happens at serving time not compilation
+ * time. The conventional markers are "_START_TEMPLATE_SECTION" and "_END_TEMPLATE_SECTION"
+ * respectively.
  */
 class CreateSyntheticBlocks extends AbstractPostOrderCallback implements CompilerPass {
   static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.error(
@@ -87,6 +94,42 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
   }
 
   /**
+   * Rewrite the function declaration from: function x() {} FUNCTION NAME x PARAM_LIST BLOCK to: var
+   * x = function() {}; VAR NAME x FUNCTION NAME (w/ empty string) PARAM_LIST BLOCK
+   */
+  private void rewriteFunctionDeclaration(Node n) {
+    // Prepare a spot for the function.
+    Node oldNameNode = n.getFirstChild();
+    Node fnNameNode = oldNameNode.cloneNode();
+    Node var = IR.var(fnNameNode).srcref(n);
+
+    // Prepare the function
+    oldNameNode.setString("");
+    compiler.reportChangeToEnclosingScope(oldNameNode);
+
+    // Move the function to the front of the parent
+    Node parent = n.getParent();
+    parent.removeChild(n);
+    parent.addChildToFront(var);
+    compiler.reportChangeToEnclosingScope(var);
+    fnNameNode.addChildToFront(n);
+  }
+
+  private void rewriteFunctionDeclarationsInBlock(Node block) {
+    checkState(block.isBlock());
+
+    Node next = null;
+    for (Node current = block.getFirstChild(); current != null; current = next) {
+      // Get the next node now, because the current node will moving and that will change its next
+      // sibling.
+      next = current.getNext();
+      if (NodeUtil.isFunctionDeclaration(current)) {
+        rewriteFunctionDeclaration(current);
+      }
+    }
+  }
+
+  /**
    * @param marker The marker to add synthetic blocks for.
    */
   private void addBlocks(Marker marker) {
@@ -119,6 +162,14 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
     outerBlock.addChildToBack(innerBlock);
     // and finally the end node.
     outerBlock.addChildToBack(outerBlock.getNext().detach());
+
+    // NOTE: Moving the code into a block made sense prior to ES2015 when declarations were never
+    // block scoped.  But with ES2015+ function, class, let and const are all block scoped.
+    // Here we are only rewriting functions because this is the behavior that "normalize" previously
+    // had and we aren't currently (July 2020) trying to improve this code's behavior.  This
+    // maintains the status quo and allows the normalization of function to be removed.
+    //
+    rewriteFunctionDeclarationsInBlock(innerBlock);
 
     compiler.reportChangeToEnclosingScope(outerBlock);
   }
