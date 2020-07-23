@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2020;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
@@ -377,8 +378,7 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("rewriteNullishCoalesceOperator")
           .setInternalFactory(RewriteNullishCoalesceOperator::new)
-          .setFeatureSet(ES_NEXT_IN)
-          // TODO(annieyw) change to ES2020 when avail
+          .setFeatureSet(ES2020)
           .build();
 
   /**
