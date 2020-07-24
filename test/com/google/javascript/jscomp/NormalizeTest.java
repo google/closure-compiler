@@ -318,11 +318,11 @@ public final class NormalizeTest extends CompilerTestCase {
 
   @Test
   public void testFunctionDeclInBlockScope() {
-    test("var x; { function g() {} }", "var x; { var g = function() {} }");
-    test("var g; { function g() {} }", "var g; { var g$jscomp$1 = function() {} }");
+    testSame("var x; { function g() {} }");
+    test("var g; { function g() {} }", "var g; { function g$jscomp$1() {} }");
 
-    testInFunction("var x; { function g() {} }", "var x; { var g = function() {} }");
-    testInFunction("var g; { function g() {} }", "var g; { var g$jscomp$1 = function() {} }");
+    testSameInFunction("var x; { function g() {} }");
+    testInFunction("var g; { function g() {} }", "var g; { function g$jscomp$1() {} }");
   }
 
   @Test
@@ -510,10 +510,8 @@ public final class NormalizeTest extends CompilerTestCase {
   @Test
   public void testMoveFunctions2() {
     testSame("function f() { function foo() {} }");
-    test("function f() { f(); {function bar() {}}}",
-        "function f() { f(); {var bar = function () {}}}");
-    test("function f() { f(); if (true) {function bar() {}}}",
-        "function f() { f(); if (true) {var bar = function () {}}}");
+    testSame("function f() { f(); {function bar() {}}}");
+    testSame("function f() { f(); if (true) {function bar() {}}}");
   }
 
   private static String inFunction(String code) {
@@ -535,27 +533,18 @@ public final class NormalizeTest extends CompilerTestCase {
     test("var f = function f() {}",
         "var f = function f$jscomp$1() {}");
     testSame("var f = function g() {}");
-    test("{function g() {}}",
-        "{var g = function () {}}");
+    testSame("{function g() {}}");
     testSame("if (function g() {}) {}");
-    test("if (true) {function g() {}}",
-        "if (true) {var g = function () {}}");
-    test("if (true) {} else {function g() {}}",
-        "if (true) {} else {var g = function () {}}");
+    testSame("if (true) {function g() {}}");
+    testSame("if (true) {} else {function g() {}}");
     testSame("switch (function g() {}) {}");
-    test("switch (1) { case 1: function g() {}}",
-        "switch (1) { case 1: var g = function () {}}");
-    test("if (true) {function g() {} function h() {}}",
-        "if (true) {var h = function() {}; var g = function () {}}");
-
+    testSame("switch (1) { case 1: function g() {}}");
+    testSame("if (true) {function g() {} function h() {}}");
 
     testSameInFunction("function f() {}");
-    testInFunction("f(); {function g() {}}",
-        "f(); {var g = function () {}}");
-    testInFunction("f(); if (true) {function g() {}}",
-        "f(); if (true) {var g = function () {}}");
-    testInFunction("if (true) {} else {function g() {}}",
-        "if (true) {} else {var g = function () {}}");
+    testSameInFunction("f(); {function g() {}}");
+    testSameInFunction("f(); if (true) {function g() {}}");
+    testSameInFunction("if (true) {} else {function g() {}}");
   }
 
   @Test
