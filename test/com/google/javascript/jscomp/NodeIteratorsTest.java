@@ -34,7 +34,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for NodeIterators.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class NodeIteratorsTest {

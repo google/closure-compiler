@@ -25,7 +25,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for DiagnosticGroup.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class DiagnosticGroupTest {

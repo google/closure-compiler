@@ -38,7 +38,6 @@ import org.junit.runners.JUnit4;
 /**
  * Testcase for WarningsGuard and its implementations.
  *
- * @author anatol@google.com (Anatol Pomazau)
  */
 @RunWith(JUnit4.class)
 public final class WarningsGuardTest {

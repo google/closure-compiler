@@ -34,7 +34,6 @@ import org.junit.runners.JUnit4;
  * Tests for {@link LiveVariablesAnalysis}. Test cases are snippets of a function and assertions are
  * made at the instruction labeled with {@code X}.
  *
- * @author simranarora@google.com (Simran Arora)
  */
 @RunWith(JUnit4.class)
 public final class LiveVariablesAnalysisTest {

@@ -23,7 +23,6 @@ import org.junit.runners.JUnit4;
 /**
  * {@link CheckDebuggerStatementTest} is a unit test for {@link CheckDebuggerStatement}.
  *
- * @author bolinfest@google.com (Michael Bolin)
  */
 @RunWith(JUnit4.class)
 public final class CheckDebuggerStatementTest extends CompilerTestCase {

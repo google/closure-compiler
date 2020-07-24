@@ -24,7 +24,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CrossChunkCodeMotion}.
- *
  */
 @RunWith(JUnit4.class)
 public final class CrossChunkCodeMotionTest extends CompilerTestCase {

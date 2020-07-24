@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link GatherRawExports}.
  *
- * @author johnlenz@google.com (John Lenz)
  */
 @RunWith(JUnit4.class)
 public final class GatherRawExportsTest extends CompilerTestCase {

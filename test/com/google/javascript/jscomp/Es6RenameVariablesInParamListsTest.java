@@ -25,7 +25,6 @@ import org.junit.runners.JUnit4;
 /**
  * Test case for {@link Es6RenameVariablesInParamLists}.
  *
- * @author moz@google.com (Michael Zhou)
  */
 @RunWith(JUnit4.class)
 public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {

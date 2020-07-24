@@ -25,7 +25,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link CreateSyntheticBlocks}
  *
- * @author johnlenz@google.com (John Lenz)
  */
 @RunWith(JUnit4.class)
 public final class CreateSyntheticBlocksTest extends CompilerTestCase {

@@ -41,8 +41,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {@link ExpressionDecomposer}
- *
- * @author johnlenz@google.com (John Lenz)
  */
 // Note: functions "foo" and "goo" are external functions in the helper.
 @RunWith(JUnit4.class)

@@ -28,8 +28,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link Es6SortedDependencies}
  *
- * @author nicksantos@google.com (Nick Santos)
- * @author stalcup@google.com (John Stalcup)
  */
 @RunWith(JUnit4.class)
 public class Es6SortedDependenciesTest {

@@ -49,7 +49,6 @@ import org.junit.runners.JUnit4;
 /**
  * An integration test for symbol table creation
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class SymbolTableTest {

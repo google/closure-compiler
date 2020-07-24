@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for PrepareAst.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class PrepareAstTest extends CompilerTestCase {

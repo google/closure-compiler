@@ -41,7 +41,6 @@ import org.junit.runners.JUnit4;
 /**
  * Various tests for {@code replaceScript} functionality of Closure Compiler.
  *
- * @author bashir@google.com (Bashir Sadjad)
  */
 @RunWith(JUnit4.class)
 public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {

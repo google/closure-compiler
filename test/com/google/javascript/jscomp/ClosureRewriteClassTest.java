@@ -36,7 +36,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit tests for ClosureRewriteGoogClass
  *
- * @author johnlenz@google.com (John Lenz)
  */
 @RunWith(JUnit4.class)
 public final class ClosureRewriteClassTest extends CompilerTestCase {

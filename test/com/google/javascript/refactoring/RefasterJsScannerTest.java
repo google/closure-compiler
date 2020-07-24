@@ -43,7 +43,6 @@ import org.junit.runners.JUnit4;
  * scanner, and to reuse the same compiler object for both the test code and the
  * scanner.
  *
- * @author mknichel@google.com (Mark Knichel)
  */
 // TODO(mknichel): Make this a SmallTest by disabling threads in the JS Compiler.
 @RunWith(JUnit4.class)

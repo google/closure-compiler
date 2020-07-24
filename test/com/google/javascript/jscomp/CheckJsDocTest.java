@@ -38,8 +38,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CheckJSDoc}.
- *
- * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
 @RunWith(JUnit4.class)
 public final class CheckJsDocTest extends CompilerTestCase {

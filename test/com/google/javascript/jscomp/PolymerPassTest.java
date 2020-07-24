@@ -42,7 +42,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit tests for PolymerPass
  *
- * @author jlklein@google.com (Jeremy Klein)
  */
 @RunWith(JUnit4.class)
 public class PolymerPassTest extends CompilerTestCase {

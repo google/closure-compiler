@@ -34,7 +34,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit tests for PerformanceTracker.
  *
- * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 @RunWith(JUnit4.class)
 public final class PerformanceTrackerTest {

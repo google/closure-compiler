@@ -71,7 +71,6 @@ import org.junit.runners.JUnit4;
  * Tests for {@link TypedScopeCreator} and {@link TypeInference}. Admittedly, the name is a bit of a
  * misnomer.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class TypedScopeCreatorTest extends CompilerTestCase {

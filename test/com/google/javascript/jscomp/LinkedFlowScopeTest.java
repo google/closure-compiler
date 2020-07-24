@@ -32,7 +32,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for LinkedFlowScope.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class LinkedFlowScopeTest extends CompilerTypeTestCase {

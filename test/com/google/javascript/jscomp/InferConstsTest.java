@@ -32,7 +32,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link InferConsts}.
  *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 @RunWith(JUnit4.class)
 public final class InferConstsTest extends CompilerTestCase {

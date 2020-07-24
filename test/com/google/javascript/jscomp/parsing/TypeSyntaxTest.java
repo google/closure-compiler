@@ -53,7 +53,6 @@ import org.junit.runners.JUnit4;
  * <p>(It tests both parsing from source to a parse tree, and conversion from a parse tree to an AST
  * in {@link IR} and {@link TypeDeclarationsIR}.)
  *
- * @author martinprobst@google.com (Martin Probst)
  */
 @RunWith(JUnit4.class)
 public final class TypeSyntaxTest {

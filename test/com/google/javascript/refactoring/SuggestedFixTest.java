@@ -39,7 +39,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit tests for JsFlume {@link SuggestedFix}.
  *
- * @author mknichel@google.com (Mark Knichel)
  */
 @RunWith(JUnit4.class)
 public class SuggestedFixTest {

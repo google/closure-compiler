@@ -29,7 +29,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link ClosureOptimizePrimitives}.
  *
- * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
 public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {

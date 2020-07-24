@@ -25,7 +25,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit tests for the {@link PathUtil} class.
  *
- * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
 public final class PathUtilTest {
