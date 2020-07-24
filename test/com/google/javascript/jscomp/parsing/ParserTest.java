@@ -5322,7 +5322,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingGetProp() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.b").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
@@ -5335,7 +5334,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingGetPropWithKeyword() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.finally").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
@@ -5348,7 +5346,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingGetElem() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.[1]").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_GETELEM);
@@ -5361,7 +5358,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingCall() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.()").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_CALL);
@@ -5374,7 +5370,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
   // Check that optional chain node that is an arg of a call gets marked as the start of a new chain
   @Test
   public void optionalChainingStartOfChain_innerChainIsArgOfACall() {
-    mode = LanguageMode.UNSUPPORTED;
     Node optChainCall = parse("a?.b?.(x?.y);").getFirstFirstChild();
     assertThat(optChainCall.isOptChainCall()).isTrue();
 
@@ -5392,7 +5387,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingStartOfChain_optGetProp() {
-    mode = LanguageMode.UNSUPPORTED;
     Node outterGet = parse("a?.b.c").getFirstFirstChild();
     Node innerGet = outterGet.getFirstChild();
 
@@ -5415,7 +5409,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingStartOfChain_optGetElem() {
-    mode = LanguageMode.UNSUPPORTED;
     Node outterGet = parse("a?.[b][c]").getFirstFirstChild();
     Node innerGet = outterGet.getFirstChild();
 
@@ -5438,7 +5431,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingStartOfChain_optCall() {
-    mode = LanguageMode.UNSUPPORTED;
     Node outterCall = parse("a?.()(b)").getFirstFirstChild();
     Node innerCall = outterCall.getFirstChild();
 
@@ -5461,7 +5453,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingParens_optGetProp() {
-    mode = LanguageMode.UNSUPPORTED;
     Node outterGet = parse("(a?.b).c").getFirstFirstChild();
     Node innerGet = outterGet.getFirstChild();
 
@@ -5500,7 +5491,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingChain() {
-    mode = LanguageMode.UNSUPPORTED;
 
     parse("a?.b?.c");
     parse("a.b?.c");
@@ -5517,23 +5507,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingAssignError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("a?.b = c", "invalid assignment target");
   }
 
   @Test
   public void optionalChainingConstructorError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("new a?.()", "Optional chaining is forbidden in construction contexts.");
     parseError("new a?.b()", "Optional chaining is forbidden in construction contexts.");
   }
 
   @Test
   public void optionalChainingTemplateLiteralError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("a?.()?.`hello`", "template literal cannot be used within optional chaining");
     parseError("a?.`hello`", "template literal cannot be used within optional chaining");
     parseError("a?.b`hello`", "template literal cannot be used within optional chaining");
@@ -5544,8 +5528,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingMiscErrors() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("super?.()", "Optional chaining is forbidden in super?.");
     parseError("super?.foo", "Optional chaining is forbidden in super?.");
     parseError("new?.target", "Optional chaining is forbidden in `new?.target` contexts.");
@@ -5554,8 +5536,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingDeleteValid() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parse("delete a?.b");
   }
 
@@ -5564,13 +5544,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.OPTIONAL_CHAINING);
     mode = LanguageMode.ECMASCRIPT_2019;
 
-    parseWarning("a?.b", unsupportedFeatureMessage(Feature.OPTIONAL_CHAINING));
+    parseWarning(
+        "a?.b", requiresLanguageModeMessage(LanguageMode.ES_NEXT_IN, Feature.OPTIONAL_CHAINING));
   }
 
   @Test
   public void optionalChainingSyntaxError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("a?.{}", "syntax error: { not allowed in optional chain");
   }
 

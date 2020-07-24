@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,6 +63,7 @@ public final class PrepareAstTest extends CompilerTestCase {
 
   @Test
   public void optionalFreeCall1() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     Node root = parseExpectedJs("foo?.();");
     Node script = root.getFirstChild();
     checkState(script.isScript());
@@ -74,6 +76,7 @@ public final class PrepareAstTest extends CompilerTestCase {
 
   @Test
   public void optionalChainFreeCall() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     Node root = parseExpectedJs("x?.foo();");
     Node script = root.getFirstChild();
     checkState(script.isScript());

@@ -85,6 +85,10 @@ public class TranspilationPasses {
           createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
     }
 
+    if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
+      passes.add(rewriteOptionalChainingOperator);
+    }
+
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
       passes.add(rewriteNullishCoalesceOperator);
     }
@@ -372,6 +376,14 @@ public class TranspilationPasses {
           .setName("rewriteGenerators")
           .setInternalFactory(Es6RewriteGenerators::new)
           .setFeatureSet(ES8)
+          .build();
+
+  static final PassFactory rewriteOptionalChainingOperator =
+      PassFactory.builderForHotSwap()
+          .setName("rewriteOptionalChainingOperator")
+          .setInternalFactory(RewriteOptionalChainingOperator::new)
+          // TODO(b/161166856) change to ES2020 when optional chaining moves there.
+          .setFeatureSet(ES_NEXT_IN)
           .build();
 
   static final PassFactory rewriteNullishCoalesceOperator =
