@@ -301,11 +301,6 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return "goog.global";
   }
 
-  @Override
-  public boolean isAliasingGlobalThis(Node n) {
-    return CodingConventions.isAliasingGlobalThis(this, n);
-  }
-
   private final ImmutableSet<String> propertyTestFunctions = ImmutableSet.of(
       "goog.isDef", "goog.isNull", "goog.isDefAndNotNull",
       "goog.isString", "goog.isNumber", "goog.isBoolean",
