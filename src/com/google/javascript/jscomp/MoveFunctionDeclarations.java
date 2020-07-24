@@ -23,6 +23,7 @@ import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -117,6 +118,11 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
 
     if (NodeUtil.isClassDeclaration(n)) {
       classes.add(n);
+    }
+
+    if (n.isConst() || n.isLet()) {
+      n.setToken(Token.VAR);
+      compiler.reportChangeToEnclosingScope(n);
     }
   }
 }

@@ -86,4 +86,18 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
     testSame("a; if (a) function f(){};");
     testSame("a; if (a) { function f(){} }");
   }
+
+  @Test
+  public void testMigrateLetConstToVar1() {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    test("let a = 1;", "var a = 1");
+    test("const a = 2;", "var a = 2");
+  }
+
+  @Test
+  public void testMigrateLetConstToVar2() {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    testSame("{let a = 1;}");
+    testSame("{const a = 2;}");
+  }
 }
