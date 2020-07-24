@@ -4413,4 +4413,32 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  }",
             "};"));
   }
+
+  @Test
+  public void testGitHubIssue3637() {
+    // Document that we break scoping even in Whitespace only mode when downleveling to ES5.
+    // This is problematic because WHITESPACE_ONLY and SIMPLE are often done file-by-file,
+    // so it is difficult to even pick a unique name for "foo" to avoid conflicts with other files.
+
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        lines(
+            "", //
+            "{",
+            "  function foo() {}",
+            "  console.log(foo());",
+            "}",
+            ""),
+        lines(
+            "", //
+            "{",
+            "  var foo = function () {}", // now global scope, may cause conflicts
+            "  console.log(foo());",
+            "}",
+            ""));
+  }
 }
