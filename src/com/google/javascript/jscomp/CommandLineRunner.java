@@ -662,7 +662,9 @@ public class CommandLineRunner extends
             "Sets the language spec to which input sources should conform. "
                 + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
                 + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
-                + "ECMASCRIPT_2017, ECMASCRIPT_2018, ECMASCRIPT_2019, STABLE, ECMASCRIPT_NEXT")
+                + "ECMASCRIPT_2017, ECMASCRIPT_2018, ECMASCRIPT_2019, STABLE, "
+                + "ECMASCRIPT_NEXT (latest features supported),"
+                + "ECMASCRIPT_NEXT_IN (latest features supported for input, but not output yet)")
     private String languageIn = "STABLE";
 
     @Option(
