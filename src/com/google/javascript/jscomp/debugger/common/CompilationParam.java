@@ -808,12 +808,12 @@ public enum CompilationParam {
   MOVE_FUNCTION_DECLARATIONS(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
-      options.setMoveFunctionDeclarations(value);
+      options.setRewriteGlobalDeclarationsForTryCatchWrapping(value);
     }
 
     @Override
     public boolean isApplied(CompilerOptions options) {
-      return options.moveFunctionDeclarations;
+      return options.rewriteGlobalDeclarationsForTryCatchWrapping;
     }
   },
 

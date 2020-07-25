@@ -57,12 +57,12 @@ import java.util.Map.Entry;
  * <p>NOTE: now that this pass also moves class declarations it should be renamed along with the
  * associated options.
  */
-class MoveFunctionDeclarations implements Callback, CompilerPass {
+class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, CompilerPass {
   private final AbstractCompiler compiler;
   private final ListMultimap<JSModule, Node> functions = ArrayListMultimap.create();
   private final ArrayList<Node> classes = new ArrayList<>();
 
-  MoveFunctionDeclarations(AbstractCompiler compiler) {
+  RewriteGlobalDeclarationsForTryCatchWrapping(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

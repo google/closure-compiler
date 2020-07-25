@@ -2062,12 +2062,12 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testMoveFunctionDeclarations() {
+  public void testRewriteGlobalDeclarationsForTryCatchWrapping() {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f(); function f() { return 3; }";
     testSame(options, code);
 
-    options.moveFunctionDeclarations = true;
+    options.rewriteGlobalDeclarationsForTryCatchWrapping = true;
     test(options, code, "var f = function() { return 3; }; var x = f();");
   }
 
@@ -3284,11 +3284,11 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testRenamePrefixNamespaceActivatesMoveFunctionDeclarations() {
+  public void testRenamePrefixNamespaceActivatesRewriteGlobalDeclarationsForTryCatchWrapping() {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f; function f() { return 3; }";
     testSame(options, code);
-    assertThat(options.moveFunctionDeclarations).isFalse();
+    assertThat(options.rewriteGlobalDeclarationsForTryCatchWrapping).isFalse();
     options.setRenamePrefixNamespace("_");
     test(options, code, "_.f = function() { return 3; }; _.x = _.f;");
   }

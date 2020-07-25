@@ -777,11 +777,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Move functions before extracting prototype member declarations.
-    if (options.moveFunctionDeclarations
-        // renamePrefixNamescape relies on moveFunctionDeclarations
+    if (options.rewriteGlobalDeclarationsForTryCatchWrapping
+        // renamePrefixNamescape relies on rewriteGlobalDeclarationsForTryCatchWrapping
         // to preserve semantics.
         || options.renamePrefixNamespace != null) {
-      passes.add(moveFunctionDeclarations);
+      passes.add(rewriteGlobalDeclarationsForTryCatchWrapping);
     }
 
     if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.MAPPED) {
@@ -2543,11 +2543,14 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Moves function declarations to the top, to simulate actual hoisting. */
-  private final PassFactory moveFunctionDeclarations =
+  /**
+   * Moves function declarations to the top to simulate actual hoisting and rewrites block scope
+   * declarations to 'var'.
+   */
+  private final PassFactory rewriteGlobalDeclarationsForTryCatchWrapping =
       PassFactory.builder()
-          .setName(PassNames.MOVE_FUNCTION_DECLARATIONS)
-          .setInternalFactory(MoveFunctionDeclarations::new)
+          .setName("rewriteGlobalDeclarationsForTryCatchWrapping")
+          .setInternalFactory(RewriteGlobalDeclarationsForTryCatchWrapping::new)
           .setFeatureSetForOptimizations()
           .build();
 

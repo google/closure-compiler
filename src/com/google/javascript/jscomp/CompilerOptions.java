@@ -834,7 +834,7 @@ public class CompilerOptions implements Serializable {
   private Map<String, Object> tweakReplacements;
 
   /** Move top-level function declarations to the top */
-  public boolean moveFunctionDeclarations;
+  public boolean rewriteGlobalDeclarationsForTryCatchWrapping;
 
   boolean checksOnly;
 
@@ -1423,7 +1423,7 @@ public class CompilerOptions implements Serializable {
     defineReplacements = new HashMap<>();
     tweakProcessing = TweakProcessing.OFF;
     tweakReplacements = new HashMap<>();
-    moveFunctionDeclarations = false;
+    rewriteGlobalDeclarationsForTryCatchWrapping = false;
     checksOnly = false;
     outputJs = OutputJs.NORMAL;
     generateExports = false;
@@ -2549,8 +2549,13 @@ public class CompilerOptions implements Serializable {
     this.tweakReplacements = tweakReplacements;
   }
 
+  @Deprecated
   public void setMoveFunctionDeclarations(boolean moveFunctionDeclarations) {
-    this.moveFunctionDeclarations = moveFunctionDeclarations;
+    setRewriteGlobalDeclarationsForTryCatchWrapping(moveFunctionDeclarations);
+  }
+
+  public void setRewriteGlobalDeclarationsForTryCatchWrapping(boolean rewrite) {
+    this.rewriteGlobalDeclarationsForTryCatchWrapping = rewrite;
   }
 
   public void setCssRenamingMap(CssRenamingMap cssRenamingMap) {
@@ -3040,7 +3045,9 @@ public class CompilerOptions implements Serializable {
             .add("messageBundle", messageBundle)
             .add("moduleRoots", moduleRoots)
             .add("chunksToPrintAfterEachPassRegexList", chunksToPrintAfterEachPassRegexList)
-            .add("moveFunctionDeclarations", moveFunctionDeclarations)
+            .add(
+                "rewriteGlobalDeclarationsForTryCatchWrapping",
+                rewriteGlobalDeclarationsForTryCatchWrapping)
             .add("nameGenerator", nameGenerator)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
             .add("optimizeCalls", optimizeCalls)
