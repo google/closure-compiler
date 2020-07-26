@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Set build dir to current working dir if not set by Travis, just so it's easy
+# to locally run this script.
+if [ -z $TRAVIS_BUILD_DIR ]; then
+  TRAVIS_BUILD_DIR=`pwd`
+fi
+
 # Run yarn install so that dev dependencies are available
 yarn install && cd ${TRAVIS_BUILD_DIR}/node_modules/closure-compiler-npm && yarn install
 
