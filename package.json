@@ -13,5 +13,11 @@
     "google-closure-library": "^20200719.0.0",
     "jest": "^26.1.0",
     "jsdom": "^16.3.0"
+  },
+  "scripts": {
+    "call-jest": "jest --testRegex .*/utils/js/.* --verbose=true",
+    "build:runtime_tests": "./utils/runtime_tests_build.sh",
+    "run:runtime_tests": "./utils/runtime_tests_run.sh",
+    "runtime_tests": "npm run build:runtime_tests && npm run run:runtime_tests"
   }
 }
