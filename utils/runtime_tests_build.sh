@@ -15,13 +15,18 @@
 
 #!/bin/bash
 
-echo -e "\nBuilding runtime tests..."
-
 # to translate from relative dir
 abs_dirname() {
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
+LOCAL_COMPILER=$(dirname ..)/target/closure-compiler-1.0-SNAPSHOT.jar
+echo $LOCAL_COMPILER
+if [ ! -f "$LOCAL_COMPILER" ]; then
+  echo -e "\nCompiler JAR not built. Building...\n" && yarn build:fast
+fi
+
+echo -e "\nBuilding runtime tests..."
 TEST_DIR="test/com/google/javascript/jscomp/runtime_tests"
 
 if [ -z $1 ]; then
@@ -49,15 +54,18 @@ compileRuntimeTests(){
 <head>
 <title>$TEST_NAME</title>
 <script defer>
-$(google-closure-compiler \
-  --language_in ES_NEXT \
-  --language_out NO_TRANSPILE \
-  --process_common_js_modules \
-  --module_resolution NODE \
-  --dependency_mode PRUNE \
-  --js node_modules/google-closure-library/ \
-  --js $ABS_PATH/ \
-  --entry_point $FILE)
+$(
+  java -server -XX:+TieredCompilation \
+    -jar $LOCAL_COMPILER \
+    --language_in ES_NEXT \
+    --language_out NO_TRANSPILE \
+    --process_common_js_modules \
+    --module_resolution NODE \
+    --dependency_mode PRUNE \
+    --js node_modules/google-closure-library/ \
+    --js $ABS_PATH/ \
+    --entry_point $FILE
+)
 </script>
 </head>
 </html>" > $TEST_LOC/build/$TEST_NAME.html
@@ -66,4 +74,6 @@ $(google-closure-compiler \
 }
 
 # build tests
-compileRuntimeTests $(find $ABS_PATH -type f -name '*_test.js')
+time(
+  compileRuntimeTests $(find $ABS_PATH -type f -name '*_test.js')
+)
