@@ -15,6 +15,8 @@
 
 #!/bin/bash
 
+echo -e "\nBuilding runtime tests..."
+
 # to translate from relative dir
 abs_dirname() {
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
@@ -31,7 +33,7 @@ fi
 i=0
 compileRuntimeTests(){
   for FILE in $@; do
-  
+
     FILE_BASE=$(echo $FILE | rev | cut -f 2- -d '.' | rev)
     TEST_NAME=$(basename $FILE_BASE)
     TEST_LOC=$(dirname $FILE)

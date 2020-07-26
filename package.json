@@ -15,9 +15,9 @@
     "jsdom": "^16.3.0"
   },
   "scripts": {
-    "call-jest": "jest --testRegex .*/utils/js/.* --verbose=true",
     "build:runtime_tests": "./utils/runtime_tests_build.sh",
+    "run:jest": "jest --testRegex .*/utils/js/.* --verbose=true",
     "run:runtime_tests": "./utils/runtime_tests_run.sh",
-    "runtime_tests": "npm run build:runtime_tests && npm run run:runtime_tests"
+    "runtime_tests": "npm run --silent build:runtime_tests && npm run --silent run:runtime_tests"
   }
 }

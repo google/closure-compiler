@@ -25,8 +25,8 @@ describe('Runtime tests', () => {
     const virtualConsole = new VirtualConsole()
       .on('log', (msg) => {
         logs.push(msg);
-        if (/Tests complete/i.test(msg)) TestIsFinished.ready();
-        else if (/Tests failed/i.test(msg)) TestIsFinished.cancel();
+        if (/Tests complete/i.test(msg)) TestIsFinished.ready(logs.join('\n'));
+        else if (/Tests failed/i.test(msg)) TestIsFinished.cancel(logs.join('\n'));
       });
 
     const TEST_DOC = fs.readFileSync(
@@ -46,13 +46,12 @@ describe('Runtime tests', () => {
       });
 
       try {
-        console.log(`Executing tests in suite ${TEST_NAME}`);
         await TestIsFinished;
       } catch(e) {
-        logAll();
+        // logAll();
         fail(`Failed test in suite ${TEST_NAME}: \n\n${e}`);
       }
-
+      console.log(`Passed all tests in suite ${TEST_NAME}`);
     });
   }
 });

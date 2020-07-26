@@ -13,5 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "Executing runtime tests..."
-npm run --silent call-jest
+echo -e "\nExecuting runtime tests..."
+npm run --silent run:jest
