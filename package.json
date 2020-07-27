@@ -16,7 +16,7 @@
     "jsdom": "^16.3.0"
   },
   "scripts": {
-    "build": "mvn -DskipTests",
+    "build": "clean && mvn -DskipTests",
     "build:fast": "mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml",
     "clean": "mvn clean",
     "runtime_tests:build": "./utils/build_runtime_tests.sh",

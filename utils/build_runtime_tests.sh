@@ -15,13 +15,18 @@
 
 #!/bin/bash
 
+if [ -z $1 ]; then
+  COMPILATION_LEVEL="SIMPLE"
+else
+  COMPILATION_LEVEL=$1
+fi
+
 # to translate from relative dir
 abs_dirname() {
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
 LOCAL_COMPILER=$(dirname ..)/target/closure-compiler-1.0-SNAPSHOT.jar
-echo $LOCAL_COMPILER
 if [ ! -f "$LOCAL_COMPILER" ]; then
   echo -e "\nCompiler JAR not built. Building...\n" && yarn build:fast
 fi
@@ -57,6 +62,7 @@ compileRuntimeTests(){
 $(
   java -server -XX:+TieredCompilation \
     -jar $LOCAL_COMPILER \
+    -O $COMPILATION_LEVEL \
     --language_in ES_NEXT \
     --language_out NO_TRANSPILE \
     --process_common_js_modules \
