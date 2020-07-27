@@ -100,18 +100,15 @@ public class AmbiguateProperties implements CompilerPass {
   private Map<String, String> renamingMap = null;
 
   /**
-   * Sorts Property objects by their count, breaking ties alphabetically to
-   * ensure a deterministic total ordering.
+   * Sorts Property objects by their count, breaking ties alphabetically to ensure a deterministic
+   * total ordering.
    */
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
-      new Comparator<Property>() {
-        @Override
-        public int compare(Property p1, Property p2) {
-          if (p1.numOccurrences != p2.numOccurrences) {
-            return p2.numOccurrences - p1.numOccurrences;
-          }
-          return p1.oldName.compareTo(p2.oldName);
+      (Property p1, Property p2) -> {
+        if (p1.numOccurrences != p2.numOccurrences) {
+          return p2.numOccurrences - p1.numOccurrences;
         }
+        return p1.oldName.compareTo(p2.oldName);
       };
 
   /** A map from JSType to a unique representative Integer. */
