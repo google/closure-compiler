@@ -374,7 +374,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   @Test
   public void propertiesAreConflated_betweenUnionAncestors_andTypesMismatchedWithTheUnion() {
-    test(
+    testSame(
         srcs(
             lines(
                 "class Foo0 {",
@@ -392,24 +392,6 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "",
                 "class Other {",
                 "  a() { }",
-                "}")),
-        expected(
-            lines(
-                "class Foo0 {",
-                "  JSC$1_a() { }",
-                "}",
-                "class Foo1 extends Foo0 { }",
-                "class Foo2 extends Foo0 { }",
-                "",
-                "class Bar {",
-                "  JSC$1_a() { }",
-                "}",
-                "",
-                "/** @type {(!Foo1|!Foo2)} @suppress {checkTypes} */",
-                "const x = new Bar();",
-                "",
-                "class Other {",
-                "  JSC$3_a() { }",
                 "}")));
   }
 
@@ -625,7 +607,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   @Test
   public void propertiesAreDisambiguated_acrossStructuralTypeMatches_iffMatchUsed() {
-    test(
+    testSame(
         srcs(
             lines(
                 "/** @record */",
@@ -646,28 +628,6 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "",
                 "class Other {",
                 " a() { }",
-                "}")),
-        expected(
-            lines(
-                "/** @record */",
-                "class Foo0 {",
-                "  JSC$3_a() { }",
-                "}",
-                "/** @record */",
-                "class Foo1 extends Foo0 {",
-                "  JSC$3_a() { }",
-                "  JSC$2_b() { }",
-                "}",
-                "class Foo2 {",
-                "  JSC$3_a() { }",
-                "  JSC$3_b() { }",
-                "}",
-                "",
-                "const /** !Foo0 */ x = new Foo2();",
-                "",
-                // `Other` is a structural match but still disambiguates separately.
-                "class Other {",
-                " JSC$4_a() { }",
                 "}")));
   }
 
@@ -706,7 +666,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   @Test
   public void propertiesAreDisambiguated_acrossTypeMismatches() {
-    test(
+    testSame(
         srcs(
             lines(
                 "class Foo0 {",
@@ -725,25 +685,6 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "",
                 "class Other {",
                 " a() { }",
-                "}")),
-        expected(
-            lines(
-                "class Foo0 {",
-                "  JSC$3_a() { }",
-                "}",
-                "class Foo1 extends Foo0 {",
-                "  JSC$3_a() { }",
-                "  JSC$2_b() { }",
-                "}",
-                "class Foo2 {",
-                "  JSC$3_a() { }",
-                "  JSC$3_b() { }",
-                "}",
-                "",
-                "const /** !Foo0 */ x = new Foo2();",
-                "",
-                "class Other {",
-                " JSC$4_a() { }",
                 "}")));
   }
 
