@@ -226,13 +226,24 @@ class MaybeReachingVariableUse extends
       case AND:
       case OR:
       case COALESCE:
-        computeMayUse(n.getLastChild(), cfgNode, output, true);
+      case OPTCHAIN_GETPROP:
+      case OPTCHAIN_GETELEM:
+        computeMayUse(n.getLastChild(), cfgNode, output, /* conditional= */ true);
+        computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
+        return;
+
+      case OPTCHAIN_CALL:
+        // As args are evaluated in AST order, we traverse in reverse AST order for backward
+        // dataflow analysis.
+        for (Node c = n.getLastChild(); c != n.getFirstChild(); c = c.getPrevious()) {
+          computeMayUse(c, cfgNode, output, /* conditional= */ true);
+        }
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
 
       case HOOK:
-        computeMayUse(n.getLastChild(), cfgNode, output, true);
-        computeMayUse(n.getSecondChild(), cfgNode, output, true);
+        computeMayUse(n.getLastChild(), cfgNode, output, /* conditional= */ true);
+        computeMayUse(n.getSecondChild(), cfgNode, output, /* conditional= */ true);
         computeMayUse(n.getFirstChild(), cfgNode, output, conditional);
         return;
 
