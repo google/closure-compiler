@@ -85,6 +85,6 @@ describe('Runtime tests', () => {
         fail(`Failed test in suite ${TEST_NAME}: \n${e}\n`);
       }
       console.log(`Passed all tests in suite ${TEST_NAME}`);
-    }, 20000);
+    });
   }
 });
