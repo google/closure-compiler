@@ -3076,7 +3076,7 @@ public final class NodeUtil {
     }
   }
 
-  static boolean isLhsOfAssign(Node n) {
+  public static boolean isLhsOfAssign(Node n) {
     Node parent = n.getParent();
     return parent != null && parent.isAssign() && parent.getFirstChild() == n;
   }

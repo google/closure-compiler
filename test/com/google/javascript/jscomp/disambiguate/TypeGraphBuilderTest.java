@@ -213,7 +213,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   }
 
   @Test
-  public void prototypeChain_includesInstanceType_evenIfUnused() {
+  public void constructorDef_includesPrototypeAndInstanceType_evenIfUnused() {
     // Given
     TypeGraphBuilder builder = this.createBuilder(null);
 
@@ -222,7 +222,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
             lines(
                 "class Foo { }", //
                 "",
-                "const test = Foo.prototype;"));
+                "const test = Foo;"));
     builder.addAll(testTypes.values());
 
     // When

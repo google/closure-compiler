@@ -24,6 +24,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.jstype.JSType;
+import java.util.BitSet;
 import java.util.LinkedHashSet;
 import javax.annotation.Nullable;
 
@@ -62,6 +63,8 @@ final class FlatType {
   private final int id;
 
   private final LinkedHashSet<PropertyClustering> associatedProps = new LinkedHashSet<>();
+
+  private final BitSet subtypeIds = new BitSet();
 
   private boolean invalidating = false;
 
@@ -138,6 +141,11 @@ final class FlatType {
   /** The set of properties that that might be accessed from this type. */
   LinkedHashSet<PropertyClustering> getAssociatedProps() {
     return this.associatedProps;
+  }
+
+  /** The IDs of other FlatTypes that have been found to be subtypes of this type. */
+  BitSet getSubtypeIds() {
+    return this.subtypeIds;
   }
 
   /**

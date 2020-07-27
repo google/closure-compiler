@@ -414,7 +414,7 @@ public class JSTypeRegistry implements Serializable {
     /**
      * `Function`
      *
-     * <p>The default implict prototype of all `FunctionType`s is `Function.prototype`. The
+     * <p>The default implicit prototype of all `FunctionType`s is `Function.prototype`. The
      * ",prototype" property of `Function` is not actually interesting, since it constructs
      * unknowns.
      */

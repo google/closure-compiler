@@ -20,9 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -37,20 +34,22 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
+import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.GraphColoring;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
+import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +98,8 @@ public class AmbiguateProperties implements CompilerPass {
   /** Map from original property name to new name. Only used by tests. */
   private Map<String, String> renamingMap = null;
 
+  private TypeFlattener flattener = null;
+
   /**
    * Sorts Property objects by their count, breaking ties alphabetically to ensure a deterministic
    * total ordering.
@@ -110,16 +111,6 @@ public class AmbiguateProperties implements CompilerPass {
         }
         return p1.oldName.compareTo(p2.oldName);
       };
-
-  /** A map from JSType to a unique representative Integer. */
-  private final BiMap<JSType, Integer> intForType = HashBiMap.create();
-
-  /**
-   * A map from JSType to JSTypeBitSet representing the types related to the type.
-   *
-   * <p>A type is always related to itself.
-   */
-  private final Map<JSType, JSTypeBitSet> relatedBitsets = new HashMap<>();
 
   /** A set of types that invalidate properties from ambiguation. */
   private final InvalidatingTypes invalidatingTypes;
@@ -160,30 +151,64 @@ public class AmbiguateProperties implements CompilerPass {
     return renamingMap;
   }
 
-  /** Returns an integer that uniquely identifies a JSType. */
-  private int getIntForType(JSType type) {
-    // Templatized types don't exist at runtime, so collapse to raw type
-    if (type != null && type.isTemplatizedType()) {
-      type = type.toMaybeObjectType().getRawType();
-    }
-    if (intForType.containsKey(type)) {
-      return intForType.get(type).intValue();
-    }
-    int newInt = intForType.size() + 1;
-    intForType.put(type, newInt);
-    return newInt;
-  }
-
   @Override
   public void process(Node externs, Node root) {
+    TypeFlattener flattener =
+        new TypeFlattener(compiler.getTypeRegistry(), this.invalidatingTypes::isInvalidating);
+    this.flattener = flattener;
+
     // Find all property references and record the types on which they occur.
     // Populate stringNodesToRename, propertyMap, quotedNames.
-    NodeTraversal.traverse(compiler, root, new ProcessProperties());
+    NodeTraversal.traverse(compiler, root, new ProcessPropertiesAndConstructors());
+
+    TypeGraphBuilder graphBuilder =
+        new TypeGraphBuilder(flattener, LowestCommonAncestorFinder::new);
+    graphBuilder.addAll(flattener.getAllKnownTypes());
+    DiGraph<FlatType, Object> typeGraph = graphBuilder.build();
+    // Cache the set of all flat types as it is rebuilt per call to getAllKnownTypes (but wait
+    // until after the typeGraph is built, as the process of building it may create new FlatTypes)
+    ImmutableSet<FlatType> allTypes = flattener.getAllKnownTypes();
+    for (FlatType flatType : allTypes) {
+      flatType.getSubtypeIds().set(flatType.getId()); // Init subtyping as reflexive.
+    }
+
+    FixedPointGraphTraversal.<FlatType, Object>newReverseTraversal(
+            (subtype, e, supertype) -> {
+              /**
+               * Cheap path for when we're sure there's going to be a change.
+               *
+               * <p>Since bits only ever turn on, using more bits means there are definitely more
+               * elements. This prevents of from needing to check cardinality or equality, which
+               * would otherwise dominate the cost of computing the fixed point.
+               *
+               * <p>We're guaranteed to converge because the sizes will be euqal after the OR
+               * operation.
+               */
+              if (subtype.getSubtypeIds().size() > supertype.getSubtypeIds().size()) {
+                supertype.getSubtypeIds().or(subtype.getSubtypeIds());
+                return true;
+              }
+
+              int startSize = supertype.getSubtypeIds().cardinality();
+              supertype.getSubtypeIds().or(subtype.getSubtypeIds());
+              return supertype.getSubtypeIds().cardinality() > startSize;
+            })
+        .computeFixedPoint(typeGraph);
+
+    // Fill in all transitive edges in subtyping graph per property
+    for (Property prop : propertyMap.values()) {
+      if (prop.relatedTypesSeeds == null) {
+        continue;
+      }
+      for (FlatType flatType : prop.relatedTypesSeeds.keySet()) {
+        prop.relatedTypes.or(flatType.getSubtypeIds());
+      }
+      prop.relatedTypesSeeds = null;
+    }
 
     ImmutableSet.Builder<String> reservedNames = ImmutableSet.<String>builder()
         .addAll(externedNames)
         .addAll(quotedNames);
-
     int numRenamedPropertyNames = 0;
     int numSkippedPropertyNames = 0;
     ArrayList<PropertyGraphNode> nodes = new ArrayList<>(propertyMap.size());
@@ -197,9 +222,9 @@ public class AmbiguateProperties implements CompilerPass {
       }
     }
 
-    PropertyGraph graph = new PropertyGraph(nodes);
+    PropertyGraph propertyGraph = new PropertyGraph(nodes);
     GraphColoring<Property, Void> coloring =
-        new GreedyGraphColoring<>(graph, FREQUENCY_COMPARATOR);
+        new GreedyGraphColoring<>(propertyGraph, FREQUENCY_COMPARATOR);
     int numNewPropertyNames = coloring.color();
 
     // Generate new names for the properties that will be renamed.
@@ -212,7 +237,7 @@ public class AmbiguateProperties implements CompilerPass {
     }
 
     // Translate the color of each Property instance to a name.
-    for (PropertyGraphNode node : graph.getNodes()) {
+    for (PropertyGraphNode node : propertyGraph.getNodes()) {
       node.getValue().newName = colorMap[node.getAnnotation().hashCode()];
       if (renamingMap != null) {
         renamingMap.put(node.getValue().oldName, node.getValue().newName);
@@ -241,107 +266,6 @@ public class AmbiguateProperties implements CompilerPass {
                   + numNewPropertyNames + " and skipped renaming "
                   + numSkippedPropertyNames + " properties.");
     }
-  }
-
-  private BitSet getRelatedTypesOnNonUnion(JSType type) {
-    // All of the types we encounter should have been added to the
-    // relatedBitsets via computeRelatedTypesForNonUnionType.
-    if (relatedBitsets.containsKey(type)) {
-      return relatedBitsets.get(type);
-    } else {
-      throw new RuntimeException("Related types should have been computed for"
-                                 + " type: " + type + " but have not been.");
-    }
-  }
-
-  /**
-   * Adds subtypes - and implementors, in the case of interfaces - of the type to its JSTypeBitSet
-   * of related types.
-   *
-   * <p>The 'is related to' relationship is best understood graphically. Draw an arrow from each
-   * instance type to the prototype of each of its subclass. Draw an arrow from each prototype to
-   * its instance type. Draw an arrow from each interface to its implementors. A type is related to
-   * another if there is a directed path in the graph from the type to other. Thus, the 'is related
-   * to' relationship is reflexive and transitive.
-   *
-   * <p>Example with Foo extends Bar which extends Baz and Bar implements I:
-   *
-   * <pre>{@code
-   * Foo -> Bar.prototype -> Bar -> Baz.prototype -> Baz
-   *                          ^
-   *                          |
-   *                          I
-   * }</pre>
-   *
-   * <p>We also need to handle relationships between functions because of ES6 class-side inheritance
-   * although the top Function type itself is invalidating.
-   */
-  @SuppressWarnings("ReferenceEquality")
-  private void computeRelatedTypesForNonUnionType(JSType type) {
-    // This method could be expanded to handle union types if necessary, but currently no union
-    // types are ever passed as input so the method doesn't have logic for union types
-    checkState(!type.isUnionType(), type);
-
-    if (relatedBitsets.containsKey(type)) {
-      // We only need to generate the bit set once.
-      return;
-    }
-
-    JSTypeBitSet related = new JSTypeBitSet(intForType.size());
-    relatedBitsets.put(type, related);
-    related.set(getIntForType(type));
-
-    // A prototype is related to its instance.
-    if (type.isFunctionPrototypeType()) {
-      FunctionType maybeCtor = type.toMaybeObjectType().getOwnerFunction();
-      if (maybeCtor.isConstructor() || maybeCtor.isInterface()) {
-        addRelatedInstance(maybeCtor, related);
-      }
-      return;
-    }
-
-    // A class/interface is related to its subclasses/implementors.
-    FunctionType constructor = type.toMaybeObjectType().getConstructor();
-    if (constructor != null) {
-      for (FunctionType subType : constructor.getDirectSubTypes()) {
-        addRelatedInstance(subType, related);
-      }
-    }
-
-    // We only specifically handle implicit prototypes of functions in the case of ES6 classes
-    // For regular functions, the implicit prototype being Function.prototype does not matter
-    // because the type `Function` is invalidating.
-    // This may cause unexpected behavior for code that manually sets a prototype, e.g.
-    //   Object.setPrototypeOf(myFunction, prototypeObj);
-    // but code like that should not be used with --ambiguate_properties or type-based optimizations
-    FunctionType fnType = type.toMaybeFunctionType();
-    if (fnType != null) {
-      for (FunctionType subType : fnType.getDirectSubTypes()) {
-        // We record all subtypes of constructors, but don't care about old 'ES5-style' subtyping,
-        // just ES6-style. This is equivalent to saying that the subtype constructor's implicit
-        // prototype is the given type
-        if (fnType == subType.getImplicitPrototype()) {
-          addRelatedType(subType, related);
-        }
-      }
-    }
-  }
-
-  /**
-   * Adds the instance of the given constructor, its implicit prototype and all
-   * its related types to the given bit set.
-   */
-  private void addRelatedInstance(FunctionType constructor, JSTypeBitSet related) {
-    checkArgument(constructor.hasInstanceType(),
-        "Constructor %s without instance type.", constructor);
-    ObjectType instanceType = constructor.getInstanceType();
-    addRelatedType(instanceType, related);
-  }
-
-  /** Adds the given type and all its related types to the given bit set. */
-  private void addRelatedType(JSType type, JSTypeBitSet related) {
-    computeRelatedTypesForNonUnionType(type);
-    related.or(relatedBitsets.get(type));
   }
 
   class PropertyGraph implements AdjacencyGraph<Property, Void> {
@@ -390,7 +314,7 @@ public class AmbiguateProperties implements CompilerPass {
    */
   class PropertySubGraph implements SubGraph<Property, Void> {
     /** Types related to properties referenced in this subgraph. */
-    JSTypeBitSet relatedTypes = new JSTypeBitSet(intForType.size());
+    final BitSet relatedTypes = new BitSet();
 
     /**
      * Returns true if prop is in an independent set from all properties in this
@@ -399,7 +323,7 @@ public class AmbiguateProperties implements CompilerPass {
      */
     @Override
     public boolean isIndependentOf(Property prop) {
-      return !relatedTypes.intersects(prop.relatedTypes);
+      return !this.relatedTypes.intersects(prop.relatedTypes);
     }
 
     /**
@@ -408,7 +332,7 @@ public class AmbiguateProperties implements CompilerPass {
      */
     @Override
     public void addNode(Property prop) {
-      relatedTypes.or(prop.relatedTypes);
+      this.relatedTypes.or(prop.relatedTypes);
     }
   }
 
@@ -446,8 +370,11 @@ public class AmbiguateProperties implements CompilerPass {
   private static final String WANT_STRING_LITERAL = " The first argument must be a string literal.";
   private static final String DO_NOT_WANT_PATH = " The first argument must not be a property path.";
 
-  /** Finds all property references, recording the types on which they occur. */
-  private class ProcessProperties extends AbstractPostOrderCallback {
+  /**
+   * Finds all property references, recording the types on which they occur, and records all
+   * constructors and their instance types in the {@link TypeFlattener}.
+   */
+  private class ProcessPropertiesAndConstructors extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -457,6 +384,13 @@ public class AmbiguateProperties implements CompilerPass {
 
         case CALL:
           processCall(n);
+          return;
+
+        case NAME:
+          // handle ES5-style classes
+          if (NodeUtil.isNameDeclaration(parent) || parent.isFunction()) {
+            flattener.flatten(getJSType(n));
+          }
           return;
 
         case OBJECTLIT:
@@ -481,6 +415,9 @@ public class AmbiguateProperties implements CompilerPass {
       Node propNode = getProp.getSecondChild();
       JSType type = getJSType(getProp.getFirstChild());
       maybeMarkCandidate(propNode, type);
+      if (NodeUtil.isLhsOfAssign(getProp) || NodeUtil.isStatement(getProp.getParent())) {
+        flattener.flatten(type);
+      }
     }
 
     private void processCall(Node call) {
@@ -594,6 +531,7 @@ public class AmbiguateProperties implements CompilerPass {
 
     private void processClass(Node classNode) {
       JSType classConstructorType = getJSType(classNode);
+      flattener.flatten(classConstructorType);
       JSType classPrototype =
           classConstructorType.isFunctionType()
               ? classConstructorType.toMaybeFunctionType().getPrototype()
@@ -672,13 +610,17 @@ public class AmbiguateProperties implements CompilerPass {
     String newName;
     int numOccurrences;
     boolean skipAmbiguating;
-    JSTypeBitSet relatedTypes = new JSTypeBitSet(intForType.size());
+    // All types upon which this property was directly accessed. For "a.b" this includes "a"'s type
+    IdentityHashMap<FlatType, Integer> relatedTypesSeeds = null;
+    // includes relatedTypesSeeds + all subtypes of those seed types. For example if this property
+    // was accessed off of Iterable, then this bitset will include Array as well.
+    final BitSet relatedTypes = new BitSet();
 
     Property(String name) {
       this.oldName = name;
     }
 
-    /** Add this type to this property, calculating */
+    /** Marks this type as related to this property */
     void addType(JSType newType) {
       if (skipAmbiguating) {
         return;
@@ -687,50 +629,22 @@ public class AmbiguateProperties implements CompilerPass {
       ++numOccurrences;
 
       if (newType.isUnionType()) {
+        // Note(lharker): deleting this line causes testPredeclaredType to fail. Apparently
+        // invaliding types cannot tell that (null|a.forward.declared.type) is invalidating.
         newType = newType.restrictByNotNullOrUndefined();
-        if (newType.isUnionType()) {
-          for (JSType alt : newType.getUnionMembers()) {
-            addNonUnionType(alt);
-          }
-          return;
-        }
       }
-      addNonUnionType(newType);
-    }
 
-    private void addNonUnionType(JSType newType) {
-      if (skipAmbiguating || invalidatingTypes.isInvalidating(newType)) {
+      if (invalidatingTypes.isInvalidating(newType)) {
         skipAmbiguating = true;
         return;
       }
-      if (!relatedTypes.get(getIntForType(newType))) {
-        computeRelatedTypesForNonUnionType(newType);
-        relatedTypes.or(getRelatedTypesOnNonUnion(newType));
+
+      if (relatedTypesSeeds == null) {
+        this.relatedTypesSeeds = new IdentityHashMap<>();
       }
-    }
-  }
 
-  // A BitSet that stores type info. Adds pretty-print routines.
-  private class JSTypeBitSet extends BitSet {
-    private static final long serialVersionUID = 1L;
-
-    private JSTypeBitSet(int size) {
-      super(size);
-    }
-
-    /**
-     * Pretty-printing, for diagnostic purposes.
-     */
-    @Override
-    public String toString() {
-      int from = 0;
-      int current = 0;
-      List<String> types = new ArrayList<>();
-      while (-1 != (current = nextSetBit(from))) {
-        types.add(intForType.inverse().get(current).toString());
-        from = current + 1;
-      }
-      return Joiner.on(" && ").join(types);
+      FlatType newFlatType = flattener.flatten(newType);
+      relatedTypesSeeds.put(newFlatType, 0);
     }
   }
 }

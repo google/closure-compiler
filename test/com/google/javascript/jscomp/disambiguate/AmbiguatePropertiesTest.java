@@ -790,35 +790,81 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testImplementsAndExtends2() {
-    String js = lines(
-        "/** @interface */ function A() {}",
-        "/**",
-        " * @constructor",
-        " */",
-        "function C1(){}",
-        "/**",
-        " * @constructor",
-        " * @extends {C1}",
-        " * @implements {A}",
-        " */",
-        "function C2(){}",
-        "/** @param {C1} x */ function f(x) { x.y = 3; }",
-        "/** @param {A} x */ function g(x) { x.z = 3; }\n");
-    String output = lines(
-        "/** @interface */ function A(){}",
-        "/**",
-        " * @constructor",
-        " */",
-        "function C1(){}",
-        "/**",
-        " * @constructor",
-        " * @extends {C1}",
-        " * @implements {A}",
-        " */",
-        "function C2(){}",
-        "/** @param {C1} x */ function f(x) { x.a = 3; }",
-        "/** @param {A} x */ function g(x) { x.b = 3; }\n");
+  public void testImplementsAndExtends_respectsUndeclaredProperties() {
+    String js =
+        lines(
+            "/** @interface */ function A() {}",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C1(){}",
+            "/**",
+            " * @constructor",
+            " * @extends {C1}",
+            " * @implements {A}",
+            " */",
+            "function C2(){}",
+            "/** @param {C1} x */ function f(x) { x.y = 3; }",
+            "/** @param {A} x */ function g(x) { x.z = 3; }");
+    String output =
+        lines(
+            "/** @interface */ function A(){}",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C1(){}",
+            "/**",
+            " * @constructor",
+            " * @extends {C1}",
+            " * @implements {A}",
+            " */",
+            "function C2(){}",
+            "/** @param {C1} x */ function f(x) { x.a = 3; }",
+            "/** @param {A} x */ function g(x) { x.b = 3; }");
+    test(js, output);
+  }
+
+  @Test
+  public void testImplementsAndExtendsEs6Class_respectsUndeclaredProperties() {
+    String js =
+        lines(
+            "/** @interface */",
+            "class A {",
+            "  constructor() {",
+            // Optional property; C2 does not need to declare it implemented.
+            "    /** @type {number|undefined} */",
+            "    this.y;",
+            "  }",
+            "}",
+            "class C1 {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.z;",
+            "  }",
+            "}",
+            "/** @implements {A} */",
+            "class C2 extends C1 {}",
+            "/** @param {A} x */ function f(x) { x.y = 3; }",
+            "/** @param {C1} x */ function g(x) { x.z = 3; }");
+    String output =
+        lines(
+            "/** @interface */",
+            "class A {",
+            "  constructor() {",
+            "    /** @type {number|undefined} */",
+            "    this.a;",
+            "  }",
+            "}",
+            "class C1 {",
+            "  constructor() {",
+            "    /** @type {number} */",
+            "    this.b;",
+            "  }",
+            "}",
+            "/** @implements {A} */",
+            "class C2 extends C1 {}",
+            "/** @param {A} x */ function f(x) { x.a = 3; }",
+            "/** @param {C1} x */ function g(x) { x.b = 3; }");
     test(js, output);
   }
 
