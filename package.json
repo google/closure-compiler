@@ -17,11 +17,10 @@
   "scripts": {
     "build": "mvn -DskipTests",
     "build:fast": "mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml",
-    "build:runtime_tests": "./utils/runtime_tests_build.sh",
     "clean": "mvn clean",
-    "run:jest": "jest --testRegex .*/utils/js/.* --verbose=true",
-    "run:runtime_tests": "./utils/runtime_tests_run.sh",
-    "runtime_tests": "npm run --silent build:runtime_tests && npm run --silent run:runtime_tests",
+    "runtime_tests:build": "./utils/build_runtime_tests.sh",
+    "runtime_tests:run": "jest --testRegex .*/utils/js/.* --verbose=true",
+    "runtime_tests": "npm run --silent runtime_tests:build && npm run --silent runtime_tests:run",
     "test": "mvn test"
   }
 }
