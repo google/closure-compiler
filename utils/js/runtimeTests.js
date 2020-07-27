@@ -21,11 +21,12 @@
  */
 
 const { JSDOM, VirtualConsole } = require('jsdom');
-const fs = require('fs');
-const path = require('path');
-const FutureEvent = require('future-event');
 const { fail } = require('assert');
+const chalk = require('chalk');
+const fs = require('fs');
+const FutureEvent = require('future-event');
 const glob = require('glob');
+const path = require('path');
 
 const TEST_FILES = glob.sync(path.resolve(
   __dirname,
@@ -35,13 +36,29 @@ const TEST_FILES = glob.sync(path.resolve(
 describe('Runtime tests', () => {
   for (const TEST_URL of TEST_FILES) {
     const logs = [];
+    const passed = /PASSED/i;
+    const failed = /FAILED/i;
+
     const allLogs = () => logs.join('\n');
+    const chalkMsg = (msg) => {
+      const isPass = passed.test(msg);
+      const isFail = failed.test(msg);
+      
+      if (isPass || isFail) {
+        return msg.replace(
+          passed, chalk.green('PASSED')
+        ).replace(
+          failed, chalk.red('FAILED')
+        );
+      }
+      else return msg;
+    }
     
     const TEST_NAME = path.basename(TEST_URL);
     const TestIsFinished = new FutureEvent();
     const virtualConsole = new VirtualConsole()
       .on('log', (msg) => {
-        logs.push(msg);
+        logs.push(chalkMsg(msg));
         if (/Tests complete/i.test(msg)) TestIsFinished.ready(allLogs());
         else if (/Tests failed/i.test(msg)) TestIsFinished.cancel(allLogs());
       });
@@ -65,9 +82,9 @@ describe('Runtime tests', () => {
       try {
         await TestIsFinished;
       } catch(e) {
-        fail(`Failed test in suite ${TEST_NAME}: \n\n${e}`);
+        fail(`Failed test in suite ${TEST_NAME}: \n${e}\n`);
       }
       console.log(`Passed all tests in suite ${TEST_NAME}`);
-    });
+    }, 20000);
   }
 });
