@@ -27,28 +27,39 @@ import org.junit.runners.JUnit4;
 public class ObjectColorTest {
   @Test
   public void isPrimitiveReturnsFalse() {
-    ObjectColor foo = ObjectColor.create("Foo", "test.js");
+    ObjectColor foo = ObjectColor.builder().setClassName("Foo").setFilename("test.js").build();
 
     assertThat(foo.isPrimitive()).isFalse();
   }
 
   @Test
   public void isObjectReturnsTrue() {
-    ObjectColor foo = ObjectColor.create("Foo", "test.js");
+    ObjectColor foo = ObjectColor.builder().setClassName("Foo").setFilename("test.js").build();
 
     assertThat(foo).isObject();
   }
 
   @Test
   public void isUnionHandlesReturnsFalse() {
-    ObjectColor foo = ObjectColor.create("Foo", "test.js");
+    ObjectColor foo = ObjectColor.builder().setClassName("Foo").setFilename("test.js").build();
 
     assertThat(foo.isUnion()).isFalse();
   }
 
   @Test
   public void objectEqualityBasedOnClassAndFileName() {
-    assertThat(ObjectColor.create("Foo", "test.js"))
-        .isEqualTo(ObjectColor.create("Foo", "test.js"));
+    assertThat(ObjectColor.builder().setClassName("Foo").setFilename("test.js").build())
+        .isEqualTo(ObjectColor.builder().setClassName("Foo").setFilename("test.js").build());
+  }
+
+  @Test
+  public void objectEqualityFalseIfInvalidatingMismatch() {
+    assertThat(
+            ObjectColor.builder()
+                .setClassName("Foo")
+                .setFilename("test.js")
+                .setInvalidating(true)
+                .build())
+        .isNotEqualTo(ObjectColor.builder().setClassName("Foo").setFilename("test.js").build());
   }
 }

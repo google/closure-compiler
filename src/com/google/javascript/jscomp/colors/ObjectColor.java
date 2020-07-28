@@ -25,10 +25,6 @@ import com.google.common.collect.ImmutableCollection;
 @AutoValue
 public abstract class ObjectColor implements Color {
 
-  public static ObjectColor create(String className, String fileName) {
-    return new AutoValue_ObjectColor(className, fileName);
-  }
-
   @Override
   public boolean isPrimitive() {
     return false;
@@ -52,4 +48,22 @@ public abstract class ObjectColor implements Color {
   public abstract String getClassName();
 
   public abstract String getFilename();
+
+  public abstract boolean isInvalidating();
+
+  /** Builder for ObjectColors */
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder setClassName(String value);
+
+    public abstract Builder setFilename(String value);
+
+    public abstract Builder setInvalidating(boolean value);
+
+    public abstract ObjectColor build();
+  }
+
+  public static Builder builder() {
+    return new AutoValue_ObjectColor.Builder().setInvalidating(false);
+  }
 }

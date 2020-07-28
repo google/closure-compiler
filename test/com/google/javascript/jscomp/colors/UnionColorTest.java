@@ -107,6 +107,7 @@ public class UnionColorTest {
         () ->
             UnionColor.create(
                 ImmutableSet.of(
-                    ObjectColor.create("Foo", "test.js"), ObjectColor.create("Foo", "test.js"))));
+                    ObjectColor.builder().setClassName("Foo").setFilename("test.js").build(),
+                    ObjectColor.builder().setClassName("Foo").setFilename("test.js").build())));
   }
 }
