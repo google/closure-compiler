@@ -21,9 +21,11 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -295,7 +297,7 @@ public final class ExpressionDecomposerTest {
             "  var myUrl =",
             "      new goog.Uri(getDomServices_(self).getDomHelper().getWindow().location.href);",
             "};"),
-        "getDomServices_",
+        exprMatchesStr("getDomServices_(self)"),
         lines(
             "HangoutStarter.prototype.launchHangout = function() {",
             "  var self = a.b;",
@@ -313,7 +315,7 @@ public final class ExpressionDecomposerTest {
             "  var myUrl = new temp_const$jscomp$0(",
             "      getDomServices_(self).getDomHelper().getWindow().location.href);",
             "}"),
-        "getDomServices_",
+        exprMatchesStr("getDomServices_(self)"),
         lines(
             "HangoutStarter.prototype.launchHangout = function() {",
             "  var self=a.b;",
@@ -802,7 +804,7 @@ public final class ExpressionDecomposerTest {
     allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x.y?.z(foo(1))",
-        "foo",
+        exprMatchesStr("foo(1)"),
         lines(
             "var temp$jscomp$1 = x.y;",
             "if (temp$jscomp$1 != null) {",
@@ -819,7 +821,7 @@ public final class ExpressionDecomposerTest {
 
     helperExposeExpression(
         "a = x.y?.z(foo(1))",
-        "foo",
+        exprMatchesStr("foo(1)"),
         lines(
             "var temp$jscomp$1 = x.y;",
             "if (temp$jscomp$1 != null) {",
@@ -1130,7 +1132,7 @@ public final class ExpressionDecomposerTest {
     // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperMoveExpression(
         "alert(class X {});",
-        ExpressionDecomposerTest::findClass,
+        compiler -> ExpressionDecomposerTest::findClass,
         "var result$jscomp$0 = class X {}; alert(result$jscomp$0);");
   }
 
@@ -1141,7 +1143,7 @@ public final class ExpressionDecomposerTest {
     // TODO(bradfordcsmith): See TODO in helperMoveExpression()
     helperMoveExpression(
         "console.log(1, 2, class X {});",
-        ExpressionDecomposerTest::findClass,
+        compiler -> ExpressionDecomposerTest::findClass,
         "var result$jscomp$0 = class X {}; console.log(1, 2, result$jscomp$0);");
   }
 
@@ -1149,7 +1151,7 @@ public final class ExpressionDecomposerTest {
   public void testMoveYieldExpression1() {
     helperMoveExpression(
         "function *f() { return { a: yield 1, c: foo(yield 2, yield 3) }; }",
-        "yield",
+        exprMatchesStr("yield 1"),
         lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 1;",
@@ -1158,7 +1160,7 @@ public final class ExpressionDecomposerTest {
 
     helperMoveExpression(
         "function *f() { return { a: 0, c: foo(yield 2, yield 3) }; }",
-        "yield",
+        exprMatchesStr("yield 2"),
         lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 2;",
@@ -1167,7 +1169,7 @@ public final class ExpressionDecomposerTest {
 
     helperMoveExpression(
         "function *f() { return { a: 0, c: foo(1, yield 3) }; }",
-        "yield",
+        exprMatchesStr("yield 3"),
         lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 3;",
@@ -1179,7 +1181,7 @@ public final class ExpressionDecomposerTest {
   public void testMoveYieldExpression2() {
     helperMoveExpression(
         "function *f() { return (yield 1) || (yield 2); }",
-        "yield",
+        exprMatchesStr("yield 1"),
         lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 1;",
@@ -1191,7 +1193,7 @@ public final class ExpressionDecomposerTest {
   public void testMoveYieldExpression3() {
     helperMoveExpression(
         "function *f() { return x.y(yield 1); }",
-        "yield",
+        exprMatchesStr("yield 1"),
         lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 1;",
@@ -1203,7 +1205,7 @@ public final class ExpressionDecomposerTest {
   public void testExposeYieldExpression1() {
     helperExposeExpression(
         "function *f(x) { return x || (yield 2); }",
-        "yield",
+        exprMatchesStr("yield 2"),
         lines(
             "function *f(x) {",
             "  var temp$jscomp$0;",
@@ -1217,7 +1219,7 @@ public final class ExpressionDecomposerTest {
     allowMethodCallDecomposing = true;
     helperExposeExpression(
         "function *f() { return x.y(yield 1); }",
-        "yield",
+        exprMatchesStr("yield 1"),
         lines(
             "function *f() {",
             "  var temp_const$jscomp$1 = x;",
@@ -1229,14 +1231,15 @@ public final class ExpressionDecomposerTest {
   @Test
   public void testExposeYieldExpression3() {
     allowMethodCallDecomposing = true;
-    String before = "function *f() { return g.call(yield 1); }";
-    String after = lines(
-        "function *f() {",
-        "  var temp_const$jscomp$1 = g;",
-        "  var temp_const$jscomp$0 = temp_const$jscomp$1.call;",
-        "  return temp_const$jscomp$0.call(temp_const$jscomp$1, yield 1);",
-        "}");
-    helperExposeExpression(before, "yield", after);
+    helperExposeExpression(
+        "function *f() { return g.call(yield 1); }",
+        exprMatchesStr("yield 1"),
+        lines(
+            "function *f() {",
+            "  var temp_const$jscomp$1 = g;",
+            "  var temp_const$jscomp$0 = temp_const$jscomp$1.call;",
+            "  return temp_const$jscomp$0.call(temp_const$jscomp$1, yield 1);",
+            "}"));
   }
 
   @Test
@@ -1244,7 +1247,7 @@ public final class ExpressionDecomposerTest {
     allowMethodCallDecomposing = true;
     helperExposeExpression(
         "function *f() { return g.apply([yield 1, yield 2]); }",
-        "yield",
+        exprMatchesStr("yield 1"),
         lines(
             "function *f() {",
             "  var temp_const$jscomp$1 = g;",
@@ -1582,10 +1585,28 @@ public final class ExpressionDecomposerTest {
     assertThat(result).isEqualTo(expectedResult);
   }
 
+  /**
+   * Test canExposeExpression on the first CALL to the given function name.
+   *
+   * @deprecated Use the method that takes a Function as its second parameter.
+   */
+  @Deprecated
+  private void helperCanExposeExpression(
+      DecompositionType expectedResult, String code, final String fnName) {
+    Function<AbstractCompiler, Function<Node, Node>> nodeFinderFn =
+        compiler ->
+            node -> {
+              Node callSite = findCall(node, fnName);
+              assertWithMessage("Call to " + fnName + " was not found.").that(callSite).isNotNull();
+              return callSite;
+            };
+    helperCanExposeExpression(expectedResult, code, nodeFinderFn);
+  }
+
   private void helperCanExposeExpression(
       DecompositionType expectedResult,
       String code,
-      String fnName) {
+      Function<AbstractCompiler, Function<Node, Node>> nodeFinderFn) {
     Compiler compiler = getCompiler();
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
@@ -1596,19 +1617,73 @@ public final class ExpressionDecomposerTest {
     Node externsRoot = parse(compiler, "function goo() {} function foo() {}");
     assertThat(externsRoot).isNotNull();
 
-    Node callSite = findCall(tree, fnName);
-    assertWithMessage("Call to " + fnName + " was not found.").that(callSite).isNotNull();
+    Node expresionNode = nodeFinderFn.apply(compiler).apply(tree);
 
     compiler.resetUniqueNameId();
-    DecompositionType result = decomposer.canExposeExpression(callSite);
+    DecompositionType result = decomposer.canExposeExpression(expresionNode);
     assertThat(result).isEqualTo(expectedResult);
   }
 
-  private void helperExposeExpression(
-      String code,
-      String fnName,
-      String expectedResult) {
-    helperExposeExpression(code, tree -> findCall(tree, fnName), expectedResult);
+  /**
+   * Provides a {@code toString()} method that contains the source code a node represents where
+   * possible, or some explanatory text when not possible.
+   */
+  private static final class NodeToSource {
+    private final AbstractCompiler compiler;
+    private final Node node;
+
+    public NodeToSource(AbstractCompiler compiler, Node node) {
+      this.compiler = compiler;
+      this.node = node;
+    }
+
+    @Override
+    public String toString() {
+      if (node.isTemplateLitString()) {
+        // A string part of a template literal cannot be printed as code on its own.
+        return SimpleFormat.format("[Template literal string: '%s']", node.getRawString());
+      } else if (node.isTemplateLitSub()) {
+        // The template literal substitution node cannot itself be turned into source code,
+        // but we can do that for the expression inside of it.
+        return SimpleFormat.format(
+            "[Template literal substitution: '%s']", compiler.toSource(node.getOnlyChild()));
+      } else {
+        return compiler.toSource(node);
+      }
+    }
+  }
+
+  private static String nodeToSource(AbstractCompiler compiler, Node node) {
+    return new NodeToSource(compiler, node).toString();
+  }
+
+  private static Function<AbstractCompiler, Function<Node, Node>> exprMatchesStr(
+      final String exprString) {
+    return (AbstractCompiler compiler) ->
+        (Node root) -> {
+          // When matching trim off the trailing newline added by the compiler's pretty-print
+          // option.
+          Predicate<Node> isAMatch =
+              (Node node) -> exprString.equals(nodeToSource(compiler, node).trim());
+          Predicate<Node> containsAMatch =
+              (Node node) -> nodeToSource(compiler, node).contains(exprString);
+          Node matchingNode = NodeUtil.findPreorder(root, isAMatch, containsAMatch);
+          assertWithMessage(
+                  "Expected node `%s` was not found in `%s`", exprString, compiler.toSource(root))
+              .that(matchingNode)
+              .isNotNull();
+          return matchingNode;
+        };
+  }
+
+  /**
+   * Test maybeExposeExpression on the first CALL to the given function name.
+   *
+   * @deprecated Use the method that takes a Function as its second parameter.
+   */
+  @Deprecated
+  private void helperExposeExpression(String code, String fnName, String expectedResult) {
+    helperExposeExpression(code, exprMatchesStr(fnName + "()"), expectedResult);
   }
 
   private Node helperExposeExpressionThenTypeCheck(String code, Function<Node, Node> nodeFinder) {
@@ -1637,7 +1712,7 @@ public final class ExpressionDecomposerTest {
 
   private void helperExposeExpression(
       String code,
-      Function<Node, Node> nodeFinder,
+      Function<AbstractCompiler, Function<Node, Node>> compilerToNodeFinder,
       String expectedResult) {
     Compiler compiler = getCompiler();
 
@@ -1659,6 +1734,7 @@ public final class ExpressionDecomposerTest {
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
 
+    final Function<Node, Node> nodeFinder = compilerToNodeFinder.apply(compiler);
     Node expr = nodeFinder.apply(tree);
     assertWithMessage("Expected node was not found.").that(expr).isNotNull();
 
@@ -1676,18 +1752,22 @@ public final class ExpressionDecomposerTest {
     }
   }
 
-  private void helperMoveExpression(
-      String code,
-      String fnName,
-      String expectedResult) {
-    helperMoveExpression(code, tree -> findCall(tree, fnName), expectedResult);
+  /**
+   * Test `moveExpression()` on the first CALL to the given function name.
+   *
+   * @deprecated Use the method that takes a Function as its second parameter.
+   */
+  @Deprecated
+  private void helperMoveExpression(String code, String fnName, String expectedResult) {
+    helperMoveExpression(code, exprMatchesStr(fnName + "()"), expectedResult);
   }
 
   private void helperMoveExpression(
       String code,
-      Function<Node, Node> nodeFinder,
+      Function<AbstractCompiler, Function<Node, Node>> compilerToNodeFinder,
       String expectedResult) {
     Compiler compiler = getCompiler();
+    Function<Node, Node> nodeFinder = compilerToNodeFinder.apply(compiler);
 
     Node expectedRoot = parse(compiler, expectedResult);
     Node tree = parse(compiler, code);
@@ -1765,6 +1845,10 @@ public final class ExpressionDecomposerTest {
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setPrettyPrint(true);
+    // Don't prefix the compiler output with `"use strict";`.
+    // It's noise for these tests, and it interferes with tests that
+    // want to use compiler.toSource() to string match expressions.
+    options.setEmitUseStrict(false);
     compiler.initOptions(options);
     return compiler;
   }

@@ -39,7 +39,7 @@ import java.util.Objects;
 final class ProductionCoverageInstrumentationCallback
     extends NodeTraversal.AbstractPostOrderCallback {
 
-  // TODO(user): Make this dynamic so that instrumentation does not rely on hardcoded files
+  // TODO(psokol): Make this dynamic so that instrumentation does not rely on hardcoded files
   private static final String INSTRUMENT_CODE_FUNCTION_NAME = "instrumentCode";
   private static final String INSTRUMENT_CODE_FILE_NAME = "InstrumentCode.js";
 
