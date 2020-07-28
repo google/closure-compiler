@@ -913,10 +913,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           checkState(!hasErrors());
           if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
             instrumentForCoverageInternal(options.getInstrumentForCoverageOption());
-          } else if (options.instrumentForCoverage) {
-            instrumentForCoverageInternal(InstrumentOption.LINE_ONLY);
-          } else if (options.instrumentForCoverage && options.instrumentBranchCoverage) {
-            instrumentForCoverageInternal(InstrumentOption.BRANCH_ONLY);
           }
           return null;
         });

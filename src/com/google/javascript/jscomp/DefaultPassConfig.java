@@ -572,14 +572,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clUtilGetDefineRewriterPass);
     }
 
-    if (options.instrumentForCoverage) {
-      if (options.instrumentBranchCoverage) {
-        options.setInstrumentForCoverageOption(InstrumentOption.BRANCH_ONLY);
-      } else {
-        options.setInstrumentForCoverageOption(InstrumentOption.LINE_ONLY);
-      }
-    }
-
     if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
       passes.add(instrumentForCodeCoverage);
     }

@@ -1193,22 +1193,6 @@ public class CompilerOptions implements Serializable {
 
   private InstrumentOption instrumentForCoverageOption;
 
-  /**
-   * Instrument code for the purpose of collecting coverage data.
-   *
-   * @deprecated Please use setInstrumentForCoverageOption with LINE_ONLY InstrumentationOption
-   *     instead
-   */
-  @Deprecated public boolean instrumentForCoverage;
-
-  /**
-   * Instrument branch coverage data - valid only if instrumentForCoverage is True
-   *
-   * @deprecated Please use setInstrumentForCoverageOption with BRANCH_ONLY InstrumentationOption
-   *     instead
-   */
-  @Deprecated public boolean instrumentBranchCoverage;
-
   private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
       ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
 
@@ -1436,10 +1420,6 @@ public class CompilerOptions implements Serializable {
     replaceStringsReservedStrings = ImmutableSet.of();
     propertyInvalidationErrors = new HashMap<>();
     inputSourceMaps = ImmutableMap.of();
-
-    // Instrumentation
-    instrumentForCoverage = false;  // instrument lines
-    instrumentBranchCoverage = false; // instrument branches
 
     instrumentForCoverageOption = InstrumentOption.NONE;
 
@@ -2816,24 +2796,6 @@ public class CompilerOptions implements Serializable {
     this.preventLibraryInjection = preventLibraryInjection;
   }
 
-  /**
-   * Set whether or not code should be modified to provide coverage
-   * information.
-   */
-  public void setInstrumentForCoverage(boolean instrumentForCoverage) {
-    this.instrumentForCoverage = instrumentForCoverage;
-  }
-
-  /** Set whether to instrument to collect branch coverage */
-  public void setInstrumentBranchCoverage(boolean instrumentBranchCoverage) {
-    if (instrumentForCoverage || !instrumentBranchCoverage) {
-      this.instrumentBranchCoverage = instrumentBranchCoverage;
-    } else {
-      throw new RuntimeException("The option instrumentForCoverage must be set to true for "
-          + "instrumentBranchCoverage to be set to true.");
-    }
-  }
-
   public void setInstrumentForCoverageOption(InstrumentOption instrumentForCoverageOption) {
     this.instrumentForCoverageOption = checkNotNull(instrumentForCoverageOption);
   }
@@ -3026,9 +2988,7 @@ public class CompilerOptions implements Serializable {
             .add("inputPropertyMap", inputPropertyMap)
             .add("inputSourceMaps", inputSourceMaps)
             .add("inputVariableMap", inputVariableMap)
-            .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
-            .add("instrumentBranchCoverage", instrumentBranchCoverage)
             .add("instrumentForCoverageOption", instrumentForCoverageOption.toString())
             .add("isolatePolyfills", isolatePolyfills)
             .add("j2clMinifierEnabled", j2clMinifierEnabled)
