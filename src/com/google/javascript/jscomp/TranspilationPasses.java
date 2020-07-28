@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT_IN;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_UNSUPPORTED;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -77,6 +78,10 @@ public class TranspilationPasses {
       List<PassFactory> passes, CompilerOptions options) {
     // Note that, for features >ES8 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
+    if (options.needsTranspilationOf(Feature.BIGINT)) {
+      passes.add(reportBigIntLiteralTranspilationUnsupported);
+    }
+
     if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
       // Numeric separators are flagged as present by the parser,
       // but never actually represented in the AST.
@@ -233,6 +238,13 @@ public class TranspilationPasses {
           .setName("removeTrailingCommaFromParamList")
           .setInternalFactory(RemoveTrailingCommaFromParamList::new)
           .setFeatureSet(ES_NEXT)
+          .build();
+
+  private static final PassFactory reportBigIntLiteralTranspilationUnsupported =
+      PassFactory.builderForHotSwap()
+          .setName("reportBigIntTranspilation")
+          .setInternalFactory(ReportBigIntLiteralTranspilationUnsupported::new)
+          .setFeatureSet(ES_UNSUPPORTED)
           .build();
 
   private static final PassFactory rewriteExponentialOperator =
