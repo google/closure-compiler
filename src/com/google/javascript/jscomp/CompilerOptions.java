@@ -380,20 +380,16 @@ public class CompilerOptions implements Serializable {
   @Deprecated
   public void setCheckGlobalThisLevel(CheckLevel level) {}
 
-  public CheckLevel checkMissingGetCssNameLevel;
+  @Deprecated public CheckLevel checkMissingGetCssNameLevel;
 
-  /**
-   * Checks that certain string literals only appear in strings used as
-   * goog.getCssName arguments.
-   */
+  /** Noop */
+  @Deprecated
   public void setCheckMissingGetCssNameLevel(CheckLevel level) {
     this.checkMissingGetCssNameLevel = level;
   }
 
-  /**
-   * Regex of string literals that may only appear in goog.getCssName arguments.
-   */
-  public String checkMissingGetCssNameBlacklist;
+  /** Noop */
+  @Deprecated public String checkMissingGetCssNameBlacklist;
 
   /**
    * A set of extra annotation names which are accepted and silently ignored
@@ -2192,6 +2188,8 @@ public class CompilerOptions implements Serializable {
     this.checkTypes = checkTypes;
   }
 
+  /** noop */
+  @Deprecated
   public void setCheckMissingGetCssNameBlacklist(String blackList) {
     this.checkMissingGetCssNameBlacklist = blackList;
   }
@@ -2918,8 +2916,6 @@ public class CompilerOptions implements Serializable {
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
             .add("checkDeterminism", getCheckDeterminism())
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
-            .add("checkMissingGetCssNameBlacklist", checkMissingGetCssNameBlacklist)
-            .add("checkMissingGetCssNameLevel", checkMissingGetCssNameLevel)
             .add("checksOnly", checksOnly)
             .add("checkSuspiciousCode", checkSuspiciousCode)
             .add("checkSymbols", checkSymbols)

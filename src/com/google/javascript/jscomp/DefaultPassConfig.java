@@ -356,10 +356,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(polymerPass);
     }
 
-    if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
-      checks.add(closureCheckGetCssName);
-    }
-
     if (options.syntheticBlockStartMarker != null) {
       // This pass must run before the first fold constants pass.
       checks.add(createSyntheticBlocks);
@@ -1548,19 +1544,6 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       RewriteGoogJsImports.Mode.LINT_AND_REWRITE,
                       compiler.getModuleMap()))
-          .setFeatureSetForChecks()
-          .build();
-
-  /** Checks that CSS class names are wrapped in goog.getCssName */
-  private final PassFactory closureCheckGetCssName =
-      PassFactory.builder()
-          .setName("closureCheckGetCssName")
-          .setInternalFactory(
-              (compiler) ->
-                  new CheckMissingGetCssName(
-                      compiler,
-                      options.checkMissingGetCssNameLevel,
-                      options.checkMissingGetCssNameBlacklist))
           .setFeatureSetForChecks()
           .build();
 

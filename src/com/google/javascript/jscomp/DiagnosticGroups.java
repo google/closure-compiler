@@ -139,7 +139,6 @@ public class DiagnosticGroups {
           + "globalThis, "
           + "invalidCasts, "
           + "misplacedTypeAnnotation, "
-          + "missingGetCssName, "
           + "missingOverride, "
           + "missingPolyfill, "
           + "missingProperties, "
@@ -493,10 +492,9 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
-  @GwtIncompatible("java.util.regex")
+  @Deprecated
   public static final DiagnosticGroup MISSING_GETCSSNAME =
-      DiagnosticGroups.registerGroup("missingGetCssName",
-          CheckMissingGetCssName.MISSING_GETCSSNAME);
+      DiagnosticGroups.registerDeprecatedGroup("missingGetCssName");
 
   @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup DUPLICATE_MESSAGE =

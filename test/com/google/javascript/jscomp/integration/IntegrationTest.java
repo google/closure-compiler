@@ -442,41 +442,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "});"));
   }
 
-  @GwtIncompatible("CheckMissingGetCssName is incompatible")
-  @Test
-  public void testCssNameCheck() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-    options.setCheckMissingGetCssNameLevel(CheckLevel.ERROR);
-    options.setCheckMissingGetCssNameBlacklist("foo");
-    compile(options, "var x = 'foo';");
-
-    assertThat(lastCompiler.getErrors()).hasSize(1);
-    assertThat(DiagnosticGroups.MISSING_GETCSSNAME.matches(lastCompiler.getErrors().get(0)))
-        .isTrue();
-  }
-
-  @Test
-  public void testBug2592659() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-    options.setCheckTypes(true);
-    options.setCheckMissingGetCssNameLevel(CheckLevel.WARNING);
-    options.setCheckMissingGetCssNameBlacklist("foo");
-    test(
-        options,
-        lines(
-            "var goog = {};",
-            "/**",
-            " * @param {string} className",
-            " * @param {string=} opt_modifier",
-            " * @return {string}",
-            "*/",
-            "goog.getCssName = function(className, opt_modifier) {}",
-            "var x = goog.getCssName(123, 'a');"),
-        DiagnosticGroups.CHECK_TYPES);
-  }
-
   @Test
   public void testCheckStrictMode() {
     CompilerOptions options = createCompilerOptions();
@@ -1412,8 +1377,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     options.exportTestFunctions = true;
     options.setClosurePass(true);
-    options.setCheckMissingGetCssNameLevel(CheckLevel.ERROR);
-    options.setCheckMissingGetCssNameBlacklist("goog");
     options.syntheticBlockStartMarker = "synStart";
     options.syntheticBlockEndMarker = "synEnd";
     options.setCheckSymbols(true);

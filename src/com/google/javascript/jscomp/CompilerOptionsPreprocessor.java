@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
@@ -32,12 +30,6 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 public final class CompilerOptionsPreprocessor {
 
   static void preprocess(CompilerOptions options) {
-    if (options.checkMissingGetCssNameLevel.isOn()
-        && (isNullOrEmpty(options.checkMissingGetCssNameBlacklist))) {
-      throw new InvalidOptionsException(
-          "Cannot check use of goog.getCssName because of empty blacklist.");
-    }
-
     if (options.getInlineFunctionsLevel() == CompilerOptions.Reach.NONE
         && options.maxFunctionSizeAfterInlining
             != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) {
