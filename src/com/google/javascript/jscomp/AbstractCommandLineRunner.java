@@ -1439,6 +1439,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       outputManifest();
       outputBundle();
 
+      // Output the production instrumentation param mapping if requested.
+      outputInstrumentationMapping();
+
       if (isOutputInJson()) {
         outputJsonStream();
       }
@@ -2013,6 +2016,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     outputManifestOrBundle(config.outputBundles, false);
   }
 
+  @GwtIncompatible("Unnecessary")
+  private void outputInstrumentationMapping() throws IOException {
+    if (!Strings.isNullOrEmpty(config.instrumentationMappingFile)) {
+      compiler.getInstrumentationMapping().save(config.instrumentationMappingFile);
+    }
+  }
+
   /**
    * Writes the manifest or bundle of all compiler input files that were included as controlled by
    * --dependency_mode, if requested.
@@ -2412,6 +2422,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     public CommandLineConfig setStringMapOutputFile(String stringMapOutputPath) {
       this.stringMapOutputPath = stringMapOutputPath;
+      return this;
+    }
+
+    private String instrumentationMappingFile = "";
+
+    public CommandLineConfig setInstrumentationMappingFile(
+        String instrumentationMappingFile) {
+      this.instrumentationMappingFile = instrumentationMappingFile;
       return this;
     }
 

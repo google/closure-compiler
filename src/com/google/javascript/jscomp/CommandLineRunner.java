@@ -22,6 +22,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -270,6 +271,12 @@ public class CommandLineRunner extends
         usage = "File where the serialized version of the variable "
         + "renaming map produced should be saved")
     private String variableMapOutputFile = "";
+
+    @Option(name = "--instrument_mapping_report",
+        usage = "File where the encoded parameters created by Production "
+            + "Instrumentation are mapped to their pre-encoded values. Must "
+            + "be used in tandem with --instrument_code=PRODUCTION")
+    private String instrumentationMappingOutputFile = "";
 
     @Option(name = "--create_renaming_reports",
         hidden = true,
@@ -1708,6 +1715,7 @@ public class CommandLineRunner extends
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)
           .setPropertyMapOutputFile(flags.propertyMapOutputFile)
+          .setInstrumentationMappingFile(flags.instrumentationMappingOutputFile)
           .setCodingConvention(conv)
           .setSummaryDetailLevel(flags.summaryDetailLevel)
           .setOutputWrapper(flags.outputWrapper)
@@ -1931,6 +1939,18 @@ public class CommandLineRunner extends
       options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     }
 
+    if (flags.instrumentCodeParsed == InstrumentOption.PRODUCTION &&
+            (Strings.isNullOrEmpty(flags.instrumentationMappingOutputFile))) {
+      throw new FlagUsageException("Expected --instrument_mapping_report to be set when "
+          + "--instrument_code is set to Production");
+    }
+
+    if (!Strings.isNullOrEmpty(flags.instrumentationMappingOutputFile)
+        && flags.instrumentCodeParsed != InstrumentOption.PRODUCTION) {
+      throw new FlagUsageException("Expected --instrument_code to be passed with PRODUCTION " +
+          "when --instrument_mapping_report is set");
+
+    }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
 
     return options;

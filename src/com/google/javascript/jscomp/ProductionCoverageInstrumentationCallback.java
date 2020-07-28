@@ -16,15 +16,15 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Strings.lenientFormat;
-
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.Base64VLQ;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -137,56 +137,104 @@ final class ProductionCoverageInstrumentationCallback
     return exprNode.useSourceInfoIfMissingFromForTree(node);
   }
 
+
+  public VariableMap getInstrumentationMapping() {
+    return parameterMapping.getParamMappingAsVariableMap();
+  }
+
   /**
    * A class the maintains a mapping of unique identifiers to parameter values. It also generates
    * unique identifiers by creating a counter starting form 0 and increments this value when
-   * assigning a new unique identifier.
+   * assigning a new unique identifier. It converts the mapping to a VariableMap as well so that it
+   * can later be saved as a file.
    */
   private static final class ParameterMapping {
 
-    private final List<String> uniqueIdentifier;
-    private final List<String> paramValue;
+    // Values are stored as a mapping of the String of the encoded array indices to a String of the
+    // encoded uniqueIdentifier. This is so we can check if an encoded param has already been
+    // defined so that we do not create a duplicate. (Ex. Key: ACA (Base64 VLQ encoding of [0,1,0]),
+    // Value: C (Base64 VLQ encoding of the uniqueIdentifier). This map will later be inversed so
+    // that it is printed in the following form: C:ACA.
+    private final Map<String, String> paramValueEncodings;
+
+    // Values are stored as a mapping of String to Integers so that we can lookup the index of the
+    // encoded (file|function|type) name and also check if it is present in constant time. These
+    // mappings are added to the VariableMap once instrumentation is complete.
+    private final Map<String, Integer> fileNameToIndex;
+    private final Map<String, Integer> functionNameToIndex;
+    private final Map<String, Integer> typeToIndex;
+
     private long nextUniqueIdentifier;
 
     ParameterMapping() {
       nextUniqueIdentifier = 0;
-      uniqueIdentifier = new ArrayList<>();
-      paramValue = new ArrayList<>();
+
+      paramValueEncodings = new HashMap<>();
+
+      // A LinkedHashMap is used so that when keys are printed, keySet() will obtain them in the
+      // insertion order which corroborates to the index. This helps to avoid the need of sorting
+      // by the Integer value and is more convenient.
+      fileNameToIndex = new LinkedHashMap<>();
+      functionNameToIndex = new LinkedHashMap<>();
+      typeToIndex = new LinkedHashMap<>();
     }
 
-    public String getEncodedParam(String fileName, String functionName, String type) {
-      String combinedParam = lenientFormat("%s %s %s", fileName, functionName, type);
-      long uniqueIdentifier = getUniqueIdentifier();
+    private String getEncodedParam(String fileName, String functionName, String type) {
 
-      if (uniqueIdentifier > Integer.MAX_VALUE) {
-        throw new ArithmeticException(
-            "Unique Identifier exceeds value of Integer.MAX_VALUE, could not encode with Base 64"
-                + " VLQ");
-      }
+      fileNameToIndex.putIfAbsent(fileName, fileNameToIndex.size());
+      functionNameToIndex.putIfAbsent(functionName, functionNameToIndex.size());
+      typeToIndex.putIfAbsent(type, typeToIndex.size());
 
       StringBuilder sb = new StringBuilder();
 
       try {
-        Base64VLQ.encode(sb, Math.toIntExact(uniqueIdentifier));
+        Base64VLQ.encode(sb, fileNameToIndex.get(fileName));
+        Base64VLQ.encode(sb, functionNameToIndex.get(functionName));
+        Base64VLQ.encode(sb, typeToIndex.get(type));
       } catch (IOException e) {
         throw new AssertionError(e);
       }
 
-      String result = sb.toString();
+      String encodedParam = sb.toString();
 
-      addParamMapping(result, combinedParam);
+      if (!paramValueEncodings.containsKey(encodedParam)) {
+        long uniqueIdentifier = generateUniqueIdentifier();
+        if (uniqueIdentifier > Integer.MAX_VALUE) {
+          throw new ArithmeticException(
+              "Unique Identifier exceeds value of Integer.MAX_VALUE, could not encode with Base 64"
+                  + " VLQ");
+        }
 
-      return result;
+        sb = new StringBuilder();
+
+        try {
+          Base64VLQ.encode(sb, Math.toIntExact(uniqueIdentifier));
+        } catch (IOException e) {
+          throw new AssertionError(e);
+        }
+
+        paramValueEncodings.put(encodedParam, sb.toString());
+      }
+
+      return paramValueEncodings.get(encodedParam);
     }
 
-    private long getUniqueIdentifier() {
+    private long generateUniqueIdentifier() {
       nextUniqueIdentifier++;
       return nextUniqueIdentifier;
     }
 
-    private void addParamMapping(String identifier, String param) {
-      uniqueIdentifier.add(identifier);
-      paramValue.add(param);
+    private VariableMap getParamMappingAsVariableMap() {
+      // Array names are given a " " (space) prefix since when writing to file, VariableMap.java
+      // sorts the map by key values. This space will place the arrays at the top of the file.
+      // The key and value entry are put in this order because the map will be inversed.
+      paramValueEncodings.put(fileNameToIndex.keySet().toString(), " FileNames");
+      paramValueEncodings.put(functionNameToIndex.keySet().toString(), " FunctionNames");
+      paramValueEncodings.put(typeToIndex.keySet().toString(), " Types");
+
+      VariableMap preInversedMap = new VariableMap(paramValueEncodings);
+      ImmutableMap<String, String> inversedMap = preInversedMap.getNewNameToOriginalNameMap();
+      return new VariableMap(inversedMap);
     }
   }
 }

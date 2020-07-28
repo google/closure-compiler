@@ -1221,6 +1221,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         this.propertyMap,
         this.anonymousFunctionNameMap,
         this.stringMap,
+        this.instrumentationMapping,
         this.sourceMap,
         this.externExports,
         this.cssNames,
@@ -3008,6 +3009,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** String replacement map */
   private VariableMap stringMap = null;
 
+  /** Mapping for Instrumentation parameter encoding */
+  private VariableMap instrumentationMapping = null;
+
   /** Id generator map */
   private String idGeneratorMap = null;
 
@@ -3059,6 +3063,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   VariableMap getStringMap() {
     return this.stringMap;
+  }
+
+  @Override
+  public void setInstrumentationMapping(VariableMap instrumentationMapping) {
+    this.instrumentationMapping = instrumentationMapping;
+  }
+
+  public VariableMap getInstrumentationMapping() {
+    return this.instrumentationMapping;
   }
 
 
