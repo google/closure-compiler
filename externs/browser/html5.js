@@ -3756,30 +3756,6 @@ XMLHttpRequest.prototype.responseType;
  */
 XMLHttpRequest.prototype.response;
 
-/**
- * Trust Tokens operation (issuance, signing, and redemption) is specified via
- * an instance of the following parameters struct, provided via Fetch, XHR, or
- * the iframe tag.
- * TODO(b/161890603): Trust Token: Remove the 'issuer' fields after Chrome 86 hits stable.
- * @typedef {{
- *     type: string,
- *     issuer: (string|undefined),
- *     issuers: (!Array<string>|undefined),
- *     refreshPolicy: string,
- *     signRequestData: string,
- *     includeTimestampHeader: boolean,
- *     additionalSignedHeaders: (!Array<string>|undefined),
- *     additionalSigningData: (string|undefined)
- *   }}
- * @see https://docs.google.com/document/d/1qUjtKgA7nMv9YGMhi0xWKEojkSITKzGLdIcZgoz6ZkI
- */
-var TrustTokenAttributeType;
-
-/**
- * @type {?function(!TrustTokenAttributeType): void}
- * @see https://docs.google.com/document/d/1qUjtKgA7nMv9YGMhi0xWKEojkSITKzGLdIcZgoz6ZkI.
- */
-XMLHttpRequest.prototype.setTrustToken;
 
 /**
  * @type {ArrayBuffer}
