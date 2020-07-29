@@ -1275,8 +1275,6 @@ public final class AstValidatorTest extends CompilerTestCase {
         "  switch(x) {",
         "    case 1: ",
         "      var y = 5;",
-        "    default:",
-        "      var y = 5;",
         "    case 2: ",
         "      var y = 5;",
         "  }",
@@ -1285,7 +1283,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid(switchStatement);
 
     Node rootScriptNode = parseValidScript(switchStatement);
-    Node defaultBlock = IR.block();
+    Node blockNode = IR.block();
 
     Node nodeToAppendChildTo =
         stream(NodeUtil.preOrderIterable(rootScriptNode))
@@ -1293,7 +1291,7 @@ public final class AstValidatorTest extends CompilerTestCase {
             .findFirst()
             .get();
 
-    nodeToAppendChildTo.addChildToFront(defaultBlock);
+    nodeToAppendChildTo.addChildToFront(blockNode);
     expectInvalid(rootScriptNode, Check.SCRIPT);
   }
 
