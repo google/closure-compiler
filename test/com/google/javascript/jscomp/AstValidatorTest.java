@@ -1265,6 +1265,38 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(expr, Check.STATEMENT);
   }
 
+  @Test
+  public void testSwitchStatement() {
+    // Since we're building the AST by hand, there won't be any types on it.
+    enableTypeInfoValidation = false;
+
+    String switchStatement = lines(
+        "function foo(x) {",
+        "  switch(x) {",
+        "    case 1: ",
+        "      var y = 5;",
+        "    default:",
+        "      var y = 5;",
+        "    case 2: ",
+        "      var y = 5;",
+        "  }",
+        "}");
+
+    valid(switchStatement);
+
+    Node switchNode = parseValidScript(switchStatement);
+    Node defaultBlock = IR.block();
+
+    Node nodeToAppendChildTo =
+        stream(NodeUtil.preOrderIterable(switchNode))
+            .filter(node -> node.isCase())
+            .findFirst()
+            .get();
+
+    nodeToAppendChildTo.addChildToFront(defaultBlock);
+    expectInvalid(switchNode, Check.SCRIPT);
+  }
+
   private void valid(String code) {
     testSame(code);
     assertThat(lastCheckWasValid).isTrue();
