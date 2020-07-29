@@ -27,13 +27,14 @@ import java.util.List;
 import java.util.Map.Entry;
 
 /**
- * A compiler pass for optimize function return results.  Currently this
- * pass looks for results that are complete unused and rewrite them to be:
- *   "return x()" -->"x(); return"
+ * A compiler pass to optimize function return results. Currently this pass looks for results that
+ * are completely unused and rewrites them as: "return x()" --> "x(); return"
  *
- * Future work: expanded this to look for use context to avoid unneeded type coercion:
- *   - "return x.toString()" --> "return x"
- *   - "return !!x" --> "return x"
+ * <p>Future work: expand this to look for use context to avoid unneeded type coercion: \
+ *
+ * <p>"return x.toString()" --> "return x" \
+ *
+ * <p>"return !!x" --> "return x"
  */
 class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
 
