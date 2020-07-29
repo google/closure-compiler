@@ -941,7 +941,7 @@ class ExpressionDecomposer {
    *   <ul>
    *     <li>{@code expressionRoot} = `a = 1 + x();`
    *     <li>{@code subExpression} = `x()`, has side-effects
-   *     <li>{@code MOVABLE} because the final value of `a` can not be influenced by `x()`.
+   *     <li>{@code MOVABLE} because the final value of `1` can not be influenced by `x()`.
    *   </ul>
    *   <ul>
    *     <li>{@code expressionRoot} = `a = b + x();`
