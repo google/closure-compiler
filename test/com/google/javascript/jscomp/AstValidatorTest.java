@@ -1284,17 +1284,17 @@ public final class AstValidatorTest extends CompilerTestCase {
 
     valid(switchStatement);
 
-    Node switchNode = parseValidScript(switchStatement);
+    Node rootScriptNode = parseValidScript(switchStatement);
     Node defaultBlock = IR.block();
 
     Node nodeToAppendChildTo =
-        stream(NodeUtil.preOrderIterable(switchNode))
+        stream(NodeUtil.preOrderIterable(rootScriptNode))
             .filter(node -> node.isCase())
             .findFirst()
             .get();
 
     nodeToAppendChildTo.addChildToFront(defaultBlock);
-    expectInvalid(switchNode, Check.SCRIPT);
+    expectInvalid(rootScriptNode, Check.SCRIPT);
   }
 
   private void valid(String code) {
