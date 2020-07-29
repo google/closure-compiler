@@ -60,12 +60,15 @@ final class InlineProperties implements CompilerPass {
 
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.invalidatingTypes = new InvalidatingTypes.Builder(compiler.getTypeRegistry())
-        // NOTE: Mismatches are less important to this pass than to (dis)ambiguate properties.
-        // This pass doesn't remove values (it only inlines them when the type is known), so
-        // it isn't necessary to invalidate due to implicit interface uses.
-        .addAllTypeMismatches(compiler.getTypeMismatches())
-        .build();
+    this.invalidatingTypes =
+        new InvalidatingTypes.Builder(compiler.getTypeRegistry())
+            // NOTE: Mismatches are less important to this pass than to (dis)ambiguate properties.
+            // This pass doesn't remove values (it only inlines them when the type is known), so
+            // it isn't necessary to invalidate due to implicit interface uses, but we do so anyway
+            // for consistency with the other type-based optimizations.
+            .addAllTypeMismatches(compiler.getTypeMismatches())
+            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
+            .build();
     invalidateExternProperties();
   }
 
