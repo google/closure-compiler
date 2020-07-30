@@ -49,6 +49,7 @@ public abstract class ObjectColor implements Color {
 
   public abstract String getFilename();
 
+  @Override
   public abstract boolean isInvalidating();
 
   /** Builder for ObjectColors */

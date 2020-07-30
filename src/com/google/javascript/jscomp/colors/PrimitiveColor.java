@@ -51,4 +51,9 @@ public enum PrimitiveColor implements Color {
     // that would be simpler or not.
     throw new UnsupportedOperationException("Can only call getAlternates() on unions");
   }
+
+  @Override
+  public boolean isInvalidating() {
+    return true;
+  }
 }

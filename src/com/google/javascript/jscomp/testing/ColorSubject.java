@@ -60,6 +60,14 @@ public final class ColorSubject extends Subject {
     check("isObject").that(actualNonNull().isObject()).isTrue();
   }
 
+  public void isInvalidating() {
+    check("isInvalidating").that(actualNonNull().isInvalidating()).isTrue();
+  }
+
+  public void isNotInvalidating() {
+    check("isInvalidating").that(actualNonNull().isInvalidating()).isFalse();
+  }
+
   public void hasAlternates(Color... alternates) {
     isUnion();
     check("getAlternates().containsExactly()")

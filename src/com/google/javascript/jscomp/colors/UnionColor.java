@@ -60,4 +60,19 @@ public abstract class UnionColor implements Color {
 
   @Override
   public abstract ImmutableCollection<Color> getAlternates();
+
+  @Override
+  public boolean isInvalidating() {
+    // Union colors are invalidating if any alternates are invalidating, with the exception of
+    // null/undefined.
+    for (Color alt : getAlternates()) {
+      if (alt.equals(PrimitiveColor.NULL_OR_VOID)) {
+        continue;
+      }
+      if (alt.isInvalidating()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
