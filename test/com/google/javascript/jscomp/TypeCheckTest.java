@@ -24071,6 +24071,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntConstructorWithNew() {
+    // BigInt object function type cannot be called with "new" keyword
+    testTypes("new BigInt(1)", "cannot instantiate non-constructor");
+  }
+
+  @Test
   public void testBigIntOrNumberArrayIndex() {
     // Even though the spec doesn't prohibit using bigint as an array index, we will report an error
     // to maintain consistency with TypeScript.
