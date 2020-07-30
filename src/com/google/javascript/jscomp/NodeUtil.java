@@ -2318,7 +2318,7 @@ public final class NodeUtil {
    * @return Whether the node is used as a statement.
    */
   public static boolean isStatement(Node n) {
-    return !n.isModuleBody() && isStatementParent(n.getParent());
+    return !n.isModuleBody() && !n.isScript() && !n.isRoot() && isStatementParent(n.getParent());
   }
 
   private static final Set<Token> IS_STATEMENT_PARENT =
