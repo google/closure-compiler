@@ -16,13 +16,18 @@
 
 package com.google.javascript.jscomp.integration;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.VariableMap;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,6 +119,35 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     String[] expectedArr = {noTranspilationInstrumentCodeExpected, expected};
     test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testInstrumentationMappingIsCreated() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source = lines("function foo() { ", "   console.log('Hello');", "}");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    Compiler compiledSourceCode = compile(options, sourceArr);
+    VariableMap variableParamMap = compiledSourceCode.getInstrumentationMapping();
+
+    ImmutableMap<String, String> paramMap = variableParamMap.getOriginalNameToNewNameMap();
+
+    assertThat(paramMap).hasSize(4);
+
+    assertWithMessage("FunctionNames in the parameter mapping are not properly set")
+        .that(paramMap.get(" FunctionNames"))
+        .isEqualTo("[foo]");
+    assertWithMessage("FileNames in the parameter mapping are not properly set")
+        .that(paramMap.get(" FileNames"))
+        .isEqualTo("[i1.js]");
+    assertWithMessage("Types in the parameter mapping are not properly set")
+        .that(paramMap.get(" Types"))
+        .isEqualTo("[Type.FUNCTION]");
+    assertWithMessage("Array index encoding is not performed properly")
+        .that(paramMap.get("C"))
+        .isEqualTo("AAA");
   }
 
   @Override

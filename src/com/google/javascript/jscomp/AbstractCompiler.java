@@ -129,6 +129,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Sets the css names found during compilation. */
   public abstract void setCssNames(Map<String, Integer> newCssNames);
 
+  /** Sets the mapping for instrumentation parameter encoding. */
+  public abstract void setInstrumentationMapping(VariableMap instrumentationMapping);
+
   /** Sets the id generator for cross-module motion. */
   public abstract void setIdGeneratorMap(String serializedIdMappings);
 

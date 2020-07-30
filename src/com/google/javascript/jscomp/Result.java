@@ -34,6 +34,7 @@ public class Result {
   public final VariableMap propertyMap;
   public final VariableMap namedAnonFunctionMap;
   public final VariableMap stringMap;
+  public final VariableMap instrumentationMappings;
   public final SourceMap sourceMap;
   public final Map<String, Integer> cssNames;
   public final String externExport;
@@ -47,6 +48,7 @@ public class Result {
       VariableMap propertyMap,
       VariableMap namedAnonFunctionMap,
       VariableMap stringMap,
+      VariableMap instrumentationMappings,
       SourceMap sourceMap,
       String externExport,
       Map<String, Integer> cssNames,
@@ -59,6 +61,7 @@ public class Result {
     this.propertyMap = propertyMap;
     this.namedAnonFunctionMap = namedAnonFunctionMap;
     this.stringMap = stringMap;
+    this.instrumentationMappings = instrumentationMappings;
     this.sourceMap = sourceMap;
     this.externExport = externExport;
     this.cssNames = cssNames;
@@ -82,12 +85,13 @@ public class Result {
         variableMap,
         propertyMap,
         namedAnonFunctionMap,
-        null,
+        /* stringMap= */ null,
+        /* instrumentationMappings= */ null,
         sourceMap,
         externExport,
-        null,
-        null,
-        null);
+        /* cssNames= */ null,
+        /* idGeneratorMap= */ null,
+        /* transpiledFiles= */ null);
   }
 
   /**
@@ -99,16 +103,17 @@ public class Result {
   public static Result createResultForStage1(Result result) {
     VariableMap emptyVariableMap = new VariableMap(ImmutableMap.of());
     return new Result(
-        result.errors,
-        result.warnings,
-        emptyVariableMap,
-        emptyVariableMap,
-        emptyVariableMap,
-        null,
-        null,
-        "",
-        null,
-        null,
-        null);
+        /* errors= */ result.errors,
+        /* warnings= */ result.warnings,
+        /* variableMap= */ emptyVariableMap,
+        /* propertyMap= */ emptyVariableMap,
+        /* namedAnonFunctionMap= */ emptyVariableMap,
+        /* stringMap= */ null,
+        /* instrumentationMappings= */ emptyVariableMap,
+        /* sourceMap= */ null,
+        /* externExport= */ "",
+        /* cssNames= */ null,
+        /* idGeneratorMap= */ null,
+        /* transpiledFiles= */ null);
   }
 }
