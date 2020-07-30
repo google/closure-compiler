@@ -1699,8 +1699,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("function f(/** number */ x) { x + 1 + 1 + x; }");
   }
 
-  public void foldDefineProperties1() {
-    test("Object.defineProperties({}, {})", "{}");
+  @Test
+  public void foldDefineProperties() {
+    test("Object.defineProperties({}, {})", "({})");
     test("Object.defineProperties(a, {})", "a");
     testSame("Object.defineProperties(a, {anything:1})");
   }
