@@ -17,9 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfill;
-import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
+import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
+import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
+import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
@@ -97,8 +97,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
     }
 
     this.libraries = new LinkedHashSet<>();
-    new PolyfillFindingCallback(compiler, polyfills)
-        .traverseExcludingGuarded(scriptRoot, this::inject);
+    new PolyfillUsageFinder(compiler, polyfills).traverseExcludingGuarded(scriptRoot, this::inject);
 
     if (libraries.isEmpty()) {
       return;
@@ -160,7 +159,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
   }
 
   private boolean languageOutIsAtLeast(FeatureSet featureSet) {
-    return PolyfillFindingCallback.languageOutIsAtLeast(
+    return PolyfillUsageFinder.languageOutIsAtLeast(
         featureSet, compiler.getOptions().getOutputFeatureSet());
   }
 }

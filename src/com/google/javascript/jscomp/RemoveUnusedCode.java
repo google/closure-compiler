@@ -25,8 +25,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
+import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
+import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
@@ -378,7 +378,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     // Accumulate guarded usages of polyfills before removal starts.
-    new PolyfillFindingCallback(compiler, polyfillsFromTable)
+    new PolyfillUsageFinder(compiler, polyfillsFromTable)
         .traverseOnlyGuarded(root, this::storePolyfill);
 
     worklist.add(new Continuation(root, scope));

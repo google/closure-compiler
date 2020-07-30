@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /** Detects all potential usages of polyfilled classes or methods */
-final class PolyfillFindingCallback {
+final class PolyfillUsageFinder {
 
   /**
    * Represents a single polyfill: specifically, for a native symbol, a set of native and polyfill
@@ -164,7 +164,7 @@ final class PolyfillFindingCallback {
 
     private static PolyfillUsage create(
         Polyfill polyfill, Node node, String name, boolean isExplicitGlobal) {
-      return new AutoValue_PolyfillFindingCallback_PolyfillUsage(
+      return new AutoValue_PolyfillUsageFinder_PolyfillUsage(
           polyfill, node, name, isExplicitGlobal);
     }
   }
@@ -172,7 +172,7 @@ final class PolyfillFindingCallback {
   private final AbstractCompiler compiler;
   private final Polyfills polyfills;
 
-  PolyfillFindingCallback(AbstractCompiler compiler, Polyfills polyfills) {
+  PolyfillUsageFinder(AbstractCompiler compiler, Polyfills polyfills) {
     this.polyfills = polyfills;
     this.compiler = compiler;
   }
