@@ -565,7 +565,7 @@ public final class SymbolTableTest {
     List<Reference> refs = table.getReferenceList(prototype);
 
     // One of the refs is implicit in the declaration of the function.
-    assertWithMessage(refs.toString()).that(refs.size()).isEqualTo(2);
+    assertWithMessage(refs.toString()).that(refs).hasSize(2);
   }
 
   @Test
@@ -635,7 +635,7 @@ public final class SymbolTableTest {
     List<Reference> refs = table.getReferenceList(prototype);
 
     // The class declaration creates an implicit .prototype reference.
-    assertWithMessage(refs.toString()).that(refs.size()).isEqualTo(1);
+    assertWithMessage(refs.toString()).that(refs).hasSize(1);
     assertNode(refs.get(0).getNode().getParent()).hasToken(Token.CLASS);
   }
 
