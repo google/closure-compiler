@@ -1296,6 +1296,7 @@ public final class NodeUtil {
       case NULLABLE_TYPE:
       case NAMED_TYPE:
       case UNDEFINED_TYPE:
+      case VOID_TYPE:
       case GENERIC_TYPE:
         return 21;
       case CAST:
