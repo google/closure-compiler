@@ -2590,7 +2590,7 @@ public final class CommandLineRunnerTest {
   @Test
   public void testInstrumentCodeProductionCreatesInstrumentationMapping() throws IOException {
     Path tempFolderPath = folder.getRoot().toPath();
-    String filePath = tempFolderPath.toString() + "\\someFile.txt";
+    String filePath = tempFolderPath + "\\someFile.txt";
 
     args.add("--instrument_code=PRODUCTION");
     args.add("--instrument_mapping_report=" + filePath);
@@ -2634,7 +2634,7 @@ public final class CommandLineRunnerTest {
 
     List<String> variableMapFile = Files.readLines(variableMap, UTF_8);
 
-    assertThat(variableMapFile.size()).isEqualTo(4);
+    assertThat(variableMapFile).hasSize(4);
     assertThat(variableMapFile.get(0)).startsWith(" FileNames:[");
     assertThat(variableMapFile.get(0)).endsWith("sourceCode.js]");
     assertThat(variableMapFile.get(1)).isEqualTo(" FunctionNames:[foo]");

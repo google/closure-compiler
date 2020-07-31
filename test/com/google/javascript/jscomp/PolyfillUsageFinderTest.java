@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
@@ -34,7 +35,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.Arrays;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -193,7 +193,7 @@ public final class PolyfillUsageFinderTest {
   }
 
   private static String lines(String... lines) {
-    return Arrays.stream(lines).collect(Collectors.joining("\n", "", "\n"));
+    return Arrays.stream(lines).collect(joining("\n", "", "\n"));
   }
 
   /** Consumes {@link PolyfillUsage} objects by storing them into a retrievable list. */
