@@ -23729,6 +23729,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntArgument() {
+    testTypes("BigInt(1)");
+    testTypes(
+        "BigInt({})",
+        lines(
+            "actual parameter 1 of BigInt does not match formal parameter",
+            "found   : {}",
+            "required: (bigint|number|string)"));
+  }
+
+  @Test
   public void testBigIntOperators_increment() {
     testTypes("const x = 1n; x++;");
     testTypes("/** @type {!BigInt} */ var x; x++;");

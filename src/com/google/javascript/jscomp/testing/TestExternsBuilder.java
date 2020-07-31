@@ -61,7 +61,7 @@ public class TestExternsBuilder {
       lines(
           "/** ",
           " * @constructor",
-          " * @param {*} arg",
+          " * @param {bigint|number|string} arg",
           " * @return {bigint}",
           " */",
           "function BigInt(arg) {}",
