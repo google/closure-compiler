@@ -24105,6 +24105,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntLiteralProperty() {
+    testTypesWithExterns(new TestExternsBuilder().addBigInt().build(), "(1n).toString()");
+  }
+
+  @Test
   public void testStrictComparison1() {
     testTypes(
         "var x = true < 'asdf';",
