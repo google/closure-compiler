@@ -5291,6 +5291,13 @@ Navigator.prototype.storage;
 
 /**
  * @param {!ShareData=} data
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/canShare
+ */
+Navigator.prototype.canShare = function(data) {};
+
+/**
+ * @param {!ShareData=} data
  * @return {!Promise<undefined>}
  * @see https://wicg.github.io/web-share/#share-method
  */
