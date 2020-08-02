@@ -1129,61 +1129,61 @@ CSSProperties.prototype.borderBottomStyle;
 CSSProperties.prototype.borderLeftStyle;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderTopWidth
  */
 CSSProperties.prototype.borderTopWidth;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderRightWidth
  */
 CSSProperties.prototype.borderRightWidth;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderBottomWidth
  */
 CSSProperties.prototype.borderBottomWidth;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderLeftWidth
  */
 CSSProperties.prototype.borderLeftWidth;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-borderWidth
  */
 CSSProperties.prototype.borderWidth;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
 CSSProperties.prototype.borderRadius;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
 CSSProperties.prototype.borderBottomLeftRadius;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
 CSSProperties.prototype.borderBottomRightRadius;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
 CSSProperties.prototype.borderTopLeftRadius;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-radius
  */
 CSSProperties.prototype.borderTopRightRadius;
@@ -1195,19 +1195,19 @@ CSSProperties.prototype.borderTopRightRadius;
 CSSProperties.prototype.borderImageSource;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-slice
  */
 CSSProperties.prototype.borderImageSlice;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-width
  */
 CSSProperties.prototype.borderImageWidth;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-background/#the-border-image-outset
  */
 CSSProperties.prototype.borderImageOutset;
@@ -1347,7 +1347,7 @@ CSSProperties.prototype.font;
 CSSProperties.prototype.fontFamily;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-fontSize
  */
 CSSProperties.prototype.fontSize;
@@ -1383,7 +1383,7 @@ CSSProperties.prototype.fontVariant;
 CSSProperties.prototype.fontWeight;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-height
  */
 CSSProperties.prototype.height;
@@ -1401,7 +1401,7 @@ CSSProperties.prototype.left;
 CSSProperties.prototype.letterSpacing;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-lineHeight
  */
 CSSProperties.prototype.lineHeight;
@@ -1431,31 +1431,31 @@ CSSProperties.prototype.listStylePosition;
 CSSProperties.prototype.listStyleType;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-margin
  */
 CSSProperties.prototype.margin;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginTop
  */
 CSSProperties.prototype.marginTop;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginRight
  */
 CSSProperties.prototype.marginRight;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginBottom
  */
 CSSProperties.prototype.marginBottom;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marginLeft
  */
 CSSProperties.prototype.marginLeft;
@@ -1473,25 +1473,25 @@ CSSProperties.prototype.markerOffset;
 CSSProperties.prototype.marks;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-maxHeight
  */
 CSSProperties.prototype.maxHeight;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-maxWidth
  */
 CSSProperties.prototype.maxWidth;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-minHeight
  */
 CSSProperties.prototype.minHeight;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-minWidth
  */
 CSSProperties.prototype.minWidth;
@@ -1521,7 +1521,7 @@ CSSProperties.prototype.outlineColor;
 CSSProperties.prototype.outlineStyle;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-outlineWidth
  */
 CSSProperties.prototype.outlineWidth;
@@ -1533,31 +1533,31 @@ CSSProperties.prototype.outlineWidth;
 CSSProperties.prototype.overflow;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-padding
  */
 CSSProperties.prototype.padding;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingTop
  */
 CSSProperties.prototype.paddingTop;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingRight
  */
 CSSProperties.prototype.paddingRight;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingBottom
  */
 CSSProperties.prototype.paddingBottom;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-paddingLeft
  */
 CSSProperties.prototype.paddingLeft;
@@ -1779,7 +1779,7 @@ CSSProperties.prototype.whiteSpace;
 CSSProperties.prototype.widows;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-width
  */
 CSSProperties.prototype.width;
@@ -1797,7 +1797,7 @@ CSSProperties.prototype.wordSpacing;
 CSSProperties.prototype.wordWrap;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-zIndex
  */
 CSSProperties.prototype.zIndex;
@@ -1817,7 +1817,7 @@ CSSProperties.prototype.boxShadow;
 CSSProperties.prototype.boxSizing;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-color/#transparency
  */
 CSSProperties.prototype.opacity;
@@ -1831,7 +1831,7 @@ CSSProperties.prototype.textOverflow;
 // CSS 3 animations
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation
  */
 CSSProperties.prototype.animation;
@@ -1861,7 +1861,7 @@ CSSProperties.prototype.animationDuration;
 CSSProperties.prototype.animationFillMode;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see https://www.w3.org/TR/css-animations-1/#animation-iteration-count
  */
 CSSProperties.prototype.animationIterationCount;
@@ -1899,7 +1899,7 @@ CSSProperties.prototype.backfaceVisibility;
 CSSProperties.prototype.perspective;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-2d-transforms/#perspective-origin
  */
 CSSProperties.prototype.perspectiveOrigin;
@@ -1911,7 +1911,7 @@ CSSProperties.prototype.perspectiveOrigin;
 CSSProperties.prototype.transform;
 
 /**
- * @type {string|number}
+ * @type {string}
  * @see http://www.w3.org/TR/css3-2d-transforms/#transform-origin
  */
 CSSProperties.prototype.transformOrigin;
