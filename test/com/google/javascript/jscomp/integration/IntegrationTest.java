@@ -1603,7 +1603,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
-    options.setExtraSmartNameRemoval(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
     String code = "/** @constructor */ function A() {} " +
@@ -1650,7 +1649,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
-    options.setExtraSmartNameRemoval(true);
     options.setFoldConstants(true);
     options.setInlineVariables(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
@@ -1825,7 +1823,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
-    options.setExtraSmartNameRemoval(true);
     options.setInlineVariables(true);
     options.setDisambiguateProperties(true);
 
@@ -1876,7 +1873,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
-    options.setExtraSmartNameRemoval(true);
     options.setInlineVariables(true);
     options.setDisambiguateProperties(true);
 

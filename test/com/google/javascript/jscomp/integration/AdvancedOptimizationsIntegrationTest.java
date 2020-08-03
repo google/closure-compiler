@@ -584,7 +584,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setExtraSmartNameRemoval(false);
     test(options, code, "");
   }
 

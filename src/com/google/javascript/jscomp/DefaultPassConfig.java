@@ -635,7 +635,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
     // more effective if code that would prevent disambiguation can be removed.
     // TODO(b/66971163): Rename options since we're not actually using smartNameRemoval here now.
-    if (options.extraSmartNameRemoval && options.smartNameRemoval) {
+    if (options.smartNameRemoval) {
 
       // These passes remove code that is dead because of define flags.
       // If the dead code is weakly typed, running these passes before property
