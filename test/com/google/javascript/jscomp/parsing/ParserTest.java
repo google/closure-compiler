@@ -5327,7 +5327,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(4);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.string("b"));
   }
@@ -5339,7 +5340,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(10);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.string("finally"));
   }
@@ -5351,7 +5353,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasType(Token.OPTCHAIN_GETELEM);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(6);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.number(1.0));
   }
@@ -5363,7 +5366,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNode(n).hasType(Token.OPTCHAIN_CALL);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(5);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
   }
 
@@ -5387,89 +5391,89 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingStartOfChain_optGetProp() {
-    Node outterGet = parse("a?.b.c").getFirstFirstChild();
-    Node innerGet = outterGet.getFirstChild();
+    Node outerGet = parse("a?.b.c").getFirstFirstChild();
+    Node innerGet = outerGet.getFirstChild();
 
     // `a?.b.c`
-    assertNode(outterGet).hasType(Token.OPTCHAIN_GETPROP);
-    assertNode(outterGet).isNotOptionalChainStart();
-    assertNode(outterGet).hasLineno(1);
-    assertNode(outterGet).hasCharno(4);
-    assertNode(outterGet).hasLength(2);
+    assertNode(outerGet).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(outerGet).isNotOptionalChainStart();
+    assertNode(outerGet).hasLineno(1);
+    assertNode(outerGet).hasCharno(0);
+    assertNode(outerGet).hasLength(6);
 
     // `a?.b`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(1);
-    assertNode(innerGet).hasLength(3);
+    assertNode(innerGet).hasCharno(0);
+    assertNode(innerGet).hasLength(4);
 
-    assertNode(outterGet.getSecondChild()).isEqualTo(IR.string("c"));
+    assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
   }
 
   @Test
   public void optionalChainingStartOfChain_optGetElem() {
-    Node outterGet = parse("a?.[b][c]").getFirstFirstChild();
-    Node innerGet = outterGet.getFirstChild();
+    Node outerGet = parse("a?.[b][c]").getFirstFirstChild();
+    Node innerGet = outerGet.getFirstChild();
 
     // `a?.[b][c]`
-    assertNode(outterGet).hasType(Token.OPTCHAIN_GETELEM);
-    assertNode(outterGet).isNotOptionalChainStart();
-    assertNode(outterGet).hasLineno(1);
-    assertNode(outterGet).hasCharno(6);
-    assertNode(outterGet).hasLength(3);
+    assertNode(outerGet).hasType(Token.OPTCHAIN_GETELEM);
+    assertNode(outerGet).isNotOptionalChainStart();
+    assertNode(outerGet).hasLineno(1);
+    assertNode(outerGet).hasCharno(0);
+    assertNode(outerGet).hasLength(9);
     //
     // // `a?.[b]`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETELEM);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(1);
-    assertNode(innerGet).hasLength(5);
+    assertNode(innerGet).hasCharno(0);
+    assertNode(innerGet).hasLength(6);
 
-    assertNode(outterGet.getSecondChild()).isEqualTo(IR.name("c"));
+    assertNode(outerGet.getSecondChild()).isEqualTo(IR.name("c"));
   }
 
   @Test
   public void optionalChainingStartOfChain_optCall() {
-    Node outterCall = parse("a?.()(b)").getFirstFirstChild();
-    Node innerCall = outterCall.getFirstChild();
+    Node outerCall = parse("a?.()(b)").getFirstFirstChild();
+    Node innerCall = outerCall.getFirstChild();
 
-    // `a?()(b)`
-    assertNode(outterCall).hasType(Token.OPTCHAIN_CALL);
-    assertNode(outterCall).isNotOptionalChainStart();
-    assertNode(outterCall).hasLineno(1);
-    assertNode(outterCall).hasCharno(5);
-    assertNode(outterCall).hasLength(3);
+    // `a?.()(b)`
+    assertNode(outerCall).hasType(Token.OPTCHAIN_CALL);
+    assertNode(outerCall).isNotOptionalChainStart();
+    assertNode(outerCall).hasLineno(1);
+    assertNode(outerCall).hasCharno(0);
+    assertNode(outerCall).hasLength(8);
 
     // `a?.()`
     assertNode(innerCall).hasType(Token.OPTCHAIN_CALL);
     assertNode(innerCall).isOptionalChainStart();
     assertNode(innerCall).hasLineno(1);
-    assertNode(innerCall).hasCharno(1);
-    assertNode(innerCall).hasLength(4);
+    assertNode(innerCall).hasCharno(0);
+    assertNode(innerCall).hasLength(5);
 
-    assertNode(outterCall.getSecondChild()).isEqualTo(IR.name("b"));
+    assertNode(outerCall.getSecondChild()).isEqualTo(IR.name("b"));
   }
 
   @Test
   public void optionalChainingParens_optGetProp() {
-    Node outterGet = parse("(a?.b).c").getFirstFirstChild();
-    Node innerGet = outterGet.getFirstChild();
+    Node outerGet = parse("(a?.b).c").getFirstFirstChild();
+    Node innerGet = outerGet.getFirstChild();
 
     // `(a?.b).c`
-    assertNode(outterGet).hasType(Token.GETPROP);
-    assertNode(outterGet).hasLineno(1);
-    assertNode(outterGet).hasCharno(0);
-    assertNode(outterGet).hasLength(8);
+    assertNode(outerGet).hasType(Token.GETPROP);
+    assertNode(outerGet).hasLineno(1);
+    assertNode(outerGet).hasCharno(0);
+    assertNode(outerGet).hasLength(8);
 
     // `a?.b`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(2);
-    assertNode(innerGet).hasLength(3);
+    assertNode(innerGet).hasCharno(1);
+    assertNode(innerGet).hasLength(4);
 
-    assertNode(outterGet.getSecondChild()).isEqualTo(IR.string("c"));
+    assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
   }
 
   @Test
@@ -5480,13 +5484,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNode(get).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(get).hasLineno(1);
-    assertNode(get).hasCharno(3);
-    assertNode(get).hasLength(3);
+    assertNode(get).hasCharno(0);
+    assertNode(get).hasLength(6);
 
     assertNode(call).hasType(Token.CALL);
-    assertNode(get).hasLineno(1);
-    assertNode(get).hasCharno(3);
-    assertNode(get).hasLength(3);
+    assertNode(call).hasLineno(1);
+    assertNode(call).hasCharno(0);
+    assertNode(call).hasLength(3);
   }
 
   @Test
@@ -5551,6 +5555,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void optionalChainingSyntaxError() {
     parseError("a?.{}", "syntax error: { not allowed in optional chain");
+    // optional chain cannot be applied on a BLOCK `{}`
+    parseError("{a:x}?.a", "primary expression expected");
+    parse("({a:x})?.a");
   }
 
   @Test

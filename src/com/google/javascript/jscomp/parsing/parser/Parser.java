@@ -3693,7 +3693,8 @@ public class Parser {
    * <p>returns parse tree after trying to parse it as an optional expression
    */
   private ParseTree maybeParseOptionalExpression(ParseTree operand) {
-    SourcePosition start = getTreeStartLocation();
+    // The optional chain's source info should cover the lhs operand also
+    SourcePosition start = operand.location.start;
 
     while (peek(TokenType.QUESTION_DOT)) {
       eat(TokenType.QUESTION_DOT);
@@ -3730,21 +3731,23 @@ public class Parser {
             reportError("syntax error: %s not allowed in optional chain", peekType());
           }
       }
-      operand = parseOptionalChain(operand);
+      operand = parseRemainingOptionalChainSegment(operand);
     }
     return operand;
   }
 
   /**
-   * Parse the next component of an optional chain.
+   * Parses the remaining components of an optional chain till the current chain's end, or a new
+   * chain's start.
    *
    * <p>`optionalExpression.identifier`, `optionalExpression[expression]`, `optionalExpression(arg1,
    * arg2)`, or `optionalExpression?.optionalExpression`
    *
    * <p>returns parse tree after trying to parse it as an optional chain
    */
-  private ParseTree parseOptionalChain(ParseTree optionalExpression) {
-    SourcePosition start = getTreeStartLocation();
+  private ParseTree parseRemainingOptionalChainSegment(ParseTree optionalExpression) {
+    // The optional chain's source info should cover the lhs operand also
+    SourcePosition start = optionalExpression.location.start;
     while (peekOptionalChainSuffix()) {
       if (peekType() == TokenType.NO_SUBSTITUTION_TEMPLATE
           || peekType() == TokenType.TEMPLATE_HEAD) {
