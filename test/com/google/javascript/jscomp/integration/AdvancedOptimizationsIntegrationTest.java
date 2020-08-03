@@ -390,7 +390,9 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   @Test
-  public void testAdvancedModeIncludesExtraSmartNameRemoval() {
+  public void testAdvancedModeRemovesLocalTypeAndAlias() {
+    // An extra pass of RemoveUnusedCode used to be conditional.  This specific code pattern
+    // wasn't removed without it.  Verify it is removed.
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
