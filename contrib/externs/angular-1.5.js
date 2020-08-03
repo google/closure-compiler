@@ -21,10 +21,10 @@
  *     $cookieStore
  *     $httpBackend
  *     $rootElement
+ *     $rootScope
  *
  * @see http://angularjs.org/
  * @externs
- * @suppress {strictMissingProperties}
  */
 
 /**
@@ -50,8 +50,11 @@ var angular = {};
  */
 angular.bind = function(self, fn, args) {};
 
-/** @typedef {{strictDi: (boolean|undefined)}} */
-angular.BootstrapOptions;
+/** @record */
+angular.BootstrapOptions = function() {};
+
+/** @type {boolean|undefined} */
+angular.BootstrapOptions.prototype.strictDi;
 
 /**
  * @param {Element|HTMLDocument} element
@@ -197,7 +200,7 @@ angular.reloadWithDebugInfo = function() {};
 
 /**
  * @param {Object|Array|Date|string|number|boolean} obj
- * @param {boolean=} opt_pretty
+ * @param {number|boolean=} opt_pretty
  * @return {string}
  */
 angular.toJson = function(obj, opt_pretty) {};
@@ -209,130 +212,86 @@ angular.toJson = function(obj, opt_pretty) {};
 angular.uppercase = function(s) {};
 
 /**
- * @typedef {{
- *   animate: (function(!angular.JQLite, !Object, !Object, !Function,
- *       !Object=):(!Function|undefined)|undefined),
- *   enter: (function(!angular.JQLite, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   leave: (function(!angular.JQLite, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   move: (function(!angular.JQLite, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   beforeAddClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   addClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   beforeRemoveClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   removeClass: (function(!angular.JQLite, string, !Function, !Object=):
- *       (!Function|undefined)|undefined),
- *   beforeSetClass: (function(!angular.JQLite, string, string, !Function,
- *       !Object=):(!Function|undefined)|undefined),
- *   setClass: (function(!angular.JQLite, string, string, !Function, !Object=):
- *       (!Function|undefined)|undefined)
- *   }}
+ * Note: the methods are declared as fields rather than methods, since Angular
+ *   allows users to define only a subset of the methods.
+ *
+ * @record
  */
-angular.Animation;
+angular.Animation = function() {};
 
 /**
- * @param {!angular.JQLite} element
- * @param {!Object} from
- * @param {!Object} to
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {(function(!angular.JQLite, !Object, !Object, !Function, !Object=):
+ *            (!Function|undefined))|
+ *        undefined}
  */
-angular.Animation.animate =
-    function(element, from, to, doneFn, opt_options) {};
+angular.Animation.prototype.animate;
 
 /**
- * @param {!angular.JQLite} element
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {(function(!angular.JQLite, !Function, !Object=):
+ *             (!Function|undefined))|
+ *        undefined}
  */
-angular.Animation.enter = function(element, doneFn, opt_options) {};
+angular.Animation.prototype.enter = function(element, doneFn, opt_options) {};
 
 /**
- * @param {!angular.JQLite} element
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {(function(!angular.JQLite, !Function, !Object=):
+ *           (!Function|undefined)|undefined)}
  */
-angular.Animation.leave = function(element, doneFn, opt_options) {};
+angular.Animation.prototype.leave;
 
 /**
- * @param {!angular.JQLite} element
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {function(!angular.JQLite, !Function, !Object=):
+ *           (!Function|undefined)|
+ *       undefined}
  */
-angular.Animation.move = function(element, doneFn, opt_options) {};
+angular.Animation.prototype.move;
 
 /**
- * @param {!angular.JQLite} element
- * @param {string} className
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {function(!angular.JQLite, string, !Function, !Object=):
+ *           (!Function|undefined)|
+ *        undefined}
  */
-angular.Animation.beforeAddClass =
-    function(element, className, doneFn, opt_options) {};
+angular.Animation.prototype.beforeAddClass;
 
 /**
- * @param {!angular.JQLite} element
- * @param {string} className
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {function(!angular.JQLite, string, !Function, !Object=):
+ *           (!Function|undefined)|
+ *        undefined}
  */
-angular.Animation.addClass =
-    function(element, className, doneFn, opt_options) {};
+angular.Animation.prototype.addClass;
 
 /**
- * @param {!angular.JQLite} element
- * @param {string} className
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {function(!angular.JQLite, string, !Function, !Object=):
+ *           (!Function|undefined)|
+ *        undefined}
  */
-angular.Animation.beforeRemoveClass =
-    function(element, className, doneFn, opt_options) {};
+angular.Animation.prototype.beforeRemoveClass;
 
 /**
- * @param {!angular.JQLite} element
- * @param {string} className
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {function(!angular.JQLite, string, !Function, !Object=):
+ *           (!Function|undefined)|
+ *        undefined}
  */
-angular.Animation.removeClass =
-    function(element, className, doneFn, opt_options) {};
+angular.Animation.prototype.removeClass;
 
 /**
- * @param {!angular.JQLite} element
- * @param {string} addedClass
- * @param {string} removedClass
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {function(!angular.JQLite, string, string, !Function, !Object=):
+ *            (!Function|undefined)|
+ *        undefined}
  */
-angular.Animation.beforeSetClass =
-    function(element, addedClass, removedClass, doneFn, opt_options) {};
+angular.Animation.prototype.beforeSetClass;
 
 /**
- * @param {!angular.JQLite} element
- * @param {string} addedClass
- * @param {string} removedClass
- * @param {!Function} doneFn
- * @param {!Object=} opt_options
- * @return {(!Function|undefined)}
+ * @type {function(!angular.JQLite, string, string, !Function, !Object=):
+ *           (!Function|undefined)|
+ *        undefined}
  */
-angular.Animation.setClass =
-    function(element, addedClass, removedClass, doneFn, opt_options) {};
+angular.Animation.prototype.setClass;
+
+
 
 /**
- * @constructor
+ * @interface
  */
 angular.Attributes = function() {};
 
@@ -380,39 +339,30 @@ angular.Attributes.prototype.$set =
     function(key, value, opt_writeAttr, opt_attrName) {};
 
 /**
- * @typedef {{
- *   pre: (function(
+ * @record
+ */
+angular.LinkingFunctions = function() {};
+
+/**
+ * @type {function(
  *           !angular.Scope=,
  *           !angular.JQLite=,
  *           !angular.Attributes=,
  *           (!Object|!Array<!Object>)=)|
- *       undefined),
- *   post: (function(
+ *       undefined}
+ */
+angular.LinkingFunctions.prototype.pre;
+
+/**
+ * @type {function(
  *           !angular.Scope=,
  *           !angular.JQLite=,
  *           !angular.Attributes=,
  *           (!Object|Array<!Object>)=)|
- *       undefined)
- *   }}
+ *       undefined}
  */
-angular.LinkingFunctions;
+angular.LinkingFunctions.prototype.post;
 
-/**
- * @param {!angular.Scope=} scope
- * @param {!angular.JQLite=} iElement
- * @param {!angular.Attributes=} iAttrs
- * @param {(!Object|!Array<!Object>)=} controller
- */
-angular.LinkingFunctions.pre = function(scope, iElement, iAttrs, controller) {};
-
-/**
- * @param {!angular.Scope=} scope
- * @param {!angular.JQLite=} iElement
- * @param {!angular.Attributes=} iAttrs
- * @param {(!Object|!Array<!Object>)=} controller
- */
-angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
-};
 
 /**
  * @typedef {{
@@ -447,7 +397,7 @@ angular.Directive;
  * @interface
  * @template T
  */
-angular.Change;
+angular.Change = function() {};
 
 /** @type {T} */
 angular.Change.prototype.currentValue;
@@ -558,6 +508,15 @@ angular.JQLite.prototype.children = function() {};
  * @return {!angular.JQLite}
  */
 angular.JQLite.prototype.clone = function() {};
+
+/**
+ * `cleanData` is an undocumented method that is relied upon for ngUpgrade.
+ * Without this extern, clients cannot enable property_renaming for ngUpgrade
+ * applications that downgrade components.
+ *
+ * @param {?} element
+ */
+angular.JQLite.prototype.cleanData = function(element) {};
 
 /**
  * @return {!angular.JQLite}
@@ -930,10 +889,7 @@ angular.Module.prototype.name;
  */
 angular.Module.prototype.requires;
 
-/**
- * NOTE: $rootScope is the same as angular.Scope.
- * @constructor
- */
+/** @interface */
 angular.Scope = function() {};
 
 /** @type {?string} */
@@ -979,7 +935,7 @@ angular.Scope.prototype.$eval = function(opt_exp, opt_locals) {};
  */
 angular.Scope.prototype.$evalAsync = function(opt_exp, opt_locals) {};
 
-/** @type {string} */
+/** @type {number} */
 angular.Scope.prototype.$id;
 
 /**
@@ -988,13 +944,6 @@ angular.Scope.prototype.$id;
  * @return {!angular.Scope}
  */
 angular.Scope.prototype.$new = function(opt_isolate, opt_parent) {};
-
-/**
- * @param {string} name
- * @param {function(!angular.Scope.Event, ...?)} listener
- * @return {function()}
- */
-angular.Scope.prototype.$on = function(name, listener) {};
 
 /** @type {!angular.Scope} */
 angular.Scope.prototype.$parent;
@@ -1026,62 +975,43 @@ angular.Scope.prototype.$watchCollection = function(exp, opt_listener) {};
 angular.Scope.prototype.$watchGroup = function(exps, opt_listener) {};
 
 /**
- * @typedef {{
- *   currentScope: !angular.Scope,
- *   defaultPrevented: boolean,
- *   name: string,
- *   preventDefault: function(),
- *   stopPropagation: function(),
- *   targetScope: !angular.Scope
- *   }}
+ * @interface
  */
-angular.Scope.Event;
+angular.Scope.Event = function() {};
 
 /** @type {!angular.Scope} */
-angular.Scope.Event.currentScope;
+angular.Scope.Event.prototype.currentScope;
 
 /** @type {boolean} */
-angular.Scope.Event.defaultPrevented;
+angular.Scope.Event.prototype.defaultPrevented;
 
 /** @type {string} */
-angular.Scope.Event.name;
+angular.Scope.Event.prototype.name;
 
-angular.Scope.Event.preventDefault = function() {};
+angular.Scope.Event.prototype.preventDefault = function() {};
 
-angular.Scope.Event.stopPropagation = function() {};
+/** @type {!Function|undefined} */
+angular.Scope.Event.prototype.stopPropagation = function() {};
 
 /** @type {!angular.Scope} */
-angular.Scope.Event.targetScope;
+angular.Scope.Event.prototype.targetScope;
+
 
 /**
- * @type {Object}
+ * @param {string} name
+ * @param {function(!angular.Scope.Event, ...?)} listener
+ * @return {function()}
  */
-angular.version = {};
+angular.Scope.prototype.$on = function(name, listener) {};
+
 
 /**
- * @type {string}
+ * @type {{
+ *     full:string, major:number, minor:number, dot:number, codeName:string}}
  */
-angular.version.full = '';
+angular.version;
 
-/**
- * @type {number}
- */
-angular.version.major = 0;
 
-/**
- * @type {number}
- */
-angular.version.minor = 0;
-
-/**
- * @type {number}
- */
-angular.version.dot = 0;
-
-/**
- * @type {string}
- */
-angular.version.codeName = '';
 
 /******************************************************************************
  * $anchorScroll Service
@@ -1266,18 +1196,26 @@ angular.$ariaProvider.prototype.config = function(config) {};
  *       function(!angular.Scope, Function=)=, number=):
  *           function(!angular.Scope,
  *               function(!angular.JQLite, !angular.Scope=)=,
- *                   angular.$compile.LinkOptions=): !angular.JQLite}
+ *                   angular.compile.LinkOptions=): !angular.JQLite}
  */
 angular.$compile;
 
-/**
- * @typedef {{
- *   parentBoundTranscludeFn: (Function|undefined),
- *   transcludeControllers: (Object|undefined),
- *   futureParentElement: (angular.JQLite|undefined)
- * }}
- */
-angular.$compile.LinkOptions;
+/** @const */
+angular.compile = {}
+
+                  /**
+                   * @record
+                   */
+                  angular.compile.LinkOptions = function() {};
+
+/** @type {!Function|undefined} */
+angular.compile.LinkOptions.prototype.parentBoundTranscludeFn;
+
+/** @type {!Object|undefined} */
+angular.compile.LinkOptions.prototype.transcludeControllers;
+
+/** @type {!angular.JQLite|undefined} */
+angular.compile.LinkOptions.prototype.futureParentElement;
 
 // TODO(martinprobst): remaining $compileProvider methods.
 
@@ -1343,81 +1281,116 @@ angular.$compileProvider.prototype.component = function(name, options) {};
  * $cacheFactory Service
  *****************************************************************************/
 
-/**
- * @typedef {
- *   function(string, angular.$cacheFactory.Options=):
- *       !angular.$cacheFactory.Cache}
- */
-angular.$cacheFactory;
+/** @const */
+angular.cacheFactory = {};
 
-/**
- * @return {!angular.$cacheFactory.Cache|undefined}
- */
-angular.$cacheFactory.prototype.get = function() {};
+/** @record */
+angular.cacheFactory.Options = function() {};
 
-/** @typedef {{capacity: (number|undefined)}} */
-angular.$cacheFactory.Options;
+/** @type {number|undefined} */
+angular.cacheFactory.Options.prototype.capacity;
 
 /**
  * @template T
  * @interface
  */
-angular.$cacheFactory.Cache = function() {};
+angular.cacheFactory.Cache = function() {};
 
 /**
- * @return {!angular.$cacheFactory.Cache.Info}
+ * @record
  */
-angular.$cacheFactory.Cache.prototype.info = function() {};
+angular.cacheFactory.Cache.Info = function() {};
+
+/** @type {string} */
+angular.cacheFactory.Cache.Info.prototype.id;
+
+/** @type {number} */
+angular.cacheFactory.Cache.Info.prototype.size;
+
+/** @type {!angular.cacheFactory.Options} */
+angular.cacheFactory.Cache.Info.prototype.options;
+
+
+/**
+ * @return {!angular.cacheFactory.Cache.Info}
+ */
+angular.cacheFactory.Cache.prototype.info = function() {};
 
 /**
  * @param {string} key
  * @param {T} value
  */
-angular.$cacheFactory.Cache.prototype.put = function(key, value) {};
+angular.cacheFactory.Cache.prototype.put = function(key, value) {};
 
 /**
  * @param {string} key
  * @return {T}
  */
-angular.$cacheFactory.Cache.prototype.get = function(key) {};
+angular.cacheFactory.Cache.prototype.get = function(key) {};
 
 /**
  * @param {string} key
  */
-angular.$cacheFactory.Cache.prototype.remove = function(key) {};
+angular.cacheFactory.Cache.prototype.remove = function(key) {};
 
-angular.$cacheFactory.Cache.prototype.removeAll = function() {};
-angular.$cacheFactory.Cache.prototype.destroy = function() {};
+angular.cacheFactory.Cache.prototype.removeAll = function() {};
+angular.cacheFactory.Cache.prototype.destroy = function() {};
+
+
 
 /**
- * @typedef {{
- *   id: string,
- *   size: number,
- *   options: angular.$cacheFactory.Options
- *   }}
+ * @typedef {
+ *   function(string, angular.cacheFactory.Options=):
+ *       !angular.cacheFactory.Cache}
  */
-angular.$cacheFactory.Cache.Info;
+angular.$cacheFactory;
+
+/**
+ * Augment the angular.$cacheFactory type definition by reopening the type via
+ * an artificial angular.$cacheFactory instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$cacheFactory}
+ */
+angular.$cacheFactory_;
+
+/**
+ * @param {string} cacheId
+ * @return {!angular.cacheFactory.Cache|undefined}
+ */
+angular.$cacheFactory_.get;
+
 
 /******************************************************************************
  * $controller Service
  *****************************************************************************/
 
 /**
- * @typedef {function((Function|string), Object):Object}
+ * @typedef {function((Function|string), !Object): !Object}
  */
 angular.$controller;
+
 
 /******************************************************************************
  * $controllerProvider Service
  *****************************************************************************/
 
 /**
- * @typedef {{
- *   register: function((string|Object), angular.Injectable=),
- *   allowGlobals: function()
- *   }}
+ * @record
  */
-angular.$controllerProvider;
+angular.$controllerProvider = function() {};
+
+/**
+ * @param {string|!Object} a
+ * @param {!angular.Injectable=} b
+ */
+angular.$controllerProvider.prototype.register = function(a, b) {};
+
+/**
+ */
+angular.$controllerProvider.prototype.allowGlobals = function() {};
 
 /******************************************************************************
  * $cookies Service
@@ -1427,6 +1400,26 @@ angular.$controllerProvider;
  * @interface
  */
 angular.$cookies = function() {};
+
+/**
+ * See:
+ * https://docs.angularjs.org/api/ngCookies/provider/$cookiesProvider#defaults
+ * @record
+ */
+angular.$cookies.Config = function() {};
+
+/** @type {string|undefined} */
+angular.$cookies.Config.prototype.path;
+
+/** @type {string|undefined} */
+angular.$cookies.Config.prototype.domain;
+
+/** @type {string|!Date|undefined} */
+angular.$cookies.Config.prototype.date;
+
+/** @type {boolean|undefined} */
+angular.$cookies.Config.prototype.secure;
+
 
 /**
  * @param {string} key
@@ -1465,17 +1458,6 @@ angular.$cookies.prototype.putObject = function(key, value, opt_options) {};
  */
 angular.$cookies.prototype.remove = function(key, opt_options) {};
 
-/**
- * See:
- * https://docs.angularjs.org/api/ngCookies/provider/$cookiesProvider#defaults
- * @typedef {{
- *   path: (string|undefined),
- *   domain: (string|undefined),
- *   date: (string|!Date|undefined),
- *   secure: (boolean|undefined)
- * }}
- */
-angular.$cookies.Config;
 
 /**
  * @interface
@@ -1483,7 +1465,7 @@ angular.$cookies.Config;
 angular.$cookiesProvider = function() {};
 
 /**
- * @type {angular.$cookies.Config}
+ * @type {!angular.$cookies.Config}
  */
 angular.$cookiesProvider.prototype.defaults;
 
@@ -1492,7 +1474,7 @@ angular.$cookiesProvider.prototype.defaults;
  *****************************************************************************/
 
 /**
- * @typedef {function(Error, string=)}
+ * @typedef {function(!Error, string=)}
  */
 angular.$exceptionHandler;
 
@@ -1506,6 +1488,17 @@ angular.$exceptionHandler;
 angular.$filter;
 
 /**
+ * Augment the angular.$filter type definition by reopening the type via
+ * an artificial angular.$filter instance.
+ *
+ * This allows us to define methods on function objects which is something
+ * that can't be expressed via typical type annotations.
+ *
+ * @type {angular.$filter}
+ */
+angular.$filter_;
+
+/**
  * The 'orderBy' filter is available through $filterProvider and AngularJS
  * injection; but is not accessed through a documented public API of AngularJS.
  * <p>In current AngularJS version the injection is satisfied by
@@ -1515,14 +1508,15 @@ angular.$filter;
  *     (string|function(?):*|Array<(string|function(?):*)>),
  *     boolean=): Array}
  */
-angular.$filter.orderBy;
+angular.$filter_.orderBy;
 
 /**
  * @typedef {function(Array,
  *     (string|Object|function(?):*),
  *     (function(?):*|boolean)=): Array}
  */
-angular.$filter.filter;
+angular.$filter_.filter;
+
 
 /******************************************************************************
  * $filterProvider Service
@@ -1550,7 +1544,7 @@ angular.$http = function() {};
 angular.$http.Config = function() {};
 
 
-/** @type {(boolean|!angular.$cacheFactory.Cache|undefined)} */
+/** @type {(boolean|!angular.cacheFactory.Cache|undefined)} */
 angular.$http.Config.prototype.cache
 
 /** @type {(string|!Object|undefined)} */
@@ -1558,6 +1552,9 @@ angular.$http.Config.prototype.data
 
 /** @type {(Object<?string|undefined>|undefined)} */
 angular.$http.Config.prototype.headers;
+
+/** @type {(string|undefined)} */
+angular.$http.Config.prototype.jsonpCallbackParam;
 
 /** @type {(string|undefined)} */
 angular.$http.Config.prototype.method;
@@ -1633,7 +1630,7 @@ angular.$http.prototype.get = function(url, opt_config) {};
 angular.$http.prototype.head = function(url, opt_config) {};
 
 /**
- * @param {string} url
+ * @param {string|!Object} url
  * @param {angular.$http.Config=} opt_config
  * @return {!angular.$http.HttpPromise}
  */
@@ -1732,7 +1729,7 @@ angular.$httpParamSerializer;
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$injector = function() {};
 
@@ -1799,7 +1796,7 @@ angular.$interpolate;
 
 /**
  * @typedef {
- *  function(function(), number=, number=, boolean=):!angular.$q.Promise
+ *  function(function(number=), number=, number=, boolean=):!angular.$q.Promise
  * }
  */
 angular.$interval;
@@ -1819,6 +1816,7 @@ angular.$interval_;
  * @type {function(!angular.$q.Promise):boolean}
  */
 angular.$interval_.cancel = function(promise) {};
+
 
 /******************************************************************************
  * $locale Service
@@ -1889,6 +1887,12 @@ angular.$location.prototype.replace = function() {};
 angular.$location.prototype.search = function(opt_search, opt_paramValue) {};
 
 /**
+ * @param {Object=} opt_state
+ * @return {(!Object|!angular.$location)}
+ */
+angular.$location.prototype.state = function(opt_state) {};
+
+/**
  * @param {string=} opt_url
  * @return {string}
  */
@@ -1904,12 +1908,15 @@ angular.$location.prototype.url = function(opt_url) {};
 angular.$locationProvider = function() {};
 
 /**
- * @typedef {{
- *   enabled: (boolean|undefined),
- *   requireBase: (boolean|undefined)
- * }}
+ * @record
  */
-angular.$locationProvider.html5ModeConfig;
+angular.$locationProvider.html5ModeConfig = function() {};
+
+/** @type {boolean|undefined} */
+angular.$locationProvider.html5ModeConfig.prototype.enabled;
+
+/** @type {boolean|undefined} */
+angular.$locationProvider.html5ModeConfig.prototype.requireBase;
 
 /**
  * @param {string=} opt_prefix
@@ -1975,7 +1982,7 @@ angular.$log.prototype.warn = function(var_args) {};
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.NgModelController = function() {};
 
@@ -2003,6 +2010,17 @@ angular.NgModelController.prototype.$formatters;
  * @type {boolean}
  */
 angular.NgModelController.prototype.$invalid;
+
+/**
+ * @type {!angular.NgModelOptions}
+ */
+angular.NgModelController.prototype.$options;
+
+/**
+ * @param {!Object} options
+ */
+angular.NgModelController.prototype.$overrideModelOptions = function(
+    options) {};
 
 /**
  * @type {!Array<function(?):*>}
@@ -2108,6 +2126,28 @@ angular.NgModelController.prototype.$commitViewValue = function() {};
 angular.NgModelController.prototype.$pending;
 
 /******************************************************************************
+ * NgModelOptions
+ *****************************************************************************/
+
+/**
+ * @interface
+ */
+angular.NgModelOptions = function() {};
+
+
+/**
+ * @param {string} optionName
+ * @return {*}
+ */
+angular.NgModelOptions.prototype.getOption = function(optionName) {};
+
+/**
+ * @param {!Object} options
+ * @return {!angular.NgModelOptions}
+ */
+angular.NgModelOptions.prototype.createChild = function(options) {};
+
+/******************************************************************************
  * FormController
  *****************************************************************************/
 
@@ -2204,7 +2244,7 @@ angular.FormController.prototype.$valid;
  *****************************************************************************/
 
 /**
- * @typedef {function(string):!angular.$parse.Expression}
+ * @typedef {function(string):!angular.parse.Expression}
  */
 angular.$parse;
 
@@ -2217,18 +2257,13 @@ angular.parse = {};
 angular.parse.Expression;
 
 /**
- * @typedef {angular.parse.Expression}
- */
-angular.$parse.Expression;
-
-/**
- * Augment the angular.$parse.Expression type definition by reopening the type
+ * Augment the angular.parse.Expression type definition by reopening the type
  * via an artificial angular.$parse instance.
  *
  * This allows us to define methods on function objects which is something
  * that can't be expressed via typical type annotations.
  *
- * @type {angular.$parse.Expression}
+ * @type {angular.parse.Expression}
  */
 angular.$parse_;
 
@@ -2237,18 +2272,93 @@ angular.$parse_;
  */
 angular.$parse_.assign = function(scope, newValue) {};
 
+/******************************************************************************
+ * $qProvider
+ *****************************************************************************/
+/** @interface */
+angular.$qProvider = function() {};
+
+/**
+ * @param {boolean=} value Retrieves or overrides whether to generate an error
+ *     when a rejected promise is not handled. This feature is enabled by
+ *     default.
+ * @return {boolean}
+ */
+angular.$qProvider.prototype.errorOnUnhandledRejections = function(value) {};
 
 /******************************************************************************
  * $rootScopeProvider
  *****************************************************************************/
 
-/** @constructor */
+/** @interface */
 angular.$rootScopeProvider = function() {};
 
 /**
  * @param {number} limit
  */
 angular.$rootScopeProvider.prototype.digestTtl = function(limit) {};
+
+/******************************************************************************
+ * $routeParams Service
+ *****************************************************************************/
+
+// TODO: This should be !Object<string|boolean> because valueless query params
+// (without even an equal sign) come through as boolean "true".
+
+/** @typedef {!Object<string>} */
+angular.$routeParams;
+
+
+/******************************************************************************
+ * $routeProvider Service
+ *****************************************************************************/
+
+/** @interface */
+angular.$routeProvider = function() {};
+
+
+/** @record */
+angular.$routeProvider.Params = function() {};
+
+/** @type {!angular.Injectable|string|undefined} */
+angular.$routeProvider.Params.prototype.controller;
+
+/** @type {string|undefined} */
+angular.$routeProvider.Params.prototype.controllerAs;
+
+/** @type {string|function(!Object<string, string>): string|undefined} */
+angular.$routeProvider.Params.prototype.template;
+
+/** @type {string|!Object|function(!Object<string,string>=)|undefined} */
+angular.$routeProvider.Params.prototype.templateUrl;
+
+/**
+ * @type {undefined|
+ * !Object<string,(string|!angular.Injectable|!angular.$q.Promise)>}
+ */
+angular.$routeProvider.Params.prototype.resolve;
+
+/**
+ * @type {string|undefined|function(!Object<string>, string, !Object): string}
+ */
+angular.$routeProvider.Params.prototype.redirectTo;
+
+/** @type {boolean|undefined} */
+angular.$routeProvider.Params.prototype.reloadOnSearch;
+
+
+/**
+ * @param {(string|!angular.$routeProvider.Params)} params
+ * @return {!angular.$routeProvider}
+ */
+angular.$routeProvider.prototype.otherwise = function(params) {};
+
+/**
+ * @param {string} path
+ * @param {angular.$routeProvider.Params} route
+ * @return {!angular.$routeProvider}
+ */
+angular.$routeProvider.prototype.when = function(path, route) {};
 
 /******************************************************************************
  * $route Service
@@ -2271,7 +2381,7 @@ angular.$route.prototype.current;
 /** @type {Object<?string, !angular.$route.Route>} */
 angular.$route.prototype.routes;
 
-/** @constructor */
+/** @interface */
 angular.$route.Route = function() {};
 
 /** @type {angular.$routeProvider.Params} */
@@ -2295,72 +2405,6 @@ angular.$route.Route.prototype.originalPath;
 /** @type {RegExp|undefined} */
 angular.$route.Route.prototype.regexp;
 
-/******************************************************************************
- * $routeParams Service
- *****************************************************************************/
-
-// TODO: This should be !Object<string|boolean> because valueless query params
-// (without even an equal sign) come through as boolean "true".
-
-/** @typedef {!Object<string>} */
-angular.$routeParams;
-
-/******************************************************************************
- * $routeProvider Service
- *****************************************************************************/
-
-/** @interface */
-angular.$routeProvider = function() {};
-
-/**
- * @param {(string|!angular.$routeProvider.Params)} params
- * @return {!angular.$routeProvider}
- */
-angular.$routeProvider.prototype.otherwise = function(params) {};
-
-/**
- * @param {string} path
- * @param {angular.$routeProvider.Params} route
- * @return {!angular.$routeProvider}
- */
-angular.$routeProvider.prototype.when = function(path, route) {};
-
-/**
- * @typedef {{
- *   controller: (angular.Injectable|string|undefined),
- *   controllerAs: (string|undefined),
- *   template: (string|undefined),
- *   templateUrl: (string|!Object|function(!Object<string,string>=)|undefined),
- *   resolve: (Object<string, (
- *       string|angular.Injectable|!angular.$q.Promise
- *       )>|undefined),
- *   redirectTo: (
- *       string|function(Object<string>, string, Object): string|undefined),
- *   reloadOnSearch: (boolean|undefined)
- *   }}
- */
-angular.$routeProvider.Params;
-
-/** @type {angular.Injectable|string} */
-angular.$routeProvider.Params.controller;
-
-/** @type {string} */
-angular.$routeProvider.Params.controllerAs;
-
-/** @type {string} */
-angular.$routeProvider.Params.template;
-
-/** @type {string|!Object|function(!Object<string,string>=)} */
-angular.$routeProvider.Params.templateUrl;
-
-/** @type {Object<string, (string|angular.Injectable|!angular.$q.Promise)>} */
-angular.$routeProvider.Params.resolve;
-
-/** @type {string|function(Object<string>, string, Object): string} */
-angular.$routeProvider.Params.redirectTo;
-
-/** @type {boolean} */
-angular.$routeProvider.Params.reloadOnSearch;
 
 /******************************************************************************
  * $sanitize Service
@@ -2368,6 +2412,31 @@ angular.$routeProvider.Params.reloadOnSearch;
 
 /** @typedef {function(string):string} */
 angular.$sanitize;
+
+/******************************************************************************
+ * $sanitizeProvider Service
+ *****************************************************************************/
+
+/** @interface */
+angular.$sanitizeProvider = function() {};
+
+/**
+ * @param {boolean=} enableSvg
+ * @return {boolean|!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.enableSvg = function(enableSvg) {};
+
+/**
+ * @param {!Array<string>|!Object} elements
+ * @return {!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.addValidElements = function(elements) {};
+
+/**
+ * @param {!Array<string>} attrs
+ * @return {!angular.$sanitizeProvider}
+ */
+angular.$sanitizeProvider.prototype.addValidAttrs = function(attrs) {};
 
 /******************************************************************************
  * $sce Service
@@ -2402,7 +2471,7 @@ angular.$sce.prototype.isEnabled = function() {};
 /**
  * @param {string} type
  * @param {string} expression
- * @return {!angular.$parse.Expression}
+ * @return {!angular.parse.Expression}
  */
 angular.$sce.prototype.parseAs = function(type, expression) {};
 
@@ -2422,31 +2491,31 @@ angular.$sce.prototype.trustAs = function(type, trustedValue) {};
 
 /**
  * @param {string} expression
- * @return {!angular.$parse.Expression}
+ * @return {!angular.parse.Expression}
  */
 angular.$sce.prototype.parseAsHtml = function(expression) {};
 
 /**
  * @param {string} expression
- * @return {!angular.$parse.Expression}
+ * @return {!angular.parse.Expression}
  */
 angular.$sce.prototype.parseAsCss = function(expression) {};
 
 /**
  * @param {string} expression
- * @return {!angular.$parse.Expression}
+ * @return {!angular.parse.Expression}
  */
 angular.$sce.prototype.parseAsUrl = function(expression) {};
 
 /**
  * @param {string} expression
- * @return {!angular.$parse.Expression}
+ * @return {!angular.parse.Expression}
  */
 angular.$sce.prototype.parseAsJs = function(expression) {};
 
 /**
  * @param {string} expression
- * @return {!angular.$parse.Expression}
+ * @return {!angular.parse.Expression}
  */
 angular.$sce.prototype.parseAsResourceUrl = function(expression) {};
 
@@ -2576,7 +2645,7 @@ angular.$sceDelegateProvider.prototype.resourceUrlBlacklist = function(
  *****************************************************************************/
 
 /**
- * @typedef {!angular.$cacheFactory.Cache<string>}
+ * @typedef {!angular.cacheFactory.Cache<string>}
  */
 angular.$templateCache;
 
