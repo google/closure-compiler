@@ -2595,6 +2595,9 @@ chrome.runtime.Manifest.prototype.kiosk_only;
  */
 chrome.runtime.Manifest.prototype.kiosk_enabled;
 
+/** @type {string|undefined} */
+chrome.runtime.Manifest.prototype.replacement_web_app;
+
 
 
 /**
