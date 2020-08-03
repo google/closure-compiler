@@ -58,6 +58,15 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
           "module$exports$instrument$code.instrumentCodeInstance = ",
           "new module$contents$instrument$code_InstrumentCode;");
 
+  private final String noTranspilationInstrumentCodeExpected =
+      lines(
+          "var module$exports$instrument$code = {}",
+          "class module$contents$instrument$code_InstrumentCode {",
+          "   instrumentCode(a, b) {};",
+          "}",
+          "module$exports$instrument$code.instrumentCodeInstance = ",
+          "new module$contents$instrument$code_InstrumentCode;");
+
   @Test
   public void testFunctionInstrumentation() {
     CompilerOptions options = createCompilerOptions();
@@ -69,8 +78,8 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String expected =
         lines(
             "function foo() { ",
-            "   module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
-            "   console.log('Hello'); ",
+               getInstrumentCodeLine("C", 1, 0), ";",
+            "  console.log('Hello'); ",
             "}");
 
     String[] expectedArr = {instrumentCodeExpected, expected};
@@ -101,23 +110,192 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     String[] sourceArr = {instrumentCodeSource, source};
 
-    String noTranspilationInstrumentCodeExpected =
-        lines(
-            "var module$exports$instrument$code = {}",
-            "class module$contents$instrument$code_InstrumentCode {",
-            "   instrumentCode(a, b) {};",
-            "}",
-            "module$exports$instrument$code.instrumentCodeInstance = ",
-            "new module$contents$instrument$code_InstrumentCode;");
-
     String expected =
         lines(
             "function foo() { ",
-            "   module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
+                getInstrumentCodeLine("C", 1, 0), ";",
             "   console.log('Hello'); ",
             "}");
 
     String[] expectedArr = {noTranspilationInstrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testIfInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines(
+            "if (tempBool) {",
+            "   console.log('Hello');",
+            "}");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "if (tempBool) { ",
+               getInstrumentCodeLine("C", 1, 0), ";",
+            "  console.log('Hello'); ",
+            "} else {",
+               getInstrumentCodeLine("E", 1, 0), ";",
+            "}");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testOrInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines("tempObj.a || tempObj.b;");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "tempObj.a || (",
+            getInstrumentCodeLine("C", 1, 13), ", tempObj.b)");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testAndInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines("tempObj.a && tempObj.b;");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "tempObj.a && (",
+            getInstrumentCodeLine("C", 1, 13), ", tempObj.b)");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testCoalesceInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2020);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
+
+    String source = lines("someObj ?? 24");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "someObj ?? (",
+            getInstrumentCodeLine("C", 1, 11), ", 24)");
+
+    String[] expectedArr = {noTranspilationInstrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testTernaryInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source = lines("flag ? foo() : fooBar()");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "flag ? (",
+            getInstrumentCodeLine("C", 1, 7), ", foo()) :",
+            "(",
+            getInstrumentCodeLine("C", 1, 15), ", fooBar())");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testForLoopInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines(
+            "for(var i = 0 ; i < 10 ; ++i) {",
+            "   console.log('*');",
+            "}");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "for(var i = 0 ; i < 10 ; ++i) {",
+                getInstrumentCodeLine("C", 1, 0), ";",
+            "   console.log('*');",
+            "}",
+            getInstrumentCodeLine("E", 1, 0), ";");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testSwitchInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines(
+            "switch (x) {",
+            "   case 1: ",
+            "      x = 5;",
+            "};");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "switch (x) {",
+            "   case 1: ",
+                   getInstrumentCodeLine("C", 2, 3), ";",
+            "      x = 5;",
+            "   default: ",
+                   getInstrumentCodeLine("E", 1, 0), ";",
+            "};");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testNestedIfInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines("if (tempBool) if(someBool) console.log('*');");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "if (tempBool) {",
+                getInstrumentCodeLine("C", 1, 0), ";",
+            "  if (someBool) {",
+                 getInstrumentCodeLine("C", 1, 14), ";",
+            "    console.log('*');",
+            "   } else {",
+                  getInstrumentCodeLine("E", 1, 14), ";",
+            "   }",
+            "} else {",
+              getInstrumentCodeLine("E", 1, 0), ";",
+            "}");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
     test(options, sourceArr, expectedArr);
   }
 
@@ -148,6 +326,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     assertWithMessage("Array index encoding is not performed properly")
         .that(paramMap.get("C"))
         .isEqualTo("AAA");
+  }
+
+  private String getInstrumentCodeLine(String encodedParam, int lineNo, int colNo){
+    return "module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"" +
+        encodedParam + "\", " + lineNo + ", " + colNo + ")";
   }
 
   @Override

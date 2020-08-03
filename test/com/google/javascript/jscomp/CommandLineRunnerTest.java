@@ -2617,7 +2617,7 @@ public final class CommandLineRunnerTest {
             "module$exports$instrument$code.instrumentCodeInstance = new"
                 + " module$contents$instrument$code_InstrumentCode;",
             "function foo() {",
-            "  module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
+            "  module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1, 0);",
             "  console.log(\"Hello\");",
             "}",
             ";");
