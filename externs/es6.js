@@ -1921,6 +1921,22 @@ AsyncGenerator.prototype.return = function(value) {};
 AsyncGenerator.prototype.throw = function(exception) {};
 
 /**
+ * @constructor
+ * @struct
+ * @param {TYPE} value
+ * @template TYPE
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef
+ */
+function WeakRef(value) {}
+
+/**
+ * @return {TYPE}
+ * @nosideeffects
+ */
+WeakRef.prototype.deref = function() {};
+
+/**
  * @type {!Global}
  */
 var globalThis;
