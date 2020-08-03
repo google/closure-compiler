@@ -583,7 +583,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     assertThat(sourceMap.has("google_test")).isFalse();
     assertThat(sourceMap.get("x_google_test").getAsJsonObject().get("number").getAsInt())
         .isEqualTo(1);
-    assertThat(sourceMap.get("x_google_array").getAsJsonArray()).hasSize(0);
+    assertThat(sourceMap.get("x_google_array").getAsJsonArray()).isEmpty();
     assertThat(sourceMap.get("x_google_int").getAsInt()).isEqualTo(2);
     assertThat(sourceMap.get("x_google_str").getAsString()).isEqualTo("Some text");
   }
