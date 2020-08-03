@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.testing.NodeSubject;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -131,6 +132,115 @@ public final class PolyfillUsageFinderTest {
     }
   }
 
+  @Test
+  public void shadowedPolyfillTest() {
+    final TestPolyfillUsageFinder testPolyfillUsageFinder =
+        TestPolyfillUsageFinder.builder()
+            .withPolyfillTableLines(
+                "Promise es6 es3 es6/promise/promise",
+                "Promise.allSettled es_2020 es3 es6/promise/allsettled")
+            .forSourceLines(
+                // usage of Promise and of Promise.allSettled
+                "Promise.allSettled([])(result => console.log(x));",
+                "function foo() {",
+                // These aren't references to Promise or Promise.allSettled because of the
+                // shadowing variable
+                "  let Promise = { allSettled: 'I solemnly swear that I am up to no good.' };",
+                "  console.log(Promise.allSettled);",
+                "}")
+            .build();
+
+    final ImmutableList<PolyfillUsage> allUsages = testPolyfillUsageFinder.getAllUsages();
+    assertThat(allUsages).hasSize(2);
+
+    final PolyfillUsageSubject promiseUsageSubject =
+        PolyfillUsageSubject.assertPolyfillUsage(allUsages.get(0));
+    promiseUsageSubject //
+        .hasNodeThat()
+        .isName("Promise")
+        .hasLineno(1)
+        .hasCharno(0)
+        .hasLength(7);
+    promiseUsageSubject
+        .hasPolyfillThat()
+        .hasNativeSymbol("Promise")
+        .hasNativeVersion(FeatureSet.ES6)
+        .hasPolyfillVersion(FeatureSet.ES3)
+        .hasLibrary("es6/promise/promise")
+        .hasKind(Kind.STATIC);
+
+    final PolyfillUsageSubject allSettledUsageSubject =
+        PolyfillUsageSubject.assertPolyfillUsage(allUsages.get(1));
+
+    allSettledUsageSubject //
+        .hasNodeThat()
+        .matchesQualifiedName("Promise.allSettled")
+        .hasLineno(1)
+        .hasCharno(0)
+        .hasLength(18);
+    allSettledUsageSubject
+        .hasPolyfillThat()
+        .hasNativeSymbol("Promise.allSettled")
+        .hasNativeVersion(FeatureSet.ES2020)
+        .hasPolyfillVersion(FeatureSet.ES3)
+        .hasLibrary("es6/promise/allsettled")
+        .hasKind(Kind.STATIC);
+  }
+
+  @Test
+  public void optionalChainCoverageTest() {
+    final TestPolyfillUsageFinder testPolyfillUsageFinder =
+        TestPolyfillUsageFinder.builder()
+            .withPolyfillTableLines("Array.from es6 es3 es6/array/from")
+            .forSourceLines(
+                // Checks for the existence of `Array`, but not `.from`, so not guarded
+                "Array?.from([]) ?? [];",
+                // Correctly guarded on existence of `Array.from`
+                "Array.from?.([]) ?? [];")
+            .build();
+
+    // First usage is unguarded
+    final ImmutableList<PolyfillUsage> unguardedPolyfillUsages =
+        testPolyfillUsageFinder.getUnguardedUsages();
+    assertThat(unguardedPolyfillUsages).hasSize(1);
+    final PolyfillUsageSubject unguardedUsageSubject =
+        PolyfillUsageSubject.assertPolyfillUsage(unguardedPolyfillUsages.get(0));
+    unguardedUsageSubject
+        .hasNodeThat()
+        .hasToken(Token.OPTCHAIN_GETPROP)
+        .hasLineno(1)
+        .hasCharno(0)
+        .hasLength(11);
+
+    // Second usage is guarded
+    final ImmutableList<PolyfillUsage> guardedPolyfillUsages =
+        testPolyfillUsageFinder.getGuardedUsages();
+    assertThat(guardedPolyfillUsages).hasSize(1);
+    final PolyfillUsageSubject guardedUsageSubject =
+        PolyfillUsageSubject.assertPolyfillUsage(guardedPolyfillUsages.get(0));
+    guardedUsageSubject
+        .hasNodeThat()
+        .hasToken(Token.GETPROP)
+        .hasLineno(2)
+        .hasCharno(0)
+        .hasLength(10);
+
+    // Other than the node they reference, both usage objects are the same
+    for (PolyfillUsageSubject arrayDotFromUsageSubject :
+        ImmutableList.of(unguardedUsageSubject, guardedUsageSubject)) {
+      arrayDotFromUsageSubject.hasName("Array.from");
+      // reference via `globalThis` makes these explicit global references
+      arrayDotFromUsageSubject.isNotExplicitGlobal();
+      arrayDotFromUsageSubject
+          .hasPolyfillThat()
+          .hasNativeSymbol("Array.from")
+          .hasNativeVersion(FeatureSet.ES6)
+          .hasPolyfillVersion(FeatureSet.ES3)
+          .hasLibrary("es6/array/from")
+          .hasKind(Kind.STATIC);
+    }
+  }
+
   /** Uses {@link PolyfillUsageFinder} to find polyfill usages in source code for testing. */
   private static final class TestPolyfillUsageFinder {
     private final PolyfillUsageFinder polyfillUsageFinder;
@@ -188,6 +298,12 @@ public final class PolyfillUsageFinderTest {
     private ImmutableList<PolyfillUsage> getGuardedUsages() {
       PolyfillUsageCollectingConsumer consumer = new PolyfillUsageCollectingConsumer();
       polyfillUsageFinder.traverseOnlyGuarded(rootNode, consumer);
+      return consumer.getUsages();
+    }
+
+    private ImmutableList<PolyfillUsage> getAllUsages() {
+      PolyfillUsageCollectingConsumer consumer = new PolyfillUsageCollectingConsumer();
+      polyfillUsageFinder.traverseIncludingGuarded(rootNode, consumer);
       return consumer.getUsages();
     }
   }
