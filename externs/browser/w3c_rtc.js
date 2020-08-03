@@ -868,6 +868,12 @@ RTCRtpEncodingParameters.prototype.rid;
 RTCRtpEncodingParameters.prototype.scaleResolutionDownBy;
 
 /**
+ * @see https://w3c.github.io/webrtc-extensions/#dom-rtcrtpencodingparameters-adaptiveptime
+ * @type {?boolean|undefined}
+ */
+RTCRtpEncodingParameters.prototype.adaptivePtime;
+
+/**
  * @interface
  * @see https://www.w3.org/TR/webrtc/#rtcrtptransceiver-interface
  */
