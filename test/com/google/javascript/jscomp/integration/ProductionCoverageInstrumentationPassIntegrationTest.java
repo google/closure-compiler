@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.Compiler;
@@ -78,7 +79,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String expected =
         lines(
             "function foo() { ",
-               getInstrumentCodeLine("C", 1, 0), ";",
+            getInstrumentCodeLine("C", 1, 0), ";",
             "  console.log('Hello'); ",
             "}");
 
@@ -113,7 +114,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String expected =
         lines(
             "function foo() { ",
-                getInstrumentCodeLine("C", 1, 0), ";",
+            getInstrumentCodeLine("C", 1, 0), ";",
             "   console.log('Hello'); ",
             "}");
 
@@ -136,10 +137,40 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String expected =
         lines(
             "if (tempBool) { ",
-               getInstrumentCodeLine("C", 1, 0), ";",
+            getInstrumentCodeLine("C", 1, 0), ";",
             "  console.log('Hello'); ",
             "} else {",
-               getInstrumentCodeLine("E", 1, 0), ";",
+            getInstrumentCodeLine("E", 1, 0), ";",
+            "}");
+
+    String[] expectedArr = {instrumentCodeExpected, expected};
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testIfElseInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines(
+            "if (tempBool) {",
+            "   console.log('Hello');",
+            "} else if(anotherTempBool) {",
+            "   console.log('hi');",
+            "}");
+
+    String[] sourceArr = {instrumentCodeSource, source};
+
+    String expected =
+        lines(
+            "if (tempBool) {",
+            getInstrumentCodeLine("C", 1, 0), ";",
+            "   console.log('Hello');",
+            "} else if(anotherTempBool) {",
+            getInstrumentCodeLine("C", 3, 7), ";",
+            "   console.log('hi');",
+            "} else {",
+            getInstrumentCodeLine("E", 3, 7), ";",
             "}");
 
     String[] expectedArr = {instrumentCodeExpected, expected};
@@ -236,10 +267,9 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String expected =
         lines(
             "for(var i = 0 ; i < 10 ; ++i) {",
-                getInstrumentCodeLine("C", 1, 0), ";",
+            getInstrumentCodeLine("C", 1, 0), ";",
             "   console.log('*');",
-            "}",
-            getInstrumentCodeLine("E", 1, 0), ";");
+            "}");
 
     String[] expectedArr = {instrumentCodeExpected, expected};
     test(options, sourceArr, expectedArr);
@@ -262,10 +292,10 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
         lines(
             "switch (x) {",
             "   case 1: ",
-                   getInstrumentCodeLine("C", 2, 3), ";",
+            getInstrumentCodeLine("C", 2, 3), ";",
             "      x = 5;",
             "   default: ",
-                   getInstrumentCodeLine("E", 1, 0), ";",
+            getInstrumentCodeLine("E", 1, 0), ";",
             "};");
 
     String[] expectedArr = {instrumentCodeExpected, expected};
@@ -284,15 +314,15 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     String expected =
         lines(
             "if (tempBool) {",
-                getInstrumentCodeLine("C", 1, 0), ";",
+            getInstrumentCodeLine("C", 1, 0), ";",
             "  if (someBool) {",
-                 getInstrumentCodeLine("C", 1, 14), ";",
+            getInstrumentCodeLine("C", 1, 14), ";",
             "    console.log('*');",
             "   } else {",
-                  getInstrumentCodeLine("E", 1, 14), ";",
+            getInstrumentCodeLine("E", 1, 14), ";",
             "   }",
             "} else {",
-              getInstrumentCodeLine("E", 1, 0), ";",
+            getInstrumentCodeLine("E", 1, 0), ";",
             "}");
 
     String[] expectedArr = {instrumentCodeExpected, expected};
@@ -328,9 +358,13 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
         .isEqualTo("AAA");
   }
 
-  private String getInstrumentCodeLine(String encodedParam, int lineNo, int colNo){
-    return "module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"" +
-        encodedParam + "\", " + lineNo + ", " + colNo + ")";
+  private String getInstrumentCodeLine(String encodedParam, int lineNo, int colNo) {
+    return Strings.lenientFormat(
+        "%s(\"%s\", %s, %s)",
+        "module$exports$instrument$code.instrumentCodeInstance.instrumentCode",
+        encodedParam,
+        lineNo,
+        colNo);
   }
 
   @Override

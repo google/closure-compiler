@@ -64,9 +64,17 @@ final class ProductionCoverageInstrumentationCallback
   private final ParameterMapping parameterMapping;
   boolean visitedInstrumentCodeFile = false;
 
-  private final String FUNCTION_TYPE = "Type.FUNCTION";
-  private final String BRANCH_TYPE = "Type.BRANCH";
-  private final String BRANCH_DEFAULT_TYPE = "Type.BRANCH_DEFAULT";
+  private enum Type {
+    FUNCTION("Type.FUNCTION"),
+    BRANCH("Type.BRANCH"),
+    BRANCH_DEFAULT("Type.BRANCH_DEFAULT");
+
+    private String value;
+
+    Type(String s){
+      this.value = s;
+    }
+  }
 
   /**
    * Stores a stack of function names that encapsulates the children nodes being instrumented. The
@@ -117,64 +125,74 @@ final class ProductionCoverageInstrumentationCallback
 
     String functionName = functionNameStack.peek();
 
-    if (node.isFunction()) {
-      // If the function node has been visited by visit() then we can be assured that all its
-      // children nodes have been visited and properly instrumented.
-      functionNameStack.pop();
-      instrumentBlockNode(node.getLastChild(), fileName, functionName, FUNCTION_TYPE);
-    } else if (node.isIf()) {
-      if (node.getChildCount() == 2) {
-        addDefaultBlock(node);
-      }
-      Node ifTrueNode = node.getSecondChild();
-      Node ifFalseNode = node.getLastChild();
-      instrumentBlockNode(ifTrueNode, sourceFileName, functionName, BRANCH_TYPE);
-      instrumentBlockNode(ifFalseNode, sourceFileName, functionName, BRANCH_DEFAULT_TYPE);
-    } else if (node.isSwitch()) {
-      boolean hasDefaultCase = false;
-      for (Node c = node.getSecondChild(); c != null; c = c.getNext()) {
-        if (c.isDefaultCase()) {
-          instrumentBlockNode(c.getLastChild(), sourceFileName, functionName, BRANCH_DEFAULT_TYPE);
-          hasDefaultCase = true;
-        } else {
-          instrumentBlockNode(c.getLastChild(), sourceFileName, functionName, BRANCH_TYPE);
+    switch (node.getToken()) {
+      case FUNCTION:
+        // If the function node has been visited by visit() then we can be assured that all its
+        // children nodes have been visited and properly instrumented.
+        functionNameStack.pop();
+        instrumentBlockNode(node.getLastChild(), fileName, functionName, Type.FUNCTION.value);
+        break;
+      case IF:
+        Node ifTrueNode = node.getSecondChild();
+        instrumentBlockNode(ifTrueNode, sourceFileName, functionName, Type.BRANCH.value);
+        if (node.getChildCount() == 2) {
+          addElseBlock(node);
         }
-      }
-      if (!hasDefaultCase){
-        Node defaultBlock = IR.block();
-        defaultBlock.useSourceInfoIfMissingFromForTree(node);
-        Node defaultCase = IR.defaultCase(defaultBlock).useSourceInfoIfMissingFromForTree(node);
-        node.addChildToBack(defaultCase);
-        instrumentBlockNode(defaultBlock, sourceFileName, functionName, BRANCH_DEFAULT_TYPE);
-      }
-    } else if (NodeUtil.isLoopStructure(node)) {
-      Node blockNode = NodeUtil.getLoopCodeBlock(node);
-      checkNotNull(blockNode);
-      instrumentBlockNode(blockNode, sourceFileName, functionName, BRANCH_TYPE);
+        Node ifFalseNode = node.getLastChild();
+        if (NodeUtil.isEmptyBlock(ifFalseNode)
+            || (ifFalseNode.getFirstChild() != null && !ifFalseNode.getFirstChild().isIf())) {
+          instrumentBlockNode(ifFalseNode, sourceFileName, functionName, Type.BRANCH_DEFAULT.value);
+        }
+        break;
+      case SWITCH:
+        boolean hasDefaultCase = false;
+        for (Node c = node.getSecondChild(); c != null; c = c.getNext()) {
+          if (c.isDefaultCase()) {
+            instrumentBlockNode(
+                c.getLastChild(), sourceFileName, functionName, Type.BRANCH_DEFAULT.value);
+            hasDefaultCase = true;
+          } else {
+            instrumentBlockNode(c.getLastChild(), sourceFileName, functionName, Type.BRANCH.value);
+          }
+        }
+        if (!hasDefaultCase) {
+          Node defaultBlock = IR.block();
+          defaultBlock.useSourceInfoIfMissingFromForTree(node);
+          Node defaultCase = IR.defaultCase(defaultBlock).useSourceInfoIfMissingFromForTree(node);
+          node.addChildToBack(defaultCase);
+          instrumentBlockNode(
+              defaultBlock, sourceFileName, functionName, Type.BRANCH_DEFAULT.value);
+        }
+        break;
+      case HOOK:
+        Node ifTernaryIsTrueExpression = node.getSecondChild();
+        Node ifTernaryIsFalseExpression = node.getLastChild();
 
-      Node newNode =
-          newInstrumentationNode(blockNode, sourceFileName, functionName, BRANCH_DEFAULT_TYPE);
-      blockNode.getGrandparent().addChildAfter(newNode, blockNode.getParent());
-      compiler.reportChangeToEnclosingScope(blockNode.getParent());
-    } else if (node.isHook()) {
-      Node ifTernaryIsTrueExpression = node.getSecondChild();
-      Node ifTernaryIsFalseExpression = node.getLastChild();
+        addInstrumentationNodeWithComma(
+            ifTernaryIsTrueExpression, sourceFileName, functionName, Type.BRANCH.value);
+        addInstrumentationNodeWithComma(
+            ifTernaryIsFalseExpression, sourceFileName, functionName, Type.BRANCH.value);
 
-      addInstrumentationNodeWithComma(
-          ifTernaryIsTrueExpression, sourceFileName, functionName, BRANCH_TYPE);
-      addInstrumentationNodeWithComma(
-          ifTernaryIsFalseExpression, sourceFileName, functionName, BRANCH_TYPE);
+        compiler.reportChangeToEnclosingScope(node);
+        break;
+      case OR:
+      case AND:
+      case COALESCE:
+        // Only instrument the second child of the binary operation because the first child will
+        // always execute, or the first child is part of a chain of binary operations and would have
+        // already been instrumented.
+        Node secondExpression = node.getLastChild();
+        addInstrumentationNodeWithComma(
+            secondExpression, sourceFileName, functionName, Type.BRANCH.value);
 
-      compiler.reportChangeToEnclosingScope(node);
-    } else if (node.isOr() || node.isAnd() || node.isNullishCoalesce()) {
-      // Only instrument the second child of the binary operation because the first child will
-      // always execute, or the first child is part of a chain of binary operations and would have
-      // already been instrumented.
-      Node secondExpression = node.getLastChild();
-      addInstrumentationNodeWithComma(
-          secondExpression, sourceFileName, functionName, BRANCH_TYPE);
-
-      compiler.reportChangeToEnclosingScope(node);
+        compiler.reportChangeToEnclosingScope(node);
+        break;
+      default:
+        if (NodeUtil.isLoopStructure(node)) {
+          Node blockNode = NodeUtil.getLoopCodeBlock(node);
+          checkNotNull(blockNode);
+          instrumentBlockNode(blockNode, sourceFileName, functionName, Type.BRANCH.value);
+        }
     }
   }
 
@@ -185,16 +203,16 @@ final class ProductionCoverageInstrumentationCallback
   private void addInstrumentationNodeWithComma(
       Node originalNode, String fileName, String functionName, String type) {
     Node parentNode = originalNode.getParent();
-    parentNode.removeChild(originalNode);
+    Node cloneOfOriginal = originalNode.cloneTree();
     Node newInstrumentationNode =
-        newInstrumentationNode(originalNode, fileName, functionName, type);
+        newInstrumentationNode(cloneOfOriginal, fileName, functionName, type);
 
     // newInstrumentationNode returns an EXPR_RESULT which cannot be a child of a COMMA node.
     // Instead we use the child of of the newInstrumentatioNode which is a CALL node.
     Node childOfInstrumentationNode = newInstrumentationNode.getFirstChild().detach();
     Node infusedExp =
-        StatementFusion.fuseExpressionIntoExpression(childOfInstrumentationNode, originalNode);
-    parentNode.addChildToBack(infusedExp);
+        StatementFusion.fuseExpressionIntoExpression(childOfInstrumentationNode, cloneOfOriginal);
+    parentNode.replaceChild(originalNode, infusedExp);
   }
 
   /**
@@ -245,8 +263,8 @@ final class ProductionCoverageInstrumentationCallback
     return exprNode.useSourceInfoIfMissingFromForTree(node);
   }
 
-  /** Add a default block for If statements */
-  private Node addDefaultBlock(Node node) {
+  /** Add an else block for If statements if one is not already present. */
+  private Node addElseBlock(Node node) {
     Node defaultBlock = IR.block();
     node.addChildToBack(defaultBlock);
     return defaultBlock.useSourceInfoIfMissingFromForTree(node);
