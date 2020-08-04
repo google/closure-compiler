@@ -191,7 +191,7 @@ class ExpressionDecomposer {
           // It is always safe to inline "foo()" for expressions such as
           // "a = b = c = foo();"
           // As the assignment is unaffected by side effect of "foo()"
-          // and the names assigned-to can not influence the state before
+          // and the names assigned-to cannot influence the state before
           // the call to foo.
           //
           // This is not true of more complex LHS values, such as
@@ -223,7 +223,7 @@ class ExpressionDecomposer {
         // already be safe.
         if (isExpressionTreeUnsafe(callee, state.sideEffects)
             && lastExposedSubexpression != callee.getFirstChild()) {
-          checkState(allowMethodCallDecomposing, "Object method calls can not be decomposed.");
+          checkState(allowMethodCallDecomposing, "Object method calls cannot be decomposed.");
           // Either there were preexisting side-effects, or this node has side-effects.
           state.sideEffects = true;
           // Rewrite the call so "this" is preserved and continue walking up from there.
@@ -941,7 +941,7 @@ class ExpressionDecomposer {
    *   <ul>
    *     <li>{@code expressionRoot} = `a = 1 + x();`
    *     <li>{@code subExpression} = `x()`, has side-effects
-   *     <li>{@code MOVABLE} because the final value of `1` can not be influenced by `x()`.
+   *     <li>{@code MOVABLE} because the final value of `1` cannot be influenced by `x()`.
    *   </ul>
    *   <ul>
    *     <li>{@code expressionRoot} = `a = b + x();`
@@ -1021,7 +1021,7 @@ class ExpressionDecomposer {
           // It is always safe to inline "foo()" for expressions such as
           //   "a = b = c = foo();"
           // As the assignment is unaffected by side effect of "foo()"
-          // and the names assigned-to can not influence the state before
+          // and the names assigned-to cannot influence the state before
           // the call to foo.
           //
           // This is not true of more complex LHS values, such as
@@ -1106,7 +1106,7 @@ class ExpressionDecomposer {
 
   /**
    * It is always safe to inline "foo()" for expressions such as "a = b = c = foo();" As the
-   * assignment is unaffected by side effect of "foo()" and the names assigned-to can not influence
+   * assignment is unaffected by side effect of "foo()" and the names assigned-to cannot influence
    * the state before the call to foo.
    *
    * <p>It is also safe in cases where the object is constant:
