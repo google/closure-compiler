@@ -1608,10 +1608,6 @@ public class CompilerOptions implements Serializable {
     this.propertyRenaming = newPropertyPolicy;
   }
 
-  /** Should shadow outer scope variable name during renaming. */
-  @Deprecated
-  public void setShadowVariables(boolean shadow) {}
-
   /**
    * @param replaceIdGenerators the replaceIdGenerators to set
    */
