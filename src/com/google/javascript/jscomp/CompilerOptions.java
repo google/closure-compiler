@@ -380,17 +380,6 @@ public class CompilerOptions implements Serializable {
   @Deprecated
   public void setCheckGlobalThisLevel(CheckLevel level) {}
 
-  @Deprecated public CheckLevel checkMissingGetCssNameLevel;
-
-  /** Noop */
-  @Deprecated
-  public void setCheckMissingGetCssNameLevel(CheckLevel level) {
-    this.checkMissingGetCssNameLevel = level;
-  }
-
-  /** Noop */
-  @Deprecated public String checkMissingGetCssNameBlacklist;
-
   /**
    * A set of extra annotation names which are accepted and silently ignored
    * when encountered in a source file. Defaults to null which has the same
@@ -1320,8 +1309,6 @@ public class CompilerOptions implements Serializable {
     checkTypes = false;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
-    checkMissingGetCssNameLevel = CheckLevel.OFF;
-    checkMissingGetCssNameBlacklist = null;
     computeFunctionSideEffects = false;
     extraAnnotationNames = null;
 
@@ -2178,12 +2165,6 @@ public class CompilerOptions implements Serializable {
 
   public void setCheckTypes(boolean checkTypes) {
     this.checkTypes = checkTypes;
-  }
-
-  /** noop */
-  @Deprecated
-  public void setCheckMissingGetCssNameBlacklist(String blackList) {
-    this.checkMissingGetCssNameBlacklist = blackList;
   }
 
   public void setFoldConstants(boolean foldConstants) {
