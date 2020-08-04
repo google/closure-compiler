@@ -482,9 +482,6 @@ public class CompilerOptions implements Serializable {
   /** Removes code associated with unused global names */
   public boolean smartNameRemoval;
 
-  /** Removes code associated with unused global names */
-  boolean extraSmartNameRemoval;
-
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
@@ -1345,7 +1342,6 @@ public class CompilerOptions implements Serializable {
     inlineVariables = false;
     inlineLocalVariables = false;
     smartNameRemoval = false;
-    extraSmartNameRemoval = false;
     removeDeadCode = false;
     extractPrototypeMemberDeclarations =
         ExtractPrototypeMemberDeclarationsMode.OFF;
@@ -2244,10 +2240,6 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  public void setExtraSmartNameRemoval(boolean smartNameRemoval) {
-    this.extraSmartNameRemoval = smartNameRemoval;
-  }
-
   public void setRemoveDeadCode(boolean removeDeadCode) {
     this.removeDeadCode = removeDeadCode;
   }
@@ -2955,7 +2947,6 @@ public class CompilerOptions implements Serializable {
             .add("externExportsPath", externExportsPath)
             .add("extraAnnotationNames", extraAnnotationNames)
             .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
-            .add("extraSmartNameRemoval", extraSmartNameRemoval)
             .add("filesToPrintAfterEachPassRegexList", filesToPrintAfterEachPassRegexList)
             .add("flowSensitiveInlineVariables", flowSensitiveInlineVariables)
             .add("foldConstants", foldConstants)
