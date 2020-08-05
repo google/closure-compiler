@@ -756,6 +756,9 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
 
     DiagnosticGroups.registerGroup("conflictingIjsFile", IjsErrors.CONFLICTING_IJS_FILE);
+
+    DiagnosticGroups.registerGroup(
+        "implicitWeakEntryPoint", JSModuleGraph.IMPLICIT_WEAK_ENTRY_POINT_ERROR);
   }
 
   /** Adds warning levels by name. */
