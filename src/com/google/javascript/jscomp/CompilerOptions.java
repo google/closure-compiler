@@ -2244,9 +2244,6 @@ public class CompilerOptions implements Serializable {
     this.inlineGetters = enabled;
   }
 
-  @Deprecated
-  public void setRemoveUnusedPrototypePropertiesInExterns(boolean enabled) {}
-
   public void setCollapseVariableDeclarations(boolean enabled) {
     this.collapseVariableDeclarations = enabled;
   }
