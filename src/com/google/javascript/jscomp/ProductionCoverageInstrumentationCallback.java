@@ -65,15 +65,9 @@ final class ProductionCoverageInstrumentationCallback
   boolean visitedInstrumentCodeFile = false;
 
   private enum Type {
-    FUNCTION("Type.FUNCTION"),
-    BRANCH("Type.BRANCH"),
-    BRANCH_DEFAULT("Type.BRANCH_DEFAULT");
-
-    private String value;
-
-    Type(String s){
-      this.value = s;
-    }
+    FUNCTION(),
+    BRANCH(),
+    BRANCH_DEFAULT();
   }
 
   /**
@@ -130,18 +124,23 @@ final class ProductionCoverageInstrumentationCallback
         // If the function node has been visited by visit() then we can be assured that all its
         // children nodes have been visited and properly instrumented.
         functionNameStack.pop();
-        instrumentBlockNode(node.getLastChild(), fileName, functionName, Type.FUNCTION.value);
+        instrumentBlockNode(node.getLastChild(), fileName, functionName, Type.FUNCTION);
         break;
       case IF:
         Node ifTrueNode = node.getSecondChild();
-        instrumentBlockNode(ifTrueNode, sourceFileName, functionName, Type.BRANCH.value);
+        instrumentBlockNode(ifTrueNode, sourceFileName, functionName, Type.BRANCH);
         if (node.getChildCount() == 2) {
           addElseBlock(node);
         }
         Node ifFalseNode = node.getLastChild();
+        // The compiler converts all sets of If-Else if-Else blocks into a combination of nested
+        // If-Else blocks. This case checks if the else blocks first child is an If statement, and
+        // if it is it will not instrument. This avoids adding multiple instrumentation calls.
+        // Since we also make sure an Else case is added to every If statement, we are still
+        // assured that the else statement is being reached through a later instrumentation call.
         if (NodeUtil.isEmptyBlock(ifFalseNode)
             || (ifFalseNode.getFirstChild() != null && !ifFalseNode.getFirstChild().isIf())) {
-          instrumentBlockNode(ifFalseNode, sourceFileName, functionName, Type.BRANCH_DEFAULT.value);
+          instrumentBlockNode(ifFalseNode, sourceFileName, functionName, Type.BRANCH_DEFAULT);
         }
         break;
       case SWITCH:
@@ -149,10 +148,10 @@ final class ProductionCoverageInstrumentationCallback
         for (Node c = node.getSecondChild(); c != null; c = c.getNext()) {
           if (c.isDefaultCase()) {
             instrumentBlockNode(
-                c.getLastChild(), sourceFileName, functionName, Type.BRANCH_DEFAULT.value);
+                c.getLastChild(), sourceFileName, functionName, Type.BRANCH_DEFAULT);
             hasDefaultCase = true;
           } else {
-            instrumentBlockNode(c.getLastChild(), sourceFileName, functionName, Type.BRANCH.value);
+            instrumentBlockNode(c.getLastChild(), sourceFileName, functionName, Type.BRANCH);
           }
         }
         if (!hasDefaultCase) {
@@ -161,7 +160,7 @@ final class ProductionCoverageInstrumentationCallback
           Node defaultCase = IR.defaultCase(defaultBlock).useSourceInfoIfMissingFromForTree(node);
           node.addChildToBack(defaultCase);
           instrumentBlockNode(
-              defaultBlock, sourceFileName, functionName, Type.BRANCH_DEFAULT.value);
+              defaultBlock, sourceFileName, functionName, Type.BRANCH_DEFAULT);
         }
         break;
       case HOOK:
@@ -169,9 +168,9 @@ final class ProductionCoverageInstrumentationCallback
         Node ifTernaryIsFalseExpression = node.getLastChild();
 
         addInstrumentationNodeWithComma(
-            ifTernaryIsTrueExpression, sourceFileName, functionName, Type.BRANCH.value);
+            ifTernaryIsTrueExpression, sourceFileName, functionName, Type.BRANCH);
         addInstrumentationNodeWithComma(
-            ifTernaryIsFalseExpression, sourceFileName, functionName, Type.BRANCH.value);
+            ifTernaryIsFalseExpression, sourceFileName, functionName, Type.BRANCH);
 
         compiler.reportChangeToEnclosingScope(node);
         break;
@@ -183,7 +182,7 @@ final class ProductionCoverageInstrumentationCallback
         // already been instrumented.
         Node secondExpression = node.getLastChild();
         addInstrumentationNodeWithComma(
-            secondExpression, sourceFileName, functionName, Type.BRANCH.value);
+            secondExpression, sourceFileName, functionName, Type.BRANCH);
 
         compiler.reportChangeToEnclosingScope(node);
         break;
@@ -191,7 +190,7 @@ final class ProductionCoverageInstrumentationCallback
         if (NodeUtil.isLoopStructure(node)) {
           Node blockNode = NodeUtil.getLoopCodeBlock(node);
           checkNotNull(blockNode);
-          instrumentBlockNode(blockNode, sourceFileName, functionName, Type.BRANCH.value);
+          instrumentBlockNode(blockNode, sourceFileName, functionName, Type.BRANCH);
         }
     }
   }
@@ -201,7 +200,7 @@ final class ProductionCoverageInstrumentationCallback
    * original node using a COMMA node.
    */
   private void addInstrumentationNodeWithComma(
-      Node originalNode, String fileName, String functionName, String type) {
+      Node originalNode, String fileName, String functionName, Type type) {
     Node parentNode = originalNode.getParent();
     Node cloneOfOriginal = originalNode.cloneTree();
     Node newInstrumentationNode =
@@ -224,7 +223,7 @@ final class ProductionCoverageInstrumentationCallback
    * @param fnName The function name of the node being instrumented.
    * @param type The type of the node being instrumented.
    */
-  private void instrumentBlockNode(Node block, String fileName, String fnName, String type) {
+  private void instrumentBlockNode(Node block, String fileName, String fnName, Type type) {
     block.addChildToFront(newInstrumentationNode(block, fileName, fnName, type));
     compiler.reportChangeToEnclosingScope(block);
   }
@@ -242,7 +241,7 @@ final class ProductionCoverageInstrumentationCallback
    * @param type The type of the node being instrumented.
    * @return The newly constructed function call node.
    */
-  private Node newInstrumentationNode(Node node, String fileName, String fnName, String type) {
+  private Node newInstrumentationNode(Node node, String fileName, String fnName, Type type) {
 
     String encodedParam = parameterMapping.getEncodedParam(fileName, fnName, type);
 
@@ -312,18 +311,18 @@ final class ProductionCoverageInstrumentationCallback
       typeToIndex = new LinkedHashMap<>();
     }
 
-    private String getEncodedParam(String fileName, String functionName, String type) {
+    private String getEncodedParam(String fileName, String functionName, Type type) {
 
       fileNameToIndex.putIfAbsent(fileName, fileNameToIndex.size());
       functionNameToIndex.putIfAbsent(functionName, functionNameToIndex.size());
-      typeToIndex.putIfAbsent(type, typeToIndex.size());
+      typeToIndex.putIfAbsent(type.name(), typeToIndex.size());
 
       StringBuilder sb = new StringBuilder();
 
       try {
         Base64VLQ.encode(sb, fileNameToIndex.get(fileName));
         Base64VLQ.encode(sb, functionNameToIndex.get(functionName));
-        Base64VLQ.encode(sb, typeToIndex.get(type));
+        Base64VLQ.encode(sb, typeToIndex.get(type.name()));
       } catch (IOException e) {
         throw new AssertionError(e);
       }
