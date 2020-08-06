@@ -399,7 +399,7 @@ public abstract class RegExpTree {
         CharRanges ieExplicits = CharRanges.EMPTY;
         while (pos < limit && pattern.charAt(pos) != ']') {
           char ch = pattern.charAt(pos);
-          char start;
+          int start;
           if (ch == '\\') {
             ++pos;
             char possibleGroupName = pattern.charAt(pos);
@@ -414,7 +414,7 @@ public abstract class RegExpTree {
             start = ch;
             ++pos;
           }
-          char end = start;
+          int end = start;
           if (pos + 1 < limit && pattern.charAt(pos) == '-'
               && pattern.charAt(pos + 1) != ']') {
             ++pos;
@@ -464,7 +464,7 @@ public abstract class RegExpTree {
        * contexts, so contexts must filter those instead.
        * E.g. '\b' means a different thing inside a charset than without.
        */
-      private char parseEscapeChar() {
+      private int parseEscapeChar() {
         char ch = pattern.charAt(pos++);
         switch (ch) {
           case 'b': return '\b';
@@ -472,7 +472,12 @@ public abstract class RegExpTree {
           case 'n': return '\n';
           case 'r': return '\r';
           case 't': return '\t';
-          case 'u': return parseHex(4);
+          case 'u':
+            if (flags.contains("u") && pos < limit && pattern.charAt(pos) == '{') {
+              return parseUnicodeEscape();
+            } else {
+              return parseHex(4);
+            }
           case 'v': return '\u000b';
           case 'x': return parseHex(2);
           default:
@@ -599,7 +604,7 @@ public abstract class RegExpTree {
             ++pos;
             return new Charset(charGroup, CharRanges.EMPTY);
           }
-          return new Text("" + parseEscapeChar());
+          return new Text(new String(Character.toChars(parseEscapeChar())));
         }
       }
 
@@ -628,6 +633,42 @@ public abstract class RegExpTree {
           result = (result << 4) | digit;
         }
         return (char) result;
+      }
+
+      private int parseUnicodeEscape() {
+        checkState(pattern.charAt(pos) == '{');
+        int start = pos++;
+        int result = 0;
+        char ch = pattern.charAt(pos);
+        if (ch == '}') {
+          throw new IllegalArgumentException("Invalid unicode escape: "
+              + pattern.substring(start, ++pos));
+        }
+        while (pos < limit) {
+          int digit;
+          ch = pattern.charAt(pos++);
+          if ('0' <= ch && ch <= '9') {
+            digit = ch - '0';
+          } else if ('a' <= ch && ch <= 'f') {
+            digit = ch + (10 - 'a');
+          } else if ('A' <= ch && ch <= 'F') {
+            digit = ch + (10 - 'A');
+          } else if (ch == '}') {
+            break;
+          } else {
+            throw new IllegalArgumentException("Invalid character in unicode escape: " + ch);
+          }
+          result = (result << 4) | digit;
+        }
+        if (ch != '}') {
+          throw new IllegalArgumentException("Malformed unicode escape: expected '}' after "
+              + pattern.substring(start, pos));
+        }
+        if (result > 0x10FFFF) {
+          throw new IllegalArgumentException("Unicode must not be greater than 0x10FFFF: "
+              + pattern.substring(start, pos));
+        }
+        return result;
       }
 
       private boolean isRepetitionStart(char ch) {
