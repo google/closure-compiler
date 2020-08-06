@@ -67,14 +67,14 @@ Storage.prototype.clear = function() {};
 function WindowSessionStorage() {}
 
 /**
- * @type {Storage}
+ * @type {!Storage}
  */
 WindowSessionStorage.prototype.sessionStorage;
 
 /**
  * Window implements WindowSessionStorage
  *
- * @type {Storage}
+ * @type {!Storage}
  */
 Window.prototype.sessionStorage;
 
@@ -85,14 +85,14 @@ Window.prototype.sessionStorage;
 function WindowLocalStorage() {}
 
 /**
- * @type {Storage}
+ * @type {!Storage}
  */
 WindowLocalStorage.prototype.localStorage;
 
 /**
  * Window implements WindowLocalStorage
  *
- * @type {Storage}
+ * @type {!Storage}
  */
 Window.prototype.localStorage;
 
