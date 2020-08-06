@@ -352,7 +352,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
         .isEqualTo("[i1.js]");
     assertWithMessage("Types in the parameter mapping are not properly set")
         .that(paramMap.get(" Types"))
-        .isEqualTo("[Type.FUNCTION]");
+        .isEqualTo("[FUNCTION]");
     assertWithMessage("Array index encoding is not performed properly")
         .that(paramMap.get("C"))
         .isEqualTo("AAA");
