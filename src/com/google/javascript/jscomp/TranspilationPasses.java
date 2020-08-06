@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_NEXT_IN;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES_UNSUPPORTED;
 
 import com.google.javascript.jscomp.Es6RewriteDestructuring.ObjectDestructuringRewriteMode;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -78,10 +77,6 @@ public class TranspilationPasses {
       List<PassFactory> passes, CompilerOptions options) {
     // Note that, for features >ES8 we detect feature by feature rather than by yearly languages
     // in order to handle FeatureSet.BROWSER_2020, which is ES2019 without the new RegExp features.
-    if (options.needsTranspilationOf(Feature.BIGINT)) {
-      passes.add(reportBigIntLiteralTranspilationUnsupported);
-    }
-
     if (options.needsTranspilationOf(Feature.NUMERIC_SEPARATOR)) {
       // Numeric separators are flagged as present by the parser,
       // but never actually represented in the AST.
@@ -92,6 +87,10 @@ public class TranspilationPasses {
 
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.add(rewriteOptionalChainingOperator);
+    }
+
+    if (options.needsTranspilationOf(Feature.BIGINT)) {
+      passes.add(reportBigIntLiteralTranspilationUnsupported);
     }
 
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
@@ -242,9 +241,9 @@ public class TranspilationPasses {
 
   private static final PassFactory reportBigIntLiteralTranspilationUnsupported =
       PassFactory.builderForHotSwap()
-          .setName("reportBigIntTranspilation")
+          .setName("reportBigIntTranspilationUnsupported")
           .setInternalFactory(ReportBigIntLiteralTranspilationUnsupported::new)
-          .setFeatureSet(ES_UNSUPPORTED)
+          .setFeatureSet(ES2020)
           .build();
 
   private static final PassFactory rewriteExponentialOperator =

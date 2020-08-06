@@ -191,7 +191,42 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // Confirm that the native BigInt type has been implemented, so the BigInt externs don't cause
     // errors.
     externs = ImmutableList.of(new TestExternsBuilder().addBigInt().buildExternsFile("externs.js"));
-    test(options, "BigInt(1)", "BigInt(1)");
+    testSame(options, "BigInt(1)");
+  }
+
+  @Test
+  public void testFunctionThatAcceptsAndReturnsBigInt() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addBigInt().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "/**",
+            " * @param {bigint} value",
+            " * @return {bigint}",
+            " */",
+            "function bigintTimes3(value){",
+            "  return value * 3n;",
+            "}",
+            "console.log(bigintTimes3(5n));"),
+        // TODO(b/140132715): This test should expect console.log(15n), must update
+        // PeepholeFoldConstants for this to work as intended
+        "console.log(5n * 3n);");
+  }
+
+  @Test
+  public void testBigIntStringConcatenation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    externs = ImmutableList.of(new TestExternsBuilder().addBigInt().buildExternsFile("externs.js"));
+    // TODO(b/140132715): This test should expect "1nasdf", must update PeepholeFoldConstants
+    // for this to work as intended
+    test(options, "1n + 'asdf'", "1n + 'asdf'");
   }
 
   @Test

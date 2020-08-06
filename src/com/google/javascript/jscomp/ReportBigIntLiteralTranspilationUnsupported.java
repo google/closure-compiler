@@ -39,7 +39,7 @@ final class ReportBigIntLiteralTranspilationUnsupported implements HotSwapCompil
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isBigInt()) {
-        // Transpilation of BigInt is not yet supported
+        // Transpilation of BigInt is not supported
         t.report(n, BIGINT_TRANSPILATION);
       }
     }

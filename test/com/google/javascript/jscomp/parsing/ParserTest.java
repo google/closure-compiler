@@ -3901,7 +3901,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralZero() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3915,7 +3914,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralPositive() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("1n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3929,7 +3927,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralNegative() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("-1n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3943,7 +3940,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralBinary() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0b10000n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3957,7 +3953,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralOctal() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0o100n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3971,7 +3966,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralHex() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0xFn;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3985,7 +3979,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralErrors() {
-    mode = LanguageMode.UNSUPPORTED;
     parseError("01n;", "SyntaxError: nonzero BigInt can't have leading zero");
     parseError(".1n", "Semi-colon expected");
     parseError("0.1n", "Semi-colon expected");
@@ -3994,12 +3987,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralWarning() {
-    parseWarning("1n;", "This language feature is not currently supported by the compiler: bigint");
+    mode = LanguageMode.ECMASCRIPT_2019;
+    parseWarning(
+        "1n;",
+        "This language feature is only supported for ECMASCRIPT_2020 mode or better: bigint");
   }
 
   @Test
   public void testBigIntLiteralInCall() {
-    mode = LanguageMode.UNSUPPORTED;
     parse("alert(1n)");
   }
 
