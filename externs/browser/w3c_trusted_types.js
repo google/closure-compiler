@@ -31,7 +31,10 @@ function TrustedScript() {}
 function TrustedScriptURL() {}
 
 
-/** @constructor */
+/**
+ * @template Options
+ * @constructor
+ */
 function TrustedTypePolicy() {}
 
 /**
