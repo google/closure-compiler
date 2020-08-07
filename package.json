@@ -18,8 +18,9 @@
   "scripts": {
     "build": "clean && mvn -DskipTests",
     "build:fast": "mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml",
-    "clean": "mvn clean",
+    "clean": "yarn runtime_tests:clean && mvn clean",
     "runtime_tests:build": "./utils/build_runtime_tests.sh",
+    "runtime_tests:clean": "rm -rf test/com/google/javascript/jscomp/runtime_tests/build/*",
     "runtime_tests:run": "jest --testRegex .*/utils/js/.* --verbose=true",
     "runtime_tests": "npm run --silent runtime_tests:build && npm run --silent runtime_tests:run",
     "test": "mvn test"
