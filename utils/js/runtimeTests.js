@@ -34,7 +34,7 @@ const TEST_FILES = glob.sync(path.resolve(
 ));
 
 describe('Runtime tests', () => {
-  for (const TEST_URL of TEST_FILES) {
+  for (let testUrl of TEST_FILES) {
     const logs = [];
     const passed = /PASSED/i;
     const failed = /FAILED/i;
@@ -54,7 +54,7 @@ describe('Runtime tests', () => {
       else return msg;
     }
     
-    const TEST_NAME = path.basename(TEST_URL);
+    const testName = path.basename(testUrl);
     const TestIsFinished = new FutureEvent();
     const virtualConsole = new VirtualConsole()
       .on('log', (msg) => {
@@ -67,12 +67,12 @@ describe('Runtime tests', () => {
       path.resolve(
         __dirname,
         '../../',
-        TEST_URL
+        testUrl
       ), 
       'utf-8'
     );
 
-    it(`should pass test suite ${path.basename(TEST_URL)}`, async () => {
+    it(`should pass test suite ${path.basename(testUrl)}`, async () => {
       const { window } = new JSDOM(TEST_DOC, {
         url: 'https://localhost:42',
         runScripts: 'dangerously',
@@ -82,9 +82,9 @@ describe('Runtime tests', () => {
       try {
         await TestIsFinished;
       } catch (e) {
-        fail(`Failed test in suite ${TEST_NAME}: \n${chalk.red(e)}\n`);
+        fail(`Failed test in suite ${testName}: \n${chalk.red(e)}\n`);
       }
-      console.log(`Passed all tests in suite ${TEST_NAME}`);
+      console.log(`Passed all tests in suite ${testName}`);
     });
   }
 });
