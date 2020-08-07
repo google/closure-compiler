@@ -54,8 +54,11 @@ describe('Runtime tests', () => {
       } else return msg;
     };
 
+    // file.ext -> file
     const testName = path.basename(testFile);
+    // A promise that will resolve when JSDOM is done executing.
     const testIsFinished = new FutureEvent();
+    // A virtual console which will receive messages from JSDOM's `console.log`.
     const virtualConsole = new VirtualConsole()
         .on('log', (msg) => {
           logs.push(chalkMsg(msg));
@@ -63,6 +66,7 @@ describe('Runtime tests', () => {
           else if (/Tests failed/i.test(msg)) testIsFinished.cancel(allLogs());
         });
 
+    // Load the generated test file for consumption by the JSDOM environment.
     const testDocument = fs.readFileSync(
         path.resolve(
             __dirname,
@@ -94,10 +98,13 @@ describe('Runtime tests', () => {
       });
 
       try {
+        // Wait for test to finish.
         await testIsFinished;
       } catch (e) {
+        // If there was an error, print it.
         fail(`Failed test in suite ${testName}: \n${e}\n`);
       }
+      // Otherwise, everything passed.
       console.log(`Passed all tests in suite ${testName}`);
     });
   }
