@@ -77,7 +77,7 @@ describe('Runtime tests', () => {
          * This does not actually run a server of any kind, it only informs the
          * DOM what to put in `window.location.origin`. By default, this is
          * `null`, and any non-HTTPS URL field here will throw an error in the
-         * test suite
+         * test suite due to unsafe URL.
          */
         url: 'https://localhost:42',
         /**
