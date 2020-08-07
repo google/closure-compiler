@@ -48,11 +48,11 @@ script:
   - export PATH="$HOME/.yarn/bin:$PATH"
   # Run the npm package tests
   - yarn install
-  - utils/test_npm.sh
+  - travis_util/test_npm.sh
   # Checks for JavaDoc errors
   - mvn -Dstyle.color=always -pl com.google.javascript:closure-compiler javadoc:javadoc
   # Test new Bazel based J2CL build
-  - utils/build_test.sh
+  - ./build_test.sh
   # Kill Bazel workers to clean up their memory usage
   - bazel shutdown
 
@@ -61,7 +61,7 @@ script:
 sudo: required
 
 after_success:
-  - utils/deploy_snapshot.sh
+  - travis_util/deploy_snapshot.sh
 
 env:
   global:
