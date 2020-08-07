@@ -30,7 +30,8 @@ const path = require('path');
 
 const TEST_FILES = glob.sync(path.resolve(
     __dirname,
-    '../../test/com/google/javascript/jscomp/runtime_tests/**/build/*_test.html',
+    '../../test/com/google/javascript/jscomp/'
+    + 'runtime_tests/**/build/*_test.html',
 ));
 
 describe('Runtime tests', () => {
