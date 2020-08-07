@@ -24,6 +24,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import java.math.BigInteger;
 
 /**
  * Peephole optimization to fold constants (e.g. x + 1 + 7 --> x + 8).
@@ -411,6 +412,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             report(FRACTIONAL_BITWISE_OPERAND, left);
             return n;
           }
+        } else if (left.isBigInt()) {
+          BigInteger val = left.getBigInt();
+          Node notValNode = IR.bigint(val.not());
+          parent.replaceChild(n, notValNode);
+          reportChangeToEnclosingScope(parent);
+          return notValNode;
         } else {
           return n;
         }

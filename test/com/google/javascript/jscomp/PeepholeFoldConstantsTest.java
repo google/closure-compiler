@@ -523,6 +523,14 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testUnaryOpsWithBigInt() {
+    fold("-(1n)", "-1n");
+    fold("- -1n", "1n");
+    fold("!1n", "false");
+    fold("~0n", "-1n");
+  }
+
+  @Test
   public void testUnaryOpsStringCompare() {
     foldSame("a = -1");
     fold("a = ~0", "a = -1");
