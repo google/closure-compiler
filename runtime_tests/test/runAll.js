@@ -28,12 +28,19 @@ const FutureEvent = require('future-event');
 const glob = require('glob');
 const path = require('path');
 
+/**
+ * All test files in the test.com.google.javascript.jscomp.runtime_tests.build
+ * directory.
+ */
 const TEST_FILES = glob.sync(path.resolve(
     __dirname,
     '../../test/com/google/javascript/jscomp/'
     + 'runtime_tests/**/build/*_test.html',
 ));
 
+/**
+ * Iterate over all found test files and execute them in JSDOM.
+ */
 describe('Runtime tests', () => {
   for (const testFile of TEST_FILES) {
     const logs = [];
@@ -42,23 +49,36 @@ describe('Runtime tests', () => {
 
     const allLogs = () => logs.join('\n');
     const chalkMsg = (msg) => {
+      /**
+       * Check whether or not this message is a PASSED or FAILED message.
+       */
       const isPass = passed.test(msg);
       const isFail = failed.test(msg);
 
-      if (isPass || isFail) {
-        return msg.replace(
-            passed, chalk.green('PASSED'),
-        ).replace(
-            failed, chalk.red('FAILED'),
-        );
-      } else return msg;
+      /**
+       * Highlight PASSED and FAILED in messages to help with accessibility.
+       */
+      return (isPass || isFail)
+        ? msg
+            .replace(passed, chalk.green('PASSED'))
+            .replace(failed, chalk.red('FAILED'))
+        : msg;
     };
 
-    // file.ext -> file
+    /**
+     * Get filename, i.e. /path/to/file.ext -> file.ext
+     */
     const testName = path.basename(testFile);
-    // A promise that will resolve when JSDOM is done executing.
+
+    /**
+     * A promise that will resolve when JSDOM is done executing.
+     */
     const testIsFinished = new FutureEvent();
-    // A virtual console which will receive messages from JSDOM's `console.log`.
+
+    /**
+     * A virtual console which will receive messages from JSDOM's
+     * `console.log`.
+     */
     const virtualConsole = new VirtualConsole()
         .on('log', (msg) => {
           logs.push(chalkMsg(msg));
@@ -66,7 +86,10 @@ describe('Runtime tests', () => {
           else if (/Tests failed/i.test(msg)) testIsFinished.cancel(allLogs());
         });
 
-    // Load the generated test file for consumption by the JSDOM environment.
+    /**
+     * Load the generated test file for consumption by the JSDOM environment.
+     * This will be a raw HTML document.
+     */
     const testDocument = fs.readFileSync(
         path.resolve(
             __dirname,
@@ -81,8 +104,9 @@ describe('Runtime tests', () => {
         /**
          * This does not actually run a server of any kind, it only informs the
          * DOM what to put in `window.location.origin`. By default, this is
-         * `null`, and any non-HTTPS URL field here will throw an error in the
-         * test suite due to unsafe URL.
+         * `null`, which throws an "unsafe URL" error in the test suite. This is
+         * purely for accurately mocking a browser for `goog.testing.testsuite`
+         * tests, and any valid HTTPS URL will work here.
          */
         url: 'https://localhost:42',
         /**
@@ -98,13 +122,19 @@ describe('Runtime tests', () => {
       });
 
       try {
-        // Wait for test to finish.
+        /**
+         * Wait for test to finish, resume if no errors thrown.
+         */
         await testIsFinished;
       } catch (e) {
-        // If there was an error, print it.
+        /**
+         * Print error and fail if any occurred.
+         */
         fail(`Failed test in suite ${testName}: \n${e}\n`);
       }
-      // Otherwise, everything passed.
+      /**
+       * Otherwise, everything passed.
+       */
       console.log(`Passed all tests in suite ${testName}`);
     });
   }
