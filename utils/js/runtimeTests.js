@@ -1,5 +1,5 @@
 /**
- * @license
+ * @license Apache-2.0
  * Copyright 2020 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,15 +74,37 @@ describe('Runtime tests', () => {
 
     it(`should pass test suite ${path.basename(testUrl)}`, async () => {
       const { window } = new JSDOM(TEST_DOC, {
+        /**
+         * This does not actually run a server of any kind, it only informs the
+         * DOM what to put in `window.location.origin`. By default, this is
+         * `null`, and any non-HTTPS URL field here will throw an error in the
+         * test suite
+         */
         url: 'https://localhost:42',
+        /**
+         * This flag will allow the execution of `<script>` tags that are added
+         * to the DOM after the `onload` event, i.e., those that are added by
+         * `goog.module` and `goog.require`.
+         */
         runScripts: 'dangerously',
+        /**
+         * Pipe `console.log` to our virtual console.
+         */
         virtualConsole
       });
 
       try {
         await TestIsFinished;
       } catch (e) {
-        fail(`Failed test in suite ${testName}: \n${chalk.red(e)}\n`);
+        // Format the error a bit: first line red, rest unformatted.
+        const errorLines = e.toString().split('\n');
+        let formattedError;
+        for (let i = 0; i < errorLines.length; i++) {
+          formattedError += i === 0 
+            ? chalk.red(errorLines[i])
+            : errorLines[i];
+        }
+        fail(`Failed test in suite ${testName}: \n${formattedError}\n`);
       }
       console.log(`Passed all tests in suite ${testName}`);
     });
