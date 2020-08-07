@@ -35,7 +35,7 @@ const TEST_FILES = glob.sync(path.resolve(
 ));
 
 describe('Runtime tests', () => {
-  for (const testUrl of TEST_FILES) {
+  for (const testFile of TEST_FILES) {
     const logs = [];
     const passed = /PASSED/i;
     const failed = /FAILED/i;
@@ -54,26 +54,26 @@ describe('Runtime tests', () => {
       } else return msg;
     };
 
-    const testName = path.basename(testUrl);
-    const TestIsFinished = new FutureEvent();
+    const testName = path.basename(testFile);
+    const testIsFinished = new FutureEvent();
     const virtualConsole = new VirtualConsole()
         .on('log', (msg) => {
           logs.push(chalkMsg(msg));
-          if (/Tests complete/i.test(msg)) TestIsFinished.ready(allLogs());
-          else if (/Tests failed/i.test(msg)) TestIsFinished.cancel(allLogs());
+          if (/Tests complete/i.test(msg)) testIsFinished.ready(allLogs());
+          else if (/Tests failed/i.test(msg)) testIsFinished.cancel(allLogs());
         });
 
-    const TEST_DOC = fs.readFileSync(
+    const testDocument = fs.readFileSync(
         path.resolve(
             __dirname,
             '../../',
-            testUrl,
+            testFile,
         ),
         'utf-8',
     );
 
-    it(`should pass test suite ${path.basename(testUrl)}`, async () => {
-      new JSDOM(TEST_DOC, {
+    it(`should pass test suite ${path.basename(testFile)}`, async () => {
+      new JSDOM(testDocument, {
         /**
          * This does not actually run a server of any kind, it only informs the
          * DOM what to put in `window.location.origin`. By default, this is
@@ -94,7 +94,7 @@ describe('Runtime tests', () => {
       });
 
       try {
-        await TestIsFinished;
+        await testIsFinished;
       } catch (e) {
         fail(`Failed test in suite ${testName}: \n${e}\n`);
       }
