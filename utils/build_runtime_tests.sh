@@ -13,51 +13,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-
 if [ -z $1 ]; then
   COMPILATION_LEVEL="SIMPLE"
 else
   COMPILATION_LEVEL=$1
 fi
 
-# to translate from relative dir
-abs_dirname() {
-  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
-}
-
-LOCAL_COMPILER=$(dirname ..)/target/closure-compiler-1.0-SNAPSHOT.jar
+# Get the location of the local compiler in this directory, if it exists.
+# If it doesn't, build it, then resume execution.
+LOCAL_COMPILER="$(dirname ..)/target/closure-compiler-1.0-SNAPSHOT.jar"
 if [ ! -f "$LOCAL_COMPILER" ]; then
   echo -e "\nCompiler JAR not built. Building...\n" && yarn build:fast
 fi
 
+# Translate a relative filepath to an absolute one.
+abs_dirname() {
+  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
+
+# Begin building runtime tests in the $TEST_DIR directory.
 echo -e "\nBuilding runtime tests..."
 TEST_DIR="test/com/google/javascript/jscomp/runtime_tests"
 
-if [ -z $1 ]; then
-  ABS_PATH=$(abs_dirname "./$TEST_DIR")
-else
-  ABS_PATH=$(abs_dirname "$1")
-fi
+# Get the absolute path of the test directory.
+ABS_PATH=$(abs_dirname "./$TEST_DIR")
 
-i=0
 compileRuntimeTests(){
-  for FILE in $@; do
+  local -i i=0
+  for file in $@; do
 
-    FILE_BASE=$(echo $FILE | rev | cut -f 2- -d '.' | rev)
-    TEST_NAME=$(basename $FILE_BASE)
-    TEST_LOC=$(dirname $FILE)
+    # /path/to/file.ext -> /path/to/file
+    local file_base=$(echo $file | rev | cut -f 2- -d '.' | rev)
+    # /path/to/file -> file
+    local test_name=$(basename $file_base)
+    # /path/to/file.ext -> /path/to
+    local test_loc=$(dirname $file)
 
-    # make build dir
-    mkdir -p $TEST_LOC/build
+    # Make sure the build directory exists.
+    mkdir -p $test_loc/build
 
+    # Echo a percentage progress indicator.
     ((i += 1))
-    echo " $((100 * $i / $#))% | $TEST_NAME"
+    echo " $((100 * $i / $#))% | $test_name"
 
+    # Output the test file, which will be executed in JSDOM.
     echo "
 <html>
 <head>
-<title>$TEST_NAME</title>
+<title>$test_name</title>
 <script defer>
 $(
   java -server -XX:+TieredCompilation \
@@ -70,11 +73,11 @@ $(
     --dependency_mode PRUNE \
     --js node_modules/google-closure-library/ \
     --js $ABS_PATH/ \
-    --entry_point $FILE
+    --entry_point $file
 )
 </script>
 </head>
-</html>" > $TEST_LOC/build/$TEST_NAME.html
+</html>" > $test_loc/build/$test_name.html
 
   done
 }
