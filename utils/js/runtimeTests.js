@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 /**
- * @file
+ * @fileoverview
  * Crawl over all test/com/google/.../runtime_tests/*_test.html files and
  * execute them in a JSDOM context, fail the test if any do not succeed.
  */
@@ -81,8 +81,8 @@ describe('Runtime tests', () => {
 
       try {
         await TestIsFinished;
-      } catch(e) {
-        fail(`Failed test in suite ${TEST_NAME}: \n${e}\n`);
+      } catch (e) {
+        fail(`Failed test in suite ${TEST_NAME}: \n${chalk.red(e)}\n`);
       }
       console.log(`Passed all tests in suite ${TEST_NAME}`);
     });
