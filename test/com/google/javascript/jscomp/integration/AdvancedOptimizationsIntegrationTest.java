@@ -224,9 +224,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
     externs = ImmutableList.of(new TestExternsBuilder().addBigInt().buildExternsFile("externs.js"));
-    // TODO(b/140132715): This test should expect "1nasdf", must update PeepholeFoldConstants
-    // for this to work as intended
-    test(options, "1n + 'asdf'", "1n + 'asdf'");
+    test(options, "1n + 'asdf'", "'1nasdf'");
   }
 
   @Test
