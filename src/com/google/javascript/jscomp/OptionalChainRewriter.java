@@ -204,7 +204,7 @@ class OptionalChainRewriter {
       final Node thisValue = receiverNode.getFirstChild();
       final Node tmpThisNode = getSubExprNameNode(thisValue);
       final Node tmpReceiverNode = getSubExprNameNode(receiverNode);
-      receiverNode = fullChainStart.getFirstChild().detach();
+      receiverNode = fullChainStart.removeFirstChild();
       fullChainStart.addChildToFront(tmpThisNode);
       fullChainStart.addChildToFront(
           astFactory
