@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Tries to fuse all the statements in a block into a one statement by using COMMAs or statements.
@@ -33,7 +32,7 @@ import com.google.javascript.rhino.Token;
  * program, and so it makes sense to prefer fusing statements with semicolons rather than commas.
  * This assumption has never been validated on a real program.
  */
-class StatementFusion extends AbstractPeepholeOptimization {
+final class StatementFusion extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node n) {
@@ -118,8 +117,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
 
     Node next = null;
     for (Node cur = first.getNext(); cur != last; cur = next) {
-      commaTree = fuseExpressionIntoExpression(
-          commaTree, cur.removeFirstChild());
+      commaTree = AstManipulations.fuseExpressions(commaTree, cur.removeFirstChild());
       next = cur.getNext();
       parent.removeChild(cur);
     }
@@ -162,41 +160,15 @@ class StatementFusion extends AbstractPeepholeOptimization {
     }
   }
 
-  // exp1, exp1
-  static Node fuseExpressionIntoExpression(Node exp1, Node exp2) {
-    if (exp2.isEmpty()) {
-      return exp1;
-    }
-    Node comma = new Node(Token.COMMA, exp1);
-    comma.useSourceInfoIfMissingFrom(exp2);
-
-    // We can just join the new comma expression with another comma but
-    // lets keep all the comma's in a straight line. That way we can use
-    // tree comparison.
-    if (exp2.isComma()) {
-      Node leftMostChild = exp2;
-      while (leftMostChild.isComma()) {
-        leftMostChild = leftMostChild.getFirstChild();
-      }
-      Node parent = leftMostChild.getParent();
-      comma.addChildToBack(leftMostChild.detach());
-      parent.addChildToFront(comma);
-      return exp2;
-    } else {
-      comma.addChildToBack(exp2);
-      return comma;
-    }
-  }
-
-  protected static void fuseExpressionIntoFirstChild(Node exp, Node stmt) {
+  private static void fuseExpressionIntoFirstChild(Node exp, Node stmt) {
     Node val = stmt.removeFirstChild();
-    Node comma = fuseExpressionIntoExpression(exp, val);
+    Node comma = AstManipulations.fuseExpressions(exp, val);
     stmt.addChildToFront(comma);
   }
 
-  protected static void fuseExpressionIntoSecondChild(Node exp, Node stmt) {
+  private static void fuseExpressionIntoSecondChild(Node exp, Node stmt) {
     Node val = stmt.getSecondChild().detach();
-    Node comma = fuseExpressionIntoExpression(exp, val);
+    Node comma = AstManipulations.fuseExpressions(exp, val);
     stmt.addChildAfter(comma, stmt.getFirstChild());
   }
 }
