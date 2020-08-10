@@ -16,12 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.Base64VLQ;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,8 +40,7 @@ import java.util.Objects;
  * instrument with a function call which is provided in the source code as opposed to an array.
  */
 @GwtIncompatible
-final class ProductionCoverageInstrumentationCallback
-    extends NodeTraversal.AbstractPostOrderCallback {
+final class ProductionCoverageInstrumentationCallback implements NodeTraversal.Callback {
 
   // TODO(psokol): Make this dynamic so that instrumentation does not rely on hardcoded files
   private static final String INSTRUMENT_CODE_FUNCTION_NAME = "instrumentCode";
@@ -60,12 +63,34 @@ final class ProductionCoverageInstrumentationCallback
   private final ParameterMapping parameterMapping;
   boolean visitedInstrumentCodeFile = false;
 
-  /** Stores the name of the current function that encapsulates the node being instrumented */
-  private String cachedFunctionName = "Anonymous";
+  private enum Type {
+    FUNCTION,
+    BRANCH,
+    BRANCH_DEFAULT;
+  }
+
+  /**
+   * Stores a stack of function names that encapsulates the children nodes being instrumented. The
+   * function name is popped off the stack when the function node, and the entire subtree rooted at
+   * the function node have been visited.
+   */
+  private final Deque<String> functionNameStack = new ArrayDeque<>();
 
   public ProductionCoverageInstrumentationCallback(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.parameterMapping = new ParameterMapping();
+  }
+
+  @Override
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+
+    if (visitedInstrumentCodeFile && n.isFunction()) {
+      String fnName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
+      fnName = (fnName == null) ? "Anonymous" : fnName;
+      functionNameStack.push(fnName);
+    }
+
+    return true;
   }
 
   @Override
@@ -91,23 +116,112 @@ final class ProductionCoverageInstrumentationCallback
       return;
     }
 
-    if (node.isFunction()) {
-      cachedFunctionName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(node));
-      instrumentCode(traversal, node.getLastChild(), cachedFunctionName);
+    String functionName = functionNameStack.peek();
+
+    switch (node.getToken()) {
+      case FUNCTION:
+        // If the function node has been visited by visit() then we can be assured that all its
+        // children nodes have been visited and properly instrumented.
+        functionNameStack.pop();
+        instrumentBlockNode(node.getLastChild(), fileName, functionName, Type.FUNCTION);
+        break;
+      case IF:
+        Node ifTrueNode = node.getSecondChild();
+        instrumentBlockNode(ifTrueNode, sourceFileName, functionName, Type.BRANCH);
+        if (node.getChildCount() == 2) {
+          addElseBlock(node);
+        }
+        Node ifFalseNode = node.getLastChild();
+        // The compiler converts all sets of If-Else if-Else blocks into a combination of nested
+        // If-Else blocks. This case checks if the else blocks first child is an If statement, and
+        // if it is it will not instrument. This avoids adding multiple instrumentation calls.
+        // Since we also make sure an Else case is added to every If statement, we are still
+        // assured that the else statement is being reached through a later instrumentation call.
+        if (NodeUtil.isEmptyBlock(ifFalseNode)
+            || (ifFalseNode.getFirstChild() != null && !ifFalseNode.getFirstChild().isIf())) {
+          instrumentBlockNode(ifFalseNode, sourceFileName, functionName, Type.BRANCH_DEFAULT);
+        }
+        break;
+      case SWITCH:
+        boolean hasDefaultCase = false;
+        for (Node c = node.getSecondChild(); c != null; c = c.getNext()) {
+          if (c.isDefaultCase()) {
+            instrumentBlockNode(
+                c.getLastChild(), sourceFileName, functionName, Type.BRANCH_DEFAULT);
+            hasDefaultCase = true;
+          } else {
+            instrumentBlockNode(c.getLastChild(), sourceFileName, functionName, Type.BRANCH);
+          }
+        }
+        if (!hasDefaultCase) {
+          Node defaultBlock = IR.block();
+          defaultBlock.useSourceInfoIfMissingFromForTree(node);
+          Node defaultCase = IR.defaultCase(defaultBlock).useSourceInfoIfMissingFromForTree(node);
+          node.addChildToBack(defaultCase);
+          instrumentBlockNode(defaultBlock, sourceFileName, functionName, Type.BRANCH_DEFAULT);
+        }
+        break;
+      case HOOK:
+        Node ifTernaryIsTrueExpression = node.getSecondChild();
+        Node ifTernaryIsFalseExpression = node.getLastChild();
+
+        addInstrumentationNodeWithComma(
+            ifTernaryIsTrueExpression, sourceFileName, functionName, Type.BRANCH);
+        addInstrumentationNodeWithComma(
+            ifTernaryIsFalseExpression, sourceFileName, functionName, Type.BRANCH);
+
+        compiler.reportChangeToEnclosingScope(node);
+        break;
+      case OR:
+      case AND:
+      case COALESCE:
+        // Only instrument the second child of the binary operation because the first child will
+        // always execute, or the first child is part of a chain of binary operations and would have
+        // already been instrumented.
+        Node secondExpression = node.getLastChild();
+        addInstrumentationNodeWithComma(
+            secondExpression, sourceFileName, functionName, Type.BRANCH);
+
+        compiler.reportChangeToEnclosingScope(node);
+        break;
+      default:
+        if (NodeUtil.isLoopStructure(node)) {
+          Node blockNode = NodeUtil.getLoopCodeBlock(node);
+          checkNotNull(blockNode);
+          instrumentBlockNode(blockNode, sourceFileName, functionName, Type.BRANCH);
+        }
     }
   }
 
   /**
-   * Iterate over all collected block nodes within a Script node and add a new child to the front of
-   * each block node which is the instrumentation Node
-   *
-   * @param traversal The node traversal context which maintains information such as fileName being
-   *     traversed
-   * @param block The block node to be instrumented instrumented
-   * @param fnName The function name that encapsulates the current node block being instrumented
+   * Given a node, this function will create a new instrumentationNode and combine it with the
+   * original node using a COMMA node.
    */
-  private void instrumentCode(NodeTraversal traversal, Node block, String fnName) {
-    block.addChildToFront(newInstrumentationNode(traversal, block, fnName));
+  private void addInstrumentationNodeWithComma(
+      Node originalNode, String fileName, String functionName, Type type) {
+    Node parentNode = originalNode.getParent();
+    Node cloneOfOriginal = originalNode.cloneTree();
+    Node newInstrumentationNode =
+        newInstrumentationNode(cloneOfOriginal, fileName, functionName, type);
+
+    // newInstrumentationNode returns an EXPR_RESULT which cannot be a child of a COMMA node.
+    // Instead we use the child of of the newInstrumentatioNode which is a CALL node.
+    Node childOfInstrumentationNode = newInstrumentationNode.getFirstChild().detach();
+    Node infusedExp = AstManipulations.fuseExpressions(childOfInstrumentationNode, cloneOfOriginal);
+    parentNode.replaceChild(originalNode, infusedExp);
+  }
+
+  /**
+   * Consumes a block node and adds a new child to the front of the block node which is the
+   * instrumentation Node
+   *
+   * @param block The block node to be instrumented.
+   * @param fileName The file name of the node being instrumented.
+   * @param fnName The function name of the node being instrumented.
+   * @param type The type of the node being instrumented.
+   */
+  private void instrumentBlockNode(Node block, String fileName, String fnName, Type type) {
+    block.addChildToFront(newInstrumentationNode(block, fileName, fnName, type));
     compiler.reportChangeToEnclosingScope(block);
   }
 
@@ -118,23 +232,38 @@ final class ProductionCoverageInstrumentationCallback
    * with the given constants evaluates to:
    * module$exports$instrument$code.instrumentCodeInstance.instrumentCode(encodedParam, lineNum);
    *
-   * @param traversal The context of the current traversal.
-   * @param node The block node to be instrumented.
-   * @param fnName The function name that the node exists within.
+   * @param node The node to be instrumented.
+   * @param fileName The file name of the node being instrumented.
+   * @param fnName The function name of the node being instrumented.
+   * @param type The type of the node being instrumented.
    * @return The newly constructed function call node.
    */
-  private Node newInstrumentationNode(NodeTraversal traversal, Node node, String fnName) {
+  private Node newInstrumentationNode(Node node, String fileName, String fnName, Type type) {
 
-    String type = "Type.FUNCTION";
+    String encodedParam = parameterMapping.getEncodedParam(fileName, fnName, type);
 
-    String encodedParam = parameterMapping.getEncodedParam(traversal.getSourceName(), fnName, type);
+    int lineNo = node.getLineno();
+    int columnNo = node.getCharno();
+
+    if (node.isBlock()) {
+      lineNo = node.getParent().getLineno();
+      columnNo = node.getParent().getCharno();
+    }
 
     Node innerProp = IR.getprop(IR.name(MODULE_RENAMING), IR.string(INSTRUMENT_CODE_INSTANCE));
     Node outerProp = IR.getprop(innerProp, IR.string(INSTRUMENT_CODE_FUNCTION_NAME));
-    Node functionCall = IR.call(outerProp, IR.string(encodedParam), IR.number(node.getLineno()));
+    Node functionCall =
+        IR.call(outerProp, IR.string(encodedParam), IR.number(lineNo), IR.number(columnNo));
     Node exprNode = IR.exprResult(functionCall);
 
     return exprNode.useSourceInfoIfMissingFromForTree(node);
+  }
+
+  /** Add an else block for If statements if one is not already present. */
+  private Node addElseBlock(Node node) {
+    Node defaultBlock = IR.block();
+    node.addChildToBack(defaultBlock);
+    return defaultBlock.useSourceInfoIfMissingFromForTree(node);
   }
 
   public VariableMap getInstrumentationMapping() {
@@ -178,18 +307,18 @@ final class ProductionCoverageInstrumentationCallback
       typeToIndex = new LinkedHashMap<>();
     }
 
-    private String getEncodedParam(String fileName, String functionName, String type) {
+    private String getEncodedParam(String fileName, String functionName, Type type) {
 
       fileNameToIndex.putIfAbsent(fileName, fileNameToIndex.size());
       functionNameToIndex.putIfAbsent(functionName, functionNameToIndex.size());
-      typeToIndex.putIfAbsent(type, typeToIndex.size());
+      typeToIndex.putIfAbsent(type.name(), typeToIndex.size());
 
       StringBuilder sb = new StringBuilder();
 
       try {
         Base64VLQ.encode(sb, fileNameToIndex.get(fileName));
         Base64VLQ.encode(sb, functionNameToIndex.get(functionName));
-        Base64VLQ.encode(sb, typeToIndex.get(type));
+        Base64VLQ.encode(sb, typeToIndex.get(type.name()));
       } catch (IOException e) {
         throw new AssertionError(e);
       }

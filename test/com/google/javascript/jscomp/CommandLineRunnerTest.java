@@ -2617,7 +2617,7 @@ public final class CommandLineRunnerTest {
             "module$exports$instrument$code.instrumentCodeInstance = new"
                 + " module$contents$instrument$code_InstrumentCode;",
             "function foo() {",
-            "  module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1);",
+            "  module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1, 0);",
             "  console.log(\"Hello\");",
             "}",
             ";");
@@ -2638,7 +2638,7 @@ public final class CommandLineRunnerTest {
     assertThat(variableMapFile.get(0)).startsWith(" FileNames:[");
     assertThat(variableMapFile.get(0)).endsWith("sourceCode.js]");
     assertThat(variableMapFile.get(1)).isEqualTo(" FunctionNames:[foo]");
-    assertThat(variableMapFile.get(2)).isEqualTo(" Types:[Type.FUNCTION]");
+    assertThat(variableMapFile.get(2)).isEqualTo(" Types:[FUNCTION]");
     assertThat(variableMapFile.get(3)).isEqualTo("C:AAA");
   }
 
