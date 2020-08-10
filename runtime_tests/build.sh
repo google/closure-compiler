@@ -40,6 +40,7 @@ ABS_PATH=$(abs_dirname "./$TEST_DIR")
 
 compileRuntimeTests(){
   local -i i=0
+  local file
   for file in $@; do
 
     # /path/to/file.ext -> /path/to/file
@@ -57,7 +58,7 @@ compileRuntimeTests(){
     echo " $((100 * $i / $#))% | $test_name"
 
     # Output the test file, which will be executed in JSDOM.
-    echo "
+    cat > $test_loc/build/$test_name.html << EOF
 <html>
 <head>
 <title>$test_name</title>
@@ -77,7 +78,8 @@ $(
 )
 </script>
 </head>
-</html>" > $test_loc/build/$test_name.html
+</html>
+EOF
 
   done
 }
