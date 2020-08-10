@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.colors;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableCollection;
+import javax.annotation.Nullable;
 
 /**
  * A user-defined object type. For now each type is defined by a unique class name and file source.
@@ -49,6 +50,13 @@ public abstract class ObjectColor implements Color {
 
   public abstract String getFilename();
 
+  // given `function Foo() {}` or `class Foo {}`, color of Foo.prototype. null otherwise.
+  @Nullable
+  public abstract Color getPrototype();
+
+  @Nullable
+  public abstract Color getInstanceColor();
+
   @Override
   public abstract boolean isInvalidating();
 
@@ -60,6 +68,10 @@ public abstract class ObjectColor implements Color {
     public abstract Builder setFilename(String value);
 
     public abstract Builder setInvalidating(boolean value);
+
+    public abstract Builder setPrototype(Color prototype);
+
+    public abstract Builder setInstanceColor(Color instanceColor);
 
     public abstract ObjectColor build();
   }
