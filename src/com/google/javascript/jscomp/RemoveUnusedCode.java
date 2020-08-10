@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -118,7 +117,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Deque<Continuation> worklist = new ArrayDeque<>();
 
-  private final Map<Var, VarInfo> varInfoMap = new IdentityHashMap<>();
+  private final IdentityHashMap<Var, VarInfo> varInfoMap = new IdentityHashMap<>();
 
   private final Set<String> pinnedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
 
