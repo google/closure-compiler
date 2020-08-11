@@ -1,23 +1,24 @@
 /**
- * @license Apache-2.0
+ * @license MIT
+ *
  * Copyright 2020 The Closure Compiler Authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 /**
  * @fileoverview
- * Crawl over all test/com/google/.../runtime_tests/*_test.html files and
- * execute them in a JSDOM context, fail the test if any do not succeed.
+ * Crawl over all ../*_test.html files and execute them in a JSDOM context,
+ * fail the test if any do not succeed.
  */
 
 const { JSDOM, VirtualConsole } = require('jsdom');
@@ -32,11 +33,7 @@ const path = require('path');
  * All test files in the test.com.google.javascript.jscomp.runtime_tests.build
  * directory.
  */
-const TEST_FILES = glob.sync(path.resolve(
-    __dirname,
-    '../../test/com/google/javascript/jscomp/'
-    + 'runtime_tests/**/build/*_test.html',
-));
+const TEST_FILES = glob.sync('../**/build/*_test.html');
 
 /**
  * Iterate over all found test files and execute them in JSDOM.
@@ -58,11 +55,11 @@ describe('Runtime tests', () => {
       /**
        * Highlight PASSED and FAILED in messages to help with accessibility.
        */
-      return (isPass || isFail)
-        ? msg
+      return (isPass || isFail) ?
+        msg
             .replace(passed, chalk.green('PASSED'))
-            .replace(failed, chalk.red('FAILED'))
-        : msg;
+            .replace(failed, chalk.red('FAILED')) :
+        msg;
     };
 
     /**
@@ -91,11 +88,7 @@ describe('Runtime tests', () => {
      * This will be a raw HTML document.
      */
     const testDocument = fs.readFileSync(
-        path.resolve(
-            __dirname,
-            '../../',
-            testFile,
-        ),
+        path.resolve(testFile),
         'utf-8',
     );
 

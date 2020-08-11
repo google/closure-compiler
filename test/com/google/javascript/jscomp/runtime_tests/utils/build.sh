@@ -19,24 +19,23 @@ else
   COMPILATION_LEVEL=$1
 fi
 
+# Location of project root.
+PROJECT_ROOT="../../../../../../.."
+
 # Get the location of the local compiler in this directory, if it exists.
 # If it doesn't, build it, then resume execution.
-LOCAL_COMPILER="$(dirname ..)/target/closure-compiler-1.0-SNAPSHOT.jar"
+LOCAL_COMPILER="$PROJECT_ROOT/target/closure-compiler-1.0-SNAPSHOT.jar"
 if [ ! -f "$LOCAL_COMPILER" ]; then
   echo -e "\nCompiler JAR not built. Building...\n" && yarn build:fast
 fi
 
-# Translate a relative filepath to an absolute one.
-abs_dirname() {
-  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
-}
-
-# Begin building runtime tests in the $TEST_DIR directory.
+# Build tests from the $TEST_DIR directory, where files like
+# `array_pattern_test.js` are stored.
 echo -e "\nBuilding runtime tests..."
-TEST_DIR="test/com/google/javascript/jscomp/runtime_tests"
+TEST_DIR=".."
 
 # Get the absolute path of the test directory.
-ABS_PATH=$(abs_dirname "./$TEST_DIR")
+ABS_PATH=$(readlink -f $TEST_DIR)
 
 compileRuntimeTests(){
   local -i i=0
@@ -72,7 +71,7 @@ $(
     --process_common_js_modules \
     --module_resolution NODE \
     --dependency_mode PRUNE \
-    --js node_modules/google-closure-library/ \
+    --js $PROJECT_ROOT/node_modules/google-closure-library/ \
     --js $ABS_PATH/ \
     --entry_point $file
 )
