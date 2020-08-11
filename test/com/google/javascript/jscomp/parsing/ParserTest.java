@@ -3994,6 +3994,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testBigIntFeatureRecorded() {
+    parse("1n;");
+    expectFeatures(Feature.BIGINT);
+  }
+
+  @Test
   public void testBigIntLiteralInCall() {
     parse("alert(1n)");
   }

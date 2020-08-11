@@ -2395,6 +2395,10 @@ public class Parser {
       recordFeatureUsed(Feature.NUMERIC_SEPARATOR);
     }
 
+    if (literal.type == TokenType.BIGINT) {
+      recordFeatureUsed(Feature.BIGINT);
+    }
+
     return new LiteralExpressionTree(getTreeLocation(start), literal);
   }
 
