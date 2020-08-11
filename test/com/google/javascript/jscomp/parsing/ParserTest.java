@@ -4895,6 +4895,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testRegExpUnicode() {
+    assertNodeEquality(parse("/\\u10fA/"), script(expr(regex("\\u10fA"))));
+    assertNodeEquality(parse("/\\u{10fA}/u"), script(expr(regex("\\u{10fA}", "u"))));
+    assertNodeEquality(parse("/\\u{1fA}/u"), script(expr(regex("\\u{1fA}", "u"))));
+    assertNodeEquality(parse("/\\u{10FFFF}/u"), script(expr(regex("\\u{10FFFF}", "u"))));
+  }
+
+  @Test
   public void testRegExpFlags() {
     // Various valid combinations.
     parse("/a/");
@@ -6554,6 +6562,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private static Node regex(String regex) {
     return new Node(Token.REGEXP, Node.newString(regex));
+  }
+
+  private static Node regex(String regex, String flag) {
+    return new Node(Token.REGEXP, Node.newString(regex), Node.newString(flag));
   }
 
   /**
