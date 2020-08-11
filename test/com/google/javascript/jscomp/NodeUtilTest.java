@@ -3722,6 +3722,48 @@ public final class NodeUtilTest {
   }
 
   @RunWith(JUnit4.class)
+  public static class ConvertToNonOptChainTests {
+    @Test
+    public void simpleChain() {
+      // `expr?.prop`
+      Node origChain = IR.startOptChainGetprop(IR.name("expr"), IR.string("prop"));
+      NodeUtil.convertToNonOptionalChainSegment(origChain);
+      assertThat(isChainConverted(origChain)).isTrue();
+    }
+
+    @Test
+    public void continuedChain() {
+      // `expr?.prop1.prop2`
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr"), IR.string("pro1"));
+      Node outterGetProp = IR.continueOptChainGetprop(innerGetProp, IR.string("prop2"));
+      NodeUtil.convertToNonOptionalChainSegment(outterGetProp);
+      assertThat(isChainConverted(outterGetProp)).isTrue();
+    }
+
+    @Test
+    public void nestedChain() {
+      // `expr2[expr1 ?.prop1]?.prop2`
+      Node innerGetProp = IR.startOptChainGetprop(IR.name("expr1"), IR.string("pro1"));
+      Node getElem = IR.getelem(IR.name("expr2"), innerGetProp);
+      Node outterGetProp = IR.startOptChainGetprop(getElem, IR.string("prop2"));
+
+      NodeUtil.convertToNonOptionalChainSegment(outterGetProp);
+      assertThat(isChainConverted(outterGetProp)).isTrue();
+
+      // nested (inner) optional chain is unchanged
+      assertThat(outterGetProp.getFirstChild().getSecondChild().isOptChainGetProp()).isTrue();
+    }
+
+    // All nodes till the current chain's start are converted to non-optional.
+    private boolean isChainConverted(Node node) {
+      if (node == null) {
+        return true;
+      }
+      return !NodeUtil.isOptChainNode(node) && isChainConverted(node.getFirstChild());
+    }
+  }
+
+  @RunWith(JUnit4.class)
   public static class GetStartOfOptChainTests {
 
     @Test

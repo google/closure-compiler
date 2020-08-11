@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import java.util.Map;
@@ -601,7 +600,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testFoldNullishCoalesce() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     // fold if left is null/undefined
     test("null ?? 1", "1");
     test("undefined ?? false", "false");
@@ -632,6 +630,22 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     test("a() ?? (1 ?? b())", "a() ?? 1");
     test("(a() ?? 1) ?? b()", "a() ?? 1 ?? b()");
+  }
+
+  @Test
+  public void testFoldOptChaining() {
+    // can't fold when optional part may execute
+    testSame("a = x?.y");
+    testSame("a = x?.()");
+
+    // fold args of optional call
+    test("x = foo() ?. (true && bar())", "x = foo() ?.(bar())");
+    test("a() ?. (1 ?? b())", "a() ?. (1)");
+
+    test("({a})?.a.b.c.d()?.x.y.z", "a.b.c.d()?.x.y.z");
+
+    // potential optimization
+    testSame("x = undefined?.y"); // `x = void 0;`
   }
 
   @Test
@@ -1103,6 +1117,23 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("for([1][0] in {});");
   }
 
+  /** Optional versions of the above `testFoldGetElem1` tests */
+  @Test
+  public void testFoldOptChainGetElem1() {
+    numRepetitions = 1;
+    test("x = [,10]?.[0]", "x = void 0");
+    test("x = [10, 20]?.[0]", "x = 10");
+    test("x = [10, 20]?.[1]", "x = 20");
+
+    testSame("x = [10, 20]?.[0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    test("x = [10, 20]?.[-1]", "x = void 0;");
+    test("x = [10, 20]?.[2]", "x = void 0;");
+
+    testSame("x = [foo(), 0]?.[1]");
+    test("x = [0, foo()]?.[1]", "x = foo()");
+    testSame("x = [0, foo()]?.[0]");
+  }
+
   @Test
   public void testFoldGetElem2() {
     // Running on just changed code results in an exception on only the first invocation. Don't
@@ -1119,6 +1150,22 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 'string'[6]", "x = void 0;");
   }
 
+  /** Optional versions of the above `testFoldGetElem2` tests */
+  @Test
+  public void testFoldOptChainGetElem2() {
+    // Running on just changed code results in an exception on only the first invocation. Don't
+    // repeat because it confuses the exception verification.
+    numRepetitions = 1;
+    test("x = 'string'?.[5]", "x = 'g'");
+    test("x = 'string'?.[0]", "x = 's'");
+    test("x = 's'?.[0]", "x = 's'");
+    testSame("x = '\uD83D\uDCA9'?.[0]");
+
+    testSame("x = 'string'?.[0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    test("x = 'string'?.[-1]", "x = void 0;");
+    test("x = 'string'?.[6]", "x = void 0;");
+  }
+
   @Test
   public void testFoldArrayLitSpreadGetElem() {
     numRepetitions = 1;
@@ -1129,6 +1176,19 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = [...[...[0, 1], 2, 3], 4][3]", "x = 3");
     test(srcs("x = [...[]][100]"), expected("x = void 0;"));
     test(srcs("x = [...[0]][100]"), expected("x = void 0;"));
+  }
+
+  /** Optional versions of the above `testFoldArrayLitSpreadGetElem` tests */
+  @Test
+  public void testFoldArrayLitSpreadOptChainGetElem() {
+    numRepetitions = 1;
+    test("x = [...[0]]?.[0]", "x = 0;");
+    test("x = [0, 1, ...[2, 3, 4]]?.[3]", "x = 3;");
+    test("x = [...[0, 1], 2, ...[3, 4]]?.[3]", "x = 3;");
+    test("x = [...[...[0, 1], 2, 3], 4]?.[0]", "x = 0");
+    test("x = [...[...[0, 1], 2, 3], 4]?.[3]", "x = 3");
+    test(srcs("x = [...[]]?.[100]"), expected("x = void 0;"));
+    test(srcs("x = [...[0]]?.[100]"), expected("x = void 0;"));
   }
 
   @Test
@@ -1554,17 +1614,23 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // Getters should not be inlined.
     testSame("({get a() {return this}}).a");
+    testSame("({get a() {return this}})?.a");
 
     // Except, if we can see that the getter function never references 'this'.
     test("({get a() {return 0}}).a", "(function() {return 0})()");
+    test("({get a() {return 0}})?.a", "(function() {return 0})()");
+    test("({get a() {return 0}})?.a.b", "(function() {return 0})().b");
 
     // It's okay to inline functions, as long as they're not immediately called.
-    // (For tests where they are immediately called, see testFoldObjectLiteralRefCall)
+    // (For tests where they are immediately called, see testFoldObjectLiteral_X)
     test("({a:function(){return this}}).a", "(function(){return this})");
+    test("({a:function(){return this}})?.a", "(function(){return this})");
 
     // It's also okay to inline functions that are immediately called, so long as we know for
     // sure the function doesn't reference 'this'.
     test("({a:function(){return 0}}).a()", "(function(){return 0})()");
+    test("({a:function(){return 0}})?.a()", "(function(){return 0})()");
+    test("({a:function(){return 0}})?.a().b", "(function(){return 0})().b");
 
     // Don't inline setters.
     testSame("({set a(b) {return this}}).a");
@@ -1606,6 +1672,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // try folding string computed properties
     test("var a = {['a']:x}['a']", "var a = x");
+    test("var a = {['a']:x}?.['a']", "var a = x");
+    test("var a = {['a']:x}?.['a'].b", "var a = x.b");
+
     test("var a = { get ['a']() { return 1; }}['a']", "var a = function() { return 1; }();");
     test("var a = {'a': x, ['a']: y}['a']", "var a = y;");
     testSame("var a = {['foo']: x}.a;");
@@ -1642,31 +1711,42 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testFoldObjectLiteral_methodCall_nonLiteralFn() {
     testSame("({a:x}).a()");
+    testSame("({a:x})?.a()");
+    testSame("({a:x})?.a()?.b");
   }
 
   @Test
   public void testFoldObjectLiteral_freeMethodCall() {
     test("({a() { return 1; }}).a()", "(function() { return 1; })()");
+    test("({a() { return 1; }})?.a()", "(function() { return 1; })()");
+
+    // grandparent of optional chaining AST continues the chain
+    test("({a() { return 1; }})?.a().b", "(function() { return 1; })().b");
+    test("({a() { return 1; }})?.a().b.c?.d", "(function() { return 1; })().b.c?.d");
   }
 
   @Test
   public void testFoldObjectLiteral_freeArrowCall_usingEnclosingThis() {
     test("({a: () => this }).a()", "(() => this)()");
+    test("({a: () => this })?.a()", "(() => this)()");
   }
 
   @Test
   public void testFoldObjectLiteral_unfreeMethodCall_dueToThis() {
     testSame("({a() { return this; }}).a()");
+    testSame("({a() { return this; }})?.a()");
   }
 
   @Test
   public void testFoldObjectLiteral_unfreeMethodCall_dueToSuper() {
     testSame("({a() { return super.toString(); }}).a()");
+    testSame("({a() { return super.toString(); }})?.a()");
   }
 
   @Test
   public void testFoldObjectLiteral_paramToInvocation() {
     test("console.log({a: 1}.a)", "console.log(1)");
+    test("console.log({a: 1}?.a)", "console.log(1)");
   }
 
   @Test
@@ -1919,3 +1999,4 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     return compiler.toSource(mainRoot);
   }
 }
+

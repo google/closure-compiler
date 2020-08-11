@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 
 /**
@@ -190,7 +189,7 @@ class OptionalChainRewriter {
     checkArgument(!NodeUtil.isOptChainNode(receiverNode), receiverNode);
 
     // change the initial chain's nodes to be non-optional
-    convertToNonOptionalChainSegment(initialChainEnd);
+    NodeUtil.convertToNonOptionalChainSegment(initialChainEnd);
 
     final Node placeholder = IR.empty();
     fullChainEnd.replaceWith(placeholder);
@@ -268,41 +267,7 @@ class OptionalChainRewriter {
     return tempVarName;
   }
 
-  /**
-   * Given the end of an optional chain segment. Change all nodes from the end down to the start
-   * into non-optional nodes.
-   */
-  private static void convertToNonOptionalChainSegment(Node endOfOptChainSegment) {
-    // Since part of changing the nodes removes the isOptionalChainStart() marker we look for to
-    // know we're done, this logic is easier to read if we just find all the nodes first, then
-    // change them.
-    final ArrayDeque<Node> segmentNodes = new ArrayDeque<>();
-    Node segmentNode = endOfOptChainSegment;
-    while (true) {
-      checkState(NodeUtil.isOptChainNode(segmentNode), segmentNode);
-      segmentNodes.add(segmentNode);
-      if (segmentNode.isOptionalChainStart()) {
-        break;
-      } else {
-        segmentNode = segmentNode.getFirstChild();
-      }
-    }
-    for (Node n : segmentNodes) {
-      n.setIsOptionalChainStart(false);
-      n.setToken(getNonOptChainToken(n.getToken()));
-    }
-  }
 
-  private static Token getNonOptChainToken(Token optChainToken) {
-    switch (optChainToken) {
-      case OPTCHAIN_CALL:
-        return Token.CALL;
-      case OPTCHAIN_GETELEM:
-        return Token.GETELEM;
-      case OPTCHAIN_GETPROP:
-        return Token.GETPROP;
-      default:
-        throw new IllegalStateException("Should be an OPTCHAIN token: " + optChainToken);
-    }
-  }
+
+
 }

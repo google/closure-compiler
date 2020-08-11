@@ -63,8 +63,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   @Override
   Node optimizeSubtree(Node subtree) {
     switch (subtree.getToken()) {
+      case OPTCHAIN_CALL:
       case CALL:
         return tryFoldCall(subtree);
+
       case NEW:
         return tryFoldCtorCall(subtree);
 
@@ -106,10 +108,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // If we've reached here, node is truly a binary operator.
     switch (subtree.getToken()) {
+      case OPTCHAIN_GETPROP:
       case GETPROP:
         return tryFoldGetProp(subtree, left, right);
 
       case GETELEM:
+      case OPTCHAIN_GETELEM:
         return tryFoldGetElem(subtree, left, right);
 
       case INSTANCEOF:
@@ -1284,7 +1288,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
    *   Object.defineProperties(o, {})  ->  o
    */
   private Node tryFoldCall(Node n) {
-    checkArgument(n.isCall());
+    checkArgument(n.isCall() || n.isOptChainCall());
 
     if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
       Node srcObj = n.getLastChild();
@@ -1344,10 +1348,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Try to fold array-element. e.g [1, 2, 3][10];
+   * For element access using GETLEM/OPTCHAIN_GETELEM on object literals, arrays or strings, tries
+   * to fold the prop access. e.g. folds array-element [1, 2, 3][1];
    */
   private Node tryFoldGetElem(Node n, Node left, Node right) {
-    checkArgument(n.isGetElem());
+    checkArgument(n.isGetElem() || n.isOptChainGetElem());
 
     if (left.isObjectLit()) {
       return tryFoldObjectPropAccess(n, left, right);
@@ -1364,10 +1369,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Try to fold array-length. e.g [1, 2, 3].length ==> 3, [x, y].length ==> 2
+   * For prop access using GETPROP/OPTCHAIN_GETPROP on object literals, tries to fold their property
+   * access. For prop access on arrays, only tries to fold array-length. e.g [1, 2, 3].length ==> 3,
+   * [x, y].length ==> 2
    */
   private Node tryFoldGetProp(Node n, Node left, Node right) {
-    checkArgument(n.isGetProp());
+    checkArgument(n.isGetProp() || n.isOptChainGetProp());
 
     if (left.isObjectLit()) {
       return tryFoldObjectPropAccess(n, left, right);
@@ -1420,6 +1427,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     double index = right.getDouble();
     int intIndex = (int) index;
     if (intIndex != index) {
+      // Ideally this should be caught in the check passes.
       report(INVALID_GETELEM_INDEX_ERROR, right);
       return n;
     }
@@ -1535,8 +1543,25 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return elem;
   }
 
+  /**
+   * Tries to fold the node `n` that's accessing an object literal's property. Bails out (skips
+   * folding and returns the same `n` node) with certainty when any of the following holds true:
+   *
+   * <ul>
+   *   <li>the access `n` is L-value
+   *   <li>the property references super
+   *   <li>the object has side-effects other than those preserved by folding the property
+   *   <li>property accessed does not exist on the object (might exist on prototype)
+   * </ul>
+   *
+   * <ul>
+   *   Examples of folding:
+   *   <li>`({a() { return 1; }})?.a` ---> `(function() { return 1; })`
+   *   <li>`({a() { return 1; }}).a()` ---> `(function() { return 1; }())`
+   * </ul>
+   */
   private Node tryFoldObjectPropAccess(Node n, Node left, Node right) {
-    checkArgument(NodeUtil.isNormalGet(n));
+    checkArgument(NodeUtil.isNormalOrOptChainGet(n));
 
     if (!left.isObjectLit() || !right.isString()) {
       return n;
@@ -1546,6 +1571,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // If GETPROP/GETELEM is used as assignment target the object literal is
       // acting as a temporary we can't fold it here:
       //    "{a:x}.a += 1" is not "x += 1"
+      checkState(!NodeUtil.isOptChainNode(n)); // optional chains can not be targets of assign
       return n;
     }
 
@@ -1590,7 +1616,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     // Didn't find a definition of the name in the object literal, it might
-    // be coming from the Object prototype
+    // be coming from the Object prototype.
     if (value == null) {
       return n;
     }
@@ -1635,6 +1661,28 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     value.detach();
 
+    Node parent = n.getParent();
+
+    if (NodeUtil.isOptChainNode(parent)) {
+
+      /**
+       * If the chain continues after `n`, simply doing `n.replaceWith(value)` below would leave the
+       * subsequent nodes in the current chain segment optional, with their start `n` replaced.
+       *
+       * <p>So, we must ensure that all nodes in the chain's current segment are made non-optional.
+       *
+       * <p>This can happen for e.g.
+       *
+       * <ul>
+       *   <li>`({a() { return 1; }})?.a()` ---> `(function() { return 1; })()`. Here, parent
+       *       OPTCHAIN_CALL node must be converted to CALL.
+       *   <li>`({a() { return 1; }})?.a().b.c?.d` ---> `(function() { return 1; })().b.c?.d`. Here,
+       *       all nodes upto `({a() { return 1; }})?.a().b.c` must become non-optional
+       * </ul>
+       */
+      Node endOfCurrentChain = NodeUtil.getEndOfOptChainSegment(parent);
+      NodeUtil.convertToNonOptionalChainSegment(endOfCurrentChain);
+    }
     if (keyIsGetter) {
       value = IR.call(value);
       value.putBooleanProp(Node.FREE_CALL, true);

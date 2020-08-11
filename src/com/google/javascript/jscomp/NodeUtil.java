@@ -50,6 +50,7 @@ import com.google.javascript.rhino.dtoa.DToA;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.math.BigInteger;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -2024,6 +2025,45 @@ public final class NodeUtil {
         // e.g. in `a?.(x?.y.z)` the parent of `x?.y.z` is part of a different optional chain.
         return true;
       }
+    }
+  }
+
+  /**
+   * Given the end of an optional chain segment changes all nodes from the end down to the start
+   * into non-optional nodes. e.g `({a})?.a.b.c.d()?.x.y.z` gets converted to
+   * `({a}).a.b.c.d()?.x.y.z` when the passed in endOfOptChainSegment is `({a})?.a.b.c.d()`.
+   */
+  static void convertToNonOptionalChainSegment(Node endOfOptChainSegment) {
+    checkArgument(isEndOfOptChainSegment(endOfOptChainSegment), endOfOptChainSegment);
+    // Since part of changing the nodes removes the isOptionalChainStart() marker we look for to
+    // know we're done, this logic is easier to read if we just find all the nodes first, then
+    // change them.
+    ArrayDeque<Node> segmentNodes = new ArrayDeque<>();
+    Node segmentNode = endOfOptChainSegment;
+    while (true) {
+      checkState(NodeUtil.isOptChainNode(segmentNode), segmentNode);
+      segmentNodes.add(segmentNode);
+      if (segmentNode.isOptionalChainStart()) {
+        break;
+      }
+      segmentNode = segmentNode.getFirstChild();
+    }
+    for (Node n : segmentNodes) {
+      n.setIsOptionalChainStart(false);
+      n.setToken(getNonOptChainToken(n.getToken()));
+    }
+  }
+
+  private static Token getNonOptChainToken(Token optChainToken) {
+    switch (optChainToken) {
+      case OPTCHAIN_CALL:
+        return Token.CALL;
+      case OPTCHAIN_GETELEM:
+        return Token.GETELEM;
+      case OPTCHAIN_GETPROP:
+        return Token.GETPROP;
+      default:
+        throw new IllegalStateException("Should be an OPTCHAIN token: " + optChainToken);
     }
   }
 
@@ -4025,6 +4065,9 @@ public final class NodeUtil {
 
   /** Returns {@code true} if the node is a definition with Object.defineProperties */
   public static boolean isObjectDefinePropertiesDefinition(Node n) {
+    // We intentionally don't check optional Object.defineProperties?.() because we expect it to be
+    // defined or polyfill-ed, and to avoid changing the current invariant that this method returns
+    // true only for non-optional `Object.defineProperties()`.
     if (!n.isCall() || !n.hasXChildren(3)) {
       return false;
     }
