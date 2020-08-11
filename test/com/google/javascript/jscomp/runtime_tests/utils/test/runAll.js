@@ -30,10 +30,17 @@ const glob = require('glob');
 const path = require('path');
 
 /**
+ * The absolute path of test.com.google.javascript.jscomp.runtime_tests.
+ */
+const RUNTIME_DIR = path.resolve(__dirname, '../..');
+
+/**
  * All test files in the test.com.google.javascript.jscomp.runtime_tests.build
  * directory.
  */
-const TEST_FILES = glob.sync('../**/build/*_test.html');
+const TEST_FILES = glob.sync(
+    `${RUNTIME_DIR}/**/build/*_test.html`,
+);
 
 /**
  * Iterate over all found test files and execute them in JSDOM.
@@ -55,11 +62,11 @@ describe('Runtime tests', () => {
       /**
        * Highlight PASSED and FAILED in messages to help with accessibility.
        */
-      return (isPass || isFail) ?
-        msg
+      return !(isPass || isFail)
+        ? msg
+        : msg
             .replace(passed, chalk.green('PASSED'))
-            .replace(failed, chalk.red('FAILED')) :
-        msg;
+            .replace(failed, chalk.red('FAILED'));
     };
 
     /**
@@ -73,8 +80,7 @@ describe('Runtime tests', () => {
     const testIsFinished = new FutureEvent();
 
     /**
-     * A virtual console which will receive messages from JSDOM's
-     * `console.log`.
+     * A virtual console which will receive messages from JSDOM's `console.log`.
      */
     const virtualConsole = new VirtualConsole()
         .on('log', (msg) => {

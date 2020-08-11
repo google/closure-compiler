@@ -19,8 +19,11 @@ else
   COMPILATION_LEVEL=$1
 fi
 
+# This directory.
+THIS_DIR=$(dirname $0)
+
 # Location of project root.
-PROJECT_ROOT="../../../../../../.."
+PROJECT_ROOT=$(readlink -f $THIS_DIR/../../../../../../..)
 
 # Get the location of the local compiler in this directory, if it exists.
 # If it doesn't, build it, then resume execution.
@@ -32,7 +35,7 @@ fi
 # Build tests from the $TEST_DIR directory, where files like
 # `array_pattern_test.js` are stored.
 echo -e "\nBuilding runtime tests..."
-TEST_DIR=".."
+TEST_DIR="$THIS_DIR/.."
 
 # Get the absolute path of the test directory.
 ABS_PATH=$(readlink -f $TEST_DIR)
@@ -42,7 +45,7 @@ compileRuntimeTests(){
   local file
   for file in $@; do
 
-    # /path/to/file.ext -> /path/to/file
+    # /path/to/file.js -> /path/to/file
     local file_base=$(echo $file | rev | cut -f 2- -d '.' | rev)
     # /path/to/file -> file
     local test_name=$(basename $file_base)
