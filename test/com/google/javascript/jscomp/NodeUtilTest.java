@@ -3755,7 +3755,7 @@ public final class NodeUtilTest {
     }
 
     // All nodes till the current chain's start are converted to non-optional.
-    private boolean isChainConverted(Node node) {
+    private static boolean isChainConverted(Node node) {
       if (node == null) {
         return true;
       }
