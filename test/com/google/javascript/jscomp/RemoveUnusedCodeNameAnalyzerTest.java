@@ -107,7 +107,8 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    // Allow testing of features that aren't fully supported for output yet.
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
     onlyValidateNoNewGettersAndSetters();

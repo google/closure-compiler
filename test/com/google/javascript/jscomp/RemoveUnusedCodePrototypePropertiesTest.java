@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,6 +86,8 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    // Allow testing of features that aren't fully supported for output yet.
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
     onlyValidateNoNewGettersAndSetters();
@@ -816,6 +819,39 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "({ ...new Foo().a.b } = 0);"));
+  }
+
+  @Test
+  public void testOptionalGetPropPreventsRemoval() {
+    test(
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  optGetPropRef() {}",
+            "  optCallRef() {}",
+            "  unreferenced() {}",
+            "}",
+            "var c = new C;",
+            "c?.optGetPropRef()",
+            "c.optCallRef?.()",
+            // no call to unreferenced()
+            ""),
+        lines(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  optGetPropRef() {}", // kept
+            "  optCallRef() {}", // kept
+            // unreferenced() removed
+            "}",
+            "var c = new C;",
+            "c?.optGetPropRef()",
+            "c.optCallRef?.()",
+            // no call to unreferenced()
+            ""));
   }
 
   @Test

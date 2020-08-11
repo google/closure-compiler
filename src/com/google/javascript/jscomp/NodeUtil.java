@@ -1930,6 +1930,11 @@ public final class NodeUtil {
     return isNormalGet(n) || isOptChainGet(n);
   }
 
+  /** Is this a GETPROP or OPTCHAIN_GETPROP? */
+  public static boolean isNormalOrOptChainGetProp(Node n) {
+    return n.isGetProp() || n.isOptChainGetProp();
+  }
+
   /** Is this a GETPROP or GETELEM node? */
   public static boolean isNormalGet(Node n) {
     return n.isGetProp() || n.isGetElem();
