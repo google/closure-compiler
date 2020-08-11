@@ -130,11 +130,6 @@ public final class TypeSubject extends Subject {
     check("isUnknownType()").that(actualNonNull().isUnknownType()).isFalse();
   }
 
-  public void isNoResolvedType(String referenceName) {
-    check("isNoResolvedType()").that(actual.isNoResolvedType()).isTrue();
-    getReferenceNameIsEqualTo(referenceName);
-  }
-
   public void isNotEmpty() {
     check("isEmptyType()").that(actualNonNull().isEmptyType()).isFalse();
   }

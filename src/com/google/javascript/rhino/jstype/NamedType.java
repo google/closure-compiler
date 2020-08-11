@@ -334,18 +334,8 @@ public final class NamedType extends ProxyObjectType {
     String scopeName = reference.substring("typeof ".length());
     JSType type = resolutionScope.lookupQualifiedName(QualifiedName.of(scopeName));
     if (type == null || type.isUnknownType()) {
-      if (registry.isForwardDeclaredType(scopeName)) {
-        // Preserve the "typeof" as a `NoResolvedType`.
-        // This is depended on by Clutz so it can generate `typeof ImportedType` instead of `any`
-        // when `ImportedType` is not defined in the files it can see.
-        setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
-        if (validator != null) {
-          validator.apply(getReferencedType());
-        }
-      } else {
-        warning(reporter, "Missing type for `typeof` value. The value must be declared and const.");
-        setReferencedAndResolvedType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE), reporter);
-      }
+      warning(reporter, "Missing type for `typeof` value. The value must be declared and const.");
+      setReferencedAndResolvedType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE), reporter);
     } else {
       if (type.isLiteralObject()) {
         // Create an extra layer of wrapping so that the "typeof" name is preserved for namespaces.

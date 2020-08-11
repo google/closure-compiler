@@ -103,7 +103,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   @Before
   @SuppressWarnings({"MustBeClosedChecker"})
   public void setUp() throws Exception {
-    resetRegistryWithForwardDeclaredName("forwardDeclared");
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
       final ObjectType googObject = registry.createAnonymousObjectType(null);
       MapBasedScope scope = new MapBasedScope(ImmutableMap.of("goog", googObject));
