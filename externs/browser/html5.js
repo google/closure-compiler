@@ -1453,7 +1453,7 @@ WebWorker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {string} scriptURL
+ * @param {!TrustedScriptURL|string} scriptURL
  * @param {!WorkerOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
