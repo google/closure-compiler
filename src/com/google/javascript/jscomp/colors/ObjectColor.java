@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.colors;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import javax.annotation.Nullable;
 
 /**
@@ -57,6 +58,10 @@ public abstract class ObjectColor implements Color {
   @Nullable
   public abstract Color getInstanceColor();
 
+  // List of other colors directly above this in the subtyping graph for the purposes of property
+  // (dis)ambiguation.
+  public abstract ImmutableList<Color> getDisambiguationSupertypes();
+
   @Override
   public abstract boolean isInvalidating();
 
@@ -69,6 +74,8 @@ public abstract class ObjectColor implements Color {
 
     public abstract Builder setInvalidating(boolean value);
 
+    public abstract Builder setDisambiguationSupertypes(ImmutableList<Color> supertypes);
+
     public abstract Builder setPrototype(Color prototype);
 
     public abstract Builder setInstanceColor(Color instanceColor);
@@ -77,6 +84,8 @@ public abstract class ObjectColor implements Color {
   }
 
   public static Builder builder() {
-    return new AutoValue_ObjectColor.Builder().setInvalidating(false);
+    return new AutoValue_ObjectColor.Builder()
+        .setInvalidating(false)
+        .setDisambiguationSupertypes(ImmutableList.of());
   }
 }
