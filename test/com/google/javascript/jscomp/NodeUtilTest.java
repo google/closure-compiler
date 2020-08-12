@@ -2394,27 +2394,6 @@ public final class NodeUtilTest {
     }
 
     @Test
-    public void testIsNestedObjectPattern() {
-      Node root = parse("var {a, b} = {a:1, b:2}");
-      Node destructuring = root.getFirstFirstChild();
-      Node objPattern = destructuring.getFirstChild();
-      assertThat(NodeUtil.isNestedObjectPattern(objPattern)).isFalse();
-
-      root = parse("var {a, b:{c}} = {a:{}, b:{c:5}};");
-      destructuring = root.getFirstFirstChild();
-      objPattern = destructuring.getFirstChild();
-      assertThat(NodeUtil.isNestedObjectPattern(objPattern)).isTrue();
-    }
-
-    @Test
-    public void testIsNestedArrayPattern() {
-      Node root = parse("var [a, b] = [1, 2]");
-      Node destructuring = root.getFirstFirstChild();
-      Node arrayPattern = destructuring.getFirstChild();
-      assertThat(NodeUtil.isNestedArrayPattern(arrayPattern)).isFalse();
-    }
-
-    @Test
     public void testDestructuring1() {
       Node root = parse("var [a, b] = obj;");
       Node varNode = root.getFirstChild();

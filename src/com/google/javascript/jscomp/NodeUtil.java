@@ -1325,30 +1325,6 @@ public final class NodeUtil {
     return n.isNull() || isUndefined(n);
   }
 
-  /**
-   * Apply the supplied predicate against
-   * all possible result Nodes of the expression.
-   */
-  static boolean allResultsMatch(Node n, Predicate<Node> p) {
-    switch (n.getToken()) {
-      case CAST:
-        return allResultsMatch(n.getFirstChild(), p);
-      case ASSIGN:
-      case COMMA:
-        return allResultsMatch(n.getLastChild(), p);
-      case AND:
-      case OR:
-      case COALESCE:
-        return allResultsMatch(n.getFirstChild(), p)
-            && allResultsMatch(n.getLastChild(), p);
-      case HOOK:
-        return allResultsMatch(n.getSecondChild(), p)
-            && allResultsMatch(n.getLastChild(), p);
-      default:
-        return p.apply(n);
-    }
-  }
-
   /** @see #getKnownValueType(Node) */
   public enum ValueType {
     UNDETERMINED,
@@ -1847,30 +1823,6 @@ public final class NodeUtil {
     for (Node keyNode : n.children()) {
       if (keyNode.isGetterDef() && keyNode.getString().equals(keyName)) {
         return keyNode;
-      }
-    }
-    return null;
-  }
-
-  /** @return The first setter in the class members that matches the key. */
-  @Nullable
-  static Node getFirstSetterMatchingKey(Node n, String keyName) {
-    checkState(n.isClassMembers() || n.isObjectLit(), n);
-    for (Node keyNode : n.children()) {
-      if (keyNode.isSetterDef() && keyNode.getString().equals(keyName)) {
-        return keyNode;
-      }
-    }
-    return null;
-  }
-
-  /** @return The first computed property in the objlit whose key matches {@code key}. */
-  @Nullable
-  static Node getFirstComputedPropMatchingKey(Node objlit, Node key) {
-    checkState(objlit.isObjectLit());
-    for (Node child : objlit.children()) {
-      if (child.isComputedProp() && child.getFirstChild().isEquivalentTo(key)) {
-        return child.getLastChild();
       }
     }
     return null;
@@ -2873,12 +2825,6 @@ public final class NodeUtil {
         && !NodeUtil.isMethodDeclaration(n);
   }
 
-  static boolean isUnannotatedCallback(Node n) {
-    JSDocInfo jsdoc = getBestJSDocInfo(n);
-    return n.isFunction() && n.getParent().isCall() && n != n.getParent().getFirstChild()
-        && jsdoc == null && !functionHasInlineJsdocs(n);
-  }
-
   /**
    * @return Whether the node is both a function expression and the function is named.
    */
@@ -3439,38 +3385,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Determine whether the destructuring object pattern is nested
-   *
-   * @param n object pattern node
-   */
-  static boolean isNestedObjectPattern(Node n) {
-    checkState(n.isObjectPattern());
-    for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-      Node value = key.getFirstChild();
-      if (value != null
-          && (value.isObjectLit() || value.isArrayLit() || value.isDestructuringPattern())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Determine whether the destructuring array pattern is nested
-   *
-   * @param n array pattern node
-   */
-  static boolean isNestedArrayPattern(Node n) {
-    checkState(n.isArrayPattern());
-    for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-      if (key.hasChildren()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * Determines whether a node represents an object literal get or set key
    * (e.g. key1 in {get key1() {}, set key2(a){}).
    *
@@ -3836,16 +3750,6 @@ public final class NodeUtil {
       return qName;
     }
     return qName.substring(0, dot);
-  }
-
-  static int getLengthOfQname(Node qname) {
-    int result = 1;
-    while (qname.isGetProp() || qname.isGetElem()) {
-      result++;
-      qname = qname.getFirstChild();
-    }
-    checkState(qname.isName());
-    return result;
   }
 
   private static Node newName(AbstractCompiler compiler, String name) {
