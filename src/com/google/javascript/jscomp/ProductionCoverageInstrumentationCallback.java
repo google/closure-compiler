@@ -138,7 +138,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
         // Since we also make sure an Else case is added to every If statement, we are still
         // assured that the else statement is being reached through a later instrumentation call.
         if (NodeUtil.isEmptyBlock(ifFalseNode)
-            || (ifFalseNode.getFirstChild() != null && !ifFalseNode.getFirstChild().isIf())) {
+            || (ifFalseNode.hasChildren() && !ifFalseNode.getFirstChild().isIf())) {
           instrumentBlockNode(ifFalseNode, sourceFileName, functionName, Type.BRANCH_DEFAULT);
         }
         break;
@@ -206,7 +206,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
 
     // newInstrumentationNode returns an EXPR_RESULT which cannot be a child of a COMMA node.
     // Instead we use the child of of the newInstrumentatioNode which is a CALL node.
-    Node childOfInstrumentationNode = newInstrumentationNode.getFirstChild().detach();
+    Node childOfInstrumentationNode = newInstrumentationNode.removeFirstChild();
     Node infusedExp = AstManipulations.fuseExpressions(childOfInstrumentationNode, cloneOfOriginal);
     parentNode.replaceChild(originalNode, infusedExp);
   }
