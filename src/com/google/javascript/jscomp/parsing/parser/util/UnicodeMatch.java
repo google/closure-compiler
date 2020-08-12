@@ -45,6 +45,8 @@ public final class UnicodeMatch {
   }
 
   /**
+   * FAST PATHS
+   * 
    * These fast paths are broken into distinct parts because of the logical
    * differences in `IdentifierStart` and `IdentifierPart`, where the former
    * does not accept a digit.
@@ -123,6 +125,15 @@ public final class UnicodeMatch {
       fastPathUnicodeDigit(ch)
     );
   }
+
+  /**
+   * PUBLIC IDENTIFIER CHECKS
+   * 
+   * These public methods use the fast paths to check if the given character is
+   * a commonly-used `IdentifierStart` or `IdentifierPart`. If no match is
+   * found, the character is evaluated against the regexpu-transpiled patterns
+   * provided by TC39.
+   */
 
   /**
    * Check if a character is a valid ECMAScript `IdentifierStart`. Check the
