@@ -105,7 +105,7 @@ public final class UnicodeMatch {
      */
     return (
       fastPathUnicodeLetter(ch) |
-      (ch == "$" | ch == "_")
+      (ch == '$' | ch == '_')
     );
   }
 
