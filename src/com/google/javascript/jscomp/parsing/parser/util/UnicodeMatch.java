@@ -143,7 +143,7 @@ public final class UnicodeMatch {
     return (
         fastPathIdentifierStart(ch) ||
         JavascriptIdentifierStart
-            .matcher(Character.toString(ch))
+            .matcher(Character.toString((char) ch))
             .matches()
     );
   }
@@ -156,7 +156,7 @@ public final class UnicodeMatch {
     return (
         fastPathIdentifierPart(ch) ||
         JavascriptIdentifierPart
-            .matcher(Character.toString(ch))
+            .matcher(Character.toString((char) ch))
             .matches()
     );
   }
