@@ -38,48 +38,53 @@ public final class UnicodeMatch {
   private UnicodeMatch() {}
 
   /**
+   * Check if a given character is an ASCII character. For performance
+   * optimization.
+   */
+  private static final boolean fastPathAscii(int ch) {
+    return ch <= 127;
+  }
+
+  /**
+   * Check if a given character is an ASCII letter. This fast path is broken
+   * into two parts because of the logical differences in `IdentifierPart` and
+   * `IdentifierStart`, where the latter does not accept a digit.
+   *
    * Intentionally avoiding short circuiting behavior of "||" and "&&". This
    * minimizes branches in this code which minimizes branch prediction misses.
    */
   @SuppressWarnings("ShortCircuitBoolean")
   private static final boolean fastPathLetters(int ch) {
     return (
-      // ASCII
       ('A' <= ch & ch <= 'Z') |
-      ('a' <= ch & ch <= 'z') |
-      (ch == '_' | ch == '$') |
-      // Latin letters
-      (0x00C0 <= ch & ch <= 0x00D6) |
-      // Latin letters
-      (0x00D8 <= ch & ch <= 0x00F6) |
-      // Latin letters
-      (0x00F8 <= ch & ch <= 0x00FF) |
-      // Latin Barred O
-      (ch == 0x0275) |
-      // Greek uppercase letters
-      (0x0391 <= ch & ch <= 0x03A1) |
-      // Remaining Greek uppercase letters
-      (0x03A3 <= ch & ch <= 0x03A9) |
-      // Greek lowercase letters
-      (0x03B1 <= ch & ch <= 0x03C9)
+      ('a' <= ch & ch <= 'z')
     );
   }
 
-  // Intentional to minimize branches in this code
+  /**
+   * Check if a given character is an ASCII digit. This fast path is broken into
+   * two parts because of the logical differences in `IdentifierPart` and
+   * `IdentifierStart`, where the latter does not accept a digit.
+   *
+   * Intentionally avoiding short circuiting behavior of "||" and "&&". This
+   * minimizes branches in this code which minimizes branch prediction misses.
+   */
   @SuppressWarnings("ShortCircuitBoolean")
   private static final boolean fastPathDigits(int ch) {
     return '0' <= ch & ch <= '9';
   }
 
   public static final boolean isJavascriptIdentifierStart(int ch) {
-    return fastPathLetters(ch)
+    return fastPathAscii(ch) 
+        || fastPathLetters(ch)
         || JavascriptIdentifierStart
               .matcher(Character.toString(ch))
               .matches();
   }
 
   public static final boolean isJavascriptIdentifierPart(int ch) {
-    return (fastPathLetters(ch) | fastPathDigits(ch))
+    return fastPathAscii(ch)
+        || (fastPathLetters(ch) | fastPathDigits(ch))
         || JavascriptIdentifierPart
               .matcher(Character.toString(ch))
               .matches();
