@@ -37,7 +37,10 @@ import java.util.regex.Pattern;
 public final class UnicodeMatch {
   private UnicodeMatch() {}
 
-  // Intentional to minimize branches in this code
+  /**
+   * Intentionally avoiding short circuiting behavior of "||" and "&&". This
+   * minimizes branches in this code which minimizes branch prediction misses.
+   */
   @SuppressWarnings("ShortCircuitBoolean")
   private static final boolean fastPathLetters(int ch) {
     return (
