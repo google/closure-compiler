@@ -141,7 +141,7 @@ public class Scanner {
     nextChar();
 
     // flags
-    while (isIdentifierPart(peekChar())) {
+    while (UnicodeMatch.isJavascriptIdentifierPart(peekChar())) {
       nextChar();
     }
 
@@ -765,7 +765,7 @@ public class Scanner {
     int unicodeEscapeLen = containsUnicodeEscape ? 1 : 0;
 
     ch = peekChar();
-    while (isIdentifierPart(ch)
+    while (UnicodeMatch.isJavascriptIdentifierPart(ch)
         || ch == '\\'
         || (ch == '{' && unicodeEscapeLen == 2)
         || (ch == '}' && bracedUnicodeEscape)) {
@@ -805,7 +805,7 @@ public class Scanner {
     // Check to make sure the first character (or the unicode escape at the
     // beginning of the identifier) is a valid identifier start character.
     char start = value.charAt(0);
-    if (!isIdentifierStart(start)) {
+    if (!UnicodeMatch.isJavascriptIdentifierStart(start)) {
       reportError(
           getPosition(beginToken),
           "Character '%c' (U+%04X) is not a valid identifier start char",
@@ -859,7 +859,7 @@ public class Scanner {
         }
         // TODO(mattloring): Allow code points >= 0xFFFF (greater than the size of a char).
         char ch = (char) Integer.parseInt(hexDigits, 0x10);
-        if (!isIdentifierPart(ch)) {
+        if (!UnicodeMatch.isJavascriptIdentifierPart(ch)) {
           return null;
         }
         value = value.substring(0, escapeStart) + ch + value.substring(escapeEnd);
@@ -868,20 +868,6 @@ public class Scanner {
       }
     }
     return value;
-  }
-
-  /**
-   * Interface from UnicodeRegex. Includes old optimizations.
-   */
-  private static boolean isIdentifierStart(char ch) {
-    return UnicodeMatch.isJavascriptIdentifierStart(ch);
-  }
-  
-  /**
-   * Interface from UnicodeRegex. Includes old optimizations.
-   */
-  private static boolean isIdentifierPart(char ch) {
-    return UnicodeMatch.isJavascriptIdentifierPart(ch);
   }
 
   private Token scanStringLiteral(int beginIndex, char terminator) {

@@ -34,7 +34,9 @@ import java.util.regex.Pattern;
  * const regexIdentifierStart = /[$_\p{ID_Start}]/u;
  * const regexIdentifierPart = /[$_\u200C\u200D\p{ID_Continue}]/u;
  */
-public class UnicodeMatch {
+private class UnicodeMatch {
+  private UnicodeMatch() {}
+  
   // Intentional to minimize branches in this code
   @SuppressWarnings("ShortCircuitBoolean")
   private static boolean fastPathLetters(char ch) {
