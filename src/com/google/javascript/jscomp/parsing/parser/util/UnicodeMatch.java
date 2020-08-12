@@ -117,8 +117,8 @@ public final class UnicodeMatch {
       <ZWJ>
   */
   public static final boolean isJavascriptIdentifierPart(int ch) {
-    return fastPathAscii(ch)
-        || (fastPathLetters(ch) | fastPathDigits(ch))
+    return (fastPathLetters(ch) | fastPathDigits(ch))
+        || (ch === '$' || ch === '_')
         || JavascriptIdentifierPart
               .matcher(Character.toString(ch))
               .matches();
