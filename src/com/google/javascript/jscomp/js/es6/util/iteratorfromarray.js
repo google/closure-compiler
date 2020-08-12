@@ -32,14 +32,17 @@ $jscomp.iteratorFromArray = function(array, transform) {
   // NOTE: IE8 doesn't support indexing from boxed Strings.
   if (array instanceof String) array = array + '';
   var i = 0;
+  var done = false;
   var iter = {
     next: function() {
-      if (i < array.length) {
+      // Once we return done, we must always return done, even if the array
+      // grows later.
+      if (!done && i < array.length) {
         var index = i++;
         return {value: transform(index, array[index]), done: false};
       }
-      iter.next = function() { return {done: true, value: void 0}; };
-      return iter.next();
+      done = true;
+      return {done: true, value: void 0};
     }
   };
   iter[Symbol.iterator] = function() { return iter; };
