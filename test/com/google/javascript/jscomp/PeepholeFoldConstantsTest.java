@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import java.util.Map;
@@ -83,401 +82,393 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     return options;
   }
 
-  private void foldSame(String js) {
-    testSame(js);
-  }
-
-  private void fold(String js, String expected) {
-    test(js, expected);
-  }
-
   @Test
   public void testUndefinedComparison1() {
-    fold("undefined == undefined", "true");
-    fold("undefined == null", "true");
-    fold("undefined == void 0", "true");
+    test("undefined == undefined", "true");
+    test("undefined == null", "true");
+    test("undefined == void 0", "true");
 
-    fold("undefined == 0", "false");
-    fold("undefined == 1", "false");
-    fold("undefined == 'hi'", "false");
-    fold("undefined == true", "false");
-    fold("undefined == false", "false");
+    test("undefined == 0", "false");
+    test("undefined == 1", "false");
+    test("undefined == 'hi'", "false");
+    test("undefined == true", "false");
+    test("undefined == false", "false");
 
-    fold("undefined === undefined", "true");
-    fold("undefined === null", "false");
-    fold("undefined === void 0", "true");
+    test("undefined === undefined", "true");
+    test("undefined === null", "false");
+    test("undefined === void 0", "true");
 
-    foldSame("undefined == this");
-    foldSame("undefined == x");
+    testSame("undefined == this");
+    testSame("undefined == x");
 
-    fold("undefined != undefined", "false");
-    fold("undefined != null", "false");
-    fold("undefined != void 0", "false");
+    test("undefined != undefined", "false");
+    test("undefined != null", "false");
+    test("undefined != void 0", "false");
 
-    fold("undefined != 0", "true");
-    fold("undefined != 1", "true");
-    fold("undefined != 'hi'", "true");
-    fold("undefined != true", "true");
-    fold("undefined != false", "true");
+    test("undefined != 0", "true");
+    test("undefined != 1", "true");
+    test("undefined != 'hi'", "true");
+    test("undefined != true", "true");
+    test("undefined != false", "true");
 
-    fold("undefined !== undefined", "false");
-    fold("undefined !== void 0", "false");
-    fold("undefined !== null", "true");
+    test("undefined !== undefined", "false");
+    test("undefined !== void 0", "false");
+    test("undefined !== null", "true");
 
-    foldSame("undefined != this");
-    foldSame("undefined != x");
+    testSame("undefined != this");
+    testSame("undefined != x");
 
-    fold("undefined < undefined", "false");
-    fold("undefined > undefined", "false");
-    fold("undefined >= undefined", "false");
-    fold("undefined <= undefined", "false");
+    test("undefined < undefined", "false");
+    test("undefined > undefined", "false");
+    test("undefined >= undefined", "false");
+    test("undefined <= undefined", "false");
 
-    fold("0 < undefined", "false");
-    fold("true > undefined", "false");
-    fold("'hi' >= undefined", "false");
-    fold("null <= undefined", "false");
+    test("0 < undefined", "false");
+    test("true > undefined", "false");
+    test("'hi' >= undefined", "false");
+    test("null <= undefined", "false");
 
-    fold("undefined < 0", "false");
-    fold("undefined > true", "false");
-    fold("undefined >= 'hi'", "false");
-    fold("undefined <= null", "false");
+    test("undefined < 0", "false");
+    test("undefined > true", "false");
+    test("undefined >= 'hi'", "false");
+    test("undefined <= null", "false");
 
-    fold("null == undefined", "true");
-    fold("0 == undefined", "false");
-    fold("1 == undefined", "false");
-    fold("'hi' == undefined", "false");
-    fold("true == undefined", "false");
-    fold("false == undefined", "false");
-    fold("null === undefined", "false");
-    fold("void 0 === undefined", "true");
+    test("null == undefined", "true");
+    test("0 == undefined", "false");
+    test("1 == undefined", "false");
+    test("'hi' == undefined", "false");
+    test("true == undefined", "false");
+    test("false == undefined", "false");
+    test("null === undefined", "false");
+    test("void 0 === undefined", "true");
 
-    fold("undefined == NaN", "false");
-    fold("NaN == undefined", "false");
-    fold("undefined == Infinity", "false");
-    fold("Infinity == undefined", "false");
-    fold("undefined == -Infinity", "false");
-    fold("-Infinity == undefined", "false");
-    fold("({}) == undefined", "false");
-    fold("undefined == ({})", "false");
-    fold("([]) == undefined", "false");
-    fold("undefined == ([])", "false");
-    fold("(/a/g) == undefined", "false");
-    fold("undefined == (/a/g)", "false");
-    fold("(function(){}) == undefined", "false");
-    fold("undefined == (function(){})", "false");
+    test("undefined == NaN", "false");
+    test("NaN == undefined", "false");
+    test("undefined == Infinity", "false");
+    test("Infinity == undefined", "false");
+    test("undefined == -Infinity", "false");
+    test("-Infinity == undefined", "false");
+    test("({}) == undefined", "false");
+    test("undefined == ({})", "false");
+    test("([]) == undefined", "false");
+    test("undefined == ([])", "false");
+    test("(/a/g) == undefined", "false");
+    test("undefined == (/a/g)", "false");
+    test("(function(){}) == undefined", "false");
+    test("undefined == (function(){})", "false");
 
-    fold("undefined != NaN", "true");
-    fold("NaN != undefined", "true");
-    fold("undefined != Infinity", "true");
-    fold("Infinity != undefined", "true");
-    fold("undefined != -Infinity", "true");
-    fold("-Infinity != undefined", "true");
-    fold("({}) != undefined", "true");
-    fold("undefined != ({})", "true");
-    fold("([]) != undefined", "true");
-    fold("undefined != ([])", "true");
-    fold("(/a/g) != undefined", "true");
-    fold("undefined != (/a/g)", "true");
-    fold("(function(){}) != undefined", "true");
-    fold("undefined != (function(){})", "true");
+    test("undefined != NaN", "true");
+    test("NaN != undefined", "true");
+    test("undefined != Infinity", "true");
+    test("Infinity != undefined", "true");
+    test("undefined != -Infinity", "true");
+    test("-Infinity != undefined", "true");
+    test("({}) != undefined", "true");
+    test("undefined != ({})", "true");
+    test("([]) != undefined", "true");
+    test("undefined != ([])", "true");
+    test("(/a/g) != undefined", "true");
+    test("undefined != (/a/g)", "true");
+    test("(function(){}) != undefined", "true");
+    test("undefined != (function(){})", "true");
 
-    foldSame("this == undefined");
-    foldSame("x == undefined");
+    testSame("this == undefined");
+    testSame("x == undefined");
   }
 
   @Test
   public void testUndefinedComparison2() {
-    fold("\"123\" !== void 0", "true");
-    fold("\"123\" === void 0", "false");
+    test("\"123\" !== void 0", "true");
+    test("\"123\" === void 0", "false");
 
-    fold("void 0 !== \"123\"", "true");
-    fold("void 0 === \"123\"", "false");
+    test("void 0 !== \"123\"", "true");
+    test("void 0 === \"123\"", "false");
   }
 
   @Test
   public void testUndefinedComparison3() {
-    fold("\"123\" !== undefined", "true");
-    fold("\"123\" === undefined", "false");
+    test("\"123\" !== undefined", "true");
+    test("\"123\" === undefined", "false");
 
-    fold("undefined !== \"123\"", "true");
-    fold("undefined === \"123\"", "false");
+    test("undefined !== \"123\"", "true");
+    test("undefined === \"123\"", "false");
   }
 
   @Test
   public void testUndefinedComparison4() {
-    fold("1 !== void 0", "true");
-    fold("1 === void 0", "false");
+    test("1 !== void 0", "true");
+    test("1 === void 0", "false");
 
-    fold("null !== void 0", "true");
-    fold("null === void 0", "false");
+    test("null !== void 0", "true");
+    test("null === void 0", "false");
 
-    fold("undefined !== void 0", "false");
-    fold("undefined === void 0", "true");
+    test("undefined !== void 0", "false");
+    test("undefined === void 0", "true");
   }
 
   @Test
   public void testNullComparison1() {
-    fold("null == undefined", "true");
-    fold("null == null", "true");
-    fold("null == void 0", "true");
+    test("null == undefined", "true");
+    test("null == null", "true");
+    test("null == void 0", "true");
 
-    fold("null == 0", "false");
-    fold("null == 1", "false");
-    fold("null == 'hi'", "false");
-    fold("null == true", "false");
-    fold("null == false", "false");
+    test("null == 0", "false");
+    test("null == 1", "false");
+    test("null == 'hi'", "false");
+    test("null == true", "false");
+    test("null == false", "false");
 
-    fold("null === undefined", "false");
-    fold("null === null", "true");
-    fold("null === void 0", "false");
-    foldSame("null === x");
+    test("null === undefined", "false");
+    test("null === null", "true");
+    test("null === void 0", "false");
+    testSame("null === x");
 
-    foldSame("null == this");
-    foldSame("null == x");
+    testSame("null == this");
+    testSame("null == x");
 
-    fold("null != undefined", "false");
-    fold("null != null", "false");
-    fold("null != void 0", "false");
+    test("null != undefined", "false");
+    test("null != null", "false");
+    test("null != void 0", "false");
 
-    fold("null != 0", "true");
-    fold("null != 1", "true");
-    fold("null != 'hi'", "true");
-    fold("null != true", "true");
-    fold("null != false", "true");
+    test("null != 0", "true");
+    test("null != 1", "true");
+    test("null != 'hi'", "true");
+    test("null != true", "true");
+    test("null != false", "true");
 
-    fold("null !== undefined", "true");
-    fold("null !== void 0", "true");
-    fold("null !== null", "false");
+    test("null !== undefined", "true");
+    test("null !== void 0", "true");
+    test("null !== null", "false");
 
-    foldSame("null != this");
-    foldSame("null != x");
+    testSame("null != this");
+    testSame("null != x");
 
-    fold("null < null", "false");
-    fold("null > null", "false");
-    fold("null >= null", "true");
-    fold("null <= null", "true");
+    test("null < null", "false");
+    test("null > null", "false");
+    test("null >= null", "true");
+    test("null <= null", "true");
 
-    fold("0 < null", "false");
-    fold("0 > null", "false");
-    fold("0 >= null", "true");
-    fold("true > null", "true");
-    fold("'hi' < null", "false");
-    fold("'hi' >= null", "false");
-    fold("null <= null", "true");
+    test("0 < null", "false");
+    test("0 > null", "false");
+    test("0 >= null", "true");
+    test("true > null", "true");
+    test("'hi' < null", "false");
+    test("'hi' >= null", "false");
+    test("null <= null", "true");
 
-    fold("null < 0", "false");
-    fold("null > true", "false");
-    fold("null < 'hi'", "false");
-    fold("null >= 'hi'", "false");
-    fold("null <= null", "true");
+    test("null < 0", "false");
+    test("null > true", "false");
+    test("null < 'hi'", "false");
+    test("null >= 'hi'", "false");
+    test("null <= null", "true");
 
-    fold("null == null", "true");
-    fold("0 == null", "false");
-    fold("1 == null", "false");
-    fold("'hi' == null", "false");
-    fold("true == null", "false");
-    fold("false == null", "false");
-    fold("null === null", "true");
-    fold("void 0 === null", "false");
+    test("null == null", "true");
+    test("0 == null", "false");
+    test("1 == null", "false");
+    test("'hi' == null", "false");
+    test("true == null", "false");
+    test("false == null", "false");
+    test("null === null", "true");
+    test("void 0 === null", "false");
 
-    fold("null == NaN", "false");
-    fold("NaN == null", "false");
-    fold("null == Infinity", "false");
-    fold("Infinity == null", "false");
-    fold("null == -Infinity", "false");
-    fold("-Infinity == null", "false");
-    fold("({}) == null", "false");
-    fold("null == ({})", "false");
-    fold("([]) == null", "false");
-    fold("null == ([])", "false");
-    fold("(/a/g) == null", "false");
-    fold("null == (/a/g)", "false");
-    fold("(function(){}) == null", "false");
-    fold("null == (function(){})", "false");
+    test("null == NaN", "false");
+    test("NaN == null", "false");
+    test("null == Infinity", "false");
+    test("Infinity == null", "false");
+    test("null == -Infinity", "false");
+    test("-Infinity == null", "false");
+    test("({}) == null", "false");
+    test("null == ({})", "false");
+    test("([]) == null", "false");
+    test("null == ([])", "false");
+    test("(/a/g) == null", "false");
+    test("null == (/a/g)", "false");
+    test("(function(){}) == null", "false");
+    test("null == (function(){})", "false");
 
-    fold("null != NaN", "true");
-    fold("NaN != null", "true");
-    fold("null != Infinity", "true");
-    fold("Infinity != null", "true");
-    fold("null != -Infinity", "true");
-    fold("-Infinity != null", "true");
-    fold("({}) != null", "true");
-    fold("null != ({})", "true");
-    fold("([]) != null", "true");
-    fold("null != ([])", "true");
-    fold("(/a/g) != null", "true");
-    fold("null != (/a/g)", "true");
-    fold("(function(){}) != null", "true");
-    fold("null != (function(){})", "true");
+    test("null != NaN", "true");
+    test("NaN != null", "true");
+    test("null != Infinity", "true");
+    test("Infinity != null", "true");
+    test("null != -Infinity", "true");
+    test("-Infinity != null", "true");
+    test("({}) != null", "true");
+    test("null != ({})", "true");
+    test("([]) != null", "true");
+    test("null != ([])", "true");
+    test("(/a/g) != null", "true");
+    test("null != (/a/g)", "true");
+    test("(function(){}) != null", "true");
+    test("null != (function(){})", "true");
 
-    foldSame("({a:f()}) == null");
-    foldSame("null == ({a:f()})");
-    foldSame("([f()]) == null");
-    foldSame("null == ([f()])");
+    testSame("({a:f()}) == null");
+    testSame("null == ({a:f()})");
+    testSame("([f()]) == null");
+    testSame("null == ([f()])");
 
-    foldSame("this == null");
-    foldSame("x == null");
+    testSame("this == null");
+    testSame("x == null");
   }
 
   @Test
   public void testBooleanBooleanComparison() {
-    foldSame("!x == !y");
-    foldSame("!x < !y");
-    foldSame("!x !== !y");
+    testSame("!x == !y");
+    testSame("!x < !y");
+    testSame("!x !== !y");
 
-    foldSame("!x == !x"); // foldable
-    foldSame("!x < !x"); // foldable
-    foldSame("!x !== !x"); // foldable
+    testSame("!x == !x"); // foldable
+    testSame("!x < !x"); // foldable
+    testSame("!x !== !x"); // foldable
   }
 
   @Test
   public void testBooleanNumberComparison() {
-    foldSame("!x == +y");
-    foldSame("!x <= +y");
-    fold("!x !== +y", "true");
+    testSame("!x == +y");
+    testSame("!x <= +y");
+    test("!x !== +y", "true");
   }
 
   @Test
   public void testNumberBooleanComparison() {
-    foldSame("+x == !y");
-    foldSame("+x <= !y");
-    fold("+x === !y", "false");
+    testSame("+x == !y");
+    testSame("+x <= !y");
+    test("+x === !y", "false");
   }
 
   @Test
   public void testBooleanStringComparison() {
-    foldSame("!x == '' + y");
-    foldSame("!x <= '' + y");
-    fold("!x !== '' + y", "true");
+    testSame("!x == '' + y");
+    testSame("!x <= '' + y");
+    test("!x !== '' + y", "true");
   }
 
   @Test
   public void testStringBooleanComparison() {
-    foldSame("'' + x == !y");
-    foldSame("'' + x <= !y");
-    fold("'' + x === !y", "false");
+    testSame("'' + x == !y");
+    testSame("'' + x <= !y");
+    test("'' + x === !y", "false");
   }
 
   @Test
   public void testNumberNumberComparison() {
-    fold("1 > 1", "false");
-    fold("2 == 3", "false");
-    fold("3.6 === 3.6", "true");
-    foldSame("+x > +y");
-    foldSame("+x == +y");
-    foldSame("+x === +y");
-    foldSame("+x == +x");
-    foldSame("+x === +x");
+    test("1 > 1", "false");
+    test("2 == 3", "false");
+    test("3.6 === 3.6", "true");
+    testSame("+x > +y");
+    testSame("+x == +y");
+    testSame("+x === +y");
+    testSame("+x == +x");
+    testSame("+x === +x");
 
-    foldSame("+x > +x"); // foldable
+    testSame("+x > +x"); // foldable
   }
 
   @Test
   public void testStringStringComparison() {
-    fold("'a' < 'b'", "true");
-    fold("'a' <= 'b'", "true");
-    fold("'a' > 'b'", "false");
-    fold("'a' >= 'b'", "false");
-    fold("+'a' < +'b'", "false");
-    foldSame("typeof a < 'a'");
-    foldSame("'a' >= typeof a");
-    fold("typeof a < typeof a", "false");
-    fold("typeof a >= typeof a", "true");
-    fold("typeof 3 > typeof 4", "false");
-    fold("typeof function() {} < typeof function() {}", "false");
-    fold("'a' == 'a'", "true");
-    fold("'b' != 'a'", "true");
-    foldSame("'undefined' == typeof a");
-    foldSame("typeof a != 'number'");
-    foldSame("'undefined' == typeof a");
-    foldSame("'undefined' == typeof a");
-    fold("typeof a == typeof a", "true");
-    fold("'a' === 'a'", "true");
-    fold("'b' !== 'a'", "true");
-    fold("typeof a === typeof a", "true");
-    fold("typeof a !== typeof a", "false");
-    foldSame("'' + x <= '' + y");
-    foldSame("'' + x != '' + y");
-    foldSame("'' + x === '' + y");
+    test("'a' < 'b'", "true");
+    test("'a' <= 'b'", "true");
+    test("'a' > 'b'", "false");
+    test("'a' >= 'b'", "false");
+    test("+'a' < +'b'", "false");
+    testSame("typeof a < 'a'");
+    testSame("'a' >= typeof a");
+    test("typeof a < typeof a", "false");
+    test("typeof a >= typeof a", "true");
+    test("typeof 3 > typeof 4", "false");
+    test("typeof function() {} < typeof function() {}", "false");
+    test("'a' == 'a'", "true");
+    test("'b' != 'a'", "true");
+    testSame("'undefined' == typeof a");
+    testSame("typeof a != 'number'");
+    testSame("'undefined' == typeof a");
+    testSame("'undefined' == typeof a");
+    test("typeof a == typeof a", "true");
+    test("'a' === 'a'", "true");
+    test("'b' !== 'a'", "true");
+    test("typeof a === typeof a", "true");
+    test("typeof a !== typeof a", "false");
+    testSame("'' + x <= '' + y");
+    testSame("'' + x != '' + y");
+    testSame("'' + x === '' + y");
 
-    foldSame("'' + x <= '' + x"); // potentially foldable
-    foldSame("'' + x != '' + x"); // potentially foldable
-    foldSame("'' + x === '' + x"); // potentially foldable
+    testSame("'' + x <= '' + x"); // potentially foldable
+    testSame("'' + x != '' + x"); // potentially foldable
+    testSame("'' + x === '' + x"); // potentially foldable
   }
 
   @Test
   public void testNumberStringComparison() {
-    fold("1 < '2'", "true");
-    fold("2 > '1'", "true");
-    fold("123 > '34'", "true");
-    fold("NaN >= 'NaN'", "false");
-    fold("1 == '2'", "false");
-    fold("1 != '1'", "false");
-    fold("NaN == 'NaN'", "false");
-    fold("1 === '1'", "false");
-    fold("1 !== '1'", "true");
-    foldSame("+x > '' + y");
-    foldSame("+x == '' + y");
-    fold("+x !== '' + y", "true");
+    test("1 < '2'", "true");
+    test("2 > '1'", "true");
+    test("123 > '34'", "true");
+    test("NaN >= 'NaN'", "false");
+    test("1 == '2'", "false");
+    test("1 != '1'", "false");
+    test("NaN == 'NaN'", "false");
+    test("1 === '1'", "false");
+    test("1 !== '1'", "true");
+    testSame("+x > '' + y");
+    testSame("+x == '' + y");
+    test("+x !== '' + y", "true");
   }
 
   @Test
   public void testStringNumberComparison() {
-    fold("'1' < 2", "true");
-    fold("'2' > 1", "true");
-    fold("'123' > 34", "true");
-    fold("'NaN' < NaN", "false");
-    fold("'1' == 2", "false");
-    fold("'1' != 1", "false");
-    fold("'NaN' == NaN", "false");
-    fold("'1' === 1", "false");
-    fold("'1' !== 1", "true");
-    foldSame("'' + x < +y");
-    foldSame("'' + x == +y");
-    fold("'' + x === +y", "false");
+    test("'1' < 2", "true");
+    test("'2' > 1", "true");
+    test("'123' > 34", "true");
+    test("'NaN' < NaN", "false");
+    test("'1' == 2", "false");
+    test("'1' != 1", "false");
+    test("'NaN' == NaN", "false");
+    test("'1' === 1", "false");
+    test("'1' !== 1", "true");
+    testSame("'' + x < +y");
+    testSame("'' + x == +y");
+    test("'' + x === +y", "false");
   }
 
   @Test
   public void testNaNComparison() {
-    fold("NaN < NaN", "false");
-    fold("NaN >= NaN", "false");
-    fold("NaN == NaN", "false");
-    fold("NaN === NaN", "false");
+    test("NaN < NaN", "false");
+    test("NaN >= NaN", "false");
+    test("NaN == NaN", "false");
+    test("NaN === NaN", "false");
 
-    fold("NaN < null", "false");
-    fold("null >= NaN", "false");
-    fold("NaN == null", "false");
-    fold("null != NaN", "true");
-    fold("null === NaN", "false");
+    test("NaN < null", "false");
+    test("null >= NaN", "false");
+    test("NaN == null", "false");
+    test("null != NaN", "true");
+    test("null === NaN", "false");
 
-    fold("NaN < undefined", "false");
-    fold("undefined >= NaN", "false");
-    fold("NaN == undefined", "false");
-    fold("undefined != NaN", "true");
-    fold("undefined === NaN", "false");
+    test("NaN < undefined", "false");
+    test("undefined >= NaN", "false");
+    test("NaN == undefined", "false");
+    test("undefined != NaN", "true");
+    test("undefined === NaN", "false");
 
-    foldSame("NaN < x");
-    foldSame("x >= NaN");
-    foldSame("NaN == x");
-    foldSame("x != NaN");
-    fold("NaN === x", "false");
-    fold("x !== NaN", "true");
-    foldSame("NaN == foo()");
+    testSame("NaN < x");
+    testSame("x >= NaN");
+    testSame("NaN == x");
+    testSame("x != NaN");
+    test("NaN === x", "false");
+    test("x !== NaN", "true");
+    testSame("NaN == foo()");
   }
 
   @Test
   public void testObjectComparison1() {
-    fold("!new Date()", "false");
-    fold("!!new Date()", "true");
+    test("!new Date()", "false");
+    test("!!new Date()", "true");
 
-    fold("new Date() == null", "false");
-    fold("new Date() == undefined", "false");
-    fold("new Date() != null", "true");
-    fold("new Date() != undefined", "true");
-    fold("null == new Date()", "false");
-    fold("undefined == new Date()", "false");
-    fold("null != new Date()", "true");
-    fold("undefined != new Date()", "true");
+    test("new Date() == null", "false");
+    test("new Date() == undefined", "false");
+    test("new Date() != null", "true");
+    test("new Date() != undefined", "true");
+    test("null == new Date()", "false");
+    test("undefined == new Date()", "false");
+    test("null != new Date()", "true");
+    test("undefined != new Date()", "true");
   }
 
   @Test
@@ -487,100 +478,108 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     numRepetitions = 1;
 
     // These cases are handled by PeepholeRemoveDeadCode.
-    foldSame("!foo()");
-    foldSame("~foo()");
-    foldSame("-foo()");
+    testSame("!foo()");
+    testSame("~foo()");
+    testSame("-foo()");
 
     // These cases are handled here.
-    fold("a=!true", "a=false");
-    fold("a=!10", "a=false");
-    fold("a=!false", "a=true");
-    foldSame("a=!foo()");
-    fold("a=-0", "a=-0.0");
-    fold("a=-(0)", "a=-0.0");
-    foldSame("a=-Infinity");
-    fold("a=-NaN", "a=NaN");
-    foldSame("a=-foo()");
-    fold("a=~~0", "a=0");
-    fold("a=~~10", "a=10");
-    fold("a=~-7", "a=6");
+    test("a=!true", "a=false");
+    test("a=!10", "a=false");
+    test("a=!false", "a=true");
+    testSame("a=!foo()");
+    test("a=-0", "a=-0.0");
+    test("a=-(0)", "a=-0.0");
+    testSame("a=-Infinity");
+    test("a=-NaN", "a=NaN");
+    testSame("a=-foo()");
+    test("a=~~0", "a=0");
+    test("a=~~10", "a=10");
+    test("a=~-7", "a=6");
 
-    fold("a=+true", "a=1");
-    fold("a=+10", "a=10");
-    fold("a=+false", "a=0");
-    foldSame("a=+foo()");
-    foldSame("a=+f");
-    fold("a=+(f?true:false)", "a=+(f?1:0)"); // TODO(johnlenz): foldable
-    fold("a=+0", "a=0");
-    fold("a=+Infinity", "a=Infinity");
-    fold("a=+NaN", "a=NaN");
-    fold("a=+-7", "a=-7");
-    fold("a=+.5", "a=.5");
+    test("a=+true", "a=1");
+    test("a=+10", "a=10");
+    test("a=+false", "a=0");
+    testSame("a=+foo()");
+    testSame("a=+f");
+    test("a=+(f?true:false)", "a=+(f?1:0)"); // TODO(johnlenz): foldable
+    test("a=+0", "a=0");
+    test("a=+Infinity", "a=Infinity");
+    test("a=+NaN", "a=NaN");
+    test("a=+-7", "a=-7");
+    test("a=+.5", "a=.5");
 
-    fold("a=~0xffffffff", "a=0");
-    fold("a=~~0xffffffff", "a=-1");
+    test("a=~0xffffffff", "a=0");
+    test("a=~~0xffffffff", "a=-1");
     testSame("a=~.5", PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
   @Test
+  public void testUnaryOpsWithBigInt() {
+    test("-(1n)", "-1n");
+    test("- -1n", "1n");
+    test("!1n", "false");
+    test("~0n", "-1n");
+  }
+
+  @Test
   public void testUnaryOpsStringCompare() {
-    foldSame("a = -1");
-    fold("a = ~0", "a = -1");
-    fold("a = ~1", "a = -2");
-    fold("a = ~101", "a = -102");
+    testSame("a = -1");
+    test("a = ~0", "a = -1");
+    test("a = ~1", "a = -2");
+    test("a = ~101", "a = -102");
   }
 
   @Test
   public void testFoldLogicalOp() {
-    fold("x = true && x", "x = x");
-    fold("x = [foo()] && x", "x = ([foo()],x)");
+    test("x = true && x", "x = x");
+    test("x = [foo()] && x", "x = ([foo()],x)");
 
-    fold("x = false && x", "x = false");
-    fold("x = true || x", "x = true");
-    fold("x = false || x", "x = x");
-    fold("x = 0 && x", "x = 0");
-    fold("x = 3 || x", "x = 3");
-    fold("x = false || 0", "x = 0");
+    test("x = false && x", "x = false");
+    test("x = true || x", "x = true");
+    test("x = false || x", "x = x");
+    test("x = 0 && x", "x = 0");
+    test("x = 3 || x", "x = 3");
+    test("x = false || 0", "x = 0");
 
     // unfoldable, because the right-side may be the result
-    fold("a = x && true", "a=x && true");
-    fold("a = x && false", "a=x && false");
-    fold("a = x || 3", "a=x || 3");
-    fold("a = x || false", "a=x || false");
-    fold("a = b ? c : x || false", "a=b ? c:x || false");
-    fold("a = b ? x || false : c", "a=b ? x || false:c");
-    fold("a = b ? c : x && true", "a=b ? c:x && true");
-    fold("a = b ? x && true : c", "a=b ? x && true:c");
+    test("a = x && true", "a=x && true");
+    test("a = x && false", "a=x && false");
+    test("a = x || 3", "a=x || 3");
+    test("a = x || false", "a=x || false");
+    test("a = b ? c : x || false", "a=b ? c:x || false");
+    test("a = b ? x || false : c", "a=b ? x || false:c");
+    test("a = b ? c : x && true", "a=b ? c:x && true");
+    test("a = b ? x && true : c", "a=b ? x && true:c");
 
     // folded, but not here.
-    foldSame("a = x || false ? b : c");
-    foldSame("a = x && true ? b : c");
+    testSame("a = x || false ? b : c");
+    testSame("a = x && true ? b : c");
 
-    fold("x = foo() || true || bar()", "x = foo() || true");
-    fold("x = foo() || true && bar()", "x = foo() || bar()");
-    fold("x = foo() || false && bar()", "x = foo() || false");
-    fold("x = foo() && false && bar()", "x = foo() && false");
-    fold("x = foo() && false || bar()", "x = (foo() && false,bar())");
-    fold("x = foo() || false || bar()", "x = foo() || bar()");
-    fold("x = foo() && true && bar()", "x = foo() && bar()");
-    fold("x = foo() || true || bar()", "x = foo() || true");
-    fold("x = foo() && false && bar()", "x = foo() && false");
-    fold("x = foo() && 0 && bar()", "x = foo() && 0");
-    fold("x = foo() && 1 && bar()", "x = foo() && bar()");
-    fold("x = foo() || 0 || bar()", "x = foo() || bar()");
-    fold("x = foo() || 1 || bar()", "x = foo() || 1");
-    foldSame("x = foo() || bar() || baz()");
-    foldSame("x = foo() && bar() && baz()");
+    test("x = foo() || true || bar()", "x = foo() || true");
+    test("x = foo() || true && bar()", "x = foo() || bar()");
+    test("x = foo() || false && bar()", "x = foo() || false");
+    test("x = foo() && false && bar()", "x = foo() && false");
+    test("x = foo() && false || bar()", "x = (foo() && false,bar())");
+    test("x = foo() || false || bar()", "x = foo() || bar()");
+    test("x = foo() && true && bar()", "x = foo() && bar()");
+    test("x = foo() || true || bar()", "x = foo() || true");
+    test("x = foo() && false && bar()", "x = foo() && false");
+    test("x = foo() && 0 && bar()", "x = foo() && 0");
+    test("x = foo() && 1 && bar()", "x = foo() && bar()");
+    test("x = foo() || 0 || bar()", "x = foo() || bar()");
+    test("x = foo() || 1 || bar()", "x = foo() || 1");
+    testSame("x = foo() || bar() || baz()");
+    testSame("x = foo() && bar() && baz()");
 
-    fold ("0 || b()", "b()");
-    fold("1 && b()", "b()");
-    fold("a() && (1 && b())", "a() && b()");
-    fold("(a() && 1) && b()", "a() && b()");
+    test("0 || b()", "b()");
+    test("1 && b()", "b()");
+    test("a() && (1 && b())", "a() && b()");
+    test("(a() && 1) && b()", "a() && b()");
 
-    fold("(x || '') || y;", "x || y");
-    fold("false || (x || '');", "x || ''");
-    fold("(x && 1) && y;", "x && y");
-    fold("true && (x && 1);", "x && 1");
+    test("(x || '') || y;", "x || y");
+    test("false || (x || '');", "x || ''");
+    test("(x && 1) && y;", "x && y");
+    test("true && (x && 1);", "x && 1");
 
     // Really not foldable, because it would change the type of the
     // expression if foo() returns something truthy but not true.
@@ -588,175 +587,190 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // An example would be if foo() is 1 (truthy) and bar() is 0 (falsey):
     // (1 && true) || 0 == true
     // 1 || 0 == 1, but true =/= 1
-    foldSame("x = foo() && true || bar()");
-    foldSame("foo() && true || bar()");
+    testSame("x = foo() && true || bar()");
+    testSame("foo() && true || bar()");
   }
 
   @Test
   public void testFoldLogicalOp2() {
-    fold("x = function(){} && x", "x = x");
-    fold("x = true && function(){}", "x = function(){}");
-    fold("x = [(function(){alert(x)})()] && x", "x = ([(function(){alert(x)})()],x)");
+    test("x = function(){} && x", "x = x");
+    test("x = true && function(){}", "x = function(){}");
+    test("x = [(function(){alert(x)})()] && x", "x = ([(function(){alert(x)})()],x)");
   }
 
   @Test
   public void testFoldNullishCoalesce() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     // fold if left is null/undefined
-    fold("null ?? 1", "1");
-    fold("undefined ?? false", "false");
+    test("null ?? 1", "1");
+    test("undefined ?? false", "false");
 
-    fold("x = [foo()] ?? x", "x = ([foo()],x)");
+    test("x = [foo()] ?? x", "x = ([foo()],x)");
 
     // short circuit on all non nullish LHS
-    fold("x = false ?? x", "x = false");
-    fold("x = true ?? x", "x = true");
-    fold("x = 0 ?? x", "x = 0");
-    fold("x = 3 ?? x", "x = 3");
+    test("x = false ?? x", "x = false");
+    test("x = true ?? x", "x = true");
+    test("x = 0 ?? x", "x = 0");
+    test("x = 3 ?? x", "x = 3");
 
     // unfoldable, because the right-side may be the result
-    foldSame("a = x ?? true");
-    foldSame("a = x ?? false");
-    foldSame("a = x ?? 3");
-    foldSame("a = b ? c : x ?? false");
-    foldSame("a = b ? x ?? false : c");
+    testSame("a = x ?? true");
+    testSame("a = x ?? false");
+    testSame("a = x ?? 3");
+    testSame("a = b ? c : x ?? false");
+    testSame("a = b ? x ?? false : c");
 
     // folded, but not here.
-    foldSame("a = x ?? false ? b : c");
-    foldSame("a = x ?? true ? b : c");
+    testSame("a = x ?? false ? b : c");
+    testSame("a = x ?? true ? b : c");
 
-    foldSame("x = foo() ?? true ?? bar()");
+    testSame("x = foo() ?? true ?? bar()");
     ;
-    fold("x = foo() ?? (true && bar())", "x = foo() ?? bar()");
-    foldSame("x = (foo() || false) ?? bar()");
+    test("x = foo() ?? (true && bar())", "x = foo() ?? bar()");
+    testSame("x = (foo() || false) ?? bar()");
 
-    fold("a() ?? (1 ?? b())", "a() ?? 1");
-    fold("(a() ?? 1) ?? b()", "a() ?? 1 ?? b()");
+    test("a() ?? (1 ?? b())", "a() ?? 1");
+    test("(a() ?? 1) ?? b()", "a() ?? 1 ?? b()");
+  }
+
+  @Test
+  public void testFoldOptChaining() {
+    // can't fold when optional part may execute
+    testSame("a = x?.y");
+    testSame("a = x?.()");
+
+    // fold args of optional call
+    test("x = foo() ?. (true && bar())", "x = foo() ?.(bar())");
+    test("a() ?. (1 ?? b())", "a() ?. (1)");
+
+    test("({a})?.a.b.c.d()?.x.y.z", "a.b.c.d()?.x.y.z");
+
+    // potential optimization
+    testSame("x = undefined?.y"); // `x = void 0;`
   }
 
   @Test
   public void testFoldBitwiseOp() {
-    fold("x = 1 & 1", "x = 1");
-    fold("x = 1 & 2", "x = 0");
-    fold("x = 3 & 1", "x = 1");
-    fold("x = 3 & 3", "x = 3");
+    test("x = 1 & 1", "x = 1");
+    test("x = 1 & 2", "x = 0");
+    test("x = 3 & 1", "x = 1");
+    test("x = 3 & 3", "x = 3");
 
-    fold("x = 1 | 1", "x = 1");
-    fold("x = 1 | 2", "x = 3");
-    fold("x = 3 | 1", "x = 3");
-    fold("x = 3 | 3", "x = 3");
+    test("x = 1 | 1", "x = 1");
+    test("x = 1 | 2", "x = 3");
+    test("x = 3 | 1", "x = 3");
+    test("x = 3 | 3", "x = 3");
 
-    fold("x = 1 ^ 1", "x = 0");
-    fold("x = 1 ^ 2", "x = 3");
-    fold("x = 3 ^ 1", "x = 2");
-    fold("x = 3 ^ 3", "x = 0");
+    test("x = 1 ^ 1", "x = 0");
+    test("x = 1 ^ 2", "x = 3");
+    test("x = 3 ^ 1", "x = 2");
+    test("x = 3 ^ 3", "x = 0");
 
-    fold("x = -1 & 0", "x = 0");
-    fold("x = 0 & -1", "x = 0");
-    fold("x = 1 & 4", "x = 0");
-    fold("x = 2 & 3", "x = 2");
+    test("x = -1 & 0", "x = 0");
+    test("x = 0 & -1", "x = 0");
+    test("x = 1 & 4", "x = 0");
+    test("x = 2 & 3", "x = 2");
 
     // make sure we fold only when we are supposed to -- not when doing so would
     // lose information or when it is performed on nonsensical arguments.
-    fold("x = 1 & 1.1", "x = 1");
-    fold("x = 1.1 & 1", "x = 1");
-    fold("x = 1 & 3000000000", "x = 0");
-    fold("x = 3000000000 & 1", "x = 0");
+    test("x = 1 & 1.1", "x = 1");
+    test("x = 1.1 & 1", "x = 1");
+    test("x = 1 & 3000000000", "x = 0");
+    test("x = 3000000000 & 1", "x = 0");
 
     // Try some cases with | as well
-    fold("x = 1 | 4", "x = 5");
-    fold("x = 1 | 3", "x = 3");
-    fold("x = 1 | 1.1", "x = 1");
-    foldSame("x = 1 | 3E9");
-    fold("x = 1 | 3000000001", "x = -1294967295");
-    fold("x = 4294967295 | 0", "x = -1");
+    test("x = 1 | 4", "x = 5");
+    test("x = 1 | 3", "x = 3");
+    test("x = 1 | 1.1", "x = 1");
+    testSame("x = 1 | 3E9");
+    test("x = 1 | 3000000001", "x = -1294967295");
+    test("x = 4294967295 | 0", "x = -1");
   }
 
   @Test
   public void testFoldBitwiseOp2() {
-    fold("x = y & 1 & 1", "x = y & 1");
-    fold("x = y & 1 & 2", "x = y & 0");
-    fold("x = y & 3 & 1", "x = y & 1");
-    fold("x = 3 & y & 1", "x = y & 1");
-    fold("x = y & 3 & 3", "x = y & 3");
-    fold("x = 3 & y & 3", "x = y & 3");
+    test("x = y & 1 & 1", "x = y & 1");
+    test("x = y & 1 & 2", "x = y & 0");
+    test("x = y & 3 & 1", "x = y & 1");
+    test("x = 3 & y & 1", "x = y & 1");
+    test("x = y & 3 & 3", "x = y & 3");
+    test("x = 3 & y & 3", "x = y & 3");
 
-    fold("x = y | 1 | 1", "x = y | 1");
-    fold("x = y | 1 | 2", "x = y | 3");
-    fold("x = y | 3 | 1", "x = y | 3");
-    fold("x = 3 | y | 1", "x = y | 3");
-    fold("x = y | 3 | 3", "x = y | 3");
-    fold("x = 3 | y | 3", "x = y | 3");
+    test("x = y | 1 | 1", "x = y | 1");
+    test("x = y | 1 | 2", "x = y | 3");
+    test("x = y | 3 | 1", "x = y | 3");
+    test("x = 3 | y | 1", "x = y | 3");
+    test("x = y | 3 | 3", "x = y | 3");
+    test("x = 3 | y | 3", "x = y | 3");
 
-    fold("x = y ^ 1 ^ 1", "x = y ^ 0");
-    fold("x = y ^ 1 ^ 2", "x = y ^ 3");
-    fold("x = y ^ 3 ^ 1", "x = y ^ 2");
-    fold("x = 3 ^ y ^ 1", "x = y ^ 2");
-    fold("x = y ^ 3 ^ 3", "x = y ^ 0");
-    fold("x = 3 ^ y ^ 3", "x = y ^ 0");
+    test("x = y ^ 1 ^ 1", "x = y ^ 0");
+    test("x = y ^ 1 ^ 2", "x = y ^ 3");
+    test("x = y ^ 3 ^ 1", "x = y ^ 2");
+    test("x = 3 ^ y ^ 1", "x = y ^ 2");
+    test("x = y ^ 3 ^ 3", "x = y ^ 0");
+    test("x = 3 ^ y ^ 3", "x = y ^ 0");
 
-    fold("x = Infinity | NaN", "x=0");
-    fold("x = 12 | NaN", "x=12");
+    test("x = Infinity | NaN", "x=0");
+    test("x = 12 | NaN", "x=12");
   }
 
   @Test
   public void testFoldingMixTypesLate() {
     late = true;
-    fold("x = x + '2'", "x+='2'");
-    fold("x = +x + +'2'", "x = +x + 2");
-    fold("x = x - '2'", "x-=2");
-    fold("x = x ^ '2'", "x^=2");
-    fold("x = '2' ^ x", "x^=2");
-    fold("x = '2' & x", "x&=2");
-    fold("x = '2' | x", "x|=2");
+    test("x = x + '2'", "x+='2'");
+    test("x = +x + +'2'", "x = +x + 2");
+    test("x = x - '2'", "x-=2");
+    test("x = x ^ '2'", "x^=2");
+    test("x = '2' ^ x", "x^=2");
+    test("x = '2' & x", "x&=2");
+    test("x = '2' | x", "x|=2");
 
-    fold("x = '2' | y", "x=2|y");
-    fold("x = y | '2'", "x=y|2");
-    fold("x = y | (a && '2')", "x=y|(a&&2)");
-    fold("x = y | (a,'2')", "x=y|(a,2)");
-    fold("x = y | (a?'1':'2')", "x=y|(a?1:2)");
-    fold("x = y | ('x'?'1':'2')", "x=y|('x'?1:2)");
+    test("x = '2' | y", "x=2|y");
+    test("x = y | '2'", "x=y|2");
+    test("x = y | (a && '2')", "x=y|(a&&2)");
+    test("x = y | (a,'2')", "x=y|(a,2)");
+    test("x = y | (a?'1':'2')", "x=y|(a?1:2)");
+    test("x = y | ('x'?'1':'2')", "x=y|('x'?1:2)");
   }
 
   @Test
   public void testFoldingMixTypesEarly() {
     late = false;
-    foldSame("x = x + '2'");
-    fold("x = +x + +'2'", "x = +x + 2");
-    fold("x = x - '2'", "x = x - 2");
-    fold("x = x ^ '2'", "x = x ^ 2");
-    fold("x = '2' ^ x", "x = 2 ^ x");
-    fold("x = '2' & x", "x = 2 & x");
-    fold("x = '2' | x", "x = 2 | x");
+    testSame("x = x + '2'");
+    test("x = +x + +'2'", "x = +x + 2");
+    test("x = x - '2'", "x = x - 2");
+    test("x = x ^ '2'", "x = x ^ 2");
+    test("x = '2' ^ x", "x = 2 ^ x");
+    test("x = '2' & x", "x = 2 & x");
+    test("x = '2' | x", "x = 2 | x");
 
-    fold("x = '2' | y", "x=2|y");
-    fold("x = y | '2'", "x=y|2");
-    fold("x = y | (a && '2')", "x=y|(a&&2)");
-    fold("x = y | (a,'2')", "x=y|(a,2)");
-    fold("x = y | (a?'1':'2')", "x=y|(a?1:2)");
-    fold("x = y | ('x'?'1':'2')", "x=y|('x'?1:2)");
+    test("x = '2' | y", "x=2|y");
+    test("x = y | '2'", "x=y|2");
+    test("x = y | (a && '2')", "x=y|(a&&2)");
+    test("x = y | (a,'2')", "x=y|(a,2)");
+    test("x = y | (a?'1':'2')", "x=y|(a?1:2)");
+    test("x = y | ('x'?'1':'2')", "x=y|('x'?1:2)");
   }
 
   @Test
   public void testFoldingAdd1() {
-    fold("x = null + true", "x=1");
-    foldSame("x = a + true");
-    fold("x = '' + {}", "x = '[object Object]'");
-    fold("x = [] + {}", "x = '[object Object]'");
-    fold("x = {} + []", "x = '[object Object]'");
-    fold("x = {} + ''", "x = '[object Object]'");
+    test("x = null + true", "x=1");
+    testSame("x = a + true");
+    test("x = '' + {}", "x = '[object Object]'");
+    test("x = [] + {}", "x = '[object Object]'");
+    test("x = {} + []", "x = '[object Object]'");
+    test("x = {} + ''", "x = '[object Object]'");
   }
 
   @Test
   public void testFoldingAdd2() {
-    fold("x = false + []", "x='false'");
-    fold("x = [] + true",  "x='true'");
-    fold("NaN + []", "'NaN'");
+    test("x = false + []", "x='false'");
+    test("x = [] + true", "x='true'");
+    test("NaN + []", "'NaN'");
   }
 
   @Test
   public void testFoldBitwiseOpStringCompare() {
-    fold("x = -1 | 0", "x = -1");
+    test("x = -1 | 0", "x = -1");
   }
 
   @Test
@@ -765,34 +779,34 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // repeat because it confuses the exception verification.
     numRepetitions = 1;
 
-    fold("x = 1 << 0", "x = 1");
-    fold("x = -1 << 0", "x = -1");
-    fold("x = 1 << 1", "x = 2");
-    fold("x = 3 << 1", "x = 6");
-    fold("x = 1 << 8", "x = 256");
+    test("x = 1 << 0", "x = 1");
+    test("x = -1 << 0", "x = -1");
+    test("x = 1 << 1", "x = 2");
+    test("x = 3 << 1", "x = 6");
+    test("x = 1 << 8", "x = 256");
 
-    fold("x = 1 >> 0", "x = 1");
-    fold("x = -1 >> 0", "x = -1");
-    fold("x = 1 >> 1", "x = 0");
-    fold("x = 2 >> 1", "x = 1");
-    fold("x = 5 >> 1", "x = 2");
-    fold("x = 127 >> 3", "x = 15");
-    fold("x = 3 >> 1", "x = 1");
-    fold("x = 3 >> 2", "x = 0");
-    fold("x = 10 >> 1", "x = 5");
-    fold("x = 10 >> 2", "x = 2");
-    fold("x = 10 >> 5", "x = 0");
+    test("x = 1 >> 0", "x = 1");
+    test("x = -1 >> 0", "x = -1");
+    test("x = 1 >> 1", "x = 0");
+    test("x = 2 >> 1", "x = 1");
+    test("x = 5 >> 1", "x = 2");
+    test("x = 127 >> 3", "x = 15");
+    test("x = 3 >> 1", "x = 1");
+    test("x = 3 >> 2", "x = 0");
+    test("x = 10 >> 1", "x = 5");
+    test("x = 10 >> 2", "x = 2");
+    test("x = 10 >> 5", "x = 0");
 
-    fold("x = 10 >>> 1", "x = 5");
-    fold("x = 10 >>> 2", "x = 2");
-    fold("x = 10 >>> 5", "x = 0");
-    fold("x = -1 >>> 1", "x = 2147483647"); // 0x7fffffff
-    fold("x = -1 >>> 0", "x = 4294967295"); // 0xffffffff
-    fold("x = -2 >>> 0", "x = 4294967294"); // 0xfffffffe
-    fold("x = 0x90000000 >>> 28", "x = 9");
+    test("x = 10 >>> 1", "x = 5");
+    test("x = 10 >>> 2", "x = 2");
+    test("x = 10 >>> 5", "x = 0");
+    test("x = -1 >>> 1", "x = 2147483647"); // 0x7fffffff
+    test("x = -1 >>> 0", "x = 4294967295"); // 0xffffffff
+    test("x = -2 >>> 0", "x = 4294967294"); // 0xfffffffe
+    test("x = 0x90000000 >>> 28", "x = 9");
 
-    fold("x = 0xffffffff << 0", "x = -1");
-    fold("x = 0xffffffff << 4", "x = -16");
+    test("x = 0xffffffff << 0", "x = -1");
+    test("x = 0xffffffff << 4", "x = -16");
     testSame("1 << 32");
     testSame("1 << -1");
     testSame("1 >> 32");
@@ -812,51 +826,51 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testFoldBitShiftsStringCompare() {
-    fold("x = -1 << 1", "x = -2");
-    fold("x = -1 << 8", "x = -256");
-    fold("x = -1 >> 1", "x = -1");
-    fold("x = -2 >> 1", "x = -1");
-    fold("x = -1 >> 0", "x = -1");
+    test("x = -1 << 1", "x = -2");
+    test("x = -1 << 8", "x = -256");
+    test("x = -1 >> 1", "x = -1");
+    test("x = -2 >> 1", "x = -1");
+    test("x = -1 >> 0", "x = -1");
   }
 
   @Test
   public void testStringAdd() {
-    fold("x = 'a' + 'bc'", "x = 'abc'");
-    fold("x = 'a' + 5", "x = 'a5'");
-    fold("x = 5 + 'a'", "x = '5a'");
-    fold("x = 'a' + ''", "x = 'a'");
-    fold("x = 'a' + foo()", "x = 'a'+foo()");
-    fold("x = foo() + 'a' + 'b'", "x = foo()+'ab'");
-    fold("x = (foo() + 'a') + 'b'", "x = foo()+'ab'"); // believe it!
-    fold("x = foo() + 'a' + 'b' + 'cd' + bar()", "x = foo()+'abcd'+bar()");
-    fold("x = foo() + 2 + 'b'", "x = foo()+2+\"b\""); // don't fold!
-    fold("x = foo() + 'a' + 2", "x = foo()+\"a2\"");
-    fold("x = '' + null", "x = 'null'");
-    fold("x = true + '' + false", "x = 'truefalse'");
-    fold("x = '' + []", "x = ''");
-    fold("x = foo() + 'a' + 1 + 1", "x = foo() + 'a11'");
-    fold("x = 1 + 1 + 'a'", "x = '2a'");
-    fold("x = 1 + 1 + 'a'", "x = '2a'");
-    fold("x = 'a' + (1 + 1)", "x = 'a2'");
-    fold("x = '_' + p1 + '_' + ('' + p2)", "x = '_' + p1 + '_' + p2");
-    fold("x = 'a' + ('_' + 1 + 1)", "x = 'a_11'");
-    fold("x = 'a' + ('_' + 1) + 1", "x = 'a_11'");
-    fold("x = 1 + (p1 + '_') + ('' + p2)", "x = 1 + (p1 + '_') + p2");
-    fold("x = 1 + p1 + '_' + ('' + p2)", "x = 1 + p1 + '_' + p2");
-    fold("x = 1 + 'a' + p1", "x = '1a' + p1");
-    fold("x = (p1 + (p2 + 'a')) + 'b'", "x = (p1 + (p2 + 'ab'))");
-    fold("'a' + ('b' + p1) + 1", "'ab' + p1 + 1");
-    fold("x = 'a' + ('b' + p1 + 'c')", "x = 'ab' + (p1 + 'c')");
-    foldSame("x = 'a' + (4 + p1 + 'a')");
-    foldSame("x = p1 / 3 + 4");
-    foldSame("foo() + 3 + 'a' + foo()");
-    foldSame("x = 'a' + ('b' + p1 + p2)");
-    foldSame("x = 1 + ('a' + p1)");
-    foldSame("x = p1 + '' + p2");
-    foldSame("x = 'a' + (1 + p1)");
-    foldSame("x = (p2 + 'a') + (1 + p1)");
-    foldSame("x = (p2 + 'a') + (1 + p1 + p2)");
-    foldSame("x = (p2 + 'a') + (1 + (p1 + p2))");
+    test("x = 'a' + 'bc'", "x = 'abc'");
+    test("x = 'a' + 5", "x = 'a5'");
+    test("x = 5 + 'a'", "x = '5a'");
+    test("x = 'a' + ''", "x = 'a'");
+    test("x = 'a' + foo()", "x = 'a'+foo()");
+    test("x = foo() + 'a' + 'b'", "x = foo()+'ab'");
+    test("x = (foo() + 'a') + 'b'", "x = foo()+'ab'"); // believe it!
+    test("x = foo() + 'a' + 'b' + 'cd' + bar()", "x = foo()+'abcd'+bar()");
+    test("x = foo() + 2 + 'b'", "x = foo()+2+\"b\""); // don't fold!
+    test("x = foo() + 'a' + 2", "x = foo()+\"a2\"");
+    test("x = '' + null", "x = 'null'");
+    test("x = true + '' + false", "x = 'truefalse'");
+    test("x = '' + []", "x = ''");
+    test("x = foo() + 'a' + 1 + 1", "x = foo() + 'a11'");
+    test("x = 1 + 1 + 'a'", "x = '2a'");
+    test("x = 1 + 1 + 'a'", "x = '2a'");
+    test("x = 'a' + (1 + 1)", "x = 'a2'");
+    test("x = '_' + p1 + '_' + ('' + p2)", "x = '_' + p1 + '_' + p2");
+    test("x = 'a' + ('_' + 1 + 1)", "x = 'a_11'");
+    test("x = 'a' + ('_' + 1) + 1", "x = 'a_11'");
+    test("x = 1 + (p1 + '_') + ('' + p2)", "x = 1 + (p1 + '_') + p2");
+    test("x = 1 + p1 + '_' + ('' + p2)", "x = 1 + p1 + '_' + p2");
+    test("x = 1 + 'a' + p1", "x = '1a' + p1");
+    test("x = (p1 + (p2 + 'a')) + 'b'", "x = (p1 + (p2 + 'ab'))");
+    test("'a' + ('b' + p1) + 1", "'ab' + p1 + 1");
+    test("x = 'a' + ('b' + p1 + 'c')", "x = 'ab' + (p1 + 'c')");
+    testSame("x = 'a' + (4 + p1 + 'a')");
+    testSame("x = p1 / 3 + 4");
+    testSame("foo() + 3 + 'a' + foo()");
+    testSame("x = 'a' + ('b' + p1 + p2)");
+    testSame("x = 1 + ('a' + p1)");
+    testSame("x = p1 + '' + p2");
+    testSame("x = 'a' + (1 + p1)");
+    testSame("x = (p2 + 'a') + (1 + p1)");
+    testSame("x = (p2 + 'a') + (1 + p1 + p2)");
+    testSame("x = (p2 + 'a') + (1 + (p1 + p2))");
   }
 
   @Test
@@ -868,220 +882,219 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testIssue821() {
-    foldSame("var a =(Math.random()>0.5? '1' : 2 ) + 3 + 4;");
-    foldSame("var a = ((Math.random() ? 0 : 1) ||" +
-             "(Math.random()>0.5? '1' : 2 )) + 3 + 4;");
+    testSame("var a =(Math.random()>0.5? '1' : 2 ) + 3 + 4;");
+    testSame("var a = ((Math.random() ? 0 : 1) ||" + "(Math.random()>0.5? '1' : 2 )) + 3 + 4;");
   }
 
   @Test
   public void testFoldConstructor() {
-    fold("x = this[new String('a')]", "x = this['a']");
-    fold("x = ob[new String(12)]", "x = ob['12']");
-    fold("x = ob[new String(false)]", "x = ob['false']");
-    fold("x = ob[new String(null)]", "x = ob['null']");
-    fold("x = 'a' + new String('b')", "x = 'ab'");
-    fold("x = 'a' + new String(23)", "x = 'a23'");
-    fold("x = 2 + new String(1)", "x = '21'");
-    foldSame("x = ob[new String(a)]");
-    foldSame("x = new String('a')");
-    foldSame("x = (new String('a'))[3]");
+    test("x = this[new String('a')]", "x = this['a']");
+    test("x = ob[new String(12)]", "x = ob['12']");
+    test("x = ob[new String(false)]", "x = ob['false']");
+    test("x = ob[new String(null)]", "x = ob['null']");
+    test("x = 'a' + new String('b')", "x = 'ab'");
+    test("x = 'a' + new String(23)", "x = 'a23'");
+    test("x = 2 + new String(1)", "x = '21'");
+    testSame("x = ob[new String(a)]");
+    testSame("x = new String('a')");
+    testSame("x = (new String('a'))[3]");
   }
 
   @Test
   public void testFoldArithmetic() {
-    fold("x = 10 + 20", "x = 30");
-    fold("x = 2 / 4", "x = 0.5");
-    fold("x = 2.25 * 3", "x = 6.75");
-    foldSame("z = x * y");
-    foldSame("x = y * 5");
-    foldSame("x = 1 / 0");
-    fold("x = 3 % 2", "x = 1");
-    fold("x = 3 % -2", "x = 1");
-    fold("x = -1 % 3", "x = -1");
-    foldSame("x = 1 % 0");
-    fold("x = 2 ** 3", "x = 8");
-    fold("x = 2 ** -3", "x = 0.125");
-    foldSame("x = 2 ** 55"); // backs off folding because 2 ** 55 is too large
-    foldSame("x = 3 ** -1"); // backs off because 3**-1 is shorter than 0.3333333333333333
+    test("x = 10 + 20", "x = 30");
+    test("x = 2 / 4", "x = 0.5");
+    test("x = 2.25 * 3", "x = 6.75");
+    testSame("z = x * y");
+    testSame("x = y * 5");
+    testSame("x = 1 / 0");
+    test("x = 3 % 2", "x = 1");
+    test("x = 3 % -2", "x = 1");
+    test("x = -1 % 3", "x = -1");
+    testSame("x = 1 % 0");
+    test("x = 2 ** 3", "x = 8");
+    test("x = 2 ** -3", "x = 0.125");
+    testSame("x = 2 ** 55"); // backs off folding because 2 ** 55 is too large
+    testSame("x = 3 ** -1"); // backs off because 3**-1 is shorter than 0.3333333333333333
   }
 
   @Test
   public void testFoldArithmetic2() {
-    foldSame("x = y + 10 + 20");
-    foldSame("x = y / 2 / 4");
-    fold("x = y * 2.25 * 3", "x = y * 6.75");
-    foldSame("z = x * y");
-    foldSame("x = y * 5");
-    fold("x = y + (z * 24 * 60 * 60 * 1000)", "x = y + z * 864E5");
+    testSame("x = y + 10 + 20");
+    testSame("x = y / 2 / 4");
+    test("x = y * 2.25 * 3", "x = y * 6.75");
+    testSame("z = x * y");
+    testSame("x = y * 5");
+    test("x = y + (z * 24 * 60 * 60 * 1000)", "x = y + z * 864E5");
   }
 
   @Test
   public void testFoldArithmetic3() {
-    fold("x = null * undefined", "x = NaN");
-    fold("x = null * 1", "x = 0");
-    fold("x = (null - 1) * 2", "x = -2");
-    fold("x = (null + 1) * 2", "x = 2");
-    fold("x = null ** 0", "x = 1");
-    fold("x = (-0) ** 3", "x = -0");
+    test("x = null * undefined", "x = NaN");
+    test("x = null * 1", "x = 0");
+    test("x = (null - 1) * 2", "x = -2");
+    test("x = (null + 1) * 2", "x = 2");
+    test("x = null ** 0", "x = 1");
+    test("x = (-0) ** 3", "x = -0");
   }
 
   @Test
   public void testFoldArithmeticInfinity() {
-    fold("x=-Infinity-2", "x=-Infinity");
-    fold("x=Infinity-2", "x=Infinity");
-    fold("x=Infinity*5", "x=Infinity");
-    fold("x = Infinity ** 2", "x = Infinity");
-    fold("x = Infinity ** -2", "x = 0");
+    test("x=-Infinity-2", "x=-Infinity");
+    test("x=Infinity-2", "x=Infinity");
+    test("x=Infinity*5", "x=Infinity");
+    test("x = Infinity ** 2", "x = Infinity");
+    test("x = Infinity ** -2", "x = 0");
   }
 
   @Test
   public void testFoldArithmeticStringComp() {
-    fold("x = 10 - 20", "x = -10");
+    test("x = 10 - 20", "x = -10");
   }
 
   @Test
   public void testFoldComparison() {
-    fold("x = 0 == 0", "x = true");
-    fold("x = 1 == 2", "x = false");
-    fold("x = 'abc' == 'def'", "x = false");
-    fold("x = 'abc' == 'abc'", "x = true");
-    fold("x = \"\" == ''", "x = true");
-    fold("x = foo() == bar()", "x = foo()==bar()");
+    test("x = 0 == 0", "x = true");
+    test("x = 1 == 2", "x = false");
+    test("x = 'abc' == 'def'", "x = false");
+    test("x = 'abc' == 'abc'", "x = true");
+    test("x = \"\" == ''", "x = true");
+    test("x = foo() == bar()", "x = foo()==bar()");
 
-    fold("x = 1 != 0", "x = true");
-    fold("x = 'abc' != 'def'", "x = true");
-    fold("x = 'a' != 'a'", "x = false");
+    test("x = 1 != 0", "x = true");
+    test("x = 'abc' != 'def'", "x = true");
+    test("x = 'a' != 'a'", "x = false");
 
-    fold("x = 1 < 20", "x = true");
-    fold("x = 3 < 3", "x = false");
-    fold("x = 10 > 1.0", "x = true");
-    fold("x = 10 > 10.25", "x = false");
-    fold("x = y == y", "x = y==y"); // Maybe foldable given type information
-    fold("x = y < y", "x = false");
-    fold("x = y > y", "x = false");
-    fold("x = 1 <= 1", "x = true");
-    fold("x = 1 <= 0", "x = false");
-    fold("x = 0 >= 0", "x = true");
-    fold("x = -1 >= 9", "x = false");
+    test("x = 1 < 20", "x = true");
+    test("x = 3 < 3", "x = false");
+    test("x = 10 > 1.0", "x = true");
+    test("x = 10 > 10.25", "x = false");
+    test("x = y == y", "x = y==y"); // Maybe foldable given type information
+    test("x = y < y", "x = false");
+    test("x = y > y", "x = false");
+    test("x = 1 <= 1", "x = true");
+    test("x = 1 <= 0", "x = false");
+    test("x = 0 >= 0", "x = true");
+    test("x = -1 >= 9", "x = false");
 
-    fold("x = true == true", "x = true");
-    fold("x = false == false", "x = true");
-    fold("x = false == null", "x = false");
-    fold("x = false == true", "x = false");
-    fold("x = true == null", "x = false");
+    test("x = true == true", "x = true");
+    test("x = false == false", "x = true");
+    test("x = false == null", "x = false");
+    test("x = false == true", "x = false");
+    test("x = true == null", "x = false");
 
-    fold("0 == 0", "true");
-    fold("1 == 2", "false");
-    fold("'abc' == 'def'", "false");
-    fold("'abc' == 'abc'", "true");
-    fold("\"\" == ''", "true");
-    foldSame("foo() == bar()");
+    test("0 == 0", "true");
+    test("1 == 2", "false");
+    test("'abc' == 'def'", "false");
+    test("'abc' == 'abc'", "true");
+    test("\"\" == ''", "true");
+    testSame("foo() == bar()");
 
-    fold("1 != 0", "true");
-    fold("'abc' != 'def'", "true");
-    fold("'a' != 'a'", "false");
+    test("1 != 0", "true");
+    test("'abc' != 'def'", "true");
+    test("'a' != 'a'", "false");
 
-    fold("1 < 20", "true");
-    fold("3 < 3", "false");
-    fold("10 > 1.0", "true");
-    fold("10 > 10.25", "false");
-    foldSame("x == x");
-    fold("x < x", "false");
-    fold("x > x", "false");
-    fold("1 <= 1", "true");
-    fold("1 <= 0", "false");
-    fold("0 >= 0", "true");
-    fold("-1 >= 9", "false");
+    test("1 < 20", "true");
+    test("3 < 3", "false");
+    test("10 > 1.0", "true");
+    test("10 > 10.25", "false");
+    testSame("x == x");
+    test("x < x", "false");
+    test("x > x", "false");
+    test("1 <= 1", "true");
+    test("1 <= 0", "false");
+    test("0 >= 0", "true");
+    test("-1 >= 9", "false");
 
-    fold("true == true", "true");
-    fold("false == null", "false");
-    fold("false == true", "false");
-    fold("true == null", "false");
+    test("true == true", "true");
+    test("false == null", "false");
+    test("false == true", "false");
+    test("true == null", "false");
   }
 
   // ===, !== comparison tests
   @Test
   public void testFoldComparison2() {
-    fold("x = 0 === 0", "x = true");
-    fold("x = 1 === 2", "x = false");
-    fold("x = 'abc' === 'def'", "x = false");
-    fold("x = 'abc' === 'abc'", "x = true");
-    fold("x = \"\" === ''", "x = true");
-    fold("x = foo() === bar()", "x = foo()===bar()");
+    test("x = 0 === 0", "x = true");
+    test("x = 1 === 2", "x = false");
+    test("x = 'abc' === 'def'", "x = false");
+    test("x = 'abc' === 'abc'", "x = true");
+    test("x = \"\" === ''", "x = true");
+    test("x = foo() === bar()", "x = foo()===bar()");
 
-    fold("x = 1 !== 0", "x = true");
-    fold("x = 'abc' !== 'def'", "x = true");
-    fold("x = 'a' !== 'a'", "x = false");
+    test("x = 1 !== 0", "x = true");
+    test("x = 'abc' !== 'def'", "x = true");
+    test("x = 'a' !== 'a'", "x = false");
 
-    fold("x = y === y", "x = y===y");
+    test("x = y === y", "x = y===y");
 
-    fold("x = true === true", "x = true");
-    fold("x = false === false", "x = true");
-    fold("x = false === null", "x = false");
-    fold("x = false === true", "x = false");
-    fold("x = true === null", "x = false");
+    test("x = true === true", "x = true");
+    test("x = false === false", "x = true");
+    test("x = false === null", "x = false");
+    test("x = false === true", "x = false");
+    test("x = true === null", "x = false");
 
-    fold("0 === 0", "true");
-    fold("1 === 2", "false");
-    fold("'abc' === 'def'", "false");
-    fold("'abc' === 'abc'", "true");
-    fold("\"\" === ''", "true");
-    foldSame("foo() === bar()");
+    test("0 === 0", "true");
+    test("1 === 2", "false");
+    test("'abc' === 'def'", "false");
+    test("'abc' === 'abc'", "true");
+    test("\"\" === ''", "true");
+    testSame("foo() === bar()");
 
-    fold("1 === '1'", "false");
-    fold("1 === true", "false");
-    fold("1 !== '1'", "true");
-    fold("1 !== true", "true");
+    test("1 === '1'", "false");
+    test("1 === true", "false");
+    test("1 !== '1'", "true");
+    test("1 !== true", "true");
 
-    fold("1 !== 0", "true");
-    fold("'abc' !== 'def'", "true");
-    fold("'a' !== 'a'", "false");
+    test("1 !== 0", "true");
+    test("'abc' !== 'def'", "true");
+    test("'a' !== 'a'", "false");
 
-    foldSame("x === x");
+    testSame("x === x");
 
-    fold("true === true", "true");
-    fold("false === null", "false");
-    fold("false === true", "false");
-    fold("true === null", "false");
+    test("true === true", "true");
+    test("false === null", "false");
+    test("false === true", "false");
+    test("true === null", "false");
   }
 
   @Test
   public void testFoldComparison3() {
-    fold("x = !1 == !0", "x = false");
+    test("x = !1 == !0", "x = false");
 
-    fold("x = !0 == !0", "x = true");
-    fold("x = !1 == !1", "x = true");
-    fold("x = !1 == null", "x = false");
-    fold("x = !1 == !0", "x = false");
-    fold("x = !0 == null", "x = false");
+    test("x = !0 == !0", "x = true");
+    test("x = !1 == !1", "x = true");
+    test("x = !1 == null", "x = false");
+    test("x = !1 == !0", "x = false");
+    test("x = !0 == null", "x = false");
 
-    fold("!0 == !0", "true");
-    fold("!1 == null", "false");
-    fold("!1 == !0", "false");
-    fold("!0 == null", "false");
+    test("!0 == !0", "true");
+    test("!1 == null", "false");
+    test("!1 == !0", "false");
+    test("!0 == null", "false");
 
-    fold("x = !0 === !0", "x = true");
-    fold("x = !1 === !1", "x = true");
-    fold("x = !1 === null", "x = false");
-    fold("x = !1 === !0", "x = false");
-    fold("x = !0 === null", "x = false");
+    test("x = !0 === !0", "x = true");
+    test("x = !1 === !1", "x = true");
+    test("x = !1 === null", "x = false");
+    test("x = !1 === !0", "x = false");
+    test("x = !0 === null", "x = false");
 
-    fold("!0 === !0", "true");
-    fold("!1 === null", "false");
-    fold("!1 === !0", "false");
-    fold("!0 === null", "false");
+    test("!0 === !0", "true");
+    test("!1 === null", "false");
+    test("!1 === !0", "false");
+    test("!0 === null", "false");
   }
 
   @Test
   public void testFoldComparison4() {
-    foldSame("[] == false");  // true
-    foldSame("[] == true");   // false
-    foldSame("[0] == false"); // true
-    foldSame("[0] == true");  // false
-    foldSame("[1] == false"); // false
-    foldSame("[1] == true");  // true
-    foldSame("({}) == false");  // false
-    foldSame("({}) == true");   // true
+    testSame("[] == false"); // true
+    testSame("[] == true"); // false
+    testSame("[0] == false"); // true
+    testSame("[0] == true"); // false
+    testSame("[1] == false"); // false
+    testSame("[1] == true"); // true
+    testSame("({}) == false"); // false
+    testSame("({}) == true"); // true
   }
 
   @Test
@@ -1090,18 +1103,35 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // repeat because it confuses the exception verification.
     numRepetitions = 1;
 
-    fold("x = [,10][0]", "x = void 0");
-    fold("x = [10, 20][0]", "x = 10");
-    fold("x = [10, 20][1]", "x = 20");
+    test("x = [,10][0]", "x = void 0");
+    test("x = [10, 20][0]", "x = 10");
+    test("x = [10, 20][1]", "x = 20");
 
     testSame("x = [10, 20][0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
     test("x = [10, 20][-1]", "x = void 0;");
     test("x = [10, 20][2]", "x = void 0;");
 
-    foldSame("x = [foo(), 0][1]");
-    fold("x = [0, foo()][1]", "x = foo()");
-    foldSame("x = [0, foo()][0]");
-    foldSame("for([1][0] in {});");
+    testSame("x = [foo(), 0][1]");
+    test("x = [0, foo()][1]", "x = foo()");
+    testSame("x = [0, foo()][0]");
+    testSame("for([1][0] in {});");
+  }
+
+  /** Optional versions of the above `testFoldGetElem1` tests */
+  @Test
+  public void testFoldOptChainGetElem1() {
+    numRepetitions = 1;
+    test("x = [,10]?.[0]", "x = void 0");
+    test("x = [10, 20]?.[0]", "x = 10");
+    test("x = [10, 20]?.[1]", "x = 20");
+
+    testSame("x = [10, 20]?.[0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    test("x = [10, 20]?.[-1]", "x = void 0;");
+    test("x = [10, 20]?.[2]", "x = void 0;");
+
+    testSame("x = [foo(), 0]?.[1]");
+    test("x = [0, foo()]?.[1]", "x = foo()");
+    testSame("x = [0, foo()]?.[0]");
   }
 
   @Test
@@ -1110,411 +1140,440 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     // repeat because it confuses the exception verification.
     numRepetitions = 1;
 
-    fold("x = 'string'[5]", "x = 'g'");
-    fold("x = 'string'[0]", "x = 's'");
-    fold("x = 's'[0]", "x = 's'");
-    foldSame("x = '\uD83D\uDCA9'[0]");
+    test("x = 'string'[5]", "x = 'g'");
+    test("x = 'string'[0]", "x = 's'");
+    test("x = 's'[0]", "x = 's'");
+    testSame("x = '\uD83D\uDCA9'[0]");
 
     testSame("x = 'string'[0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
     test("x = 'string'[-1]", "x = void 0;");
     test("x = 'string'[6]", "x = void 0;");
   }
 
+  /** Optional versions of the above `testFoldGetElem2` tests */
+  @Test
+  public void testFoldOptChainGetElem2() {
+    // Running on just changed code results in an exception on only the first invocation. Don't
+    // repeat because it confuses the exception verification.
+    numRepetitions = 1;
+    test("x = 'string'?.[5]", "x = 'g'");
+    test("x = 'string'?.[0]", "x = 's'");
+    test("x = 's'?.[0]", "x = 's'");
+    testSame("x = '\uD83D\uDCA9'?.[0]");
+
+    testSame("x = 'string'?.[0.5]", PeepholeFoldConstants.INVALID_GETELEM_INDEX_ERROR);
+    test("x = 'string'?.[-1]", "x = void 0;");
+    test("x = 'string'?.[6]", "x = void 0;");
+  }
+
   @Test
   public void testFoldArrayLitSpreadGetElem() {
     numRepetitions = 1;
-    fold("x = [...[0]][0]", "x = 0;");
-    fold("x = [0, 1, ...[2, 3, 4]][3]", "x = 3;");
-    fold("x = [...[0, 1], 2, ...[3, 4]][3]", "x = 3;");
-    fold("x = [...[...[0, 1], 2, 3], 4][0]", "x = 0");
-    fold("x = [...[...[0, 1], 2, 3], 4][3]", "x = 3");
+    test("x = [...[0]][0]", "x = 0;");
+    test("x = [0, 1, ...[2, 3, 4]][3]", "x = 3;");
+    test("x = [...[0, 1], 2, ...[3, 4]][3]", "x = 3;");
+    test("x = [...[...[0, 1], 2, 3], 4][0]", "x = 0");
+    test("x = [...[...[0, 1], 2, 3], 4][3]", "x = 3");
     test(srcs("x = [...[]][100]"), expected("x = void 0;"));
     test(srcs("x = [...[0]][100]"), expected("x = void 0;"));
   }
 
+  /** Optional versions of the above `testFoldArrayLitSpreadGetElem` tests */
+  @Test
+  public void testFoldArrayLitSpreadOptChainGetElem() {
+    numRepetitions = 1;
+    test("x = [...[0]]?.[0]", "x = 0;");
+    test("x = [0, 1, ...[2, 3, 4]]?.[3]", "x = 3;");
+    test("x = [...[0, 1], 2, ...[3, 4]]?.[3]", "x = 3;");
+    test("x = [...[...[0, 1], 2, 3], 4]?.[0]", "x = 0");
+    test("x = [...[...[0, 1], 2, 3], 4]?.[3]", "x = 3");
+    test(srcs("x = [...[]]?.[100]"), expected("x = void 0;"));
+    test(srcs("x = [...[0]]?.[100]"), expected("x = void 0;"));
+  }
+
   @Test
   public void testDontFoldNonLiteralSpreadGetElem() {
-    foldSame("x = [...iter][0];");
-    foldSame("x = [0, 1, ...iter][2];");
+    testSame("x = [...iter][0];");
+    testSame("x = [0, 1, ...iter][2];");
     //  `...iter` could have side effects, so don't replace `x` with `0`
-    foldSame("x = [0, 1, ...iter][0];");
+    testSame("x = [0, 1, ...iter][0];");
   }
 
   @Test
   public void testFoldArraySpread() {
     numRepetitions = 1;
-    fold("x = [...[]]", "x = []");
-    fold("x = [0, ...[], 1]", "x = [0, 1]");
-    fold("x = [...[0, 1], 2, ...[3, 4]]", "x = [0, 1, 2, 3, 4]");
-    fold("x = [...[...[0], 1], 2]", "x = [0, 1, 2]");
-    foldSame("[...[x]] = arr");
+    test("x = [...[]]", "x = []");
+    test("x = [0, ...[], 1]", "x = [0, 1]");
+    test("x = [...[0, 1], 2, ...[3, 4]]", "x = [0, 1, 2, 3, 4]");
+    test("x = [...[...[0], 1], 2]", "x = [0, 1, 2]");
+    testSame("[...[x]] = arr");
   }
 
   @Test
   public void testFoldObjectLitSpreadGetProp() {
     numRepetitions = 1;
-    fold("x = {...{a}}.a", "x = a;");
-    fold("x = {a, b, ...{c, d, e}}.d", "x = d;");
-    fold("x = {...{a, b}, c, ...{d, e}}.d", "x = d;");
-    fold("x = {...{...{a, b}, c, d}, e}.a", "x = a");
-    fold("x = {...{...{a, b}, c, d}, e}.d", "x = d");
+    test("x = {...{a}}.a", "x = a;");
+    test("x = {a, b, ...{c, d, e}}.d", "x = d;");
+    test("x = {...{a, b}, c, ...{d, e}}.d", "x = d;");
+    test("x = {...{...{a, b}, c, d}, e}.a", "x = a");
+    test("x = {...{...{a, b}, c, d}, e}.d", "x = d");
   }
 
   @Test
   public void testDontFoldNonLiteralObjectSpreadGetProp_gettersImpure() {
     this.assumeGettersPure = false;
 
-    foldSame("x = {...obj}.a;");
-    foldSame("x = {a, ...obj, c}.a;");
-    foldSame("x = {a, ...obj, c}.c;");
+    testSame("x = {...obj}.a;");
+    testSame("x = {a, ...obj, c}.a;");
+    testSame("x = {a, ...obj, c}.c;");
   }
 
   @Test
   public void testDontFoldNonLiteralObjectSpreadGetProp_assumeGettersPure() {
     this.assumeGettersPure = true;
 
-    foldSame("x = {...obj}.a;");
-    foldSame("x = {a, ...obj, c}.a;");
-    fold("x = {a, ...obj, c}.c;", "x = c;"); // We assume object spread has no side-effects.
+    testSame("x = {...obj}.a;");
+    testSame("x = {a, ...obj, c}.a;");
+    test("x = {a, ...obj, c}.c;", "x = c;"); // We assume object spread has no side-effects.
   }
 
   @Test
   public void testFoldObjectSpread() {
     numRepetitions = 1;
-    fold("x = {...{}}", "x = {}");
-    fold("x = {a, ...{}, b}", "x = {a, b}");
-    fold("x = {...{a, b}, c, ...{d, e}}", "x = {a, b, c, d, e}");
-    fold("x = {...{...{a}, b}, c}", "x = {a, b, c}");
-    foldSame("({...{x}} = obj)");
+    test("x = {...{}}", "x = {}");
+    test("x = {a, ...{}, b}", "x = {a, b}");
+    test("x = {...{a, b}, c, ...{d, e}}", "x = {a, b, c, d, e}");
+    test("x = {...{...{a}, b}, c}", "x = {a, b, c}");
+    testSame("({...{x}} = obj)");
   }
 
   @Test
   public void testDontFoldMixedObjectAndArraySpread() {
     numRepetitions = 1;
-    foldSame("x = [...{}]");
-    foldSame("x = {...[]}");
-    fold("x = [a, ...[...{}]]", "x = [a, ...{}]");
-    fold("x = {a, ...{...[]}}", "x = {a, ...[]}");
+    testSame("x = [...{}]");
+    testSame("x = {...[]}");
+    test("x = [a, ...[...{}]]", "x = [a, ...{}]");
+    test("x = {a, ...{...[]}}", "x = {a, ...[]}");
   }
 
   @Test
   public void testFoldComplex() {
-    fold("x = (3 / 1.0) + (1 * 2)", "x = 5");
-    fold("x = (1 == 1.0) && foo() && true", "x = foo()&&true");
-    fold("x = 'abc' + 5 + 10", "x = \"abc510\"");
+    test("x = (3 / 1.0) + (1 * 2)", "x = 5");
+    test("x = (1 == 1.0) && foo() && true", "x = foo()&&true");
+    test("x = 'abc' + 5 + 10", "x = \"abc510\"");
   }
 
   @Test
   public void testFoldLeft() {
-    foldSame("(+x - 1) + 2"); // not yet
-    fold("(+x + 1) + 2", "+x + 3");
+    testSame("(+x - 1) + 2"); // not yet
+    test("(+x + 1) + 2", "+x + 3");
   }
 
   @Test
   public void testFoldArrayLength() {
     // Can fold
-    fold("x = [].length", "x = 0");
-    fold("x = [1,2,3].length", "x = 3");
-    fold("x = [a,b].length", "x = 2");
+    test("x = [].length", "x = 0");
+    test("x = [1,2,3].length", "x = 3");
+    test("x = [a,b].length", "x = 2");
 
     // Not handled yet
-    fold("x = [,,1].length", "x = 3");
+    test("x = [,,1].length", "x = 3");
 
     // Cannot fold
-    fold("x = [foo(), 0].length", "x = [foo(),0].length");
-    foldSame("x = y.length");
+    test("x = [foo(), 0].length", "x = [foo(),0].length");
+    testSame("x = y.length");
   }
 
   @Test
   public void testFoldStringLength() {
     // Can fold basic strings.
-    fold("x = ''.length", "x = 0");
-    fold("x = '123'.length", "x = 3");
+    test("x = ''.length", "x = 0");
+    test("x = '123'.length", "x = 3");
 
     // Test Unicode escapes are accounted for.
-    fold("x = '123\u01dc'.length", "x = 4");
+    test("x = '123\u01dc'.length", "x = 4");
   }
 
   @Test
   public void testFoldTypeof() {
-    fold("x = typeof 1", "x = \"number\"");
-    fold("x = typeof 'foo'", "x = \"string\"");
-    fold("x = typeof true", "x = \"boolean\"");
-    fold("x = typeof false", "x = \"boolean\"");
-    fold("x = typeof null", "x = \"object\"");
-    fold("x = typeof undefined", "x = \"undefined\"");
-    fold("x = typeof void 0", "x = \"undefined\"");
-    fold("x = typeof []", "x = \"object\"");
-    fold("x = typeof [1]", "x = \"object\"");
-    fold("x = typeof [1,[]]", "x = \"object\"");
-    fold("x = typeof {}", "x = \"object\"");
-    fold("x = typeof function() {}", "x = 'function'");
+    test("x = typeof 1", "x = \"number\"");
+    test("x = typeof 'foo'", "x = \"string\"");
+    test("x = typeof true", "x = \"boolean\"");
+    test("x = typeof false", "x = \"boolean\"");
+    test("x = typeof null", "x = \"object\"");
+    test("x = typeof undefined", "x = \"undefined\"");
+    test("x = typeof void 0", "x = \"undefined\"");
+    test("x = typeof []", "x = \"object\"");
+    test("x = typeof [1]", "x = \"object\"");
+    test("x = typeof [1,[]]", "x = \"object\"");
+    test("x = typeof {}", "x = \"object\"");
+    test("x = typeof function() {}", "x = 'function'");
 
-    foldSame("x = typeof[1,[foo()]]");
-    foldSame("x = typeof{bathwater:baby()}");
+    testSame("x = typeof[1,[foo()]]");
+    testSame("x = typeof{bathwater:baby()}");
   }
 
   @Test
   public void testFoldInstanceOf() {
     // Non object types are never instances of anything.
-    fold("64 instanceof Object", "false");
-    fold("64 instanceof Number", "false");
-    fold("'' instanceof Object", "false");
-    fold("'' instanceof String", "false");
-    fold("true instanceof Object", "false");
-    fold("true instanceof Boolean", "false");
-    fold("!0 instanceof Object", "false");
-    fold("!0 instanceof Boolean", "false");
-    fold("false instanceof Object", "false");
-    fold("null instanceof Object", "false");
-    fold("undefined instanceof Object", "false");
-    fold("NaN instanceof Object", "false");
-    fold("Infinity instanceof Object", "false");
+    test("64 instanceof Object", "false");
+    test("64 instanceof Number", "false");
+    test("'' instanceof Object", "false");
+    test("'' instanceof String", "false");
+    test("true instanceof Object", "false");
+    test("true instanceof Boolean", "false");
+    test("!0 instanceof Object", "false");
+    test("!0 instanceof Boolean", "false");
+    test("false instanceof Object", "false");
+    test("null instanceof Object", "false");
+    test("undefined instanceof Object", "false");
+    test("NaN instanceof Object", "false");
+    test("Infinity instanceof Object", "false");
 
     // Array and object literals are known to be objects.
-    fold("[] instanceof Object", "true");
-    fold("({}) instanceof Object", "true");
+    test("[] instanceof Object", "true");
+    test("({}) instanceof Object", "true");
 
     // These cases is foldable, but no handled currently.
-    foldSame("new Foo() instanceof Object");
+    testSame("new Foo() instanceof Object");
     // These would require type information to fold.
-    foldSame("[] instanceof Foo");
-    foldSame("({}) instanceof Foo");
+    testSame("[] instanceof Foo");
+    testSame("({}) instanceof Foo");
 
-    fold("(function() {}) instanceof Object", "true");
+    test("(function() {}) instanceof Object", "true");
 
     // An unknown value should never be folded.
-    foldSame("x instanceof Foo");
+    testSame("x instanceof Foo");
   }
 
   @Test
   public void testDivision() {
     // Make sure the 1/3 does not expand to 0.333333
-    foldSame("print(1/3)");
+    testSame("print(1/3)");
 
     // Decimal form is preferable to fraction form when strings are the
     // same length.
-    fold("print(1/2)", "print(0.5)");
+    test("print(1/2)", "print(0.5)");
   }
 
   @Test
   public void testAssignOpsLate() {
     late = true;
-    fold("x=x+y", "x+=y");
-    foldSame("x=y+x");
-    fold("x=x*y", "x*=y");
-    fold("x=y*x", "x*=y");
-    fold("x.y=x.y+z", "x.y+=z");
-    foldSame("next().x = next().x + 1");
+    test("x=x+y", "x+=y");
+    testSame("x=y+x");
+    test("x=x*y", "x*=y");
+    test("x=y*x", "x*=y");
+    test("x.y=x.y+z", "x.y+=z");
+    testSame("next().x = next().x + 1");
 
-    fold("x=x-y", "x-=y");
-    foldSame("x=y-x");
-    fold("x=x|y", "x|=y");
-    fold("x=y|x", "x|=y");
-    fold("x=x*y", "x*=y");
-    fold("x=y*x", "x*=y");
-    fold("x=x**y", "x**=y");
-    foldSame("x=y**x");
-    fold("x.y=x.y+z", "x.y+=z");
-    foldSame("next().x = next().x + 1");
+    test("x=x-y", "x-=y");
+    testSame("x=y-x");
+    test("x=x|y", "x|=y");
+    test("x=y|x", "x|=y");
+    test("x=x*y", "x*=y");
+    test("x=y*x", "x*=y");
+    test("x=x**y", "x**=y");
+    testSame("x=y**x");
+    test("x.y=x.y+z", "x.y+=z");
+    testSame("next().x = next().x + 1");
     // This is OK, really.
-    fold("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
+    test("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
   }
 
   @Test
   public void testAssignOpsEarly() {
     late = false;
-    foldSame("x=x+y");
-    foldSame("x=y+x");
-    foldSame("x=x*y");
-    foldSame("x=y*x");
-    foldSame("x.y=x.y+z");
-    foldSame("next().x = next().x + 1");
+    testSame("x=x+y");
+    testSame("x=y+x");
+    testSame("x=x*y");
+    testSame("x=y*x");
+    testSame("x.y=x.y+z");
+    testSame("next().x = next().x + 1");
 
-    foldSame("x=x-y");
-    foldSame("x=y-x");
-    foldSame("x=x|y");
-    foldSame("x=y|x");
-    foldSame("x=x*y");
-    foldSame("x=y*x");
-    foldSame("x=x**y");
-    foldSame("x=y**2");
-    foldSame("x.y=x.y+z");
-    foldSame("next().x = next().x + 1");
+    testSame("x=x-y");
+    testSame("x=y-x");
+    testSame("x=x|y");
+    testSame("x=y|x");
+    testSame("x=x*y");
+    testSame("x=y*x");
+    testSame("x=x**y");
+    testSame("x=y**2");
+    testSame("x.y=x.y+z");
+    testSame("next().x = next().x + 1");
     // This is OK, really.
-    fold("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
+    test("({a:1}).a = ({a:1}).a + 1", "({a:1}).a = 2");
   }
 
   @Test
   public void testUnfoldAssignOpsLate() {
     late = true;
-    foldSame("x+=y");
-    foldSame("x*=y");
-    foldSame("x.y+=z");
-    foldSame("x-=y");
-    foldSame("x|=y");
-    foldSame("x*=y");
-    foldSame("x**=y");
-    foldSame("x.y+=z");
+    testSame("x+=y");
+    testSame("x*=y");
+    testSame("x.y+=z");
+    testSame("x-=y");
+    testSame("x|=y");
+    testSame("x*=y");
+    testSame("x**=y");
+    testSame("x.y+=z");
   }
 
   @Test
   public void testUnfoldAssignOpsEarly() {
     late = false;
-    fold("x+=y", "x=x+y");
-    fold("x*=y", "x=x*y");
-    fold("x.y+=z", "x.y=x.y+z");
-    fold("x-=y", "x=x-y");
-    fold("x|=y", "x=x|y");
-    fold("x*=y", "x=x*y");
-    fold("x**=y", "x=x**y");
-    fold("x.y+=z", "x.y=x.y+z");
+    test("x+=y", "x=x+y");
+    test("x*=y", "x=x*y");
+    test("x.y+=z", "x.y=x.y+z");
+    test("x-=y", "x=x-y");
+    test("x|=y", "x=x|y");
+    test("x*=y", "x=x*y");
+    test("x**=y", "x=x**y");
+    test("x.y+=z", "x.y=x.y+z");
   }
 
   @Test
   public void testFoldAdd1() {
-    fold("x=false+1", "x=1");
-    fold("x=true+1", "x=2");
-    fold("x=1+false", "x=1");
-    fold("x=1+true", "x=2");
+    test("x=false+1", "x=1");
+    test("x=true+1", "x=2");
+    test("x=1+false", "x=1");
+    test("x=1+true", "x=2");
   }
 
   @Test
   public void testFoldLiteralNames() {
-    fold("NaN == NaN", "false");
-    fold("Infinity == Infinity", "true");
-    fold("Infinity == NaN", "false");
-    fold("undefined == NaN", "false");
-    fold("undefined == Infinity", "false");
+    test("NaN == NaN", "false");
+    test("Infinity == Infinity", "true");
+    test("Infinity == NaN", "false");
+    test("undefined == NaN", "false");
+    test("undefined == Infinity", "false");
 
-    fold("Infinity >= Infinity", "true");
-    fold("NaN >= NaN", "false");
+    test("Infinity >= Infinity", "true");
+    test("NaN >= NaN", "false");
   }
 
   @Test
   public void testFoldLiteralsTypeMismatches() {
-    fold("true == true", "true");
-    fold("true == false", "false");
-    fold("true == null", "false");
-    fold("false == null", "false");
+    test("true == true", "true");
+    test("true == false", "false");
+    test("true == null", "false");
+    test("false == null", "false");
 
     // relational operators convert its operands
-    fold("null <= null", "true"); // 0 = 0
-    fold("null >= null", "true");
-    fold("null > null", "false");
-    fold("null < null", "false");
+    test("null <= null", "true"); // 0 = 0
+    test("null >= null", "true");
+    test("null > null", "false");
+    test("null < null", "false");
 
-    fold("false >= null", "true"); // 0 = 0
-    fold("false <= null", "true");
-    fold("false > null", "false");
-    fold("false < null", "false");
+    test("false >= null", "true"); // 0 = 0
+    test("false <= null", "true");
+    test("false > null", "false");
+    test("false < null", "false");
 
-    fold("true >= null", "true");  // 1 > 0
-    fold("true <= null", "false");
-    fold("true > null", "true");
-    fold("true < null", "false");
+    test("true >= null", "true"); // 1 > 0
+    test("true <= null", "false");
+    test("true > null", "true");
+    test("true < null", "false");
 
-    fold("true >= false", "true");  // 1 > 0
-    fold("true <= false", "false");
-    fold("true > false", "true");
-    fold("true < false", "false");
+    test("true >= false", "true"); // 1 > 0
+    test("true <= false", "false");
+    test("true > false", "true");
+    test("true < false", "false");
   }
 
   @Test
   public void testFoldLeftChildConcat() {
-    foldSame("x +5 + \"1\"");
-    fold("x+\"5\" + \"1\"", "x + \"51\"");
-    // fold("\"a\"+(c+\"b\")", "\"a\"+c+\"b\"");
-    fold("\"a\"+(\"b\"+c)", "\"ab\"+c");
+    testSame("x +5 + \"1\"");
+    test("x+\"5\" + \"1\"", "x + \"51\"");
+    // test("\"a\"+(c+\"b\")", "\"a\"+c+\"b\"");
+    test("\"a\"+(\"b\"+c)", "\"ab\"+c");
   }
 
   @Test
   public void testFoldLeftChildOp() {
-    fold("x * Infinity * 2", "x * Infinity");
-    foldSame("x - Infinity - 2"); // want "x-Infinity"
-    foldSame("x - 1 + Infinity");
-    foldSame("x - 2 + 1");
-    foldSame("x - 2 + 3");
-    foldSame("1 + x - 2 + 1");
-    foldSame("1 + x - 2 + 3");
-    foldSame("1 + x - 2 + 3 - 1");
-    foldSame("f(x)-0");
-    fold("x-0-0", "x-0");
-    foldSame("x+2-2+2");
-    foldSame("x+2-2+2-2");
-    foldSame("x-2+2");
-    foldSame("x-2+2-2");
-    foldSame("x-2+2-2+2");
+    test("x * Infinity * 2", "x * Infinity");
+    testSame("x - Infinity - 2"); // want "x-Infinity"
+    testSame("x - 1 + Infinity");
+    testSame("x - 2 + 1");
+    testSame("x - 2 + 3");
+    testSame("1 + x - 2 + 1");
+    testSame("1 + x - 2 + 3");
+    testSame("1 + x - 2 + 3 - 1");
+    testSame("f(x)-0");
+    test("x-0-0", "x-0");
+    testSame("x+2-2+2");
+    testSame("x+2-2+2-2");
+    testSame("x-2+2");
+    testSame("x-2+2-2");
+    testSame("x-2+2-2+2");
 
-    foldSame("1+x-0-NaN");
-    foldSame("1+f(x)-0-NaN");
-    foldSame("1+x-0+NaN");
-    foldSame("1+f(x)-0+NaN");
+    testSame("1+x-0-NaN");
+    testSame("1+f(x)-0-NaN");
+    testSame("1+x-0+NaN");
+    testSame("1+f(x)-0+NaN");
 
-    foldSame("1+x+NaN"); // unfoldable
-    foldSame("x+2-2");   // unfoldable
-    foldSame("x+2");  // nothing to do
-    foldSame("x-2");  // nothing to do
+    testSame("1+x+NaN"); // unfoldable
+    testSame("x+2-2"); // unfoldable
+    testSame("x+2"); // nothing to do
+    testSame("x-2"); // nothing to do
   }
 
   @Test
   public void testFoldSimpleArithmeticOp() {
-    foldSame("x*NaN");
-    foldSame("NaN/y");
-    foldSame("f(x)-0");
-    foldSame("f(x)*1");
-    foldSame("1*f(x)");
-    foldSame("0+a+b");
-    foldSame("0-a-b");
-    foldSame("a+b-0");
-    foldSame("(1+x)*NaN");
+    testSame("x*NaN");
+    testSame("NaN/y");
+    testSame("f(x)-0");
+    testSame("f(x)*1");
+    testSame("1*f(x)");
+    testSame("0+a+b");
+    testSame("0-a-b");
+    testSame("a+b-0");
+    testSame("(1+x)*NaN");
 
-    foldSame("(1+f(x))*NaN"); // don't fold side-effects
+    testSame("(1+f(x))*NaN"); // don't fold side-effects
   }
 
   @Test
   public void testFoldLiteralsAsNumbers() {
-    fold("x/'12'", "x/12");
-    fold("x/('12'+'6')", "x/126");
-    fold("true*x", "1*x");
-    fold("x/false", "x/0");  // should we add an error check? :)
+    test("x/'12'", "x/12");
+    test("x/('12'+'6')", "x/126");
+    test("true*x", "1*x");
+    test("x/false", "x/0"); // should we add an error check? :)
   }
 
   @Test
   public void testNotFoldBackToTrueFalse() {
     late = false;
-    fold("!0", "true");
-    fold("!1", "false");
-    fold("!3", "false");
+    test("!0", "true");
+    test("!1", "false");
+    test("!3", "false");
 
     late = true;
-    foldSame("!0");
-    foldSame("!1");
-    fold("!3", "false");
-    foldSame("false");
-    foldSame("true");
+    testSame("!0");
+    testSame("!1");
+    test("!3", "false");
+    testSame("false");
+    testSame("true");
   }
 
   @Test
   public void testFoldBangConstants() {
-    fold("1 + !0", "2");
-    fold("1 + !1", "1");
-    fold("'a ' + !1", "'a false'");
-    fold("'a ' + !0", "'a true'");
+    test("1 + !0", "2");
+    test("1 + !1", "1");
+    test("'a ' + !1", "'a false'");
+    test("'a ' + !0", "'a true'");
   }
 
   @Test
   public void testFoldMixed() {
-    fold("''+[1]", "'1'");
-    fold("false+[]", "\"false\"");
+    test("''+[1]", "'1'");
+    test("false+[]", "\"false\"");
   }
 
   @Test
   public void testFoldVoid() {
-    foldSame("void 0");
-    fold("void 1", "void 0");
-    fold("void x", "void 0");
-    foldSame("void x()");
+    testSame("void 0");
+    test("void 1", "void 0");
+    test("void x", "void 0");
+    testSame("void x()");
   }
 
   @Test
@@ -1555,17 +1614,23 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // Getters should not be inlined.
     testSame("({get a() {return this}}).a");
+    testSame("({get a() {return this}})?.a");
 
     // Except, if we can see that the getter function never references 'this'.
     test("({get a() {return 0}}).a", "(function() {return 0})()");
+    test("({get a() {return 0}})?.a", "(function() {return 0})()");
+    test("({get a() {return 0}})?.a.b", "(function() {return 0})().b");
 
     // It's okay to inline functions, as long as they're not immediately called.
-    // (For tests where they are immediately called, see testFoldObjectLiteralRefCall)
+    // (For tests where they are immediately called, see testFoldObjectLiteral_X)
     test("({a:function(){return this}}).a", "(function(){return this})");
+    test("({a:function(){return this}})?.a", "(function(){return this})");
 
     // It's also okay to inline functions that are immediately called, so long as we know for
     // sure the function doesn't reference 'this'.
     test("({a:function(){return 0}}).a()", "(function(){return 0})()");
+    test("({a:function(){return 0}})?.a()", "(function(){return 0})()");
+    test("({a:function(){return 0}})?.a().b", "(function(){return 0})().b");
 
     // Don't inline setters.
     testSame("({set a(b) {return this}}).a");
@@ -1607,6 +1672,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     // try folding string computed properties
     test("var a = {['a']:x}['a']", "var a = x");
+    test("var a = {['a']:x}?.['a']", "var a = x");
+    test("var a = {['a']:x}?.['a'].b", "var a = x.b");
+
     test("var a = { get ['a']() { return 1; }}['a']", "var a = function() { return 1; }();");
     test("var a = {'a': x, ['a']: y}['a']", "var a = y;");
     testSame("var a = {['foo']: x}.a;");
@@ -1643,31 +1711,42 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testFoldObjectLiteral_methodCall_nonLiteralFn() {
     testSame("({a:x}).a()");
+    testSame("({a:x})?.a()");
+    testSame("({a:x})?.a()?.b");
   }
 
   @Test
   public void testFoldObjectLiteral_freeMethodCall() {
     test("({a() { return 1; }}).a()", "(function() { return 1; })()");
+    test("({a() { return 1; }})?.a()", "(function() { return 1; })()");
+
+    // grandparent of optional chaining AST continues the chain
+    test("({a() { return 1; }})?.a().b", "(function() { return 1; })().b");
+    test("({a() { return 1; }})?.a().b.c?.d", "(function() { return 1; })().b.c?.d");
   }
 
   @Test
   public void testFoldObjectLiteral_freeArrowCall_usingEnclosingThis() {
     test("({a: () => this }).a()", "(() => this)()");
+    test("({a: () => this })?.a()", "(() => this)()");
   }
 
   @Test
   public void testFoldObjectLiteral_unfreeMethodCall_dueToThis() {
     testSame("({a() { return this; }}).a()");
+    testSame("({a() { return this; }})?.a()");
   }
 
   @Test
   public void testFoldObjectLiteral_unfreeMethodCall_dueToSuper() {
     testSame("({a() { return super.toString(); }}).a()");
+    testSame("({a() { return super.toString(); }})?.a()");
   }
 
   @Test
   public void testFoldObjectLiteral_paramToInvocation() {
     test("console.log({a: 1}.a)", "console.log(1)");
+    test("console.log({a: 1}?.a)", "console.log(1)");
   }
 
   @Test
@@ -1699,8 +1778,9 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("function f(/** number */ x) { x + 1 + 1 + x; }");
   }
 
-  public void foldDefineProperties1() {
-    test("Object.defineProperties({}, {})", "{}");
+  @Test
+  public void foldDefineProperties() {
+    test("Object.defineProperties({}, {})", "({})");
     test("Object.defineProperties(a, {})", "a");
     testSame("Object.defineProperties(a, {anything:1})");
   }
@@ -1792,7 +1872,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
             if (a.equals("NaN") ||
                 a.equals("Infinity") ||
                 a.equals("-Infinity")) {
-              fold(join(a, op, b), a.equals("NaN") ? "false" : "true");
+              test(join(a, op, b), a.equals("NaN") ? "false" : "true");
             } else {
               assertSameResults(join(a, op, b), "true");
               assertSameResults(join(a, inverse, b), "false");
@@ -1836,7 +1916,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Test
   public void testConvertToNumberNegativeInf() {
-    foldSame("var x = 3 * (r ? Infinity : -Infinity);");
+    testSame("var x = 3 * (r ? Infinity : -Infinity);");
   }
 
   @Test
@@ -1850,28 +1930,28 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldNumericTypes("x-0", "x");
     foldNumericTypes("x-0-0-0", "x");
     // 'x-0' is numeric even if x isn't
-    fold("var x='a'; x-0-0", "var x='a';x-0");
+    test("var x='a'; x-0-0", "var x='a';x-0");
     foldNumericTypes("0-x", "-x");
-    fold("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "for(var i=0; i < 5; i++) var x=i");
+    test("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "for(var i=0; i < 5; i++) var x=i");
 
     foldNumericTypes("x*1", "x");
     foldNumericTypes("1*x", "x");
     // can't optimize these without a non-NaN prover
-    foldSame("x*0");
-    foldSame("0*x");
-    foldSame("0/x");
+    testSame("x*0");
+    testSame("0*x");
+    testSame("0/x");
 
     foldNumericTypes("x/1", "x");
   }
 
   private void foldNumericTypes(String js, String expected) {
-    fold(
+    test(
         "function f(/** @type {number} */ x) { " + js + " }",
         "function f(/** @type {number} */ x) { " + expected + " }");
   }
 
   private void foldStringTypes(String js, String expected) {
-    fold(
+    test(
         "function f(/** @type {string} */ x) { " + js + " }",
         "function f(/** @type {string} */ x) { " + expected + " }");
   }
@@ -1919,3 +1999,4 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     return compiler.toSource(mainRoot);
   }
 }
+

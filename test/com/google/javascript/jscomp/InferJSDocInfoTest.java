@@ -33,7 +33,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link InferJSDocInfo}.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 // TODO(nicksantos): A lot of this code is duplicated from
 // TypedScopeCreatorTest. We should create a common test harness for

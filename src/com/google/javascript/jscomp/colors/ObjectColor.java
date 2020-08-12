@@ -18,16 +18,14 @@ package com.google.javascript.jscomp.colors;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
 
 /**
  * A user-defined object type. For now each type is defined by a unique class name and file source.
  */
 @AutoValue
 public abstract class ObjectColor implements Color {
-
-  public static ObjectColor create(String className, String fileName) {
-    return new AutoValue_ObjectColor(className, fileName);
-  }
 
   @Override
   public boolean isPrimitive() {
@@ -52,4 +50,42 @@ public abstract class ObjectColor implements Color {
   public abstract String getClassName();
 
   public abstract String getFilename();
+
+  // given `function Foo() {}` or `class Foo {}`, color of Foo.prototype. null otherwise.
+  @Nullable
+  public abstract Color getPrototype();
+
+  @Nullable
+  public abstract Color getInstanceColor();
+
+  // List of other colors directly above this in the subtyping graph for the purposes of property
+  // (dis)ambiguation.
+  public abstract ImmutableList<Color> getDisambiguationSupertypes();
+
+  @Override
+  public abstract boolean isInvalidating();
+
+  /** Builder for ObjectColors */
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder setClassName(String value);
+
+    public abstract Builder setFilename(String value);
+
+    public abstract Builder setInvalidating(boolean value);
+
+    public abstract Builder setDisambiguationSupertypes(ImmutableList<Color> supertypes);
+
+    public abstract Builder setPrototype(Color prototype);
+
+    public abstract Builder setInstanceColor(Color instanceColor);
+
+    public abstract ObjectColor build();
+  }
+
+  public static Builder builder() {
+    return new AutoValue_ObjectColor.Builder()
+        .setInvalidating(false)
+        .setDisambiguationSupertypes(ImmutableList.of());
+  }
 }

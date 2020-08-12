@@ -39,28 +39,42 @@ public final class FixedPointGraphTraversal<N, E> {
 
   private final EdgeCallback<N, E> callback;
 
+  private enum TraversalDirection {
+    INWARDS, // from a node to its incoming edges
+    OUTWARDS // from a node to its outgoing edges
+  }
+
+  private final TraversalDirection traversalDirection;
+
   public static final String NON_HALTING_ERROR_MSG =
     "Fixed point computation not halting";
 
   /**
    * Create a new traversal.
-   * @param callback A callback for updating the state of the graph each
-   *     time an edge is traversed.
+   *
+   * @param callback A callback for updating the state of the graph each time an edge is traversed.
    */
-  public FixedPointGraphTraversal(EdgeCallback<N, E> callback) {
+  private FixedPointGraphTraversal(
+      EdgeCallback<N, E> callback, TraversalDirection traversalDirection) {
     this.callback = callback;
+    this.traversalDirection = traversalDirection;
   }
 
-  /**
-   * Helper method for creating new traversals.
-   */
-  public static <NODE, EDGE> FixedPointGraphTraversal<NODE, EDGE> newTraversal(
-      EdgeCallback<NODE, EDGE> callback) {
-    return new FixedPointGraphTraversal<>(callback);
+  /** Helper method for creating new traversals that traverse from parent to child. */
+  public static <NodeT, EdgeT> FixedPointGraphTraversal<NodeT, EdgeT> newTraversal(
+      EdgeCallback<NodeT, EdgeT> callback) {
+    return new FixedPointGraphTraversal<>(callback, TraversalDirection.OUTWARDS);
+  }
+
+  /** Helper method for creating new traversals that traverse from child to parent. */
+  public static <NodeT, EdgeT> FixedPointGraphTraversal<NodeT, EdgeT> newReverseTraversal(
+      EdgeCallback<NodeT, EdgeT> callback) {
+    return new FixedPointGraphTraversal<>(callback, TraversalDirection.INWARDS);
   }
 
   /**
    * Compute a fixed point for the given graph.
+   *
    * @param graph The graph to traverse.
    */
   public void computeFixedPoint(DiGraph<N, E> graph) {
@@ -101,33 +115,49 @@ public final class FixedPointGraphTraversal<N, E> {
       workSet.add(graph.getNode(n));
     }
     for (; !workSet.isEmpty() && cycleCount < maxIterations; cycleCount++) {
-      // For every out edge in the workSet, traverse that edge. If that
-      // edge updates the state of the graph, then add the destination
-      // node to the resultSet, so that we can update all of its out edges
-      // on the next iteration.
-      DiGraphNode<N, E> source = workSet.iterator().next();
-      N sourceValue = source.getValue();
-
-      workSet.remove(source);
-
-      for (DiGraphEdge<N, E> edge : source.getOutEdges()) {
-        N destNode = edge.getDestination().getValue();
-        if (callback.traverseEdge(sourceValue, edge.getValue(), destNode)) {
-          workSet.add(edge.getDestination());
-        }
-      }
+      visitNode(workSet.iterator().next(), workSet);
     }
 
     checkState(cycleCount != maxIterations, NON_HALTING_ERROR_MSG);
   }
 
+  private void visitNode(DiGraphNode<N, E> node, LinkedHashSet<DiGraphNode<N, E>> workSet) {
+    // For every out edge in the workSet, traverse that edge. If that
+    // edge updates the state of the graph, then add the destination
+    // node to the resultSet, so that we can update all of its out edges
+    // on the next iteration.
+    workSet.remove(node);
+    switch (traversalDirection) {
+      case OUTWARDS:
+        N sourceValue = node.getValue();
+        for (DiGraphEdge<N, E> edge : node.getOutEdges()) {
+          N destValue = edge.getDestination().getValue();
+          if (callback.traverseEdge(sourceValue, edge.getValue(), destValue)) {
+            workSet.add(edge.getDestination());
+          }
+        }
+        return;
+      case INWARDS:
+        N revSourceValue = node.getValue();
+        for (DiGraphEdge<N, E> edge : node.getInEdges()) {
+          N revDestValue = edge.getSource().getValue();
+          if (callback.traverseEdge(revSourceValue, edge.getValue(), revDestValue)) {
+            workSet.add(edge.getSource());
+          }
+        }
+        return;
+    }
+    throw new AssertionError("Unrecognized direction " + traversalDirection);
+  }
+
   /** Edge callback */
-  public static interface EdgeCallback<Node, Edge> {
+  public interface EdgeCallback<Node, Edge> {
     /**
-     * Update the state of the destination node when the given edge
-     * is traversed. For the fixed-point computation to work, only the
-     * destination node may be modified. The source node and the edge must
-     * not be modified.
+     * Update the state of the destination node when the given edge is traversed.
+     *
+     * <p>Recall that depending on the direction of the traversal, {@code source} and {@code
+     * destination} may be swapped compared to the orientation of the edge in the graph. In either
+     * case, only the {@code destination} parameter may be mutated.
      *
      * @param source The start node.
      * @param e The edge.

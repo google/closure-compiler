@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * that a caller can get information about a target, use that information to do additional type
  * inference, and finally call {@code inferType} if desired.
  */
-final class DestructuredTarget {
+public final class DestructuredTarget {
   private final JSTypeRegistry registry;
   /**
    * Holds the STRING_KEY or COMPUTED_PROPERTY for a target in an object pattern. Null for targets
@@ -82,30 +82,30 @@ final class DestructuredTarget {
 
   /** Returns a COMPUTED_PROP node or null */
   @Nullable
-  Node getComputedProperty() {
+  public Node getComputedProperty() {
     return hasComputedProperty() ? objectPatternKey : null;
   }
 
-  boolean hasComputedProperty() {
+  public boolean hasComputedProperty() {
     return objectPatternKey != null && objectPatternKey.isComputedProp();
   }
 
-  boolean hasStringKey() {
+  public boolean hasStringKey() {
     return objectPatternKey != null && objectPatternKey.isStringKey();
   }
 
   /** Returns a STRING_KEY node or null */
   @Nullable
-  Node getStringKey() {
+  public Node getStringKey() {
     return hasStringKey() ? objectPatternKey : null;
   }
 
   @Nullable
-  Node getDefaultValue() {
+  public Node getDefaultValue() {
     return defaultValue;
   }
 
-  boolean hasDefaultValue() {
+  public boolean hasDefaultValue() {
     return defaultValue != null;
   }
 
@@ -225,20 +225,12 @@ final class DestructuredTarget {
     return builder.build();
   }
 
-  Supplier<JSType> getInferredTypeSupplier() {
-    return this::inferType;
-  }
-
-  Supplier<JSType> getInferredTypeSupplierWithoutDefaultValue() {
-    return this::inferTypeWithoutUsingDefaultValue;
-  }
-
   /**
    * Returns all the targets directly in the given pattern, except for EMPTY nodes
    *
    * <p>EMPTY nodes occur in array patterns with elisions, e.g. `[, , a] = []`
    */
-  static ImmutableList<DestructuredTarget> createAllNonEmptyTargetsInPattern(
+  public static ImmutableList<DestructuredTarget> createAllNonEmptyTargetsInPattern(
       JSTypeRegistry registry, JSType patternType, Node pattern) {
     return createAllNonEmptyTargetsInPattern(registry, () -> patternType, pattern);
   }
@@ -248,7 +240,7 @@ final class DestructuredTarget {
    *
    * <p>EMPTY nodes occur in array patterns with elisions, e.g. `[, , a] = []`
    */
-  static ImmutableList<DestructuredTarget> createAllNonEmptyTargetsInPattern(
+  public static ImmutableList<DestructuredTarget> createAllNonEmptyTargetsInPattern(
       JSTypeRegistry registry, Supplier<JSType> patternType, Node pattern) {
     checkArgument(pattern.isDestructuringPattern(), pattern);
     ImmutableList.Builder<DestructuredTarget> builder = ImmutableList.builder();

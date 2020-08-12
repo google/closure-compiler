@@ -32,7 +32,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link DepsFileRegexParser}.
  *
- * @author agrieve@google.com (Andrew Grieve)
  */
 @RunWith(JUnit4.class)
 public final class DepsFileRegexParserTest {

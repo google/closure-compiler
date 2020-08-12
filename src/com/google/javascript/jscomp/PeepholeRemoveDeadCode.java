@@ -29,8 +29,8 @@ import java.util.ArrayDeque;
 import javax.annotation.Nullable;
 
 /**
- * Peephole optimization to remove useless code such as IF's with false
- * guard conditions, comma operator left hand sides with no side effects, etc.
+ * Peephole optimization to remove useless code such as IF's with false guard conditions, comma
+ * operator's left hand sides with no side effects, etc.
  */
 class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
@@ -445,7 +445,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Returns a expression executing {@code expr} which is legal in any expression context.
+   * Returns an expression executing {@code expr} which is legal in any expression context.
    *
    * @param expr An attached expression
    * @return A detached expression
@@ -457,7 +457,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         switch (expr.getParent().getToken()) {
           case ARRAYLIT:
           case NEW:
-          case CALL:
+          case CALL: // `Math.sin(...c)`
+          case OPTCHAIN_CALL: // `Math?.sin(...c)`
             expr = IR.arraylit(expr.detach()).srcref(expr);
             break;
           case OBJECTLIT:
@@ -554,7 +555,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       reportChangeToEnclosingScope(replacement);
       return replacement;
     } else if (n.hasTwoChildren() && n.getLastChild().isDefaultCase()) {
-      if (n.getFirstChild().isCall()) {
+      if (n.getFirstChild().isCall() || n.getFirstChild().isOptChainCall()) {
+        // Before removing switch, we must preserve the switch condition if it is a call
         return tryRemoveSwitchWithSingleCase(n, true);
       } else {
         return tryRemoveSwitchWithSingleCase(n, false);
@@ -990,17 +992,17 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       elseBody = null;
     }
 
-    // if (x()) { }
+    // `if (x()) { }` or `if (x?.()) { }`
     if (!mayHaveSideEffects(thenBody) && elseBody == null) {
       if (mayHaveSideEffects(cond)) {
-        // x() has side effects, just leave the condition on its own.
+        // `x()` or `x?.()` has side effects, just leave the condition on its own.
         n.removeChild(cond);
         Node replacement = NodeUtil.newExpr(cond);
         parent.replaceChild(n, replacement);
         reportChangeToEnclosingScope(parent);
         return replacement;
       } else {
-        // x() has no side effects, the whole tree is useless now.
+        // `x()` or `x?.()` has no side effects, the whole tree is useless now.
         NodeUtil.removeChild(parent, n);
         reportChangeToEnclosingScope(parent);
         return null;

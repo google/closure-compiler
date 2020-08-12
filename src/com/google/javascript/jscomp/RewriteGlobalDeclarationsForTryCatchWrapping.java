@@ -23,17 +23,20 @@ import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
 /**
- * Moves top-level function declarations to the top of the enclosing JSModule.
+ * Moves top-level function declarations to the top of the enclosing JSModule and rewrites class
+ * declarations.
  *
  * <p>Enable this pass if a try catch block wraps the output after compilation, and the output runs
  * on Firefox because function declarations are only defined when reached inside a try catch block
  * on older versions of Firefox.
  *
- * <p>On Firefox versions <= 45, this code works:
+ * <p>On Firefox versions <= 45 (March 2016), this code works:
  *
  * <p>var g = f; function f() {}
  *
@@ -41,23 +44,26 @@ import java.util.Map.Entry;
  *
  * <p>try { var g = f; function f() {} } catch(e) {}
  *
- * <p>NOTE(lharker): As of Firefox version 46 the above code works. Projects not supporting older
- * versions of Firefox shouldn't need this pass.
+ * <p>NOTE: As of Firefox version 46 the above code works. Projects not supporting older versions of
+ * Firefox shouldn't need this pass.
  *
  * <p>RescopeGlobalSymbols still depends on this pass running first to preserve function hoisting
  * semantics.
  *
- * <p>NOTE(dimvar): This pass is safe to turn on by default and delete the associated compiler
- * option. However, we don't do that because the pass is only useful for code wrapped in a
- * try/catch, and otherwise it makes debugging harder because it moves code around.
+ * <p>NOTE: This pass is safe to turn on by default and delete the associated compiler option.
+ * However, we don't do that because the pass is only useful for code wrapped in a try/catch, and
+ * otherwise it makes debugging harder because it moves code around.
+ *
+ * <p>NOTE: now that this pass also moves class declarations it should be renamed along with the
+ * associated options.
  */
-class MoveFunctionDeclarations implements Callback, CompilerPass {
+class RewriteGlobalDeclarationsForTryCatchWrapping implements Callback, CompilerPass {
   private final AbstractCompiler compiler;
-  private final ListMultimap<JSModule, Node> functions;
+  private final ListMultimap<JSModule, Node> functions = ArrayListMultimap.create();
+  private final ArrayList<Node> classes = new ArrayList<>();
 
-  MoveFunctionDeclarations(AbstractCompiler compiler) {
+  RewriteGlobalDeclarationsForTryCatchWrapping(AbstractCompiler compiler) {
     this.compiler = compiler;
-    functions = ArrayListMultimap.create();
   }
 
   @Override
@@ -68,6 +74,10 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
       List<Node> fnNodes = Lists.reverse(entry.getValue());
       if (!fnNodes.isEmpty()) {
         for (Node n : fnNodes) {
+          Node parent = n.getParent();
+          parent.removeChild(n);
+          compiler.reportChangeToEnclosingScope(parent);
+
           Node nameNode = n.getFirstChild();
           String name = nameNode.getString();
           nameNode.setString("");
@@ -77,6 +87,16 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
         }
         compiler.reportChangeToEnclosingScope(addingRoot);
       }
+    }
+
+    for (Node n : classes) {
+      // rewrite CLASS > NAME ... => VAR > NAME > CLASS > EMPTY ...
+      Node originalNameNode = n.getFirstChild();
+      originalNameNode.replaceWith(IR.empty());
+      Node var = IR.var(originalNameNode);
+      n.replaceWith(var);
+      originalNameNode.addChildToFront(n);
+      compiler.reportChangeToEnclosingScope(n);
     }
   }
 
@@ -93,10 +113,16 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
     }
 
     if (NodeUtil.isFunctionDeclaration(n)) {
-      parent.removeChild(n);
-      compiler.reportChangeToEnclosingScope(parent);
-
       functions.put(t.getModule(), n);
+    }
+
+    if (NodeUtil.isClassDeclaration(n)) {
+      classes.add(n);
+    }
+
+    if (n.isConst() || n.isLet()) {
+      n.setToken(Token.VAR);
+      compiler.reportChangeToEnclosingScope(n);
     }
   }
 }

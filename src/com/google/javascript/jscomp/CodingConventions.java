@@ -67,12 +67,6 @@ public final class CodingConventions {
     return n.getFirstChild().matchesQualifiedName(alwaysThrowsFunctionName);
   }
 
-  static boolean isAliasingGlobalThis(CodingConvention convention, Node n) {
-    return n.isAssign()
-        && n.getFirstChild().matchesQualifiedName(convention.getGlobalObject())
-        && n.getLastChild().isThis();
-  }
-
   /**
    * A convention that wraps another.
    *
@@ -263,11 +257,6 @@ public final class CodingConventions {
     @Override
     public String getGlobalObject() {
       return nextConvention.getGlobalObject();
-    }
-
-    @Override
-    public boolean isAliasingGlobalThis(Node n) {
-      return nextConvention.isAliasingGlobalThis(n);
     }
 
     @Override
@@ -520,11 +509,6 @@ public final class CodingConventions {
     @Override
     public String getGlobalObject() {
       return "window";
-    }
-
-    @Override
-    public boolean isAliasingGlobalThis(Node n) {
-      return CodingConventions.isAliasingGlobalThis(this, n);
     }
 
     @Override

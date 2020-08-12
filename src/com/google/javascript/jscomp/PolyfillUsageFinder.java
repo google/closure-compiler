@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -24,13 +26,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /** Detects all potential usages of polyfilled classes or methods */
-final class PolyfillFindingCallback {
+final class PolyfillUsageFinder {
 
   /**
    * Represents a single polyfill: specifically, for a native symbol, a set of native and polyfill
@@ -141,15 +145,6 @@ final class PolyfillFindingCallback {
       return new Polyfills(methods.build(), statics.build());
     }
 
-    /**
-     * Given a qualified name {@code node}, checks whether the suffix
-     * of the name could possibly match a static polyfill.
-     */
-    boolean checkSuffix(Node node) {
-      return node.isGetProp()
-          ? suffixes.contains(node.getLastChild().getString())
-          : node.isName() && suffixes.contains(node.getString());
-    }
   }
 
   @AutoValue
@@ -162,17 +157,21 @@ final class PolyfillFindingCallback {
 
     abstract boolean isExplicitGlobal();
 
-    private static PolyfillUsage create(
-        Polyfill polyfill, Node node, String name, boolean isExplicitGlobal) {
-      return new AutoValue_PolyfillFindingCallback_PolyfillUsage(
-          polyfill, node, name, isExplicitGlobal);
+    private static PolyfillUsage createExplicit(Polyfill polyfill, Node node, String name) {
+      return new AutoValue_PolyfillUsageFinder_PolyfillUsage(
+          polyfill, node, name, /* isExplicitGlobal= */ true);
+    }
+
+    private static PolyfillUsage createNonExplicit(Polyfill polyfill, Node node, String name) {
+      return new AutoValue_PolyfillUsageFinder_PolyfillUsage(
+          polyfill, node, name, /* isExplicitGlobal= */ false);
     }
   }
 
   private final AbstractCompiler compiler;
   private final Polyfills polyfills;
 
-  PolyfillFindingCallback(AbstractCompiler compiler, Polyfills polyfills) {
+  PolyfillUsageFinder(AbstractCompiler compiler, Polyfills polyfills) {
     this.polyfills = polyfills;
     this.compiler = compiler;
   }
@@ -245,50 +244,131 @@ final class PolyfillFindingCallback {
 
     @Override
     public void visitGuarded(NodeTraversal traversal, Node node, Node parent) {
-      // Find qualified names that match static calls
-      if (node.isQualifiedName() && polyfills.checkSuffix(node)) {
-        String name = node.getQualifiedName();
-
-        // TODO(sdh): We could reduce some work here by combining the global names
-        // check with the root-in-scope check but it's not clear how to do so and
-        // still keep the var lookup *after* the polyfill-existence check.
-        boolean isExplicitGlobal = false;
-        for (String global : GLOBAL_NAMES) {
-          if (name.startsWith(global)) {
-            name = name.substring(global.length());
-            isExplicitGlobal = true;
-            break;
-          }
-        }
-
-        // If the name is known, then make sure it's either explicitly or implicitly global.
-        Polyfill polyfill = polyfills.statics.get(name);
-        if (polyfill != null && !isExplicitGlobal && isRootInScope(node, traversal)) {
-          polyfill = null;
-        }
-
-        if (polyfill != null && includeGuardedUsages.shouldInclude(isGuarded(name))) {
-          emit(polyfill, node, name, isExplicitGlobal);
-          // Bail out because isGetProp overlaps below
-          return;
-        }
+      switch (node.getToken()) {
+        case NAME:
+          visitName(traversal, node);
+          break;
+        case GETPROP:
+        case OPTCHAIN_GETPROP:
+          visitGetPropChain(traversal, node);
+          break;
+        default:
+          // nothing to do
       }
+    }
 
-      // Inject anything that *might* match method calls - these may be removed later.
-      if (node.isGetProp()) {
-        String methodName = node.getLastChild().getString();
-        Collection<Polyfill> methods = polyfills.methods.get(methodName);
-        if (!methods.isEmpty() && includeGuardedUsages.shouldInclude(isGuarded("." + methodName))) {
-          for (Polyfill polyfill : methods) {
-            emit(polyfill, node, methodName, /* rootIsKnownGlobal= */ false);
+    private void visitName(NodeTraversal traversal, Node nameNode) {
+      String name = nameNode.getString();
+      Polyfill polyfill = polyfills.statics.get(name);
+      if (polyfill == null) {
+        // no polyfill exists for this name
+        return;
+      }
+      if (traversal.getScope().getVar(name) != null) {
+        // This class is only supposed to traverse over actual sources, not externs,
+        // so it shouldn't see the declarations of the things being polyfilled.
+        // If we see a declaration of the name, then it is defined by the source code,
+        // and we won't count it as a reference to our polyfill.
+        return;
+      }
+      if (includeGuardedUsages.shouldInclude(isGuarded(name))) {
+        this.polyfillConsumer.accept(PolyfillUsage.createNonExplicit(polyfill, nameNode, name));
+      }
+    }
+
+    private void visitGetPropChain(NodeTraversal traversal, Node getPropNode) {
+      // First see if we have a usage that matches a full static polyfill name.
+      // e.g. `Array.from` or `globalThis.Promise.allSettled`
+      PolyfillUsage staticPolyfillUsage =
+          maybeCreateStaticPolyfillUsageForGetPropChain(traversal, getPropNode);
+      if (staticPolyfillUsage != null) {
+        if (includeGuardedUsages.shouldInclude(isGuarded(staticPolyfillUsage.name()))) {
+          this.polyfillConsumer.accept(staticPolyfillUsage);
+        }
+      } else {
+        // We don't have a static polyfill usage, but this could still be a reference to one of
+        // several possible method polyfills.
+        // e.g. `obj.includes(x)` could be a usage of `Array.prototype.includes` or
+        // `String.prototype.includes`.
+        final String propertyName = getPropNode.getSecondChild().getString();
+        Collection<Polyfill> methodPolyfills = polyfills.methods.get(propertyName);
+        // Note that we use ".foo" as the guard check for methods to keep them distinct in case
+        // there is also a static "foo" polyfill.
+        if (!methodPolyfills.isEmpty()
+            && includeGuardedUsages.shouldInclude(isGuarded("." + propertyName))) {
+          for (Polyfill polyfill : methodPolyfills) {
+            this.polyfillConsumer.accept(
+                PolyfillUsage.createNonExplicit(polyfill, getPropNode, propertyName));
           }
         }
       }
     }
+  }
 
-    private void emit(Polyfill polyfill, Node node, String name, boolean rootIsKnownGlobal) {
-      this.polyfillConsumer.accept(PolyfillUsage.create(polyfill, node, name, rootIsKnownGlobal));
+  @Nullable
+  private PolyfillUsage maybeCreateStaticPolyfillUsageForGetPropChain(
+      NodeTraversal traversal, final Node getPropNode) {
+    checkArgument(getPropNode.isGetProp() || getPropNode.isOptChainGetProp(), getPropNode);
+    final String lastComponent = getPropNode.getSecondChild().getString();
+    if (!polyfills.suffixes.contains(lastComponent)) {
+      // Save execution time by bailing out early if the property name at the end of the chain
+      // doesn't match any of the known polyfills.
+      return null;
     }
+    // NOTE: We are not using isQualifiedName() and getQualifiedName() here, because we want to
+    // locate the owner node and also have this code work for optional chains.
+    final ArrayDeque<String> components = new ArrayDeque<>();
+    components.addFirst(lastComponent);
+    Node ownerNode;
+    for (ownerNode = getPropNode.getFirstChild();
+        ownerNode.isGetProp() || ownerNode.isOptChainGetProp();
+        ownerNode = ownerNode.getFirstChild()) {
+      components.addFirst(ownerNode.getSecondChild().getString());
+    }
+    if (!ownerNode.isName()) {
+      // Static polyfills are always fully qualified names beginning with a NAME node.
+      // e.g. `Array.from` or `globalThis.Promise`
+      return null;
+    }
+    final String rootName = ownerNode.getString();
+    components.addFirst(rootName);
+    final String fullName = String.join(".", components);
+    final String globalPrefix = findGlobalPrefix(fullName);
+    if (globalPrefix != null) {
+      // The full name starts with a known global value, like `goog.global.` or `globalThis.`.
+      // We must strip that off before matching with the known polyfill names.
+      // (Note that the connecting '.' is included and will also be stripped.)
+      // Also, the presence of the explicit global value name means we don't have to check the
+      // scope for a shadowing variable as we do below.
+      Polyfill polyfill = polyfills.statics.get(fullName.substring(globalPrefix.length()));
+      if (polyfill != null) {
+        return PolyfillUsage.createExplicit(polyfill, getPropNode, polyfill.nativeSymbol);
+      }
+    } else {
+      Polyfill polyfill = polyfills.statics.get(fullName);
+      if (polyfill != null) {
+        // This class is only supposed to traverse over actual sources, not externs,
+        // so it shouldn't see the declarations of the things being polyfilled.
+        // If we see a declaration of the name, then it is defined by the source code,
+        // and we won't count it as a reference to our polyfill.
+        // Checking the scope is relatively expensive, so we don't want to do it until
+        // we've confirmed that this node looks like it could be a polyfill reference.
+        if (traversal.getScope().getVar(rootName) == null) {
+          return PolyfillUsage.createNonExplicit(polyfill, getPropNode, polyfill.nativeSymbol);
+        }
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  private static String findGlobalPrefix(String qualifiedName) {
+    for (String global : GLOBAL_NAMES) {
+      if (qualifiedName.startsWith(global)) {
+        return global;
+      }
+    }
+    return null;
   }
 
   private static final ImmutableSet<String> GLOBAL_NAMES =
@@ -321,11 +401,5 @@ final class PolyfillFindingCallback {
       default:
         return false;
     }
-  }
-
-  private static boolean isRootInScope(Node node, NodeTraversal traversal) {
-    Node root = NodeUtil.getRootOfQualifiedName(node);
-    // NOTE: `this` and `super` are always considered "in scope" and thus shouldn't be polyfilled.
-    return !root.isName() || traversal.getScope().getVar(root.getString()) != null;
   }
 }

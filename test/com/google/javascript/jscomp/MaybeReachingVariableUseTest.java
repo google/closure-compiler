@@ -33,20 +33,17 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link MaybeReachingVariableUse}.
  *
+ * <p>The test cases consist of a short code snippet that has an instruction labeled with D and one
+ * or more with label starting with U. When assertMatch is called, the test suite verifies that all
+ * the uses with label starting with U is reachable to the definition label at D.
  */
+// TODO(rishipal): Consider classifying these tests based on the position of `D` and `U` in input.
 @RunWith(JUnit4.class)
 public final class MaybeReachingVariableUseTest {
 
   private MaybeReachingVariableUse useDef = null;
   private Node def = null;
   private List<Node> uses = null;
-
-  /*
-   * The test cases consist of a short code snippet that has an instruction
-   * labeled with D and one or more with label starting with U. When assertMatch
-   * is called, the test suite verifies that all the uses with label starting
-   * with U is reachable to the definition label at D.
-   */
 
   @Test
   public void testStraightLine() {
@@ -63,49 +60,97 @@ public final class MaybeReachingVariableUseTest {
     assertMatch("var x; if(a){ D:x=1 }else { x=2 }; U:x");
     assertMatch("var x; if(a){ x=1 }else { D:x=2 }; U:x");
     assertMatch("D:var x=1; if(a){ U1: x }else { U2: x };");
+    // Original def is redefined along all paths to the use, hence not reachable.
+    assertNotMatch("D: var x; if(a){ x=1 }else { x=2 }; U:x");
   }
 
   @Test
   public void testLoops() {
     assertMatch("var x=0; while(a){ D:x=1 }; U:x");
+    assertMatch("var x=0; for(;cond;) { D:x=1 }; U:x");
+
+    // statically infinite loops don't have a CFG edge to the end
     assertNotMatch("var x=0; for(;;) { D:x=1 }; U:x");
     assertNotMatch("var x=0; for(;true;) { D:x=1 }; U:x");
     assertNotMatch("var x=0; while (true) { D:x=1 }; U:x");
+    // even un-obscured(exposed) defs before the infinite loop don't reach their uses
+    assertNotMatch("D: var x=0; while (true) { y=1 }; U:x");
 
     assertMatch("D:var x=1; while(a) { U:x }");
     assertMatch("D:var x=1; for(;;)  { U:x }");
   }
 
+  // This test shows that MaybeReachingVariableUseTest does not use data flow(values) in
+  // conditionals but relies only on static CFG edges to find whether a use reaches a def.
+  // TODO(rishipal): Make Control flow analysis smarter about short ciruiting and update this test.
+  @Test
+  public void testShortCircuiting_usesOnlyCFGEdges() {
+
+    // Even though `(x=1)` will never execute at runtime in the following cases, it is conditionally
+    // executed in  static analysis (=no dataflow) , i.e. there exists a static CFG path from D->U
+    // that does not redefine `x`. Hence we add U to the "may-be" reaching use of D.
+    assertMatch("var x=0; D: var y = false && (x=1); U:x");
+    assertMatch("var x=0; D: var y = true || (x=1); U:x");
+    assertMatch("var x=0; var y=0; D:(y=0)&&(x=1); U:x");
+
+    // Even though `(x=1)` will always execute at runtime, it is conditionally executed in  static
+    // analysis (=no dataflow) , i.e. there exists a static CFG path from D->U which adds U to the
+    // "may-be" reaching use of D.
+    assertMatch("D: var x=0; var y = true && (x=1); U:x");
+    assertMatch("D: var x=0; var y = false || (x=1); U:x");
+  }
+
   @Test
   public void testConditional() {
+    // Def on LHS is unconditional
     assertMatch("var x=0; var y; D:(x=1)&&y; U:x");
-    assertMatch("var x=0; var y; D:y&&(x=1); U:x");
-    assertMatch("var x=0; var y=0; D:(x=1)&&(y=0); U:x");
-    assertMatch("var x=0; var y=0; D:(y=0)&&(x=1); U:x");
-    assertNotMatch("D: var x=0; var y=0; (x=1)&&(y=0); U:x");
+    assertNotMatch("D: var x=0; var y; (x=1)&&(y); U:x");
+
+    // Even though `(x=1)` will always execute at runtime, it is conditionally executed in static
+    // analysis (=no dataflow) , i.e. there exists a static CFG path from D->U that does not
+    // redefine `x`. Hence we add U to the "may-be" reaching use of D.
     assertMatch("D: var x=0; var y=0; (y=1)&&((y=2)||(x=1)); U:x");
-    assertMatch("D: var x=0; var y=0; (y=0)&&(x=1); U:x");
+    assertMatch("D: var x=0; var y=1; (y)&&(x=1); U:x");
   }
 
   @Test
   public void nullishCoalesce() {
     // LHS always executed
     assertMatch("var x=0; var y; D:(x=1)??y; U:x");
-    assertMatch("var x=0; var y=0; D:(x=1)??(y=0); U:x");
+    assertNotMatch("D: var x=0; var y; (x=1)??(y); U:x");
 
-    // y is undefined so RHS is executed
+    // Even though `(x=1)` will always execute at runtime as `y` is undefined, it is conditionally
+    // executed in  static analysis (=no dataflow) , i.e. there exists a static CFG path from D->U
+    // that does not redefine `x`. Hence we add U to the "may-be" reaching use of D.
     assertMatch("var x=0; var y; D:y??(x=1); U:x");
+    assertMatch("D: var x=0; var y; y??(x=1); U:x");
+    assertMatch("D: var x=0; var y; (y)??((y)||(x=1)); U:x");
+
+    // Even though `(x=1)` will never execute at runtime in the following cases, it is conditionally
+    // executed in  static analysis (=no dataflow), i.e. there exists a static CFG path from D->U
+    // that does not redefine `x`. Hence we add U to the "may-be" reaching use of D.
+    assertMatch("var x=0; var y=1; D:(y=1)??(x=1); U:x");
+    assertMatch("D: var x=0; var y; (y)&&((y)??(x=1)); U:x");
+  }
+
+  @Test
+  public void optionalChaining() {
+    // LHS always executed
+    assertMatch("var x=0; var y; D:(x=1)?.y; U:x");
+    assertMatch("var x=0; var y=0; D:(x=1)?.(y=0); U:x");
+    assertNotMatch("D: var x=0; var y=0; (x=1)?.(y=0); U:x");
 
     // one of the paths will reach the definition
-    assertMatch("var x=0; var y=0; D:(y=0)??(x=1); U:x");
+    assertMatch("var x=0; var y=0; D:(y=0)?.(x=1); U:x");
+    assertMatch("var x=0; var y; D:y?.(x=1); U:x");
 
-    // x is redefined because LHS is always executed
-    assertNotMatch("D: var x=0; var y=0; (x=1)??(y=0); U:x");
+    // Flow analysis isn't smart enough to recognize that `(x=1)` here gets short circuited and
+    // never executes at runtime
+    assertMatch("var x=0; var y; D: y?.(true||(x=1)); U:x");
 
     // RHS not always executed due to short circuiting
-    assertMatch("D: var x=0; var y=0; (y=1)??((y=2)||(x=1)); U:x");
-    assertMatch("D: var x=0; var y=0; (y=1)&&((y=2)??(x=1)); U:x");
-    assertMatch("D: var x=0; var y=0; (y=0)??(x=1); U:x");
+    assertMatch("D: var x=0; var y; y?.((y=2)||(x=1)); U:x");
+    assertMatch("D: var x=0; var y; y?.(x=1); U:x");
   }
 
   @Test
@@ -124,6 +169,8 @@ public final class MaybeReachingVariableUseTest {
   public void testHook() {
     assertMatch("var x=0; D:foo() ? x=1 : bar(); U:x");
     assertMatch("var x=0; D:foo() ? x=1 : x=2; U:x");
+    // TODO(rishipal): Fix this test. The U should not be reachable to D as D is obscured by redef.
+    assertMatch("D: var x=0; foo() ? x=1 : x=2; U:x");
   }
 
   @Test
@@ -131,12 +178,15 @@ public final class MaybeReachingVariableUseTest {
     assertNotMatch("D: var x = 0; U: x = 100");
     assertMatch("D: var x = 0; U: x += 100");
     assertMatch("D: var x = 0; U: x -= 100");
+    assertNotMatch("D: var x = 0; x+=10; U:x");
   }
 
   @Test
   public void testInc() {
     assertMatch("D: var x = 0; U:x++");
     assertMatch("var x = 0; D:x++; U:x");
+    // TODO(rishipal): Fix this test. The U should not be reachable to D as D is obscured by redef.
+    assertMatch("D: var x = 0; x++; U:x");
   }
 
   @Test
@@ -180,6 +230,12 @@ public final class MaybeReachingVariableUseTest {
         + "D: var x = 1; "
         + "try { U: var y = foo() + x; } catch (e) {} "
         + "U: var z = x;");
+
+    assertMatch("" + "D: var x = 1; " + "try { x=2; U: var y = foo() + x; } catch (e) {} ");
+
+    // TODO(rishipal): Fix this test. The U should not be reachable to D as D is obscured by redef.
+    assertMatch(
+        "" + "D: var x = 1; " + "try { x=2; U: var y = foo() + x; } catch (e) {} " + "U:x;");
   }
 
   @Test
@@ -188,6 +244,7 @@ public final class MaybeReachingVariableUseTest {
     assertMatch("D: var x = 1; var y; U: [y = x] = [];");
     assertMatch("D: var [x] = []; U: x;");
     assertMatch("var x; x = 3; D: [x] = 5; U: x;");
+    assertNotMatch("D: var x; x = 3; [x] = 5; U: x;");
   }
 
   private void assertMatch(String src) {
@@ -216,7 +273,8 @@ public final class MaybeReachingVariableUseTest {
   /** The def of x at D: is not used by the read of x at U:. */
   private void assertNotMatch(String src, boolean async) {
     computeUseDef(src, async);
-    assertThat(useDef.getUses("x", def)).doesNotContain(uses);
+    Collection<Node> result = useDef.getUses("x", def);
+    assertThat(result.containsAll(uses)).isFalse();
   }
 
   /** Computes reaching use on given source. */
@@ -265,3 +323,4 @@ public final class MaybeReachingVariableUseTest {
     }
   }
 }
+

@@ -33,7 +33,6 @@ import org.junit.runners.JUnit4;
  * Tests for {@link MinimizedCondition} in isolation. Tests for the containing
  * PeepholeMinimizeConditions pass are in {@link PeepholeMinimizeConditionsTest}.
  *
- * @author blickly@google.com (Ben Lickly)
  */
 @RunWith(JUnit4.class)
 public final class MinimizedConditionTest {

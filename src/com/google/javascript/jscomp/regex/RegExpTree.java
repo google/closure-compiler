@@ -399,7 +399,7 @@ public abstract class RegExpTree {
         CharRanges ieExplicits = CharRanges.EMPTY;
         while (pos < limit && pattern.charAt(pos) != ']') {
           char ch = pattern.charAt(pos);
-          char start;
+          int start;
           if (ch == '\\') {
             ++pos;
             char possibleGroupName = pattern.charAt(pos);
@@ -414,7 +414,7 @@ public abstract class RegExpTree {
             start = ch;
             ++pos;
           }
-          char end = start;
+          int end = start;
           if (pos + 1 < limit && pattern.charAt(pos) == '-'
               && pattern.charAt(pos + 1) != ']') {
             ++pos;
@@ -459,12 +459,11 @@ public abstract class RegExpTree {
       }
 
       /**
-       * Parses an escape to a code point.
-       * Some of the characters parsed here have special meanings in various
-       * contexts, so contexts must filter those instead.
-       * E.g. '\b' means a different thing inside a charset than without.
+       * Parses an escape to a code point. Some of the characters parsed here have special meanings
+       * in various contexts, so contexts must filter those instead. E.g. '\b' means a different
+       * thing inside a charset than without.
        */
-      private char parseEscapeChar() {
+      private int parseEscapeChar() {
         char ch = pattern.charAt(pos++);
         switch (ch) {
           case 'b': return '\b';
@@ -472,7 +471,10 @@ public abstract class RegExpTree {
           case 'n': return '\n';
           case 'r': return '\r';
           case 't': return '\t';
-          case 'u': return parseHex(4);
+          case 'u':
+            return (flags.contains("u") && pos < limit && pattern.charAt(pos) == '{')
+                ? parseBracedUnicodeEscape()
+                : parseHex(4);
           case 'v': return '\u000b';
           case 'x': return parseHex(2);
           default:
@@ -599,18 +601,23 @@ public abstract class RegExpTree {
             ++pos;
             return new Charset(charGroup, CharRanges.EMPTY);
           }
-          return new Text("" + parseEscapeChar());
+          return new Text(new String(Character.toChars(parseEscapeChar())));
         }
       }
 
-      /**
-       * Parses n hex digits to a code-unit.
-       */
-      private char parseHex(int n) {
+      /** Parses n hex digits to a code-unit. */
+      private int parseHex(int n) {
         if (pos + n > limit) {
           throw new IllegalArgumentException(
               "Abbreviated hex escape " + pattern.substring(pos));
         }
+        if (n > 7) {
+          // We need to guard the MSB to prevent overflow.
+          throw new IllegalArgumentException(
+              "Cannot parse hexadecimal encoding wider than 28 bits: "
+                  + pattern.substring(pos, pos + n));
+        }
+
         int result = 0;
         while (--n >= 0) {
           char ch = pattern.charAt(pos);
@@ -627,7 +634,31 @@ public abstract class RegExpTree {
           ++pos;
           result = (result << 4) | digit;
         }
-        return (char) result;
+        return result;
+      }
+
+      private int parseBracedUnicodeEscape() {
+        int openBrace = pos;
+        checkState(pattern.charAt(pos++) == '{');
+
+        int closeBrace = pos;
+        while (closeBrace < limit && pattern.charAt(closeBrace) != '}') {
+          closeBrace++;
+        }
+        if (closeBrace == limit) {
+          throw new IllegalArgumentException(
+              "Malformed unicode escape: expected '}' after " + pattern.substring(openBrace));
+        } else if (closeBrace == pos) {
+          throw new IllegalArgumentException("Empty unicode escape");
+        }
+
+        int result = parseHex(closeBrace - pos);
+        if (result > 0x10FFFF) {
+          throw new IllegalArgumentException(
+              "Unicode must be at most 0x10FFFF: " + pattern.substring(openBrace + 1, pos));
+        }
+        pos++; // Consume the close brace.
+        return result;
       }
 
       private boolean isRepetitionStart(char ch) {

@@ -28,4 +28,6 @@ public interface Color {
   boolean isObject();
 
   ImmutableCollection<Color> getAlternates();
+
+  boolean isInvalidating();
 }

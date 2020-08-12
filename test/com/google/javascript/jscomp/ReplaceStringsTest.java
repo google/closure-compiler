@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.List;

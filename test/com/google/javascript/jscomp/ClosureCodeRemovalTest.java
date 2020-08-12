@@ -23,7 +23,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link ClosureCodeRemoval}
  *
- * @author robbyw@google.com (Robby Walker)
  */
 @RunWith(JUnit4.class)
 public final class ClosureCodeRemovalTest extends CompilerTestCase {

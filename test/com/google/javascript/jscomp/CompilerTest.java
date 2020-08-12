@@ -60,7 +60,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author johnlenz@google.com (John Lenz) */
 @RunWith(JUnit4.class)
 public final class CompilerTest {
 
@@ -1403,31 +1402,6 @@ public final class CompilerTest {
         .isSameInstanceAs(compiler.getInput(new InputId(name)).getAstRoot(compiler));
   }
 
-  @Test
-  public void testEs6ModuleEntryPoint() throws Exception {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
-        SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
-
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(
-        ModuleIdentifier.forFile("/index"));
-
-    CompilerOptions options = createNewFlagBasedOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
-    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
-
-    List<SourceFile> externs =
-        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
-
-    Compiler compiler = new Compiler();
-    compiler.compile(externs, inputs, options);
-
-    Result result = compiler.getResult();
-    assertThat(result.warnings).isEmpty();
-    assertThat(result.errors).isEmpty();
-  }
-
   // https://github.com/google/closure-compiler/issues/2692
   @Test
   public void testGoogNamespaceEntryPoint() throws Exception {
@@ -2686,6 +2660,7 @@ public final class CompilerTest {
 
     System.gc();
     System.runFinalization();
+
     assertThat(registryWeakReference.get()).isNull();
   }
 }

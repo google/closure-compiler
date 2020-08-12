@@ -26,7 +26,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit test for {@link InlineCostEstimator}.
  *
- * @author johnlenz@google.com (John Lenz)
  */
 @RunWith(JUnit4.class)
 public final class InlineCostEstimatorTest {

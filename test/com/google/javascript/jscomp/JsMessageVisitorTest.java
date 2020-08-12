@@ -47,7 +47,6 @@ import org.junit.runners.JUnit4;
 /**
  * Test for {@link JsMessageVisitor}.
  *
- * @author anatol@google.com (Anatol Pomazau)
  */
 @RunWith(JUnit4.class)
 public final class JsMessageVisitorTest {

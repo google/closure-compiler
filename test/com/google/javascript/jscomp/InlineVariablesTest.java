@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
 /**
  * Verifies that valid candidates for inlining are inlined, but that no dangerous inlining occurs.
  *
- * @author kushal@google.com (Kushal Dave)
  */
 @RunWith(JUnit4.class)
 public final class InlineVariablesTest extends CompilerTestCase {

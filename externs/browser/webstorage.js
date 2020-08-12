@@ -15,7 +15,7 @@
  */
 /**
  * @fileoverview Definitions for W3C's WebStorage specification.
- * This file depends on html5.js.
+ * This file depends on w3c_dom1.js and w3c_event.js.
  * @externs
  */
 
@@ -67,14 +67,14 @@ Storage.prototype.clear = function() {};
 function WindowSessionStorage() {}
 
 /**
- * @type {Storage}
+ * @type {!Storage}
  */
 WindowSessionStorage.prototype.sessionStorage;
 
 /**
  * Window implements WindowSessionStorage
  *
- * @type {Storage}
+ * @type {!Storage}
  */
 Window.prototype.sessionStorage;
 
@@ -85,14 +85,14 @@ Window.prototype.sessionStorage;
 function WindowLocalStorage() {}
 
 /**
- * @type {Storage}
+ * @type {!Storage}
  */
 WindowLocalStorage.prototype.localStorage;
 
 /**
  * Window implements WindowLocalStorage
  *
- * @type {Storage}
+ * @type {!Storage}
  */
 Window.prototype.localStorage;
 

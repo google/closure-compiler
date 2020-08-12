@@ -82,6 +82,24 @@ public final class ConstParamCheckTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTemplateLiteralSubstitutesConstTemplate() {
+    testNoWarning(
+        CLOSURE_DEFS
+            + "var BAR = `bar`;" // An ESLint template
+            + "var FOO = `foo ${BAR}`;"
+            + "goog.string.Const.from(FOO);");
+  }
+
+  @Test
+  public void testTemplateLiteralSubstitutesConstString() {
+    testNoWarning(
+        CLOSURE_DEFS
+            + "var BAR = 'bar';" // A string literal
+            + "var FOO = `foo ${BAR}`;"
+            + "goog.string.Const.from(FOO);");
+  }
+
+  @Test
   public void testConcatenatedStringLiteralArgument() {
     testSame(CLOSURE_DEFS
         + "goog.string.Const.from('foo' + 'bar' + 'baz');");

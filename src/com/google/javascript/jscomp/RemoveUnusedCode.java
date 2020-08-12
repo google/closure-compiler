@@ -25,8 +25,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
+import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
+import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -118,7 +117,7 @@ class RemoveUnusedCode implements CompilerPass {
    */
   private final Deque<Continuation> worklist = new ArrayDeque<>();
 
-  private final Map<Var, VarInfo> varInfoMap = new IdentityHashMap<>();
+  private final IdentityHashMap<Var, VarInfo> varInfoMap = new IdentityHashMap<>();
 
   private final Set<String> pinnedPropertyNames = new HashSet<>(IMPLICITLY_USED_PROPERTIES);
 
@@ -378,7 +377,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     // Accumulate guarded usages of polyfills before removal starts.
-    new PolyfillFindingCallback(compiler, polyfillsFromTable)
+    new PolyfillUsageFinder(compiler, polyfillsFromTable)
         .traverseOnlyGuarded(root, this::storePolyfill);
 
     worklist.add(new Continuation(root, scope));
@@ -470,6 +469,7 @@ class RemoveUnusedCode implements CompilerPass {
         break;
 
       case CALL:
+      case OPTCHAIN_CALL:
         traverseCall(n, scope);
         break;
 
@@ -547,7 +547,8 @@ class RemoveUnusedCode implements CompilerPass {
         break;
 
       case GETPROP:
-        traverseGetProp(n, scope);
+      case OPTCHAIN_GETPROP:
+        traverseNormalOrOptChainGetProp(n, scope);
         break;
 
       default:
@@ -570,7 +571,17 @@ class RemoveUnusedCode implements CompilerPass {
     }
   }
 
-  private void traverseGetProp(Node getProp, Scope scope) {
+  /**
+   * Traverse `expr.prop` or `expr?.prop`.
+   *
+   * <p>Note that this method is called only for RHS nodes. Property references that are being
+   * assigned to are handled by the logic traversing their parent (e.g. ASSIGN) node.
+   *
+   * <p>The primary purpose of this method is to make sure the property reference is correctly
+   * recorded.
+   */
+  private void traverseNormalOrOptChainGetProp(Node getProp, Scope scope) {
+    checkState(NodeUtil.isNormalOrOptChainGetProp(getProp), getProp);
     Node objectNode = getProp.getFirstChild();
     Node propertyNameNode = objectNode.getNext();
     String propertyName = propertyNameNode.getString();
@@ -587,7 +598,10 @@ class RemoveUnusedCode implements CompilerPass {
       markPropertyNameAsPinned(propertyName);
       traverseNode(objectNode, scope);
     } else if (objectNode.isThis()) {
+      // This is probably the declaration of a class field in a constructor.
+      // /** @private {number} */
       // this.propName;
+      // We don't want to consider this a real usage that should prevent removal.
       RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
       considerForIndependentRemoval(builder.buildUnusedReadReference(getProp, propertyNameNode));
     } else if (isDotPrototype(objectNode)) {
@@ -910,7 +924,8 @@ class RemoveUnusedCode implements CompilerPass {
 
   /** True for `someExpression.prototype`. */
   private static boolean isDotPrototype(Node n) {
-    return n.isGetProp() && n.getLastChild().getString().equals("prototype");
+    return NodeUtil.isNormalOrOptChainGetProp(n)
+        && n.getLastChild().getString().equals("prototype");
   }
 
   private void traverseCatch(Node catchNode, Scope scope) {
@@ -1464,8 +1479,8 @@ class RemoveUnusedCode implements CompilerPass {
 
   /** @return Whether or not accessor side-effect are a possibility. */
   private boolean considerForAccessorSideEffects(Node getprop, PropertyAccessKind usage) {
-    checkState(getprop.isGetProp(), getprop); // Other node types may make sense in the future.
-
+    // Other node types may make sense in the future.
+    checkState(NodeUtil.isNormalOrOptChainGetProp(getprop), getprop);
     String propName = getprop.getSecondChild().getString();
     PropertyAccessKind recorded = compiler.getAccessorSummary().getKind(propName);
     if ((recorded.hasGetter() && usage.hasGetter() && !assumeGettersArePure)
@@ -2073,12 +2088,12 @@ class RemoveUnusedCode implements CompilerPass {
 
   /** True for `this.propertyName` */
   private static boolean isThisDotProperty(Node n) {
-    return n.isGetProp() && n.getFirstChild().isThis();
+    return NodeUtil.isNormalOrOptChainGetProp(n) && n.getFirstChild().isThis();
   }
 
   /** True for `(something).prototype.propertyName` */
   private static boolean isDotPrototypeDotProperty(Node n) {
-    return n.isGetProp() && isDotPrototype(n.getFirstChild());
+    return NodeUtil.isNormalOrOptChainGetProp(n) && isDotPrototype(n.getFirstChild());
   }
 
   private class IndirectAssign extends Removable {
@@ -2855,7 +2870,7 @@ class RemoveUnusedCode implements CompilerPass {
         // A matching NAME node must be a reference (there's no need to check that the referenced
         // Var is global, since local variables have all been renamed by normalization).
         isRemovable = false;
-      } else if (possiblyReferencingNode.isGetProp()) {
+      } else if (NodeUtil.isNormalOrOptChainGetProp(possiblyReferencingNode)) {
         // Assume that the owner is possibly the global `this` and skip removal.
         isRemovable = false;
       }
@@ -2878,10 +2893,9 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     void considerPossibleReferenceInternal(Node possiblyReferencingNode) {
-      if (!possiblyReferencingNode.isGetProp()) {
-        return;
+      if (NodeUtil.isNormalOrOptChainGetProp(possiblyReferencingNode)) {
+        isRemovable = false;
       }
-      isRemovable = false;
     }
   }
 
@@ -2901,11 +2915,10 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     void considerPossibleReferenceInternal(Node possiblyReferencingNode) {
-      if (!possiblyReferencingNode.isGetProp()) {
-        return;
+      if (NodeUtil.isNormalOrOptChainGetProp(possiblyReferencingNode)) {
+        // Prototype properties are simply not removable.
+        isRemovable = false;
       }
-      // Prototype properties are simply not removable.
-      isRemovable = false;
     }
   }
 

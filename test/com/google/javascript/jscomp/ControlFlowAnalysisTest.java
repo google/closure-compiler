@@ -155,11 +155,10 @@ public final class ControlFlowAnalysisTest {
   }
 
   /**
-   * Assert that there exists a control flow edge of the given type
-   * from some node with the first token to some node with the second token.
+   * Assert that there exists no control flow edge of the given type from some node with the first
+   * token to some node with the second token.
    */
-  private static void assertNoEdge(ControlFlowGraph<Node> cfg, Token startToken,
-      Token endToken) {
+  private static void assertNoEdge(ControlFlowGraph<Node> cfg, Token startToken, Token endToken) {
     assertThat(getAllEdges(cfg, startToken, endToken)).isEmpty();
   }
 
@@ -310,10 +309,60 @@ public final class ControlFlowAnalysisTest {
 
   @Test
   public void testBreakingBlock() throws IOException {
-    // BUG #1382217
     String src = "X: { while(1) { break } }";
     ControlFlowGraph<Node> cfg = createCfg(src);
     assertUpEdge(cfg, Token.BREAK, Token.BLOCK, Branch.UNCOND);
+  }
+
+  @Test
+  public void testBreakingWhile() {
+    String src = "var x; while(true) { break; } x();";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.WHILE, Token.BLOCK, Branch.ON_TRUE);
+    assertDownEdge(cfg, Token.BLOCK, Token.BREAK, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.BREAK, Token.EXPR_RESULT, Branch.UNCOND);
+  }
+
+  @Test
+  public void testInifiteLoopWhile() {
+    String src = "var x; while(true) { } x();";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.WHILE, Token.BLOCK, Branch.ON_TRUE);
+    assertNoEdge(cfg, Token.WHILE, Token.EXPR_RESULT);
+  }
+
+  @Test
+  public void testInifiteLoopFor_emptyCond() {
+    String src = "var x; for(;;) { } x();";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.FOR, Token.BLOCK, Branch.ON_TRUE);
+    assertNoEdge(cfg, Token.FOR, Token.EXPR_RESULT);
+  }
+
+  @Test
+  public void testBreakingFor_emptyCond() {
+    String src = "var x; for(;;) { break; } x();";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.FOR, Token.BLOCK, Branch.ON_TRUE);
+    assertDownEdge(cfg, Token.BLOCK, Token.BREAK, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.BREAK, Token.EXPR_RESULT, Branch.UNCOND);
+  }
+
+  @Test
+  public void testInifiteLoopFor_trueCond() {
+    String src = "var x; for(;true;) { } x();";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.FOR, Token.BLOCK, Branch.ON_TRUE);
+    assertNoEdge(cfg, Token.FOR, Token.EXPR_RESULT);
+  }
+
+  @Test
+  public void testBreakingFor_trueCond() {
+    String src = "var x; for(;true;) { break; } x();";
+    ControlFlowGraph<Node> cfg = createCfg(src);
+    assertDownEdge(cfg, Token.FOR, Token.BLOCK, Branch.ON_TRUE);
+    assertDownEdge(cfg, Token.BLOCK, Token.BREAK, Branch.UNCOND);
+    assertCrossEdge(cfg, Token.BREAK, Token.EXPR_RESULT, Branch.UNCOND);
   }
 
   @Test

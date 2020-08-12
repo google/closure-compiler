@@ -380,21 +380,6 @@ public class CompilerOptions implements Serializable {
   @Deprecated
   public void setCheckGlobalThisLevel(CheckLevel level) {}
 
-  public CheckLevel checkMissingGetCssNameLevel;
-
-  /**
-   * Checks that certain string literals only appear in strings used as
-   * goog.getCssName arguments.
-   */
-  public void setCheckMissingGetCssNameLevel(CheckLevel level) {
-    this.checkMissingGetCssNameLevel = level;
-  }
-
-  /**
-   * Regex of string literals that may only appear in goog.getCssName arguments.
-   */
-  public String checkMissingGetCssNameBlacklist;
-
   /**
    * A set of extra annotation names which are accepted and silently ignored
    * when encountered in a source file. Defaults to null which has the same
@@ -486,9 +471,6 @@ public class CompilerOptions implements Serializable {
   /** Removes code associated with unused global names */
   public boolean smartNameRemoval;
 
-  /** Removes code associated with unused global names */
-  boolean extraSmartNameRemoval;
-
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
@@ -503,9 +485,6 @@ public class CompilerOptions implements Serializable {
 
   /** Removes unused member prototypes */
   public boolean removeUnusedPrototypeProperties;
-
-  /** Tells AnalyzePrototypeProperties it can remove externed props. */
-  public boolean removeUnusedPrototypePropertiesInExterns;
 
   /** Removes unused member properties */
   public boolean removeUnusedClassProperties;
@@ -837,7 +816,7 @@ public class CompilerOptions implements Serializable {
   private Map<String, Object> tweakReplacements;
 
   /** Move top-level function declarations to the top */
-  public boolean moveFunctionDeclarations;
+  public boolean rewriteGlobalDeclarationsForTryCatchWrapping;
 
   boolean checksOnly;
 
@@ -1196,22 +1175,6 @@ public class CompilerOptions implements Serializable {
 
   private InstrumentOption instrumentForCoverageOption;
 
-  /**
-   * Instrument code for the purpose of collecting coverage data.
-   *
-   * @deprecated Please use setInstrumentForCoverageOption with LINE_ONLY InstrumentationOption
-   *     instead
-   */
-  @Deprecated public boolean instrumentForCoverage;
-
-  /**
-   * Instrument branch coverage data - valid only if instrumentForCoverage is True
-   *
-   * @deprecated Please use setInstrumentForCoverageOption with BRANCH_ONLY InstrumentationOption
-   *     instead
-   */
-  @Deprecated public boolean instrumentBranchCoverage;
-
   private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
       ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
 
@@ -1346,8 +1309,6 @@ public class CompilerOptions implements Serializable {
     checkTypes = false;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
-    checkMissingGetCssNameLevel = CheckLevel.OFF;
-    checkMissingGetCssNameBlacklist = null;
     computeFunctionSideEffects = false;
     extraAnnotationNames = null;
 
@@ -1368,12 +1329,10 @@ public class CompilerOptions implements Serializable {
     inlineVariables = false;
     inlineLocalVariables = false;
     smartNameRemoval = false;
-    extraSmartNameRemoval = false;
     removeDeadCode = false;
     extractPrototypeMemberDeclarations =
         ExtractPrototypeMemberDeclarationsMode.OFF;
     removeUnusedPrototypeProperties = false;
-    removeUnusedPrototypePropertiesInExterns = false;
     removeUnusedClassProperties = false;
     removeUnusedVars = false;
     removeUnusedLocalVars = false;
@@ -1427,7 +1386,7 @@ public class CompilerOptions implements Serializable {
     defineReplacements = new HashMap<>();
     tweakProcessing = TweakProcessing.OFF;
     tweakReplacements = new HashMap<>();
-    moveFunctionDeclarations = false;
+    rewriteGlobalDeclarationsForTryCatchWrapping = false;
     checksOnly = false;
     outputJs = OutputJs.NORMAL;
     generateExports = false;
@@ -1440,10 +1399,6 @@ public class CompilerOptions implements Serializable {
     replaceStringsReservedStrings = ImmutableSet.of();
     propertyInvalidationErrors = new HashMap<>();
     inputSourceMaps = ImmutableMap.of();
-
-    // Instrumentation
-    instrumentForCoverage = false;  // instrument lines
-    instrumentBranchCoverage = false; // instrument branches
 
     instrumentForCoverageOption = InstrumentOption.NONE;
 
@@ -1635,10 +1590,6 @@ public class CompilerOptions implements Serializable {
     this.variableRenaming = newVariablePolicy;
     this.propertyRenaming = newPropertyPolicy;
   }
-
-  /** Should shadow outer scope variable name during renaming. */
-  @Deprecated
-  public void setShadowVariables(boolean shadow) {}
 
   /**
    * @param replaceIdGenerators the replaceIdGenerators to set
@@ -2216,10 +2167,6 @@ public class CompilerOptions implements Serializable {
     this.checkTypes = checkTypes;
   }
 
-  public void setCheckMissingGetCssNameBlacklist(String blackList) {
-    this.checkMissingGetCssNameBlacklist = blackList;
-  }
-
   public void setFoldConstants(boolean foldConstants) {
     this.foldConstants = foldConstants;
   }
@@ -2274,10 +2221,6 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  public void setExtraSmartNameRemoval(boolean smartNameRemoval) {
-    this.extraSmartNameRemoval = smartNameRemoval;
-  }
-
   public void setRemoveDeadCode(boolean removeDeadCode) {
     this.removeDeadCode = removeDeadCode;
   }
@@ -2299,10 +2242,6 @@ public class CompilerOptions implements Serializable {
     // InlineSimpleMethods makes similar assumptions to
     // RemoveUnusedCode, so they are enabled together.
     this.inlineGetters = enabled;
-  }
-
-  public void setRemoveUnusedPrototypePropertiesInExterns(boolean enabled) {
-    this.removeUnusedPrototypePropertiesInExterns = enabled;
   }
 
   public void setCollapseVariableDeclarations(boolean enabled) {
@@ -2554,8 +2493,13 @@ public class CompilerOptions implements Serializable {
     this.tweakReplacements = tweakReplacements;
   }
 
+  @Deprecated
   public void setMoveFunctionDeclarations(boolean moveFunctionDeclarations) {
-    this.moveFunctionDeclarations = moveFunctionDeclarations;
+    setRewriteGlobalDeclarationsForTryCatchWrapping(moveFunctionDeclarations);
+  }
+
+  public void setRewriteGlobalDeclarationsForTryCatchWrapping(boolean rewrite) {
+    this.rewriteGlobalDeclarationsForTryCatchWrapping = rewrite;
   }
 
   public void setCssRenamingMap(CssRenamingMap cssRenamingMap) {
@@ -2816,24 +2760,6 @@ public class CompilerOptions implements Serializable {
     this.preventLibraryInjection = preventLibraryInjection;
   }
 
-  /**
-   * Set whether or not code should be modified to provide coverage
-   * information.
-   */
-  public void setInstrumentForCoverage(boolean instrumentForCoverage) {
-    this.instrumentForCoverage = instrumentForCoverage;
-  }
-
-  /** Set whether to instrument to collect branch coverage */
-  public void setInstrumentBranchCoverage(boolean instrumentBranchCoverage) {
-    if (instrumentForCoverage || !instrumentBranchCoverage) {
-      this.instrumentBranchCoverage = instrumentBranchCoverage;
-    } else {
-      throw new RuntimeException("The option instrumentForCoverage must be set to true for "
-          + "instrumentBranchCoverage to be set to true.");
-    }
-  }
-
   public void setInstrumentForCoverageOption(InstrumentOption instrumentForCoverageOption) {
     this.instrumentForCoverageOption = checkNotNull(instrumentForCoverageOption);
   }
@@ -2956,8 +2882,6 @@ public class CompilerOptions implements Serializable {
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
             .add("checkDeterminism", getCheckDeterminism())
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
-            .add("checkMissingGetCssNameBlacklist", checkMissingGetCssNameBlacklist)
-            .add("checkMissingGetCssNameLevel", checkMissingGetCssNameLevel)
             .add("checksOnly", checksOnly)
             .add("checkSuspiciousCode", checkSuspiciousCode)
             .add("checkSymbols", checkSymbols)
@@ -3001,7 +2925,6 @@ public class CompilerOptions implements Serializable {
             .add("externExportsPath", externExportsPath)
             .add("extraAnnotationNames", extraAnnotationNames)
             .add("extractPrototypeMemberDeclarations", extractPrototypeMemberDeclarations)
-            .add("extraSmartNameRemoval", extraSmartNameRemoval)
             .add("filesToPrintAfterEachPassRegexList", filesToPrintAfterEachPassRegexList)
             .add("flowSensitiveInlineVariables", flowSensitiveInlineVariables)
             .add("foldConstants", foldConstants)
@@ -3026,9 +2949,7 @@ public class CompilerOptions implements Serializable {
             .add("inputPropertyMap", inputPropertyMap)
             .add("inputSourceMaps", inputSourceMaps)
             .add("inputVariableMap", inputVariableMap)
-            .add("instrumentForCoverage", instrumentForCoverage)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
-            .add("instrumentBranchCoverage", instrumentBranchCoverage)
             .add("instrumentForCoverageOption", instrumentForCoverageOption.toString())
             .add("isolatePolyfills", isolatePolyfills)
             .add("j2clMinifierEnabled", j2clMinifierEnabled)
@@ -3045,7 +2966,9 @@ public class CompilerOptions implements Serializable {
             .add("messageBundle", messageBundle)
             .add("moduleRoots", moduleRoots)
             .add("chunksToPrintAfterEachPassRegexList", chunksToPrintAfterEachPassRegexList)
-            .add("moveFunctionDeclarations", moveFunctionDeclarations)
+            .add(
+                "rewriteGlobalDeclarationsForTryCatchWrapping",
+                rewriteGlobalDeclarationsForTryCatchWrapping)
             .add("nameGenerator", nameGenerator)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
             .add("optimizeCalls", optimizeCalls)
@@ -3085,9 +3008,6 @@ public class CompilerOptions implements Serializable {
             .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
             .add("removeUnusedLocalVars", removeUnusedLocalVars)
             .add("removeUnusedPrototypeProperties", removeUnusedPrototypeProperties)
-            .add(
-                "removeUnusedPrototypePropertiesInExterns",
-                removeUnusedPrototypePropertiesInExterns)
             .add("removeUnusedVars", removeUnusedVars)
             .add(
                 "renamePrefixNamespaceAssumeCrossChunkNames",
@@ -3142,7 +3062,8 @@ public class CompilerOptions implements Serializable {
   public enum InstrumentOption {
     NONE, // No coverage instrumentation is performed
     LINE_ONLY, // Collect coverage for every executable statement.
-    BRANCH_ONLY; // Collect coverage for control-flow branches.
+    BRANCH_ONLY, // Collect coverage for control-flow branches.
+    PRODUCTION; // Collect coverage for functions where code is compiled for production.
 
     public static InstrumentOption fromString(String value) {
       if (value == null) {
@@ -3155,6 +3076,8 @@ public class CompilerOptions implements Serializable {
           return InstrumentOption.LINE_ONLY;
         case "BRANCH":
           return InstrumentOption.BRANCH_ONLY;
+        case "PRODUCTION":
+          return InstrumentOption.PRODUCTION;
         default:
           return null;
       }

@@ -24,11 +24,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * External references of the form: "window['xx']" indicate names that must
- * be reserved when variable renaming to avoid conflicts.
+ * Collect known properties on the global windows object to avoid creating global variable names
+ * that conflict with these names. This pass runs after property renaming but before variable
+ * renaming.
+ *
+ * <p>This is a best effort pass and does not guarantee that there are no conflicts.
+ *
+ * <p>This is not required if the global variables are isolated from global scope
+ * (isolation_mode=IIFE) or equivalent.
  */
-class GatherRawExports extends AbstractPostOrderCallback
-    implements CompilerPass {
+class GatherRawExports extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
@@ -38,7 +43,8 @@ class GatherRawExports extends AbstractPostOrderCallback
   // two common cases "collapse properties and renaming on" or both off
   // but not the case where only property renaming is on.
   private static final String[] GLOBAL_THIS_NAMES = {
-    "window", "top", "goog$global", "goog.global" };
+    "window", "globalThis", "top", "self", "goog$global", "goog.global"
+  };
 
   private final Set<String> exportedVariables = new HashSet<>();
 
@@ -57,13 +63,14 @@ class GatherRawExports extends AbstractPostOrderCallback
     Node sibling = n.getNext();
     if (sibling != null
         && sibling.isString()
-        && NodeUtil.isNormalGet(parent)
+        && NodeUtil.isNormalOrOptChainGet(parent)
         && isGlobalThisObject(t, n)) {
       exportedVariables.add(sibling.getString());
     }
   }
 
   private static boolean isGlobalThisObject(NodeTraversal t, Node n) {
+    // We should consider using scopes or types to check for references to the "global this".
     if (n.isThis()) {
       return t.inGlobalHoistScope();
     } else if (n.isQualifiedName()) {

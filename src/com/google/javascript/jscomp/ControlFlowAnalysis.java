@@ -450,7 +450,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
     // The edge that transfer control to the beginning of the loop body.
     createEdge(forNode, Branch.ON_TRUE, computeFallThrough(body));
     // The edge to end of the loop.
-    if (!cond.isEmpty()) {
+    if (!cond.isEmpty() && !cond.isTrue()) {
       createEdge(forNode, Branch.ON_FALSE, computeFollowNode(forNode, this));
     }
     // The end of the body will have a unconditional branch to our iter

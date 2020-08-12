@@ -36,6 +36,8 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
+import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
@@ -354,10 +356,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(polymerPass);
     }
 
-    if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
-      checks.add(closureCheckGetCssName);
-    }
-
     if (options.syntheticBlockStartMarker != null) {
       // This pass must run before the first fold constants pass.
       checks.add(createSyntheticBlocks);
@@ -570,14 +568,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clUtilGetDefineRewriterPass);
     }
 
-    if (options.instrumentForCoverage) {
-      if (options.instrumentBranchCoverage) {
-        options.setInstrumentForCoverageOption(InstrumentOption.BRANCH_ONLY);
-      } else {
-        options.setInstrumentForCoverageOption(InstrumentOption.LINE_ONLY);
-      }
-    }
-
     if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
       passes.add(instrumentForCodeCoverage);
     }
@@ -645,7 +635,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
     // more effective if code that would prevent disambiguation can be removed.
     // TODO(b/66971163): Rename options since we're not actually using smartNameRemoval here now.
-    if (options.extraSmartNameRemoval && options.smartNameRemoval) {
+    if (options.smartNameRemoval) {
 
       // These passes remove code that is dead because of define flags.
       // If the dead code is weakly typed, running these passes before property
@@ -775,11 +765,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Move functions before extracting prototype member declarations.
-    if (options.moveFunctionDeclarations
-        // renamePrefixNamescape relies on moveFunctionDeclarations
+    if (options.rewriteGlobalDeclarationsForTryCatchWrapping
+        // renamePrefixNamescape relies on rewriteGlobalDeclarationsForTryCatchWrapping
         // to preserve semantics.
         || options.renamePrefixNamespace != null) {
-      passes.add(moveFunctionDeclarations);
+      passes.add(rewriteGlobalDeclarationsForTryCatchWrapping);
     }
 
     if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.MAPPED) {
@@ -1554,19 +1544,6 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       RewriteGoogJsImports.Mode.LINT_AND_REWRITE,
                       compiler.getModuleMap()))
-          .setFeatureSetForChecks()
-          .build();
-
-  /** Checks that CSS class names are wrapped in goog.getCssName */
-  private final PassFactory closureCheckGetCssName =
-      PassFactory.builder()
-          .setName("closureCheckGetCssName")
-          .setInternalFactory(
-              (compiler) ->
-                  new CheckMissingGetCssName(
-                      compiler,
-                      options.checkMissingGetCssNameLevel,
-                      options.checkMissingGetCssNameBlacklist))
           .setFeatureSetForChecks()
           .build();
 
@@ -2420,8 +2397,7 @@ public final class DefaultPassConfig extends PassConfig {
                     .removeGlobals(options.removeUnusedVars)
                     .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
                     .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
-                    .allowRemovalOfExternProperties(
-                        options.removeUnusedPrototypePropertiesInExterns)
+                    .allowRemovalOfExternProperties(false)
                     .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
                     .removeUnusedObjectDefinePropertiesDefinitions(
                         options.isRemoveUnusedClassProperties())
@@ -2462,9 +2438,7 @@ public final class DefaultPassConfig extends PassConfig {
                   new CrossChunkMethodMotion(
                       compiler,
                       compiler.getCrossModuleIdGenerator(),
-                      // Only move properties in externs if we're not treating
-                      // them as exports.
-                      options.removeUnusedPrototypePropertiesInExterns,
+                      /* canModifyExterns= */ false, // remove this
                       options.crossChunkCodeMotionNoStubMethods))
           .setFeatureSetForOptimizations()
           .build();
@@ -2544,11 +2518,14 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Moves function declarations to the top, to simulate actual hoisting. */
-  private final PassFactory moveFunctionDeclarations =
+  /**
+   * Moves function declarations to the top to simulate actual hoisting and rewrites block scope
+   * declarations to 'var'.
+   */
+  private final PassFactory rewriteGlobalDeclarationsForTryCatchWrapping =
       PassFactory.builder()
-          .setName(PassNames.MOVE_FUNCTION_DECLARATIONS)
-          .setInternalFactory(MoveFunctionDeclarations::new)
+          .setName("rewriteGlobalDeclarationsForTryCatchWrapping")
+          .setInternalFactory(RewriteGlobalDeclarationsForTryCatchWrapping::new)
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2604,7 +2581,8 @@ public final class DefaultPassConfig extends PassConfig {
                   new AmbiguateProperties(
                       compiler,
                       options.getPropertyReservedNamingFirstChars(),
-                      options.getPropertyReservedNamingNonFirstChars()))
+                      options.getPropertyReservedNamingNonFirstChars(),
+                      compiler.getExternProperties()))
           .setFeatureSetForOptimizations()
           .build();
 

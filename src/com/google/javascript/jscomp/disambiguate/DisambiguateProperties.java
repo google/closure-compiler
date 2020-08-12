@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -25,8 +25,17 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
-import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DestructuredTarget;
+import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
+import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.graph.StandardUnionFind;
 import com.google.javascript.jscomp.graph.UnionFind;
 import com.google.javascript.rhino.Node;
@@ -50,39 +59,35 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
- * DisambiguateProperties renames properties to disambiguate between unrelated
- * fields with the same name. Two properties are considered related if they
- * share a definition on their prototype chains, or if they are potentially
- * referenced together via union types.
+ * DisambiguateProperties renames properties to disambiguate between unrelated fields with the same
+ * name. Two properties are considered related if they share a definition on their prototype chains,
+ * or if they are potentially referenced together via union types.
  *
- * <p> Renamimg only occurs if there are two or more distinct properties with
- * the same name.
+ * <p>Renamimg only occurs if there are two or more distinct properties with the same name.
  *
- * <p> This pass allows other passes, such as inlining and code removal to take
- * advantage of type information implicitly.
+ * <p>This pass allows other passes, such as inlining and code removal to take advantage of type
+ * information implicitly.
  *
  * <pre>
  *   Foo.a;
  *   Bar.a;
  * </pre>
  *
- * <p> will become
+ * <p>will become
  *
  * <pre>
  *   Foo.Foo$a;
  *   Bar.Bar$a;
  * </pre>
  *
- * NOTE(dimvar): For every property, this pass groups together the types that
- * can't be disambiguated. If a type inherits from another type, their common
- * properties can never be disambiguated, yet we have to compute this info once
- * per property rather than just once in the pass. This is where the bulk of the
- * time is spent.
- * We have added many caches that help a lot, but it is probably worth it to
- * revisit this pass and rewrite it in a way that does not compute the same
- * thing over and over.
+ * NOTE(dimvar): For every property, this pass groups together the types that can't be
+ * disambiguated. If a type inherits from another type, their common properties can never be
+ * disambiguated, yet we have to compute this info once per property rather than just once in the
+ * pass. This is where the bulk of the time is spent. We have added many caches that help a lot, but
+ * it is probably worth it to revisit this pass and rewrite it in a way that does not compute the
+ * same thing over and over.
  */
-class DisambiguateProperties implements CompilerPass {
+public class DisambiguateProperties implements CompilerPass {
   // To prevent the logs from filling up, we cap the number of warnings
   // that we tell the user to fix per-property.
   private static final int MAX_INVALIDATION_WARNINGS_PER_PROPERTY = 10;
@@ -362,7 +367,7 @@ class DisambiguateProperties implements CompilerPass {
 
   private final Map<String, Property> properties = new LinkedHashMap<>();
 
-  DisambiguateProperties(
+  public DisambiguateProperties(
       AbstractCompiler compiler, Map<String, CheckLevel> propertiesToErrorFor) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
@@ -372,17 +377,19 @@ class DisambiguateProperties implements CompilerPass {
     this.propertiesToErrorFor = propertiesToErrorFor;
     this.invalidationMap = propertiesToErrorFor.isEmpty() ? null : LinkedHashMultimap.create();
 
-    this.invalidatingTypes = new InvalidatingTypes.Builder(registry)
-        .writeInvalidationsInto(this.invalidationMap)
-        .addAllTypeMismatches(compiler.getTypeMismatches())
-        .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
-        .allowEnumsAndScalars()
-        .build();
+    this.invalidatingTypes =
+        new InvalidatingTypes.Builder(registry)
+            .writeInvalidationsInto(this.invalidationMap)
+            .addAllTypeMismatches(compiler.getTypeMismatches())
+            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
+            .allowEnums()
+            .allowScalars()
+            .build();
   }
 
   @Override
   public void process(Node externs, Node root) {
-    checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+    checkState(compiler.getLifeCycleStage().isNormalized());
     this.ancestorInterfaces = new HashMap<>();
     // Gather names of properties in externs; these properties can't be renamed.
     NodeTraversal.traverse(compiler, externs, new FindExternProperties());
@@ -392,6 +399,7 @@ class DisambiguateProperties implements CompilerPass {
     // Do the actual renaming.
     renameProperties();
     // Update any getters and setters we renamed.
+    // TODO(b/161947315): this shouldn't be the responsibility of DisambiguateProperties
     GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 

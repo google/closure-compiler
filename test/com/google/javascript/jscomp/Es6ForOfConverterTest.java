@@ -27,7 +27,6 @@ import org.junit.runners.JUnit4;
 /**
  * Test cases for {@link Es6ForOfConverter}
  *
- * @author lharker@google.com (Laura Harker)
  */
 @RunWith(JUnit4.class)
 public final class Es6ForOfConverterTest extends CompilerTestCase {

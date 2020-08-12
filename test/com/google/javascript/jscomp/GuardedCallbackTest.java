@@ -191,6 +191,6 @@ public final class GuardedCallbackTest extends CompilerTestCase {
                 "console.log(",
                 "    GUARDED_NAME?.resolve(GUARDED_NAME)",
                 "        .then(x.finally)",
-                "        ?.GUARDED_PROP(x.GUARDED_PROP))")));
+                "        .GUARDED_PROP?.(x.GUARDED_PROP))")));
   }
 }

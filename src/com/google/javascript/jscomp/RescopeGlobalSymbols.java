@@ -28,27 +28,29 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Finds all references to global symbols and rewrites them to be property
- * accesses to a special object with the same name as the global symbol.
+ * Finds all references to global symbols and rewrites them to be property accesses to a special
+ * object with the same name as the global symbol.
  *
- * Given the name of the global object is NS
+ * <p>Given the name of the global object is NS
+ *
  * <pre> var a = 1; function b() { return a }</pre>
+ *
  * becomes
+ *
  * <pre> NS.a = 1; NS.b = function b() { return NS.a }</pre>
  *
- * This allows splitting code into modules that depend on each other's
- * global symbols, without using polluting JavaScript's global scope with those
- * symbols. You typically define just a single global symbol, wrap each module
- * in a function wrapper, and pass the global symbol around, eg,
+ * This allows splitting code into modules that depend on each other's global symbols, without using
+ * polluting JavaScript's global scope with those symbols. You typically define just a single global
+ * symbol, wrap each module in a function wrapper, and pass the global symbol around, eg,
+ *
  * <pre> var uniqueNs = uniqueNs || {}; </pre>
+ *
  * <pre> (function (NS) { ...your module code here... })(uniqueNs); </pre>
  *
- *
- * <p>This compile step requires moveFunctionDeclarations to be turned on
- * to guarantee semantics.
+ * <p>This compile step requires rewriteGlobalDeclarationsForTryCatchWrapping to be turned on to
+ * guarantee semantics.
  *
  * <p>For lots of examples, see the unit test.
- *
  */
 final class RescopeGlobalSymbols implements CompilerPass {
 

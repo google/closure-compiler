@@ -107,6 +107,55 @@ public class UnionColorTest {
         () ->
             UnionColor.create(
                 ImmutableSet.of(
-                    ObjectColor.create("Foo", "test.js"), ObjectColor.create("Foo", "test.js"))));
+                    ObjectColor.builder().setClassName("Foo").setFilename("test.js").build(),
+                    ObjectColor.builder().setClassName("Foo").setFilename("test.js").build())));
+  }
+
+  @Test
+  public void nullableUnionDoesNotInvalidate() {
+    ObjectColor nonInvalidatingObject =
+        ObjectColor.builder().setClassName("Bar").setFilename("test.js").build();
+    UnionColor objects =
+        UnionColor.create(ImmutableSet.of(PrimitiveColor.NULL_OR_VOID, nonInvalidatingObject));
+
+    assertThat(objects).isNotInvalidating();
+  }
+
+  @Test
+  public void notInvalidatingIfOnlyValidObjects() {
+    ObjectColor nonInvalidatingObjectFoo =
+        ObjectColor.builder().setClassName("Foo").setFilename("test.js").build();
+    ObjectColor nonInvalidatingObjectBar =
+        ObjectColor.builder().setClassName("Bar").setFilename("test.js").build();
+    UnionColor objects =
+        UnionColor.create(ImmutableSet.of(nonInvalidatingObjectFoo, nonInvalidatingObjectBar));
+
+    assertThat(objects).isNotInvalidating();
+  }
+
+  @Test
+  public void invalidatingIfContainsInvalidatingObject() {
+    ObjectColor invalidatingObject =
+        ObjectColor.builder()
+            .setClassName("Foo")
+            .setFilename("test.js")
+            .setInvalidating(true)
+            .build();
+    ObjectColor nonInvalidatingObject =
+        ObjectColor.builder().setClassName("Bar").setFilename("test.js").build();
+    UnionColor objects =
+        UnionColor.create(ImmutableSet.of(invalidatingObject, nonInvalidatingObject));
+
+    assertThat(objects).isInvalidating();
+  }
+
+  @Test
+  public void invalidatingIfContainsUnknown() {
+    ObjectColor nonInvalidatingObject =
+        ObjectColor.builder().setClassName("Bar").setFilename("test.js").build();
+    UnionColor objects =
+        UnionColor.create(ImmutableSet.of(PrimitiveColor.UNKNOWN, nonInvalidatingObject));
+
+    assertThat(objects).isInvalidating();
   }
 }

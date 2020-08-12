@@ -28,12 +28,11 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link GatherRawExports}.
  *
- * @author johnlenz@google.com (John Lenz)
  */
 @RunWith(JUnit4.class)
 public final class GatherRawExportsTest extends CompilerTestCase {
 
-  private static final String EXTERNS = "var window;";
+  private static final String EXTERNS = "var window;var self;";
   private GatherRawExports last;
 
   public GatherRawExportsTest() {
@@ -54,18 +53,29 @@ public final class GatherRawExportsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExportsFound1() {
+  public void testTopLevelVar() {
+    // Global vars are not what we are looking for.
     assertExported("var a");
   }
 
   @Test
-  public void testExportsFound2() {
+  public void testExportsFoundQuoted() {
     assertExported("window['a']", "a");
   }
 
   @Test
-  public void testExportsFound3() {
+  public void testExportsFoundUnquoted() {
     assertExported("window.a", "a");
+  }
+
+  @Test
+  public void testExportWithOptChainFoundQuoted() {
+    assertExported("window?.['a']", "a");
+  }
+
+  @Test
+  public void testExportWithOptChainFoundUnquoted() {
+    assertExported("window?.a", "a");
   }
 
   @Test
@@ -151,6 +161,36 @@ public final class GatherRawExportsTest extends CompilerTestCase {
   @Test
   public void testExportOntopFound2() {
     assertExported("top.a", "a");
+  }
+
+  @Test
+  public void testExportOnGlobalThis1() {
+    assertExported("globalThis['a']", "a");
+  }
+
+  @Test
+  public void testExportOnGlobalThis2() {
+    assertExported("globalThis.a", "a");
+  }
+
+  @Test
+  public void testExportOnSelf1() {
+    assertExported("self['a']", "a");
+  }
+
+  @Test
+  public void testExportOnSelf2() {
+    assertExported("self.a", "a");
+  }
+
+  @Test
+  public void testNoExportOnLocalSelf1() {
+    assertExported("function fn(self) { self['a']; }");
+  }
+
+  @Test
+  public void testNoExportOnLocalSelf2() {
+    assertExported("function fn(self) { self.a; }");
   }
 
   @Test

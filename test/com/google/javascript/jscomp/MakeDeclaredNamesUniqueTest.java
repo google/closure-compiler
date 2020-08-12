@@ -321,6 +321,28 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMakeFunctionsUniqueWithContext1() {
+    this.useDefaultRenamer = true;
+    test(
+        "if (1) { function f(){} } else { function f(){} }",
+        "if (1) { function f(){} } else { function f$jscomp$1(){} }");
+  }
+
+  @Test
+  public void testMakeFunctionsUniqueWithContext2() {
+    this.useDefaultRenamer = true;
+    testSame("if (1) { function f(){} function f(){} }");
+  }
+
+  @Test
+  public void testMakeFunctionsUniqueWithContext3() {
+    this.useDefaultRenamer = true;
+    test(
+        "function f() {} if (1) { function f(){} function f(){} }",
+        "function f() {} if (1) { function f$jscomp$1(){} function f$jscomp$1(){} }");
+  }
+
+  @Test
   public void testArguments() {
     // Set the test type
     this.useDefaultRenamer = true;

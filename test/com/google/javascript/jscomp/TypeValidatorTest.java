@@ -37,7 +37,6 @@ import org.junit.runners.JUnit4;
 /**
  * Type-checking tests that can use methods from CompilerTestCase
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class TypeValidatorTest extends CompilerTestCase {

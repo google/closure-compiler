@@ -191,7 +191,40 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // Confirm that the native BigInt type has been implemented, so the BigInt externs don't cause
     // errors.
     externs = ImmutableList.of(new TestExternsBuilder().addBigInt().buildExternsFile("externs.js"));
-    test(options, "BigInt(1)", "BigInt(1)");
+    testSame(options, "BigInt(1)");
+  }
+
+  @Test
+  public void testFunctionThatAcceptsAndReturnsBigInt() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addBigInt().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "/**",
+            " * @param {bigint} value",
+            " * @return {bigint}",
+            " */",
+            "function bigintTimes3(value){",
+            "  return value * 3n;",
+            "}",
+            "console.log(bigintTimes3(5n));"),
+        // TODO(b/140132715): This test should expect console.log(15n), must update
+        // PeepholeFoldConstants for this to work as intended
+        "console.log(5n * 3n);");
+  }
+
+  @Test
+  public void testBigIntStringConcatenation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    externs = ImmutableList.of(new TestExternsBuilder().addBigInt().buildExternsFile("externs.js"));
+    test(options, "1n + 'asdf'", "'1nasdf'");
   }
 
   @Test
@@ -390,7 +423,9 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   }
 
   @Test
-  public void testAdvancedModeIncludesExtraSmartNameRemoval() {
+  public void testAdvancedModeRemovesLocalTypeAndAlias() {
+    // An extra pass of RemoveUnusedCode used to be conditional.  This specific code pattern
+    // wasn't removed without it.  Verify it is removed.
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -584,7 +619,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setExtraSmartNameRemoval(false);
     test(options, code, "");
   }
 
@@ -1275,8 +1309,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
-    options.setRemoveUnusedPrototypePropertiesInExterns(true);
-
     String code =
         ""
         + "/** @constructor */ var X = function() {"
@@ -1284,11 +1316,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         + "/** @constructor */ var Y = function() {"
         + "/** @export */ this.abc = 1;};\n"
         + "alert(new X().abc + new Y().abc);";
-
-    // no export enabled, property name not preserved
-    test(options, code,
-        "alert((new function(){this.a = 1}).a + " +
-            "(new function(){this.a = 1}).a);");
 
     options.setGenerateExports(true);
 
@@ -1298,7 +1325,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     assertThat(lastCompiler.getErrors()).hasSize(1);
 
     options.setExportLocalPropertyDefinitions(true);
-    options.setRemoveUnusedPrototypePropertiesInExterns(false);
 
     // property name preserved due to export
     test(options, code,

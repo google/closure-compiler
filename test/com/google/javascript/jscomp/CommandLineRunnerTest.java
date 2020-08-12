@@ -58,14 +58,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
  * Tests for {@link CommandLineRunner}.
- *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class CommandLineRunnerTest {
@@ -2562,6 +2562,87 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
+  public void testInstrumentCodeMappingFileNotSet() {
+    args.add("--instrument_code=PRODUCTION");
+
+    FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo(
+            "Expected --instrument_mapping_report to be set when "
+                + "--instrument_code is set to Production");
+  }
+
+  @Test
+  public void testInstrumentCodeProductionArgNotSet() {
+    args.add("--instrument_mapping_report=someFile.txt");
+
+    FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo(
+            "Expected --instrument_code to be passed with PRODUCTION "
+                + "when --instrument_mapping_report is set");
+  }
+
+  @Rule public TemporaryFolder folder = new TemporaryFolder();
+
+  @Test
+  public void testInstrumentCodeProductionCreatesInstrumentationMapping() throws IOException {
+    Path tempFolderPath = folder.getRoot().toPath();
+    String filePath = tempFolderPath + "\\someFile.txt";
+
+    args.add("--instrument_code=PRODUCTION");
+    args.add("--instrument_mapping_report=" + filePath);
+    args.add("--language_out=NO_TRANSPILE");
+    args.add("--formatting=PRETTY_PRINT");
+
+    String instrumentCodeSource =
+        lines(
+            "goog.module('instrument.code');",
+            "class InstrumentCode {",
+            "  instrumentCode(a,b) {}",
+            "}",
+            "const instrumentCodeInstance = new InstrumentCode();",
+            "exports = {instrumentCodeInstance};");
+
+    String instrumentCodeExpected =
+        lines(
+            "'use strict';",
+            "var module$exports$instrument$code = {};",
+            "class module$contents$instrument$code_InstrumentCode {",
+            "  instrumentCode(a, b) {",
+            "  }",
+            "}",
+            "module$exports$instrument$code.instrumentCodeInstance = new"
+                + " module$contents$instrument$code_InstrumentCode;",
+            "function foo() {",
+            "  module$exports$instrument$code.instrumentCodeInstance.instrumentCode(\"C\", 1, 0);",
+            "  console.log(\"Hello\");",
+            "}",
+            ";");
+
+    String source = lines("function foo() { ", "   console.log('Hello'); ", "}");
+
+    FlagEntry<JsSourceType> instrumentCodeFile =
+        createJsFileWithSuffix("InstrumentCode", instrumentCodeSource);
+    FlagEntry<JsSourceType> sourceCodeFile = createJsFileWithSuffix("sourceCode", source);
+
+    compileFiles(instrumentCodeExpected, instrumentCodeFile, sourceCodeFile);
+
+    File variableMap = new File(filePath);
+
+    List<String> variableMapFile = Files.readLines(variableMap, UTF_8);
+
+    assertThat(variableMapFile).hasSize(4);
+    assertThat(variableMapFile.get(0)).startsWith(" FileNames:[");
+    assertThat(variableMapFile.get(0)).endsWith("sourceCode.js]");
+    assertThat(variableMapFile.get(1)).isEqualTo(" FunctionNames:[foo]");
+    assertThat(variableMapFile.get(2)).isEqualTo(" Types:[FUNCTION]");
+    assertThat(variableMapFile.get(3)).isEqualTo("C:AAA");
+  }
+
+  @Test
   public void testEscapeDollarInTemplateLiteralInOutput() {
     args.add("--language_in=ECMASCRIPT6");
     args.add("--language_out=ECMASCRIPT6");
@@ -2869,6 +2950,21 @@ public final class CommandLineRunnerTest {
       throws IOException {
     File tempJsFile = File.createTempFile(filename, ".js",
         java.nio.file.Files.createTempDirectory("jscomp").toFile());
+    try (FileOutputStream fileOutputStream = new FileOutputStream(tempJsFile)) {
+      fileOutputStream.write(fileContent.getBytes(UTF_8));
+    }
+
+    return new FlagEntry<>(JsSourceType.JS, tempJsFile.getAbsolutePath());
+  }
+
+  /**
+   * TODO(psokol) Delete this and use createJSFile when InstrumentCode can be dynamically inserted
+   */
+  private static FlagEntry<JsSourceType> createJsFileWithSuffix(String filename, String fileContent)
+      throws IOException {
+    File tempJsFile =
+        File.createTempFile(
+            filename, filename + ".js", java.nio.file.Files.createTempDirectory("jscomp").toFile());
     try (FileOutputStream fileOutputStream = new FileOutputStream(tempJsFile)) {
       fileOutputStream.write(fileContent.getBytes(UTF_8));
     }

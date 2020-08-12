@@ -370,7 +370,7 @@ public final class ModuleLoader {
   /** A trivial module loader with no roots. */
   public static final ModuleLoader EMPTY =
       new ModuleLoader(
-          /** errorReporter= */ null,
+          /* errorHandler= */ null,
           ImmutableList.of(),
           ImmutableList.of(),
           BrowserModuleResolver.FACTORY);

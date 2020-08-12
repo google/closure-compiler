@@ -993,6 +993,71 @@ Float64Array.of = function(var_args) {};
 
 
 /**
+ * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
+ *     lengthOrArrayOrBuffer
+ * @param {number=} byteOffset
+ * @param {number=} bufferLength
+ * @constructor
+ * @extends {TypedArray}
+ * @throws {Error}
+ * @modifies {arguments}
+ */
+function BigInt64Array(lengthOrArrayOrBuffer, byteOffset, bufferLength) {}
+
+/** @const {number} */
+BigInt64Array.BYTES_PER_ELEMENT;
+
+/**
+ * @param {string|!IArrayLike<bigint>|!Iterable<bigint>} source
+ * @param {function(this:S, bigint): bigint=} mapFn
+ * @param {S=} thisArg
+ * @template S
+ * @return {!BigInt64Array}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
+ */
+BigInt64Array.from = function(source, mapFn, thisArg) {};
+
+/**
+ * @param {...bigint} var_args
+ * @return {!BigInt64Array}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
+ */
+BigInt64Array.of = function(var_args) {};
+
+
+/**
+ * @param {number|ArrayBufferView|Array<bigint>|ArrayBuffer|SharedArrayBuffer}
+ *     lengthOrArrayOrBuffer
+ * @param {number=} byteOffset
+ * @param {number=} bufferLength
+ * @constructor
+ * @extends {TypedArray}
+ * @throws {Error}
+ * @modifies {arguments}
+ */
+function BigUint64Array(lengthOrArrayOrBuffer, byteOffset, bufferLength) {}
+
+/** @const {number} */
+BigUint64Array.BYTES_PER_ELEMENT;
+
+/**
+ * @param {string|!IArrayLike<bigint>|!Iterable<bigint>} source
+ * @param {function(this:S, bigint): bigint=} mapFn
+ * @param {S=} thisArg
+ * @template S
+ * @return {!BigUint64Array}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
+ */
+BigUint64Array.from = function(source, mapFn, thisArg) {};
+
+/**
+ * @param {...bigint} var_args
+ * @return {!BigUint64Array}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/of
+ */
+BigUint64Array.of = function(var_args) {};
+
+/**
  * @param {ArrayBuffer|SharedArrayBuffer} buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_byteLength
@@ -1067,6 +1132,22 @@ DataView.prototype.getFloat64 = function(byteOffset, opt_littleEndian) {};
 
 /**
  * @param {number} byteOffset
+ * @param {boolean=} littleEndian
+ * @return {bigint}
+ * @throws {Error}
+ */
+DataView.prototype.getBigInt64 = function(byteOffset, littleEndian) {};
+
+/**
+ * @param {number} byteOffset
+ * @param {boolean=} littleEndian
+ * @return {bigint}
+ * @throws {Error}
+ */
+DataView.prototype.getBigUint64 = function(byteOffset, littleEndian) {};
+
+/**
+ * @param {number} byteOffset
  * @param {number} value
  * @throws {Error}
  * @return {undefined}
@@ -1136,6 +1217,24 @@ DataView.prototype.setFloat32 = function(
  */
 DataView.prototype.setFloat64 = function(
     byteOffset, value, opt_littleEndian) {};
+
+/**
+ * @param {number} byteOffset
+ * @param {number} value
+ * @param {boolean=} littleEndian
+ * @throws {Error}
+ * @return {undefined}
+ */
+DataView.prototype.setBigInt64 = function(byteOffset, value, littleEndian) {};
+
+/**
+ * @param {number} byteOffset
+ * @param {number} value
+ * @param {boolean=} littleEndian
+ * @throws {Error}
+ * @return {undefined}
+ */
+DataView.prototype.setBigUint64 = function(byteOffset, value, littleEndian) {};
 
 
 /**
@@ -1919,6 +2018,22 @@ AsyncGenerator.prototype.return = function(value) {};
  * @return {!Promise<!IIterableResult<VALUE>>}
  */
 AsyncGenerator.prototype.throw = function(exception) {};
+
+/**
+ * @constructor
+ * @struct
+ * @param {TYPE} value
+ * @template TYPE
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef
+ */
+function WeakRef(value) {}
+
+/**
+ * @return {TYPE}
+ * @nosideeffects
+ */
+WeakRef.prototype.deref = function() {};
 
 /**
  * @type {!Global}

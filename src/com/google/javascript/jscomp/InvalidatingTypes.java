@@ -29,9 +29,10 @@ import javax.annotation.Nullable;
 
 /**
  * Keeps track of "invalidating types" that force type-based optimizations to back off, specifically
- * for {@link InlineProperties}, {@link AmbiguateProperties}, and {@link DisambiguateProperties}.
- * Note that disambiguation has slightly different behavior from the other two, as pointed out in
- * implementation comments.
+ * for {@link InlineProperties}, {@link
+ * com.google.javascript.jscomp.disambiguate.AmbiguateProperties}, and {@link
+ * com.google.javascript.jscomp.disambiguate.DisambiguateProperties}. Note that disambiguation has
+ * slightly different behavior from the other two, as pointed out in implementation comments.
  */
 public final class InvalidatingTypes {
   private final ImmutableSet<JSType> types;
@@ -40,13 +41,10 @@ public final class InvalidatingTypes {
   /** Whether to allow types like 'str'.toString() */
   private final boolean allowScalars;
 
-  private final boolean allowObjectLiteralTypes;
-
   private InvalidatingTypes(Builder builder, ImmutableSet<JSType> types) {
     this.types = types;
     this.allowEnums = builder.allowEnums;
     this.allowScalars = builder.allowScalars;
-    this.allowObjectLiteralTypes = builder.allowObjectLiteralTypes;
   }
 
   public boolean isInvalidating(JSType type) {
@@ -81,10 +79,6 @@ public final class InvalidatingTypes {
   }
 
   private boolean isInvalidatingDueToAmbiguity(ObjectType type) {
-    if (this.allowObjectLiteralTypes && type.isLiteralObject()) {
-      return false;
-    }
-
     return type.isAmbiguousObject();
   }
 
@@ -96,8 +90,6 @@ public final class InvalidatingTypes {
     private final LinkedHashSet<TypeMismatch> mismatches = new LinkedHashSet<>();
     private boolean allowEnums = false;
     private boolean allowScalars = false;
-    private boolean allowGlobalThis = true;
-    private boolean allowObjectLiteralTypes = false;
 
     // TODO(b/160269908): Investigate making this always false, instead of always true.
     private final boolean alsoInvalidateRelatedTypes = true;
@@ -119,10 +111,6 @@ public final class InvalidatingTypes {
           registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
           registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE));
 
-      if (!this.allowGlobalThis) {
-        types.add(registry.getNativeType(JSTypeNative.GLOBAL_THIS));
-      }
-
       for (TypeMismatch mismatch : this.mismatches) {
         this.addTypeWithReason(mismatch.getFound(), mismatch.getLocation());
         this.addTypeWithReason(mismatch.getRequired(), mismatch.getLocation());
@@ -133,36 +121,28 @@ public final class InvalidatingTypes {
       return new InvalidatingTypes(this, types);
     }
 
-    // TODO(sdh): Investigate whether this can be consolidated between all three passes.
-    // In particular, mutation testing suggests allowEnums=true should work everywhere.
-    // We should revisit what breaks when we disallow scalars everywhere.
     public Builder writeInvalidationsInto(@Nullable Multimap<JSType, Node> invalidationMap) {
       this.invalidationMap = invalidationMap;
       return this;
     }
 
-    public Builder allowEnumsAndScalars() {
-      // Ambiguate and Inline do not allow enums or scalars.
-      this.allowEnums = this.allowScalars = true;
+    // TODO(sdh): Investigate whether this can be consolidated between all three passes.
+    // In particular, mutation testing suggests allowEnums=true should work everywhere.
+    // We should revisit what breaks when we disallow scalars everywhere.
+    public Builder allowEnums() {
+      // Ambiguate and Inline do not allow enums
+      this.allowEnums = true;
       return this;
     }
 
-    public Builder disallowGlobalThis() {
-      /**
-       * Disambiguate does not invalidate global this because it sets skipping explicitly for extern
-       * properties only on the extern types.
-       */
-      this.allowGlobalThis = false;
+    public Builder allowScalars() {
+      // Ambiguate and Inline do not allow scalars.
+      this.allowScalars = true;
       return this;
     }
 
     public Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
       mismatches.forEach(this.mismatches::add);
-      return this;
-    }
-
-    public Builder setAllowObjectLiteralTypes(boolean x) {
-      this.allowObjectLiteralTypes = x;
       return this;
     }
 

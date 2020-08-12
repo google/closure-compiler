@@ -1,10 +1,31 @@
 {
   "name": "closure-compiler",
+  "config": {
+    "runtime_tests_dir": "./test/com/google/javascript/jscomp/runtime_tests"
+  },
   "version": "1.0.0",
   "repository": "git@github.com:google/closure-compiler.git",
   "license": "Apache-2",
   "private": true,
   "devDependencies": {
     "closure-compiler-npm": "google/closure-compiler-npm"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "future-event": "^1.5.0",
+    "glob": "^7.1.6",
+    "google-closure-library": "^20200719.0.0",
+    "jest": "^26.1.0",
+    "jsdom": "^16.3.0"
+  },
+  "scripts": {
+    "build": "clean && mvn -DskipTests",
+    "build:fast": "mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml",
+    "clean": "yarn runtime_tests:clean && mvn clean",
+    "runtime_tests:build": "$npm_package_config_runtime_tests_dir/utils/build.sh",
+    "runtime_tests:clean": "rm -rf $npm_package_config_runtime_tests_dir/**/build/*",
+    "runtime_tests:run": "jest --testRegex $npm_package_config_runtime_tests_dir/utils/test/* --verbose=true",
+    "runtime_tests": "yarn runtime_tests:clean && yarn run --silent runtime_tests:build && yarn run --silent runtime_tests:run",
+    "test": "mvn test"
   }
 }

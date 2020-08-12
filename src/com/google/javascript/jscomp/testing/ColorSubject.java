@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertAbout;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ObjectColor;
 import javax.annotation.Nullable;
 
 /** Subject for {@link Color} */
@@ -60,10 +61,26 @@ public final class ColorSubject extends Subject {
     check("isObject").that(actualNonNull().isObject()).isTrue();
   }
 
+  public void isInvalidating() {
+    check("isInvalidating").that(actualNonNull().isInvalidating()).isTrue();
+  }
+
+  public void isNotInvalidating() {
+    check("isInvalidating").that(actualNonNull().isInvalidating()).isFalse();
+  }
+
   public void hasAlternates(Color... alternates) {
     isUnion();
     check("getAlternates().containsExactly()")
         .that(actualNonNull().getAlternates())
+        // cast to Object[] to suppress warning about varargs vs. non-varargs call confusion
+        .containsExactly((Object[]) alternates);
+  }
+
+  public void hasDisambiguationSupertypes(Color... alternates) {
+    isObject();
+    check("getDirectSupertypes().containsExactly()")
+        .that(((ObjectColor) actualNonNull()).getDisambiguationSupertypes())
         // cast to Object[] to suppress warning about varargs vs. non-varargs call confusion
         .containsExactly((Object[]) alternates);
   }

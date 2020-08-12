@@ -25,6 +25,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCommandLineRunner;
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ClosureCodingConvention;
@@ -39,13 +40,16 @@ import com.google.javascript.jscomp.CompilerOptionsPreprocessor;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CrossChunkMethodMotion;
 import com.google.javascript.jscomp.CustomPassExecutionTime;
+import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroupWarningsGuard;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.EmptyMessageBundle;
 import com.google.javascript.jscomp.GoogleCodingConvention;
+import com.google.javascript.jscomp.ModuleIdentifier;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.RenamingMap;
+import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.StrictWarningsGuard;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -54,6 +58,7 @@ import com.google.javascript.jscomp.testing.JSCompCorrespondences;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -435,41 +440,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  my.namespace.X = function() {};",
             "  return { X: my.namespace.X };",
             "});"));
-  }
-
-  @GwtIncompatible("CheckMissingGetCssName is incompatible")
-  @Test
-  public void testCssNameCheck() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-    options.setCheckMissingGetCssNameLevel(CheckLevel.ERROR);
-    options.setCheckMissingGetCssNameBlacklist("foo");
-    compile(options, "var x = 'foo';");
-
-    assertThat(lastCompiler.getErrors()).hasSize(1);
-    assertThat(DiagnosticGroups.MISSING_GETCSSNAME.matches(lastCompiler.getErrors().get(0)))
-        .isTrue();
-  }
-
-  @Test
-  public void testBug2592659() {
-    CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
-    options.setCheckTypes(true);
-    options.setCheckMissingGetCssNameLevel(CheckLevel.WARNING);
-    options.setCheckMissingGetCssNameBlacklist("foo");
-    test(
-        options,
-        lines(
-            "var goog = {};",
-            "/**",
-            " * @param {string} className",
-            " * @param {string=} opt_modifier",
-            " * @return {string}",
-            "*/",
-            "goog.getCssName = function(className, opt_modifier) {}",
-            "var x = goog.getCssName(123, 'a');"),
-        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -1407,8 +1377,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setGenerateExports(true);
     options.exportTestFunctions = true;
     options.setClosurePass(true);
-    options.setCheckMissingGetCssNameLevel(CheckLevel.ERROR);
-    options.setCheckMissingGetCssNameBlacklist("goog");
     options.syntheticBlockStartMarker = "synStart";
     options.syntheticBlockEndMarker = "synEnd";
     options.setCheckSymbols(true);
@@ -1635,7 +1603,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
-    options.setExtraSmartNameRemoval(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
     String code = "/** @constructor */ function A() {} " +
@@ -1682,7 +1649,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRemoveUnusedVariables(Reach.ALL);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setSmartNameRemoval(true);
-    options.setExtraSmartNameRemoval(true);
     options.setFoldConstants(true);
     options.setInlineVariables(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
@@ -1857,7 +1823,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
-    options.setExtraSmartNameRemoval(true);
     options.setInlineVariables(true);
     options.setDisambiguateProperties(true);
 
@@ -1908,7 +1873,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
-    options.setExtraSmartNameRemoval(true);
     options.setInlineVariables(true);
     options.setDisambiguateProperties(true);
 
@@ -2057,12 +2021,12 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testMoveFunctionDeclarations() {
+  public void testRewriteGlobalDeclarationsForTryCatchWrapping() {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f(); function f() { return 3; }";
     testSame(options, code);
 
-    options.moveFunctionDeclarations = true;
+    options.rewriteGlobalDeclarationsForTryCatchWrapping = true;
     test(options, code, "var f = function() { return 3; }; var x = f();");
   }
 
@@ -3279,11 +3243,11 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testRenamePrefixNamespaceActivatesMoveFunctionDeclarations() {
+  public void testRenamePrefixNamespaceActivatesRewriteGlobalDeclarationsForTryCatchWrapping() {
     CompilerOptions options = createCompilerOptions();
     String code = "var x = f; function f() { return 3; }";
     testSame(options, code);
-    assertThat(options.moveFunctionDeclarations).isFalse();
+    assertThat(options.rewriteGlobalDeclarationsForTryCatchWrapping).isFalse();
     options.setRenamePrefixNamespace("_");
     test(options, code, "_.f = function() { return 3; }; _.x = _.f;");
   }
@@ -3435,15 +3399,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}");
 
     test(options, code, result);
-  }
-
-  @Test
-  public void testRmUnusedProtoPropsInExternsUsage() {
-    CompilerOptions options = new CompilerOptions();
-    options.setRemoveUnusedPrototypePropertiesInExterns(true);
-    options.setRemoveUnusedPrototypeProperties(false);
-    assertThrows(
-        CompilerOptionsPreprocessor.InvalidOptionsException.class, () -> test(options, "", ""));
   }
 
   @Test
@@ -4191,6 +4146,58 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
+  public void testEs6ModuleEntryPoint() throws Exception {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
+    assertThat(result.errors).isEmpty();
+  }
+
+  @Test
+  @GwtIncompatible("AbstractCommandLineRunner.getBuiltinExterns()")
+  public void testEs6ModuleEntryPointWithSquareBracketsInFilename() throws Exception {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
+    assertThat(result.errors).isEmpty();
+  }
+
+  @Test
   public void testBrowserFeaturesetYear2020() {
     CompilerOptions options = createCompilerOptions();
     options.setBrowserFeaturesetYear(2020);
@@ -4364,5 +4371,33 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    return Object.create(b.prototype);",
             "  }",
             "};"));
+  }
+
+  @Test
+  public void testGitHubIssue3637() {
+    // Document that we break scoping even in Whitespace only mode when downleveling to ES5.
+    // This is problematic because WHITESPACE_ONLY and SIMPLE are often done file-by-file,
+    // so it is difficult to even pick a unique name for "foo" to avoid conflicts with other files.
+
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.WHITESPACE_ONLY.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        lines(
+            "", //
+            "{",
+            "  function foo() {}",
+            "  console.log(foo());",
+            "}",
+            ""),
+        lines(
+            "", //
+            "{",
+            "  var foo = function () {}", // now global scope, may cause conflicts
+            "  console.log(foo());",
+            "}",
+            ""));
   }
 }

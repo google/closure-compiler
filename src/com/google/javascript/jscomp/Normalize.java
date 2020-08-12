@@ -69,13 +69,9 @@ class Normalize implements CompilerPass {
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
     this.compiler = compiler;
     this.assertOnChange = assertOnChange;
-
-    // TODO(nicksantos): assertOnChange should only be true if the tree
-    // is normalized.
   }
 
-  static void normalizeSyntheticCode(
-      AbstractCompiler compiler, Node js, String prefix) {
+  static void normalizeSyntheticCode(AbstractCompiler compiler, Node js, String prefix) {
     NodeTraversal.traverse(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
     NodeTraversal.traverse(
@@ -486,10 +482,7 @@ class Normalize implements CompilerPass {
      */
     static boolean visitFunction(Node n, AbstractCompiler compiler) {
       checkState(n.isFunction(), n);
-      if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
-        rewriteFunctionDeclaration(n, compiler);
-        return true;
-      } else if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
+      if (n.isFunction() && !NodeUtil.getFunctionBody(n).isBlock()) {
         Node returnValue = NodeUtil.getFunctionBody(n);
         Node body = IR.block(IR.returnNode(returnValue.detach()));
         body.useSourceInfoIfMissingFromForTree(returnValue);
@@ -497,40 +490,6 @@ class Normalize implements CompilerPass {
         compiler.reportChangeToEnclosingScope(body);
       }
       return false;
-    }
-
-    /**
-     * Rewrite the function declaration from:
-     *   function x() {}
-     *   FUNCTION
-     *     NAME x
-     *     PARAM_LIST
-     *     BLOCK
-     * to:
-     *   var x = function() {};
-     *   VAR
-     *     NAME x
-     *       FUNCTION
-     *         NAME (w/ empty string)
-     *         PARAM_LIST
-     *         BLOCK
-     */
-    private static void rewriteFunctionDeclaration(Node n, AbstractCompiler compiler) {
-      // Prepare a spot for the function.
-      Node oldNameNode = n.getFirstChild();
-      Node fnNameNode = oldNameNode.cloneNode();
-      Node var = IR.var(fnNameNode).srcref(n);
-
-      // Prepare the function
-      oldNameNode.setString("");
-      compiler.reportChangeToEnclosingScope(oldNameNode);
-
-      // Move the function to the front of the parent
-      Node parent = n.getParent();
-      parent.removeChild(n);
-      parent.addChildToFront(var);
-      compiler.reportChangeToEnclosingScope(var);
-      fnNameNode.addChildToFront(n);
     }
 
     /**

@@ -277,7 +277,7 @@ ServiceWorkerContainer.prototype.controller;
 ServiceWorkerContainer.prototype.ready;
 
 /**
- * @param {string} scriptURL
+ * @param {!TrustedScriptURL|string} scriptURL
  * @param {RegistrationOptions=} opt_options
  * @return {!Promise<!ServiceWorkerRegistration>}
  */

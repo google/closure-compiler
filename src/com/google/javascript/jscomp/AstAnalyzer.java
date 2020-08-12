@@ -60,7 +60,8 @@ public class AstAnalyzer {
   // can also be called as constructors but lack side-effects.
   // TODO(johnlenz): consider adding an extern annotation for this.
   private static final ImmutableSet<String> BUILTIN_FUNCTIONS_WITHOUT_SIDEEFFECTS =
-      ImmutableSet.of("Object", "Array", "String", "Number", "Boolean", "RegExp", "Error");
+      ImmutableSet.of(
+          "Object", "Array", "String", "Number", "BigInt", "Boolean", "RegExp", "Error");
   private static final ImmutableSet<String> OBJECT_METHODS_WITHOUT_SIDEEFFECTS =
       ImmutableSet.of("toString", "valueOf");
   private static final ImmutableSet<String> REGEXP_METHODS = ImmutableSet.of("test", "exec");
@@ -357,6 +358,7 @@ public class AstAnalyzer {
         // Any context that supports DEFAULT_VALUE is already an assignment. The possiblity of a
         // default doesn't itself create a side-effect. Therefore, we prefer to defer the decision.
       case NUMBER:
+      case BIGINT:
       case OR:
       case COALESCE:
       case THIS:

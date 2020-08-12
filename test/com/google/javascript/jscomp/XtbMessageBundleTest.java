@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Tests {@link XtbMessageBundle}.
- *
  */
 @RunWith(JUnit4.class)
 public final class XtbMessageBundleTest {

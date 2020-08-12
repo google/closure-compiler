@@ -21,9 +21,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfill;
-import com.google.javascript.jscomp.PolyfillFindingCallback.PolyfillUsage;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
+import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
+import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
+import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -90,7 +90,7 @@ class IsolatePolyfills implements CompilerPass {
     Set<String> injectedPolyfills = findAllInjectedPolyfills();
 
     List<PolyfillUsage> polyfillUsages = new ArrayList<>();
-    new PolyfillFindingCallback(compiler, this.polyfills)
+    new PolyfillUsageFinder(compiler, this.polyfills)
         .traverseIncludingGuarded(root, polyfillUsages::add);
 
     LinkedHashSet<Node> visitedNodes = new LinkedHashSet<>();
@@ -170,7 +170,7 @@ class IsolatePolyfills implements CompilerPass {
     final Polyfill polyfill = polyfillUsage.polyfill();
 
     // Skip isolation if the --language_out is high enough to already contain the given feature.
-    if (PolyfillFindingCallback.languageOutIsAtLeast(
+    if (PolyfillUsageFinder.languageOutIsAtLeast(
         polyfill.nativeVersion, compiler.getOptions().getOutputFeatureSet())) {
       return;
     }

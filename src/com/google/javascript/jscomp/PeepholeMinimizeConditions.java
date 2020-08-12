@@ -44,11 +44,10 @@ class PeepholeMinimizeConditions
   private final boolean late;
 
   /**
-   * @param late When late is false, this mean we are currently running before
-   * most of the other optimizations. In this case we would avoid optimizations
-   * that would make the code harder to analyze (such as using string splitting,
-   * merging statements with commas, etc). When this is true, we would
-   * do anything to minimize for size.
+   * @param late When late is false, this mean we are currently running before most of the other
+   *     optimizations. In this case we would avoid optimizations that would make the code harder to
+   *     analyze (such as using string splitting, merging statements with commas, etc). When late is
+   *     true, we would do anything to minimize for size.
    */
   PeepholeMinimizeConditions(boolean late) {
     this.late = late;
@@ -809,15 +808,22 @@ class PeepholeMinimizeConditions
           // http://blickly.github.io/closure-compiler-issues/#291
           // We try to detect this case, and not fold EXPR_RESULTs
           // into other expressions.
-          if (maybeExpr.getFirstChild().isCall()) {
+          // e.g.:
+          // if (e.onchange) {
+          //    e.onchange({
+          //        _extendedByPrototype: Prototype.emptyFunction,
+          //        target: e
+          //    });
+          //  }
+          if (maybeExpr.getFirstChild().isCall() || maybeExpr.getFirstChild().isOptChainCall()) {
             Node calledFn = maybeExpr.getFirstFirstChild();
 
             // We only have to worry about methods with an implicit 'this'
             // param, or this doesn't happen.
-            if (calledFn.isGetElem()) {
+            if (calledFn.isGetElem() || calledFn.isOptChainGetElem()) {
               return false;
-            } else if (calledFn.isGetProp()
-                       && calledFn.getLastChild().getString().startsWith("on")) {
+            } else if ((calledFn.isGetProp() || calledFn.isOptChainGetProp())
+                && calledFn.getLastChild().getString().startsWith("on")) {
               return false;
             }
           }

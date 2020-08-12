@@ -26,7 +26,6 @@ import org.junit.runners.JUnit4;
  *
  * <p>Created by simranarora on 7/6/17.
  *
- * @author simranarora@google.com (Simran Arora)
  */
 @RunWith(JUnit4.class)
 public class Es6RewriteBlockScopedDeclarationEs6LangOutTest extends CompilerTestCase {

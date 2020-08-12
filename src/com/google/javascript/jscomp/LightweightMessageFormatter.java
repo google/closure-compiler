@@ -95,7 +95,6 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     // Format the non-reverse-mapped position.
     StringBuilder b = new StringBuilder();
     StringBuilder boldLine = new StringBuilder();
-    String nonMappedPosition = formatPosition(sourceName, lineNumber);
 
     // Check if we can reverse-map the source.
     if (includeLocation) {
@@ -104,17 +103,18 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
               ? null
               : source.getSourceMapping(
                   error.getSourceName(), error.getLineNumber(), error.getCharno());
-      if (mapping == null) {
-        boldLine.append(nonMappedPosition);
-      } else {
+
+      if (mapping != null) {
+        appendPosition(b, sourceName, lineNumber, charno);
+
         sourceName = mapping.getOriginalFile();
         lineNumber = mapping.getLineNumber();
         charno = mapping.getColumnPosition();
 
-        b.append(nonMappedPosition);
         b.append("\nOriginally at:\n");
-        boldLine.append(formatPosition(sourceName, lineNumber));
       }
+
+      appendPosition(boldLine, sourceName, lineNumber, charno);
     }
 
     if (includeLevel) {
@@ -177,17 +177,18 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     return b.toString();
   }
 
-  private static String formatPosition(String sourceName, int lineNumber) {
-    StringBuilder b = new StringBuilder();
+  private static void appendPosition(
+      StringBuilder b, String sourceName, int lineNumber, int charno) {
     if (sourceName != null) {
       b.append(sourceName);
       if (lineNumber > 0) {
-        b.append(':');
-        b.append(lineNumber);
+        b.append(':').append(lineNumber);
+        if (charno >= 0) {
+          b.append(':').append(charno);
+        }
       }
       b.append(": ");
     }
-    return b.toString();
   }
 
   private void padLine(

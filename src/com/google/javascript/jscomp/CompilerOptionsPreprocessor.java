@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
@@ -32,19 +30,6 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 public final class CompilerOptionsPreprocessor {
 
   static void preprocess(CompilerOptions options) {
-    if (options.checkMissingGetCssNameLevel.isOn()
-        && (isNullOrEmpty(options.checkMissingGetCssNameBlacklist))) {
-      throw new InvalidOptionsException(
-          "Cannot check use of goog.getCssName because of empty blacklist.");
-    }
-
-    if (options.removeUnusedPrototypePropertiesInExterns
-        && !options.removeUnusedPrototypeProperties) {
-      throw new InvalidOptionsException(
-          "remove_unused_prototype_props_in_externs requires "
-          + "remove_unused_prototype_props to be turned on.");
-    }
-
     if (options.getInlineFunctionsLevel() == CompilerOptions.Reach.NONE
         && options.maxFunctionSizeAfterInlining
             != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) {
@@ -59,13 +44,6 @@ public final class CompilerOptionsPreprocessor {
       // --dart_pass does not support type-aware property renaming yet.
       options.setAmbiguateProperties(false);
       options.setDisambiguateProperties(false);
-    }
-
-    if (options.removeUnusedPrototypePropertiesInExterns
-        && options.exportLocalPropertyDefinitions) {
-      throw new InvalidOptionsException(
-          "remove_unused_prototype_props_in_externs "
-          + "and export_local_property_definitions cannot be used together.");
     }
   }
 

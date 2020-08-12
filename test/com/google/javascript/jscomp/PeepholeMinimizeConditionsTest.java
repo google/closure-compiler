@@ -65,8 +65,12 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     late = false;
     fold("function f(){if(x)a();x=3}",
         "function f(){x&&a();x=3}");
+    fold("function f(){if(x)a?.();x=3}", "function f(){x&&a?.();x=3}");
+
     fold("function f(){if(x){a()}x=3}",
         "function f(){x&&a();x=3}");
+    fold("function f(){if(x){a?.()}x=3}", "function f(){x&&a?.();x=3}");
+
     fold("function f(){if(x){return 3}}",
         "function f(){if(x)return 3}");
     fold("function f(){if(x){a()}}",
@@ -84,6 +88,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("function f(){if(x){a.b+=1}}", "function f(){x&&(a.b+=1)}");
     fold("function f(){if(x){++a.b}}", "function f(){x&&++a.b}");
     fold("function f(){if(x){a.foo()}}", "function f(){x&&a.foo()}");
+    fold("function f(){if(x){a?.foo()}}", "function f(){x&&a?.foo()}");
 
     // Try it out with throw/catch/finally [which should not change]
     foldSame("function f(){try{foo()}catch(e){bar(e)}finally{baz()}}");
@@ -178,6 +183,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     // Can't combine, side-effect
     fold("function f(){ if (x) g(); if (y) g() }",
          "function f(){ x&&g(); y&&g() }");
+    fold("function f(){ if (x) g?.(); if (y) g?.() }", "function f(){ x&&g?.(); y&&g?.() }");
     // Can't combine, side-effect
     fold("function f(){ if (x) y = 0; if (y) y = 0; }",
          "function f(){ x&&(y = 0); y&&(y = 0); }");
@@ -269,6 +275,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("function f(){if(x||y)a.foo()}", "function f(){(x||y)&&a.foo()}");
     fold("function f(){if(x.a)x.a=0}",
          "function f(){x.a&&(x.a=0)}");
+    fold("function f(){if(x?.a)x.a=0}", "function f(){x?.a&&(x.a=0)}");
     foldSame("function f(){if(x()||y()){x()||y()}}");
   }
 
@@ -400,8 +407,12 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("x ? x : y", "x || y");
     // We assume GETPROPs don't have side effects.
     fold("x.y ? x.y : x.z", "x.y || x.z");
+    fold("x?.y ? x?.y : x.z", "x?.y || x.z");
+    fold("x?.y ? x?.y : x?.z", "x?.y || x?.z");
+
     // This can be folded if x() does not have side effects.
     foldSame("x() ? x() : y()");
+    foldSame("x?.() ? x?.() : y()");
 
     fold("!x ? foo() : bar()",
          "x ? bar() : foo()");
@@ -752,6 +763,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     fold("if(x)if(y){if(z){while(1){}}}", "if(x&&(y&&z)){while(1){}}");
   }
 
+  // See: http://blickly.github.io/closure-compiler-issues/#291
   @Test
   public void testIssue291() {
     fold("if (true) { f.onchange(); }", "if (1) f.onchange();");
@@ -759,6 +771,13 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
     foldSame("if (f) { f.bar(); } else { f.onchange(); }");
     fold("if (f) { f.bonchange(); }", "f && f.bonchange();");
     foldSame("if (f) { f['x'](); }");
+
+    // optional versions
+    fold("if (true) { f?.onchange(); }", "if (1) f?.onchange();");
+    foldSame("if (f) { f?.onchange(); }");
+    foldSame("if (f) { f?.bar(); } else { f?.onchange(); }");
+    fold("if (f) { f?.bonchange(); }", "f && f?.bonchange();");
+    foldSame("if (f) { f?.['x'](); }");
   }
 
   @Test
@@ -834,6 +853,15 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
         "    a = 1;\n" +
         "}",
         "a = (x[--y]) ? 0 : 1;");
+
+    test(
+        lines(
+            "if (x?.[--y]) {", //
+            "    a = 0;",
+            "} else {",
+            "    a = 1;",
+            "}"),
+        "a = (x?.[--y]) ? 0 : 1;");
 
     test("if (x++) { x += 2 } else { x += 3 }",
          "x++ ? x += 2 : x += 3");

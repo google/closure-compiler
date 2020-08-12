@@ -161,6 +161,16 @@ function LayoutShift() {}
 /** @type {number} */ LayoutShift.prototype.value;
 /** @type {boolean} */ LayoutShift.prototype.hadRecentInput;
 /** @type {number} */ LayoutShift.prototype.lastInputTime;
+/** @type {!Array<!LayoutShiftAttribution>} */ LayoutShift.prototype.sources;
+
+/**
+ * https://wicg.github.io/layout-instability/#sec-layout-shift
+ * @constructor
+ */
+function LayoutShiftAttribution() {}
+/** @type {?Node} */ LayoutShiftAttribution.prototype.node;
+/** @type {!DOMRectReadOnly} */ LayoutShiftAttribution.prototype.previousRect;
+/** @type {!DOMRectReadOnly} */ LayoutShiftAttribution.prototype.currentRect;
 
 /**
  * https://wicg.github.io/largest-contentful-paint/#largestcontentfulpaint

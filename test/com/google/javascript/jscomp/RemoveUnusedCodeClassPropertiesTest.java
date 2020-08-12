@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -96,6 +97,8 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    // Allow testing of features that aren't fully supported for output yet.
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
     onlyValidateNoNewGettersAndSetters();
@@ -213,6 +216,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   public void testExprResult() {
     test("this.x", "");
     test("externFunction().prototype.x", "externFunction()");
+    // It doesn't make much sense to use optional chaining in these cases, but if you do,
+    // it shouldn't prevent unused property removal
+    test("this?.x", "");
+    test("externFunction()?.prototype.x", "externFunction()");
   }
 
   @Test

@@ -33,7 +33,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit-tests for the GlobalVarReferenceMap class.
  *
- * @author bashir@google.com (Bashir Sadjad)
  */
 @RunWith(JUnit4.class)
 public final class GlobalVarReferenceMapTest {

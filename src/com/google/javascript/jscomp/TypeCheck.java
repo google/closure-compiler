@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Streams.stream;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -2386,7 +2387,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Node constructor = n.getFirstChild();
     JSType type = getJSType(constructor).restrictByNotNullOrUndefined();
     if (!couldBeAConstructor(type)
-        || type.equals(typeRegistry.getNativeType(SYMBOL_OBJECT_FUNCTION_TYPE))) {
+        || type.equals(typeRegistry.getNativeType(SYMBOL_OBJECT_FUNCTION_TYPE))
+        || type.equals(typeRegistry.getNativeType(BIGINT_OBJECT_FUNCTION_TYPE))) {
       report(n, NOT_A_CONSTRUCTOR);
       ensureTyped(n);
       return;

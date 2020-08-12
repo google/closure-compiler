@@ -27,7 +27,6 @@ import org.junit.runners.JUnit4;
 /**
  * Test which checks that replacer works correctly.
  *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 @RunWith(JUnit4.class)
 public final class ReplaceMessagesForChromeTest extends CompilerTestCase {

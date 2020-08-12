@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
  * Tests for the "missing provides" checks in {@link ProcessClosurePrimitives} and {@link
  * ClosureRewriteModule}.
  *
- * @author stalcup@google.com (John Stalcup)
  */
 @RunWith(JUnit4.class)
 public final class MissingProvideTest extends CompilerTestCase {

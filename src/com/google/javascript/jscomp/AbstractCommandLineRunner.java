@@ -1231,7 +1231,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       compiler.printConfig(System.err);
     }
 
-
     String saveAfterChecksFilename = config.getSaveAfterChecksFileName();
     String continueSavedCompilationFilename = config.getContinueSavedCompilationFileName();
     if (config.skipNormalOutputs) {
@@ -1438,6 +1437,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       // Output the manifest and bundle files if requested.
       outputManifest();
       outputBundle();
+
+      // Output the production instrumentation param mapping if requested.
+      outputInstrumentationMapping();
 
       if (isOutputInJson()) {
         outputJsonStream();
@@ -2013,6 +2015,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     outputManifestOrBundle(config.outputBundles, false);
   }
 
+  @GwtIncompatible("Unnecessary")
+  private void outputInstrumentationMapping() throws IOException {
+    if (!Strings.isNullOrEmpty(config.instrumentationMappingFile)) {
+      compiler.getInstrumentationMapping().save(config.instrumentationMappingFile);
+    }
+  }
+
   /**
    * Writes the manifest or bundle of all compiler input files that were included as controlled by
    * --dependency_mode, if requested.
@@ -2030,14 +2039,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       }
 
       if (shouldGenerateOutputPerModule(output)) {
-        // Generate per-module manifests or bundles
+        // Generate per-module manifests or bundles.
         Iterable<JSModule> modules = compiler.getModuleGraph().getAllModules();
         for (JSModule module : modules) {
           try (Writer out = fileNameToOutputWriter2(expandCommandLinePath(output, module))) {
             if (isManifest) {
-              printManifestTo(module.getInputs(), out);
+              printManifestTo(module, out);
             } else {
-              printBundleTo(module.getInputs(), out);
+              printBundleTo(module, out);
             }
           }
         }
@@ -2045,12 +2054,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         // Generate a single file manifest or bundle.
         try (Writer out = fileNameToOutputWriter2(expandCommandLinePath(output, null))) {
           if (config.module.isEmpty()) {
+            // For a single-module compilation, generate a single headerless manifest or bundle
+            // containing only the strong files.
+            JSModule module =
+                compiler.getModuleGraph().getModuleByName(JSModule.STRONG_MODULE_NAME);
             if (isManifest) {
-              printManifestTo(compiler.getInputsInOrder(), out);
+              printManifestTo(module, out);
             } else {
-              printBundleTo(compiler.getInputsInOrder(), out);
+              printBundleTo(module, out);
             }
           } else {
+            // For a multi-module compilation, generate a single manifest file with module headers.
             printModuleGraphManifestOrBundleTo(compiler.getModuleGraph(), out, isManifest);
           }
         }
@@ -2084,6 +2098,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     Joiner commas = Joiner.on(",");
     boolean requiresNewline = false;
     for (JSModule module : graph.getAllModules()) {
+      if (!isManifest && module.isWeak()) {
+        // Skip the weak module on a multi-module bundle, but not a multi-module manifest.
+        continue;
+      }
+
       if (requiresNewline) {
         out.append("\n");
       }
@@ -2096,9 +2115,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
             String.format("{%s%s}\n",
                 module.getName(),
                 dependencies.isEmpty() ? "" : ":" + dependencies));
-        printManifestTo(module.getInputs(), out);
+        printManifestTo(module, out);
       } else {
-        printBundleTo(module.getInputs(), out);
+        printBundleTo(module, out);
       }
       requiresNewline = true;
     }
@@ -2110,12 +2129,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
-  void printManifestTo(Iterable<CompilerInput> inputs, Appendable out) throws IOException {
-    for (CompilerInput input : inputs) {
+  void printManifestTo(JSModule module, Appendable out) throws IOException {
+    for (CompilerInput input : module.getInputs()) {
       String rootRelativePath = rootRelativePathsMap.get(input.getName());
-      String displayName = rootRelativePath != null
-          ? rootRelativePath
-          : input.getName();
+      String displayName = rootRelativePath != null ? rootRelativePath : input.getName();
       out.append(displayName);
       out.append("\n");
     }
@@ -2127,7 +2144,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
-  void printBundleTo(Iterable<CompilerInput> inputs, Appendable out) throws IOException {
+  void printBundleTo(JSModule module, Appendable out) throws IOException {
+    Iterable<CompilerInput> inputs = module.getInputs();
     // Prebuild ASTs before they're needed in getLoadFlags, for performance and because
     // StackOverflowErrors can be hit if not prebuilt.
     if (compiler.getOptions().numParallelThreads > 1) {
@@ -2147,11 +2165,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     for (CompilerInput input : inputs) {
       String name = input.getName();
       String code = input.getSourceFile().getCode();
-
-      // Ignore weak files.
-      if (input.getSourceFile().isWeak()) {
-        continue;
-      }
 
       // Ignore empty fill files created by the compiler to facilitate cross-module code motion.
       // Note that non-empty fill files (ones whose code has actually been moved into) are still
@@ -2412,6 +2425,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     public CommandLineConfig setStringMapOutputFile(String stringMapOutputPath) {
       this.stringMapOutputPath = stringMapOutputPath;
+      return this;
+    }
+
+    private String instrumentationMappingFile = "";
+
+    public CommandLineConfig setInstrumentationMappingFile(String instrumentationMappingFile) {
+      this.instrumentationMappingFile = instrumentationMappingFile;
       return this;
     }
 

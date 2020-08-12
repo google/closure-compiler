@@ -25,6 +25,7 @@ import static com.google.javascript.rhino.Token.ARRAY_PATTERN;
 import static com.google.javascript.rhino.Token.ASSIGN;
 import static com.google.javascript.rhino.Token.ASSIGN_ADD;
 import static com.google.javascript.rhino.Token.AWAIT;
+import static com.google.javascript.rhino.Token.BIGINT;
 import static com.google.javascript.rhino.Token.BITOR;
 import static com.google.javascript.rhino.Token.CALL;
 import static com.google.javascript.rhino.Token.CLASS;
@@ -257,6 +258,7 @@ public final class AstAnalyzerTest {
           kase().js("/abc/gi").token(REGEXP).expect(true),
           kase().js("'a'").token(STRING).expect(false),
           kase().js("0").token(NUMBER).expect(false),
+          kase().js("1n").token(BIGINT).expect(false),
           kase().js("a + c").token(ADD).expect(false),
           kase().js("'c' + a[0]").token(ADD).expect(false),
           kase().js("a[0][1]").token(GETELEM).expect(false),
@@ -785,6 +787,35 @@ public final class AstAnalyzerTest {
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isTrue();
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class BuiltInFunctionWithoutSideEffects {
+
+    @Parameter(0)
+    public String functionName;
+
+    @Parameters(name = "#{index} {0}")
+    public static final ImmutableList<Object[]> cases() {
+      return ImmutableList.copyOf(
+          new Object[][] {
+            {"Object"},
+            {"Array"},
+            {"String"},
+            {"Number"},
+            {"BigInt"},
+            {"Boolean"},
+            {"RegExp"},
+            {"Error"}
+          });
+    }
+
+    @Test
+    public void test() {
+      ParseHelper parseHelper = new ParseHelper();
+      Node func = parseHelper.parseFirst(CALL, SimpleFormat.format("%s(1);", functionName));
+      assertThat(parseHelper.getAstAnalyzer().functionCallHasSideEffects(func)).isFalse();
     }
   }
 

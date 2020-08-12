@@ -105,7 +105,7 @@ angular.ResourceAction.prototype.transformResponse;
  * If true, a default $http cache will be used to cache the GET request,
  * otherwise if a cache instance built with $cacheFactory, this cache will be
  * used for caching.
- * @type {boolean|angular.$cacheFactory.Cache|undefined}
+ * @type {boolean|angular.cacheFactory.Cache|undefined}
  */
 angular.ResourceAction.prototype.cache;
 

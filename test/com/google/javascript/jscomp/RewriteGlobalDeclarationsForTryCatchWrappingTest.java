@@ -22,20 +22,35 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Tests for {@link MoveFunctionDeclarations}
- *
+ * Tests for {@link RewriteGlobalDeclarationsForTryCatchWrapping}
  */
 @RunWith(JUnit4.class)
-public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
+public final class RewriteGlobalDeclarationsForTryCatchWrappingTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new MoveFunctionDeclarations(compiler);
+    return new RewriteGlobalDeclarationsForTryCatchWrapping(compiler);
   }
 
   @Test
   public void testFunctionDeclarations() {
     test("a; function f(){} function g(){}", "var f = function(){}; var g = function(){}; a;");
+  }
+
+  @Test
+  public void testFunctionDeclarationsInBlock() {
+    testSame("a; if (1) { function f(){} function g(){} }");
+  }
+
+  @Test
+  public void testClassDeclarations() {
+    // classes don't hoist
+    test("a; class B{} class C{}", "a; var B = class{}; var C = class{};");
+  }
+
+  @Test
+  public void testClassDeclarationsInBlock() {
+    testSame("a; if (1) { class B{} class C{} }");
   }
 
   @Test
@@ -70,5 +85,19 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame("a; if (a) function f(){};");
     testSame("a; if (a) { function f(){} }");
+  }
+
+  @Test
+  public void testMigrateLetConstToVar1() {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    test("let a = 1;", "var a = 1");
+    test("const a = 2;", "var a = 2");
+  }
+
+  @Test
+  public void testMigrateLetConstToVar2() {
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    testSame("{let a = 1;}");
+    testSame("{const a = 2;}");
   }
 }

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2018;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES2020;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
@@ -82,6 +83,14 @@ public class TranspilationPasses {
       // The only thing we need to do is mark them as not present in the AST.
       passes.add(
           createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
+    }
+
+    if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
+      passes.add(rewriteOptionalChainingOperator);
+    }
+
+    if (options.needsTranspilationOf(Feature.BIGINT)) {
+      passes.add(reportBigIntLiteralTranspilationUnsupported);
     }
 
     if (options.needsTranspilationOf(Feature.NULL_COALESCE_OP)) {
@@ -230,6 +239,13 @@ public class TranspilationPasses {
           .setFeatureSet(ES_NEXT)
           .build();
 
+  private static final PassFactory reportBigIntLiteralTranspilationUnsupported =
+      PassFactory.builderForHotSwap()
+          .setName("reportBigIntTranspilationUnsupported")
+          .setInternalFactory(ReportBigIntLiteralTranspilationUnsupported::new)
+          .setFeatureSet(ES2020)
+          .build();
+
   private static final PassFactory rewriteExponentialOperator =
       PassFactory.builderForHotSwap()
           .setName("rewriteExponentialOperator")
@@ -373,12 +389,19 @@ public class TranspilationPasses {
           .setFeatureSet(ES8)
           .build();
 
+  static final PassFactory rewriteOptionalChainingOperator =
+      PassFactory.builderForHotSwap()
+          .setName("rewriteOptionalChainingOperator")
+          .setInternalFactory(RewriteOptionalChainingOperator::new)
+          // TODO(b/161166856) change to ES2020 when optional chaining moves there.
+          .setFeatureSet(ES_NEXT_IN)
+          .build();
+
   static final PassFactory rewriteNullishCoalesceOperator =
       PassFactory.builderForHotSwap()
           .setName("rewriteNullishCoalesceOperator")
           .setInternalFactory(RewriteNullishCoalesceOperator::new)
-          .setFeatureSet(ES_NEXT_IN)
-          // TODO(annieyw) change to ES2020 when avail
+          .setFeatureSet(ES2020)
           .build();
 
   /**

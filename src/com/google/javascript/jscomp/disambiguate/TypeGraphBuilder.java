@@ -197,8 +197,8 @@ final class TypeGraphBuilder {
       /**
        * Make sure we include all instance types we know about.
        *
-       * <p>If there are no direct property accesses off of the instance type of this prototype we
-       * won't see it during AST traversal. However, the instance type may still be used.
+       * <p>We may not see all types directly on the AST when collecting types to use in this pass,
+       * but should still account for instance types if their associated prototype is present.
        */
       if (flatObjectType.isFunctionPrototypeType()) {
         FunctionType ownerFunction = flatObjectType.getOwnerFunction();
@@ -208,11 +208,22 @@ final class TypeGraphBuilder {
            *
            * <p>Recursion up this type's prototype chain will create any required edges.
            * Additionally, this may not actually be the instance type of `flatObjectType`.
-           *
-           * <p>TODO(nickreid): Find out what syntax was causing this and add a test.
            */
           this.addInternal(ownerFunction.getInstanceType());
         }
+      }
+
+      /**
+       * Add all instance and prototype types when visiting a constructor. We won't necessarily see
+       * all possible instance types that exist at runtime during an AST traversal.
+       *
+       * <p>For example, a subclass constructor may never be explicitly initialized but instead
+       * passed to some function expecting `function(new:Parent)`. See {@link
+       * AmbiguatePropertiesTest#testImplementsAndExtends_respectsUndeclaredProperties()}
+       */
+      FunctionType flatFunctionType = flatObjectType.toMaybeFunctionType();
+      if (flatFunctionType != null && flatFunctionType.hasInstanceType()) {
+        this.addInternal(flatFunctionType.getInstanceType());
       }
 
       return flatNode;

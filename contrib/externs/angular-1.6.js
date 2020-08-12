@@ -373,20 +373,20 @@ angular.LinkingFunctions.prototype.post;
  *   controllerAs: (string|undefined),
  *   link: (function(
  *       !angular.Scope=, !angular.JQLite=, !angular.Attributes=,
- *       (!Object|!Array.<!Object>)=)|
+ *       (!Object|!Array<!Object>)=)|
  *       !angular.LinkingFunctions|
  *       undefined),
  *   name: (string|undefined),
  *   priority: (number|undefined),
  *   replace: (boolean|undefined),
- *   require: (string|Array.<string>|!Object<string, string>|undefined),
+ *   require: (string|Array<string>|!Object<string, string>|undefined),
  *   restrict: (string|undefined),
- *   scope: (boolean|Object.<string, string>|undefined),
+ *   scope: (boolean|Object<string, string>|undefined),
  *   template: (string|!angular.Injectable|undefined),
  *   templateNamespace: (string|undefined),
  *   templateUrl: (string|!angular.Injectable|!Object|undefined),
  *   terminal: (boolean|undefined),
- *   transclude: (boolean|string|!Object.<string, string>|undefined)
+ *   transclude: (boolean|string|!Object<string, string>|undefined)
  *   }}
  */
 angular.Directive;
@@ -1879,7 +1879,7 @@ angular.$location.prototype.protocol = function() {};
 angular.$location.prototype.replace = function() {};
 
 /**
- * @param {(string|Object.<string, string>|Object.<string, Array.<string>>)=}
+ * @param {(string|Object<string, string>|Object<string, Array<string>>)=}
  *     opt_search
  * @param {?(string|Array<string>|boolean|number)=} opt_paramValue
  * @return {(!Object|!angular.$location)}

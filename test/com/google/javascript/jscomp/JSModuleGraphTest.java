@@ -470,7 +470,7 @@ public final class JSModuleGraphTest {
     makeDeps();
     makeGraph();
     JsonArray modules = graph.toJson();
-    assertThat(modules.size()).isEqualTo(7);
+    assertThat(modules).hasSize(7);
     for (int i = 0; i < modules.size(); i++) {
       JsonObject m = modules.get(i).getAsJsonObject();
       assertThat(m.get("name")).isNotNull();
@@ -481,7 +481,7 @@ public final class JSModuleGraphTest {
     JsonObject m = modules.get(3).getAsJsonObject();
     assertThat(m.get("name").getAsString()).isEqualTo("moduleD");
     assertThat(m.get("dependencies").getAsJsonArray().toString()).isEqualTo("[\"moduleB\"]");
-    assertThat(m.get("transitive-dependencies").getAsJsonArray().size()).isEqualTo(2);
+    assertThat(m.get("transitive-dependencies").getAsJsonArray()).hasSize(2);
     assertThat(m.get("inputs").getAsJsonArray().toString()).isEqualTo("[]");
   }
 

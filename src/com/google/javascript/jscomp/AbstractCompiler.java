@@ -129,6 +129,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Sets the css names found during compilation. */
   public abstract void setCssNames(Map<String, Integer> newCssNames);
 
+  /** Sets the mapping for instrumentation parameter encoding. */
+  public abstract void setInstrumentationMapping(VariableMap instrumentationMapping);
+
   /** Sets the id generator for cross-module motion. */
   public abstract void setIdGeneratorMap(String serializedIdMappings);
 
@@ -289,10 +292,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   public abstract ReverseAbstractInterpreter getReverseAbstractInterpreter();
 
-  /**
-   * @return The current life-cycle stage of the AST we're working on.
-   */
-  LifeCycleStage getLifeCycleStage() {
+  /** Returns the current life-cycle stage of the AST we're working on. */
+  public LifeCycleStage getLifeCycleStage() {
     return stage;
   }
 
@@ -440,7 +441,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   abstract CheckLevel getErrorLevel(JSError error);
 
-  static enum LifeCycleStage implements Serializable {
+  /** What point in optimizations we're in. For use by compiler passes */
+  public static enum LifeCycleStage implements Serializable {
     RAW,
 
     // See constraints put on the tree by Normalize.java
@@ -451,15 +453,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
     // coding conventions no longer apply.
     NORMALIZED_OBFUSCATED;
 
-    boolean isNormalized() {
+    public boolean isNormalized() {
       return this == NORMALIZED || this == NORMALIZED_OBFUSCATED;
     }
 
-    boolean isNormalizedUnobfuscated() {
+    public boolean isNormalizedUnobfuscated() {
       return this == NORMALIZED;
     }
 
-    boolean isNormalizedObfuscated() {
+    public boolean isNormalizedObfuscated() {
       return this == NORMALIZED_OBFUSCATED;
     }
   }
@@ -577,8 +579,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract void setExternProperties(Set<String> externProperties);
 
   /**
-   * Gets the names of the properties defined in externs or null if
-   * GatherExternProperties pass was not run yet.
+   * Gets the names of the properties defined in externs or null if GatherExternProperties pass was
+   * not run yet.
    */
   abstract Set<String> getExternProperties();
 

@@ -200,7 +200,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = createCompilerOptions();
     options.setSmartNameRemoval(true);
-    options.setExtraSmartNameRemoval(true);
     test(options, source, DiagnosticGroups.INVALID_CONST_PARAM);
   }
 

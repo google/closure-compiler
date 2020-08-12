@@ -138,10 +138,17 @@ public class AstChainOptionalizer {
   /** Special function qualified names that really should never be called with ?. */
   private static final ImmutableList<String> SPECIAL_CALLEE_QNAMES =
       ImmutableList.of(
+          "Array.from",
           "Object.defineProperty",
           "Object.defineProperties",
+          "goog.addSingletonGetter",
           "goog.inherits",
-          "goog.reflect.cache");
+          "goog.mixin",
+          "goog$mixin",
+          "goog.reflect.cache",
+          "goog.reflect.objectProperty",
+          "Math.random",
+          "$jscomp.polyfill");
 
   /**
    * Is the callee a special function name that we would never expect to be called using optional

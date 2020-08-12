@@ -77,6 +77,8 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    // Allow testing of features that aren't supported for output yet.
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
     onlyValidateNoNewGettersAndSetters();
@@ -87,7 +89,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
     return options;
   }
 
@@ -2164,8 +2165,34 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemoveUnusedPolyfills_propertyOfGlobalObject_withOptionalChain() {
+    final String promisePolyfill = "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder()
+                    .addConsole()
+                    .addPromise()
+                    .addExtra(JSCOMP_POLYFILL, "/** @const */ var goog = {};")
+                    .build())
+            .addPolyfill(promisePolyfill);
+
+    // The optional chain here isn't guarding against Promise being undefined,
+    // just the object on which it is referenced.
+    tester.expectNoRemovalTest("console.log(goog.global?.Promise.resolve());");
+
+    // The optional chain here _is_ guarding against Promise being undefined.
+    tester.expectPolyfillsRemovedTest(
+        "console.log(goog.global.Promise?.resolve());", promisePolyfill);
+
+    // The optional chain here _is_ guarding against Promise being undefined,
+    // in addition to the object on which it is referenced.
+    tester.expectPolyfillsRemovedTest(
+        "console.log(goog.global?.Promise?.resolve());", promisePolyfill);
+  }
+
+  @Test
   public void testRemoveUnusedPolyfills_propertyOfGlobalObject_typed() {
-    setAstChainOptionalizer(null);
     enableTypeCheck();
     // We no longer use type information to make polyfill removal decisions
     testRemoveUnusedPolyfills_propertyOfGlobalObject_untyped();
@@ -2236,6 +2263,80 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRemoveUnusedPolyfills_staticProperty_withOptionalChain() {
+    final String promisePolyfill = "$jscomp.polyfill('Promise', function() {}, 'es6', 'es3');";
+    final String allSettledPolyfill =
+        "$jscomp.polyfill('Promise.allSettled', function() {}, 'es6', 'es3');";
+    PolyfillRemovalTester tester =
+        new PolyfillRemovalTester()
+            .addExterns(
+                new TestExternsBuilder()
+                    .addConsole()
+                    .addPromise()
+                    .addExtra(JSCOMP_POLYFILL, "/** @const */ var goog = {};")
+                    .build())
+            .addPolyfill(promisePolyfill)
+            .addPolyfill(allSettledPolyfill);
+
+    tester.expectNoRemovalTest("console.log(Promise.allSettled());"); // neither guarded
+
+    // `?.` guards the name on its left, allowing it to be removed
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise.allSettled?.());", // allSettled guarded
+        allSettledPolyfill);
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise.allSettled?.(Promise.allSettled));", // allSettled guarded
+        allSettledPolyfill);
+
+    // TODO(b/163394833): Note that this behavior could result in the Promise polyfill being
+    // removed, then the Promise.allSettled polyfill code having nowhere to hang its value.
+    // At runtime the `$jscomp.polyfill('Promise.allSettled',...)` call will silently fail
+    // to create the polyfill if `Promise` isn't defined.
+    // This is consistent with the way guarding with `&&` would behave, as demonstrated by the
+    // following test case.
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise?.allSettled());", // Promise guarded
+        promisePolyfill);
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise && Promise.allSettled());", // Promise guarded
+        promisePolyfill);
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise?.allSettled?.([Promise.allSettled]));", // both guarded
+        promisePolyfill,
+        allSettledPolyfill);
+
+    // Access via a (potentially) global variable should behave the same way, even if the
+    // global is referenced via optional chaining
+    tester.expectNoRemovalTest(
+        "console.log(goog.global?.Promise.allSettled());"); // neither guarded
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(goog.global?.Promise.allSettled?.());", // allSettled guarded
+        allSettledPolyfill);
+
+    // TODO(b/163394833): Note that this behavior could result in the Promise polyfill being
+    // removed, then the Promise.allSettled polyfill code having nowhere to hang its value.
+    // At runtime the `$jscomp.polyfill('Promise.allSettled',...)` call will silently fail
+    // to create the polyfill if `Promise` isn't defined.
+    // This is consistent with the way guarding with `&&` would behave, as demonstrated by the
+    // following test case.
+    tester.expectPolyfillsRemovedTest(
+        "console.log(goog.global?.Promise?.allSettled());", // Promise guarded
+        promisePolyfill);
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(goog.global && goog.global.Promise && goog.global.Promise.allSettled());",
+        promisePolyfill);
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(goog.global?.Promise?.allSettled?.());", // both guarded
+        promisePolyfill,
+        allSettledPolyfill);
+  }
+
+  @Test
   public void testRemoveUnusedPolyfills_staticProperty_typed() {
     enableTypeCheck();
     // NOTE: We no longer use type information to make polyfill removal decisions.
@@ -2267,12 +2368,21 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
     // Used polyfill is retained.
     tester.expectNoRemovalTest("''.repeat(1);");
+    tester.expectNoRemovalTest("''?.repeat(1);");
+
+    // Guarded polyfill is removed.
+    tester.expectPolyfillsRemovedTest("''.repeat?.(1);", stringRepeatPolyfill);
 
     // Used polyfill (directly via String.prototype) is retained.
     tester.expectNoRemovalTest("String.prototype.repeat(1);");
+    tester.expectNoRemovalTest("String.prototype?.repeat(1);");
+    tester.expectPolyfillsRemovedTest("String.prototype.repeat?.(1);", stringRepeatPolyfill);
 
     // Used polyfill (directly String.prototype and Function.prototype.call) is retained.
     tester.expectNoRemovalTest("String.prototype.repeat.call('', 1);");
+    tester.expectNoRemovalTest("String.prototype.repeat.call?.('', 1);");
+    tester.expectPolyfillsRemovedTest(
+        "String.prototype.repeat?.call('', 1);", stringRepeatPolyfill);
 
     // Unused polyfill is not removed if there is another property with the same name on an unknown
     // type
@@ -2280,6 +2390,11 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         lines(
             "var x = externFunction();", //
             "x.repeat();"));
+    tester.expectPolyfillsRemovedTest(
+        lines(
+            "var x = externFunction();", //
+            "x.repeat?.();"),
+        stringRepeatPolyfill);
 
     // Without type information, cannot remove the polyfill.
     tester.expectNoRemovalTest(
@@ -2345,6 +2460,10 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     // The extra method polyfill is removed if not used, even when the base is retained.
     tester.expectPolyfillsRemovedTest("console.log(Promise.resolve());", finallyPolyfill);
 
+    // Promise is guarded by an optional chain.
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise?.resolve());", promisePolyfill, finallyPolyfill);
+
     // Can't remove finally without type information
     tester.expectPolyfillsRemovedTest(
         lines(
@@ -2355,8 +2474,44 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
         // it would actually prevent the Promise polyfill from being removed.
         promisePolyfill);
 
+    // `finally` is guarded by an optional chain
+    tester.expectPolyfillsRemovedTest(
+        lines(
+            "", //
+            "const p = {finally() {}};",
+            "p.finally?.();"),
+        promisePolyfill,
+        finallyPolyfill);
+
     // Retain both the base and the extra method when both are used.
     tester.expectNoRemovalTest("console.log(Promise.resolve().finally(() => {}));");
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise?.resolve()?.finally(() => {}));",
+        promisePolyfill); // finally is not guarded
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise?.resolve().finally?.(() => {}));",
+        promisePolyfill,
+        finallyPolyfill); // both are guarded
+
+    // TODO(b/163394833): Note that this behavior could result in the Promise polyfill being
+    // removed, then the Promise.prototype.finally polyfill code having nowhere to hang its value.
+    // This is consistent with the way guarding with `&&` would behave, as demonstrated by the
+    // following test case.
+    // NOTE: In reality the Promise.prototype.finally polyfill references Promise, so
+    // it would actually prevent the Promise polyfill from being removed.
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise?.resolve().finally(() => {}));",
+        promisePolyfill); // only Promise guarded by optional chain
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise && Promise.resolve().finally(() => {}));",
+        promisePolyfill); // only Promise guarded by optional chain
+
+    tester.expectPolyfillsRemovedTest(
+        "console.log(Promise.resolve().finally?.(() => {}));",
+        finallyPolyfill); // only `finally` guarded by optional chain
 
     // The base polyfill is removed and the extra method retained if the constructor never shows up
     // anywhere in the source code.  NOTE: this is probably the wrong thing to do.  This situation

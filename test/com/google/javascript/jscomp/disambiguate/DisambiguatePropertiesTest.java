@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PropertyRenamingDiagnostics.INVALIDATION;
 
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.DiagnosticGroup;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.HashMap;
@@ -1560,7 +1566,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "(new Foo).a = 0;"
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n";
-    testSets(js, "{}", TypeValidator.TYPE_MISMATCH_WARNING);
+    testSets(js, "{}", DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -1756,13 +1762,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "",
         "(new Bar()).alias();");
 
-    testSets(
-        "",
-        js,
-        js,
-        "{}",
-        TypeValidator.TYPE_MISMATCH_WARNING,
-        "assignment\n" + "found   : (typeof Foo)\n" + "required: (typeof Bar)");
+    testSets("", js, js, "{}", DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -2202,11 +2202,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var F = new Bar;\n"
         + "F.a = 0;";
 
-    testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING,
-        lines(
-            "initializing variable",
-            "found   : Bar",
-            "required: (Foo|null)"));
+    testSets("", js, js, "{}", DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -2217,10 +2213,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Bar.prototype.a = 0;\n"
         + "var a = /** @type {!Foo} */ (new Bar);\n"
         + "a.a = 4;";
-    testSets("", js, js, "{}", TypeValidator.INVALID_CAST,
-             "invalid cast - must be a subtype or supertype\n"
-             + "from: Bar\n"
-             + "to  : Foo");
+    testSets("", js, js, "{}", DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -3015,7 +3008,8 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEs6ClassMethods_emitInvalidationErrorAfterTypeMismatch() {
-    ignoreWarnings(TypeValidator.TYPE_MISMATCH_WARNING);
+
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     test(
         srcs(
             lines(
@@ -3423,6 +3417,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testClassPrototypeMemberInInvalidatingExternsType() {
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     testSame(
         externs("class Foo { method() {} }"),
         srcs(
@@ -3431,12 +3426,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "(new Foo()).method();",
                 "(new Bar()).method();",
                 // this invalidates renaming all properties matching the name method
-                "const /** number */ n = new Foo();")),
-        warning(TypeValidator.TYPE_MISMATCH_WARNING));
+                "const /** number */ n = new Foo();")));
   }
 
   @Test
   public void testClassPrototypeMemberInExternsWithQuotedPropertyDoesntInvalidate() {
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     test(
         externs("/** @dict */ class Foo { 'method'() {} }"),
         srcs(
@@ -3450,8 +3445,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             lines(
                 "class Bar { Bar_prototype$method() {} }", //
                 "class Baz { Baz_prototype$method() {} }",
-                "const /** number */ n = new Foo();")),
-        warning(TypeValidator.TYPE_MISMATCH_WARNING));
+                "const /** number */ n = new Foo();")));
   }
 
   /** Tests for destructuring */
@@ -3661,11 +3655,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "const {.../** !Bar */ bar} = new Foo();",
             "alert(bar.prop);"),
         "{prop=[[Bar], [Foo]]}",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
   public void testObjectRest_allowsDisambiguation_betweenPairOfRecordTypes() {
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     testSets(
         lines(
@@ -3695,8 +3690,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  const {.../** !Bar */ bar} = f;",
             "  alert(bar.prop);",
             "}"),
-        "{prop=[[Bar], [Foo]], uniqueProp=[[Foo]]}",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        "{prop=[[Bar], [Foo]], uniqueProp=[[Foo]]}");
   }
 
   @Test
@@ -3723,6 +3717,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjectSpread_allowsDisambiguation_betweenInstanceAndRecordType() {
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     testSets(
         lines(
@@ -3747,8 +3742,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             // "prop". See b/128355893#comment3
             "const /** !Bar */ bar = {...new Foo()};",
             "alert(bar.prop);"),
-        "{prop=[[Bar], [Foo]]}",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        "{prop=[[Bar], [Foo]]}");
   }
 
   @Test
@@ -3783,7 +3777,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  alert(bar.prop);",
             "}"),
         "{prop=[[Bar], [Foo]], uniqueProp=[[Foo]]}",
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        DiagnosticGroups.CHECK_TYPES);
   }
 
   @Test
@@ -3908,13 +3902,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     assertThat(mapToString(lastPass.getRenamedTypesForTesting())).isEqualTo(fieldTypes);
   }
 
-  private void testSets(String externs, String js, String expected,
-       final String fieldTypes, DiagnosticType warning, String description) {
-    test(
-        externs(DEFAULT_EXTERNS + externs),
-        srcs(js),
-        expected(expected),
-        warning(warning).withMessage(description));
+  private void testSets(
+      String externs,
+      String js,
+      String expected,
+      final String fieldTypes,
+      DiagnosticGroup warning) {
+    ignoreWarnings(warning);
+    test(externs(DEFAULT_EXTERNS + externs), srcs(js), expected(expected));
     assertThat(mapToString(lastPass.getRenamedTypesForTesting())).isEqualTo(fieldTypes);
   }
 
@@ -3931,16 +3926,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   /**
-   * Compiles the code and checks that the set of types for each field matches
-   * the expected value.
+   * Compiles the code and checks that the set of types for each field matches the expected value.
    *
-   * <p>The format for the set of types for fields is:
-   * {field=[[Type1, Type2]]}
+   * <p>The format for the set of types for fields is: {field=[[Type1, Type2]]}
    */
-  private void testSets(String js, final String fieldTypes, DiagnosticType warning) {
+  private void testSets(String js, final String fieldTypes, DiagnosticGroup warning) {
+    ignoreWarnings(warning);
     test(
         srcs(js),
-        warning(warning),
         (Postcondition)
             unused ->
                 assertThat(mapToString(lastPass.getRenamedTypesForTesting()))

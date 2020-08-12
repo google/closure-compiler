@@ -42,14 +42,14 @@ public class CheckMissingRequires extends AbstractModuleCallback implements Comp
               + "use the alias instead.");
 
   public static final DiagnosticType MISSING_REQUIRE_TYPE =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_TYPE",
           "''{0}'' references a fully qualified namespace, which is disallowed by the style"
               + " guide.\nPlease add a goog.requireType, assign or destructure it into an alias, "
               + "and use the alias instead.");
 
   public static final DiagnosticType MISSING_REQUIRE_IN_PROVIDES_FILE =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_MISSING_REQUIRE_IN_PROVIDES_FILE",
           "''{0}'' references a namespace which was not required by this file.\n"
               + "Please add a goog.require.");

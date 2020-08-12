@@ -46,7 +46,7 @@ public final class RewriteOptionalChainingOperatorTest {
           "    /** @const {function(number): !TestObject} */",
           "    this.fun = (num) => this.ary[num];",
           "    /** @const */",
-          "    this.n = 0;",
+          "    this.num = 0;",
           "  }",
           "  /** @return {!TestObject} */",
           "  getObj() { return this; }",
@@ -91,6 +91,32 @@ public final class RewriteOptionalChainingOperatorTest {
     public static final ImmutableList<Object> cases() {
       return ImmutableList.copyOf(
           new Object[][] {
+            {
+              // Do rewriting within a function.
+              // This will fail if the AST change is reported for the script's scope instead of
+              // the function's scope.
+              lines(
+                  "function foo() {", //
+                  "  return obj?.num;",
+                  "}"),
+              lines(
+                  "function foo() {", //
+                  "  let tmp0;",
+                  "  return (tmp0 = obj) == null ? void 0 : tmp0.num;",
+                  "}")
+            },
+            {
+              "eval?.('foo()');",
+              lines(
+                  "let tmp0;", //
+                  "(tmp0 = eval) == null",
+                  "    ? void 0",
+                  // The spec says that `eval?.()` must behave like an indirect
+                  // eval, so it is important that `eval?.()` not be transpiled to
+                  // anything that ends up containing `eval()`.
+                  // We must be sure to call it using the temporary variable.
+                  "    : tmp0('foo()');")
+            },
             {
               "obj?.ary[getNum()].obj.obj?.obj.ary",
               lines(

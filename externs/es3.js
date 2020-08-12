@@ -1028,6 +1028,68 @@ Number.NEGATIVE_INFINITY;
  */
 Number.POSITIVE_INFINITY;
 
+/**
+ * @constructor
+ * @param {number|string|bigint} arg
+ * @return {bigint}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
+ */
+function BigInt(arg) {}
+
+/**
+ * Wraps a BigInt value to a signed integer between -2^(width-1) and
+ * 2^(width-1)-1.
+ * @param {number} width
+ * @param {bigint} bigint
+ * @return {bigint}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/asIntN
+ */
+BigInt.asIntN = function(width, bigint) {};
+
+/**
+ * Wraps a BigInt value to an unsigned integer between 0 and (2^width)-1.
+ * @param {number} width
+ * @param {bigint} bigint
+ * @return {bigint}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/asUintN
+ */
+BigInt.asUintN = function(width, bigint) {};
+
+/**
+ * Returns a string with a language-sensitive representation of this BigInt.
+ * @param {string|!Array<string>=} locales
+ * @param {Object=} options
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/toLocaleString
+ * @override
+ */
+BigInt.prototype.toLocaleString = function(locales, options) {};
+
+/**
+ * Returns a string representing the specified BigInt object. The trailing "n"
+ * is not part of the string.
+ * @this {BigInt|bigint}
+ * @param {number=} radix
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/toString
+ * @override
+ */
+BigInt.prototype.toString = function(radix) {};
+
+/**
+ * Returns the wrapped primitive value of a BigInt object.
+ * @return {bigint}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt/valueOf
+ * @override
+ */
+BigInt.prototype.valueOf = function() {};
+
 
 /**
  * @const

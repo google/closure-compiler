@@ -20,7 +20,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
-import com.google.javascript.jscomp.PolyfillFindingCallback.Polyfills;
+import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;

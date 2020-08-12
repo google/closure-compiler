@@ -51,7 +51,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Tests {@link TypeCheck}.
- *
  */
 @RunWith(JUnit4.class)
 public final class TypeCheckTest extends TypeCheckTestCase {
@@ -23730,6 +23729,17 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntArgument() {
+    testTypes("BigInt(1)");
+    testTypes(
+        "BigInt({})",
+        lines(
+            "actual parameter 1 of BigInt does not match formal parameter",
+            "found   : {}",
+            "required: (bigint|number|string)"));
+  }
+
+  @Test
   public void testBigIntOperators_increment() {
     testTypes("const x = 1n; x++;");
     testTypes("/** @type {!BigInt} */ var x; x++;");
@@ -24072,6 +24082,12 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntConstructorWithNew() {
+    // BigInt object function type cannot be called with "new" keyword
+    testTypes("new BigInt(1)", "cannot instantiate non-constructor");
+  }
+
+  @Test
   public void testBigIntOrNumberArrayIndex() {
     // Even though the spec doesn't prohibit using bigint as an array index, we will report an error
     // to maintain consistency with TypeScript.
@@ -24097,6 +24113,11 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   @Test
   public void testBigIntAsComputedPropForStructClasses() {
     testTypes("class C { 123n() {} }", "Cannot do '[]' access on a struct");
+  }
+
+  @Test
+  public void testBigIntLiteralProperty() {
+    testTypesWithExterns(new TestExternsBuilder().addBigInt().build(), "(1n).toString()");
   }
 
   @Test

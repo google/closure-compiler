@@ -3901,7 +3901,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralZero() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3915,7 +3914,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralPositive() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("1n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3929,7 +3927,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralNegative() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("-1n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3943,7 +3940,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralBinary() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0b10000n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3957,7 +3953,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralOctal() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0o100n;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3971,7 +3966,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralHex() {
-    mode = LanguageMode.UNSUPPORTED;
     Node bigint =
         parse("0xFn;") // SCRIPT
             .getOnlyChild() // EXPR_RESULT
@@ -3984,8 +3978,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testBigIntInFunctionStatement() {
+    Node add =
+        parse("function f(/** @type {bigint} */ x) { 0n + x }") // SCRIPT
+            .getOnlyChild() // FUNCTION
+            .getLastChild() // BLOCK
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // ADD
+    assertNode(add).hasToken(Token.ADD);
+    assertNode(add.getFirstChild()).isBigInt(BigInteger.ZERO);
+    assertNode(add.getLastChild()).isName("x");
+  }
+
+  @Test
   public void testBigIntLiteralErrors() {
-    mode = LanguageMode.UNSUPPORTED;
     parseError("01n;", "SyntaxError: nonzero BigInt can't have leading zero");
     parseError(".1n", "Semi-colon expected");
     parseError("0.1n", "Semi-colon expected");
@@ -3994,12 +4000,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testBigIntLiteralWarning() {
-    parseWarning("1n;", "This language feature is not currently supported by the compiler: bigint");
+    mode = LanguageMode.ECMASCRIPT_2019;
+    parseWarning(
+        "1n;",
+        "This language feature is only supported for ECMASCRIPT_2020 mode or better: bigint");
+  }
+
+  @Test
+  public void testBigIntFeatureRecorded() {
+    parse("1n;");
+    expectFeatures(Feature.BIGINT);
   }
 
   @Test
   public void testBigIntLiteralInCall() {
-    mode = LanguageMode.UNSUPPORTED;
     parse("alert(1n)");
   }
 
@@ -4900,6 +4914,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testRegExpUnicode() {
+    assertNodeEquality(parse("/\\u10fA/"), script(expr(regex("\\u10fA"))));
+    assertNodeEquality(parse("/\\u{10fA}/u"), script(expr(regex("\\u{10fA}", "u"))));
+    assertNodeEquality(parse("/\\u{1fA}/u"), script(expr(regex("\\u{1fA}", "u"))));
+    assertNodeEquality(parse("/\\u{10FFFF}/u"), script(expr(regex("\\u{10FFFF}", "u"))));
+  }
+
+  @Test
   public void testRegExpFlags() {
     // Various valid combinations.
     parse("/a/");
@@ -5322,59 +5344,58 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingGetProp() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.b").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(4);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.string("b"));
   }
 
   @Test
   public void optionalChainingGetPropWithKeyword() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.finally").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(10);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.string("finally"));
   }
 
   @Test
   public void optionalChainingGetElem() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.[1]").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_GETELEM);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(6);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
     assertNode(n.getSecondChild()).isEqualTo(IR.number(1.0));
   }
 
   @Test
   public void optionalChainingCall() {
-    mode = LanguageMode.UNSUPPORTED;
     Node n = parse("a?.()").getFirstFirstChild();
 
     assertNode(n).hasType(Token.OPTCHAIN_CALL);
     assertNode(n).isOptionalChainStart();
     assertNode(n).hasLineno(1);
-    assertNode(n).hasCharno(1);
+    assertNode(n).hasCharno(0);
+    assertNode(n).hasLength(5);
     assertNode(n.getFirstChild()).isEqualTo(IR.name("a"));
   }
 
   // Check that optional chain node that is an arg of a call gets marked as the start of a new chain
   @Test
   public void optionalChainingStartOfChain_innerChainIsArgOfACall() {
-    mode = LanguageMode.UNSUPPORTED;
     Node optChainCall = parse("a?.b?.(x?.y);").getFirstFirstChild();
     assertThat(optChainCall.isOptChainCall()).isTrue();
 
@@ -5392,93 +5413,89 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingStartOfChain_optGetProp() {
-    mode = LanguageMode.UNSUPPORTED;
-    Node outterGet = parse("a?.b.c").getFirstFirstChild();
-    Node innerGet = outterGet.getFirstChild();
+    Node outerGet = parse("a?.b.c").getFirstFirstChild();
+    Node innerGet = outerGet.getFirstChild();
 
     // `a?.b.c`
-    assertNode(outterGet).hasType(Token.OPTCHAIN_GETPROP);
-    assertNode(outterGet).isNotOptionalChainStart();
-    assertNode(outterGet).hasLineno(1);
-    assertNode(outterGet).hasCharno(4);
-    assertNode(outterGet).hasLength(2);
+    assertNode(outerGet).hasType(Token.OPTCHAIN_GETPROP);
+    assertNode(outerGet).isNotOptionalChainStart();
+    assertNode(outerGet).hasLineno(1);
+    assertNode(outerGet).hasCharno(0);
+    assertNode(outerGet).hasLength(6);
 
     // `a?.b`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(1);
-    assertNode(innerGet).hasLength(3);
+    assertNode(innerGet).hasCharno(0);
+    assertNode(innerGet).hasLength(4);
 
-    assertNode(outterGet.getSecondChild()).isEqualTo(IR.string("c"));
+    assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
   }
 
   @Test
   public void optionalChainingStartOfChain_optGetElem() {
-    mode = LanguageMode.UNSUPPORTED;
-    Node outterGet = parse("a?.[b][c]").getFirstFirstChild();
-    Node innerGet = outterGet.getFirstChild();
+    Node outerGet = parse("a?.[b][c]").getFirstFirstChild();
+    Node innerGet = outerGet.getFirstChild();
 
     // `a?.[b][c]`
-    assertNode(outterGet).hasType(Token.OPTCHAIN_GETELEM);
-    assertNode(outterGet).isNotOptionalChainStart();
-    assertNode(outterGet).hasLineno(1);
-    assertNode(outterGet).hasCharno(6);
-    assertNode(outterGet).hasLength(3);
+    assertNode(outerGet).hasType(Token.OPTCHAIN_GETELEM);
+    assertNode(outerGet).isNotOptionalChainStart();
+    assertNode(outerGet).hasLineno(1);
+    assertNode(outerGet).hasCharno(0);
+    assertNode(outerGet).hasLength(9);
     //
     // // `a?.[b]`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETELEM);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(1);
-    assertNode(innerGet).hasLength(5);
+    assertNode(innerGet).hasCharno(0);
+    assertNode(innerGet).hasLength(6);
 
-    assertNode(outterGet.getSecondChild()).isEqualTo(IR.name("c"));
+    assertNode(outerGet.getSecondChild()).isEqualTo(IR.name("c"));
   }
 
   @Test
   public void optionalChainingStartOfChain_optCall() {
-    mode = LanguageMode.UNSUPPORTED;
-    Node outterCall = parse("a?.()(b)").getFirstFirstChild();
-    Node innerCall = outterCall.getFirstChild();
+    Node outerCall = parse("a?.()(b)").getFirstFirstChild();
+    Node innerCall = outerCall.getFirstChild();
 
-    // `a?()(b)`
-    assertNode(outterCall).hasType(Token.OPTCHAIN_CALL);
-    assertNode(outterCall).isNotOptionalChainStart();
-    assertNode(outterCall).hasLineno(1);
-    assertNode(outterCall).hasCharno(5);
-    assertNode(outterCall).hasLength(3);
+    // `a?.()(b)`
+    assertNode(outerCall).hasType(Token.OPTCHAIN_CALL);
+    assertNode(outerCall).isNotOptionalChainStart();
+    assertNode(outerCall).hasLineno(1);
+    assertNode(outerCall).hasCharno(0);
+    assertNode(outerCall).hasLength(8);
 
     // `a?.()`
     assertNode(innerCall).hasType(Token.OPTCHAIN_CALL);
     assertNode(innerCall).isOptionalChainStart();
     assertNode(innerCall).hasLineno(1);
-    assertNode(innerCall).hasCharno(1);
-    assertNode(innerCall).hasLength(4);
+    assertNode(innerCall).hasCharno(0);
+    assertNode(innerCall).hasLength(5);
 
-    assertNode(outterCall.getSecondChild()).isEqualTo(IR.name("b"));
+    assertNode(outerCall.getSecondChild()).isEqualTo(IR.name("b"));
   }
 
   @Test
   public void optionalChainingParens_optGetProp() {
-    mode = LanguageMode.UNSUPPORTED;
-    Node outterGet = parse("(a?.b).c").getFirstFirstChild();
-    Node innerGet = outterGet.getFirstChild();
+    Node outerGet = parse("(a?.b).c").getFirstFirstChild();
+    Node innerGet = outerGet.getFirstChild();
 
     // `(a?.b).c`
-    assertNode(outterGet).hasType(Token.GETPROP);
-    assertNode(outterGet).hasLineno(1);
-    assertNode(outterGet).hasCharno(0);
-    assertNode(outterGet).hasLength(8);
+    assertNode(outerGet).hasType(Token.GETPROP);
+    assertNode(outerGet).hasLineno(1);
+    assertNode(outerGet).hasCharno(0);
+    assertNode(outerGet).hasLength(8);
 
     // `a?.b`
     assertNode(innerGet).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(innerGet).isOptionalChainStart();
     assertNode(innerGet).hasLineno(1);
-    assertNode(innerGet).hasCharno(2);
-    assertNode(innerGet).hasLength(3);
+    assertNode(innerGet).hasCharno(1);
+    assertNode(innerGet).hasLength(4);
 
-    assertNode(outterGet.getSecondChild()).isEqualTo(IR.string("c"));
+    assertNode(outerGet.getSecondChild()).isEqualTo(IR.string("c"));
   }
 
   @Test
@@ -5489,18 +5506,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNode(get).hasType(Token.OPTCHAIN_GETPROP);
     assertNode(get).hasLineno(1);
-    assertNode(get).hasCharno(3);
-    assertNode(get).hasLength(3);
+    assertNode(get).hasCharno(0);
+    assertNode(get).hasLength(6);
 
     assertNode(call).hasType(Token.CALL);
-    assertNode(get).hasLineno(1);
-    assertNode(get).hasCharno(3);
-    assertNode(get).hasLength(3);
+    assertNode(call).hasLineno(1);
+    assertNode(call).hasCharno(0);
+    assertNode(call).hasLength(3);
   }
 
   @Test
   public void optionalChainingChain() {
-    mode = LanguageMode.UNSUPPORTED;
 
     parse("a?.b?.c");
     parse("a.b?.c");
@@ -5517,23 +5533,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingAssignError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("a?.b = c", "invalid assignment target");
   }
 
   @Test
   public void optionalChainingConstructorError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("new a?.()", "Optional chaining is forbidden in construction contexts.");
     parseError("new a?.b()", "Optional chaining is forbidden in construction contexts.");
   }
 
   @Test
   public void optionalChainingTemplateLiteralError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("a?.()?.`hello`", "template literal cannot be used within optional chaining");
     parseError("a?.`hello`", "template literal cannot be used within optional chaining");
     parseError("a?.b`hello`", "template literal cannot be used within optional chaining");
@@ -5544,8 +5554,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingMiscErrors() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("super?.()", "Optional chaining is forbidden in super?.");
     parseError("super?.foo", "Optional chaining is forbidden in super?.");
     parseError("new?.target", "Optional chaining is forbidden in `new?.target` contexts.");
@@ -5554,8 +5562,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void optionalChainingDeleteValid() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parse("delete a?.b");
   }
 
@@ -5564,14 +5570,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.OPTIONAL_CHAINING);
     mode = LanguageMode.ECMASCRIPT_2019;
 
-    parseWarning("a?.b", unsupportedFeatureMessage(Feature.OPTIONAL_CHAINING));
+    parseWarning(
+        "a?.b", requiresLanguageModeMessage(LanguageMode.ES_NEXT_IN, Feature.OPTIONAL_CHAINING));
   }
 
   @Test
   public void optionalChainingSyntaxError() {
-    mode = LanguageMode.UNSUPPORTED;
-
     parseError("a?.{}", "syntax error: { not allowed in optional chain");
+    // optional chain cannot be applied on a BLOCK `{}`
+    parseError("{a:x}?.a", "primary expression expected");
+    parse("({a:x})?.a");
   }
 
   @Test
@@ -6573,6 +6581,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private static Node regex(String regex) {
     return new Node(Token.REGEXP, Node.newString(regex));
+  }
+
+  private static Node regex(String regex, String flag) {
+    return new Node(Token.REGEXP, Node.newString(regex), Node.newString(flag));
   }
 
   /**

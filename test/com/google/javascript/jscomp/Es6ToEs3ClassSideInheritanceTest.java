@@ -24,7 +24,6 @@ import org.junit.runners.JUnit4;
 /**
  * Test case for {@link Es6ToEs3ClassSideInheritance}.
  *
- * @author tbreisacher@google.com (Tyler Breisacher)
  */
 @RunWith(JUnit4.class)
 public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {

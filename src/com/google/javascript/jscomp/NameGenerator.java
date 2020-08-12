@@ -21,7 +21,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /** A class that generates unique JavaScript variable/property names. */
-interface NameGenerator extends Serializable {
+public interface NameGenerator extends Serializable {
 
   /**
    * Reconfigures this NameGenerator, and resets it to the initial state.
@@ -60,8 +60,6 @@ interface NameGenerator extends Serializable {
       String prefix,
       @Nullable char[] reservedCharacters);
 
-  /**
-   * Generates the next name.
-   */
-  String generateNextName();
+  /** Generates the next name. */
+  public String generateNextName();
 }

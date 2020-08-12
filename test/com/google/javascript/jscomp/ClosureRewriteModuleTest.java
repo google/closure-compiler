@@ -41,8 +41,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit tests for ClosureRewriteModule
  *
- * @author johnlenz@google.com (John Lenz)
- * @author stalcup@google.com (John Stalcup)
  */
 @RunWith(JUnit4.class)
 public final class ClosureRewriteModuleTest extends CompilerTestCase {

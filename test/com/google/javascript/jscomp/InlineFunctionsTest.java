@@ -26,7 +26,6 @@ import org.junit.runners.JUnit4;
 /**
  * Inline function tests.
  *
- * @author johnlenz@google.com (john lenz)
  */
 @RunWith(JUnit4.class)
 public class InlineFunctionsTest extends CompilerTestCase {

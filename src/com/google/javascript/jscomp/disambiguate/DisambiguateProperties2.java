@@ -25,7 +25,6 @@ import static java.util.Comparator.naturalOrder;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -33,7 +32,6 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -53,7 +51,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private final ImmutableMap<String, CheckLevel> invalidationReportingLevelByProp;
 
   private final JSTypeRegistry registry;
-  private final ImmutableSet<TypeMismatch> mismatches;
   private final InvalidatingTypes invalidations;
 
   public DisambiguateProperties2(
@@ -63,14 +60,12 @@ public final class DisambiguateProperties2 implements CompilerPass {
     this.invalidationReportingLevelByProp = invalidationReportingLevelByProp;
 
     this.registry = this.compiler.getTypeRegistry();
-    this.mismatches =
-        ImmutableSet.<TypeMismatch>builder()
-            .addAll(compiler.getTypeMismatches())
-            .addAll(compiler.getImplicitInterfaceUses())
-            .build();
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry)
-            .allowEnumsAndScalars()
+            .addAllTypeMismatches(compiler.getTypeMismatches())
+            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
+            .allowEnums()
+            .allowScalars()
             .build();
   }
 
@@ -103,7 +98,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .collect(toImmutableSortedMap(naturalOrder(), (x) -> x.name, (x) -> x)));
 
     graphBuilder.addAll(flattener.getAllKnownTypes());
-    this.mismatches.forEach(graphBuilder::addForcedEdge);
     DiGraph<FlatType, Object> graph = graphBuilder.build();
     this.logForDiagnostics(
         "graph",

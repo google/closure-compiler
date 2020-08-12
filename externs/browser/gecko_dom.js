@@ -72,11 +72,6 @@ Window.prototype.directories;
  */
 Window.prototype.fullScreen;
 
-/**
- * @see https://developer.mozilla.org/en/DOM/Storage#globalStorage
- */
-Window.prototype.globalStorage;
-
 /** @see https://developer.mozilla.org/en/DOM/window.pkcs11 */
 Window.prototype.pkcs11;
 
@@ -94,9 +89,6 @@ Window.prototype.scrollMaxX;
  * @see https://developer.mozilla.org/En/DOM/window.scrollMaxY
  */
 Window.prototype.scrollMaxY;
-
-/** @see https://developer.mozilla.org/en/DOM/Storage#sessionStorage */
-Window.prototype.sessionStorage;
 
 /** @see https://developer.mozilla.org/en/DOM/window.sidebar */
 Window.prototype.sidebar;

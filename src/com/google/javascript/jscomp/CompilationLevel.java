@@ -174,14 +174,12 @@ public enum CompilationLevel {
     options.setReserveRawExports(true);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.setRemoveUnusedPrototypeProperties(true);
-    options.setRemoveUnusedPrototypePropertiesInExterns(false);
     options.setRemoveUnusedClassProperties(true);
     options.setCollapseAnonymousFunctions(true);
     options.setCollapsePropertiesLevel(PropertyCollapseLevel.ALL);
     options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.WARNING);
     options.setRewriteFunctionExpressions(false);
     options.setSmartNameRemoval(true);
-    options.setExtraSmartNameRemoval(true);
     options.setInlineConstantVars(true);
     options.setInlineFunctions(Reach.ALL);
     options.setAssumeClosuresOnlyCaptureReferences(false);

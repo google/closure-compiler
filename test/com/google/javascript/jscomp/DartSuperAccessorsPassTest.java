@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
 /**
  * Test case for {@link DartSuperAccessorsPass}.
  *
- * @author ochafik@google.com (Olivier Chafik)
  */
 @RunWith(JUnit4.class)
 public final class DartSuperAccessorsPassTest extends CompilerTestCase {

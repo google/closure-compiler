@@ -1453,7 +1453,7 @@ WebWorker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {string} scriptURL
+ * @param {!TrustedScriptURL|string} scriptURL
  * @param {!WorkerOptions=} opt_options
  * @constructor
  * @implements {EventTarget}
@@ -3756,28 +3756,6 @@ XMLHttpRequest.prototype.responseType;
  */
 XMLHttpRequest.prototype.response;
 
-/**
- * Trust Tokens operation (issuance, signing, and redemption) is specified via
- * an instance of the following parameters struct, provided via Fetch, XHR, or
- * the iframe tag.
- * @typedef {{
- *     type: string,
- *     issuer: string,
- *     refreshPolicy: string,
- *     signRequestData: string,
- *     includeTimestampHeader: boolean,
- *     additionalSignedHeaders: (!Array<string>|undefined),
- *     additionalSigningData: (string|undefined)
- *   }}
- * @see https://docs.google.com/document/d/1qUjtKgA7nMv9YGMhi0xWKEojkSITKzGLdIcZgoz6ZkI
- */
-var TrustTokenAttributeType;
-
-/**
- * @type {?function(!TrustTokenAttributeType): void}
- * @see https://docs.google.com/document/d/1qUjtKgA7nMv9YGMhi0xWKEojkSITKzGLdIcZgoz6ZkI.
- */
-XMLHttpRequest.prototype.setTrustToken;
 
 /**
  * @type {ArrayBuffer}
@@ -5310,6 +5288,13 @@ Navigator.prototype.deviceMemory;
  * @see https://storage.spec.whatwg.org
  */
 Navigator.prototype.storage;
+
+/**
+ * @param {!ShareData=} data
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/canShare
+ */
+Navigator.prototype.canShare = function(data) {};
 
 /**
  * @param {!ShareData=} data

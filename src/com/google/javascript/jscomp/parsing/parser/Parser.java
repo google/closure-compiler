@@ -1726,55 +1726,56 @@ public class Parser {
    */
   private boolean peekStatementStandard() {
     switch (peekType()) {
-    case OPEN_CURLY:
-    case VAR:
-    case CONST:
-    case SEMI_COLON:
-    case IF:
-    case DO:
-    case WHILE:
-    case FOR:
-    case CONTINUE:
-    case BREAK:
-    case RETURN:
-    case WITH:
-    case SWITCH:
-    case THROW:
-    case TRY:
-    case DEBUGGER:
-    case YIELD:
-    case IDENTIFIER:
-    case TYPE:
-    case DECLARE:
-    case MODULE:
-    case NAMESPACE:
-    case THIS:
-    case CLASS:
-    case SUPER:
-    case NUMBER:
-    case STRING:
-    case NO_SUBSTITUTION_TEMPLATE:
-    case TEMPLATE_HEAD:
-    case NULL:
-    case TRUE:
-    case SLASH: // regular expression literal
-    case SLASH_EQUAL: // regular expression literal
-    case FALSE:
-    case OPEN_SQUARE:
-    case OPEN_PAREN:
-    case NEW:
-    case DELETE:
-    case VOID:
-    case TYPEOF:
-    case PLUS_PLUS:
-    case MINUS_MINUS:
-    case PLUS:
-    case MINUS:
-    case TILDE:
-    case BANG:
-      return true;
-    default:
-      return false;
+      case OPEN_CURLY:
+      case VAR:
+      case CONST:
+      case SEMI_COLON:
+      case IF:
+      case DO:
+      case WHILE:
+      case FOR:
+      case CONTINUE:
+      case BREAK:
+      case RETURN:
+      case WITH:
+      case SWITCH:
+      case THROW:
+      case TRY:
+      case DEBUGGER:
+      case YIELD:
+      case IDENTIFIER:
+      case TYPE:
+      case DECLARE:
+      case MODULE:
+      case NAMESPACE:
+      case THIS:
+      case CLASS:
+      case SUPER:
+      case NUMBER:
+      case BIGINT:
+      case STRING:
+      case NO_SUBSTITUTION_TEMPLATE:
+      case TEMPLATE_HEAD:
+      case NULL:
+      case TRUE:
+      case SLASH: // regular expression literal
+      case SLASH_EQUAL: // regular expression literal
+      case FALSE:
+      case OPEN_SQUARE:
+      case OPEN_PAREN:
+      case NEW:
+      case DELETE:
+      case VOID:
+      case TYPEOF:
+      case PLUS_PLUS:
+      case MINUS_MINUS:
+      case PLUS:
+      case MINUS:
+      case TILDE:
+      case BANG:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -2393,6 +2394,10 @@ public class Parser {
 
     if (literal.type == TokenType.NUMBER && literal.toString().contains("_")) {
       recordFeatureUsed(Feature.NUMERIC_SEPARATOR);
+    }
+
+    if (literal.type == TokenType.BIGINT) {
+      recordFeatureUsed(Feature.BIGINT);
     }
 
     return new LiteralExpressionTree(getTreeLocation(start), literal);
@@ -3693,7 +3698,8 @@ public class Parser {
    * <p>returns parse tree after trying to parse it as an optional expression
    */
   private ParseTree maybeParseOptionalExpression(ParseTree operand) {
-    SourcePosition start = getTreeStartLocation();
+    // The optional chain's source info should cover the lhs operand also
+    SourcePosition start = operand.location.start;
 
     while (peek(TokenType.QUESTION_DOT)) {
       eat(TokenType.QUESTION_DOT);
@@ -3730,21 +3736,23 @@ public class Parser {
             reportError("syntax error: %s not allowed in optional chain", peekType());
           }
       }
-      operand = parseOptionalChain(operand);
+      operand = parseRemainingOptionalChainSegment(operand);
     }
     return operand;
   }
 
   /**
-   * Parse the next component of an optional chain.
+   * Parses the remaining components of an optional chain till the current chain's end, or a new
+   * chain's start.
    *
    * <p>`optionalExpression.identifier`, `optionalExpression[expression]`, `optionalExpression(arg1,
    * arg2)`, or `optionalExpression?.optionalExpression`
    *
    * <p>returns parse tree after trying to parse it as an optional chain
    */
-  private ParseTree parseOptionalChain(ParseTree optionalExpression) {
-    SourcePosition start = getTreeStartLocation();
+  private ParseTree parseRemainingOptionalChainSegment(ParseTree optionalExpression) {
+    // The optional chain's source info should cover the lhs operand also
+    SourcePosition start = optionalExpression.location.start;
     while (peekOptionalChainSuffix()) {
       if (peekType() == TokenType.NO_SUBSTITUTION_TEMPLATE
           || peekType() == TokenType.TEMPLATE_HEAD) {

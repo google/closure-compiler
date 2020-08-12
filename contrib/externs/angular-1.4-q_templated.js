@@ -28,14 +28,14 @@
  *****************************************************************************/
 
 /**
- * @constructor
+ * @interface
  */
 angular.$q = function() {};
 
 /**
- * @constructor
+ * @interface
  * @template T
- * @implements {IThenable<T>}
+ * @extends {IThenable<T>}
  */
 angular.$q.Promise = function() {};
 
@@ -62,8 +62,8 @@ angular.$q.Promise = function() {};
  *              V)))))
  *  =:
  */
-angular.$q.Promise.prototype.then =
-    function(opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};
+angular.$q.Promise.prototype.then = function(
+    opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};
 
 /**
  * @param {?function(?)} callback
@@ -73,12 +73,14 @@ angular.$q.Promise.prototype.catch = function(callback) {};
 
 /**
  * @param {?function(?)} callback
+ * @param {?(function(?): ?)=} opt_notifyCallback
  * @return {!angular.$q.Promise.<T>}
  */
-angular.$q.Promise.prototype.finally = function(callback) {};
+angular.$q.Promise.prototype.finally = function(
+    callback, opt_notifyCallback) {};
 
 /**
- * @constructor
+ * @interface
  * @template T
  */
 angular.$q.Deferred = function() {};
@@ -132,6 +134,13 @@ angular.$q.Deferred.prototype.promise;
 angular.$q.prototype.all = function(promises) {};
 
 /**
+ * @param {!Array<!angular.$q.Promise>|!Object<string,!angular.$q.Promise>}
+ *     promises
+ * @return {!angular.$q.Promise}
+ */
+angular.$q.prototype.race = function(promises) {};
+
+/**
  * @return {!angular.$q.Deferred}
  */
 angular.$q.prototype.defer = function() {};
@@ -143,8 +152,45 @@ angular.$q.prototype.defer = function() {};
 angular.$q.prototype.reject = function(opt_reason) {};
 
 /**
- * @param {RESULT} value
- * @return {!angular.$q.Promise.<RESULT>}
- * @template RESULT
+ * @see "https://github.com/google/closure-compiler/commit/be3f15e58812b0843ad0ccc0bcddb5a1506d56e8"
+ * @param {VALUE=} opt_value
+ * @param {Function=} opt_successCallback
+ * @param {Function=} opt_errorCallback
+ * @param {Function=} opt_progressCallback
+ * @return {RESULT}
+ * @template VALUE
+ * @template RESULT := type('angular.$q.Promise',
+ *     cond(isUnknown(VALUE),
+ *       unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
+ * =:
  */
-angular.$q.prototype.when = function(value) {};
+angular.$q.prototype.when = function(
+    opt_value, opt_successCallback, opt_errorCallback, opt_progressCallback) {};
+
+/**
+ * @see "https://github.com/google/closure-compiler/commit/be3f15e58812b0843ad0ccc0bcddb5a1506d56e8"
+ * @param {VALUE=} opt_value
+ * @param {Function=} opt_successCallback
+ * @param {Function=} opt_errorCallback
+ * @param {Function=} opt_progressCallback
+ * @return {RESULT}
+ * @template VALUE
+ * @template RESULT := type('angular.$q.Promise',
+ *     cond(isUnknown(VALUE),
+ *       unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
+ * =:
+ */
+angular.$q.prototype.resolve = function(
+    opt_value, opt_successCallback, opt_errorCallback, opt_progressCallback) {};

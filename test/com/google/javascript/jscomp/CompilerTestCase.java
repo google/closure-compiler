@@ -63,7 +63,6 @@ import org.junit.Before;
  * <p>Pulls in shared functionality from different test cases. Also supports node tree comparison
  * for input and output (instead of string comparison), which makes it easier to write tests b/c you
  * don't have to get the syntax exactly correct to the spacing.
- *
  */
 public abstract class CompilerTestCase {
 
@@ -632,7 +631,8 @@ public abstract class CompilerTestCase {
 
     // TODO(sdh): Initialize *all* the options here, but first we must ensure no subclass
     // is changing them in the constructor, rather than in their own setUp method.
-    this.acceptedLanguage = LanguageMode.ECMASCRIPT_NEXT; // TODO(nickreid): Consider ES_UNSUPPORTED
+    this.acceptedLanguage =
+        LanguageMode.ECMASCRIPT_NEXT_IN; // TODO(nickreid): Consider ES_UNSUPPORTED
     this.moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     this.parseJsDocDocumentation = JsDocParsing.TYPES_ONLY;
     this.allowExternsChanges = false;
@@ -1003,6 +1003,11 @@ public abstract class CompilerTestCase {
   protected final void enableGatherExternProperties() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     gatherExternPropertiesEnabled = true;
+  }
+
+  protected final Set<String> getGatheredExternProperties() {
+    checkState(this.gatherExternPropertiesEnabled, "Must enable gatherExternProperties");
+    return lastCompiler.getExternProperties();
   }
 
   /** Disables verification that getters and setters were correctly updated by the pass. */

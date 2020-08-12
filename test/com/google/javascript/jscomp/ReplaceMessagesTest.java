@@ -29,7 +29,6 @@ import org.junit.runners.JUnit4;
 
 /**
  * Test which checks that replacer works correctly.
- *
  */
 @RunWith(JUnit4.class)
 public final class ReplaceMessagesTest extends CompilerTestCase {

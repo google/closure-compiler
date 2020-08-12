@@ -32,7 +32,6 @@ import org.junit.runners.JUnit4;
 /**
  * Unit tests for JsFlume {@link Matchers}.
  *
- * @author mknichel@google.com (Mark Knichel)
  */
 @RunWith(JUnit4.class)
 public class MatchersTest {

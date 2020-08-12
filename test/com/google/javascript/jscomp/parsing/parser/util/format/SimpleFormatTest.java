@@ -25,7 +25,6 @@ import org.junit.runners.JUnit4;
 /**
  * Basic tests for {@code SimpleFormat}
  *
- * @author zhoumotongxue008@gmail.com (Michael Zhou)
  */
 @RunWith(JUnit4.class)
 public final class SimpleFormatTest {

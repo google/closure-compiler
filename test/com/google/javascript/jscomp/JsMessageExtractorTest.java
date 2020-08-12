@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.base.Joiner;
 import java.io.IOException;
@@ -63,26 +64,22 @@ public final class JsMessageExtractorTest {
 
   @Test
   public void testSyntaxError1() {
-    try {
-      extractMessage("if (true) {}}");
-      assertWithMessage("Expected exception").fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
-      assertThat(e).hasMessageThat().contains("testcode:1: ERROR - [JSC_PARSE_ERROR] Parse error");
-      assertThat(e).hasMessageThat().contains("if (true) {}}\n");
-    }
+    RuntimeException e =
+        assertThrows(RuntimeException.class, () -> extractMessage("if (true) {}}"));
+
+    assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
+    assertThat(e).hasMessageThat().contains("testcode:1:13: ERROR - [JSC_PARSE_ERROR] Parse error");
+    assertThat(e).hasMessageThat().contains("if (true) {}}\n");
   }
 
   @Test
   public void testSyntaxError2() {
-    try {
-      extractMessage("", "if (true) {}}");
-      assertWithMessage("Expected exception").fail();
-    } catch (RuntimeException e) {
-      assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
-      assertThat(e).hasMessageThat().contains("testcode:2: ERROR - [JSC_PARSE_ERROR] Parse error");
-      assertThat(e).hasMessageThat().contains("if (true) {}}\n");
-    }
+    RuntimeException e =
+        assertThrows(RuntimeException.class, () -> extractMessage("", "if (true) {}}"));
+
+    assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
+    assertThat(e).hasMessageThat().contains("testcode:2:13: ERROR - [JSC_PARSE_ERROR] Parse error");
+    assertThat(e).hasMessageThat().contains("if (true) {}}\n");
   }
 
   @Test

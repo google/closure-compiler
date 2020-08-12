@@ -1974,6 +1974,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
             FunctionType.builder(registry)
                 .copyFromOtherFunction(callTargetFn)
                 .withTypeOfThis(thisType.toObjectType())
+                .withSourceNode(null)
                 .buildAndResolve();
         target.setJSType(callTargetFn);
       }
@@ -1990,6 +1991,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
           FunctionType.builder(registry)
               .copyFromOtherFunction(bindType)
               .withReturnType(returnType)
+              .withSourceNode(null)
               .buildAndResolve();
       n.getFirstChild().setJSType(bindType);
     }
@@ -2715,4 +2717,3 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     return ((TypedScope) scope.getDeclarationScope()).getVar(name);
   }
 }
-

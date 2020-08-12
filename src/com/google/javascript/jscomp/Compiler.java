@@ -913,10 +913,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           checkState(!hasErrors());
           if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
             instrumentForCoverageInternal(options.getInstrumentForCoverageOption());
-          } else if (options.instrumentForCoverage) {
-            instrumentForCoverageInternal(InstrumentOption.LINE_ONLY);
-          } else if (options.instrumentForCoverage && options.instrumentBranchCoverage) {
-            instrumentForCoverageInternal(InstrumentOption.BRANCH_ONLY);
           }
           return null;
         });
@@ -1225,6 +1221,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         this.propertyMap,
         this.anonymousFunctionNameMap,
         this.stringMap,
+        this.instrumentationMapping,
         this.sourceMap,
         this.externExports,
         this.cssNames,
@@ -3012,6 +3009,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** String replacement map */
   private VariableMap stringMap = null;
 
+  /** Mapping for Instrumentation parameter encoding */
+  private VariableMap instrumentationMapping = null;
+
   /** Id generator map */
   private String idGeneratorMap = null;
 
@@ -3065,6 +3065,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return this.stringMap;
   }
 
+  @Override
+  public void setInstrumentationMapping(VariableMap instrumentationMapping) {
+    this.instrumentationMapping = instrumentationMapping;
+  }
+
+  public VariableMap getInstrumentationMapping() {
+    return this.instrumentationMapping;
+  }
 
   @Override
   public void addExportedNames(Set<String> exportedNames) {

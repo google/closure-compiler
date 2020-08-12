@@ -29,7 +29,6 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for function and method arity checking in TypeCheck.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
 @RunWith(JUnit4.class)
 public final class TypeCheckFunctionCheckTest extends CompilerTestCase {

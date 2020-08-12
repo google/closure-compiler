@@ -414,7 +414,7 @@ public class JSTypeRegistry implements Serializable {
     /**
      * `Function`
      *
-     * <p>The default implict prototype of all `FunctionType`s is `Function.prototype`. The
+     * <p>The default implicit prototype of all `FunctionType`s is `Function.prototype`. The
      * ",prototype" property of `Function` is not actually interesting, since it constructs
      * unknowns.
      */
@@ -615,10 +615,14 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.PROMISE_FUNCTION_TYPE, promiseFunctionType);
     registerNativeType(JSTypeNative.PROMISE_TYPE, promiseFunctionType.getInstanceType());
 
+    // (bigint,number,string)
+    JSType bigintNumberString = createUnionType(bigIntType, numberType, stringType);
+    registerNativeType(BIGINT_NUMBER_STRING, bigintNumberString);
+
     // BigInt
     FunctionType bigIntObjectFunctionType =
         nativeConstructorBuilder("BigInt")
-            .withParameters(createOptionalParameters(allType))
+            .withParameters(createParameters(bigintNumberString))
             .withReturnType(bigIntType)
             .build();
     bigIntObjectFunctionType.getPrototype(); // Force initialization
@@ -741,10 +745,6 @@ public class JSTypeRegistry implements Serializable {
     // (BigInt,Number)
     JSType bigintNumberObject = createUnionType(bigIntObjectType, numberObjectType);
     registerNativeType(BIGINT_NUMBER_OBJECT, bigintNumberObject);
-
-    // (bigint,number,string)
-    JSType bigintNumberString = createUnionType(bigIntType, numberType, stringType);
-    registerNativeType(BIGINT_NUMBER_STRING, bigintNumberString);
 
     // (Bigint,Number,String)
     JSType bigintNumberStringObject =
