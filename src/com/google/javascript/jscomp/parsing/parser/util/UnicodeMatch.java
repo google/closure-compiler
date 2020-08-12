@@ -38,13 +38,6 @@ public final class UnicodeMatch {
   private UnicodeMatch() {}
 
   /**
-   * Check if a given character is an ASCII character.
-   */
-  private static final boolean fastPathAscii(int ch) {
-    return ch <= 127;
-  }
-
-  /**
    * FAST PATHS
    * 
    * These fast paths are broken into distinct parts because of the logical
@@ -56,7 +49,7 @@ public final class UnicodeMatch {
    */
 
   /**
-   * Check if a given character is an ASCII letter.
+   * Fast path to check if a given character is a non-ASCII Unicode letter.
    */
   @SuppressWarnings("ShortCircuitBoolean")
   private static final boolean fastPathUnicodeLetter(int ch) {
@@ -65,8 +58,6 @@ public final class UnicodeMatch {
      * minimizes branches in this code which minimizes branch prediction misses.
      */
     return (
-      ('A' <= ch & ch <= 'Z') |
-      ('a' <= ch & ch <= 'z') |
       // Latin letters
       (0x00C0 <= ch & ch <= 0x00D6) |
       // Latin letters
@@ -84,35 +75,31 @@ public final class UnicodeMatch {
     );
   }
 
-  /** 
-   * Check if a given character is an ASCII digit.
-   */
-  @SuppressWarnings("ShortCircuitBoolean")
-  private static final boolean fastPathUnicodeDigit(int ch) {
-    /**
-     * Intentionally avoiding short circuiting behavior of "||" and "&&". This
-     * minimizes branches in this code which minimizes branch prediction misses.
-     */
-    return '0' <= ch & ch <= '9';
-  }
-
   /**
-   * Check if a given character is an ASCII letter, "$" or "_".
+   * Fast path to check if a given character is a Unicode letter, "$" or "_".
    */
   @SuppressWarnings("ShortCircuitBoolean")
   private static final boolean fastPathIdentifierStart(int ch) {
     /**
+     * ASCII optimization. If ASCII character does not match /[a-z]/i, it is not
+     * a valid `IdentifierStart`.
+     * 
      * Intentionally avoiding short circuiting behavior of "||" and "&&". This
      * minimizes branches in this code which minimizes branch prediction misses.
      */
-    return (
-      fastPathUnicodeLetter(ch) |
-      (ch == '$' | ch == '_')
-    );
+    if (ch <= 127) {
+      return (
+        (ch >= 'A' & ch <= 'Z') |
+        (ch >= 'a' & ch <= 'z') |
+        (ch == '$' | ch == '_')
+      );
+    }
+
+    return fastPathUnicodeLetter(ch);
   }
 
   /**
-   * Check if a given character is an ASCII letter, digit, "$" or "_".
+   * Fast path to check if a given character is an `IdentifierStart` or a digit.
    */
   @SuppressWarnings("ShortCircuitBoolean")
   private static final boolean fastPathIdentifierPart(int ch) {
@@ -122,7 +109,7 @@ public final class UnicodeMatch {
      */
     return (
       fastPathIdentifierStart(ch) |
-      fastPathUnicodeDigit(ch)
+      '0' <= ch & ch <= '9'
     );
   }
 
