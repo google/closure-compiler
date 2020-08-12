@@ -1726,55 +1726,56 @@ public class Parser {
    */
   private boolean peekStatementStandard() {
     switch (peekType()) {
-    case OPEN_CURLY:
-    case VAR:
-    case CONST:
-    case SEMI_COLON:
-    case IF:
-    case DO:
-    case WHILE:
-    case FOR:
-    case CONTINUE:
-    case BREAK:
-    case RETURN:
-    case WITH:
-    case SWITCH:
-    case THROW:
-    case TRY:
-    case DEBUGGER:
-    case YIELD:
-    case IDENTIFIER:
-    case TYPE:
-    case DECLARE:
-    case MODULE:
-    case NAMESPACE:
-    case THIS:
-    case CLASS:
-    case SUPER:
-    case NUMBER:
-    case STRING:
-    case NO_SUBSTITUTION_TEMPLATE:
-    case TEMPLATE_HEAD:
-    case NULL:
-    case TRUE:
-    case SLASH: // regular expression literal
-    case SLASH_EQUAL: // regular expression literal
-    case FALSE:
-    case OPEN_SQUARE:
-    case OPEN_PAREN:
-    case NEW:
-    case DELETE:
-    case VOID:
-    case TYPEOF:
-    case PLUS_PLUS:
-    case MINUS_MINUS:
-    case PLUS:
-    case MINUS:
-    case TILDE:
-    case BANG:
-      return true;
-    default:
-      return false;
+      case OPEN_CURLY:
+      case VAR:
+      case CONST:
+      case SEMI_COLON:
+      case IF:
+      case DO:
+      case WHILE:
+      case FOR:
+      case CONTINUE:
+      case BREAK:
+      case RETURN:
+      case WITH:
+      case SWITCH:
+      case THROW:
+      case TRY:
+      case DEBUGGER:
+      case YIELD:
+      case IDENTIFIER:
+      case TYPE:
+      case DECLARE:
+      case MODULE:
+      case NAMESPACE:
+      case THIS:
+      case CLASS:
+      case SUPER:
+      case NUMBER:
+      case BIGINT:
+      case STRING:
+      case NO_SUBSTITUTION_TEMPLATE:
+      case TEMPLATE_HEAD:
+      case NULL:
+      case TRUE:
+      case SLASH: // regular expression literal
+      case SLASH_EQUAL: // regular expression literal
+      case FALSE:
+      case OPEN_SQUARE:
+      case OPEN_PAREN:
+      case NEW:
+      case DELETE:
+      case VOID:
+      case TYPEOF:
+      case PLUS_PLUS:
+      case MINUS_MINUS:
+      case PLUS:
+      case MINUS:
+      case TILDE:
+      case BANG:
+        return true;
+      default:
+        return false;
     }
   }
 

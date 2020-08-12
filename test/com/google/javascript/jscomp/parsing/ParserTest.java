@@ -3978,6 +3978,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testBigIntInFunctionStatement() {
+    Node add =
+        parse("function f(/** @type {bigint} */ x) { 0n + x }") // SCRIPT
+            .getOnlyChild() // FUNCTION
+            .getLastChild() // BLOCK
+            .getOnlyChild() // EXPR_RESULT
+            .getOnlyChild(); // ADD
+    assertNode(add).hasToken(Token.ADD);
+    assertNode(add.getFirstChild()).isBigInt(BigInteger.ZERO);
+    assertNode(add.getLastChild()).isName("x");
+  }
+
+  @Test
   public void testBigIntLiteralErrors() {
     parseError("01n;", "SyntaxError: nonzero BigInt can't have leading zero");
     parseError(".1n", "Semi-colon expected");
