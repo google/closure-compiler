@@ -34,12 +34,12 @@ import java.util.regex.Pattern;
  * const regexIdentifierStart = /[$_\p{ID_Start}]/u;
  * const regexIdentifierPart = /[$_\u200C\u200D\p{ID_Continue}]/u;
  */
-private class UnicodeMatch {
+public final class UnicodeMatch {
   private UnicodeMatch() {}
-  
+
   // Intentional to minimize branches in this code
   @SuppressWarnings("ShortCircuitBoolean")
-  private static boolean fastPathLetters(char ch) {
+  private static final boolean fastPathLetters(char ch) {
     return (
       // ASCII
       ('A' <= ch & ch <= 'Z') |
@@ -64,18 +64,18 @@ private class UnicodeMatch {
 
   // Intentional to minimize branches in this code
   @SuppressWarnings("ShortCircuitBoolean")
-  private static boolean fastPathDigits(char ch) {
+  private static final boolean fastPathDigits(char ch) {
     return '0' <= ch & ch <= '9';
   }
 
-  public static boolean isJavascriptIdentifierStart(char ch) {
+  public static final boolean isJavascriptIdentifierStart(char ch) {
     return fastPathLetters(ch)
         || JavascriptIdentifierStart
               .matcher(Character.toString(ch))
               .matches();
   }
 
-  public static boolean isJavascriptIdentifierPart(char ch) {
+  public static final boolean isJavascriptIdentifierPart(char ch) {
     return (fastPathLetters(ch) | fastPathDigits(ch))
         || JavascriptIdentifierPart
               .matcher(Character.toString(ch))
