@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Streams.stream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Streams;
@@ -122,7 +123,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
       return true;
     } else if (argument.isTemplateLit()) {
       // Each templateLit child is either a TemplateLitString, or has children which are substituted
-      return Streams.stream(argument.children())
+      return stream(argument.children())
           .filter(node -> !node.isTemplateLitString())
           .map(Node::children)
           .flatMap(Streams::stream)
