@@ -39,7 +39,7 @@ public final class UnicodeMatch {
 
   // Intentional to minimize branches in this code
   @SuppressWarnings("ShortCircuitBoolean")
-  private static final boolean fastPathLetters(char ch) {
+  private static final boolean fastPathLetters(int ch) {
     return (
       // ASCII
       ('A' <= ch & ch <= 'Z') |
@@ -64,18 +64,18 @@ public final class UnicodeMatch {
 
   // Intentional to minimize branches in this code
   @SuppressWarnings("ShortCircuitBoolean")
-  private static final boolean fastPathDigits(char ch) {
+  private static final boolean fastPathDigits(int ch) {
     return '0' <= ch & ch <= '9';
   }
 
-  public static final boolean isJavascriptIdentifierStart(char ch) {
+  public static final boolean isJavascriptIdentifierStart(int ch) {
     return fastPathLetters(ch)
         || JavascriptIdentifierStart
               .matcher(Character.toString(ch))
               .matches();
   }
 
-  public static final boolean isJavascriptIdentifierPart(char ch) {
+  public static final boolean isJavascriptIdentifierPart(int ch) {
     return (fastPathLetters(ch) | fastPathDigits(ch))
         || JavascriptIdentifierPart
               .matcher(Character.toString(ch))
