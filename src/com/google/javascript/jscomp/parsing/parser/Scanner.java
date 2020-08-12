@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-
 import com.google.javascript.jscomp.parsing.parser.util.UnicodeMatch;
 
 import java.util.ArrayList;
