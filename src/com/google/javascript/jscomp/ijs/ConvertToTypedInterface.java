@@ -421,6 +421,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       removeDuplicateDeclarations();
 
       // Simplify all names in the top-level scope.
+      @SuppressWarnings("StreamToIterable")
       Iterable<String> seenNames =
           currentFile.getDeclarations().keySet().stream().sorted(SHORT_TO_LONG)::iterator;
 
