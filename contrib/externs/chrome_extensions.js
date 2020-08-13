@@ -2333,7 +2333,7 @@ chrome.enterprise.reportingPrivate.getPersistentSecret = function(callback) {};
  * Returns byte string associated with the data item stored in a platform
  * specific storage.
  * @param {!string} item Item name (can have containers separated by '/').
- * @param {(function(!ArrayBuffer): void)=} callback Called back with the
+ * @param {(function((!ArrayBuffer|undefined)): void)=} callback Called back with the
  *     response.
  */
 chrome.enterprise.reportingPrivate.getDeviceData = function(item, callback) {};
@@ -2342,7 +2342,7 @@ chrome.enterprise.reportingPrivate.getDeviceData = function(item, callback) {};
  * Stores byte string associated with the data item in a platform
  * specific storage.
  * @param {!string} item Item name (can have containers separated by '/').
- * @param {!ArrayBuffer} data Byte string to associate with the data item.
+ * @param {!ArrayBuffer|undefined} data Byte string to associate with the data item.
  * @param {(function(): void)=} callback Called back with the response.
  */
 chrome.enterprise.reportingPrivate.setDeviceData = function(
@@ -2368,6 +2368,7 @@ chrome.enterprise.reportingPrivate.SettingValue = {
  *   serialNumber: string,
  *   screenLockSecured: chrome.enterprise.reportingPrivate.SettingValue,
  *   diskEncrypted: chrome.enterprise.reportingPrivate.SettingValue,
+ *   macAddresses: (!Array<string>|undefined),
  * }}
  */
 chrome.enterprise.reportingPrivate.DeviceInfo;
