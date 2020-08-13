@@ -467,11 +467,14 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
       DiagnosticGroups.registerGroup(
-          "stricterMissingRequire", CheckMissingRequires.MISSING_REQUIRE);
+          "stricterMissingRequire",
+          CheckMissingRequires.MISSING_REQUIRE,
+          CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE,
+          CheckMissingRequires.MISSING_REQUIRE_TYPE,
+          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
   public static final DiagnosticGroup STRICTER_MISSING_REQUIRE_TYPE =
-      DiagnosticGroups.registerGroup(
-          "stricterMissingRequireType", CheckMissingRequires.MISSING_REQUIRE_TYPE);
+      DiagnosticGroups.registerDeprecatedGroup("stricterMissingRequireType");
 
   public static final DiagnosticGroup STRICTER_MISSING_REQUIRE_IN_PROVIDES_FILE =
       DiagnosticGroups.registerGroup(

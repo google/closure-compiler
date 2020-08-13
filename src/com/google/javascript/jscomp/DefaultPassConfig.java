@@ -294,8 +294,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(missingAndExtraRequires);
     }
 
-    if (options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE)
-        || options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE)) {
+    if (options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE)) {
       checks.add(checkMissingRequires);
     }
 
