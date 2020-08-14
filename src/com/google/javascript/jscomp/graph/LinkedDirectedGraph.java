@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A directed graph using linked list within nodes to store edge information.
+ * A directed graph using ArrayLists within nodes to store edge information.
  *
  * <p>This implementation favors directed graph operations inherited from <code>
- * DirectedGraph</code>. Operations from <code>Graph</code> would tends to be slower.
+ * DirectedGraph</code>. Operations from <code>Graph</code> would tend to be slower.
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.
@@ -206,49 +206,53 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
   }
 
   /**
-   * DiGraphNode look ups can be expensive for a large graph operation, prefer the
-   * version below that takes DiGraphNodes, if you have them available.
+   * DiGraphNode look ups can be expensive for a large graph operation, prefer the version below
+   * that takes DiGraphNodes, if you have them available.
+   *
+   * @param source the source node from which we traverse outwards
    */
   @Override
-  public boolean isConnectedInDirection(N n1, N n2) {
-    return isConnectedInDirection(n1, Predicates.<E>alwaysTrue(), n2);
+  public boolean isConnectedInDirection(N source, N dest) {
+    return isConnectedInDirection(source, Predicates.<E>alwaysTrue(), dest);
   }
 
   /**
-   * DiGraphNode look ups can be expensive for a large graph operation, prefer the
-   * version below that takes DiGraphNodes, if you have them available.
+   * DiGraphNode look ups can be expensive for a large graph operation, prefer the version below
+   * that takes DiGraphNodes, if you have them available.
+   *
+   * @param source the source node from which we traverse outwards
+   * @param edgeValue only edges equal to the given value will be traversed
    */
   @Override
-  public boolean isConnectedInDirection(N n1, E edgeValue, N n2) {
-    return isConnectedInDirection(n1, Predicates.equalTo(edgeValue), n2);
+  public boolean isConnectedInDirection(N source, E edgeValue, N dest) {
+    return isConnectedInDirection(source, Predicates.equalTo(edgeValue), dest);
   }
 
   /**
    * DiGraphNode look ups can be expensive for a large graph operation, prefer this method if you
    * have the DiGraphNodes available.
+   *
+   * @param source the source node from which we traverse outwards
+   * @param edgeFilter only edges matching this filter will be traversed
+   * @param dest the destination node
    */
   public boolean isConnectedInDirection(
-      LinkedDiGraphNode<N, E> dNode1, Predicate<E> edgeMatcher, LinkedDiGraphNode<N, E> dNode2) {
-    // Verify the nodes.
-    List<LinkedDiGraphEdge<N, E>> outEdges = dNode1.getOutEdges();
+      LinkedDiGraphNode<N, E> source, Predicate<E> edgeFilter, LinkedDiGraphNode<N, E> dest) {
+    List<LinkedDiGraphEdge<N, E>> outEdges = source.getOutEdges();
     int outEdgesLen = outEdges.size();
-    List<LinkedDiGraphEdge<N, E>> inEdges = dNode2.getInEdges();
+    List<LinkedDiGraphEdge<N, E>> inEdges = dest.getInEdges();
     int inEdgesLen = inEdges.size();
-    // It is possible that there is a large assymmetry between the nodes, so pick the direction
+    // It is possible that there is a large asymmetry between the nodes, so pick the direction
     // to search based on the shorter list since the edge lists should be symmetric.
     if (outEdgesLen < inEdgesLen) {
-      for (int i = 0; i < outEdgesLen; i++) {
-        DiGraphEdge<N, E> outEdge = outEdges.get(i);
-        if (outEdge.getDestination() == dNode2
-            && edgeMatcher.apply(outEdge.getValue())) {
+      for (DiGraphEdge<N, E> outEdge : outEdges) {
+        if (outEdge.getDestination() == dest && edgeFilter.apply(outEdge.getValue())) {
           return true;
         }
       }
     } else {
-      for (int i = 0; i < inEdgesLen; i++) {
-        DiGraphEdge<N, E> inEdge = inEdges.get(i);
-        if (inEdge.getSource() == dNode1
-            && edgeMatcher.apply(inEdge.getValue())) {
+      for (DiGraphEdge<N, E> inEdge : inEdges) {
+        if (inEdge.getSource() == source && edgeFilter.apply(inEdge.getValue())) {
           return true;
         }
       }

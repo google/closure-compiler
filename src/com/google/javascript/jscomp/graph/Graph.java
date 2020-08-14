@@ -25,30 +25,25 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * The base generic class for graph-like data structure and algorithms in
- * the compiler.
- * <p>
- * Nodes and edges in the graph can store a piece of data that this graph is
- * used to represent. For example, a variable interference graph might store a
- * variable in the node. This piece of data can be accessed with
- * {@link GraphNode#getValue} and {@link GraphEdge#getValue}.
- * <p>
- * Algorithms and analysis can annotate information on the nodes and edges
- * using {@link GraphNode#getValue} and {@link GraphEdge#getValue}. For example,
- * a graph coloring algorithm can store the color as an annotation. If multiple
- * analyses are required, it is up to the user of the analysis to save the
- * annotated solution between passes.
- * <p>
- * We implemented our own graph data structure (as opposed to using
- * <code>com.google.common.graph</code>) for two reasons. First, aside from
- * the node's label value, we would like to annotate information on the nodes
- * and edges. Using a map to annotate would introduce too much overhead during
- * fix point analysis. Also, <code>com.google.common.graph</code> does not
- * support labeling of edges. Secondly, not using another external package would
- * limit our dependencies.
- * <p>
- * TODO(user): All functionality for removing nodes and edges.
+ * The base generic class for graph-like data structure and algorithms in the compiler.
  *
+ * <p>Nodes and edges in the graph can store a piece of data that this graph is used to represent.
+ * For example, a variable interference graph might store a variable in the node. This piece of data
+ * can be accessed with {@link GraphNode#getValue} and {@link GraphEdge#getValue}. However, in some
+ * cases wrapping the nodes and/or edges in a custom class may be preferrable, as this additional
+ * piece of data must be explicitly cast down from {@link Annotation} to its true type.
+ *
+ * <p>Algorithms and analysis can annotate information on the nodes and edges using {@link
+ * GraphNode#getValue} and {@link GraphEdge#getValue}. For example, a graph coloring algorithm can
+ * store the color as an annotation. If multiple analyses are required, it is up to the user of the
+ * analysis to save the annotated solution between passes.
+ *
+ * <p>We implemented our own graph data structure (as opposed to using <code>com.google.common.graph
+ * </code>) for three reasons. First, aside from the node's label value, we would like to annotate
+ * information on the nodes and edges. Using a map to annotate would introduce too much overhead
+ * during fix point analysis. Also, <code>com.google.common.graph</code> does not support labeling
+ * of edges. Second, avoiding using an external package limits our dependencies. Third, <code>
+ * com.google.common.graph</code> uses WeakRefs which J2CL does not support.
  *
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.
