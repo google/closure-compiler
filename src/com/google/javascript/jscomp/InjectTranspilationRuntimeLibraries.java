@@ -158,7 +158,6 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
 
   private void visitGetprop(NodeTraversal t, Node n) {
     Node receiverNode = n.getFirstChild();
-    String propName = receiverNode.getNext().getString();
     if (isGlobalSymbol(t, receiverNode)) {
       compiler.ensureLibraryInjected("es6/symbol", false);
     }
