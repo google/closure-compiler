@@ -248,3 +248,21 @@ Document.prototype.getElementsByClassName = function(name) {};
  * @see https://dom.spec.whatwg.org/#dom-element-getelementsbyclassname-classnames-classnames
  */
 Element.prototype.getElementsByClassName = function(classNames) {};
+
+/**
+ * @param {string} where
+ * @param {Element} element
+ * @return {!Element}
+ * @throws {DOMException}
+ * @see https://dom.spec.whatwg.org/#dom-element-insertadjacentelement
+ */
+Element.prototype.insertAdjacentElement = function(where, element) {};
+
+/**
+ * @param {string} where
+ * @param {string} data
+ * @return {undefined}
+ * @throws {DOMException}
+ * @see https://dom.spec.whatwg.org/#dom-element-insertadjacenttext
+ */
+Element.prototype.insertAdjacentText = function(where, data) {};
