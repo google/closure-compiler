@@ -37,21 +37,18 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Inline variables when possible. Using the information from
- * {@link MaybeReachingVariableUse} and {@link MustBeReachingVariableDef},
- * this pass attempts to inline a variable by placing the value at the
- * definition where the variable is used. The basic requirements for inlining
- * are the following:
+ * Inline variables when possible. Using the information from {@link MaybeReachingVariableUse} and
+ * {@link MustBeReachingVariableDef}, this pass attempts to inline a variable by placing the value
+ * at the definition where the variable is used. The basic requirements for inlining are the
+ * following:
  *
  * <ul>
- * <li> There is exactly one reaching definition at the use of that variable
- * </li>
- * <li> There is exactly one use for that definition of the variable
- * </li>
+ *   <li>There is exactly one reaching definition at the use of that variable
+ *   <li>There is exactly one use for that definition of the variable
  * </ul>
  *
- * <p>Other requirements can be found in {@link Candidate#canInline}. Currently
- * this pass does not operate on the global scope due to compilation time.
+ * <p>Other requirements can be found in {@link Candidate#canInline}. Currently this pass does not
+ * operate on the global scope due to compilation time.
  */
 class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
@@ -316,10 +313,9 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
   }
 
   /**
-   * Gathers a list of possible candidates for inlining based only on
-   * information from {@link MustBeReachingVariableDef}. The list will be stored
-   * in {@code candidates} and the validity of each inlining Candidate should
-   * be later verified with {@link Candidate#canInline(Scope)} when
+   * Gathers a list of possible candidates for inlining based only on information from {@link
+   * MustBeReachingVariableDef}. The list will be stored in {@code candidates} and the validity of
+   * each inlining Candidate should be later verified with {@link Candidate#canInline(Scope)} when
    * {@link MaybeReachingVariableUse} has been performed.
    */
   private class GatherCandidates extends AbstractShallowCallback {

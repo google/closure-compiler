@@ -23,6 +23,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.MaybeReachingVariableUse.ReachingUses;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
@@ -36,16 +37,41 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Computes "may be" reaching use for all definitions of each variables.
+ * Computes "may be" reaching use for all definitions of each variable.
  *
- * A use of {@code A} in {@code alert(A)} is a "may be" reaching use of
- * the definition of {@code A} at {@code A = foo()} if at least one path from
- * the use node reaches that definition and it is the last definition before
- * the use on that path.
+ * <p>A use of {@code A} in {@code alert(A)} is a "may be" reaching use of the definition of {@code
+ * A} at {@code A = foo()} if at least one path from the definition node to the end node reaches
+ * that use and it is the last definition before the use on that path.
+ *
+ * <p>Example:
+ *
+ * <p><code>
+ * D1: var A = foo();
+ * U1: alert(A);
+ *     if(....) {
+ *        D2: A = bar();
+ *        U2: alert(A);
+ *     }
+ * U3: alert(A);
+ * </code>
+ *
+ * <p>Here, MaybeReachingUses[D1] = {U1, U3} and MaybeReachingUses[D2]={U2, U3}. The use U3 is not
+ * guaranteed to use def D1: this is a "may-be" analysis.
+ *
+ * <p>This pass is a backwards-analysis pass, i.e. it traverses the CFG nodes bottom-up, `MAX_STEPS`
+ * times or till a fixed point solution is reached. At each `cfgNode`, it:
+ *
+ * <ol>
+ *   <li>1. Creates a new output lattice element to store the set of upward exposed variable uses at
+ *       `cfgNode`.
+ *   <li>2. Propagates the set of existing upwards exposed variable uses at `cfgNode` from the input
+ *       lattice to output lattice
+ *   <li>3. Adds new exposed uses of a variable to the upward exposed set in the output lattice
+ *   <li>4. Removes killed(unconditionally redefined) variables from upward exposed set in the
+ *       output lattice
+ * </ol>
  */
-class MaybeReachingVariableUse extends
-    DataFlowAnalysis<Node, MaybeReachingVariableUse.ReachingUses> {
-
+class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
   // The scope of the function that we are analyzing.
   private final Set<Var> escaped;
   private final Map<String, Var> allVarsInFn;
@@ -68,17 +94,17 @@ class MaybeReachingVariableUse extends
   }
 
   /**
-   * May use definition lattice representation. It captures a product
-   * lattice for each local (non-escaped) variable. The sub-lattice is
-   * a n + 2 power set element lattice with all the Nodes in the program,
-   * TOP and BOTTOM. This is better explained with an example:
+   * May use definition lattice representation. It captures a product lattice for each local
+   * (non-escaped) variable. The sub-lattice is a n + 2 power set element lattice with all the Nodes
+   * in the program, TOP and BOTTOM. This is better explained with an example:
    *
-   * Consider: A sub-lattice element representing the variable A represented
-   * by { N_4, N_5} where N_x is a Node in the program. This implies at
-   * that particular point in the program the content of A is "upward exposed"
-   * at point N_4 and N_5.
+   * <p>Consider: A sub-lattice element representing the variable A represented by { N_4, N_5} where
+   * N_x is a Node in the program. This implies at that particular point in the program the content
+   * of A is "upward exposed" at point N_4 and N_5.
    *
-   * Example:
+   * <p>Example:
+   *
+   * <p><code>
    *
    * A = 1;
    * ...
@@ -87,10 +113,12 @@ class MaybeReachingVariableUse extends
    * N_5: y = A;
    * N_6: A = 1;
    * N_7: print(A);
+   * </code>
    *
-   * At N_3, reads of A in {N_4, N_5} are said to be upward exposed.
+   * <p>At N_3, reads of A in {N_4, N_5} are said to be upward exposed.
    */
   static final class ReachingUses implements LatticeElement {
+    // Maps variables to all their uses that are upward exposed at the current cfgNode.
     final Multimap<Var, Node> mayUseMap;
 
     public ReachingUses() {
@@ -121,9 +149,9 @@ class MaybeReachingVariableUse extends
   /**
    * The join is a simple union because of the "may be" nature of the analysis.
    *
-   * Consider: A = 1; if (x) { A = 2 }; alert(A);
+   * <p>Consider: A = 1; if (x) { A = 2 }; alert(A);
    *
-   * The read of A "may be" exposed to A = 1 in the beginning.
+   * <p>The read of A "may be" exposed to A = 1 in the beginning.
    */
   private static class ReachingUsesJoinOp implements JoinOp<ReachingUses> {
     @Override
@@ -151,6 +179,16 @@ class MaybeReachingVariableUse extends
     return new ReachingUses();
   }
 
+  /**
+   * Computes the new LatticeElement for a given node given its LatticeElement from previous
+   * iteration.
+   *
+   * @param n node
+   * @param input - Backward dataflow analyses compute their LatticeElement bottom-up (i.e.
+   *     FlowState.out to FlowState.in). See {@link DataFlowAnalysis#flow(DiGraphNode)}. Here param
+   *     `input` is the readonly input FlowState.out that was constructed as `FlowState.in` in the
+   *     previous iteration, or the initial lattice element if this is the first iteration.
+   */
   @Override
   ReachingUses flowThrough(Node n, ReachingUses input) {
     ReachingUses output = new ReachingUses(input);
@@ -175,6 +213,11 @@ class MaybeReachingVariableUse extends
   }
 
   /**
+   * Given a cfgNode, updates the output LatticeElement at that node by finding and storing all
+   * variables and their uses that are upward exposed at the cfgNode.
+   *
+   * @param n The explorer node which searches for variables
+   * @param cfgNode The CFG node for which the upward exposed variables are being searched.
    * @param conditional Whether {@code n} is only conditionally evaluated given that {@code cfgNode}
    *     is evaluated. Do not remove conditionally redefined variables from the reaching uses set.
    */
@@ -312,9 +355,8 @@ class MaybeReachingVariableUse extends
   }
 
   /**
-   * Sets the variable for the given name to the node value in the upward
-   * exposed lattice. Do nothing if the variable name is one of the escaped
-   * variable.
+   * Sets the variable for the given name to the node value in the upward exposed lattice. Do
+   * nothing if the variable name is one of the escaped variable.
    */
   private void addToUseIfLocal(String name, Node node, ReachingUses use) {
     Var var = allVarsInFn.get(name);
@@ -327,9 +369,8 @@ class MaybeReachingVariableUse extends
   }
 
   /**
-   * Removes the variable for the given name from the node value in the upward
-   * exposed lattice. Do nothing if the variable name is one of the escaped
-   * variable.
+   * Removes the variable for the given name from the node value in the upward exposed lattice. Do
+   * nothing if the variable name is one of the escaped variable.
    */
   private void removeFromUseIfLocal(String name, ReachingUses use) {
     Var var = allVarsInFn.get(name);
@@ -342,14 +383,13 @@ class MaybeReachingVariableUse extends
   }
 
   /**
-   * Gets a list of nodes that may be using the value assigned to {@code name}
-   * in {@code defNode}. {@code defNode} must be one of the control flow graph
-   * nodes.
+   * Gets a list of nodes that may be using the value assigned to {@code name} in {@code defNode}.
+   * {@code defNode} must be one of the control flow graph nodes.
    *
-   * @param name name of the variable. It can only be names of local variable
-   *     that are not function parameters, escaped variables or variables
-   *     declared in catch.
-   * @param defNode The list of upward exposed use for the variable.
+   * @param name name of the variable. It can only be names of local variable that are not function
+   *     parameters, escaped variables or variables declared in catch.
+   * @param defNode the control flow graph node that may assign a value to {@code name}
+   * @return the list of upward exposed uses of the variable {@code name} at defNode.
    */
   Collection<Node> getUses(String name, Node defNode) {
     GraphNode<Node, Branch> n = getCfg().getNode(defNode);

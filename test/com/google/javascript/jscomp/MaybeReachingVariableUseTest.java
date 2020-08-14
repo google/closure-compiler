@@ -33,17 +33,28 @@ import org.junit.runners.JUnit4;
 /**
  * Tests for {@link MaybeReachingVariableUse}.
  *
- * <p>The test cases consist of a short code snippet that has an instruction labeled with D and one
- * or more with label starting with U. When assertMatch is called, the test suite verifies that all
- * the uses with label starting with U is reachable to the definition label at D.
+ * <p>Each test case consist of a short code snippet that has an instruction labeled with `D:` and
+ * one or more with label starting with `U:`. When `assertMatch` is called, the test suite verifies
+ * that all the uses with label starting with `U:` is a may be reaching use of the definition label
+ * at `D:`.
  */
 // TODO(rishipal): Consider classifying these tests based on the position of `D` and `U` in input.
 @RunWith(JUnit4.class)
 public final class MaybeReachingVariableUseTest {
 
+  Compiler compiler;
+  SyntacticScopeCreator scopeCreator;
   private MaybeReachingVariableUse useDef = null;
   private Node def = null;
   private List<Node> uses = null;
+
+  // Illustrates that the label D needn't correspond to a definition of `x` in these tests, but is
+  // symbolic of any program point at which we want to check the use U is upward exposed (reachable)
+  @Test
+  public void testReachableUseUAtProgramPointD() {
+    assertMatch("var x = 1; D: var y = 2; y; U:x");
+    assertNotMatch("D: var y = 1; var x = 2; y; U:x");
+  }
 
   @Test
   public void testStraightLine() {
@@ -255,9 +266,11 @@ public final class MaybeReachingVariableUseTest {
     assertMatch(src, true);
   }
 
-  /** The def of x at D: may be used by the read of x at U:. */
+  /** The def of `x` at D: may be used by the read of `x` at U:. */
   private void assertMatch(String src, boolean async) {
-    computeUseDef(src, async);
+    Node root = computeUseDef(src, async);
+    extractDefAndUsesFromInputLabels(compiler, scopeCreator, root);
+
     Collection<Node> result = useDef.getUses("x", def);
     assertThat(result).containsAtLeastElementsIn(uses);
   }
@@ -270,21 +283,17 @@ public final class MaybeReachingVariableUseTest {
     assertNotMatch(src, true);
   }
 
-  /** The def of x at D: is not used by the read of x at U:. */
+  /** The def of `x` at D: is not used by the read of `x` at U:. */
   private void assertNotMatch(String src, boolean async) {
-    computeUseDef(src, async);
-    Collection<Node> result = useDef.getUses("x", def);
-    assertThat(result.containsAll(uses)).isFalse();
+    Node root = computeUseDef(src, async);
+    extractDefAndUsesFromInputLabels(compiler, scopeCreator, root);
+    assertThat(useDef.getUses("x", def)).doesNotContain(uses);
   }
 
   /** Computes reaching use on given source. */
-  private void computeUseDef(String src, boolean async) {
-    Compiler compiler = new Compiler();
-    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    compiler.initOptions(options);
-    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
+  private Node computeUseDef(String src, boolean async) {
+    compiler = createCompiler();
+    scopeCreator = new SyntacticScopeCreator(compiler);
     src = (async ? "async " : "") + "function _FUNCTION(param1, param2){" + src + "}";
     Node script = compiler.parseTestCode(src);
     Node root = script.getFirstChild();
@@ -298,6 +307,21 @@ public final class MaybeReachingVariableUseTest {
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     useDef = new MaybeReachingVariableUse(cfg, funcBlockScope, compiler, scopeCreator);
     useDef.analyze();
+    return root;
+  }
+
+  private static Compiler createCompiler() {
+    Compiler compiler = new Compiler();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
+    compiler.initOptions(options);
+    return compiler;
+  }
+
+  // Run `LabelFinder` to find the `D:` and `U:` labels and save the def and uses of `x`
+  private void extractDefAndUsesFromInputLabels(
+      Compiler compiler, SyntacticScopeCreator scopeCreator, Node root) {
     def = null;
     uses = new ArrayList<>();
     new NodeTraversal(compiler, new LabelFinder(), scopeCreator).traverse(root);
@@ -323,4 +347,3 @@ public final class MaybeReachingVariableUseTest {
     }
   }
 }
-

@@ -154,7 +154,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   abstract boolean isForward();
 
   /**
-   * Computes the output state for a given node and input state.
+   * Computes the output state for a given node given its input state.
    *
    * @param node The node.
    * @param input Input lattice that should be read-only.
@@ -173,22 +173,21 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   }
 
   /**
-   * Finds a fixed-point solution. The function has the side effect of replacing
-   * the existing node annotations with the computed solutions using {@link
+   * Finds a fixed-point solution. The function has the side effect of replacing the existing node
+   * annotations with the computed solutions using {@link
    * com.google.javascript.jscomp.graph.GraphNode#setAnnotation(Annotation)}.
    *
-   * <p>Initially, each node's input and output flow state contains the value
-   * given by {@link #createInitialEstimateLattice()} (with the exception of the
-   * entry node of the graph which takes on the {@link #createEntryLattice()}
-   * value. Each node will use the output state of its predecessor and compute a
-   * output state according to the instruction. At that time, any nodes that
-   * depends on the node's newly modified output value will need to recompute
-   * their output state again. Each step will perform a computation at one node
-   * until no extra computation will modify any existing output state anymore.
+   * <p>Initially, each node's input and output flow state contains the value given by {@link
+   * #createInitialEstimateLattice()} (with the exception of the entry node of the graph which takes
+   * on the {@link #createEntryLattice()} value. Each node will use the output state of its
+   * predecessor and compute an output state according to the instruction. At that time, any nodes
+   * that depend on the node's newly modified output value will need to recompute their output state
+   * again. Each step will perform a computation at one node until no extra computation will modify
+   * any existing output state anymore.
    *
-   * @param maxSteps Max number of iterations before the method stops and throw
-   *        a {@link MaxIterationsExceededException}. This will prevent the
-   *        analysis from going into a infinite loop.
+   * @param maxSteps Max number of iterations before the method stops and throw a {@link
+   *     MaxIterationsExceededException}. This will prevent the analysis from going into a infinite
+   *     loop.
    */
   final void analyze(int maxSteps) {
     initialize();

@@ -35,14 +35,17 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Computes reaching definition for all use of each variables.
+ * Computes must-be-reaching definition for all uses of each variable.
  *
- * A definition of {@code A} in {@code A = foo()} is a reaching definition of
- * the use of {@code A} in {@code alert(A)} if all paths from entry node must
- * reaches that definition and it is the last definition before the use.
+ * <p>A definition of {@code A} in {@code A = foo()} is a must-be-reaching definition of the use of
+ * {@code A} in {@code alert(A)} if all paths from entry node to the use pass through that
+ * definition and it is the last definition before the use.
+ *
+ * <p>By definition, a must-be-reaching definition for a given use is always a single definition and
+ * it "dominates" that use (i.e. always must execute before that use).
  */
-final class MustBeReachingVariableDef extends
-    DataFlowAnalysis<Node, MustBeReachingVariableDef.MustDef> {
+final class MustBeReachingVariableDef
+    extends DataFlowAnalysis<Node, MustBeReachingVariableDef.MustDef> {
 
   // The scope of the function that we are analyzing.
   private final AbstractCompiler compiler;
@@ -464,11 +467,10 @@ final class MustBeReachingVariableDef extends
   }
 
   /**
-   * Gets the must reaching definition of a given node.
+   * Gets the must-be-reaching definition of a given use node.
    *
-   * @param name name of the variable. It can only be names of local variable
-   *     that are not function parameters, escaped variables or variables
-   *     declared in catch.
+   * @param name name of the variable. It can only be names of local variable that are not function
+   *     parameters, escaped variables or variables declared in catch.
    * @param useNode the location of the use where the definition reaches.
    */
   Definition getDef(String name, Node useNode) {

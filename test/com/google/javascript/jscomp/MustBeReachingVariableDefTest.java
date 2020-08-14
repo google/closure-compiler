@@ -284,9 +284,8 @@ public final class MustBeReachingVariableDefTest {
     assertWithMessage("Code should have an instruction labeled U").that(use).isNotNull();
   }
 
-  /**
-   * Finds the D: and U: label and store which node they point to.
-   */
+  /** Finds the D: and U: label and store which node they point to. */
+  // TODO(rishipal): This same class is duplicated in ComputeReachableUsesTest.
   private class LabelFinder extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
