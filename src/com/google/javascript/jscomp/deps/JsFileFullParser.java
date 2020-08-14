@@ -62,6 +62,7 @@ public class JsFileFullParser {
       UNKNOWN,
       GOOG_PROVIDE,
       GOOG_MODULE,
+      ES_MODULE,
     }
 
     public boolean goog = false;
@@ -209,6 +210,8 @@ public class JsFileFullParser {
         info.moduleType = FileInfo.ModuleType.GOOG_MODULE;
         break;
       case ES6_MODULE:
+        info.moduleType = FileInfo.ModuleType.ES_MODULE;
+        break;
       case COMMON_JS:
       case SCRIPT:
         // Treat these as unknown for now; we can extend the enum if we care about these.

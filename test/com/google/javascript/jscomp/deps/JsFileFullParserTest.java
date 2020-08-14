@@ -31,22 +31,63 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class JsFileFullParserTest {
+
+  @Test
+  public void testModuleType_script() {
+    FileInfo info = parse("alert(42);");
+    assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.UNKNOWN);
+  }
+
+  @Test
+  public void testModuleType_cjs() {
+    FileInfo info = parse("const fs = require('fs');");
+    assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.UNKNOWN);
+  }
+
+  @Test
+  public void testModuleType_googProvide() {
+    FileInfo info = parse("goog.provide('foo');");
+    assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.GOOG_PROVIDE);
+  }
+
+  @Test
+  public void testModuleType_googModule() {
+    FileInfo info = parse("goog.module('foo');");
+    assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.GOOG_MODULE);
+  }
+
+  @Test
+  public void testModuleType_legacyGoogModule() {
+    FileInfo info = parse("goog.module('foo');", "goog.module.declareLegacyNamespace();");
+    assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.GOOG_MODULE);
+  }
+
+  @Test
+  public void testModuleType_esModule_export() {
+    FileInfo info = parse("export function f() {};");
+    assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.ES_MODULE);
+  }
+
+  @Test
+  public void testModuleType_esModule_import() {
+    FileInfo info = parse("import * from './bar';");
+    assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.ES_MODULE);
+  }
+
   @Test
   public void testProvidesRequires() {
-    String contents =
-        lines(
+    FileInfo info =
+        parse(
             "goog.provide('providedSymbol');",
             "goog.require('stronglyRequiredSymbol');",
             "goog.requireType('weaklyRequiredSymbol');");
-
-    FileInfo info = JsFileFullParser.parse(contents, "file.js", null);
 
     assertThat(info.provides).containsExactly("providedSymbol");
     assertThat(info.requires).containsExactly("stronglyRequiredSymbol");
     assertThat(info.typeRequires).containsExactly("weaklyRequiredSymbol");
   }
 
-  private static String lines(String... lines) {
-    return Joiner.on('\n').join(lines);
+  private static FileInfo parse(String... lines) {
+    return JsFileFullParser.parse(Joiner.on('\n').join(lines), "file.js", null);
   }
 }
