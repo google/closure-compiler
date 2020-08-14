@@ -833,6 +833,10 @@ public final class DefaultPassConfig extends PassConfig {
     // Passes after this point can no longer depend on normalized AST assumptions.
     passes.add(markUnnormalized);
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(removeTypes);
+    }
+
     if (options.collapseVariableDeclarations) {
       passes.add(exploitAssign);
       passes.add(collapseVariableDeclarations);
@@ -859,8 +863,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.foldConstants) {
       passes.add(latePeepholeOptimizations);
     }
-
-    passes.add(removeTypes);
 
     if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.UNMAPPED) {
       passes.add(nameUnmappedAnonymousFunctions);
