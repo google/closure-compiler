@@ -399,7 +399,11 @@ public class JSTypeRegistry implements Serializable {
     promiseTemplateKey = new TemplateType(this, "TYPE");
 
     /**
-     * The default prototype of all functions: 'Function.prototype`.
+     * The default implicit prototype of all functions, as well as the ".prototype" field of
+     * `(typeof Function)`.
+     *
+     * <p>This is the interesting `Function` protoype, as all its properties are inhertied by other
+     * functions.
      *
      * <p>Must be created and registered early so `FunctionType.Builder` has access to it.
      */
@@ -412,11 +416,22 @@ public class JSTypeRegistry implements Serializable {
     registerNativeType(JSTypeNative.FUNCTION_PROTOTYPE, functionPrototype);
 
     /**
+     * The ".prototype" property of the type `Function`.
+     *
+     * <p>So named because `Function` constructs `?`s. This type is not particularly interesting,
+     * since its properties aren't inherited by any other type.
+     */
+    PrototypeObjectType functionInstancePrototype =
+        PrototypeObjectType.builder(this)
+            .setName("?.prototype")
+            .setNative(true)
+            // Defer until `Object` is defined. .setImplicitPrototype(objectType)
+            .build();
+
+    /**
      * `Function`
      *
-     * <p>The default implicit prototype of all `FunctionType`s is `Function.prototype`. The
-     * ",prototype" property of `Function` is not actually interesting, since it constructs
-     * unknowns.
+     * <p>The default implicit prototype of all `FunctionType`s is `functionPrototype`.
      */
     FunctionType functionType =
         FunctionType.builder(this)
@@ -427,14 +442,13 @@ public class JSTypeRegistry implements Serializable {
             .withTypeOfThis(unknownType)
             .withReturnType(unknownType)
             .build();
+    functionType.setPrototype(functionInstancePrototype, null);
     registerNativeType(JSTypeNative.FUNCTION_TYPE, functionType);
 
     /**
      * `(typeof Function)`
      *
-     * <p>The default implict prototype of all `FunctionType`s is `Function.prototype`. The
-     * ",prototype" property of this type is the interesting one. It's also the same as its implicit
-     * prototype.
+     * <p>The default implict prototype of all `FunctionType`s is `functionPrototype`.
      */
     FunctionType functionFunctionType =
         FunctionType.builder(this)
@@ -472,6 +486,8 @@ public class JSTypeRegistry implements Serializable {
 
     functionPrototype.clearCachedValues();
     functionPrototype.setImplicitPrototype(objectType);
+    functionInstancePrototype.clearCachedValues();
+    functionInstancePrototype.setImplicitPrototype(objectType);
 
     // IObject
     FunctionType iObjectFunctionType =
