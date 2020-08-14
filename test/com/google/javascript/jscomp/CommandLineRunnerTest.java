@@ -2614,24 +2614,20 @@ public final class CommandLineRunnerTest {
     String source = lines("function foo() { ", "   console.log('Hello'); ", "}");
     String expected =
         lines(
-            "'use struct'",
             "var ist_arr = [];",
-            "function foo() { ",
-            "   ist_arr.push(\"C\");",
-            "   console.log('Hello'); ",
+            "function foo() {",
+            "  ist_arr.push('C');",
+            "  console.log('Hello');",
             "}");
 
-    FlagEntry<JsSourceType> sourceFile = createJsFile("sourceCode", source);
-
-    compileFiles(expected, sourceFile);
+    test(source, expected);
 
     File variableMap = new File(filePath);
 
     List<String> variableMapFile = Files.readLines(variableMap, UTF_8);
 
     assertThat(variableMapFile).hasSize(4);
-    assertThat(variableMapFile.get(0)).startsWith(" FileNames:[");
-    assertThat(variableMapFile.get(0)).endsWith(".js]");
+    assertThat(variableMapFile.get(0)).isEqualTo(" FileNames:[input0]");
     assertThat(variableMapFile.get(1)).isEqualTo(" FunctionNames:[foo]");
     assertThat(variableMapFile.get(2)).isEqualTo(" Types:[FUNCTION]");
     assertThat(variableMapFile.get(3)).isEqualTo("C:AAACA");
