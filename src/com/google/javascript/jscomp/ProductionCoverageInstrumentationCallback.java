@@ -37,31 +37,20 @@ import java.util.Objects;
  * from the previous implementations ({@link CoverageInstrumentationCallback} and {@link
  * BranchCoverageInstrumentationCallback}) in that it is properly optimized and obfuscated so that
  * it can be run on client browsers with the goal of better detecting dead code. The callback will
- * instrument with a function call which is provided in the source code as opposed to an array.
+ * instrument by pushing a string onto an array which identifies what piece of code was executed.
  */
 @GwtIncompatible
 final class ProductionCoverageInstrumentationCallback implements NodeTraversal.Callback {
 
-  // TODO(psokol): Make this dynamic so that instrumentation does not rely on hardcoded files
-  private static final String INSTRUMENT_CODE_FUNCTION_NAME = "instrumentCode";
-  private static final String INSTRUMENT_CODE_FILE_NAME = "InstrumentCode.js";
 
   /**
-   * The compiler runs an earlier pass that combines all modules and renames them appropriately.
-   * This constant represents what the INSTRUMENT_CODE_FILE_NAME module will be renamed to by the
-   * compiler and this will be used to make the correct call to INSTRUMENT_CODE_FUNCTION_NAME.
+   * The name of the global array to which at every instrumentation point a new encoded param will
+   * be added. This is dynamically set by the command line flag --production_instrumentation_array.
    */
-  private static final String MODULE_RENAMING = "module$exports$instrument$code";
-
-  /**
-   * INSTRUMENT_CODE_FILE_NAME will contain an instance of the instrumentCode class and that
-   * instance name is stored in this constant.
-   */
-  private static final String INSTRUMENT_CODE_INSTANCE = "instrumentCodeInstance";
+  public final String INSTRUMENTATION_ARRAY;
 
   private final AbstractCompiler compiler;
   private final ParameterMapping parameterMapping;
-  boolean visitedInstrumentCodeFile = false;
 
   private enum Type {
     FUNCTION,
@@ -79,12 +68,22 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
   public ProductionCoverageInstrumentationCallback(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.parameterMapping = new ParameterMapping();
+
+    INSTRUMENTATION_ARRAY = compiler.getOptions().getProductionInstrumentationArray();
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
 
-    if (visitedInstrumentCodeFile && n.isFunction()) {
+    // If origin of node is not from sourceFile, do not instrument. This typically occurs when
+    // polyfill code is injected into the sourceFile AST and this check avoids instrumenting it. We
+    // avoid instrumentation as this callback does not distinguish between sourceFile code and
+    // injected code and can result in an error.
+    if (!n.isRoot() && !Objects.equals(t.getSourceName(), n.getSourceFileName())) {
+      return false;
+    }
+
+    if (n.isFunction()) {
       String fnName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
       fnName = (fnName == null) ? "Anonymous" : fnName;
       functionNameStack.push(fnName);
@@ -97,24 +96,6 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
   public void visit(NodeTraversal traversal, Node node, Node parent) {
     String fileName = traversal.getSourceName();
     String sourceFileName = node.getSourceFileName();
-
-    // If origin of node is not from sourceFile, do not instrument. This typically occurs when
-    // polyfill code is injected into the sourceFile AST and this check avoids instrumenting it. We
-    // avoid instrumentation as this callback does not distinguish between sourceFile code and
-    // injected code and can result in an error.
-    if (!Objects.equals(fileName, sourceFileName)) {
-      return;
-    }
-
-    // If Source File INSTRUMENT_CODE_FILE_NAME has not yet been visited, do not instrument as
-    // the instrument function has not yet been defined and any call made to it will result in an
-    // error in the compiled JS code.
-    if (!visitedInstrumentCodeFile || sourceFileName.endsWith(INSTRUMENT_CODE_FILE_NAME)) {
-      if (sourceFileName.endsWith(INSTRUMENT_CODE_FILE_NAME)) {
-        visitedInstrumentCodeFile = true;
-      }
-      return;
-    }
 
     String functionName = functionNameStack.peek();
 
@@ -204,8 +185,6 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     Node newInstrumentationNode =
         newInstrumentationNode(cloneOfOriginal, fileName, functionName, type);
 
-    // newInstrumentationNode returns an EXPR_RESULT which cannot be a child of a COMMA node.
-    // Instead we use the child of of the newInstrumentatioNode which is a CALL node.
     Node childOfInstrumentationNode = newInstrumentationNode.removeFirstChild();
     Node infusedExp = AstManipulations.fuseExpressions(childOfInstrumentationNode, cloneOfOriginal);
     parentNode.replaceChild(originalNode, infusedExp);
@@ -240,7 +219,6 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
    */
   private Node newInstrumentationNode(Node node, String fileName, String fnName, Type type) {
 
-    String encodedParam = parameterMapping.getEncodedParam(fileName, fnName, type);
 
     int lineNo = node.getLineno();
     int columnNo = node.getCharno();
@@ -250,10 +228,14 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
       columnNo = node.getParent().getCharno();
     }
 
-    Node innerProp = IR.getprop(IR.name(MODULE_RENAMING), IR.string(INSTRUMENT_CODE_INSTANCE));
-    Node outerProp = IR.getprop(innerProp, IR.string(INSTRUMENT_CODE_FUNCTION_NAME));
+    String encodedParam = parameterMapping.getEncodedParam(fileName, fnName, type, lineNo, columnNo);
+
+
+   // Node innerProp = IR.getprop(IR.name(MODULE_RENAMING), IR.string(INSTRUMENT_CODE_INSTANCE));
+   // Node outerProp = IR.getprop(innerProp, IR.string(INSTRUMENT_CODE_FUNCTION_NAME));
+    Node prop = IR.getprop(IR.name(INSTRUMENTATION_ARRAY), IR.string("push"));
     Node functionCall =
-        IR.call(outerProp, IR.string(encodedParam), IR.number(lineNo), IR.number(columnNo));
+        IR.call(prop, IR.string(encodedParam));
     Node exprNode = IR.exprResult(functionCall);
 
     return exprNode.useSourceInfoIfMissingFromForTree(node);
@@ -307,7 +289,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
       typeToIndex = new LinkedHashMap<>();
     }
 
-    private String getEncodedParam(String fileName, String functionName, Type type) {
+    private String getEncodedParam(String fileName, String functionName, Type type, int lineNo, int ColNo) {
 
       fileNameToIndex.putIfAbsent(fileName, fileNameToIndex.size());
       functionNameToIndex.putIfAbsent(functionName, functionNameToIndex.size());
@@ -319,6 +301,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
         Base64VLQ.encode(sb, fileNameToIndex.get(fileName));
         Base64VLQ.encode(sb, functionNameToIndex.get(functionName));
         Base64VLQ.encode(sb, typeToIndex.get(type.name()));
+        Base64VLQ.encode(sb, lineNo);
+        Base64VLQ.encode(sb, ColNo);
       } catch (IOException e) {
         throw new AssertionError(e);
       }

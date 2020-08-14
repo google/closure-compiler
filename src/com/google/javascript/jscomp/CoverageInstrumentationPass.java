@@ -70,6 +70,14 @@ class CoverageInstrumentationPass implements CompilerPass {
             .useSourceInfoIfMissingFromForTree(script));
   }
 
+  private void addProductionHeaderCode(Node script, String arrayName) {
+
+    Node arrayLit = IR.arraylit();
+    Node name = IR.name(arrayName);
+    Node letNode = IR.var(name, arrayLit);
+    script.addChildToFront(letNode.useSourceInfoIfMissingFromForTree(script));
+  }
+
   @Override
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
@@ -89,9 +97,6 @@ class CoverageInstrumentationPass implements CompilerPass {
             productionCoverageInstrumentationCallback.getInstrumentationMapping();
         compiler.setInstrumentationMapping(instrumentationMapping);
 
-        // Does not require any additional header code as it relies on the instrumentation function
-        // being part of the source code.
-        return;
       } else {
         NodeTraversal.traverse(
             compiler, rootNode, new CoverageInstrumentationCallback(instrumentationData, reach));
@@ -103,7 +108,13 @@ class CoverageInstrumentationPass implements CompilerPass {
       if (firstScript.hasChildren() && firstScript.getFirstChild().isModuleBody()) {
         firstScript = firstScript.getFirstChild();
       }
-      addHeaderCode(firstScript);
+
+      if (instrumentOption == InstrumentOption.PRODUCTION) {
+        addProductionHeaderCode(
+            firstScript, compiler.getOptions().getProductionInstrumentationArray());
+      } else {
+        addHeaderCode(firstScript);
+      }
     }
   }
 

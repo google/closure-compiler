@@ -873,6 +873,15 @@ public class CommandLineRunner extends
                 + " 4. PRODUCTION - Function Instrumentation on compiled JS code.\n")
     private String instrumentCode = "NONE";
 
+    @Option(
+        name = "--production_instrumentation_array",
+        usage =
+            "Name of the global array used by production instrumentation. The array name "
+                + "should be declared as an extern so it is not renamed by the compiler. A function"
+                + "that parses the global array should also be included. This flag is to be used in"
+                + "tandem with --instrument_code=PRODUCTION")
+    private String productionInstrumentationArray = "";
+
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
     @Argument
@@ -1954,7 +1963,15 @@ public class CommandLineRunner extends
           "Expected --instrument_code to be passed with PRODUCTION "
               + "when --instrument_mapping_report is set");
     }
+
+    if (Strings.isNullOrEmpty(flags.productionInstrumentationArray)
+        && flags.instrumentCodeParsed == InstrumentOption.PRODUCTION) {
+      throw new FlagUsageException(
+          "Expected --production_instrumentation_array to be set when "
+              + "--instrument_code is set to Production");
+    }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
+    options.setProductionInstrumentationArray(flags.productionInstrumentationArray);
 
     return options;
   }
