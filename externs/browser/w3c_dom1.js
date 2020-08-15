@@ -474,6 +474,24 @@ NodeList.prototype.item = function(index) {};
 NodeList.prototype.forEach = function(callback, opt_thisobj) {};
 
 /**
+ * @return {!Iterator<!Array<number|T>>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/entries
+ */
+NodeList.prototype.entries = function() {};
+
+/**
+ * @return {!Iterator<number>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/keys
+ */
+NodeList.prototype.keys = function() {};
+
+/**
+ * @return {!Iterator<T>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/values
+ */
+NodeList.prototype.values = function() {};
+
+/**
  * @constructor
  * @implements {IObject<(string|number), T>}
  * @implements {IArrayLike<T>}
