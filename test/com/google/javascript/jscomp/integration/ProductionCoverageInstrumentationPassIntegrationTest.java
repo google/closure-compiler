@@ -21,8 +21,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.BlackHoleErrorManager;
+import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -30,6 +32,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableMap;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -278,6 +281,66 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
         .isEqualTo("AAACA");
   }
 
+  @Test
+  public void testGlobalArrayIsDeclared() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source = lines("function foo (x) {", "console.log(x+5);", "};");
+    String useGlobalArray = lines("function ist(){", "console.log(ist_array)", "}");
+
+    String expected =
+        lines("function foo (x) {", getInstrumentCodeLine("C"), ";", "console.log( x + 5);", "};");
+
+    String expectedUseGlobalArray =
+        lines("function ist(){", getInstrumentCodeLine("E"), ";", "console.log(ist_array);", "}");
+
+    String[] sourceArr = new String[] {source, useGlobalArray};
+    String[] expectedArr =
+        new String[] {instrumentCodeExpected.concat(expected), expectedUseGlobalArray};
+
+    test(options, sourceArr, expectedArr);
+  }
+
+  @Test
+  public void testInstrumentationWithAdvancedOpt() {
+    CompilerOptions options = createCompilerOptions();
+
+    String blahExtern =
+        lines(
+            "/**",
+            "* @externs",
+            "*/",
+            "/**",
+            "*@type {!Array<string>}",
+            "*/",
+            "let ist_arr;"
+            );
+    externs = ImmutableList.of(
+        new TestExternsBuilder()
+            .addArray()
+            .addAlert()
+            .addExtra(
+                blahExtern)
+            .buildExternsFile("externs"));
+
+
+    String source = lines("function foo (x) {", "if(x) { alert(x+5); }", "} foo(true); foo(false);");
+
+    String expected =
+        lines(
+            "function a(b) {",
+            getInstrumentCodeLine("G"),";",
+            "b ? (", getInstrumentCodeLine("C"),",alert(b+5)) : ", getInstrumentCodeLine("E"),";",
+            "}",
+            "a(!0);" ,
+            "a(!1);");
+
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+     test(options, source, instrumentCodeExpected.concat(expected));
+  }
+
   private String getInstrumentCodeLine(String encodedParam) {
     return Strings.lenientFormat("%s.push(\"%s\")", "ist_arr", encodedParam);
   }
@@ -287,7 +350,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = new CompilerOptions();
 
     options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
-    options.setProductionInstrumentationArray("ist_arr");
+    options.setProductionInstrumentationArrayName("ist_arr");
 
     options.setClosurePass(true);
 

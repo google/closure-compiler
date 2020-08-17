@@ -45,9 +45,9 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
 
   /**
    * The name of the global array to which at every instrumentation point a new encoded param will
-   * be added. This is dynamically set by the command line flag --production_instrumentation_array.
+   * be added. This is dynamically set by the command line flag --prod_instr_array_name.
    */
-  public final String INSTRUMENTATION_ARRAY;
+  public final String INSTRUMENTATION_ARRAY_NAME;
 
   private final AbstractCompiler compiler;
   private final ParameterMapping parameterMapping;
@@ -65,11 +65,11 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
    */
   private final Deque<String> functionNameStack = new ArrayDeque<>();
 
-  public ProductionCoverageInstrumentationCallback(AbstractCompiler compiler) {
+  public ProductionCoverageInstrumentationCallback(AbstractCompiler compiler, String instrumentationArrayName) {
     this.compiler = compiler;
     this.parameterMapping = new ParameterMapping();
 
-    INSTRUMENTATION_ARRAY = compiler.getOptions().getProductionInstrumentationArray();
+    INSTRUMENTATION_ARRAY_NAME = instrumentationArrayName;
   }
 
   @Override
@@ -207,9 +207,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
   /**
    * Create a function call to the Instrument Code function with properly encoded parameters. The
    * instrumented function call will be of the following form:
-   * MODULE_RENAMING.INSTRUMENT_CODE_INSTANCE.INSTRUMENT_CODE_FUNCTION_NAME(param1, param2). This
-   * with the given constants evaluates to:
-   * module$exports$instrument$code.instrumentCodeInstance.instrumentCode(encodedParam, lineNum);
+   * INSTRUMENTATION_ARRAY_NAME.push(param). Where INSTRUMENT_ARRAY_NAME is the name of the global
+   * array and param is the encoded param which will be pushed onto the array.
    *
    * @param node The node to be instrumented.
    * @param fileName The file name of the node being instrumented.
@@ -230,10 +229,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
 
     String encodedParam = parameterMapping.getEncodedParam(fileName, fnName, type, lineNo, columnNo);
 
-
-   // Node innerProp = IR.getprop(IR.name(MODULE_RENAMING), IR.string(INSTRUMENT_CODE_INSTANCE));
-   // Node outerProp = IR.getprop(innerProp, IR.string(INSTRUMENT_CODE_FUNCTION_NAME));
-    Node prop = IR.getprop(IR.name(INSTRUMENTATION_ARRAY), IR.string("push"));
+    Node prop = IR.getprop(IR.name(INSTRUMENTATION_ARRAY_NAME), IR.string("push"));
     Node functionCall =
         IR.call(prop, IR.string(encodedParam));
     Node exprNode = IR.exprResult(functionCall);
@@ -289,7 +285,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
       typeToIndex = new LinkedHashMap<>();
     }
 
-    private String getEncodedParam(String fileName, String functionName, Type type, int lineNo, int ColNo) {
+    private String getEncodedParam(String fileName, String functionName, Type type, int lineNo, int colNo) {
 
       fileNameToIndex.putIfAbsent(fileName, fileNameToIndex.size());
       functionNameToIndex.putIfAbsent(functionName, functionNameToIndex.size());
@@ -302,7 +298,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
         Base64VLQ.encode(sb, functionNameToIndex.get(functionName));
         Base64VLQ.encode(sb, typeToIndex.get(type.name()));
         Base64VLQ.encode(sb, lineNo);
-        Base64VLQ.encode(sb, ColNo);
+        Base64VLQ.encode(sb, colNo);
       } catch (IOException e) {
         throw new AssertionError(e);
       }

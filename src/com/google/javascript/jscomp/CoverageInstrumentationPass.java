@@ -87,9 +87,10 @@ class CoverageInstrumentationPass implements CompilerPass {
             rootNode,
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
       } else if (instrumentOption == InstrumentOption.PRODUCTION) {
+        String arrayName = compiler.getOptions().getProductionInstrumentationArrayName();
 
         ProductionCoverageInstrumentationCallback productionCoverageInstrumentationCallback =
-            new ProductionCoverageInstrumentationCallback(compiler);
+            new ProductionCoverageInstrumentationCallback(compiler, arrayName);
 
         NodeTraversal.traverse(compiler, rootNode, productionCoverageInstrumentationCallback);
 
@@ -111,7 +112,7 @@ class CoverageInstrumentationPass implements CompilerPass {
 
       if (instrumentOption == InstrumentOption.PRODUCTION) {
         addProductionHeaderCode(
-            firstScript, compiler.getOptions().getProductionInstrumentationArray());
+            firstScript, compiler.getOptions().getProductionInstrumentationArrayName());
       } else {
         addHeaderCode(firstScript);
       }

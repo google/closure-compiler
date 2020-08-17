@@ -874,13 +874,13 @@ public class CommandLineRunner extends
     private String instrumentCode = "NONE";
 
     @Option(
-        name = "--production_instrumentation_array",
+        name = "--prod_instr_array_name",
         usage =
             "Name of the global array used by production instrumentation. The array name "
                 + "should be declared as an extern so it is not renamed by the compiler. A function"
                 + "that parses the global array should also be included. This flag is to be used in"
                 + "tandem with --instrument_code=PRODUCTION")
-    private String productionInstrumentationArray = "";
+    private String productionInstrumentationArrayName = "";
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
@@ -1964,14 +1964,14 @@ public class CommandLineRunner extends
               + "when --instrument_mapping_report is set");
     }
 
-    if (Strings.isNullOrEmpty(flags.productionInstrumentationArray)
+    if (Strings.isNullOrEmpty(flags.productionInstrumentationArrayName)
         && flags.instrumentCodeParsed == InstrumentOption.PRODUCTION) {
       throw new FlagUsageException(
-          "Expected --production_instrumentation_array to be set when "
+          "Expected --prod_instr_array_name to be set when "
               + "--instrument_code is set to Production");
     }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
-    options.setProductionInstrumentationArray(flags.productionInstrumentationArray);
+    options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
 
     return options;
   }

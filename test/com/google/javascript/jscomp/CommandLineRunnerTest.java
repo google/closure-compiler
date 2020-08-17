@@ -2594,7 +2594,7 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            "Expected --production_instrumentation_array to be set when "
+            "Expected --prod_instr_array_name to be set when "
                 + "--instrument_code is set to Production");
   }
 
@@ -2607,7 +2607,7 @@ public final class CommandLineRunnerTest {
 
     args.add("--instrument_code=PRODUCTION");
     args.add("--instrument_mapping_report=" + filePath);
-    args.add("--production_instrumentation_array=ist_arr");
+    args.add("--prod_instr_array_name=ist_arr");
     args.add("--language_out=NO_TRANSPILE");
     args.add("--formatting=PRETTY_PRINT");
 
