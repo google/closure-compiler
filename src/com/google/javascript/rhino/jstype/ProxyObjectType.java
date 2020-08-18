@@ -127,6 +127,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public final boolean isAmbiguousObject() {
+    return referencedObjType != null && referencedObjType.isAmbiguousObject();
+  }
+
+  @Override
   public final boolean matchesNumberContext() {
     return referencedType.matchesNumberContext();
   }

@@ -1046,6 +1046,32 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void structuralTypesNotAmbiguated_forwardRefsNotInUnion() {
+    // edge case where the early referenced to "Params" caused data.name => data.a
+    test(
+        lines(
+            "class Foo {",
+            "  method() {}",
+            "}",
+            "/** @param {!Params=} data */",
+            "function f(data) {",
+            "  return data.name;",
+            "}",
+            "/** @typedef {{name: string}} */",
+            "let Params;"),
+        lines(
+            "class Foo {",
+            "  a() {}",
+            "}",
+            "/** @param {!Params=} data */",
+            "function f(data) {",
+            "  return data.name;",
+            "}",
+            "/** @typedef {{name: string}} */",
+            "let Params;"));
+  }
+
+  @Test
   public void testObjectSpreadDoesNotCrash() {
     testSame("var lit1 = {...a};");
   }
