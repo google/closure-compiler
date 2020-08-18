@@ -49,6 +49,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.DoNotCall;
+import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
@@ -84,6 +85,8 @@ public class Node implements Serializable {
     NON_JSDOC_COMMENT,
     // Contains a JSDocInfo object
     JSDOC_INFO,
+    // Contains a Color object
+    COLOR,
     // Whether incrdecr is pre (false) or post (true)
     INCRDECR,
     // Set to indicate a quoted object lit key
@@ -2576,6 +2579,20 @@ public class Node implements Serializable {
 
   public final Node setJSType(@Nullable JSType jstype) {
     this.jstype = jstype;
+    return this;
+  }
+
+  /**
+   * Returns the compiled inferred type on this node. Not to be confused with {@link
+   * #getDeclaredTypeExpression()} which returns the syntactically specified type.
+   */
+  @Nullable
+  public final Color getColor() {
+    return (Color) getProp(Prop.COLOR);
+  }
+
+  public final Node setColor(@Nullable Color jstype) {
+    putProp(Prop.COLOR, jstype);
     return this;
   }
 
