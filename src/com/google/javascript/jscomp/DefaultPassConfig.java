@@ -788,6 +788,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(ambiguateProperties);
     }
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(removeTypes);
+    }
+
     if (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.add(renameProperties);
     }
@@ -832,10 +836,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Passes after this point can no longer depend on normalized AST assumptions.
     passes.add(markUnnormalized);
-
-    if (options.checkTypes || options.inferTypes) {
-      passes.add(removeTypes);
-    }
 
     if (options.collapseVariableDeclarations) {
       passes.add(exploitAssign);
