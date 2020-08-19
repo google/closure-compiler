@@ -34,7 +34,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * A root pass that container for other passes that should run on with a single call graph.
+ * A root pass that is a container for other passes that should run on with a single call graph.
  *
  * <p>Known passes include:
  *
@@ -300,8 +300,18 @@ class OptimizeCalls implements CompilerPass {
      * Whether the provided node acts as the target function in a new or call expression including
      * .call expressions. For example, returns true for 'x' in 'x.call()'.
      */
+    // TODO(rishipal): Remove this function's usage; use
+    //  `isNormalOrOptionalCallOrNewTarget` instead.
     static boolean isCallOrNewTarget(Node n) {
       return isCallTarget(n) || isNewTarget(n);
+    }
+
+    /**
+     * Whether the provided node acts as the target function in a new or call or optional chain call
+     * expression including .call expressions. For example, returns true for 'x' in 'x?.call()'.
+     */
+    static boolean isNormalOrOptionalCallOrNewTarget(Node n) {
+      return isCallTarget(n) || isNewTarget(n) || isOptionalCallTarget(n);
     }
 
     /**
@@ -313,6 +323,20 @@ class OptimizeCalls implements CompilerPass {
       return ((parent.getFirstChild() == n) && parent.isCall())
           || (parent.isGetProp()
               && parent.getParent().isCall()
+              && parent.isFirstChildOf(parent.getParent())
+              && parent.getLastChild().getString().equals("call"));
+    }
+
+    /**
+     * Whether the provided node acts as the target function in an optional chain call expression
+     * including .call expressions. For example, returns true for 'x' in 'x?.call()'.
+     */
+    static boolean isOptionalCallTarget(Node n) {
+      Node parent = n.getParent();
+      return ((parent.getFirstChild() == n) && parent.isOptChainCall()) // e.g. a?.();
+          || (parent.isOptChainGetProp() // e.g. a?.call();
+              && parent.getParent().isOptChainCall()
+              && parent.isFirstChildOf(parent.getParent())
               && parent.getLastChild().getString().equals("call"));
     }
 
@@ -322,19 +346,24 @@ class OptimizeCalls implements CompilerPass {
       return parent.isNew() && parent.getFirstChild() == n;
     }
 
-    /** Finds the associated call node for a node for which isCallOrNewTarget returns true. */
+    /**
+     * Finds the associated call node for a node for which isNormalOrOptionalCallOrNewTarget returns
+     * true.
+     */
     static Node getCallOrNewNodeForTarget(Node n) {
       Node maybeCall = n.getParent();
       checkState(n.isFirstChildOf(maybeCall), "%s\n\n%s", maybeCall, n);
 
       if (NodeUtil.isCallOrNew(maybeCall)) {
+        // e.g. `n` input param is the `a` in `a()` or `a?.()`
         return maybeCall;
       } else {
+        // e.g. `n` input param is the `a` in `a.b()` or `a?.b()`.
         Node child = maybeCall;
         maybeCall = child.getParent();
 
-        checkState(child.isGetProp(), child);
-        checkState(maybeCall.isCall(), maybeCall);
+        checkState(NodeUtil.isNormalOrOptChainGetProp(child), child);
+        checkState(NodeUtil.isNormalOrOptChainCall(maybeCall), maybeCall);
         checkState(child.isFirstChildOf(maybeCall), "%s\n\n%s", maybeCall, child);
 
         return maybeCall;
@@ -343,8 +372,8 @@ class OptimizeCalls implements CompilerPass {
 
     /**
      * Finds the call argument node matching the first parameter of the called function for a node
-     * for which isCallOrNewTarget returns true. Specifically, corrects for the additional argument
-     * provided to .call expressions.
+     * for which isNormalOrOptionalCallOrNewTarget returns true. Specifically, corrects for the
+     * additional argument provided to .call expressions.
      */
     static Node getFirstArgumentForCallOrNewOrDotCall(Node n) {
       return getArgumentForCallOrNewOrDotCall(n, 0);
@@ -352,13 +381,13 @@ class OptimizeCalls implements CompilerPass {
 
     /**
      * Finds the call argument node matching the parameter at the specified index of the called
-     * function for a node for which isCallOrNewTarget returns true. Specifically, corrects for the
-     * additional argument provided to .call expressions.
+     * function for a node for which isNormalOrOptionalCallOrNewTarget returns true. Specifically,
+     * corrects for the additional argument provided to .call expressions.
      */
     static Node getArgumentForCallOrNewOrDotCall(Node n, int index) {
       int adjustedIndex = index;
       Node parent = n.getParent();
-      if (!(parent.isCall() || parent.isNew())) {
+      if (!(parent.isCall() || parent.isOptChainCall() || parent.isNew())) {
         parent = parent.getParent();
         if (NodeUtil.isFunctionObjectCall(parent)) {
           adjustedIndex++;
@@ -398,7 +427,7 @@ class OptimizeCalls implements CompilerPass {
         case NAME:
           maybeAddNameReference(n);
           break;
-
+        case OPTCHAIN_GETPROP:
         case GETPROP:
           maybeAddPropReference(n.getLastChild().getString(), n);
           break;
@@ -414,6 +443,7 @@ class OptimizeCalls implements CompilerPass {
           break;
 
         case COMPUTED_PROP:
+        case OPTCHAIN_GETELEM:
         case GETELEM:
           // Ignore quoted keys.
           // TODO(johnlenz): support symbols.
@@ -498,11 +528,15 @@ class OptimizeCalls implements CompilerPass {
         return true;
       case GETELEM:
       case GETPROP:
+      case OPTCHAIN_GETPROP:
+      case OPTCHAIN_GETELEM:
         // Calls escape the "this" value. a.foo() aliases "a" as "this" but general
         // property references do not.
         Node grandparent = parent.getParent();
-        if (n == parent.getFirstChild() && grandparent != null && grandparent.isCall()) {
-          return false;
+        if (n == parent.getFirstChild()
+            && grandparent != null
+            && (grandparent.isCall() || grandparent.isOptChainCall())) {
+          return false; // `a.foo()` or `a?.foo()` or `a?.[foo]()`
         }
         return true;
       default:

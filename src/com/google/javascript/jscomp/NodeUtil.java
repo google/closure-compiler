@@ -1887,6 +1887,11 @@ public final class NodeUtil {
     return n.isGetProp() || n.isOptChainGetProp();
   }
 
+  /** Is this a CALL or OPTCHAIN_CALL? */
+  public static boolean isNormalOrOptChainCall(Node n) {
+    return n.isCall() || n.isOptChainCall();
+  }
+
   /** Is this a GETPROP or GETELEM node? */
   public static boolean isNormalGet(Node n) {
     return n.isGetProp() || n.isGetElem();
@@ -2925,9 +2930,13 @@ public final class NodeUtil {
   }
 
   /**
+   * <code>
+   * a.f(...)
+   * a?.f(...)
+   * a['f'](...)
+   * </code>
+   *
    * @return Whether node is a call to methodName.
-   *    a.f(...)
-   *    a['f'](...)
    */
   static boolean isObjectCallMethod(Node callNode, String methodName) {
     if (callNode.isCall() || callNode.isOptChainCall()) {
