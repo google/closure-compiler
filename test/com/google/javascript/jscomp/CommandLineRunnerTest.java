@@ -1523,9 +1523,9 @@ public final class CommandLineRunnerTest {
     });
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.writeModuleOutput(
-        builder,
-        lastCompiler.getModuleGraph().getRootModule());
+    JSModule module = lastCompiler.getModuleGraph().getRootModule();
+    String filename = lastCommandLineRunner.getModuleOutputFileName(module);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, module);
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
   }
 
@@ -1539,9 +1539,9 @@ public final class CommandLineRunnerTest {
     });
 
     StringBuilder builder = new StringBuilder();
-    lastCommandLineRunner.writeModuleOutput(
-        builder,
-        lastCompiler.getModuleGraph().getRootModule());
+    JSModule module = lastCompiler.getModuleGraph().getRootModule();
+    String filename = lastCommandLineRunner.getModuleOutputFileName(module);
+    lastCommandLineRunner.writeModuleOutput(filename, builder, module);
     assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
   }
 

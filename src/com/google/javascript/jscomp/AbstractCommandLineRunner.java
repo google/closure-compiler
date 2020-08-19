@@ -998,7 +998,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * <p>Otherwise, the output file name is {@code <outputPathPrefix>/<chunkName>.js}
    */
   @GwtIncompatible("Unnecessary")
-  private String getModuleOutputFileName(JSModule m) {
+  @VisibleForTesting
+  String getModuleOutputFileName(JSModule m) {
     if (parsedModuleOutputFiles == null) {
       parsedModuleOutputFiles = parseModuleOutputFiles(config.moduleOutputFiles);
     }
@@ -1011,7 +1012,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   @VisibleForTesting
   @GwtIncompatible("Unnecessary")
-  void writeModuleOutput(Appendable out, JSModule m) throws IOException {
+  void writeModuleOutput(String fileName, Appendable out, JSModule m) throws IOException {
     if (parsedModuleWrappers == null) {
       parsedModuleWrappers =
           parseModuleWrappers(
@@ -1019,12 +1020,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
               ImmutableList.copyOf(compiler.getModuleGraph().getAllModules()));
     }
 
-    String fileName = getModuleOutputFileName(m);
     maybeCreateDirsForPath(fileName);
     String baseName = new File(fileName).getName();
-    writeOutput(out, compiler, m,
+    writeOutput(
+        out,
+        compiler,
+        m,
         parsedModuleWrappers.get(m.getName()).replace("%basename%", baseName),
-        "%s", null);
+        "%s",
+        null,
+        fileName);
   }
 
   /**
@@ -1040,7 +1045,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       @Nullable JSModule module,
       String wrapper,
       String codePlaceholder,
-      @Nullable Function<String, String> escaper)
+      @Nullable Function<String, String> escaper,
+      String filename)
       throws IOException {
     if (compiler.getOptions().outputJs == OutputJs.SENTINEL) {
       out.append("// No JS output because the compiler was run in checks-only mode.\n");
@@ -1049,7 +1055,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     checkState(compiler.getOptions().outputJs == OutputJs.NORMAL);
 
     String code = module == null ? compiler.toSource() : compiler.toSource(module);
-    writeOutput(out, compiler, code, wrapper, codePlaceholder, escaper);
+    writeOutput(out, compiler, code, wrapper, codePlaceholder, escaper, filename);
   }
 
   /**
@@ -1064,7 +1070,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       String code,
       String wrapper,
       String codePlaceholder,
-      @Nullable Function<String, String> escaper)
+      @Nullable Function<String, String> escaper,
+      String filename)
       throws IOException {
     int pos = wrapper.indexOf(codePlaceholder);
     if (pos != -1) {
@@ -1473,8 +1480,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
       Appendable jsOutput = createDefaultOutput();
       writeOutput(
-          jsOutput, compiler, (JSModule) null, config.outputWrapper,
-          marker, escaper);
+          jsOutput,
+          compiler,
+          (JSModule) null,
+          config.outputWrapper,
+          marker,
+          escaper,
+          config.jsOutputFile);
       closeAppendable(jsOutput);
     }
   }
@@ -1485,8 +1497,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       throws IOException {
     Appendable jsOutput = new StringBuilder();
     writeOutput(
-        jsOutput, compiler, (JSModule) null, config.outputWrapper,
-        outputMarker, escaper);
+        jsOutput,
+        compiler,
+        (JSModule) null,
+        config.outputWrapper,
+        outputMarker,
+        escaper,
+        config.jsOutputFile);
 
     JsonFileSpec jsonOutput = new JsonFileSpec(jsOutput.toString(),
         Strings.isNullOrEmpty(config.jsOutputFile) ?
@@ -1559,7 +1576,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           if (options.sourceMapOutputPath != null) {
             compiler.resetAndIntitializeSourceMap();
           }
-          writeModuleOutput(writer, m);
+          writeModuleOutput(moduleFilename, writer, m);
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().appendTo(mapFileOut, moduleFilename);
           }
@@ -1583,11 +1600,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   private JsonFileSpec createJsonFileFromModule(JSModule module) throws IOException {
     compiler.resetAndIntitializeSourceMap();
 
+    String filename = getModuleOutputFileName(module);
     StringBuilder output = new StringBuilder();
-    writeModuleOutput(output, module);
+    writeModuleOutput(filename, output, module);
 
-    JsonFileSpec jsonFile = new JsonFileSpec(output.toString(),
-        getModuleOutputFileName(module));
+    JsonFileSpec jsonFile = new JsonFileSpec(output.toString(), filename);
 
     StringBuilder moduleSourceMap = new StringBuilder();
 
