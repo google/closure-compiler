@@ -44,6 +44,7 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+import java.math.BigInteger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -146,6 +147,26 @@ public class NodeTest {
     node1.putBooleanProp(Node.SLASH_V, true);
     Node node2 = Node.newString("\u000B");
     assertThat(node1.isEquivalentTo(node2)).isFalse();
+  }
+
+  @Test
+  public void testIsEquivalentToNumber() {
+    assertThat(Node.newNumber(1).isEquivalentTo(Node.newNumber(1))).isTrue();
+    assertThat(Node.newNumber(1).isEquivalentTo(Node.newNumber(2))).isFalse();
+  }
+
+  @Test
+  public void testIsEquivalentToBigInt() {
+    assertThat(Node.newBigInt(BigInteger.ONE).isEquivalentTo(Node.newBigInt(BigInteger.ONE)))
+        .isTrue();
+    assertThat(Node.newBigInt(BigInteger.ONE).isEquivalentTo(Node.newBigInt(BigInteger.TEN)))
+        .isFalse();
+  }
+
+  @Test
+  public void testIsEquivalentToString() {
+    assertThat(Node.newString("1").isEquivalentTo(Node.newString("1"))).isTrue();
+    assertThat(Node.newString("1").isEquivalentTo(Node.newString("2"))).isFalse();
   }
 
   @Test
