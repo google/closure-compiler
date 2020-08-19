@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.refactoring.examples;
+package com.google.javascript.refactoring.testing;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
@@ -30,7 +30,8 @@ import com.google.javascript.refactoring.Scanner;
 import com.google.javascript.refactoring.SuggestedFix;
 import java.util.List;
 
-abstract class RefactoringTest {
+/** RefactoringTestCase */
+public abstract class RefactoringTestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   protected abstract Scanner getScanner();

@@ -16,15 +16,14 @@
 package com.google.javascript.refactoring.examples;
 
 import com.google.javascript.refactoring.Scanner;
+import com.google.javascript.refactoring.testing.RefactoringTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link GoogBindToArrow}.
- */
+/** Test case for {@link GoogBindToArrow}. */
 @RunWith(JUnit4.class)
-public class GoogBindToArrowTest extends RefactoringTest {
+public class GoogBindToArrowTest extends RefactoringTestCase {
   @Override
   protected String getExterns() {
     return "";
