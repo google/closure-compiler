@@ -66,51 +66,43 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     return peepholePass;
   }
 
-  private void foldSame(String js) {
-    testSame(js);
-  }
-
-  private void fold(String js, String expected) {
-    test(js, expected);
-  }
-
   @Test
   public void testFoldRegExpConstructor() {
     enableNormalize();
 
     // Cannot fold all the way to a literal because there are too few arguments.
-    fold("x = new RegExp",                    "x = RegExp()");
+    test("x = new RegExp", "x = RegExp()");
     // Empty regexp should not fold to // since that is a line comment
-    fold("x = new RegExp(\"\")", "x = RegExp(\"\")");
-    fold("x = new RegExp(\"\", \"i\")",       "x = RegExp(\"\",\"i\")");
+    test("x = new RegExp(\"\")", "x = RegExp(\"\")");
+    test("x = new RegExp(\"\", \"i\")", "x = RegExp(\"\",\"i\")");
 
     // Regexp starting with * should not fold to /* since that is the start of a comment
-    fold("x = new RegExp('*')", "x = RegExp('*')");
-    fold("x = new RegExp('*', 'i')", "x = RegExp('*', 'i')");
+    test("x = new RegExp('*')", "x = RegExp('*')");
+    test("x = new RegExp('*', 'i')", "x = RegExp('*', 'i')");
 
     // Bogus flags should not fold
     testSame("x = RegExp(\"foobar\", \"bogus\")",
          PeepholeSubstituteAlternateSyntax.INVALID_REGULAR_EXPRESSION_FLAGS);
     // Don't fold if the argument is not a string. See issue 1260.
-    foldSame("x = new RegExp(y)");
+    testSame("x = new RegExp(y)");
     // Can Fold
-    fold("x = new RegExp(\"foobar\")",        "x = /foobar/");
-    fold("x = RegExp(\"foobar\")",            "x = /foobar/");
-    fold("x = new RegExp(\"foobar\", \"i\")", "x = /foobar/i");
+    test("x = new RegExp(\"foobar\")", "x = /foobar/");
+    test("x = RegExp(\"foobar\")", "x = /foobar/");
+    test("x = new RegExp(\"foobar\", \"i\")", "x = /foobar/i");
     // Make sure that escaping works
-    fold("x = new RegExp(\"\\\\.\", \"i\")",  "x = /\\./i");
-    fold("x = new RegExp(\"/\", \"\")",       "x = /\\//");
-    fold("x = new RegExp(\"[/]\", \"\")",     "x = /[/]/");
-    fold("x = new RegExp(\"///\", \"\")",     "x = /\\/\\/\\//");
-    fold("x = new RegExp(\"\\\\\\/\", \"\")", "x = /\\//");
-    fold("x = new RegExp(\"\\n\")",           "x = /\\n/");
-    fold("x = new RegExp('\\\\\\r')",         "x = /\\r/");
+    test("x = new RegExp(\"\\\\.\", \"i\")", "x = /\\./i");
+    test("x = new RegExp(\"/\", \"\")", "x = /\\//");
+    test("x = new RegExp(\"[/]\", \"\")", "x = /[/]/");
+    test("x = new RegExp(\"///\", \"\")", "x = /\\/\\/\\//");
+    test("x = new RegExp(\"\\\\\\/\", \"\")", "x = /\\//");
+    test("x = new RegExp(\"\\n\")", "x = /\\n/");
+    test("x = new RegExp('\\\\\\r')", "x = /\\r/");
 
     // Shouldn't fold RegExp unnormalized because
     // we can't be sure that RegExp hasn't been redefined
     disableNormalize();
 
-    foldSame("x = new RegExp(\"foobar\")");
+    testSame("x = new RegExp(\"foobar\")");
   }
 
   @Test
@@ -119,24 +111,21 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
     // Don't fold if the flags contain 'g'
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
-    fold("x = new RegExp(\"foobar\", \"g\")",
-         "x = RegExp(\"foobar\",\"g\")");
-    fold("x = new RegExp(\"foobar\", \"ig\")",
-         "x = RegExp(\"foobar\",\"ig\")");
+    test("x = new RegExp(\"foobar\", \"g\")", "x = RegExp(\"foobar\",\"g\")");
+    test("x = new RegExp(\"foobar\", \"ig\")", "x = RegExp(\"foobar\",\"ig\")");
     // ... unless in ECMAScript 5 mode per section 7.8.5 of ECMAScript 5.
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-    fold("x = new RegExp(\"foobar\", \"ig\")",
-         "x = /foobar/ig");
+    test("x = new RegExp(\"foobar\", \"ig\")", "x = /foobar/ig");
     // Don't fold things that crash older versions of Safari and that don't work
     // as regex literals on other old versions of Safari
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
-    fold("x = new RegExp(\"\\u2028\")", "x = RegExp(\"\\u2028\")");
-    fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
+    test("x = new RegExp(\"\\u2028\")", "x = RegExp(\"\\u2028\")");
+    test("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
     // Sunset Safari exclusions for ECMAScript 5 and later.
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-    fold("x = new RegExp(\"\\u2028\\u2029\")", "x = /\\u2028\\u2029/");
-    fold("x = new RegExp(\"\\\\u2028\")", "x = /\\u2028/");
-    fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
+    test("x = new RegExp(\"\\u2028\\u2029\")", "x = /\\u2028\\u2029/");
+    test("x = new RegExp(\"\\\\u2028\")", "x = /\\u2028/");
+    test("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
   }
 
   @Test
@@ -162,21 +151,20 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     enableNormalize();
 
     // Can fold when normalized
-    fold("x = new Object", "x = ({})");
-    fold("x = new Object()", "x = ({})");
-    fold("x = Object()", "x = ({})");
+    test("x = new Object", "x = ({})");
+    test("x = new Object()", "x = ({})");
+    test("x = Object()", "x = ({})");
 
     disableNormalize();
     // Cannot fold above when not normalized
-    foldSame("x = new Object");
-    foldSame("x = new Object()");
-    foldSame("x = Object()");
+    testSame("x = new Object");
+    testSame("x = new Object()");
+    testSame("x = Object()");
 
     enableNormalize();
 
     // Cannot fold, the constructor being used is actually a local function
-    foldSame("x = " +
-         "(function f(){function Object(){this.x=4};return new Object();})();");
+    testSame("x = " + "(function f(){function Object(){this.x=4};return new Object();})();");
   }
 
   @Test
@@ -184,24 +172,25 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     enableNormalize();
 
     // Can fold when normalized
-    fold("x = new window.Object", "x = ({})");
-    fold("x = new window.Object()", "x = ({})");
+    test("x = new window.Object", "x = ({})");
+    test("x = new window.Object()", "x = ({})");
 
     // Mustn't fold optional chains
-    fold("x = window.Object()", "x = ({})");
-    fold("x = window.Object?.()", "x = Object?.()");
+    test("x = window.Object()", "x = ({})");
+    test("x = window.Object?.()", "x = Object?.()");
 
     disableNormalize();
     // Cannot fold above when not normalized
-    foldSame("x = new window.Object");
-    foldSame("x = new window.Object()");
-    foldSame("x = window.Object()");
-    foldSame("x = window?.Object()");
+    testSame("x = new window.Object");
+    testSame("x = new window.Object()");
+    testSame("x = window.Object()");
+    testSame("x = window?.Object()");
 
     enableNormalize();
 
     // Can fold, the window namespace ensures it's not a conflict with the local Object.
-    fold("x = (function f(){function Object(){this.x=4};return new window.Object;})();",
+    test(
+        "x = (function f(){function Object(){this.x=4};return new window.Object;})();",
         "x = (function f(){function Object(){this.x=4};return {};})();");
   }
 
@@ -210,92 +199,91 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     enableNormalize();
 
     // No arguments - can fold when normalized
-    fold("x = new Array", "x = []");
-    fold("x = new Array()", "x = []");
-    fold("x = Array()", "x = []");
-    foldSame("x = Array?.()"); // Mustn't fold optional chains
+    test("x = new Array", "x = []");
+    test("x = new Array()", "x = []");
+    test("x = Array()", "x = []");
+    testSame("x = Array?.()"); // Mustn't fold optional chains
 
     // One argument - can be fold when normalized
-    fold("x = new Array(0)", "x = []");
-    fold("x = Array(0)", "x = []");
-    fold("x = new Array(\"a\")", "x = [\"a\"]");
-    fold("x = Array(\"a\")", "x = [\"a\"]");
+    test("x = new Array(0)", "x = []");
+    test("x = Array(0)", "x = []");
+    test("x = new Array(\"a\")", "x = [\"a\"]");
+    test("x = Array(\"a\")", "x = [\"a\"]");
 
     // One argument - cannot be fold when normalized
-    fold("x = new Array(7)", "x = Array(7)");
-    foldSame("x = Array(7)");
-    fold("x = new Array(y)", "x = Array(y)");
-    foldSame("x = Array(y)");
-    fold("x = new Array(foo())", "x = Array(foo())");
-    foldSame("x = Array(foo())");
+    test("x = new Array(7)", "x = Array(7)");
+    testSame("x = Array(7)");
+    test("x = new Array(y)", "x = Array(y)");
+    testSame("x = Array(y)");
+    test("x = new Array(foo())", "x = Array(foo())");
+    testSame("x = Array(foo())");
 
     // More than one argument - can be fold when normalized
-    fold("x = new Array(1, 2, 3, 4)", "x = [1, 2, 3, 4]");
-    fold("x = Array(1, 2, 3, 4)", "x = [1, 2, 3, 4]");
-    fold("x = new Array('a', 1, 2, 'bc', 3, {}, 'abc')",
-         "x = ['a', 1, 2, 'bc', 3, {}, 'abc']");
-    fold("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')",
-         "x = ['a', 1, 2, 'bc', 3, {}, 'abc']");
-    fold("x = new Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
-    fold("x = Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
-    fold("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
-         "x = [{}, [\"abc\", {}, [[]]]]");
-    fold("x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
-         "x = [{}, [\"abc\", {}, [[]]]]");
+    test("x = new Array(1, 2, 3, 4)", "x = [1, 2, 3, 4]");
+    test("x = Array(1, 2, 3, 4)", "x = [1, 2, 3, 4]");
+    test("x = new Array('a', 1, 2, 'bc', 3, {}, 'abc')", "x = ['a', 1, 2, 'bc', 3, {}, 'abc']");
+    test("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')", "x = ['a', 1, 2, 'bc', 3, {}, 'abc']");
+    test("x = new Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
+    test("x = Array(Array(1, '2', 3, '4'))", "x = [[1, '2', 3, '4']]");
+    test(
+        "x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
+        "x = [{}, [\"abc\", {}, [[]]]]");
+    test(
+        "x = new Array(Object(), Array(\"abc\", Object(), Array(Array())))",
+        "x = [{}, [\"abc\", {}, [[]]]]");
 
     disableNormalize();
     // Cannot fold above when not normalized
-    foldSame("x = new Array");
-    foldSame("x = new Array()");
-    foldSame("x = Array()");
+    testSame("x = new Array");
+    testSame("x = new Array()");
+    testSame("x = Array()");
 
-    foldSame("x = new Array(0)");
-    foldSame("x = Array(0)");
-    foldSame("x = new Array(\"a\")");
-    foldSame("x = Array(\"a\")");
-    foldSame("x = new Array(7)");
-    foldSame("x = Array(7)");
-    foldSame("x = new Array(foo())");
-    foldSame("x = Array(foo())");
+    testSame("x = new Array(0)");
+    testSame("x = Array(0)");
+    testSame("x = new Array(\"a\")");
+    testSame("x = Array(\"a\")");
+    testSame("x = new Array(7)");
+    testSame("x = Array(7)");
+    testSame("x = new Array(foo())");
+    testSame("x = Array(foo())");
 
-    foldSame("x = new Array(1, 2, 3, 4)");
-    foldSame("x = Array(1, 2, 3, 4)");
-    foldSame("x = new Array('a', 1, 2, 'bc', 3, {}, 'abc')");
-    foldSame("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')");
-    foldSame("x = new Array(Array(1, '2', 3, '4'))");
-    foldSame("x = Array(Array(1, '2', 3, '4'))");
-    foldSame("x = new Array(" +
-        "Object(), Array(\"abc\", Object(), Array(Array())))");
-    foldSame("x = new Array(" +
-        "Object(), Array(\"abc\", Object(), Array(Array())))");
+    testSame("x = new Array(1, 2, 3, 4)");
+    testSame("x = Array(1, 2, 3, 4)");
+    testSame("x = new Array('a', 1, 2, 'bc', 3, {}, 'abc')");
+    testSame("x = Array('a', 1, 2, 'bc', 3, {}, 'abc')");
+    testSame("x = new Array(Array(1, '2', 3, '4'))");
+    testSame("x = Array(Array(1, '2', 3, '4'))");
+    testSame("x = new Array(" + "Object(), Array(\"abc\", Object(), Array(Array())))");
+    testSame("x = new Array(" + "Object(), Array(\"abc\", Object(), Array(Array())))");
   }
 
   @Test
   public void testRemoveWindowRefs() {
     enableNormalize();
-    fold("x = window.Object", "x = Object");
-    fold("x = window.Object.keys", "x = Object.keys");
-    fold("if (window.Object) {}", "if (Object) {}");
-    fold("x = window.Object", "x = Object");
-    fold("x = window.Array", "x = Array");
-    fold("x = window.Error", "x = Error");
-    fold("x = window.RegExp", "x = RegExp");
-    fold("x = window.Math", "x = Math");
+    test("x = window.Object", "x = Object");
+    test("x = window.Object.keys", "x = Object.keys");
+    test("if (window.Object) {}", "if (Object) {}");
+    test("x = window.Object", "x = Object");
+    test("x = window.Array", "x = Array");
+    test("x = window.Error", "x = Error");
+    test("x = window.RegExp", "x = RegExp");
+    test("x = window.Math", "x = Math");
 
     // Not currently handled by the pass but should be folded in the future.
-    foldSame("x = window.String");
+    testSame("x = window.String");
 
     // Don't fold properties on the window.
-    foldSame("x = window.foo");
+    testSame("x = window.foo");
 
     disableNormalize();
     // Cannot fold when not normalized
-    foldSame("x = window.Object");
-    foldSame("x = window.Object.keys");
+    testSame("x = window.Object");
+    testSame("x = window.Object.keys");
 
     enableNormalize();
-    foldSame("var x = "
-        + "(function f(){var window = {Object: function() {}};return new window.Object;})();");
+    testSame(
+        "var x = "
+            + "(function f(){var window = {Object: function() {}};return new window.Object;})();");
   }
 
   /**
@@ -306,13 +294,13 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   public void testRemoveWindowRef_childOfOptionalChain() {
     enableNormalize();
     // ref on window can be folded preserving the optional access.
-    fold("x = window.Object?.keys", "x = Object?.keys");
-    fold("x = window.Object?.(keys)", "x = Object?.(keys)");
+    test("x = window.Object?.keys", "x = Object?.keys");
+    test("x = window.Object?.(keys)", "x = Object?.(keys)");
 
     // Show that the above works only on `BUILTIN_EXTERNS` such as Object but not on regular prop
     // accesses
-    foldSame("x = window.prop?.keys");
-    foldSame("x = window.prop?.(keys)");
+    testSame("x = window.prop?.keys");
+    testSame("x = window.prop?.(keys)");
   }
 
   /**
@@ -324,123 +312,118 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   public void testDontRemoveWindowRefs_optionalChaining() {
     enableNormalize();
     // Don't fold the optional chain check on window
-    foldSame("x = window?.Object");
-    foldSame("if (window?.Object) {}");
-    foldSame("x = window?.Object");
-    foldSame("x = window?.Array");
-    foldSame("x = window?.Error");
-    foldSame("x = window?.RegExp");
-    foldSame("x = window?.Math");
-    foldSame("x = window?.String");
+    testSame("x = window?.Object");
+    testSame("if (window?.Object) {}");
+    testSame("x = window?.Object");
+    testSame("x = window?.Array");
+    testSame("x = window?.Error");
+    testSame("x = window?.RegExp");
+    testSame("x = window?.Math");
+    testSame("x = window?.String");
 
     // Don't fold properties on the window anyway (non-optional or optional).
-    foldSame("x = window.foo");
-    foldSame("x = window?.foo");
+    testSame("x = window.foo");
+    testSame("x = window?.foo");
 
     disableNormalize();
     // Cannot fold when not normalized
-    foldSame("x = window?.Object");
-    foldSame("x = window.Object?.keys");
+    testSame("x = window?.Object");
+    testSame("x = window.Object?.keys");
   }
 
   @Test
   public void testFoldStandardConstructors() {
-    foldSame("new Foo('a')");
-    foldSame("var x = new goog.Foo(1)");
-    foldSame("var x = new String(1)");
-    foldSame("var x = new Number(1)");
-    foldSame("var x = new Boolean(1)");
+    testSame("new Foo('a')");
+    testSame("var x = new goog.Foo(1)");
+    testSame("var x = new String(1)");
+    testSame("var x = new Number(1)");
+    testSame("var x = new Boolean(1)");
 
     enableNormalize();
 
-    fold("var x = new Object('a')", "var x = Object('a')");
-    fold("var x = new RegExp('')", "var x = RegExp('')");
-    fold("var x = new Error('20')", "var x = Error(\"20\")");
-    fold("var x = new Array(20)", "var x = Array(20)");
+    test("var x = new Object('a')", "var x = Object('a')");
+    test("var x = new RegExp('')", "var x = RegExp('')");
+    test("var x = new Error('20')", "var x = Error(\"20\")");
+    test("var x = new Array(20)", "var x = Array(20)");
   }
 
   @Test
   public void testFoldTrueFalse() {
-    fold("x = true", "x = !0");
-    fold("x = false", "x = !1");
+    test("x = true", "x = !0");
+    test("x = false", "x = !1");
   }
 
   @Test
   public void testFoldTrueFalseComparison() {
-    fold("x == true", "x == 1");
-    fold("x == false", "x == 0");
-    fold("x != true", "x != 1");
-    fold("x < true", "x < 1");
-    fold("x <= true", "x <= 1");
-    fold("x > true", "x > 1");
-    fold("x >= true", "x >= 1");
+    test("x == true", "x == 1");
+    test("x == false", "x == 0");
+    test("x != true", "x != 1");
+    test("x < true", "x < 1");
+    test("x <= true", "x <= 1");
+    test("x > true", "x > 1");
+    test("x >= true", "x >= 1");
   }
 
   @Test
   public void testFoldSubtractionAssignment() {
-    fold("x -= 1", "--x");
-    fold("x -= -1", "++x");
+    test("x -= 1", "--x");
+    test("x -= -1", "++x");
   }
 
   @Test
   public void testFoldReturnResult() {
-    foldSame("function f(){return !1;}");
-    foldSame("function f(){return null;}");
-    fold("function f(){return void 0;}",
-         "function f(){return}");
-    foldSame("function f(){return void foo();}");
-    fold("function f(){return undefined;}",
-         "function f(){return}");
-    fold("function f(){if(a()){return undefined;}}",
-         "function f(){if(a()){return}}");
+    testSame("function f(){return !1;}");
+    testSame("function f(){return null;}");
+    test("function f(){return void 0;}", "function f(){return}");
+    testSame("function f(){return void foo();}");
+    test("function f(){return undefined;}", "function f(){return}");
+    test("function f(){if(a()){return undefined;}}", "function f(){if(a()){return}}");
   }
 
   @Test
   public void testUndefined() {
-    foldSame("var x = undefined");
-    foldSame("function f(f) {var undefined=2;var x = undefined;}");
+    testSame("var x = undefined");
+    testSame("function f(f) {var undefined=2;var x = undefined;}");
     enableNormalize();
-    fold("var x = undefined", "var x=void 0");
-    foldSame(
-        "var undefined = 1;" +
-        "function f() {var undefined=2;var x = undefined;}");
-    foldSame("function f(undefined) {}");
-    foldSame("try {} catch(undefined) {}");
-    foldSame("for (undefined in {}) {}");
-    foldSame("undefined++;");
+    test("var x = undefined", "var x=void 0");
+    testSame("var undefined = 1;" + "function f() {var undefined=2;var x = undefined;}");
+    testSame("function f(undefined) {}");
+    testSame("try {} catch(undefined) {}");
+    testSame("for (undefined in {}) {}");
+    testSame("undefined++;");
     disableNormalize();
-    foldSame("undefined += undefined;");
+    testSame("undefined += undefined;");
     enableNormalize();
-    fold("undefined += undefined;", "undefined = void 0 + void 0;");
+    test("undefined += undefined;", "undefined = void 0 + void 0;");
   }
 
   @Test
   public void testSplitCommaExpressions() {
     late = false;
     // Don't try to split in expressions.
-    foldSame("while (foo(), !0) boo()");
-    foldSame("var a = (foo(), !0);");
-    foldSame("a = (foo(), !0);");
+    testSame("while (foo(), !0) boo()");
+    testSame("var a = (foo(), !0);");
+    testSame("a = (foo(), !0);");
 
     // Don't try to split COMMA under LABELs.
-    foldSame("a:a(),b()");
+    testSame("a:a(),b()");
 
-    fold("(x=2), foo()", "x=2; foo()");
-    fold("foo(), boo();", "foo(); boo()");
-    fold("(a(), b()), (c(), d());", "a(), b(); c(), d()");
-    fold("a(); b(); (c(), d());", "a(); b(); c(); d();");
-    fold("foo(), true", "foo();true");
-    foldSame("foo();true");
-    fold("function x(){foo(), !0}", "function x(){foo(); !0}");
-    foldSame("function x(){foo(); !0}");
+    test("(x=2), foo()", "x=2; foo()");
+    test("foo(), boo();", "foo(); boo()");
+    test("(a(), b()), (c(), d());", "a(), b(); c(), d()");
+    test("a(); b(); (c(), d());", "a(); b(); c(); d();");
+    test("foo(), true", "foo();true");
+    testSame("foo();true");
+    test("function x(){foo(), !0}", "function x(){foo(); !0}");
+    testSame("function x(){foo(); !0}");
   }
 
   @Test
   public void testComma1() {
     late = false;
-    fold("1, 2", "1; 2");
+    test("1, 2", "1; 2");
     late = true;
-    foldSame("1, 2");
+    testSame("1, 2");
   }
 
   @Test
@@ -450,8 +433,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     test("1, a?.()", "1; a?.()");
 
     late = true;
-    foldSame("1, a()");
-    foldSame("1, a?.()");
+    testSame("1, a()");
+    testSame("1, a?.()");
   }
 
   @Test
@@ -461,8 +444,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     test("1, a?.(), b?.()", "1, a?.(); b?.()");
 
     late = true;
-    foldSame("1, a(), b()");
-    foldSame("1, a?.(), b?.()");
+    testSame("1, a(), b()");
+    testSame("1, a?.(), b?.()");
   }
 
   @Test
@@ -472,8 +455,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     test("a?.(), b?.()", "a?.();b?.()");
 
     late = true;
-    foldSame("a(), b()");
-    foldSame("a?.(), b?.()");
+    testSame("a(), b()");
+    testSame("a?.(), b?.()");
   }
 
   @Test
@@ -483,8 +466,8 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     test("a?.(), b?.(), 1", "a?.(), b?.(); 1");
 
     late = true;
-    foldSame("a(), b(), 1");
-    foldSame("a?.(), b?.(), 1");
+    testSame("a(), b(), 1");
+    testSame("a?.(), b?.(), 1");
   }
 
   @Test
