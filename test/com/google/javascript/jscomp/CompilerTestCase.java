@@ -125,9 +125,7 @@ public abstract class CompilerTestCase {
    */
   private boolean typeCheckEnabled;
 
-  /**
-   * If true performs the test using multistage compilation.
-   */
+  /** If true performs the test using multistage compilation. */
   private boolean multistageCompilation;
 
   /** Whether to test the compiler pass before the type check. */
