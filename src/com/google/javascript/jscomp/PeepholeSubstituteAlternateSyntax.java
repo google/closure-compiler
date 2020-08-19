@@ -151,7 +151,9 @@ class PeepholeSubstituteAlternateSyntax
         newNameNode.useSourceInfoFrom(stringNode);
         parentNode.replaceChild(node, newNameNode);
 
-        if (parentNode.isCall()) {
+        if (parentNode.isCall() || parentNode.isOptChainCall()) {
+          // e.g. when converting `window.Array?.()` to `Array?.()`, ensure that the
+          // OPTCHAIN_CALL gets marked as `FREE_CALL`
           parentNode.putBooleanProp(Node.FREE_CALL, true);
         }
         reportChangeToEnclosingScope(parentNode);

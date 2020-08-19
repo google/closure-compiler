@@ -186,13 +186,17 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     // Can fold when normalized
     fold("x = new window.Object", "x = ({})");
     fold("x = new window.Object()", "x = ({})");
+
+    // Mustn't fold optional chains
     fold("x = window.Object()", "x = ({})");
+    fold("x = window.Object?.()", "x = Object?.()");
 
     disableNormalize();
     // Cannot fold above when not normalized
     foldSame("x = new window.Object");
     foldSame("x = new window.Object()");
     foldSame("x = window.Object()");
+    foldSame("x = window?.Object()");
 
     enableNormalize();
 
@@ -209,6 +213,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     fold("x = new Array", "x = []");
     fold("x = new Array()", "x = []");
     fold("x = Array()", "x = []");
+    foldSame("x = Array?.()"); // Mustn't fold optional chains
 
     // One argument - can be fold when normalized
     fold("x = new Array(0)", "x = []");
@@ -284,12 +289,58 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     foldSame("x = window.foo");
 
     disableNormalize();
+    // Cannot fold when not normalized
     foldSame("x = window.Object");
     foldSame("x = window.Object.keys");
 
     enableNormalize();
     foldSame("var x = "
         + "(function f(){var window = {Object: function() {}};return new window.Object;})();");
+  }
+
+  /**
+   * Tests that it's safe to fold access on window that is non-optional but is under an optional
+   * chain in the AST.
+   */
+  @Test
+  public void testRemoveWindowRef_childOfOptionalChain() {
+    enableNormalize();
+    // ref on window can be folded preserving the optional access.
+    fold("x = window.Object?.keys", "x = Object?.keys");
+    fold("x = window.Object?.(keys)", "x = Object?.(keys)");
+
+    // Show that the above works only on `BUILTIN_EXTERNS` such as Object but not on regular prop
+    // accesses
+    foldSame("x = window.prop?.keys");
+    foldSame("x = window.prop?.(keys)");
+  }
+
+  /**
+   * There isn't an obvious reason to write `window?.Boolean()` or `window?.Error()`, but if one
+   * did, presumably there's some reason to believe that `window` won't be there. We don't optimize
+   * away these checks.
+   */
+  @Test
+  public void testDontRemoveWindowRefs_optionalChaining() {
+    enableNormalize();
+    // Don't fold the optional chain check on window
+    foldSame("x = window?.Object");
+    foldSame("if (window?.Object) {}");
+    foldSame("x = window?.Object");
+    foldSame("x = window?.Array");
+    foldSame("x = window?.Error");
+    foldSame("x = window?.RegExp");
+    foldSame("x = window?.Math");
+    foldSame("x = window?.String");
+
+    // Don't fold properties on the window anyway (non-optional or optional).
+    foldSame("x = window.foo");
+    foldSame("x = window?.foo");
+
+    disableNormalize();
+    // Cannot fold when not normalized
+    foldSame("x = window?.Object");
+    foldSame("x = window.Object?.keys");
   }
 
   @Test
@@ -396,32 +447,44 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   public void testComma2() {
     late = false;
     test("1, a()", "1; a()");
+    test("1, a?.()", "1; a?.()");
+
     late = true;
     foldSame("1, a()");
+    foldSame("1, a?.()");
   }
 
   @Test
   public void testComma3() {
     late = false;
     test("1, a(), b()", "1, a(); b()");
+    test("1, a?.(), b?.()", "1, a?.(); b?.()");
+
     late = true;
     foldSame("1, a(), b()");
+    foldSame("1, a?.(), b?.()");
   }
 
   @Test
   public void testComma4() {
     late = false;
     test("a(), b()", "a();b()");
+    test("a?.(), b?.()", "a?.();b?.()");
+
     late = true;
     foldSame("a(), b()");
+    foldSame("a?.(), b?.()");
   }
 
   @Test
   public void testComma5() {
     late = false;
     test("a(), b(), 1", "a(), b(); 1");
+    test("a?.(), b?.(), 1", "a?.(), b?.(); 1");
+
     late = true;
     foldSame("a(), b(), 1");
+    foldSame("a?.(), b?.(), 1");
   }
 
   @Test
@@ -553,7 +616,13 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   @Test
   public void testSimpleFunctionCall1() {
     test("var a = String(23)", "var a = '' + 23");
+    // Don't fold the existence check to preserve behavior
+    testSame("var a = String?.(23)");
+
     test("var a = String('hello')", "var a = '' + 'hello'");
+    // Don't fold the existence check to preserve behavior
+    testSame("var a = String?.('hello')");
+
     testSame("var a = String('hello', bar());");
     testSame("var a = String({valueOf: function() { return 1; }});");
   }
@@ -561,10 +630,25 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   @Test
   public void testSimpleFunctionCall2() {
     test("var a = Boolean(true)", "var a = !0");
+    // Don't fold the existence check to preserve behavior
+    test("var a = Boolean?.(true)", "var a = Boolean?.(!0)");
+
     test("var a = Boolean(false)", "var a = !1");
+    // Don't fold the existence check to preserve behavior
+    test("var a = Boolean?.(false)", "var a = Boolean?.(!1)");
+
     test("var a = Boolean(1)", "var a = !!1");
+    // Don't fold the existence check to preserve behavior
+    testSame("var a = Boolean?.(1)");
+
     test("var a = Boolean(x)", "var a = !!x");
+    // Don't fold the existence check to preserve behavior
+    testSame("var a = Boolean?.(x)");
+
     test("var a = Boolean({})", "var a = !!{}");
+    // Don't fold the existence check to preserve behavior
+    testSame("var a = Boolean?.({})");
+
     testSame("var a = Boolean()");
     testSame("var a = Boolean(!0, !1);");
   }
@@ -585,7 +669,6 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   @Test
   public void nullishCoalesce() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     test("a ?? (b ?? c);", "(a ?? b) ?? c");
   }
 
