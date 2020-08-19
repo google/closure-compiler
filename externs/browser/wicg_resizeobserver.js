@@ -1,6 +1,7 @@
 /**
  * @fileoverview The current draft spec of ResizeObserver.
  * @see https://wicg.github.io/ResizeObserver/
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
  * @externs
  */
 
@@ -10,34 +11,52 @@
 var ResizeObserverCallback;
 
 /**
- * @constructor
- * @param {!ResizeObserverCallback} callback
+ * @typedef {{box: string}}
  */
-function ResizeObserver(callback) {}
-
-/** @type {function(!Element)} */
-ResizeObserver.prototype.observe;
-
-/** @type {function(!Element)} */
-ResizeObserver.prototype.unobserve;
-
-/** @type {function()} */
-ResizeObserver.prototype.disconnect;
+var ResizeObserverOptions;
 
 /**
  * @constructor
- * @param {!Element} target
+ * @param {!ResizeObserverCallback} callback
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver/ResizeObserver
  */
-function ResizeObserverEntry(target) {}
+function ResizeObserver(callback) {}
 
-/** @const {!Element} */
+/**
+ * @param {!Element} target
+ * @param {!ResizeObserverOptions=} opt_options
+ * @return {void}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver/observe
+ */
+ResizeObserver.prototype.observe = function(target, opt_options) {};
+
+/**
+ * @param {!Element} target
+ * @return {void}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver/unobserve
+ */
+ResizeObserver.prototype.unobserve = function(target) {};
+
+/**
+ * @return {void}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver/disconnect
+ */
+ResizeObserver.prototype.disconnect = function() {};
+
+/**
+ * @interface
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry
+ */
+function ResizeObserverEntry() {}
+
+/**
+ * @const {!Element}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/target
+ */
 ResizeObserverEntry.prototype.target;
 
-/** @const {{
- *   x: number,
- *   y: number,
- *   width: number,
- *   height: number,
- * }}
+/**
+ * @const {!DOMRectReadOnly}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/contentRect
  */
 ResizeObserverEntry.prototype.contentRect;
