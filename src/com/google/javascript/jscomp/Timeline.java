@@ -63,40 +63,13 @@ final class Timeline<T> {
     }
   }
 
-  private static <V> Event<V> addEvent(V value, Map<V, Event<V>> eventsByKey, Event<?> headEvent) {
-    Event<V> event = eventsByKey.get(value);
-
-    // If the event already exists and is already at the front, do nothing.
-    if (headEvent == event) {
-      return event;
-    }
-
-    // If the event already exists somewhere else in the history then...
-    if (event != null) {
-      // cut it out of the linked list...
-      event.previousEvent.nextEvent = event.nextEvent;
-      event.nextEvent.previousEvent = event.previousEvent;
-      event.nextEvent = null;
-    } else {
-      // Otherwise create and track an event for the given value.
-      event = new Event<V>(value);
-      eventsByKey.put(value, event);
-    }
-
-    // Regardless, stick the event at the front.
-    event.previousEvent = headEvent;
-    headEvent.nextEvent = event;
-    headEvent = event;
-
-    return event;
-  }
-
   private final Map<Time, Event<Time>> eventsByTime = new HashMap<>();
   private final Map<T, Event<T>> eventsByValue = new HashMap<>();
+  // In practice headEvent is Event<Time> or Event<T>
   private Event<?> headEvent = new Event<>(new Time("-beginning-"));
 
   void add(T value) {
-    headEvent = addEvent(value, eventsByValue, headEvent);
+    addEvent(value, eventsByValue);
   }
 
   void remove(T value) {
@@ -120,7 +93,7 @@ final class Timeline<T> {
   }
 
   void mark(String timeName) {
-    headEvent = addEvent(new Time(timeName), eventsByTime, headEvent);
+    addEvent(new Time(timeName), eventsByTime);
   }
 
   @SuppressWarnings("unchecked")
@@ -140,5 +113,32 @@ final class Timeline<T> {
     }
 
     return values;
+  }
+
+  // In practice V is either T or Time.
+  private <V> void addEvent(V value, Map<V, Event<V>> eventsByKey) {
+    Event<V> event = eventsByKey.get(value);
+
+    // If the event already exists and is already at the front, do nothing.
+    if (this.headEvent == event) {
+      return;
+    }
+
+    // If the event already exists somewhere else in the history then...
+    if (event != null) {
+      // cut it out of the linked list...
+      event.previousEvent.nextEvent = event.nextEvent;
+      event.nextEvent.previousEvent = event.previousEvent;
+      event.nextEvent = null;
+    } else {
+      // Otherwise create and track an event for the given value.
+      event = new Event<V>(value);
+      eventsByKey.put(value, event);
+    }
+
+    // Regardless, stick the event at the front.
+    event.previousEvent = this.headEvent;
+    this.headEvent.nextEvent = event;
+    this.headEvent = event;
   }
 }

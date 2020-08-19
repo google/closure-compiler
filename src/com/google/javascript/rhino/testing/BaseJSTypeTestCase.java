@@ -60,12 +60,11 @@ import org.junit.After;
 
 /** A base class for tests on {@code JSType}s. */
 public abstract class BaseJSTypeTestCase {
-  protected static final String FORWARD_DECLARED_TYPE_NAME = "forwardDeclared";
 
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   protected final TestErrorReporter errorReporter = new TestErrorReporter();
-  protected final JSTypeRegistry registry;
+  protected JSTypeRegistry registry;
 
   protected JSType ALL_TYPE;
   protected ObjectType NO_OBJECT_TYPE;
@@ -121,8 +120,13 @@ public abstract class BaseJSTypeTestCase {
   public BaseJSTypeTestCase(JSTypeRegistry registry) {
     this.registry =
         (registry == null)
-            ? new JSTypeRegistry(errorReporter, ImmutableSet.of(FORWARD_DECLARED_TYPE_NAME))
+            ? new JSTypeRegistry(errorReporter, ImmutableSet.of())
             : registry;
+    initTypes();
+  }
+
+  protected void resetRegistryWithForwardDeclaredName(String name) {
+    this.registry = new JSTypeRegistry(errorReporter, ImmutableSet.of(name));
     initTypes();
   }
 

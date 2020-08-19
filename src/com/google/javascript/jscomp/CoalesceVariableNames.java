@@ -209,7 +209,6 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       // This code block is slow but since usePseudoName is for debugging,
       // we should not sacrifice performance for non-debugging compilation to
       // make this fast.
-      String pseudoName = null;
       Set<String> allMergedNames = new TreeSet<>();
       for (Var iVar : liveness.getAllVariablesInOrder()) {
         // Look for all the variables that can be merged (in the graph by now)
@@ -225,7 +224,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         return;
       }
 
-      pseudoName = Joiner.on("_").join(allMergedNames);
+      String pseudoName = Joiner.on("_").join(allMergedNames);
 
       while (t.getScope().hasSlot(pseudoName)) {
         pseudoName += "$";

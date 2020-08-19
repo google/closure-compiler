@@ -165,8 +165,6 @@ final class RenameLabels implements CompilerPass {
         if (names.size() < currentDepth) {
           names.add(nameSupplier.get());
         }
-
-        String newName = getNameForId(currentDepth);
       }
 
       return true;

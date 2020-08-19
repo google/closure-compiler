@@ -55,7 +55,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author nicksantos@google.com (Nick Santos) */
 @RunWith(JUnit4.class)
 public class NamedTypeTest extends BaseJSTypeTestCase {
 
@@ -116,9 +115,11 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testStateOfForwardDeclaredType_Unresolved() {
+    resetRegistryWithForwardDeclaredName("forwardDeclared");
+
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
       // Given
-      NamedType type = namedTypeBuilder(FORWARD_DECLARED_TYPE_NAME).build();
+      NamedType type = namedTypeBuilder("forwardDeclared").build();
 
       // Then
       assertThat(type.isResolved()).isFalse();
@@ -130,8 +131,10 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testStateOfForwardDeclaredType_UnsuccesfullyResolved() {
+    resetRegistryWithForwardDeclaredName("forwardDeclared");
+
     // Given
-    NamedType type = namedTypeBuilder(FORWARD_DECLARED_TYPE_NAME).build();
+    NamedType type = namedTypeBuilder("forwardDeclared").build();
 
     // Then
     assertThat(type.isUnsuccessfullyResolved()).isTrue();
@@ -356,6 +359,18 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
     assertType(typeofFooBuilder.build()).isUnknown();
     errorReporter.expectAllWarnings(
         "Missing type for `typeof` value. The value must be declared and const.");
+  }
+
+  @Test
+  public void testBuilderForTypeof_yieldsNoResolvedTypeWithForwardDeclaredName() {
+    resetRegistryWithForwardDeclaredName("Foo");
+
+    NamedType.Builder typeofFooBuilder = NamedType
+        .builder(registry, "typeof Foo")
+        .setScope(emptyScope())
+        .setResolutionKind(ResolutionKind.TYPEOF);
+
+    assertType(typeofFooBuilder.build()).isNoResolvedType("typeof Foo");
   }
 
   @Test

@@ -455,22 +455,19 @@ final class RenameVars implements CompilerPass {
    * Determines which new names to substitute for the original names.
    */
   private void assignNames(SortedSet<Assignment> varsToRename) {
-    NameGenerator globalNameGenerator = null;
-    NameGenerator localNameGenerator = null;
-
-    globalNameGenerator = nameGenerator;
     nameGenerator.reset(reservedNames, prefix, reservedCharacters);
 
+    NameGenerator globalNameGenerator = nameGenerator;
     // Local variables never need a prefix.
     // Also, we need to avoid conflicts between global and local variable
     // names; we do this by having using the same generator (not two
     // instances). The case where global variables have a prefix (and
     // therefore we use two different generators) but a local variable name
     // might nevertheless conflict with a global one is not handled.
-    localNameGenerator =
+    NameGenerator localNameGenerator =
         prefix.isEmpty()
-        ? globalNameGenerator
-        : nameGenerator.clone(reservedNames, "", reservedCharacters);
+            ? globalNameGenerator
+            : nameGenerator.clone(reservedNames, "", reservedCharacters);
 
     // Generated names and the assignments for non-local vars.
     List<Assignment> pendingAssignments = new ArrayList<>();
