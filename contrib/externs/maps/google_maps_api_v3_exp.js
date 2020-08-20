@@ -2559,7 +2559,7 @@ google.maps.LatLngLiteral.prototype.lng;
 google.maps.LocationElevationRequest = function() {};
 
 /**
- * @type {?Array<!google.maps.LatLng>|undefined}
+ * @type {?Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|undefined}
  */
 google.maps.LocationElevationRequest.prototype.locations;
 
@@ -3699,7 +3699,7 @@ google.maps.PanoProviderOptions.prototype.cors;
 google.maps.PathElevationRequest = function() {};
 
 /**
- * @type {?Array<!google.maps.LatLng>|undefined}
+ * @type {?Array<!google.maps.LatLng|!google.maps.LatLngLiteral>|undefined}
  */
 google.maps.PathElevationRequest.prototype.path;
 
