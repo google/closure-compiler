@@ -23,18 +23,13 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.BlackHoleErrorManager;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableMap;
-import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -50,11 +45,19 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   public void testFunctionInstrumentation() {
     CompilerOptions options = createCompilerOptions();
 
-    String source = lines("function foo() { ", "   console.log('Hello'); ", "}");
+    String source =
+        lines(
+            "function foo() { ", //
+            "   console.log('Hello'); ",
+            "}");
 
     String expected =
         lines(
-            "function foo() { ", getInstrumentCodeLine("C"), ";", "  console.log('Hello'); ", "}");
+            "function foo() { ", //
+            getInstrumentCodeLine("C"),
+            ";",
+            "  console.log('Hello'); ",
+            "}");
 
     test(options, source, instrumentCodeExpected.concat(expected));
   }
@@ -76,11 +79,19 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
 
-    String source = lines("function foo() { ", "   console.log('Hello'); ", "}");
+    String source =
+        lines(
+            "function foo() { ", //
+            "   console.log('Hello'); ",
+            "}");
 
     String expected =
         lines(
-            "function foo() { ", getInstrumentCodeLine("C"), ";", "   console.log('Hello'); ", "}");
+            "function foo() { ", //
+            getInstrumentCodeLine("C"),
+            ";",
+            "   console.log('Hello'); ",
+            "}");
 
     test(options, source, instrumentCodeExpected.concat(expected));
   }
@@ -89,7 +100,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   public void testIfInstrumentation() {
     CompilerOptions options = createCompilerOptions();
 
-    String source = lines("if (tempBool) {", "   console.log('Hello');", "}");
+    String source =
+        lines(
+            "if (tempBool) {", //
+            "   console.log('Hello');",
+            "}");
 
     String expected =
         lines(
@@ -193,7 +208,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   public void testForLoopInstrumentation() {
     CompilerOptions options = createCompilerOptions();
 
-    String source = lines("for(var i = 0 ; i < 10 ; ++i) {", "   console.log('*');", "}");
+    String source =
+        lines(
+            "for(var i = 0 ; i < 10 ; ++i) {", //
+            "   console.log('*');",
+            "}");
 
     String expected =
         lines(
@@ -210,7 +229,12 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   public void testSwitchInstrumentation() {
     CompilerOptions options = createCompilerOptions();
 
-    String source = lines("switch (x) {", "   case 1: ", "      x = 5;", "};");
+    String source =
+        lines(
+            "switch (x) {", //
+            "   case 1: ",
+            "      x = 5;",
+            "};");
 
     String expected =
         lines(
@@ -258,7 +282,11 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   public void testInstrumentationMappingIsCreated() {
     CompilerOptions options = createCompilerOptions();
 
-    String source = lines("function foo() { ", "   console.log('Hello');", "}");
+    String source =
+        lines(
+            "function foo() { ", //
+            "   console.log('Hello');",
+            "}");
 
     Compiler compiledSourceCode = compile(options, source);
     VariableMap variableParamMap = compiledSourceCode.getInstrumentationMapping();
@@ -269,13 +297,13 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     assertWithMessage("FunctionNames in the parameter mapping are not properly set")
         .that(paramMap.get(" FunctionNames"))
-        .isEqualTo("[foo]");
+        .isEqualTo("[\"foo\"]");
     assertWithMessage("FileNames in the parameter mapping are not properly set")
         .that(paramMap.get(" FileNames"))
-        .isEqualTo("[i0.js]");
+        .isEqualTo("[\"i0.js\"]");
     assertWithMessage("Types in the parameter mapping are not properly set")
         .that(paramMap.get(" Types"))
-        .isEqualTo("[FUNCTION]");
+        .isEqualTo("[\"FUNCTION\"]");
     assertWithMessage("Array index encoding is not performed properly")
         .that(paramMap.get("C"))
         .isEqualTo("AAACA");
@@ -285,11 +313,24 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   public void testGlobalArrayIsDeclared() {
     CompilerOptions options = createCompilerOptions();
 
-    String source = lines("function foo (x) {", "console.log(x+5);", "};");
-    String useGlobalArray = lines("function ist(){", "console.log(ist_array)", "}");
+    String source =
+        lines(
+            "function foo (x) {", //
+            "   console.log(x+5);",
+            "};");
+    String useGlobalArray =
+        lines(
+            "function ist(){", //
+            "   console.log(ist_array)",
+            "}");
 
     String expected =
-        lines("function foo (x) {", getInstrumentCodeLine("C"), ";", "console.log( x + 5);", "};");
+        lines(
+            "function foo (x) {", //
+            getInstrumentCodeLine("C"),
+            ";",
+            "   console.log( x + 5);",
+            "};");
 
     String expectedUseGlobalArray =
         lines("function ist(){", getInstrumentCodeLine("E"), ";", "console.log(ist_array);", "}");
@@ -307,38 +348,47 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
     String blahExtern =
         lines(
-            "/**",
+            "/**", //
             "* @externs",
             "*/",
             "/**",
             "*@type {!Array<string>}",
             "*/",
-            "let ist_arr;"
-            );
-    externs = ImmutableList.of(
-        new TestExternsBuilder()
-            .addArray()
-            .addAlert()
-            .addExtra(
-                blahExtern)
-            .buildExternsFile("externs"));
+            "let ist_arr;");
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addArray()
+                .addAlert()
+                .addExtra(blahExtern)
+                .buildExternsFile("externs"));
 
-
-    String source = lines("function foo (x) {", "if(x) { alert(x+5); }", "} foo(true); foo(false);");
+    String source =
+        lines(
+            "function foo (x) {", //
+            "   if(x) { " ,
+            "      alert(x+5); ",
+            "   }",
+            "} ",
+            "foo(true); foo(false);");
 
     String expected =
         lines(
             "function a(b) {",
-            getInstrumentCodeLine("G"),";",
-            "b ? (", getInstrumentCodeLine("C"),",alert(b+5)) : ", getInstrumentCodeLine("E"),";",
+            getInstrumentCodeLine("G"),
+            ";",
+            "b ? (",
+            getInstrumentCodeLine("C"),
+            ", alert(b+5)) : ",
+            getInstrumentCodeLine("E"),
+            ";",
             "}",
-            "a(!0);" ,
+            "a(!0);",
             "a(!1);");
-
 
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
-     test(options, source, instrumentCodeExpected.concat(expected));
+    test(options, source, instrumentCodeExpected.concat(expected));
   }
 
   private String getInstrumentCodeLine(String encodedParam) {

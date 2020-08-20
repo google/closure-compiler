@@ -74,8 +74,8 @@ class CoverageInstrumentationPass implements CompilerPass {
 
     Node arrayLit = IR.arraylit();
     Node name = IR.name(arrayName);
-    Node letNode = IR.var(name, arrayLit);
-    script.addChildToFront(letNode.useSourceInfoIfMissingFromForTree(script));
+    Node varNode = IR.var(name, arrayLit);
+    script.addChildToFront(varNode.useSourceInfoIfMissingFromForTree(script));
   }
 
   @Override

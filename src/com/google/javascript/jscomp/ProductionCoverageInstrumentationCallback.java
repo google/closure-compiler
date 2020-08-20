@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.Base64VLQ;
+import com.google.gson.Gson;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
@@ -47,7 +48,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
    * The name of the global array to which at every instrumentation point a new encoded param will
    * be added. This is dynamically set by the command line flag --prod_instr_array_name.
    */
-  public final String INSTRUMENTATION_ARRAY_NAME;
+  private final String instrumentationArrayName;
 
   private final AbstractCompiler compiler;
   private final ParameterMapping parameterMapping;
@@ -69,7 +70,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     this.compiler = compiler;
     this.parameterMapping = new ParameterMapping();
 
-    INSTRUMENTATION_ARRAY_NAME = instrumentationArrayName;
+    this.instrumentationArrayName = instrumentationArrayName;
   }
 
   @Override
@@ -207,7 +208,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
   /**
    * Create a function call to the Instrument Code function with properly encoded parameters. The
    * instrumented function call will be of the following form:
-   * INSTRUMENTATION_ARRAY_NAME.push(param). Where INSTRUMENT_ARRAY_NAME is the name of the global
+   * instrumentationArrayName.push(param). Where instrumentationArrayName is the name of the global
    * array and param is the encoded param which will be pushed onto the array.
    *
    * @param node The node to be instrumented.
@@ -229,7 +230,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
 
     String encodedParam = parameterMapping.getEncodedParam(fileName, fnName, type, lineNo, columnNo);
 
-    Node prop = IR.getprop(IR.name(INSTRUMENTATION_ARRAY_NAME), IR.string("push"));
+    Node prop = IR.getprop(IR.name(instrumentationArrayName), IR.string("push"));
     Node functionCall =
         IR.call(prop, IR.string(encodedParam));
     Node exprNode = IR.exprResult(functionCall);
@@ -333,12 +334,14 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     }
 
     private VariableMap getParamMappingAsVariableMap() {
+      Gson gson = new Gson();
+
       // Array names are given a " " (space) prefix since when writing to file, VariableMap.java
       // sorts the map by key values. This space will place the arrays at the top of the file.
       // The key and value entry are put in this order because the map will be inversed.
-      paramValueEncodings.put(fileNameToIndex.keySet().toString(), " FileNames");
-      paramValueEncodings.put(functionNameToIndex.keySet().toString(), " FunctionNames");
-      paramValueEncodings.put(typeToIndex.keySet().toString(), " Types");
+      paramValueEncodings.put(gson.toJson(fileNameToIndex.keySet()), " FileNames");
+      paramValueEncodings.put(gson.toJson(functionNameToIndex.keySet()), " FunctionNames");
+      paramValueEncodings.put(gson.toJson(typeToIndex.keySet()), " Types");
 
       VariableMap preInversedMap = new VariableMap(paramValueEncodings);
       ImmutableMap<String, String> inversedMap = preInversedMap.getNewNameToOriginalNameMap();
