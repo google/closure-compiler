@@ -15,10 +15,7 @@
  */
 package com.google.javascript.refactoring.examples;
 
-import static com.google.javascript.refactoring.testing.RefasterJsTestUtils.assertFileRefactoring;
-
-import com.google.common.collect.ImmutableList;
-
+import com.google.javascript.refactoring.testing.RefasterJsTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -43,21 +40,21 @@ public class SetLocationTest {
 
   @Test
   public void testLocationHref() throws Exception {
-    assertFileRefactoring(
-        SET_LOCATION_HREF_TEMPLATE,
-        TESTDATA_DIR,
-        "set_location_href_test_in.js",
-        ImmutableList.of("goog_base.js"),
-        "set_location_href_test_out.js");
+    RefasterJsTestCase.builder()
+        .setTemplatePath(SET_LOCATION_HREF_TEMPLATE)
+        .setInputPath(TESTDATA_DIR + "/set_location_href_test_in.js")
+        .addExpectedOutputPath(TESTDATA_DIR + "/set_location_href_test_out.js")
+        .addAdditionalSourcePath(TESTDATA_DIR + "/goog_base.js")
+        .test();
   }
 
   @Test
   public void testWindowLocation() throws Exception {
-    assertFileRefactoring(
-        SET_WINDOW_LOCATION_TEMPLATE,
-        TESTDATA_DIR,
-        "set_window_location_test_in.js",
-        ImmutableList.of("goog_base.js"),
-        "set_window_location_test_out.js");
+    RefasterJsTestCase.builder()
+        .setTemplatePath(SET_WINDOW_LOCATION_TEMPLATE)
+        .setInputPath(TESTDATA_DIR + "/set_window_location_test_in.js")
+        .addExpectedOutputPath(TESTDATA_DIR + "/set_window_location_test_out.js")
+        .addAdditionalSourcePath(TESTDATA_DIR + "/goog_base.js")
+        .test();
   }
 }
