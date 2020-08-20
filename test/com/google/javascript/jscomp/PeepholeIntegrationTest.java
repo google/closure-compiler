@@ -34,8 +34,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     super.setUp();
 
     enableNormalize();
-    this.late = false;
-    this.numRepetitions = 2;
+    late = false;
+    numRepetitions = 2;
   }
 
   @Override
@@ -167,7 +167,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testRemoveDuplicateStatementsIntegration() {
-    enableNormalize();
     test(
         lines(
             "function z() {if (a) { return true }",
@@ -390,6 +389,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
          "function f(a) {return a}");
   }
 
+  @Test
   public void disable_testFoldHook1() {
     test("function f(a) {return (!a)?a:a;}",
          "function f(a) {return a}");
@@ -397,7 +397,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Test
   public void testTemplateStringsKnownMethods() {
-    enableNormalize();
     test("x = `abcdef`.indexOf('b')", "x = 1");
     test("x = [`a`, `b`, `c`].join(``)", "x='abc'");
     test("x = `abcdef`.substr(0,2)", "x = 'ab'");
