@@ -109,7 +109,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
      // Verify that non-global scope works.
      test("function foo(){if(x()){}}", "function foo(){x()}");
-
+    test("function foo(){if(x?.()){}}", "function foo(){x?.()}");
   }
 
   @Test
@@ -224,6 +224,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
     // Make sure proper empty nodes are inserted.
     test("if(foo())for(;false;){foo()}else bar()", "foo()||bar()");
+    test("if(foo?.())for(;false;){foo?.()}else bar?.()", "foo?.()||bar?.()");
   }
 
   @Test
@@ -235,6 +236,15 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
     // Make sure proper empty nodes are inserted.
     test("if(foo())do {foo()} while(false) else bar()", "foo()?foo():bar()");
+
+    // Optional chaining version of these tests.
+    test("do { foo?.() } while(!true);", "foo?.()");
+    test("do { foo?.() } while(void 0);", "foo?.()");
+    test("do { foo?.() } while(undefined);", "foo?.()");
+    test("do { foo?.() } while(!void 0);", "do { foo?.() } while(1);");
+
+    // Make sure proper empty nodes are inserted.
+    test("if(foo?.())do {foo?.()} while(false) else bar?.()", "foo?.() ? foo?.() : bar?.()");
   }
 
   @Test
@@ -247,14 +257,19 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
     /* This is similar to the !!true case */
     test("!!x()&&y()", "x()&&y()");
+    test("!!x?.()&&y?.()", "x?.()&&y?.()");
   }
 
   @Test
   public void testBug1509085() {
-    this.numRepetitions = 1;
-    this.late = true;
+    numRepetitions = 1;
+    late = true;
+    // Such code can be replaced by using the simpler, equivalent optional chaining operator
+    // `x?.()`.
     test("x ? x() : void 0", "x&&x();");
     testSame("y = x ? x() : void 0");
+
+    testSame("x?.()");
   }
 
   @Test
@@ -304,6 +319,10 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("a() && (1 && b())", "a() && b()");
     test("a() && 1 && b()", "a() && b()");
     test("(a() && 1) && b()", "a() && b()");
+
+    test("a?.() && (1 && b?.())", "a?.() && b?.()");
+    test("a?.() && 1 && b?.()", "a?.() && b?.()");
+    test("(a?.() && 1) && b?.()", "a?.() && b?.()");
   }
 
   @Test
@@ -314,6 +333,7 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("(x && false) && y()", "");
     test("a = x || false ? b : c", "a=x?b:c");
     test("do {x()} while((x && false) && y())", "x()");
+    test("do {x?.()} while((x && false) && y?.())", "x?.()");
   }
 
   // A few miscellaneous cases where one of the peephole passes increases the
@@ -349,8 +369,10 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public void testAvoidCommaSplitting() {
     late = false;
     test("x(),y(),z()", "x();y();z()");
+    test("x?.(),y?.(),z?.()", "x?.();y?.();z?.()");
     late = true;
     testSame("x(),y(),z()");
+    testSame("x?.(),y?.(),z?.()");
   }
 
   @Test
@@ -359,6 +381,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("({a:1})", "");
     test("({a:foo()})", "foo()");
     test("({'a':foo()})", "foo()");
+    test("({a:foo?.()})", "foo?.()");
+    test("({'a':foo?.()})", "foo?.()");
   }
 
   @Test
@@ -409,5 +433,21 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
     test("x = `\t\n\uFEFF\t asd foo bar \r\n`.trim()", "x = 'asd foo bar'");
     test("x = parseInt(`123`)", "x = 123");
     test("x = parseFloat(`1.23`)", "x = 1.23");
+  }
+
+  @Test
+  public void testDontFoldKnownMethodsWithOptionalChaining() {
+    // Known methods guarded by an optional chain are not folded
+    test("x = `abcdef`.indexOf?.('b')", "x = \"abcdef\".indexOf?.(\"b\");");
+    test("x = [`a`, `b`, `c`].join?.(``)", "x = [\"a\", \"b\", \"c\"].join?.(\"\")");
+    test("x = `abcdef`.substr?.(0,2)", "x = \"abcdef\".substr?.(0,2)");
+    test("x = `abcdef`.substring?.(0,2)", "x = \"abcdef\".substring?.(0,2)");
+    test("x = `abcdef`.slice?.(0,2)", "x = \"abcdef\".slice?.(0,2)");
+    test("x = `abcdef`.charAt?.(0)", "x = \"abcdef\".charAt?.(0)");
+    test("x = `abcdef`.charCodeAt?.(0)", "x = \"abcdef\".charCodeAt?.(0)");
+    test("x = `abc`.toUpperCase?.()", "x = \"abc\".toUpperCase?.()");
+    test("x = `ABC`.toLowerCase?.()", "x = \"ABC\".toLowerCase?.()");
+    test("x = parseInt?.(`123`)", "x = parseInt?.(\"123\")");
+    test("x = parseFloat?.(`1.23`)", "x = parseFloat?.(\"1.23\")");
   }
 }
