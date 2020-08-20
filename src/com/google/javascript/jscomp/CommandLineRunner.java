@@ -867,11 +867,20 @@ public class CommandLineRunner extends
         name = "--instrument_code",
         usage =
             "Enable code instrumentation to perform code coverage analysis. Options are:\n"
-                + " 1. NONE (deault)\n"
+                + " 1. NONE (default)\n"
                 + " 2. LINE - Instrument code by line.\n"
                 + " 3. BRANCH - Instrument code by branch.\n"
                 + " 4. PRODUCTION - Function Instrumentation on compiled JS code.\n")
     private String instrumentCode = "NONE";
+
+    @Option(
+        name = "--production_instrumentation_array_name",
+        usage =
+            "Name of the global array used by production instrumentation. The array name "
+                + "should be declared as an extern so it is not renamed by the compiler. A function"
+                + "that parses the global array should also be included. This flag is to be used in"
+                + "tandem with --instrument_code=PRODUCTION")
+    private String productionInstrumentationArrayName = "";
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
@@ -1954,7 +1963,15 @@ public class CommandLineRunner extends
           "Expected --instrument_code to be passed with PRODUCTION "
               + "when --instrument_mapping_report is set");
     }
+
+    if (Strings.isNullOrEmpty(flags.productionInstrumentationArrayName)
+        && flags.instrumentCodeParsed == InstrumentOption.PRODUCTION) {
+      throw new FlagUsageException(
+          "Expected --production_instrumentation_array_name to be set when "
+              + "--instrument_code is set to Production");
+    }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
+    options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
 
     return options;
   }

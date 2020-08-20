@@ -70,6 +70,14 @@ class CoverageInstrumentationPass implements CompilerPass {
             .useSourceInfoIfMissingFromForTree(script));
   }
 
+  private void addProductionHeaderCode(Node script, String arrayName) {
+
+    Node arrayLit = IR.arraylit();
+    Node name = IR.name(arrayName);
+    Node varNode = IR.var(name, arrayLit);
+    script.addChildToFront(varNode.useSourceInfoIfMissingFromForTree(script));
+  }
+
   @Override
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
@@ -79,9 +87,10 @@ class CoverageInstrumentationPass implements CompilerPass {
             rootNode,
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
       } else if (instrumentOption == InstrumentOption.PRODUCTION) {
+        String arrayName = compiler.getOptions().getProductionInstrumentationArrayName();
 
         ProductionCoverageInstrumentationCallback productionCoverageInstrumentationCallback =
-            new ProductionCoverageInstrumentationCallback(compiler);
+            new ProductionCoverageInstrumentationCallback(compiler, arrayName);
 
         NodeTraversal.traverse(compiler, rootNode, productionCoverageInstrumentationCallback);
 
@@ -89,9 +98,6 @@ class CoverageInstrumentationPass implements CompilerPass {
             productionCoverageInstrumentationCallback.getInstrumentationMapping();
         compiler.setInstrumentationMapping(instrumentationMapping);
 
-        // Does not require any additional header code as it relies on the instrumentation function
-        // being part of the source code.
-        return;
       } else {
         NodeTraversal.traverse(
             compiler, rootNode, new CoverageInstrumentationCallback(instrumentationData, reach));
@@ -103,7 +109,13 @@ class CoverageInstrumentationPass implements CompilerPass {
       if (firstScript.hasChildren() && firstScript.getFirstChild().isModuleBody()) {
         firstScript = firstScript.getFirstChild();
       }
-      addHeaderCode(firstScript);
+
+      if (instrumentOption == InstrumentOption.PRODUCTION) {
+        addProductionHeaderCode(
+            firstScript, compiler.getOptions().getProductionInstrumentationArrayName());
+      } else {
+        addHeaderCode(firstScript);
+      }
     }
   }
 

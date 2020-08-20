@@ -1175,6 +1175,8 @@ public class CompilerOptions implements Serializable {
 
   private InstrumentOption instrumentForCoverageOption;
 
+  private String productionInstrumentationArrayName;
+
   private static final ImmutableList<ConformanceConfig> GLOBAL_CONFORMANCE_CONFIGS =
       ImmutableList.of(ResourceLoader.loadGlobalConformance(CompilerOptions.class));
 
@@ -1401,6 +1403,7 @@ public class CompilerOptions implements Serializable {
     inputSourceMaps = ImmutableMap.of();
 
     instrumentForCoverageOption = InstrumentOption.NONE;
+    productionInstrumentationArrayName = "";
 
     // Output
     preserveTypeAnnotations = false;
@@ -2768,6 +2771,18 @@ public class CompilerOptions implements Serializable {
     return this.instrumentForCoverageOption;
   }
 
+  /**
+   * Sets the name for the global array which is used by PRODUCTION instrumentation. The array is
+   * declared during the instrumentation pass with the name provided through this setter.
+   */
+  public void setProductionInstrumentationArrayName(String productionInstrumentationArrayName) {
+    this.productionInstrumentationArrayName = checkNotNull(productionInstrumentationArrayName);
+  }
+
+  public String getProductionInstrumentationArrayName() {
+    return this.productionInstrumentationArrayName;
+  }
+
   public final ImmutableList<ConformanceConfig> getConformanceConfigs() {
     return conformanceConfigs;
   }
@@ -2951,6 +2966,7 @@ public class CompilerOptions implements Serializable {
             .add("inputVariableMap", inputVariableMap)
             .add("instrumentForCoverageOnly", instrumentForCoverageOnly)
             .add("instrumentForCoverageOption", instrumentForCoverageOption.toString())
+            .add("productionInstrumentationArrayName", productionInstrumentationArrayName)
             .add("isolatePolyfills", isolatePolyfills)
             .add("j2clMinifierEnabled", j2clMinifierEnabled)
             .add("j2clMinifierPruningManifest", j2clMinifierPruningManifest)
