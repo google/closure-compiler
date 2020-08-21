@@ -222,6 +222,23 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
               "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
               "(new Foo).method();")
         });
+
+    // Same as above, but reference to the method is via an optional chain
+    test(
+        JSChunkGraphBuilder.forChain()
+            .addChunk("class Foo { method() {} }")
+            .addChunk("(new Foo)?.method()")
+            .build(),
+        new String[] {
+          lines(
+              STUB_DECLARATIONS,
+              "class Foo {}",
+              "Foo.prototype.method = JSCompiler_stubMethod(0);"),
+          // Chunk 2
+          lines(
+              "Foo.prototype.method = JSCompiler_unstubMethod(0, function() {});",
+              "(new Foo)?.method();")
+        });
   }
 
   @Test

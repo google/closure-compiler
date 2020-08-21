@@ -267,22 +267,35 @@ class AnalyzePrototypeProperties implements CompilerPass {
           }
           break;
 
+        case OPTCHAIN_GETPROP:
+          addSymbolUse(n.getSecondChild().getString(), t.getModule(), PROPERTY);
+          break;
+
         case GETPROP:
           String propName = n.getSecondChild().getString();
 
           if (n.isQualifiedName()) {
             if (propName.equals("prototype")) {
-              if (processPrototypeRef(t, n)) {
+              if (handlePossibleAssignmentToPrototype(t, n)) {
+                // The reference is being assigned to not read from, so don't record this as a
+                // reference.
                 return;
               }
             } else if (compiler.getCodingConvention().isExported(propName)) {
+              // TODO(bradfordcsmith): We don't seem to have any tests that cover this case.
+              // This class has no unit tests of its own and it is only used by
+              // CrossChunkMethodMotion.
               addGlobalUseOfSymbol(propName, t.getModule(), PROPERTY);
               return;
             } else {
-              // Do not mark prototype prop assigns as a 'use' in the global scope.
               if (parent.isAssign() && n == parent.getFirstChild()) {
                 String rValueName = getPrototypePropertyNameFromRValue(n);
                 if (rValueName != null) {
+                  // e.g. `Foo.prototype.bar = something`
+                  // We record the declaration of `bar` when we look at the `Foo.prototype`
+                  // Node via the call to handlePossibleAssignmentToPrototype() above.
+                  // Now that we're looking at the whole `Foo.prototype.bar` node,
+                  // we just need to make sure we don't record it as a read reference.
                   return;
                 }
               }
@@ -486,12 +499,17 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     /**
-     * Processes the GETPROP of prototype, which can either be under another GETPROP (in the case of
-     * Foo.prototype.bar), or can be under an assignment (in the case of Foo.prototype = ...).
+     * Examines a qualified name ending in `.prototype`.
      *
+     * <p>If it is part of an assignment like `foo.prototype = {}` or `foo.prototype.bar = x`,
+     * record this reference as the definition of one or more prototype properties and return
+     * `true`.
+     *
+     * @param t
+     * @param ref A reference to some qualified name that ends with `.prototype`
      * @return True if a declaration was added.
      */
-    private boolean processPrototypeRef(NodeTraversal t, Node ref) {
+    private boolean handlePossibleAssignmentToPrototype(NodeTraversal t, Node ref) {
       Node root = NodeUtil.getRootOfQualifiedName(ref);
 
       Node n = ref.getParent();
