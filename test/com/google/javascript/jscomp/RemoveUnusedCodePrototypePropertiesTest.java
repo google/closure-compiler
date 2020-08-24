@@ -48,7 +48,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
 
   private boolean keepLocals = true;
   private boolean keepGlobals = false;
-  private boolean allowRemovalOfExternProperties = false;
 
   public RemoveUnusedCodePrototypePropertiesTest() {
     super(EXTERNS);
@@ -68,7 +67,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             .removeLocalVars(!keepLocals)
             .removeGlobals(!keepGlobals)
             .removeUnusedPrototypeProperties(true)
-            .allowRemovalOfExternProperties(allowRemovalOfExternProperties)
             .build()
             .process(externs, root);
       }
@@ -93,7 +91,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     onlyValidateNoNewGettersAndSetters();
     keepLocals = true;
     keepGlobals = false;
-    allowRemovalOfExternProperties = false;
   }
 
   @Test
@@ -393,20 +390,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
         "Foo.prototype._externMethod = Foo.prototype.method";
 
     test(classAndItsMethodAliasedAsExtern, compiled);
-  }
-
-  @Test
-  public void testMethodsFromExternsFileNotExported() {
-    allowRemovalOfExternProperties = true;
-
-    test(
-        lines(
-            "function Foo() {}",
-            "Foo.prototype.bar_ = function() {};",
-            "Foo.prototype.unused = function() {};",
-            "var instance = new Foo;",
-            "Foo.prototype.externPropName = Foo.prototype.bar_"),
-        "function Foo(){} new Foo;");
   }
 
   @Test

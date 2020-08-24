@@ -147,7 +147,6 @@ class RemoveUnusedCode implements CompilerPass {
   private final SyntacticScopeCreator scopeCreator;
 
   private final boolean removeUnusedPrototypeProperties;
-  private final boolean allowRemovalOfExternProperties;
   private final boolean removeUnusedThisProperties;
   private final boolean removeUnusedObjectDefinePropertiesDefinitions;
   private final boolean removeUnusedPolyfills;
@@ -166,7 +165,6 @@ class RemoveUnusedCode implements CompilerPass {
     this.removeGlobals = builder.removeGlobals;
     this.preserveFunctionExpressionNames = builder.preserveFunctionExpressionNames;
     this.removeUnusedPrototypeProperties = builder.removeUnusedPrototypeProperties;
-    this.allowRemovalOfExternProperties = builder.allowRemovalOfExternProperties;
     this.removeUnusedThisProperties = builder.removeUnusedThisProperties;
     this.removeUnusedObjectDefinePropertiesDefinitions =
         builder.removeUnusedObjectDefinePropertiesDefinitions;
@@ -188,7 +186,6 @@ class RemoveUnusedCode implements CompilerPass {
     private boolean removeGlobals = false;
     private boolean preserveFunctionExpressionNames = false;
     private boolean removeUnusedPrototypeProperties = false;
-    private boolean allowRemovalOfExternProperties = false;
     private boolean removeUnusedThisProperties = false;
     private boolean removeUnusedObjectDefinePropertiesDefinitions = false;
     private boolean removeUnusedPolyfills = false;
@@ -215,11 +212,6 @@ class RemoveUnusedCode implements CompilerPass {
 
     Builder removeUnusedPrototypeProperties(boolean value) {
       this.removeUnusedPrototypeProperties = value;
-      return this;
-    }
-
-    Builder allowRemovalOfExternProperties(boolean value) {
-      this.allowRemovalOfExternProperties = value;
       return this;
     }
 
@@ -352,9 +344,7 @@ class RemoveUnusedCode implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    if (!allowRemovalOfExternProperties) {
-      pinnedPropertyNames.addAll(compiler.getExternProperties());
-    }
+    pinnedPropertyNames.addAll(compiler.getExternProperties());
 
     try (LogFile logFile = compiler.createOrReopenIndexedLog(this.getClass(), "removals.log")) {
       removalLog = logFile; // avoid passing the log file through a bunch of methods
