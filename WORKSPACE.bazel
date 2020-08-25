@@ -1,7 +1,53 @@
 workspace(name = "com_google_javascript_jscomp")
 
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+git_repository(
+    name = "google_bazel_common",
+    commit = "abe450a882d93fafbeb2c20977b5f499c2f86530",
+    remote = "git://github.com/google/bazel-common.git",
+)
+
+load("@google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules", "maven_import")
+
+google_common_workspace_rules()
+
+maven_import(
+    # http://args4j.kohsuke.org/index.html
+    group_id = "args4j",
+    artifact_id = "args4j",
+    version = "2.0.26",
+    sha256 = "989bda2321ea073a03686e9d4437ea4928c72c99f993f9ca6fab24615f0771a4",
+    licenses = ["notice"],
+)
+
+maven_import(
+    # https://github.com/google/gson
+    group_id = "com.google.code.gson",
+    artifact_id = "gson",
+    version = "2.7",
+    sha256 = "2d43eb5ea9e133d2ee2405cc14f5ee08951b8361302fdd93494a3a997b508d32",
+    licenses = ["notice"],
+)
+
+maven_import(
+    # https://github.com/protocolbuffers/protobuf
+    group_id ="com.google.protobuf",
+    artifact_id = "protobuf-java",
+    version ="3.11.1",
+    sha256 = "4a01db8277b79eaf84151013f3348a4d24720c8c9e1b33e5ed292caca5567cf1",
+    licenses = ["notice"],
+)
+
+maven_import(
+    # https://github.com/google/re2j
+    group_id ="com.google.re2j",
+    artifact_id = "re2j",
+    version ="1.3",
+    sha256 = "d8040fa1c54c1ce208199015b6e599ec2ef37b7780f8f55a8b4b4b4299bade19",
+    licenses = ["notice"],
+)
 
 ## Load J2CL repo ##
 
@@ -101,3 +147,16 @@ j2cl_maven_import_external(
     artifact = "com.google.re2j:re2j:1.3",
     server_urls = _MAVEN_CENTRAL_URLS,
 )
+
+# Jarjar is a Google tool (https://github.com/google/jarjar) for generating
+# shaded JARs (https://stackoverflow.com/questions/49810578). This repo contains
+# Bazel bindings for Jarjar, under the Apache license.
+git_repository(
+    name = "com_github_johnynek_bazel_jar_jar",
+    commit = "171f268569384c57c19474b04aebe574d85fde0d",
+    remote = "git://github.com/johnynek/bazel_jar_jar.git",
+)
+
+load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
+
+jar_jar_repositories()
