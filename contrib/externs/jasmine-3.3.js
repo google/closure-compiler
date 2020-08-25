@@ -102,7 +102,7 @@ jasmine.AsyncMatchers.prototype.toBeRejectedWith = function(value) {};
 
 
 /**
- * @param {!Error|string|!RegExp=} errorOrMessage
+ * @param {function(new:Error, ...)|string|!RegExp=} errorOrMessage
  * @param {string|!RegExp=} message
  * @return {!Promise<void>}
  */
