@@ -2710,24 +2710,21 @@ class RemoveUnusedCode implements CompilerPass {
      *
      * @return true if the variable was not already marked as referenced
      */
-    boolean markAsReferenced() {
-      return setIsExplicitlyNotRemovable();
+    void markAsReferenced() {
+      setIsExplicitlyNotRemovable();
     }
 
     boolean isRemovable() {
       return isEntirelyRemovable;
     }
 
-    boolean setIsExplicitlyNotRemovable() {
+    void setIsExplicitlyNotRemovable() {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
         for (Removable r : removables) {
           considerForIndependentRemoval(r);
         }
         removables.clear();
-        return true;
-      } else {
-        return false;
       }
     }
 
