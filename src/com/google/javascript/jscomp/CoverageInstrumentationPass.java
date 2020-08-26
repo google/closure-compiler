@@ -164,9 +164,4 @@ class CoverageInstrumentationPass implements CompilerPass {
                     jscovData)));
     return var.useSourceInfoIfMissingFromForTree(srcref);
   }
-
-  public enum CoverageReach {
-    ALL, // Instrument all statements.
-    CONDITIONAL // Do not instrument global statements.
-  }
 }
