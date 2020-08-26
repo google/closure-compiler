@@ -2245,6 +2245,11 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
+    boolean isAssignedValueLocal() {
+      return true;
+    }
+
+    @Override
     public String toString() {
       return "ClassDeclaration:" + classDeclarationNode;
     }
