@@ -29,11 +29,17 @@ import java.util.Map;
 @GwtIncompatible("FileInstrumentationData")
 class CoverageInstrumentationPass implements CompilerPass {
 
-  public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
   final AbstractCompiler compiler;
   private final Map<String, FileInstrumentationData> instrumentationData;
   private final CoverageReach reach;
   private final InstrumentOption instrumentOption;
+
+  public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
+
+  public enum CoverageReach {
+    ALL,         // Instrument all statements.
+    CONDITIONAL  // Do not instrument global statements.
+  }
 
   /** @param compiler the compiler which generates the AST. */
   public CoverageInstrumentationPass(
