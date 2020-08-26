@@ -29,17 +29,11 @@ import java.util.Map;
 @GwtIncompatible("FileInstrumentationData")
 class CoverageInstrumentationPass implements CompilerPass {
 
+  public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
   final AbstractCompiler compiler;
   private final Map<String, FileInstrumentationData> instrumentationData;
   private final CoverageReach reach;
   private final InstrumentOption instrumentOption;
-
-  public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
-
-  public enum CoverageReach {
-    ALL,         // Instrument all statements.
-    CONDITIONAL  // Do not instrument global statements.
-  }
 
   /** @param compiler the compiler which generates the AST. */
   public CoverageInstrumentationPass(
@@ -78,6 +72,14 @@ class CoverageInstrumentationPass implements CompilerPass {
     script.addChildToFront(varNode.useSourceInfoIfMissingFromForTree(script));
   }
 
+  private void checkIfArrayNameExternDeclared(Node externsNode, String arrayName) {
+    if (!NodeUtil.collectExternVariableNames(this.compiler, externsNode).contains(arrayName)) {
+      throw new AssertionError(
+          "The array name passed to --production_instrumentation_array_name was not "
+              + "declared as an extern. This will result in undefined behaviour");
+    }
+  }
+
   @Override
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
@@ -93,6 +95,8 @@ class CoverageInstrumentationPass implements CompilerPass {
             new ProductionCoverageInstrumentationCallback(compiler, arrayName);
 
         NodeTraversal.traverse(compiler, rootNode, productionCoverageInstrumentationCallback);
+
+        checkIfArrayNameExternDeclared(externsNode, arrayName);
 
         VariableMap instrumentationMapping =
             productionCoverageInstrumentationCallback.getInstrumentationMapping();
@@ -153,5 +157,10 @@ class CoverageInstrumentationPass implements CompilerPass {
                     IR.getelem(IR.getprop(IR.name("window"), "top"), IR.string("__jscov")),
                     jscovData)));
     return var.useSourceInfoIfMissingFromForTree(srcref);
+  }
+
+  public enum CoverageReach {
+    ALL, // Instrument all statements.
+    CONDITIONAL // Do not instrument global statements.
   }
 }

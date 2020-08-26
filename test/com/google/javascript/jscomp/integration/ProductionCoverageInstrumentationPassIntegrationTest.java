@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Strings;
@@ -41,9 +42,14 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
 
   private final String instrumentCodeExpected = lines("var ist_arr = [];\n");
 
+  private static String getInstrumentCodeLine(String encodedParam) {
+    return Strings.lenientFormat("%s.push(\"%s\")", "ist_arr", encodedParam);
+  }
+
   @Test
   public void testFunctionInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -65,6 +71,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testNoFunctionInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source = lines("var global = 23;", "console.log(global);");
 
@@ -76,6 +83,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testNoTranspilationFunctionInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
 
@@ -99,6 +107,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testIfInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -123,6 +132,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testIfElseInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -153,6 +163,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testOrInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source = lines("tempObj.a || tempObj.b;");
 
@@ -164,6 +175,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testAndInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source = lines("tempObj.a && tempObj.b;");
 
@@ -175,6 +187,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testCoalesceInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2020);
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
@@ -189,6 +202,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testTernaryInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source = lines("flag ? foo() : fooBar()");
 
@@ -207,6 +221,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testForLoopInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -228,6 +243,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testSwitchInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -252,8 +268,62 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   }
 
   @Test
+  public void testLambdaInstrumentation() {
+    CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
+
+    String source = lines("window.setInterval((x) => { console.log(x); }, 500);");
+
+    String expected =
+        lines(
+            "window.setInterval(function(x) { "
+                + "ist_arr.push('C');"
+                + "console.log(x);"
+                + "}, 500);");
+
+    test(options, source, instrumentCodeExpected.concat(expected));
+  }
+
+  @Test
+  public void testNoNameFunctionsAreNamedProperly() {
+    CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
+
+    String source = lines("tempObj.a || tempObj.b;");
+
+    Compiler compiledSourceCode = compile(options, source);
+
+    VariableMap variableParamMap = compiledSourceCode.getInstrumentationMapping();
+
+    ImmutableMap<String, String> paramMap = variableParamMap.getOriginalNameToNewNameMap();
+
+    assertWithMessage("Function name is not converted properly when it has no name")
+        .that(paramMap.get(" FunctionNames"))
+        .isEqualTo("[\"<Anonymous>\"]");
+  }
+
+  @Test
+  public void testExternIsNotDeclaredException() {
+    CompilerOptions options = createCompilerOptions();
+
+    String source =
+        lines(
+            "for(var i = 0 ; i < 10 ; ++i) {", //
+            "   console.log('*');",
+            "}");
+
+    AssertionError e = assertThrows(AssertionError.class, () -> compile(options, source));
+    assertThat(e)
+        .hasMessageThat()
+        .isEqualTo(
+            "The array name passed to --production_instrumentation_array_name was not "
+                + "declared as an extern. This will result in undefined behaviour");
+  }
+
+  @Test
   public void testNestedIfInstrumentation() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source = lines("if (tempBool) if(someBool) console.log('*');");
 
@@ -281,6 +351,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testInstrumentationMappingIsCreated() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -312,6 +383,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testGlobalArrayIsDeclared() {
     CompilerOptions options = createCompilerOptions();
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -345,23 +417,7 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
   @Test
   public void testInstrumentationWithAdvancedOpt() {
     CompilerOptions options = createCompilerOptions();
-
-    String blahExtern =
-        lines(
-            "/**", //
-            "* @externs",
-            "*/",
-            "/**",
-            "*@type {!Array<string>}",
-            "*/",
-            "let ist_arr;");
-    externs =
-        ImmutableList.of(
-            new TestExternsBuilder()
-                .addArray()
-                .addAlert()
-                .addExtra(blahExtern)
-                .buildExternsFile("externs"));
+    declareIstArrExtern();
 
     String source =
         lines(
@@ -391,8 +447,23 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     test(options, source, instrumentCodeExpected.concat(expected));
   }
 
-  private static String getInstrumentCodeLine(String encodedParam) {
-    return Strings.lenientFormat("%s.push(\"%s\")", "ist_arr", encodedParam);
+  private void declareIstArrExtern() {
+    String externDefinition =
+        lines(
+            "/**", //
+            "* @externs",
+            "*/",
+            "/**",
+            "*@type {!Array<string>}",
+            "*/",
+            "let ist_arr;");
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder()
+                .addArray()
+                .addAlert()
+                .addExtra(externDefinition)
+                .buildExternsFile("externs"));
   }
 
   @Override

@@ -22,6 +22,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.Base64VLQ;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
@@ -51,6 +52,8 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
 
   private final AbstractCompiler compiler;
   private final ParameterMapping parameterMapping;
+
+  private static final String GLOBAL_FUNCTION_NAME = "<Anonymous>";
 
   private enum Type {
     FUNCTION,
@@ -86,8 +89,12 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
 
     if (n.isFunction()) {
       String fnName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
-      fnName = (fnName == null) ? "Anonymous" : fnName;
+      fnName = (fnName == null) ? GLOBAL_FUNCTION_NAME : fnName;
       functionNameStack.push(fnName);
+    }
+
+    if(functionNameStack.isEmpty()){
+      functionNameStack.push(GLOBAL_FUNCTION_NAME);
     }
 
     return true;
@@ -334,7 +341,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
     }
 
     private VariableMap getParamMappingAsVariableMap() {
-      Gson gson = new Gson();
+      Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
       // Array names are given a " " (space) prefix since when writing to file, VariableMap.java
       // sorts the map by key values. This space will place the arrays at the top of the file.
