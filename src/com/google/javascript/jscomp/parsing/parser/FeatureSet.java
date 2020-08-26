@@ -87,6 +87,12 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES_NEXT_IN.with(LangVersion.TYPESCRIPT.features());
 
+  public static final FeatureSet BROWSER_2019 =
+      ES8_MODULES.without(
+          // Safari 12 has a bug that totally breaks the assumptions of tagged template strings:
+          // https://bugs.webkit.org/show_bug.cgi?id=190756
+          Feature.TEMPLATE_LITERALS);
+
   public static final FeatureSet BROWSER_2020 =
       ES2019_MODULES.without(
           // https://kangax.github.io/compat-table/es2016plus/
@@ -364,16 +370,12 @@ public final class FeatureSet implements Serializable {
     return new FeatureSet(union(features, other.features));
   }
 
-  /**
-   * Does this {@link FeatureSet} contain all of the features of {@code other}?
-   */
+  /** Does this {@link FeatureSet} contain all of the features of {@code other}? */
   public boolean contains(FeatureSet other) {
     return this.features.containsAll(other.features);
   }
 
-  /**
-   * Does this {@link FeatureSet} contain the given feature?
-   */
+  /** Does this {@link FeatureSet} contain the given feature? */
   public boolean contains(Feature feature) {
     return this.features.containsAll(EnumSet.of(feature));
   }
@@ -430,9 +432,7 @@ public final class FeatureSet implements Serializable {
     return new FeatureSet(union(features, newFeatures.features));
   }
 
-  /**
-   * Does this {@link FeatureSet} include {@code feature}?
-   */
+  /** Does this {@link FeatureSet} include {@code feature}? */
   public boolean has(Feature feature) {
     return features.contains(feature);
   }

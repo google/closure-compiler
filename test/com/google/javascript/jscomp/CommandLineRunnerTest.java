@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagEntry;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.JsSourceType;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.rhino.Node;
 import java.io.ByteArrayInputStream;
@@ -579,8 +580,7 @@ public final class CommandLineRunnerTest {
     test(original, expected);
     /* Browser's year is not expected to match output language's year
     Flag value --browser_featureset_year=2019 corresponds to output ECMASCRIPT_2017 */
-    assertThat(lastCompiler.getOptions().getOutputFeatureSet())
-        .isEqualTo(LanguageMode.ECMASCRIPT_2017.toFeatureSet());
+    assertThat(lastCompiler.getOptions().getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2019);
   }
 
   @Test

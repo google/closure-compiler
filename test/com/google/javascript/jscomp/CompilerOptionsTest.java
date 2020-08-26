@@ -47,8 +47,7 @@ public final class CompilerOptionsTest {
         .isEqualTo(LanguageMode.ECMASCRIPT5_STRICT.toFeatureSet());
 
     options.setBrowserFeaturesetYear(2019);
-    assertThat(options.getOutputFeatureSet())
-        .isEqualTo(LanguageMode.ECMASCRIPT_2017.toFeatureSet());
+    assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2019);
 
     options.setBrowserFeaturesetYear(2020);
     assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2020);
