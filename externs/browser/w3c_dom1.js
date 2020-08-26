@@ -20,7 +20,6 @@
  *  http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
  *
  * @externs
- * @author stevey@google.com (Steve Yegge)
  */
 
 /**
@@ -472,6 +471,24 @@ NodeList.prototype.item = function(index) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/forEach
  */
 NodeList.prototype.forEach = function(callback, opt_thisobj) {};
+
+/**
+ * @return {!IteratorIterable<!Array<number|T>>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/entries
+ */
+NodeList.prototype.entries = function() {};
+
+/**
+ * @return {!IteratorIterable<number>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/keys
+ */
+NodeList.prototype.keys = function() {};
+
+/**
+ * @return {!IteratorIterable<T>}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/values
+ */
+NodeList.prototype.values = function() {};
 
 /**
  * @constructor

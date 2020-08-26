@@ -65,7 +65,6 @@ public final class InlinePropertiesTest extends CompilerTestCase {
               .removeGlobals(true)
               .preserveFunctionExpressionNames(true)
               .removeUnusedPrototypeProperties(true)
-              .allowRemovalOfExternProperties(false)
               .removeUnusedThisProperties(true)
               .removeUnusedObjectDefinePropertiesDefinitions(true)
               .build();

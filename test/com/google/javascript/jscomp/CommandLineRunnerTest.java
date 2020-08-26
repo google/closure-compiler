@@ -2636,11 +2636,13 @@ public final class CommandLineRunnerTest {
 
     List<String> variableMapFile = Files.readLines(variableMap, UTF_8);
 
-    assertThat(variableMapFile).hasSize(4);
-    assertThat(variableMapFile.get(0)).isEqualTo(" FileNames:[\"input0\"]");
-    assertThat(variableMapFile.get(1)).isEqualTo(" FunctionNames:[\"foo\"]");
-    assertThat(variableMapFile.get(2)).isEqualTo(" Types:[\"FUNCTION\"]");
-    assertThat(variableMapFile.get(3)).isEqualTo("C:AAACA");
+    assertThat(variableMapFile)
+        .containsExactly(
+            " FileNames:[\"input0\"]",
+            " FunctionNames:[\"foo\"]",
+            " Types:[\"FUNCTION\"]",
+            "C:AAACA")
+        .inOrder();
   }
 
   @Test

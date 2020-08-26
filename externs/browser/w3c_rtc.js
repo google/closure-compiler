@@ -2849,3 +2849,48 @@ RTCPeerConnection.prototype.ondatachannel;
  * @type {?function(!Event)}
  */
 RTCPeerConnection.prototype.onconnectionstatechange;
+
+/**
+ * @typedef {string}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcerrordetailtype
+ * Possible values: 'data-channel-failure', 'dtls-failure',
+ *   'fingerprint-failure', 'sctp-failure', 'sdp-syntax-error',
+ *   'hardware-encoder-not-available', 'hardware-encoder-error'
+ */
+var RTCErrorDetailType;
+
+/**
+ * @see https://www.w3.org/TR/webrtc/#rtcerror-interface
+ * @interface
+ */
+function RTCError() {}
+
+/** @const {!RTCErrorDetailType} */
+RTCError.prototype.errorDetail;
+
+/** @const {number|undefined} */
+RTCError.prototype.sdpLineNumber;
+
+/** @const {number|undefined} */
+RTCError.prototype.httpRequestStatusCode;
+
+/** @const {number|undefined} */
+RTCError.prototype.sctpCauseCode;
+
+/** @const {number|undefined} */
+RTCError.prototype.receivedAlert;
+
+/** @const {number|undefined} */
+RTCError.prototype.sentAlert;
+
+/**
+ * @see https://www.w3.org/TR/webrtc/#rtcerrorevent-interface
+ * @interface
+ */
+function RTCErrorEvent() {}
+
+/** @const {!RTCError} */
+RTCErrorEvent.prototype.error;
+
+/** @const {string} */
+RTCErrorEvent.prototype.message;

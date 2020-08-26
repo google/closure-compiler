@@ -101,6 +101,15 @@ jasmine.AsyncMatchers.prototype.toBeRejected = function() {};
 jasmine.AsyncMatchers.prototype.toBeRejectedWith = function(value) {};
 
 
+/**
+ * @param {function(new:Error, ...)|string|!RegExp=} errorOrMessage
+ * @param {string|!RegExp=} message
+ * @return {!Promise<void>}
+ */
+jasmine.AsyncMatchers.prototype.toBeRejectedWithError = function(
+    errorOrMessage, message) {};
+
+
 /** @return {!Promise<void>} */
 jasmine.AsyncMatchers.prototype.toBeResolved = function() {};
 

@@ -2398,7 +2398,6 @@ public final class DefaultPassConfig extends PassConfig {
                     .removeGlobals(options.removeUnusedVars)
                     .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
                     .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
-                    .allowRemovalOfExternProperties(false)
                     .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
                     .removeUnusedObjectDefinePropertiesDefinitions(
                         options.isRemoveUnusedClassProperties())

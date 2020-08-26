@@ -144,9 +144,12 @@ class MinimizedCondition {
         MeasuredNode positive = pickBest(
             MeasuredNode.addNode(n, subtree.positive),
             subtree.negative);
-        MeasuredNode negative = pickBest(
-            subtree.negative.negate(),
-            subtree.positive);
+          MeasuredNode negative =
+              pickBest(
+                  subtree.negative
+                      .negate(), // since parent node `n` is a NOT, we need to negate the subtree's
+                  // computed `negative` to obtain the parent `n`'s real negative.
+                  subtree.positive);
         return new MinimizedCondition(positive, negative);
       }
       case AND:
@@ -217,10 +220,10 @@ class MinimizedCondition {
     private final MeasuredNode[] children;
 
     MeasuredNode(Node n, MeasuredNode[] children, int len, boolean ch) {
-      this.node = n;
+      node = n;
       this.children = children;
-      this.length = len;
-      this.changed = ch;
+      length = len;
+      changed = ch;
     }
 
     boolean isChanged() {
@@ -232,7 +235,7 @@ class MinimizedCondition {
     }
 
     MeasuredNode withoutNot() {
-      checkState(this.isNot());
+      checkState(isNot());
       return (normalizeChildren(node, children)[0]).change();
     }
 
@@ -249,7 +252,7 @@ class MinimizedCondition {
         case NOT:
           return withoutNot();
         default:
-          return this.addNot();
+          return addNot();
       }
     }
 
@@ -328,8 +331,8 @@ class MinimizedCondition {
     }
 
     /**
-     * Return a MeasuredNode for a non-particapting AST Node. This is
-     * used for leaf expression nodes.
+     * Return a MeasuredNode for a non-participating AST Node. This is used for leaf expression
+     * nodes.
      */
     private static MeasuredNode forNode(Node n) {
       return new MeasuredNode(n, null, 0, false);
@@ -342,7 +345,7 @@ class MinimizedCondition {
      */
     public boolean willChange(Node original) {
       checkNotNull(original);
-      return original != this.node || this.isChanged();
+      return original != node || isChanged();
     }
 
     /**

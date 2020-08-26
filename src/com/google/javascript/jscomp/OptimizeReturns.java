@@ -103,7 +103,7 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
     boolean seenUse = false;
     for (Node n : refs) {
       // Assume indirect definitions references use the result
-      if (ReferenceMap.isCallTarget(n)) {
+      if (ReferenceMap.isCallTarget(n) || ReferenceMap.isOptionalCallTarget(n)) {
         Node callNode = ReferenceMap.getCallOrNewNodeForTarget(n);
         if (NodeUtil.isExpressionResultUsed(callNode)) {
           // At least one call site uses the return value, this

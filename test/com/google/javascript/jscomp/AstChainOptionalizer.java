@@ -148,6 +148,8 @@ public class AstChainOptionalizer {
           "goog.reflect.cache",
           "goog.reflect.objectProperty",
           "Math.random",
+          "JSCompiler_stubMethod",
+          "JSCompiler_unstubMethod",
           "$jscomp.polyfill");
 
   /**

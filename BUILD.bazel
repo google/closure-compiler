@@ -1,37 +1,177 @@
+load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@com_google_j2cl//build_defs:rules.bzl", "j2cl_application", "j2cl_import", "j2cl_library")
+load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 
 package(licenses = ["notice"])
 
-genrule(
-    name = "resources_gen_js",
-    srcs = ["src/com/google/javascript/jscomp/resources/resources.json"],
-    outs = ["resources.js"],
-    cmd = """echo 'goog.module(\"com.google.javascript.jscomp.Resources\");
-    let resources = ' > $@ &&
-    cat $(SRCS) >> $@ &&
-    echo ";exports = {resources: function() {return resources}};" >> $@
-    """,
+java_binary(
+    name = "compiler_unshaded",
+    main_class = "com.google.javascript.jscomp.CommandLineRunner",
+    runtime_deps = [":compiler_lib"],
 )
 
-filegroup(
-    name = "node_globals_externs",
-    srcs = [
-        "contrib/nodejs/events.js",
-        "contrib/nodejs/fs.js",
-        "contrib/nodejs/globals.js",
-        "contrib/nodejs/stream.js",
+jar_jar(
+    name = "compiler_shaded",
+    input_jar = ":compiler_unshaded_deploy.jar",
+    rules = "rules.jarjar",
+)
+
+java_binary(
+    name = "linter",
+    main_class = "com.google.javascript.jscomp.LinterMain",
+    runtime_deps = [":compiler_lib"],
+)
+
+java_binary(
+    name = "refasterjs",
+    main_class = "com.google.javascript.refactoring.RefasterJs",
+    runtime_deps = [":compiler_lib"],
+)
+
+java_library(
+    name = "externs",
+    resources = [":externs_zip"],
+)
+
+java_library(
+    name = "compiler_lib",
+    srcs = glob(
+        [
+            "gen/**/*.java",
+            "src/com/google/debugging/**/*.java",
+            "src/com/google/javascript/jscomp/*.java",
+            "src/com/google/javascript/jscomp/bundle/**/*.java",
+            "src/com/google/javascript/jscomp/colors/**/*.java",
+            "src/com/google/javascript/jscomp/deps/**/*.java",
+            "src/com/google/javascript/jscomp/diagnostic/**/*.java",
+            "src/com/google/javascript/jscomp/disambiguate/**/*.java",
+            "src/com/google/javascript/jscomp/graph/**/*.java",
+            "src/com/google/javascript/jscomp/ijs/**/*.java",
+            "src/com/google/javascript/jscomp/resources/**/*.java",
+            "src/com/google/javascript/jscomp/lint/**/*.java",
+            "src/com/google/javascript/jscomp/modules/**/*.java",
+            "src/com/google/javascript/jscomp/parsing/**/*.java",
+            "src/com/google/javascript/jscomp/regex/**/*.java",
+            "src/com/google/javascript/jscomp/transpile/**/*.java",
+            "src/com/google/javascript/jscomp/type/**/*.java",
+            "src/com/google/javascript/refactoring/**/*.java",
+            "src/com/google/javascript/refactroing/**/*.java",
+            "src/com/google/javascript/rhino/**/*.java",
+        ],
+        exclude = [
+            "**/testing/**/*.java",
+            "**/super*/**/*.java",
+            "**/j2cl/**/*.java",
+            "**/gwt/**/*.java",
+            "src/com/google/debugging/sourcemap/*Js.java",
+        ],
+    ),
+    resources = [
+        ":externs_zip",
+    ] + glob([
+        "src/**/*.properties",
+        "src/com/google/javascript/jscomp/js/**/*.js",
+        "src/com/google/javascript/jscomp/js/**/*.txt",
+    ]),
+    deps = [
+        "@args4j_args4j",
+        "@com_google_code_gson_gson",
+        "@com_google_guava_failureaccess//jar",
+        "@com_google_guava_guava//jar",
+        "@com_google_protobuf_protobuf_java",
+        "@com_google_re2j_re2j",
+        "@google_bazel_common//third_party/java/auto:value",
+        "@google_bazel_common//third_party/java/error_prone:annotations",
+        "@google_bazel_common//third_party/java/jsr305_annotations",
     ],
 )
 
-j2cl_import(
-    name = "auto_value-j2cl",
-    jar = "@com_google_auto_value//jar",
+genrule(
+    name = "externs_zip",
+    srcs = glob(["externs/**/*.js"]),
+    outs = ["externs.zip"],
+    # Trim the "externs/" prefix from the names of the ziped files.
+    cmd = "cd externs && find . -name '*.js' | zip ../$(OUTS) -@ &> /dev/null",
 )
 
-SUPER_SRCS = glob(["**/super/**"])
+# To run all tests:           `blaze test //:compiler_tests`
+# To test `a/b/FooTest.java`: `blaze test //:a/b/Foo`
+#
+# Only files ending in `*Test.java` are considered tests.
+gen_java_tests(
+    name = "compiler_tests",
+    srcs = glob(
+        [
+            "test/**/*.java",
+            "src/**/testing/**/*.java",
+        ],
+        exclude = [
+            # TODO(nickreid): Reenable these when we stop running them with
+            # Maven. Runfiles make them too hard to get them to pass under Maven
+            # and Bazel together.
+            "test/com/google/javascript/jscomp/CommandLineRunnerTest.java",
+            "test/com/google/javascript/jscomp/CompilerTest.java",
+            "test/com/google/javascript/jscomp/ConformanceAllowlisterTest.java",
+            "test/com/google/javascript/jscomp/CoverageInstrumentationPassTest.java",
+            "test/com/google/javascript/jscomp/SourceMapJsLangTest.java",
+            "test/com/google/javascript/jscomp/integration/IntegrationTest.java",
+            "test/com/google/javascript/refactoring/examples/*.java",
+        ] + [
+            # These files are only needed by the GWT/J2CL build of the compiler.
+            "**/super*/**/*.java",
+            "**/j2cl/**/*.java",
+            "**/gwt/**/*.java",
+            "src/com/google/debugging/sourcemap/*Js.java",
+        ],
+    ),
+    prefix_path = "test/",
+    deps = [
+        ":compiler_lib",
+        ":compiler_tests_resources",
+        "@args4j_args4j",
+        "@com_google_code_gson_gson",
+        "@com_google_guava_failureaccess//jar",
+        "@com_google_guava_guava//jar",
+        "@com_google_guava_guava_testlib//jar",
+        "@com_google_protobuf_protobuf_java",
+        "@com_google_re2j_re2j",
+        "@google_bazel_common//third_party/java/auto:value",
+        "@google_bazel_common//third_party/java/error_prone:annotations",
+        "@google_bazel_common//third_party/java/jsr305_annotations",
+        "@google_bazel_common//third_party/java/junit",
+        "@google_bazel_common//third_party/java/mockito",
+        "@google_bazel_common//third_party/java/truth",
+    ],
+)
+
+java_library(
+    name = "compiler_tests_resources",
+    resources = glob([
+        "test/com/google/javascript/refactoring/examples/testdata/**/*.js",
+        "src/com/google/javascript/refactoring/examples/refasterjs/**/*.js",
+    ]),
+)
+
+# This is the bazel target that compiles and optimizes the J2CL app.
+#
+# It provides couple of convenient targets:
+#  :compiler produces the compiler.js that could be used for production.
+#  :compiler_dev produces the compiler_dev.js that could be used for development.
+#  :compiler_dev_server serves compiler_dev.js with couple of extras which you can
+#    use as a simple development server.
+#
+# If you like to just save a file and see the results, you can replace bazel w/ ibazel:
+#   $ ibazel run :compiler_dev_server
+#
+j2cl_application(
+    name = "compiler-j2cl",
+    entry_points = ["com.google.javascript.jscomp.gwt.client.JsRunnerMain"],
+    jre_checks_check_level = "MINIMAL",
+    deps = [":compiler_lib-j2cl"],
+)
 
 j2cl_library(
-    name = "app",
+    name = "compiler_lib-j2cl",
     srcs = [
         ":node_globals_externs",
         ":resources.js",
@@ -64,7 +204,7 @@ j2cl_library(
             "**/super-gwt/**",
             "**/testing/**",
             "src/com/google/javascript/jscomp/deps/PathUtil.java",
-        ] + ["src/" + s.split("/super/")[1] for s in SUPER_SRCS],
+        ] + ["src/" + s.split("/super/")[1] for s in glob(["**/super/**"])],
     ),
     js_suppress = ["deprecated"],
     deps = [
@@ -79,20 +219,30 @@ j2cl_library(
     ],
 )
 
-# This is the bazel target that compiles and optimizes the J2CL app.
-#
-# It provides couple of convenient targets:
-#  :compiler produces the compiler.js that could be used for production.
-#  :compiler_dev produces the compiler_dev.js that could be used for development.
-#  :compiler_dev_server serves compiler_dev.js with couple of extras which you can
-#    use as a simple development server.
-#
-# If you like to just save a file and see the results, you can replace bazel w/ ibazel:
-#   $ ibazel run :compiler_dev_server
-#
-j2cl_application(
-    name = "compiler",
-    entry_points = ["com.google.javascript.jscomp.gwt.client.JsRunnerMain"],
-    jre_checks_check_level = "MINIMAL",
-    deps = [":app"],
+j2cl_import(
+    name = "auto_value-j2cl",
+    jar = "@com_google_auto_value//jar",
+)
+
+genrule(
+    name = "resources_gen_js",
+    srcs = ["src/com/google/javascript/jscomp/resources/resources.json"],
+    outs = ["resources.js"],
+    # Wrap resources.json into a goog.module that the data can be depended on
+    # via goog.require in the J2CL build.
+    cmd = """echo 'goog.module(\"com.google.javascript.jscomp.Resources\");
+    let resources = ' > $@ &&
+    cat $(SRCS) >> $@ &&
+    echo ";exports = {resources: function() {return resources}};" >> $@
+    """,
+)
+
+filegroup(
+    name = "node_globals_externs",
+    srcs = [
+        "contrib/nodejs/events.js",
+        "contrib/nodejs/fs.js",
+        "contrib/nodejs/globals.js",
+        "contrib/nodejs/stream.js",
+    ],
 )
