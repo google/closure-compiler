@@ -53,7 +53,7 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
   private final AbstractCompiler compiler;
   private final ParameterMapping parameterMapping;
 
-  private static final String GLOBAL_FUNCTION_NAME = "<Anonymous>";
+  private static final String ANONYMOUS_FUNCTION_NAME = "<Anonymous>";
 
   private enum Type {
     FUNCTION,
@@ -89,12 +89,12 @@ final class ProductionCoverageInstrumentationCallback implements NodeTraversal.C
 
     if (n.isFunction()) {
       String fnName = NodeUtil.getBestLValueName(NodeUtil.getBestLValue(n));
-      fnName = (fnName == null) ? GLOBAL_FUNCTION_NAME : fnName;
+      fnName = (fnName == null) ? ANONYMOUS_FUNCTION_NAME : fnName;
       functionNameStack.push(fnName);
     }
 
     if(functionNameStack.isEmpty()){
-      functionNameStack.push(GLOBAL_FUNCTION_NAME);
+      functionNameStack.push(ANONYMOUS_FUNCTION_NAME);
     }
 
     return true;
