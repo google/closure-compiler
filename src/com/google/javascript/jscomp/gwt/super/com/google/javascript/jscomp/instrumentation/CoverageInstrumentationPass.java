@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.instrumentation;
 
+import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
+import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.rhino.Node;
 
 /** GWT compatible no-op replacement for {@code CoverageInstrumentationPass} */
