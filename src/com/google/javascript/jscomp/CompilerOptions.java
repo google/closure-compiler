@@ -157,7 +157,7 @@ public class CompilerOptions implements Serializable {
         if (year == 2020) {
           CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2020);
         } else if (year == 2019) {
-          CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2019);
+          CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
         } else if (year == 2012) {
           CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
         }
