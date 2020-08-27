@@ -1703,10 +1703,10 @@ public class CommandLineRunner extends
       out.println(
           "Closure Compiler (http://github.com/google/closure-compiler)\n"
               + "Version: "
-              + Compiler.getReleaseVersion()
+              + Compiler.getReleaseVersion() // Inlined by Bazel
               + "\n"
               + "Built on: "
-              + Compiler.getReleaseDate());
+              + Compiler.getReleaseDate()); // Inlined by Bazel
       out.flush();
     } else {
       runCompiler = true;

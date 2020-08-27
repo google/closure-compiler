@@ -1,6 +1,21 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@com_google_j2cl//build_defs:rules.bzl", "j2cl_application", "j2cl_import", "j2cl_library")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
+load("//:expand_template_with_defines.bzl", "expand_template_with_defines")
 
 package(licenses = ["notice"])
 
@@ -35,7 +50,9 @@ java_library(
 
 java_library(
     name = "compiler_lib",
-    srcs = glob(
+    srcs = [
+        ":CommandLineRunner_with_version",
+    ] + glob(
         [
             "gen/**/*.java",
             "src/com/google/debugging/**/*.java",
@@ -64,6 +81,9 @@ java_library(
             "**/j2cl/**/*.java",
             "**/gwt/**/*.java",
             "src/com/google/debugging/sourcemap/*Js.java",
+        ] + [
+            # Used as a template.
+            "src/com/google/javascript/jscomp/CommandLineRunner.java",
         ],
     ),
     resources = [
@@ -92,6 +112,22 @@ genrule(
     outs = ["externs.zip"],
     # Trim the "externs/" prefix from the names of the ziped files.
     cmd = "cd externs && find . -name '*.js' | zip ../$(OUTS) -@ &> /dev/null",
+)
+
+# It's easier to make a copy of this Java file than to update PraserConfig.properties
+# because the Java compiler can tell us during build if something is wrong. By
+# contrast, the ParserConfig lookup will fail at runtime.
+expand_template_with_defines(
+    name = "CommandLineRunner_with_version",
+    out = "withversion/CommandLineRunner.java",
+    defines = {
+        "COMPILER_VERSION": "unspecified",
+    },
+    substitutions = {
+        "Compiler.getReleaseVersion()": '"{COMPILER_VERSION}"',
+        "Compiler.getReleaseDate()": '"unspecified"',
+    },
+    template = "src/com/google/javascript/jscomp/CommandLineRunner.java",
 )
 
 # To run all tests:           `blaze test //:compiler_tests`
