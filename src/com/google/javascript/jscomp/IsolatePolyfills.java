@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -169,9 +170,14 @@ class IsolatePolyfills implements CompilerPass {
   private void rewritePolyfill(PolyfillUsage polyfillUsage) {
     final Polyfill polyfill = polyfillUsage.polyfill();
 
-    // Skip isolation if the --language_out is high enough to already contain the given feature.
-    if (PolyfillUsageFinder.languageOutIsAtLeast(
-        polyfill.nativeVersion, compiler.getOptions().getOutputFeatureSet())) {
+    // If the output FeatureSet includes all of the features of the language version in which
+    // the polyfilled symbol was introduced, we can assume that the intended platform has
+    // the symbol defined natively, so the compiler won't include the polyfill in its output and it
+    // won't need to be isolated.
+    if (compiler
+        .getOptions()
+        .getOutputFeatureSet()
+        .contains(FeatureSet.valueOf(polyfill.nativeVersion))) {
       return;
     }
 

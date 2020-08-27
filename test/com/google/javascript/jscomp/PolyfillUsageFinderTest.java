@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill.Kind;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfills;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -83,8 +82,8 @@ public final class PolyfillUsageFinderTest {
     mapUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Map")
-        .hasNativeVersion(FeatureSet.ES6)
-        .hasPolyfillVersion(FeatureSet.ES3)
+        .hasNativeVersionStr("es6")
+        .hasPolyfillVersionStr("es3")
         .hasLibrary("es6/map")
         .hasKind(Kind.STATIC);
 
@@ -96,8 +95,8 @@ public final class PolyfillUsageFinderTest {
     arrayFillUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Array.prototype.fill")
-        .hasNativeVersion(FeatureSet.ES6)
-        .hasPolyfillVersion(FeatureSet.ES3)
+        .hasNativeVersionStr("es6")
+        .hasPolyfillVersionStr("es3")
         .hasLibrary("es6/array/fill")
         .hasKind(Kind.METHOD);
 
@@ -125,8 +124,8 @@ public final class PolyfillUsageFinderTest {
       arrayDotFromUsageSubject
           .hasPolyfillThat()
           .hasNativeSymbol("Array.from")
-          .hasNativeVersion(FeatureSet.ES6)
-          .hasPolyfillVersion(FeatureSet.ES3)
+          .hasNativeVersionStr("es6")
+          .hasPolyfillVersionStr("es3")
           .hasLibrary("es6/array/from")
           .hasKind(Kind.STATIC);
     }
@@ -164,8 +163,8 @@ public final class PolyfillUsageFinderTest {
     promiseUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Promise")
-        .hasNativeVersion(FeatureSet.ES6)
-        .hasPolyfillVersion(FeatureSet.ES3)
+        .hasNativeVersionStr("es6")
+        .hasPolyfillVersionStr("es3")
         .hasLibrary("es6/promise/promise")
         .hasKind(Kind.STATIC);
 
@@ -181,8 +180,8 @@ public final class PolyfillUsageFinderTest {
     allSettledUsageSubject
         .hasPolyfillThat()
         .hasNativeSymbol("Promise.allSettled")
-        .hasNativeVersion(FeatureSet.ES2020)
-        .hasPolyfillVersion(FeatureSet.ES3)
+        .hasNativeVersionStr("es_2020")
+        .hasPolyfillVersionStr("es3")
         .hasLibrary("es6/promise/allsettled")
         .hasKind(Kind.STATIC);
   }
@@ -234,8 +233,8 @@ public final class PolyfillUsageFinderTest {
       arrayDotFromUsageSubject
           .hasPolyfillThat()
           .hasNativeSymbol("Array.from")
-          .hasNativeVersion(FeatureSet.ES6)
-          .hasPolyfillVersion(FeatureSet.ES3)
+          .hasNativeVersionStr("es6")
+          .hasPolyfillVersionStr("es3")
           .hasLibrary("es6/array/from")
           .hasKind(Kind.STATIC);
     }
@@ -345,12 +344,12 @@ public final class PolyfillUsageFinderTest {
       return this;
     }
 
-    PolyfillSubject hasNativeVersion(FeatureSet expected) {
+    PolyfillSubject hasNativeVersionStr(String expected) {
       check("nativeVersion").that(actual.nativeVersion).isEqualTo(expected);
       return this;
     }
 
-    PolyfillSubject hasPolyfillVersion(FeatureSet expected) {
+    PolyfillSubject hasPolyfillVersionStr(String expected) {
       check("polyfillVersion").that(actual.polyfillVersion).isEqualTo(expected);
       return this;
     }

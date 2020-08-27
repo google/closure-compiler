@@ -248,7 +248,10 @@ public final class FeatureSet implements Serializable {
     this.features = ImmutableSet.copyOf(features);
   }
 
-  /** Returns a string representation suitable for encoding in depgraph and deps.js files. */
+  /**
+   * Returns a string representation suitable for use in polyfill definition files and encoding in
+   * depgraph and deps.js files.
+   */
   public String version() {
     if (ES3.contains(this)) {
       return "es3";

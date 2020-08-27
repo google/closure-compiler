@@ -124,9 +124,9 @@ public class RewritePolyfills implements HotSwapCompilerPass {
         Node call = node.getFirstChild();
         Node name = call.getFirstChild();
         if (name.matchesQualifiedName("$jscomp.polyfill")) {
-          FeatureSet nativeVersion =
-              FeatureSet.valueOf(name.getNext().getNext().getNext().getString());
-          if (languageOutIsAtLeast(nativeVersion)) {
+          final String nativeVersionStr = name.getNext().getNext().getNext().getString();
+          final FeatureSet outputFeatureSet = compiler.getOptions().getOutputFeatureSet();
+          if (outputFeatureSet.contains(FeatureSet.valueOf(nativeVersionStr))) {
             NodeUtil.removeChild(parent, node);
             NodeUtil.markFunctionsDeleted(node, compiler);
           }
@@ -143,23 +143,26 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
   private void inject(PolyfillUsage polyfillUsage) {
     Polyfill polyfill = polyfillUsage.polyfill();
+    final FeatureSet outputFeatureSet = compiler.getOptions().getOutputFeatureSet();
+    final FeatureSet featuresRequiredByPolyfill = FeatureSet.valueOf(polyfill.polyfillVersion);
     if (polyfill.kind.equals(Polyfill.Kind.STATIC)
-        && !languageOutIsAtLeast(polyfill.polyfillVersion)) {
+        && !outputFeatureSet.contains(featuresRequiredByPolyfill)) {
       compiler.report(
           JSError.make(
               polyfillUsage.node(),
               INSUFFICIENT_OUTPUT_VERSION_ERROR,
               polyfillUsage.name(),
-              compiler.getOptions().getOutputFeatureSet().version()));
+              outputFeatureSet.version()));
     }
 
-    if (!languageOutIsAtLeast(polyfill.nativeVersion) && !polyfill.library.isEmpty()) {
+    // The question we want to ask here is:
+    // "Does the target platform already have the symbol this polyfill provides?"
+    // We approximate it by asking instead:
+    // "Does the target platform support all of the features that existed in the language
+    // version that introduced this symbol?"
+    if (!outputFeatureSet.contains(FeatureSet.valueOf(polyfill.nativeVersion))
+        && !polyfill.library.isEmpty()) {
       libraries.add(polyfill.library);
     }
-  }
-
-  private boolean languageOutIsAtLeast(FeatureSet featureSet) {
-    return PolyfillUsageFinder.languageOutIsAtLeast(
-        featureSet, compiler.getOptions().getOutputFeatureSet());
   }
 }

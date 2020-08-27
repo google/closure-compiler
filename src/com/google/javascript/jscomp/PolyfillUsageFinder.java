@@ -23,8 +23,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Collection;
@@ -46,19 +44,19 @@ final class PolyfillUsageFinder {
     final String nativeSymbol;
 
     /**
-     * The language version at (or above) which the native symbol is
-     * available and sufficient.  If the language out flag is at least
-     * as high as {@code nativeVersion} then no rewriting will happen.
+     * The language version at (or above) which the native symbol is available and sufficient. If
+     * the language out flag is at least as high as {@code nativeVersion} then the polyfill is not
+     * needed. This string should be one of those returned by FeatureSet.version().
      */
-    final FeatureSet nativeVersion;
+    final String nativeVersion;
 
     /**
-     * The required language version for the polyfill to work.  This
-     * should not be higher than {@code nativeVersion}, but may be the same
-     * in cases where there is no polyfill provided.  This is used to
-     * emit a warning if the language out flag is too low.
+     * The required language version for the polyfill to work. This should not be higher than {@code
+     * nativeVersion}, but may be the same in cases where there is no polyfill provided. This is
+     * used to emit a warning if the language out flag is too low. This string should be one of
+     * those returned by FeatureSet.version().
      */
-    final FeatureSet polyfillVersion;
+    final String polyfillVersion;
 
     /**
      * Runtime library to inject for the polyfill, e.g. "es6/map".
@@ -74,8 +72,8 @@ final class PolyfillUsageFinder {
 
     Polyfill(
         String nativeSymbol,
-        FeatureSet nativeVersion,
-        FeatureSet polyfillVersion,
+        String nativeVersion,
+        String polyfillVersion,
         String library,
         Kind kind) {
       this.nativeSymbol = nativeSymbol;
@@ -129,11 +127,13 @@ final class PolyfillUsageFinder {
         }
         String symbol = tokens.get(0);
         boolean isPrototypeMethod = symbol.contains(".prototype.");
+        final String nativeVersionStr = tokens.get(1);
+        final String polyfillVersionStr = tokens.get(2);
         Polyfill polyfill =
             new Polyfill(
                 symbol,
-                FeatureSet.valueOf(tokens.get(1)),
-                FeatureSet.valueOf(tokens.get(2)),
+                nativeVersionStr,
+                polyfillVersionStr,
                 tokens.size() > 3 ? tokens.get(3) : "",
                 isPrototypeMethod ? Polyfill.Kind.METHOD : Polyfill.Kind.STATIC);
         if (isPrototypeMethod) {
@@ -374,32 +374,4 @@ final class PolyfillUsageFinder {
   private static final ImmutableSet<String> GLOBAL_NAMES =
       ImmutableSet.of("goog.global.", "window.", "goog$global.", "globalThis.");
 
-  private static boolean languageOutIsAtLeast(LanguageMode mode, FeatureSet outputFeatureSet) {
-    return outputFeatureSet.contains(mode.toFeatureSet());
-  }
-
-  static boolean languageOutIsAtLeast(FeatureSet features, FeatureSet outputFeatureSet) {
-    switch (features.version()) {
-      case "ts":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT6_TYPED, outputFeatureSet);
-      case "es_2020":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2020, outputFeatureSet);
-      case "es_2019":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2019, outputFeatureSet);
-      case "es9":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2018, outputFeatureSet);
-      case "es8":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2017, outputFeatureSet);
-      case "es7":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2016, outputFeatureSet);
-      case "es6":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT_2015, outputFeatureSet);
-      case "es5":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT5, outputFeatureSet);
-      case "es3":
-        return languageOutIsAtLeast(LanguageMode.ECMASCRIPT3, outputFeatureSet);
-      default:
-        return false;
-    }
-  }
 }
