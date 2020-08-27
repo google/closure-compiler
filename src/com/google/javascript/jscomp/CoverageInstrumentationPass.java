@@ -78,6 +78,14 @@ class CoverageInstrumentationPass implements CompilerPass {
     script.addChildToFront(varNode.useSourceInfoIfMissingFromForTree(script));
   }
 
+  private void checkIfArrayNameExternDeclared(Node externsNode, String arrayName) {
+    if (!NodeUtil.collectExternVariableNames(this.compiler, externsNode).contains(arrayName)) {
+      throw new AssertionError(
+          "The array name passed to --production_instrumentation_array_name was not "
+              + "declared as an extern. This will result in undefined behaviour");
+    }
+  }
+
   @Override
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
@@ -93,6 +101,8 @@ class CoverageInstrumentationPass implements CompilerPass {
             new ProductionCoverageInstrumentationCallback(compiler, arrayName);
 
         NodeTraversal.traverse(compiler, rootNode, productionCoverageInstrumentationCallback);
+
+        checkIfArrayNameExternDeclared(externsNode, arrayName);
 
         VariableMap instrumentationMapping =
             productionCoverageInstrumentationCallback.getInstrumentationMapping();
