@@ -1345,11 +1345,10 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "f({foo : 0})"),
         ImmutableList.of("f"));
 
-    assertPureCallsMarked(
+    assertNoPureCalls(
         lines(
             "function f({x}) {x.foo++}", // preserve newline
-            "f({x: {foo : 0}})"),
-        ImmutableList.of("f"));
+            "f({x: {foo : 0}})"));
   }
 
   @Test
@@ -1888,20 +1887,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "};",
             "b();"),
         ImmutableList.of("C.a", "b"));
-
-    assertPureCallsMarked(
-        lines(
-            "// Mutates argument",
-            "A.a = function([argument]) {",
-            "  argument.x = 2;",
-            "};",
-            "// No side effects",
-            "B.a = function() {};",
-            "var b = function() {",
-            "  C.a([{}]);",
-            "};",
-            "b();"),
-        ImmutableList.of("C.a", "b"));
   }
 
   @Test
@@ -2138,9 +2123,26 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
     assertPureCallsMarked(
         lines(
-            "function f([x]) { x.y = 1; }", // preserve newline
-            "f([{}]);"),
+            "function f(x = {}) { x.y = 1; }", // preserve newline
+            "f({});"),
         ImmutableList.of("f"));
+  }
+
+  @Test
+  public void testMutatesArguments_notTrackedThroughDestructuring() {
+    assertNoPureCalls(
+        lines(
+            "const obj = {};", // preserve newline
+            "function f([x]) { x.y = 1; }",
+            "f({obj});",
+            ""));
+
+    // This is technically pure, but right now we don't track that the array being destructured was
+    // a literal containing literals.
+    assertNoPureCalls(
+        lines(
+            "function f([x]) { x.y = 1; }", // preserve newline
+            "f([{}]);"));
   }
 
   @Test
@@ -2168,13 +2170,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "function f(x) { x.y = 1; }", // preserve newline
             "function g(x) { f({}); x.y = 1; }",
             "g({});"),
-        ImmutableList.of("f", "g"));
-
-    assertPureCallsMarked(
-        lines(
-            "function f([x]) { x.y = 1; }", // preserve newline
-            "function g([x]) { f([{}]); x.y = 1; }",
-            "g([{}]);"),
         ImmutableList.of("f", "g"));
   }
 

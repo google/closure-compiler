@@ -963,7 +963,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         }
 
         for (Var v : t.getScope().getVarIterable()) {
+          boolean isFromDestructuring = NodeUtil.isLhsByDestructuring(v.getNameNode());
           if (v.isParam()
+              // Ignore destructuring parameters because they don't directly correspond to an
+              // argument passed to the function for the purposes of "setMutatesArguments"
+              && !isFromDestructuring
               && !skiplistedVarsByFunction.containsEntry(function, v)
               && taintedVarsByFunction.containsEntry(function, v)) {
             sideEffectInfo.setMutatesArguments();

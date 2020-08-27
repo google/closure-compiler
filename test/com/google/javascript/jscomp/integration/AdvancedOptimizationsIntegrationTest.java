@@ -2118,4 +2118,55 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     testSame(options, "alert('hi');");
   }
+
+  @Test
+  public void testModififyingDestructuringParamWithTranspilation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("testExterns.js", new TestExternsBuilder().addAlert().build()));
+
+    test(
+        options,
+        lines(
+            "function installBaa({ obj }) {",
+            " obj.baa = 'foo';",
+            "}",
+            "",
+            "const obj = {};",
+            "installBaa({ obj });",
+            "alert(obj.baa);"),
+        "alert('foo');");
+  }
+
+  @Test
+  public void testModififyingDestructuringParamWithoutTranspilation() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    externs =
+        ImmutableList.of(
+            SourceFile.fromCode("testExterns.js", new TestExternsBuilder().addAlert().build()));
+
+    test(
+        options,
+        lines(
+            "function installBaa({ obj }) {",
+            " obj.baa = 'foo';",
+            "}",
+            "",
+            "const obj = {};",
+            "installBaa({ obj });",
+            "alert(obj.baa);"),
+        lines(
+            "const a = {};", //
+            "(function({b}){",
+            "  b.a = 'foo';",
+            "})({b: a});",
+            "alert(a.a);"));
+  }
 }
