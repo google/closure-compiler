@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.instrumentation;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;

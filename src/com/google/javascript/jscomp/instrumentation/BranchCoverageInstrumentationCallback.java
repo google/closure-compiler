@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.instrumentation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.ControlFlowGraph;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;

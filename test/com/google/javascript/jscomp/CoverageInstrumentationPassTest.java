@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for function transformation in {@link CoverageInstrumentationPass}. */
+/** Tests for function transformation in {@link com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass}. */
 @RunWith(JUnit4.class)
 public final class CoverageInstrumentationPassTest {
 

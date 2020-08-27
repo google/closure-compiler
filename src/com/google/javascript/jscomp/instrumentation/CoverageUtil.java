@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.instrumentation;
 
 /**
  * This class contains all general purpose static methods that are used by

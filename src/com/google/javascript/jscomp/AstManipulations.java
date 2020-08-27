@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /** Utilities to abstract away certain common AST manipulations */
-final class AstManipulations {
+public final class AstManipulations {
 
   // Non-instantiable
   private AstManipulations() {}
@@ -33,7 +33,7 @@ final class AstManipulations {
    * <p>Requires that expr1 and expr2 are detached (i.e. have no parent nodes). If exp2 is EMPTY
    * this just returns exp1.
    */
-  static Node fuseExpressions(Node exp1, Node exp2) {
+  public static Node fuseExpressions(Node exp1, Node exp2) {
     checkArgument(exp1.getParent() == null, "Expected detached node, got %s", exp1);
     checkArgument(exp2.getParent() == null, "Expected detached node, got %s", exp2);
     if (exp2.isEmpty()) {

@@ -255,7 +255,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /**
    * Parses code for injecting.
    */
-  abstract Node parseSyntheticCode(String code);
+  public abstract Node parseSyntheticCode(String code);
 
   /**
    * Parses code for injecting, and associate it with a given source file.
@@ -477,7 +477,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   public abstract Node getRoot();
 
-  abstract CompilerOptions getOptions();
+  public abstract CompilerOptions getOptions();
 
   /**
    * The set of features defined by the input language mode that have not (yet) been transpiled
