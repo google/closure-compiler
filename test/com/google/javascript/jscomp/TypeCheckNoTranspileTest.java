@@ -4085,6 +4085,33 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testClassSuperMethodCallableInParameters() {
+    testTypes(
+        lines(
+            "class Foo {",
+            "  /** @return {string|number} */",
+            "  foo() {",
+            "    return 0;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  /**",
+            "   * @param {number=} param",
+            "   * @return {string}",
+            "   * @override",
+            "   */",
+            //  super.foo() returns string|number, so `param` is typed as `string|number`
+            "  foo(param = super.foo()) {",
+            "    return 'param: ' + param;",
+            "  }",
+            "}"),
+        lines(
+            "default value has wrong type", //
+            "found   : (number|string)",
+            "required: (number|undefined)"));
+  }
+
+  @Test
   public void testAbstractSuperMethodCall_warning() {
     testTypes(
         lines(

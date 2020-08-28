@@ -89,9 +89,8 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
-  private final FlowScope functionScope;
   private final FlowScope bottomScope;
-  private final TypedScope containerScope;
+  private final TypedScope containerScope; // either the global scope or a function scope
   private final TypedScopeCreator scopeCreator;
   private final AssertionFunctionLookup assertionFunctionLookup;
   private final ModuleImportResolver moduleImportResolver;
@@ -115,24 +114,20 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       TypedScopeCreator scopeCreator,
       AssertionFunctionLookup assertionFunctionLookup) {
     super(cfg, new LinkedFlowScope.FlowScopeJoinOp(compiler));
-    this.compiler = compiler;
-    this.registry = compiler.getTypeRegistry();
-    this.reverseInterpreter = reverseInterpreter;
+    checkArgument(
+        syntacticScope.isGlobal() || syntacticScope.isFunctionScope(),
+        "Expected global or function scope, got %s",
+        syntacticScope);
+    this.compiler = checkNotNull(compiler);
+    this.registry = checkNotNull(compiler.getTypeRegistry());
+    this.reverseInterpreter = checkNotNull(reverseInterpreter);
     this.unknownType = registry.getNativeObjectType(UNKNOWN_TYPE);
     this.moduleImportResolver =
         new ModuleImportResolver(
             compiler.getModuleMap(), scopeCreator.getNodeToScopeMapper(), this.registry);
-
     this.containerScope = syntacticScope;
-
-    this.scopeCreator = scopeCreator;
-    this.assertionFunctionLookup = assertionFunctionLookup;
-
-    FlowScope entryScope =
-        inferDeclarativelyUnboundVarsWithoutTypes(
-            LinkedFlowScope.createEntryLattice(compiler, syntacticScope));
-
-    this.functionScope = inferParameters(entryScope);
+    this.scopeCreator = checkNotNull(scopeCreator);
+    this.assertionFunctionLookup = checkNotNull(assertionFunctionLookup);
 
     this.bottomScope =
         LinkedFlowScope.createEntryLattice(
@@ -346,7 +341,12 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
   @Override
   FlowScope createEntryLattice() {
-    return functionScope;
+    // only ever called once so we don't need to cache this computation
+    FlowScope entryScope =
+        inferDeclarativelyUnboundVarsWithoutTypes(
+            LinkedFlowScope.createEntryLattice(compiler, this.containerScope));
+
+    return inferParameters(entryScope);
   }
 
   @Override
@@ -964,7 +964,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
       case GETELEM:
       case GETPROP:
-        superNodeType = ObjectType.cast(functionScope.getSlot("super").getType());
+        superNodeType = ObjectType.cast(containerScope.getSlot("super").getType());
         break;
 
       default:
@@ -1016,7 +1016,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
 
     Node retValue = n.getFirstChild();
     if (retValue != null) {
-      JSType type = functionScope.getRootNode().getJSType();
+      JSType type = containerScope.getRootNode().getJSType();
       if (type != null) {
         FunctionType fnType = type.toMaybeFunctionType();
         if (fnType != null) {

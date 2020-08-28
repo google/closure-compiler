@@ -153,7 +153,7 @@ public final class TypeInferenceTest {
     parseAndRunTypeInference("(" + thisBlock + " function() {" + js + "});");
   }
 
-  private void inModule(String js) {
+  private void inScript(String js) {
     Node script = compiler.parseTestCode(js);
     assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
         .that(compiler.getErrorCount())
@@ -164,9 +164,7 @@ public final class TypeInferenceTest {
     new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
         .process(root.getFirstChild(), root.getSecondChild());
 
-    // SCRIPT -> MODULE_BODY
-    Node moduleBody = script.getFirstChild();
-    parseAndRunTypeInference(root, moduleBody);
+    parseAndRunTypeInference(root, root);
   }
 
   private void inGenerator(String js) {
@@ -224,28 +222,28 @@ public final class TypeInferenceTest {
       scopeCreator.resolveWeakImportsPreResolution();
     }
     scopeCreator.undoTypeAliasChains();
-      // Create the control graph.
-      ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
-      cfa.process(null, cfgRoot);
-      ControlFlowGraph<Node> cfg = cfa.getCfg();
-      // Create a simple reverse abstract interpreter.
-      ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
-      // Do the type inference by data-flow analysis.
-      TypeInference dfa =
-          new TypeInference(compiler, cfg, rai, assumedScope, scopeCreator, ASSERTION_FUNCTION_MAP);
-      dfa.analyze();
-      // Get the scope of the implicit return.
-      BranchedFlowState<FlowScope> rtnState = cfg.getImplicitReturn().getAnnotation();
-      if (cfgRoot.isFunction()) {
-        // Reset the flow scope's syntactic scope to the function block, rather than the function
-        // node
-        // itself.  This allows pulling out local vars from the function by name to verify their
-        // types.
-        returnScope =
-            rtnState.getIn().withSyntacticScope(scopeCreator.createScope(cfgRoot.getLastChild()));
-      } else {
-        returnScope = rtnState.getIn();
-      }
+    // Create the control graph.
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
+    cfa.process(null, cfgRoot);
+    ControlFlowGraph<Node> cfg = cfa.getCfg();
+    // Create a simple reverse abstract interpreter.
+    ReverseAbstractInterpreter rai = compiler.getReverseAbstractInterpreter();
+    // Do the type inference by data-flow analysis.
+    TypeInference dfa =
+        new TypeInference(compiler, cfg, rai, assumedScope, scopeCreator, ASSERTION_FUNCTION_MAP);
+    dfa.analyze();
+    // Get the scope of the implicit return.
+    BranchedFlowState<FlowScope> rtnState = cfg.getImplicitReturn().getAnnotation();
+    if (cfgRoot.isFunction()) {
+      // Reset the flow scope's syntactic scope to the function block, rather than the function
+      // node
+      // itself.  This allows pulling out local vars from the function by name to verify their
+      // types.
+      returnScope =
+          rtnState.getIn().withSyntacticScope(scopeCreator.createScope(cfgRoot.getLastChild()));
+    } else {
+      returnScope = rtnState.getIn();
+    }
 
     this.closer = this.registry.getResolver().openForDefinition();
   }
@@ -3743,7 +3741,7 @@ public final class TypeInferenceTest {
     assuming("foo", NUMBER_TYPE);
     assuming("bar", UNKNOWN_TYPE);
 
-    inModule("export default (bar = foo, foo = 'not a number');");
+    inScript("export default (bar = foo, foo = 'not a number');");
 
     assertType(getType("bar")).isNumber();
     assertType(getType("foo")).isString();
