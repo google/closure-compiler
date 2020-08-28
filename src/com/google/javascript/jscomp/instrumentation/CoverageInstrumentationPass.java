@@ -39,6 +39,8 @@ public class CoverageInstrumentationPass implements CompilerPass {
   private final CoverageReach reach;
   private final InstrumentOption instrumentOption;
 
+  private final String productionInstrumentationArrayName;
+
   public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
 
   public enum CoverageReach {
@@ -48,16 +50,20 @@ public class CoverageInstrumentationPass implements CompilerPass {
 
   /** @param compiler the compiler which generates the AST. */
   public CoverageInstrumentationPass(
-      AbstractCompiler compiler, CoverageReach reach, InstrumentOption instrumentOption) {
+      AbstractCompiler compiler,
+      CoverageReach reach,
+      InstrumentOption instrumentOption,
+      String productionInstrumentationArrayName) {
     this.compiler = compiler;
     this.reach = reach;
     this.instrumentOption = instrumentOption;
+    this.productionInstrumentationArrayName = productionInstrumentationArrayName;
     instrumentationData = new LinkedHashMap<>();
   }
 
   @Deprecated
   public CoverageInstrumentationPass(AbstractCompiler compiler, CoverageReach reach) {
-    this(compiler, reach, InstrumentOption.LINE_ONLY);
+    this(compiler, reach, InstrumentOption.LINE_ONLY, "");
   }
 
   /**
@@ -100,14 +106,14 @@ public class CoverageInstrumentationPass implements CompilerPass {
             rootNode,
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
       } else if (instrumentOption == InstrumentOption.PRODUCTION) {
-        String arrayName = compiler.getOptions().getProductionInstrumentationArrayName();
 
         ProductionCoverageInstrumentationCallback productionCoverageInstrumentationCallback =
-            new ProductionCoverageInstrumentationCallback(compiler, arrayName);
+            new ProductionCoverageInstrumentationCallback(
+                compiler, productionInstrumentationArrayName);
 
         NodeTraversal.traverse(compiler, rootNode, productionCoverageInstrumentationCallback);
 
-        checkIfArrayNameExternDeclared(externsNode, arrayName);
+        checkIfArrayNameExternDeclared(externsNode, productionInstrumentationArrayName);
 
         VariableMap instrumentationMapping =
             productionCoverageInstrumentationCallback.getInstrumentationMapping();
@@ -127,7 +133,7 @@ public class CoverageInstrumentationPass implements CompilerPass {
 
       if (instrumentOption == InstrumentOption.PRODUCTION) {
         addProductionHeaderCode(
-            firstScript, compiler.getOptions().getProductionInstrumentationArrayName());
+            firstScript, productionInstrumentationArrayName);
       } else {
         addHeaderCode(firstScript);
       }

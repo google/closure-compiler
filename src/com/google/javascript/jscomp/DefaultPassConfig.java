@@ -2746,7 +2746,8 @@ public final class DefaultPassConfig extends PassConfig {
                   new CoverageInstrumentationPass(
                       compiler,
                       CoverageReach.CONDITIONAL,
-                      options.getInstrumentForCoverageOption()))
+                      options.getInstrumentForCoverageOption(),
+                      options.getProductionInstrumentationArrayName()))
           .setFeatureSetForOptimizations()
           .build();
 

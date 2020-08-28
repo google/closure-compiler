@@ -477,7 +477,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
    */
   public abstract Node getRoot();
 
-  public abstract CompilerOptions getOptions();
+  abstract CompilerOptions getOptions();
 
   /**
    * The set of features defined by the input language mode that have not (yet) been transpiled

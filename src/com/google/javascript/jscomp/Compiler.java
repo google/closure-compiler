@@ -35,8 +35,6 @@ import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
-import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
-import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
@@ -47,6 +45,8 @@ import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.deps.WebpackModuleResolver;
 import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
+import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
@@ -921,7 +921,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private void instrumentForCoverageInternal(InstrumentOption instrumentForCoverageOption) {
     Tracer tracer = newTracer("instrumentationPass");
-    process(new CoverageInstrumentationPass(this, CoverageReach.ALL, instrumentForCoverageOption));
+    process(
+        new CoverageInstrumentationPass(
+            this,
+            CoverageReach.ALL,
+            instrumentForCoverageOption,
+            options.getProductionInstrumentationArrayName()));
     stopTracer(tracer, "instrumentationPass");
   }
 
