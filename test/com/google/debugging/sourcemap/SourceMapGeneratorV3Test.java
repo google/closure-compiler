@@ -561,6 +561,59 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   }
 
   @Test
+  public void testSourceMerging1() throws SourceMapParseException, IOException {
+    // construct first source map
+    SourceMapGeneratorV3 sourceMapGeneratorV3 = new SourceMapGeneratorV3();
+    sourceMapGeneratorV3.addMapping(
+        "sourceName1",
+        "symbolName1",
+        new FilePosition(1, 1),
+        new FilePosition(2, 2),
+        new FilePosition(3, 3));
+    StringWriter w = new StringWriter();
+    sourceMapGeneratorV3.appendTo(w, "foo.js.sourcemap");
+    String sourceMap1 = w.toString();
+
+    // construct second source map
+    sourceMapGeneratorV3 = new SourceMapGeneratorV3();
+    sourceMapGeneratorV3.addMapping(
+        "sourceName2",
+        "symbolName2",
+        new FilePosition(1, 4),
+        new FilePosition(2, 5),
+        new FilePosition(3, 6));
+    w = new StringWriter();
+    sourceMapGeneratorV3.appendTo(w, "bar.js.sourcemap");
+    String sourceMap2 = w.toString();
+
+    // combine the two
+    sourceMapGeneratorV3 = new SourceMapGeneratorV3();
+    sourceMapGeneratorV3.mergeMapSection(0, 0, sourceMap1);
+    sourceMapGeneratorV3.mergeMapSection(4, 0, sourceMap2);
+    sourceMapGeneratorV3.appendTo(w, "foobar.js.sourcemap");
+    String combinedMap = w.toString();
+
+    // Construct the same map manually
+    sourceMapGeneratorV3 = new SourceMapGeneratorV3();
+    sourceMapGeneratorV3.addMapping(
+        "sourceName1",
+        "symbolName1",
+        new FilePosition(1, 1),
+        new FilePosition(2, 2),
+        new FilePosition(3, 3));
+    sourceMapGeneratorV3.addMapping(
+        "sourceName2",
+        "symbolName2",
+        new FilePosition(1, 4),
+        new FilePosition(6, 5),
+        new FilePosition(7, 6));
+    sourceMapGeneratorV3.appendTo(w, "foobar.js.sourcemap");
+    String manuallyCombined = w.toString();
+    // TODO(b/62591567): these should be equal, but combinedMap is missing the last mapping.
+    assertThat(combinedMap).isNotEqualTo(manuallyCombined);
+  }
+
+  @Test
   public void testSourceMapExtensions() throws Exception {
     //generating the json
     SourceMapGeneratorV3 mapper = new SourceMapGeneratorV3();
