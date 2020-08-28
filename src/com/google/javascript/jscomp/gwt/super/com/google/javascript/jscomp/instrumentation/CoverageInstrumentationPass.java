@@ -33,8 +33,10 @@ public class CoverageInstrumentationPass implements CompilerPass {
   }
 
   public CoverageInstrumentationPass(
-      AbstractCompiler compiler, CoverageReach reach, InstrumentOption notUsed) {
-  }
+      AbstractCompiler compiler,
+      CoverageReach reach,
+      InstrumentOption notUsed,
+      String productionInstrumentationArrayName) {}
 
   @Override
   public void process(Node externs, Node root) {
