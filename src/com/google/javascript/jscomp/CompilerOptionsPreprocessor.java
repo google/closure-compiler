@@ -45,6 +45,12 @@ public final class CompilerOptionsPreprocessor {
       options.setAmbiguateProperties(false);
       options.setDisambiguateProperties(false);
     }
+
+    // TypeScript can be parsed or code printed only, so prevent setting a languageIn and
+    // languageOut that would require transpiling TS.
+    if (options.needsTranspilationFrom(FeatureSet.TYPESCRIPT)) {
+      throw new InvalidOptionsException("Transpilation of TypeScript syntax is not supported");
+    }
   }
 
   /** Exception to indicate incompatible options in the CompilerOptions. */

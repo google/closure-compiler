@@ -15,103 +15,57 @@
  */
 package com.google.javascript.jscomp.integration;
 
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
+
 import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.CompilerOptionsPreprocessor;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.WarningLevel;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Integration tests for compilation in {@link LanguageMode#ECMASCRIPT6_TYPED} mode with
- * typechecking done.
+ * Integration tests for compilation in {@link LanguageMode#ECMASCRIPT6_TYPED} mode
+ *
+ * <p>Only parsing and code printing of types is supported.
  */
 @RunWith(JUnit4.class)
 public final class Es6TypedIntegrationTest extends IntegrationTestCase {
 
   @Test
-  public void testBasicTypeCheck() {
-    test(createCompilerOptions(), "var x: number = 12;\nalert(x);", "alert(12);");
+  public void forbidsTranspilingTsToJS() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    assertThrows(
+        CompilerOptionsPreprocessor.InvalidOptionsException.class,
+        () -> test(options, "var x: number = 12;\nalert(x);", "alert(12);"));
   }
 
   @Test
-  public void testBasicTypeCheck_error() {
-    test(createCompilerOptions(), "var x: number = 'hello';", DiagnosticGroups.CHECK_TYPES);
-  }
+  public void passThroughWithTypesWarns() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT6_TYPED);
 
-  @Test
-  public void testFunctionType_correct() {
-    test(createCompilerOptions(), "function x(): number { return 12; }; alert(x());", "alert(12)");
-  }
-
-  @Test
-  public void testFunctionType_error() {
     test(
-        createCompilerOptions(),
-        "function x(): number { return 'hello'; }",
-        DiagnosticGroups.CHECK_TYPES);
+        options, "var x: number = 12;\nalert(x);", DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS);
   }
 
   @Test
-  public void testFunctionParameter() {
-    test(createCompilerOptions(), "function x(x: number) {}; x(12);", "");
-  }
+  public void disableFeaturesNotSupportedException() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT6_TYPED);
+    options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
 
-  @Test
-  public void testFunctionParameter_error() {
-    test(
-        createCompilerOptions(),
-        "function x(x: number) {}; x('hello');",
-        DiagnosticGroups.CHECK_TYPES);
-  }
-
-  @Test
-  public void testClassMemberVariable() {
-    test(createCompilerOptions(),
-        "class C { x: number; }\n"
-            + "var c: C = new C();\n"
-            + "c.x = 12;\n"
-            + "alert(c.x);",
-        "var a=new function(){};a.a=12;alert(a.a);");
-    test(
-        createCompilerOptions(),
-        "class C { x: number; }\n" + "var c: C = new C();\n" + "c.x = '12';",
-        DiagnosticGroups.CHECK_TYPES);
-  }
-
-  @Test
-  public void testClassMemberVariable_static() {
-    test(createCompilerOptions(),
-        "class C { static x: number; }\n"
-            + "C.x = 12;\n"
-            + "alert(C.x);",
-        "alert(12);");
-    test(
-        createCompilerOptions(),
-        "class C { static x: number; }\n" + "C.x = '12';",
-        DiagnosticGroups.CHECK_TYPES);
-  }
-
-  @Test
-  public void testVariableDeclaredBeforePassVaraiableReferenceCheck() {
-    test(createCompilerOptions(),
-        "enum A { B, C }\n"
-        + "function b(a:A = A.B) {}\n"
-        + "b();", "");
+    test(options, "var x: number = 12;\nalert(x);", "var x: number = 12;\nalert(x);");
   }
 
   @Override
-  public CompilerOptions createCompilerOptions() {
+  protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
-    options.preserveTypeAnnotations = true;
-    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     return options;
   }
 }

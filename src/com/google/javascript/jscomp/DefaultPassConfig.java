@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -138,9 +137,6 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getTranspileOnlyPasses() {
     List<PassFactory> passes = new ArrayList<>();
 
-    if (options.needsTranspilationFrom(TYPESCRIPT)) {
-      passes.add(convertEs6TypedToEs6);
-    }
     passes.add(markUntranspilableFeaturesAsRemoved);
 
     passes.add(checkVariableReferencesForTranspileOnly);
@@ -240,10 +236,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Run this pass before any pass tries to inject new runtime libraries
     checks.add(addSyntheticScript);
-
-    if (options.needsTranspilationFrom(TYPESCRIPT)) {
-      checks.add(convertEs6TypedToEs6);
-    }
 
     if (!options.checksOnly) {
       checks.add(markUntranspilableFeaturesAsRemoved);
@@ -1428,14 +1420,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("InjectRuntimeLibraries")
           .setInternalFactory(InjectRuntimeLibraries::new)
           .setFeatureSetForChecks()
-          .build();
-
-  /** Desugars ES6_TYPED features into ES6 code. */
-  final PassFactory convertEs6TypedToEs6 =
-      PassFactory.builderForHotSwap()
-          .setName("convertEs6Typed")
-          .setInternalFactory(Es6TypedToEs6Converter::new)
-          .setFeatureSet(TYPESCRIPT)
           .build();
 
   private final PassFactory markUntranspilableFeaturesAsRemoved =
