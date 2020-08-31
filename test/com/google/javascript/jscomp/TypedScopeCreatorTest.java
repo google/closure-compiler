@@ -1794,6 +1794,22 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testCollectedCtorBigIntProperty() {
+    testSame(
+        lines(
+            "/** @constructor */ function f() { ",
+            "  /** @const */ this.foo = 1n + 2n;",
+            "}",
+            "var x = new f();"));
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertThat(x.toString()).isEqualTo("f");
+    assertThat(x.hasProperty("foo")).isTrue();
+    assertThat(x.getPropertyType("foo").toString()).isEqualTo("bigint");
+    assertThat(x.isPropertyTypeInferred("foo")).isFalse();
+    assertThat(x.isPropertyTypeDeclared("foo")).isTrue();
+  }
+
+  @Test
   public void testCollectedCtorProperty9() {
     testSame(
         "/** @constructor */ function f() {}\n" +

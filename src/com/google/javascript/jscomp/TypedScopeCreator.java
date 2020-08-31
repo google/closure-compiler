@@ -2567,6 +2567,10 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         return getNativeType(NUMBER_TYPE);
       }
 
+      if (NodeUtil.isBigIntResult(rValue)) {
+        return getNativeType(BIGINT_TYPE);
+      }
+
       if (NodeUtil.isStringResult(rValue)) {
         return getNativeType(STRING_TYPE);
       }

@@ -1338,8 +1338,11 @@ public final class NodeUtil {
   }
 
   /**
-   * Apply the supplied predicate against
-   * all possible result Nodes of the expression.
+   * Evaluate a node's token and attempt to determine which primitive value type it could resolve to
+   * Without proper type information some assumptions had to be made for operations that could
+   * result in a BigInt or a Number. If there is not enough information available to determine one
+   * or the other then we assume Number in order to maintain historical behavior of the compiler and
+   * avoid breaking projects that relied on this behavior.
    */
   public static ValueType getKnownValueType(Node n) {
     switch (n.getToken()) {
@@ -1360,33 +1363,34 @@ public final class NodeUtil {
             getKnownValueType(n.getLastChild()));
 
       case ADD: {
-        ValueType last = getKnownValueType(n.getLastChild());
-        if (last == ValueType.STRING) {
-          return ValueType.STRING;
-        }
-        ValueType first = getKnownValueType(n.getFirstChild());
-        if (first == ValueType.STRING) {
-          return ValueType.STRING;
-        }
+          ValueType last = getKnownValueType(n.getLastChild());
+          if (last == ValueType.STRING) {
+            return ValueType.STRING;
+          }
+          ValueType first = getKnownValueType(n.getFirstChild());
+          if (first == ValueType.STRING) {
+            return ValueType.STRING;
+          }
 
-        // There are some pretty weird cases for object types:
-        //   {} + [] === "0"
-        //   [] + {} ==== "[object Object]"
-        if (first == ValueType.OBJECT || last == ValueType.OBJECT) {
+          // There are some pretty weird cases for object types:
+          //   {} + [] === "0"
+          //   [] + {} === "[object Object]"
+          if (first == ValueType.OBJECT || last == ValueType.OBJECT) {
+            return ValueType.UNDETERMINED;
+          }
+
+          if (!mayBeString(first) && !mayBeString(last)) {
+            if (first == ValueType.BIGINT || last == ValueType.BIGINT) {
+              // If one operand is a BigInt, then the result is a BigInt or there's a type error
+              return ValueType.BIGINT;
+            } else {
+              // ADD used with compilations of null, undefined, boolean and number always result
+              // in numbers.
+              return ValueType.NUMBER;
+            }
+          }
+
           return ValueType.UNDETERMINED;
-        }
-
-        if (!mayBeString(first) && !mayBeString(last)) {
-          // ADD used with compilations of null, undefined, boolean and number always result
-          // in numbers.
-          return ValueType.NUMBER;
-        }
-
-        // There are some pretty weird cases for object types:
-        //   {} + [] === "0"
-        //   [] + {} ==== "[object Object]"
-
-        return ValueType.UNDETERMINED;
       }
 
       case ASSIGN_ADD: {
@@ -1421,27 +1425,53 @@ public final class NodeUtil {
       case ASSIGN_EXPONENT:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
-      case BITNOT:
+        // assign operators could be using BIGINT or NUMBER
+        if (getKnownValueType(n.getLastChild()) == ValueType.BIGINT) {
+          return ValueType.BIGINT;
+        } else {
+          return ValueType.NUMBER;
+        }
+
+      case BIGINT:
+        return ValueType.BIGINT;
+
       case BITOR:
       case BITXOR:
       case BITAND:
       case LSH:
       case RSH:
-      case URSH:
       case SUB:
       case MUL:
       case MOD:
       case DIV:
       case EXPONENT:
+        {
+          // binary arithmetic operators could result in BIGINT or NUMBER
+          ValueType first = getKnownValueType(n.getFirstChild());
+          ValueType last = getKnownValueType(n.getLastChild());
+          if (first == ValueType.BIGINT || last == ValueType.BIGINT) {
+            return ValueType.BIGINT;
+          } else {
+            return ValueType.NUMBER;
+          }
+        }
+      case BITNOT:
+      case NEG:
+        // unary negation (bitwise or arithmetic) could be using BIGINT or NUMBER
+        if (getKnownValueType(n.getOnlyChild()) == ValueType.BIGINT) {
+          return ValueType.BIGINT;
+        } else {
+          return ValueType.NUMBER;
+        }
       case INC:
       case DEC:
-      case POS:
-      case NEG:
-      case NUMBER:
+        // increment and decrement can only be used on variables, so we assume they're numbers
         return ValueType.NUMBER;
-
-      case BIGINT:
-        return ValueType.BIGINT;
+      case URSH:
+      case POS:
+      case NUMBER:
+        // unary + and unsigned right shift don't apply to bigint
+        return ValueType.NUMBER;
 
       // Primitives
       case TRUE:
@@ -1499,6 +1529,11 @@ public final class NodeUtil {
     return getKnownValueType(n) == ValueType.NUMBER;
   }
 
+  /** Returns true if the result of node evaluation is always a bigint */
+  public static boolean isBigIntResult(Node n) {
+    return getKnownValueType(n) == ValueType.BIGINT;
+  }
+
   /**
    * @return Whether the result of node evaluation is always a boolean
    */
@@ -1538,7 +1573,10 @@ public final class NodeUtil {
       if (type != null) {
         if (type.isStringValueType()) {
           return true;
-        } else if (type.isNumberValueType() || type.isBooleanValueType() || type.isNullType()
+        } else if (type.isNumberValueType()
+            || type.isBigIntValueType()
+            || type.isBooleanValueType()
+            || type.isNullType()
             || type.isVoidType()) {
           return false;
         }
@@ -1563,9 +1601,8 @@ public final class NodeUtil {
       case STRING:
       case UNDETERMINED:
         return true;
-      default:
-        throw new IllegalStateException("unexpected");
     }
+    throw new IllegalStateException("unexpected");
   }
 
   static boolean mayBeObject(Node n) {
@@ -1584,9 +1621,8 @@ public final class NodeUtil {
       case OBJECT:
       case UNDETERMINED:
         return true;
-      default:
-        throw new IllegalStateException("unexpected");
     }
+    throw new IllegalStateException("unexpected");
   }
 
   /**

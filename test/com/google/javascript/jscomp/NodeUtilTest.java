@@ -63,6 +63,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1731,10 +1733,17 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.isNumericResult(parseExpr("undefined"))).isFalse();
       assertThat(NodeUtil.isNumericResult(parseExpr("void 0"))).isFalse();
 
+      // Technically the result when both operands are variables could be a `bigint`.
+      // We would need to use type information to be certain, but `number` is much more likely.
       assertThat(NodeUtil.isNumericResult(parseExpr("a << b"))).isTrue();
       assertThat(NodeUtil.isNumericResult(parseExpr("a >> b"))).isTrue();
+      // if one side is a number then we can safely assume the result is a number
+      assertThat(NodeUtil.isNumericResult(parseExpr("a << 2"))).isTrue();
+      assertThat(NodeUtil.isNumericResult(parseExpr("a >> 2"))).isTrue();
+      // unsigned right shift is only allowed with numbers
       assertThat(NodeUtil.isNumericResult(parseExpr("a >>> b"))).isTrue();
 
+      // logical comparisons result in boolean, not number
       assertThat(NodeUtil.isNumericResult(parseExpr("a == b"))).isFalse();
       assertThat(NodeUtil.isNumericResult(parseExpr("a != b"))).isFalse();
       assertThat(NodeUtil.isNumericResult(parseExpr("a === b"))).isFalse();
@@ -1768,14 +1777,100 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.isNumericResult(parseExpr("a,1"))).isTrue();
       assertThat(NodeUtil.isNumericResult(parseExpr("a=1"))).isTrue();
 
+      // variable might be a string
       assertThat(NodeUtil.isNumericResult(parseExpr("a += 1"))).isFalse();
 
       assertThat(NodeUtil.isNumericResult(parseExpr("a -= 1"))).isTrue();
       assertThat(NodeUtil.isNumericResult(parseExpr("a *= 1"))).isTrue();
+
+      // Technically when the operand is a variable the result could be a `bigint`.
+      // We would need to use type information to be certain, but `number` is much more likely.
       assertThat(NodeUtil.isNumericResult(parseExpr("--a"))).isTrue();
       assertThat(NodeUtil.isNumericResult(parseExpr("++a"))).isTrue();
       assertThat(NodeUtil.isNumericResult(parseExpr("a++"))).isTrue();
       assertThat(NodeUtil.isNumericResult(parseExpr("a--"))).isTrue();
+    }
+
+    @Test
+    public void testIsBigIntResult() {
+      assertThat(NodeUtil.isBigIntResult(parseExpr("1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("-1n"))).isTrue();
+
+      // if one side is a bigint then we will assume the result is a bigint
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a *= 1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * 1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("1n * a"))).isTrue();
+
+      // if neither side is explicitly bigint, then the the result could be a number or type error
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b"))).isFalse();
+      // addition is a special case because of string concatenation
+      assertThat(NodeUtil.isBigIntResult(parseExpr("'a'+1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("1n+'b'"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("1n + 2n"))).isTrue();
+      // variable might be a string
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a += 1n"))).isFalse();
+
+      // unsigned right shift and unary + are only allowed with numbers
+      assertThat(NodeUtil.isBigIntResult(parseExpr("+a"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a >>> b"))).isFalse();
+
+      // recurse if necessary
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b + 1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b * 1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b + c * 1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b + c * d"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * ~b * -c * d * 1n"))).isTrue();
+      // even though the other side is definitely NUMBER, isBigIntResult returns true because it is
+      // not responsible for type checking
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * 1 * b * c * d * 1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b * +c * d * 1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b >> c * d * 1n"))).isTrue();
+      // unsigned right shift is the overall parent and thus evaluated as NUMBER
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a * b >>> c * d * 1n"))).isFalse();
+
+      // Infinity and NaN are numbers, not bigints
+      assertThat(NodeUtil.isBigIntResult(parseExpr("-Infinity"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("Infinity"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("NaN"))).isFalse();
+
+      assertThat(NodeUtil.isBigIntResult(parseExpr("undefined"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("void 0n"))).isFalse();
+
+      // logical comparisons result in boolean, not bigint
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a == 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a != 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a === 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a !== 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a < 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a > 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a <= 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a >= 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a in 1n"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a instanceof 1n"))).isFalse();
+
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a()"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("''.a"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a.b"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a.b()"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a().b()"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("new a()"))).isFalse();
+
+      // Definitely not bigint
+      assertThat(NodeUtil.isBigIntResult(parseExpr("([1n,2n])"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("({a:1n})"))).isFalse();
+
+      // Recurse into the expression when necessary.
+      assertThat(NodeUtil.isBigIntResult(parseExpr("1n && 2n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("1n || 2n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a ? 2n : 3n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a,1n"))).isTrue();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a=1n"))).isTrue();
+
+      // variable might be a number
+      assertThat(NodeUtil.isBigIntResult(parseExpr("--a"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("++a"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a++"))).isFalse();
+      assertThat(NodeUtil.isBigIntResult(parseExpr("a--"))).isFalse();
     }
 
     @Test
@@ -1896,6 +1991,27 @@ public final class NodeUtilTest {
     }
 
     @Test
+    public void testMayBeStringWithTypes() {
+      JSTypeRegistry registry = new JSTypeRegistry(null);
+      assertThat(
+              NodeUtil.mayBeString(
+                  IR.name("a").setJSType(registry.getNativeType(JSTypeNative.NUMBER_TYPE)), true))
+          .isFalse();
+      assertThat(
+              NodeUtil.mayBeString(
+                  IR.name("a").setJSType(registry.getNativeType(JSTypeNative.BIGINT_TYPE)), true))
+          .isFalse();
+      assertThat(
+              NodeUtil.mayBeString(
+                  IR.name("a").setJSType(registry.getNativeType(JSTypeNative.BOOLEAN_TYPE)), true))
+          .isFalse();
+      assertThat(
+              NodeUtil.mayBeString(
+                  IR.name("a").setJSType(registry.getNativeType(JSTypeNative.STRING_TYPE)), true))
+          .isTrue();
+    }
+
+    @Test
     public void testIsStringResult() {
       assertThat(NodeUtil.isStringResult(parseExpr("1"))).isFalse();
       assertThat(NodeUtil.isStringResult(parseExpr("true"))).isFalse();
@@ -1959,6 +2075,71 @@ public final class NodeUtilTest {
       // Template literals
       assertThat(NodeUtil.isStringResult(parseExpr("`x`"))).isTrue();
       assertThat(NodeUtil.isStringResult(parseExpr("`a${b}c`"))).isTrue();
+    }
+
+    @Test
+    public void testMayBeObject() {
+      assertThat(NodeUtil.mayBeObject(parseExpr("1"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("1n"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a * b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("true"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("+true"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("+1"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("-1"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("-Infinity"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("Infinity"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("NaN"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("undefined"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("void 0"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("null"))).isFalse();
+
+      assertThat(NodeUtil.mayBeObject(parseExpr("a << b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a >> b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a >>> b"))).isFalse();
+
+      assertThat(NodeUtil.mayBeObject(parseExpr("a == b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a != b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a === b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a !== b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a < b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a > b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a <= b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a >= b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a in b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a instanceof b"))).isFalse();
+
+      assertThat(NodeUtil.mayBeObject(parseExpr("'a'"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("'a'+b"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a+'b'"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a+b"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a()"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("''.a"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a.b"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a.b()"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a().b()"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("new a()"))).isTrue();
+
+      // These can't be objects but they aren't handled yet.
+      assertThat(NodeUtil.mayBeObject(parseExpr("1 && 2"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("1 || 2"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("1 ? 2 : 3"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("1,2"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a=1"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("1+1"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("true+true"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("null+null"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("NaN+NaN"))).isFalse();
+
+      // These are not objects but they aren't primitives either
+      assertThat(NodeUtil.mayBeObject(parseExpr("([1,2])"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("({a:1})"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("({}+1)"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("(1+{})"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("([]+1)"))).isTrue();
+      assertThat(NodeUtil.mayBeObject(parseExpr("(1+[])"))).isTrue();
+
+      assertThat(NodeUtil.mayBeObject(parseExpr("a += 'x'"))).isFalse();
+      assertThat(NodeUtil.mayBeObject(parseExpr("a += 1"))).isTrue();
     }
 
     @Test
