@@ -282,7 +282,7 @@ public class CodeGenerator {
         if (first != last) {
           checkState(childCount == 2, node);
           cc.addOp("=", true);
-          add(last);
+          addExpr(last, NodeUtil.precedence(Token.ASSIGN), getContextForNoInOperator(context));
         }
         break;
 
@@ -298,13 +298,7 @@ public class CodeGenerator {
         if (first != null && !first.isEmpty()) {
           checkState(childCount == 1, node);
           cc.addOp("=", true);
-          if (first.isComma() || (first.isCast() && first.getFirstChild().isComma())) {
-            addExpr(first, NodeUtil.precedence(Token.ASSIGN), Context.OTHER);
-          } else {
-            // Add expression, consider nearby code at lowest level of
-            // precedence.
-            addExpr(first, 0, getContextForNoInOperator(context));
-          }
+          addExpr(first, NodeUtil.precedence(Token.ASSIGN), getContextForNoInOperator(context));
         }
         break;
 

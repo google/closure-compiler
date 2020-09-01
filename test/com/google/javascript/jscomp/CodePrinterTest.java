@@ -916,6 +916,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "var a={}; for(var i = () => (0 in a); i;) {}", "var a={};for(var i=()=>(0 in a);i;);");
     assertPrint(
         "var a={}; for(var i = () => ({} in a); i;) {}", "var a={};for(var i=()=>({}in a);i;);");
+
+    // And inside a destructuring declaration
+    assertPrint(
+        "var a={}; for(var {noop} = (\"prop\" in a); noop;) {}",
+        "var a={};for(var {noop}=(\"prop\"in a);noop;);");
   }
 
   @Test
@@ -3256,6 +3261,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Parens required for first operand to a conditional, but not the rest.
     assertPrint("((x)=>1)?a:b", "(x=>1)?a:b");
     assertPrint("x?((x)=>0):((x)=>1)", "x?x=>0:x=>1");
+  }
+
+  @Test
+  public void testParensAroundVariableDeclarator() {
+    assertPrintSame("var o=(test++,{one:1})");
+    assertPrintSame("({one}=(test++,{one:1}))");
+    assertPrintSame("[one]=(test++,[1])");
+
+    assertPrintSame("var {one}=(test++,{one:1})");
+    assertPrintSame("var [one]=(test++,[1])");
+    assertPrint(
+        "var {one}=/** @type {{one: number}} */(test++,{one:1})", "var {one}=(test++,{one:1})");
+    assertPrint("var [one]=/** @type {!Array<number>} */(test++,[1])", "var [one]=(test++,[1])");
   }
 
   @Test
