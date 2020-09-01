@@ -55,7 +55,6 @@
   </parent>
 
   <modules>
-    <module>pom-linter.xml</module>
     <module>pom-main-unshaded.xml</module>
     <module>pom-main-shaded.xml</module>
   </modules>
