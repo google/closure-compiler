@@ -66,6 +66,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -1633,7 +1634,6 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("022"))).isEqualTo(18.0);
     }
 
-    @SuppressWarnings("JUnit3FloatingPointComparisonWithoutDelta")
     @Test
     public void testGetNumberValue() {
       // Strings
@@ -1646,7 +1646,6 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("'+2'"))).isEqualTo(2.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("'-1.6'"))).isEqualTo(-1.6);
       assertThat(NodeUtil.getNumberValue(parseExpr("'16'"))).isEqualTo(16.0);
-      assertThat(NodeUtil.getNumberValue(parseExpr("' 16 '"))).isEqualTo(16.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("' 16 '"))).isEqualTo(16.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("'123e2'"))).isEqualTo(12300.0);
       assertThat(NodeUtil.getNumberValue(parseExpr("'123E2'"))).isEqualTo(12300.0);
@@ -1718,6 +1717,84 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.getNumberValue(parseExpr("1/2"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("1-2"))).isNull();
       assertThat(NodeUtil.getNumberValue(parseExpr("+1"))).isNull();
+    }
+
+    @Test
+    public void testGetBigIntValue() {
+      // Strings
+      // NOTE: Strings with the 'n' literal syntax can't be converted to BigInt
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'1'"))).isEqualTo(BigInteger.ONE);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'1n'"))).isNull();
+
+      // whitespace
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'\\uFEFF1'"))).isEqualTo(BigInteger.ONE);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("''"))).isEqualTo(BigInteger.ZERO);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("' '"))).isEqualTo(BigInteger.ZERO);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("' \\t'"))).isEqualTo(BigInteger.ZERO);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("' 1 '"))).isEqualTo(BigInteger.ONE);
+
+      // Even though unary plus cannot be applied to a bigint, numeric strings that have one can
+      // still be converted, e.g. BigInt("+0") => 0n
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'+0'"))).isEqualTo(BigInteger.ZERO);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'-0'"))).isEqualTo(BigInteger.ZERO);
+
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'10'"))).isEqualTo(BigInteger.TEN);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'+10'"))).isEqualTo(new BigInteger("+10"));
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'-10'"))).isEqualTo(new BigInteger("-10"));
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'   +10'"))).isEqualTo(new BigInteger("+10"));
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'   -10'"))).isEqualTo(new BigInteger("-10"));
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'0xa'"))).isEqualTo(BigInteger.TEN);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'0XA'"))).isEqualTo(BigInteger.TEN);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'0o12'"))).isEqualTo(BigInteger.TEN);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'0O12'"))).isEqualTo(BigInteger.TEN);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'0b1010'"))).isEqualTo(BigInteger.TEN);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'0B1010'"))).isEqualTo(BigInteger.TEN);
+
+      // Strings representing hex, octal, or binary literal values cannot include a unary plus or
+      // minus when being passed to BigInt().
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'+0xF'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'-0xF'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'+0oF'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'-0oF'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'+0bF'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'-0bF'"))).isNull();
+
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'1.5'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'-Infinity'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'Infinity'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'+Infinity'"))).isNull();
+
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'NaN'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'some unknown string'"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("'123 blah'"))).isNull();
+
+      // Literals
+      assertThat(NodeUtil.getBigIntValue(parseExpr("1"))).isEqualTo(BigInteger.ONE);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("1n"))).isEqualTo(BigInteger.ONE);
+      // "-1" is parsed as a literal
+      assertThat(NodeUtil.getBigIntValue(parseExpr("-1"))).isEqualTo(new BigInteger("-1"));
+      // "+1" is parse as an op + literal
+      assertThat(NodeUtil.getBigIntValue(parseExpr("+1"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("22"))).isEqualTo(new BigInteger("22"));
+      assertThat(NodeUtil.getBigIntValue(parseExpr("022"))).isEqualTo(new BigInteger("18"));
+      assertThat(NodeUtil.getBigIntValue(parseExpr("0x22"))).isEqualTo(new BigInteger("34"));
+
+      final String maxSafeInt = "9007199254740991"; // Number.MAX_SAFE_INTEGER
+      assertThat(NodeUtil.getBigIntValue(parseExpr(maxSafeInt)))
+          .isEqualTo(new BigInteger(maxSafeInt));
+
+      assertThat(NodeUtil.getBigIntValue(parseExpr("true"))).isEqualTo(BigInteger.ONE);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("false"))).isEqualTo(BigInteger.ZERO);
+      assertThat(NodeUtil.getBigIntValue(parseExpr("null"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("void 0"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("void f"))).isNull();
+
+      // getBigIntValue only converts literals
+      assertThat(NodeUtil.getBigIntValue(parseExpr("x"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("x.y"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("1/2"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("1-2"))).isNull();
+      assertThat(NodeUtil.getBigIntValue(parseExpr("+1"))).isNull();
     }
 
     @Test

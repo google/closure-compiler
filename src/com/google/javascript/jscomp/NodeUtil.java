@@ -422,6 +422,107 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * Gets the value of a node as a BigInt, or null if it cannot be converted. When it returns a
+   * non-null BigInteger, this method effectively emulates the <code>BigInt()</code> JavaScript cast
+   * function.
+   *
+   * <p>IMPORTANT: This method does not consider whether {@code n} may have side effects.
+   *
+   * @param n The node.
+   * @return The value of a node as a BigInt, or null if it cannot be converted.
+   */
+  static BigInteger getBigIntValue(Node n) {
+    switch (n.getToken()) {
+      case TRUE:
+        return BigInteger.ONE;
+
+      case FALSE:
+        return BigInteger.ZERO;
+
+      case NUMBER:
+        double val = n.getDouble();
+        return val % 1 == 0 ? BigInteger.valueOf((long) val) : null;
+
+      case BIGINT:
+        return n.getBigInt();
+
+      case NOT:
+        TernaryValue child = getBooleanValue(n.getFirstChild());
+        if (child != TernaryValue.UNKNOWN) {
+          return child.toBoolean(true) ? BigInteger.ZERO : BigInteger.ONE; // reversed.
+        }
+        return null;
+
+      case TEMPLATELIT:
+        String string = getStringValue(n);
+        if (string == null) {
+          return null;
+        }
+        return getStringBigIntValue(string);
+
+      case STRING:
+        return getStringBigIntValue(n.getString());
+
+      case ARRAYLIT:
+      case OBJECTLIT:
+        String value = getStringValue(n);
+        return value != null ? getStringBigIntValue(value) : null;
+      case VOID:
+      case NAME:
+      case NEG:
+      case NULL:
+      default:
+        return null;
+    }
+  }
+
+  static BigInteger getStringBigIntValue(String rawJsString) {
+    if (rawJsString.contains("\u000b")) {
+      // vertical tab is not always whitespace
+      return null;
+    }
+
+    String s = trimJsWhiteSpace(rawJsString);
+    if (s.isEmpty()) {
+      return BigInteger.ZERO;
+    }
+
+    if (s.length() > 2 && s.charAt(0) == '0') {
+      // Attempt to convert hex, octal, and binary formats.
+      int radix;
+      switch (s.charAt(1)) {
+        case 'x':
+        case 'X':
+          radix = 16;
+          break;
+        case 'o':
+        case 'O':
+          radix = 8;
+          break;
+        case 'b':
+        case 'B':
+          radix = 2;
+          break;
+        default:
+          radix = 0;
+      }
+      if (radix != 0) {
+        try {
+          return new BigInteger(s.substring(2), radix);
+        } catch (NumberFormatException e) {
+          return null;
+        }
+      }
+    }
+
+    try {
+      return new BigInteger(s);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
   static String trimJsWhiteSpace(String s) {
     int start = 0;
     int end = s.length();
