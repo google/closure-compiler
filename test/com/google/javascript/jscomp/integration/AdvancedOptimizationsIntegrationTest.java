@@ -213,9 +213,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  return value * 3n;",
             "}",
             "console.log(bigintTimes3(5n));"),
-        // TODO(b/140132715): This test should expect console.log(15n), must update
-        // PeepholeFoldConstants for this to work as intended
-        "console.log(5n * 3n);");
+        "console.log(15n);");
   }
 
   @Test

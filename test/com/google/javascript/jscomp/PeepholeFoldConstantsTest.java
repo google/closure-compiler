@@ -838,6 +838,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 'a' + 'bc'", "x = 'abc'");
     test("x = 'a' + 5", "x = 'a5'");
     test("x = 5 + 'a'", "x = '5a'");
+    test("x = 'a' + 5n", "x = 'a5n'");
+    test("x = 5n + 'a'", "x = '5na'");
     test("x = 'a' + ''", "x = 'a'");
     test("x = 'a' + foo()", "x = 'a'+foo()");
     test("x = foo() + 'a' + 'b'", "x = foo()+'ab'");
@@ -923,6 +925,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x = y + 10 + 20");
     testSame("x = y / 2 / 4");
     test("x = y * 2.25 * 3", "x = y * 6.75");
+    testSame("x = y * 2.25 * z * 3");
     testSame("z = x * y");
     testSame("x = y * 5");
     test("x = y + (z * 24 * 60 * 60 * 1000)", "x = y + z * 864E5");
@@ -950,6 +953,35 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testFoldArithmeticStringComp() {
     test("x = 10 - 20", "x = -10");
+  }
+
+  @Test
+  public void testNoFoldArithmeticWithSideEffects() {
+    // can't fold this to "x = y * 6.75" because you can't remove the "sideEffects()" call
+    testSame("x = y * 2.25 * (sideEffects(), 3)");
+  }
+
+  @Test
+  public void testFoldBigIntArithmetic() {
+    test("x = 1n + 2n", "x = 3n");
+    test("x = 1n - 2n", "x = -1n");
+    test("x = 2n * 3n", "x = 6n");
+    test("x = 6n / 2n", "x = 3n");
+    test("x = 3n % 2n", "x = 1n");
+    test("x = 2n ** 3n", "x = 8n");
+
+    // The compiler is not designed to fold expressions with an exponent > 2147483647
+    test("x = 1n ** 2147483647n", "x = 1n");
+    testSame("x = 1n ** 2147483648n");
+
+    test("x = y * 2n * 3n", "x = y * 6n");
+    testSame("x = y * 2n * z * 3n");
+  }
+
+  @Test
+  public void testNoFoldBigIntArithmeticWithSideEffects() {
+    // can't fold this to "x = y * 6.75" because you can't remove the "sideEffects()" call
+    testSame("x = y * 2n * (sideEffects(), 3n)");
   }
 
   @Test
@@ -1942,6 +1974,45 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("0/x");
 
     foldNumericTypes("x/1", "x");
+
+    test("(doSomething(),0)*1", "(doSomething(),0)");
+    test("1*(doSomething(),0)", "(doSomething(),0)");
+    testSame("(0,doSomething())*1");
+    testSame("1*(0,doSomething())");
+  }
+
+  @Test
+  public void testBigIntAlgebraicIdentities() {
+    enableTypeCheck();
+
+    foldBigIntTypes("x+0n", "x");
+    foldBigIntTypes("0n+x", "x");
+    foldBigIntTypes("x+0n+0n+x+x+0n", "x+x+x");
+
+    foldBigIntTypes("x-0n", "x");
+    foldBigIntTypes("0n-x", "-x");
+    foldBigIntTypes("x-0n-0n-0n", "x");
+
+    foldBigIntTypes("x*1n", "x");
+    foldBigIntTypes("1n*x", "x");
+    foldBigIntTypes("x*1n*1n*x*x*1n", "x*x*x");
+
+    foldBigIntTypes("x/1n", "x");
+    foldBigIntTypes("x/0n", "x/0n");
+
+    test("for (var i = 0n; i < 5n; i++) var x = 0n + i * 1n", "for(var i=0n; i < 5n; i++) var x=i");
+
+    test("(doSomething(),0n)*1n", "(doSomething(),0n)");
+    test("1n*(doSomething(),0n)", "(doSomething(),0n)");
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
+    testSame("(0n,doSomething())*1n");
+    testSame("1n*(0n,doSomething())");
+  }
+
+  private void foldBigIntTypes(String js, String expected) {
+    test(
+        "function f(/** @type {bigint} */ x) { " + js + " }",
+        "function f(/** @type {bigint} */ x) { " + expected + " }");
   }
 
   private void foldNumericTypes(String js, String expected) {

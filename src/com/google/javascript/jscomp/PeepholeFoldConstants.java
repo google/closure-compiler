@@ -788,6 +788,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return null;
     }
 
+    if (isBigInt(left) && isBigInt(right)) {
+      return performBigIntArithmeticOp(opType, left, right);
+    }
+
     double result;
 
     // TODO(johnlenz): Handle NaN with unknown value. BIT ops convert NaN
@@ -891,9 +895,80 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return maybeReplaceBinaryOpWithNumericResult(result, lval, rval);
   }
 
+  private Node performBigIntArithmeticOp(Token opType, Node left, Node right) {
+    BigInteger lVal = getSideEffectFreeBigIntValue(left);
+    BigInteger rVal = getSideEffectFreeBigIntValue(right);
+    if (lVal != null && rVal != null) {
+      switch (opType) {
+        case ADD:
+          return IR.bigint(lVal.add(rVal));
+        case SUB:
+          return IR.bigint(lVal.subtract(rVal));
+        case MUL:
+          return IR.bigint(lVal.multiply(rVal));
+        case DIV:
+          if (!rVal.equals(BigInteger.ZERO)) {
+            return IR.bigint(lVal.divide(rVal));
+          } else {
+            return null;
+          }
+        case EXPONENT:
+          try {
+            return IR.bigint(lVal.pow(rVal.intValueExact()));
+          } catch (ArithmeticException exception) {
+            return null;
+          }
+        case MOD:
+          return IR.bigint(lVal.mod(rVal));
+        default:
+          return null;
+      }
+    }
+
+    // handle the operations that have algebraic identities, since we can simplify the tree without
+    // actually knowing the value statically.
+    switch (opType) {
+      case ADD:
+        if (lVal != null && lVal.equals(BigInteger.ZERO)) {
+          return right.cloneTree(/* cloneTypeExprs= */ true);
+        } else if (rVal != null && rVal.equals(BigInteger.ZERO)) {
+          return left.cloneTree(/* cloneTypeExprs= */ true);
+        }
+        return null;
+      case SUB:
+        if (lVal != null && lVal.equals(BigInteger.ZERO)) {
+          // 0n - x -> -x
+          return IR.neg(right.cloneTree(/* cloneTypeExprs= */ true));
+        } else if (rVal != null && rVal.equals(BigInteger.ZERO)) {
+          // x - 0n -> x
+          return left.cloneTree(/* cloneTypeExprs= */ true);
+        }
+        return null;
+      case MUL:
+        if (lVal != null && lVal.equals(BigInteger.ONE)) {
+          return right.cloneTree(/* cloneTypeExprs= */ true);
+        } else if (rVal != null && rVal.equals(BigInteger.ONE)) {
+          return left.cloneTree(/* cloneTypeExprs= */ true);
+        }
+        return null;
+      case DIV:
+        if (rVal != null && rVal.equals(BigInteger.ONE)) {
+          return left.cloneTree(/* cloneTypeExprs= */ true);
+        }
+        return null;
+      default:
+        return null;
+    }
+  }
+
   private boolean isNumeric(Node n) {
     return NodeUtil.isNumericResult(n)
         || (shouldUseTypes && n.getJSType() != null && n.getJSType().isNumberValueType());
+  }
+
+  private boolean isBigInt(Node n) {
+    return NodeUtil.isBigIntResult(n)
+        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isBigIntValueType());
   }
 
   private Node maybeReplaceBinaryOpWithNumericResult(double result, double lval, double rval) {
@@ -914,13 +989,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Expressions such as [foo() * 10 * 20] generate parse trees
-   * where no node has two const children ((foo() * 10) * 20), so
-   * performArithmeticOp() won't fold it -- tryFoldLeftChildOp() will.
-   * Specifically, it folds associative expressions where:
-   *  - The left child is also an associative expression of the same time.
-   *  - The right child is a constant NUMBER constant.
-   *  - The left child's right child is a NUMBER constant.
+   * Expressions such as [foo() * 10 * 20] generate parse trees where no node has two const children
+   * ((foo() * 10) * 20), so performArithmeticOp() won't fold it: tryFoldLeftChildOp() will.
+   *
+   * <p>Specifically, this folds associative expressions where:
+   *
+   * <ul>
+   *   <li>The left child is also an associative expression of the same type.
+   *   <li>The right child is a BIGINT or NUMBER constant.
+   *   <li>The left child's right child is a BIGINT or NUMBER constant.
    */
   private Node tryFoldLeftChildOp(Node n, Node left, Node right) {
     Token opType = n.getToken();
@@ -931,7 +1008,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     // Use getNumberValue to handle constants like "NaN" and "Infinity"
     // other values are converted to numbers elsewhere.
     Double rightValObj = getSideEffectFreeNumberValue(right);
-    if (rightValObj != null && left.getToken() == opType) {
+    BigInteger rightBigInt = getSideEffectFreeBigIntValue(right);
+    if ((rightValObj != null || rightBigInt != null) && left.getToken() == opType) {
       checkState(left.hasTwoChildren());
 
       Node ll = left.getFirstChild();
