@@ -539,6 +539,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = false || x", "x = x");
     test("x = 0 && x", "x = 0");
     test("x = 3 || x", "x = 3");
+    test("x = 0n && x", "x = 0n");
+    test("x = 3n || x", "x = 3n");
     test("x = false || 0", "x = 0");
 
     // unfoldable, because the right-side may be the result
@@ -568,6 +570,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = foo() && 1 && bar()", "x = foo() && bar()");
     test("x = foo() || 0 || bar()", "x = foo() || bar()");
     test("x = foo() || 1 || bar()", "x = foo() || 1");
+    test("x = foo() && 0n && bar()", "x = foo() && 0n");
+    test("x = foo() && 1n && bar()", "x = foo() && bar()");
+    test("x = foo() || 0n || bar()", "x = foo() || bar()");
+    test("x = foo() || 1n || bar()", "x = foo() || 1n");
     testSame("x = foo() || bar() || baz()");
     testSame("x = foo() && bar() && baz()");
 
