@@ -920,6 +920,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           }
         case MOD:
           return IR.bigint(lVal.mod(rVal));
+        case BITAND:
+          return IR.bigint(lVal.and(rVal));
+        case BITOR:
+          return IR.bigint(lVal.or(rVal));
+        case BITXOR:
+          return IR.bigint(lVal.xor(rVal));
         default:
           return null;
       }

@@ -682,6 +682,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 1 | 3", "x = 3");
     test("x = 1 | 1.1", "x = 1");
     testSame("x = 1 | 3E9");
+
+    // these cases look strange because bitwise OR converts unsigned numbers to be signed
     test("x = 1 | 3000000001", "x = -1294967295");
     test("x = 4294967295 | 0", "x = -1");
   }
@@ -711,6 +713,59 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     test("x = Infinity | NaN", "x=0");
     test("x = 12 | NaN", "x=12");
+  }
+
+  @Test
+  public void testFoldBitwiseOpWithBigInt() {
+    test("x = 1n & 1n", "x = 1n");
+    test("x = 1n & 2n", "x = 0n");
+    test("x = 3n & 1n", "x = 1n");
+    test("x = 3n & 3n", "x = 3n");
+
+    test("x = 1n | 1n", "x = 1n");
+    test("x = 1n | 2n", "x = 3n");
+    test("x = 1n | 3n", "x = 3n");
+    test("x = 3n | 1n", "x = 3n");
+    test("x = 3n | 3n", "x = 3n");
+    test("x = 1n | 4n", "x = 5n");
+
+    test("x = 1n ^ 1n", "x = 0n");
+    test("x = 1n ^ 2n", "x = 3n");
+    test("x = 3n ^ 1n", "x = 2n");
+    test("x = 3n ^ 3n", "x = 0n");
+
+    test("x = -1n & 0n", "x = 0n");
+    test("x = 0n & -1n", "x = 0n");
+    test("x = 1n & 4n", "x = 0n");
+    test("x = 2n & 3n", "x = 2n");
+
+    test("x = 1n & 3000000000n", "x = 0n");
+    test("x = 3000000000n & 1n", "x = 0n");
+
+    // bitwise OR does not affect the sign of a bigint
+    test("x = 1n | 3000000001n", "x = 3000000001n");
+    test("x = 4294967295n | 0n", "x = 4294967295n");
+
+    test("x = y & 1n & 1n", "x = y & 1n");
+    test("x = y & 1n & 2n", "x = y & 0n");
+    test("x = y & 3n & 1n", "x = y & 1n");
+    test("x = 3n & y & 1n", "x = y & 1n");
+    test("x = y & 3n & 3n", "x = y & 3n");
+    test("x = 3n & y & 3n", "x = y & 3n");
+
+    test("x = y | 1n | 1n", "x = y | 1n");
+    test("x = y | 1n | 2n", "x = y | 3n");
+    test("x = y | 3n | 1n", "x = y | 3n");
+    test("x = 3n | y | 1n", "x = y | 3n");
+    test("x = y | 3n | 3n", "x = y | 3n");
+    test("x = 3n | y | 3n", "x = y | 3n");
+
+    test("x = y ^ 1n ^ 1n", "x = y ^ 0n");
+    test("x = y ^ 1n ^ 2n", "x = y ^ 3n");
+    test("x = y ^ 3n ^ 1n", "x = y ^ 2n");
+    test("x = 3n ^ y ^ 1n", "x = y ^ 2n");
+    test("x = y ^ 3n ^ 3n", "x = y ^ 0n");
+    test("x = 3n ^ y ^ 3n", "x = y ^ 0n");
   }
 
   @Test
