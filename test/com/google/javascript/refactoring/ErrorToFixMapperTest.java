@@ -66,7 +66,6 @@ public class ErrorToFixMapperTest {
     options.setWarningLevel(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT, ERROR);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, WARNING);
     options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE, ERROR);
-    options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE, ERROR);
     options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE_IN_PROVIDES_FILE, ERROR);
     options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE, ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, ERROR);

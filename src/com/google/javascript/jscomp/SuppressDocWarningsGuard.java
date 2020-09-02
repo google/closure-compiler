@@ -57,7 +57,6 @@ class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
             new DiagnosticGroup(
                 DiagnosticGroups.STRICT_MISSING_REQUIRE,
                 DiagnosticGroups.STRICTER_MISSING_REQUIRE,
-                DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE,
                 DiagnosticGroups.STRICTER_MISSING_REQUIRE_IN_PROVIDES_FILE,
                 DiagnosticGroups.STRICTER_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE),
             CheckLevel.OFF));
