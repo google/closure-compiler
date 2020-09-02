@@ -62,7 +62,8 @@ public class CheckNullabilityModifiers extends AbstractPostOrderCallback impleme
 
   /** The set of primitive type names. Note that `void` is a synonym for `undefined`. */
   private static final ImmutableSet<String> PRIMITIVE_TYPE_NAMES =
-      ImmutableSet.of("boolean", "number", "string", "symbol", "undefined", "void", "null");
+      ImmutableSet.of(
+          "boolean", "number", "bigint", "string", "symbol", "undefined", "void", "null");
 
   private final AbstractCompiler compiler;
 

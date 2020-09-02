@@ -45,6 +45,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
   public void testPrimitiveType() {
     checkRedundantWarning("/** @type {!boolean} */ var x;");
     checkRedundantWarning("/** @type {!number} */ var x;");
+    checkRedundantWarning("/** @type {!bigint} */ var x;");
     checkRedundantWarning("/** @type {!string} */ var x;");
     checkRedundantWarning("/** @type {!symbol} */ var x;");
     checkRedundantWarning("/** @type {!undefined} */ var x;");
@@ -109,6 +110,7 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
   public void testEnumType() {
     checkRedundantWarning("/** @enum {!boolean} */ var x;");
     checkRedundantWarning("/** @enum {!number} */ var x;");
+    checkRedundantWarning("/** @enum {!bigint} */ var x;");
     checkRedundantWarning("/** @enum {!string} */ var x;");
     checkRedundantWarning("/** @enum {!symbol} */ var x;");
 
