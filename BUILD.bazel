@@ -12,17 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//:expand_template_with_defines.bzl", "expand_template_with_defines")
+load("//:oss_java_library.bzl", "oss_java_library")
+load("//:sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@com_google_j2cl//build_defs:rules.bzl", "j2cl_application", "j2cl_import", "j2cl_library")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
-load("//:expand_template_with_defines.bzl", "expand_template_with_defines")
 
 package(licenses = ["notice"])
 
-java_binary(
-    name = "compiler_unshaded",
-    main_class = "com.google.javascript.jscomp.CommandLineRunner",
-    runtime_deps = [":compiler_lib"],
+filegroup(
+    name = "artifact_bundles",
+    srcs = [
+        ":compiler_externs_bundle",
+        ":compiler_main_bundle",
+        ":compiler_parent_bundle",
+        ":compiler_shaded_bundle",
+        ":compiler_unshaded_bundle",
+    ],
+)
+
+sonatype_artifact_bundle(
+    name = "compiler_shaded_bundle",
+    artifact_id = "closure-compiler",
+    jar = ":compiler_shaded.jar",
+    javadoc = ":compiler_lib.javadoc",
+    pom = "pom-main-shaded.xml",
+    sources = ":compiler_lib.sources",
+)
+
+sonatype_artifact_bundle(
+    name = "compiler_unshaded_bundle",
+    artifact_id = "closure-compiler-unshaded",
+    jar = ":compiler_unshaded_deploy.jar",
+    javadoc = ":compiler_lib.javadoc",
+    pom = "pom-main-unshaded.xml",
+    sources = ":compiler_lib.sources",
+)
+
+sonatype_artifact_bundle(
+    name = "compiler_externs_bundle",
+    artifact_id = "closure-compiler-externs",
+    jar = ":externs",
+    pom = "pom-externs.xml",
+)
+
+sonatype_artifact_bundle(
+    name = "compiler_main_bundle",
+    artifact_id = "closure-compiler-main",
+    pom = "pom-main.xml",
+)
+
+sonatype_artifact_bundle(
+    name = "compiler_parent_bundle",
+    artifact_id = "closure-compiler-parent",
+    pom = "pom.xml",
 )
 
 jar_jar(
@@ -32,14 +76,14 @@ jar_jar(
 )
 
 java_binary(
-    name = "linter",
-    main_class = "com.google.javascript.jscomp.LinterMain",
+    name = "compiler_unshaded",
+    main_class = "com.google.javascript.jscomp.CommandLineRunner",
     runtime_deps = [":compiler_lib"],
 )
 
 java_binary(
-    name = "refasterjs",
-    main_class = "com.google.javascript.refactoring.RefasterJs",
+    name = "linter",
+    main_class = "com.google.javascript.jscomp.LinterMain",
     runtime_deps = [":compiler_lib"],
 )
 
@@ -48,62 +92,68 @@ java_library(
     resources = [":externs_zip"],
 )
 
-java_library(
+oss_java_library(
     name = "compiler_lib",
-    srcs = [
-        ":CommandLineRunner_with_version",
-    ] + glob(
-        [
-            "gen/**/*.java",
-            "src/com/google/debugging/**/*.java",
-            "src/com/google/javascript/jscomp/*.java",
-            "src/com/google/javascript/jscomp/bundle/**/*.java",
-            "src/com/google/javascript/jscomp/colors/**/*.java",
-            "src/com/google/javascript/jscomp/deps/**/*.java",
-            "src/com/google/javascript/jscomp/diagnostic/**/*.java",
-            "src/com/google/javascript/jscomp/disambiguate/**/*.java",
-            "src/com/google/javascript/jscomp/graph/**/*.java",
-            "src/com/google/javascript/jscomp/ijs/**/*.java",
-            "src/com/google/javascript/jscomp/resources/**/*.java",
-            "src/com/google/javascript/jscomp/lint/**/*.java",
-            "src/com/google/javascript/jscomp/modules/**/*.java",
-            "src/com/google/javascript/jscomp/parsing/**/*.java",
-            "src/com/google/javascript/jscomp/regex/**/*.java",
-            "src/com/google/javascript/jscomp/transpile/**/*.java",
-            "src/com/google/javascript/jscomp/type/**/*.java",
-            "src/com/google/javascript/refactoring/**/*.java",
-            "src/com/google/javascript/refactroing/**/*.java",
-            "src/com/google/javascript/rhino/**/*.java",
-        ],
-        exclude = [
-            "**/testing/**/*.java",
-            "**/super*/**/*.java",
-            "**/j2cl/**/*.java",
-            "**/gwt/**/*.java",
-            "src/com/google/debugging/sourcemap/*Js.java",
-        ] + [
-            # Used as a template.
-            "src/com/google/javascript/jscomp/CommandLineRunner.java",
+    java_attrs = dict(
+        resources = [
+            ":externs_zip",
+        ] + glob([
+            "src/**/*.properties",
+            "src/com/google/javascript/jscomp/js/**/*.js",
+            "src/com/google/javascript/jscomp/js/**/*.txt",
+        ]),
+    ),
+    javadoc_attrs = dict(
+    ),
+    shared_attrs = dict(
+        srcs = [
+            ":CommandLineRunner_with_version",
+        ] + glob(
+            [
+                "gen/**/*.java",
+                "src/com/google/debugging/**/*.java",
+                "src/com/google/javascript/jscomp/*.java",
+                "src/com/google/javascript/jscomp/bundle/**/*.java",
+                "src/com/google/javascript/jscomp/colors/**/*.java",
+                "src/com/google/javascript/jscomp/deps/**/*.java",
+                "src/com/google/javascript/jscomp/diagnostic/**/*.java",
+                "src/com/google/javascript/jscomp/disambiguate/**/*.java",
+                "src/com/google/javascript/jscomp/graph/**/*.java",
+                "src/com/google/javascript/jscomp/ijs/**/*.java",
+                "src/com/google/javascript/jscomp/resources/**/*.java",
+                "src/com/google/javascript/jscomp/lint/**/*.java",
+                "src/com/google/javascript/jscomp/modules/**/*.java",
+                "src/com/google/javascript/jscomp/parsing/**/*.java",
+                "src/com/google/javascript/jscomp/regex/**/*.java",
+                "src/com/google/javascript/jscomp/transpile/**/*.java",
+                "src/com/google/javascript/jscomp/type/**/*.java",
+                "src/com/google/javascript/refactoring/**/*.java",
+                "src/com/google/javascript/refactroing/**/*.java",
+                "src/com/google/javascript/rhino/**/*.java",
+            ],
+            exclude = [
+                "**/testing/**/*.java",
+                "**/super*/**/*.java",
+                "**/j2cl/**/*.java",
+                "**/gwt/**/*.java",
+                "src/com/google/debugging/sourcemap/*Js.java",
+            ] + [
+                # Used as a template.
+                "src/com/google/javascript/jscomp/CommandLineRunner.java",
+            ],
+        ),
+        deps = [
+            "@args4j_args4j",
+            "@com_google_code_gson_gson",
+            "@com_google_guava_failureaccess//jar",
+            "@com_google_guava_guava//jar",
+            "@com_google_protobuf_protobuf_java",
+            "@com_google_re2j_re2j",
+            "@google_bazel_common//third_party/java/auto:value",
+            "@google_bazel_common//third_party/java/error_prone:annotations",
+            "@google_bazel_common//third_party/java/jsr305_annotations",
         ],
     ),
-    resources = [
-        ":externs_zip",
-    ] + glob([
-        "src/**/*.properties",
-        "src/com/google/javascript/jscomp/js/**/*.js",
-        "src/com/google/javascript/jscomp/js/**/*.txt",
-    ]),
-    deps = [
-        "@args4j_args4j",
-        "@com_google_code_gson_gson",
-        "@com_google_guava_failureaccess//jar",
-        "@com_google_guava_guava//jar",
-        "@com_google_protobuf_protobuf_java",
-        "@com_google_re2j_re2j",
-        "@google_bazel_common//third_party/java/auto:value",
-        "@google_bazel_common//third_party/java/error_prone:annotations",
-        "@google_bazel_common//third_party/java/jsr305_annotations",
-    ],
 )
 
 genrule(
