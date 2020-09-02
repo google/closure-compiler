@@ -214,6 +214,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     test("null == 0", "false");
     test("null == 1", "false");
+    test("null == 0n", "false");
+    test("null == 1n", "false");
     test("null == 'hi'", "false");
     test("null == true", "false");
     test("null == false", "false");
@@ -232,6 +234,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     test("null != 0", "true");
     test("null != 1", "true");
+    test("null != 0n", "true");
+    test("null != 1n", "true");
     test("null != 'hi'", "true");
     test("null != true", "true");
     test("null != false", "true");
@@ -251,12 +255,16 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("0 < null", "false");
     test("0 > null", "false");
     test("0 >= null", "true");
+    test("0n < null", "false");
+    test("0n > null", "false");
+    test("0n >= null", "true");
     test("true > null", "true");
     test("'hi' < null", "false");
     test("'hi' >= null", "false");
     test("null <= null", "true");
 
     test("null < 0", "false");
+    test("null < 0n", "false");
     test("null > true", "false");
     test("null < 'hi'", "false");
     test("null >= 'hi'", "false");
@@ -429,7 +437,70 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBigIntNumberComparison() {
+    test("1n < 2", "true");
+    test("1n > 2", "false");
+    test("1n == 1", "true");
+    test("1n == 2", "false");
+
+    // comparing with decimals is allowed
+    test("1n < 1.1", "true");
+    test("1n < 1.9", "true");
+    test("1n < 0.9", "false");
+    test("-1n < -1.1", "false");
+    test("-1n < -1.9", "false");
+    test("-1n < -0.9", "true");
+    test("1n > 1.1", "false");
+    test("1n > 0.9", "true");
+    test("-1n > -1.1", "true");
+    test("-1n > -0.9", "false");
+
+    // comparing with Infinity is allowed
+    test("1n < Infinity", "true");
+    test("1n > Infinity", "false");
+    test("1n < -Infinity", "false");
+    test("1n > -Infinity", "true");
+
+    // null is interpreted as 0 when comparing with bigint
+    test("1n < null", "false");
+    test("1n > null", "true");
+  }
+
+  @Test
+  public void testBigIntStringComparison() {
+    test("1n < '2'", "true");
+    test("2n > '1'", "true");
+    test("123n > '34'", "true");
+    test("1n == '1'", "true");
+    test("1n == '2'", "false");
+    test("1n != '1'", "false");
+    test("1n === '1'", "false");
+    test("1n !== '1'", "true");
+  }
+
+  @Test
+  public void testStringBigIntComparison() {
+    test("'1' < 2n", "true");
+    test("'2' > 1n", "true");
+    test("'123' > 34n", "true");
+    test("'1' == 1n", "true");
+    test("'1' == 2n", "false");
+    test("'1' != 1n", "false");
+    test("'1' === 1n", "false");
+    test("'1' !== 1n", "true");
+  }
+
+  @Test
   public void testNaNComparison() {
+    test("NaN < 1", "false");
+    test("NaN <= 1", "false");
+    test("NaN > 1", "false");
+    test("NaN >= 1", "false");
+    test("NaN < 1n", "false");
+    test("NaN <= 1n", "false");
+    test("NaN > 1n", "false");
+    test("NaN >= 1n", "false");
+
     test("NaN < NaN", "false");
     test("NaN >= NaN", "false");
     test("NaN == NaN", "false");
@@ -1049,12 +1120,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   public void testFoldComparison() {
     test("x = 0 == 0", "x = true");
     test("x = 1 == 2", "x = false");
+    test("x = 0n == 0n", "x = true");
+    test("x = 1n == 2n", "x = false");
     test("x = 'abc' == 'def'", "x = false");
     test("x = 'abc' == 'abc'", "x = true");
     test("x = \"\" == ''", "x = true");
     test("x = foo() == bar()", "x = foo()==bar()");
 
     test("x = 1 != 0", "x = true");
+    test("x = 1 != 1", "x = false");
+    test("x = 1n != 0n", "x = true");
+    test("x = 1n != 1n", "x = false");
     test("x = 'abc' != 'def'", "x = true");
     test("x = 'a' != 'a'", "x = false");
 
@@ -1062,13 +1138,23 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("x = 3 < 3", "x = false");
     test("x = 10 > 1.0", "x = true");
     test("x = 10 > 10.25", "x = false");
-    test("x = y == y", "x = y==y"); // Maybe foldable given type information
-    test("x = y < y", "x = false");
-    test("x = y > y", "x = false");
     test("x = 1 <= 1", "x = true");
     test("x = 1 <= 0", "x = false");
     test("x = 0 >= 0", "x = true");
     test("x = -1 >= 9", "x = false");
+
+    test("x = 1n < 20n", "x = true");
+    test("x = 3n < 3n", "x = false");
+    test("x = 10n > 1n", "x = true");
+    test("x = 10n > 10n", "x = false");
+    test("x = 1n <= 1n", "x = true");
+    test("x = 1n <= 0n", "x = false");
+    test("x = 0n >= 0n", "x = true");
+    test("x = -1n >= 9n", "x = false");
+
+    testSame("x = y == y");
+    test("x = y < y", "x = false");
+    test("x = y > y", "x = false");
 
     test("x = true == true", "x = true");
     test("x = false == false", "x = true");
@@ -1078,12 +1164,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     test("0 == 0", "true");
     test("1 == 2", "false");
+    test("0n == 0n", "true");
+    test("1n == 2n", "false");
     test("'abc' == 'def'", "false");
     test("'abc' == 'abc'", "true");
     test("\"\" == ''", "true");
     testSame("foo() == bar()");
 
     test("1 != 0", "true");
+    test("1 != 1", "false");
+    test("1n != 0n", "true");
+    test("1n != 1n", "false");
     test("'abc' != 'def'", "true");
     test("'a' != 'a'", "false");
 
@@ -1099,6 +1190,15 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     test("0 >= 0", "true");
     test("-1 >= 9", "false");
 
+    test("1n < 20n", "true");
+    test("3n < 3n", "false");
+    test("10n > 1n", "true");
+    test("10n > 10n", "false");
+    test("1n <= 1n", "true");
+    test("1n <= 0n", "false");
+    test("0n >= 0n", "true");
+    test("-1n >= 9n", "false");
+
     test("true == true", "true");
     test("false == null", "false");
     test("false == true", "false");
@@ -1110,12 +1210,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   public void testFoldComparison2() {
     test("x = 0 === 0", "x = true");
     test("x = 1 === 2", "x = false");
+    test("x = 0n === 0n", "x = true");
+    test("x = 1n === 2n", "x = false");
     test("x = 'abc' === 'def'", "x = false");
     test("x = 'abc' === 'abc'", "x = true");
     test("x = \"\" === ''", "x = true");
     test("x = foo() === bar()", "x = foo()===bar()");
 
     test("x = 1 !== 0", "x = true");
+    test("x = 1 !== 1", "x = false");
+    test("x = 1n !== 0n", "x = true");
+    test("x = 1n !== 1n", "x = false");
     test("x = 'abc' !== 'def'", "x = true");
     test("x = 'a' !== 'a'", "x = false");
 
@@ -1129,6 +1234,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
     test("0 === 0", "true");
     test("1 === 2", "false");
+    test("0n === 0n", "true");
+    test("1n === 2n", "false");
     test("'abc' === 'def'", "false");
     test("'abc' === 'abc'", "true");
     test("\"\" === ''", "true");

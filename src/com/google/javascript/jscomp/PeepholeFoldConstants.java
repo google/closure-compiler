@@ -1156,55 +1156,98 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return newNode;
   }
 
-  /** http://www.ecma-international.org/ecma-262/6.0/#sec-abstract-relational-comparison */
+  /** https://tc39.es/ecma262/#sec-abstract-relational-comparison */
   private static TernaryValue tryAbstractRelationalComparison(
       AbstractPeepholeOptimization peepholeOptimization,
       Node left,
       Node right,
       boolean willNegate) {
-    // First, try to evaluate based on the general type.
     ValueType leftValueType = NodeUtil.getKnownValueType(left);
     ValueType rightValueType = NodeUtil.getKnownValueType(right);
-    if (leftValueType != ValueType.UNDETERMINED && rightValueType != ValueType.UNDETERMINED) {
-      if (leftValueType == ValueType.STRING && rightValueType == ValueType.STRING) {
-        String lv = peepholeOptimization.getSideEffectFreeStringValue(left);
-        String rv = peepholeOptimization.getSideEffectFreeStringValue(right);
-        if (lv != null && rv != null) {
-          // In JS, browsers parse \v differently. So do not compare strings if one contains \v.
-          if (lv.indexOf('\u000B') != -1 || rv.indexOf('\u000B') != -1) {
-            return TernaryValue.UNKNOWN;
-          } else {
-            return TernaryValue.forBoolean(lv.compareTo(rv) < 0);
-          }
-        } else if (left.isTypeOf()
-            && right.isTypeOf()
-            && left.getFirstChild().isName()
-            && right.getFirstChild().isName()
-            && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
-          // Special case: `typeof a < typeof a` is always false.
-          return TernaryValue.FALSE;
+    // First, check for a string comparison.
+    if (leftValueType == ValueType.STRING && rightValueType == ValueType.STRING) {
+      String lvStr = peepholeOptimization.getSideEffectFreeStringValue(left);
+      String rvStr = peepholeOptimization.getSideEffectFreeStringValue(right);
+      if (lvStr != null && rvStr != null) {
+        // In JS, browsers parse \v differently. So do not compare strings if one contains \v.
+        if (lvStr.indexOf('\u000B') != -1 || rvStr.indexOf('\u000B') != -1) {
+          return TernaryValue.UNKNOWN;
+        } else {
+          return TernaryValue.forBoolean(lvStr.compareTo(rvStr) < 0);
         }
+      } else if (left.isTypeOf()
+          && right.isTypeOf()
+          && left.getFirstChild().isName()
+          && right.getFirstChild().isName()
+          && left.getFirstChild().getString().equals(right.getFirstChild().getString())) {
+        // Special case: `typeof a < typeof a` is always false.
+        return TernaryValue.FALSE;
       }
     }
-    // Then, try to evaluate based on the value of the node. Try comparing as numbers.
-    Double lv = peepholeOptimization.getSideEffectFreeNumberValue(left);
-    Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
-    if (lv == null || rv == null) {
-      // Special case: `x < x` is always false.
-      //
-      // TODO(moz): If we knew the named value wouldn't be NaN, it would be nice to handle
-      // LE and GE. We should use type information if available here.
-      if (!willNegate && left.isName() && right.isName()) {
-        if (left.getString().equals(right.getString())) {
-          return TernaryValue.FALSE;
-        }
-      }
-      return TernaryValue.UNKNOWN;
+
+    // Next, try to evaluate based on the value of the node. Try comparing as BigInts first.
+    BigInteger lvBig = peepholeOptimization.getSideEffectFreeBigIntValue(left);
+    BigInteger rvBig = peepholeOptimization.getSideEffectFreeBigIntValue(right);
+    if (lvBig != null && rvBig != null) {
+      return TernaryValue.forBoolean(lvBig.compareTo(rvBig) < 0);
     }
-    if (Double.isNaN(lv) || Double.isNaN(rv)) {
+
+    // Then, try comparing as Numbers.
+    Double lvNum = peepholeOptimization.getSideEffectFreeNumberValue(left);
+    Double rvNum = peepholeOptimization.getSideEffectFreeNumberValue(right);
+    if (lvNum != null && rvNum != null) {
+      if (Double.isNaN(lvNum) || Double.isNaN(rvNum)) {
+        return TernaryValue.forBoolean(willNegate);
+      } else {
+        return TernaryValue.forBoolean(lvNum.doubleValue() < rvNum.doubleValue());
+      }
+    }
+
+    // Finally, try comparisons between BigInt and Number.
+    if (lvBig != null && rvNum != null) {
+      return compareBigIntAndNumber(lvBig, rvNum, false, willNegate);
+    }
+    if (lvNum != null && rvBig != null) {
+      return compareBigIntAndNumber(rvBig, lvNum, true, willNegate);
+    }
+
+    // Special case: `x < x` is always false.
+    // TODO(moz): If we knew the named value wouldn't be NaN, it would be nice to handle
+    // LE and GE. We should use type information if available here.
+    if (!willNegate && left.isName() && right.isName()) {
+      if (left.getString().equals(right.getString())) {
+        return TernaryValue.FALSE;
+      }
+    }
+
+    return TernaryValue.UNKNOWN;
+  }
+
+  private static TernaryValue compareBigIntAndNumber(
+      BigInteger bigint, double number, boolean invert, boolean willNegate) {
+    // if invert is false, then the number is on the right in tryAbstractRelationalComparison
+    // if it's true, then the number is on the left
+    if (Double.isNaN(number)) {
       return TernaryValue.forBoolean(willNegate);
+    } else if (number == Double.POSITIVE_INFINITY) {
+      return invert ? TernaryValue.FALSE : TernaryValue.TRUE;
+    } else if (number == Double.NEGATIVE_INFINITY) {
+      return invert ? TernaryValue.TRUE : TernaryValue.FALSE;
     } else {
-      return TernaryValue.forBoolean(lv.doubleValue() < rv.doubleValue());
+      BigInteger numberAsBigInt = BigInteger.valueOf((long) number);
+      int comparison = invert ? numberAsBigInt.compareTo(bigint) : bigint.compareTo(numberAsBigInt);
+      switch (comparison) {
+        case -1:
+          return TernaryValue.TRUE;
+        case 1:
+          return TernaryValue.FALSE;
+        case 0:
+          // Even if the number has a decimal it can still be compared to a bigint
+          double remainder = (invert ? -number : number) % 1;
+          return TernaryValue.forBoolean(remainder > 0);
+        default:
+          throw new AssertionError("compareTo returned an unexpected value: " + comparison);
+      }
     }
   }
 
@@ -1219,10 +1262,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (leftValueType == rightValueType) {
         return tryStrictEqualityComparison(peepholeOptimization, left, right);
       }
+
       if ((leftValueType == ValueType.NULL && rightValueType == ValueType.VOID)
           || (leftValueType == ValueType.VOID && rightValueType == ValueType.NULL)) {
         return TernaryValue.TRUE;
       }
+
       if ((leftValueType == ValueType.NUMBER && rightValueType == ValueType.STRING)
           || rightValueType == ValueType.BOOLEAN) {
         Double rv = peepholeOptimization.getSideEffectFreeNumberValue(right);
@@ -1237,6 +1282,15 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             ? TernaryValue.UNKNOWN
             : tryAbstractEqualityComparison(peepholeOptimization, IR.number(lv), right);
       }
+
+      if (leftValueType == ValueType.BIGINT || rightValueType == ValueType.BIGINT) {
+        BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
+        BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
+        if (lv != null && rv != null) {
+          return TernaryValue.forBoolean(lv.equals(rv));
+        }
+      }
+
       if ((leftValueType == ValueType.STRING || leftValueType == ValueType.NUMBER)
           && rightValueType == ValueType.OBJECT) {
         return TernaryValue.UNKNOWN;
@@ -1245,6 +1299,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           && (rightValueType == ValueType.STRING || rightValueType == ValueType.NUMBER)) {
         return TernaryValue.UNKNOWN;
       }
+
       return TernaryValue.FALSE;
     }
     // In general, the rest of the cases cannot be folded.
@@ -1308,6 +1363,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             TernaryValue lv = peepholeOptimization.getSideEffectFreeBooleanValue(left);
             TernaryValue rv = peepholeOptimization.getSideEffectFreeBooleanValue(right);
             return lv.and(rv).or(lv.not().and(rv.not()));
+          }
+        case BIGINT:
+          {
+            BigInteger lv = peepholeOptimization.getSideEffectFreeBigIntValue(left);
+            BigInteger rv = peepholeOptimization.getSideEffectFreeBigIntValue(right);
+            return TernaryValue.forBoolean(lv.equals(rv));
           }
         default: // Symbol and Object cannot be folded in the general case.
           return TernaryValue.UNKNOWN;
