@@ -1,12 +1,1 @@
-# Recommended bazel settings for working with J2CL.
-#
-# Copied from https://github.com/google/j2cl/blob/master/.bazelrc since Bazel
-# doesn't support referring to .bazelrc from different workspaces.
-
-build --watchfs
-
-build --spawn_strategy=local
-build --strategy=J2cl=worker
-build --strategy=Closure=worker
-build --experimental_persistent_javac
 
