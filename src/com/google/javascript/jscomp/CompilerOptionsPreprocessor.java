@@ -46,10 +46,10 @@ public final class CompilerOptionsPreprocessor {
       options.setDisambiguateProperties(false);
     }
 
-    // TypeScript can be parsed or code printed only, so prevent setting a languageIn and
-    // languageOut that would require transpiling TS.
-    if (options.needsTranspilationFrom(FeatureSet.TYPESCRIPT)) {
-      throw new InvalidOptionsException("Transpilation of TypeScript syntax is not supported");
+    // ECMASCRIPT6_TYPED and TS syntax support exist only for use by Gents
+    // (https://github.com/angular/clutz) which outputs TS syntax but does not parse it.
+    if (CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED.equals(options.getLanguageIn())) {
+      throw new InvalidOptionsException("Cannot set input language to ECMASCRIPT6_TYPED.");
     }
   }
 

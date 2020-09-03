@@ -78,7 +78,7 @@ public final class TypeSyntaxTest {
       features[i] =
           "type syntax is only supported in ES6 typed mode: "
               + features[i]
-              + ". Use --language_in=ECMASCRIPT6_TYPED to enable ES6 typed features.";
+              + ". This syntax is only available in unit tests.";
     }
     expectErrors(features);
     parse(source, LanguageMode.ECMASCRIPT_2015);

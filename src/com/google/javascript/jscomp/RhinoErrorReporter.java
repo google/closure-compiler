@@ -103,9 +103,7 @@ class RhinoErrorReporter {
       DiagnosticType.error("JSC_UNSUPPORTED_LANGUAGE_FEATURE", "{0}.");
 
   static final DiagnosticType ES6_TYPED =
-      DiagnosticType.error(
-          "JSC_ES6_TYPED",
-          "{0}. Use --language_in=ECMASCRIPT6_TYPED to enable ES6 typed features.");
+      DiagnosticType.error("JSC_ES6_TYPED", "{0}. This syntax is only available in unit tests.");
 
   static final DiagnosticType MISPLACED_TYPE_SYNTAX =
       DiagnosticType.error(

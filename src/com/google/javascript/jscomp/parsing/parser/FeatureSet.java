@@ -213,7 +213,7 @@ public final class FeatureSet implements Serializable {
     // ES_NEXT_IN
     NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT_IN),
 
-    // ES6 typed features that are not at all implemented in browsers
+    // TypeScript type syntax that will never be implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
     CALL_SIGNATURE("call signature", LangVersion.TYPESCRIPT),

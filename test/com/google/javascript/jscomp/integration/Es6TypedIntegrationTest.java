@@ -17,11 +17,9 @@ package com.google.javascript.jscomp.integration;
 
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptionsPreprocessor;
-import com.google.javascript.jscomp.DiagnosticGroups;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,21 +43,13 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void passThroughWithTypesWarns() {
+  public void forbidsParsingTypeSyntax() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageOut(LanguageMode.ECMASCRIPT6_TYPED);
 
-    test(
-        options, "var x: number = 12;\nalert(x);", DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS);
-  }
-
-  @Test
-  public void disableFeaturesNotSupportedException() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT6_TYPED);
-    options.setWarningLevel(DiagnosticGroups.FEATURES_NOT_SUPPORTED_BY_PASS, CheckLevel.OFF);
-
-    test(options, "var x: number = 12;\nalert(x);", "var x: number = 12;\nalert(x);");
+    assertThrows(
+        CompilerOptionsPreprocessor.InvalidOptionsException.class,
+        () -> test(options, "var x: number = 12;\nalert(x);", "alert(12);"));
   }
 
   @Override
