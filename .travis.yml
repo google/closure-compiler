@@ -35,6 +35,7 @@ before_script:
   - echo "common --noshow_progress" >> .bazelrc
   - echo "build --noshow_loading_progress" >> .bazelrc
   - echo "build --verbose_failures" >> .bazelrc
+  - echo "build --jobs=25" >> .bazelrc
 
 script:
   # Builds the compiler and runs tests
