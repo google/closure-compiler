@@ -46,6 +46,7 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
 
   @Test
   public void testExplicitJsdocDoesntWarn() {
+    noWarning("/** @type {bigint} */ var x;");
     noWarning("/** @type {boolean} */ var x;");
     noWarning("/** @type {symbol} */ var x;");
     noWarning("/** @type {null} */ var x;");

@@ -52,6 +52,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
       ImmutableSet.of(
           "*", //
           "?",
+          "bigint",
           "boolean",
           "null",
           "number",
