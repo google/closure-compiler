@@ -35,6 +35,9 @@ before_script:
   - echo "common --noshow_progress" >> .bazelrc
   - echo "build --noshow_loading_progress" >> .bazelrc
   - echo "build --verbose_failures" >> .bazelrc
+  - echo "build --discard_analysis_cache" >> .bazelrc
+  - echo "build --nokeep_state_after_build" >> .bazelrc
+  - echo "build --notrack_incremental_state" >> .bazelrc
 
 script:
   # Builds the compiler and runs tests
