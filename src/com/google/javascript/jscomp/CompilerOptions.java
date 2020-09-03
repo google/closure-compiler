@@ -3222,8 +3222,8 @@ public class CompilerOptions implements Serializable {
         case ECMASCRIPT_2020:
           return FeatureSet.ES2020_MODULES;
         case ECMASCRIPT_NEXT:
-        case NO_TRANSPILE:
           return FeatureSet.ES_NEXT;
+        case NO_TRANSPILE:
         case ECMASCRIPT_NEXT_IN:
           return FeatureSet.ES_NEXT_IN;
         case UNSUPPORTED:
