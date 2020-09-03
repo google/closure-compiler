@@ -94,7 +94,7 @@ public class IR {
   public static Node paramList(Node... params) {
     Node paramList = new Node(Token.PARAM_LIST);
     for (Node param : params) {
-      checkState(param.isName() || param.isRest());
+      checkState(param.isName() || param.isRest() || param.isDefaultValue());
       paramList.addChildToBack(param);
     }
     return paramList;
