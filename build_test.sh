@@ -16,6 +16,6 @@
 # Script that can be used by CI server for testing JsCompiler builds.
 set -e
 
-bazel build :all
+bazel build --host_jvm_args=-Xmx2g --host_jvm_args=-Xms2g :all
 
 # TODO: Run other tests needed for open source verification
