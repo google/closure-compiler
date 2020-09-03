@@ -2294,6 +2294,7 @@ Text.prototype.getDestinationInsertionPoints = function() {};
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttracklist
  * @constructor
+ * @implements {EventTarget}
  * @implements {IArrayLike<!TextTrack>}
  */
 function TextTrackList() {}
