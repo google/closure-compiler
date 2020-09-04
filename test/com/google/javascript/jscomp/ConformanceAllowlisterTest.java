@@ -40,13 +40,13 @@ public class ConformanceAllowlisterTest {
     sources.add(
         SourceFile.fromCode(
             "/entry.js",
-            lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
+            lines("var foo = document.getElementById('name');", "foo.title = 'test';")));
 
     Requirement requirement =
         Requirement.newBuilder()
             .setType(Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
-            .addValue("Object.prototype.innerHTML")
+            .addValue("Object.prototype.title")
             .build();
 
     assertThat(testConformanceAllowlister(sources.build(), requirement))
@@ -60,7 +60,7 @@ public class ConformanceAllowlisterTest {
     sources.add(
         SourceFile.fromCode(
             "/entry.js",
-            lines("var foo = document.getElementById('name');", "foo.outerHTML = 'test';")));
+            lines("var foo = document.getElementById('name');", "foo.title = 'test';")));
 
     Requirement requirement =
         Requirement.newBuilder()
@@ -80,13 +80,13 @@ public class ConformanceAllowlisterTest {
     sources.add(
         SourceFile.fromCode(
             "/entry.js",
-            lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
+            lines("var foo = document.getElementById('name');", "foo.title = 'test';")));
 
     Requirement requirement =
         Requirement.newBuilder()
             .setType(Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
-            .addValue("Object.prototype.innerHTML")
+            .addValue("Object.prototype.title")
             .addWhitelist("/entry.js")
             .build();
 
