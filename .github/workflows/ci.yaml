@@ -1,0 +1,107 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Compiler CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    # Daily at 12pm UTC
+    - cron: '0 12 * * *'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+          java-package: jdk
+          architecture: x64
+
+      - name: Setup Bazel
+        uses: jwlawson/actions-setup-bazel@v1
+        with:
+          bazel-version: '2.2.0'
+
+      - name: Build
+        run: bazel build //:all
+
+      - name: Unit Tests
+        run: bazel test //:all
+
+      - name: Store Unshaded Compiler
+        uses: actions/upload-artifact@v2
+        with:
+          name: unshaded_compiler
+          path: bazel-bin/compiler_unshaded_deploy.jar
+          if-no-files-found: error
+
+      - name: Store Snapshot Bundles
+        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: snapshot_bundles
+          path: bazel-bin/*_bundle.jar
+          if-no-files-found: error
+
+  test-closure-compiler-npm:
+    name: Test closure-compiler-npm
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-test
+    steps:
+      - name: Setup Node.js (${{ env.NODE_VERSION }})
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Grab Unshaded Compiler
+        uses: actions/download-artifact@v2
+        with:
+          name: unshaded_compiler
+          path: .
+
+      - name: Test closure-compiler-npm
+        run: .github/ci_support/test_closure-compiler-npm.sh
+
+  upload-snapshots:
+    name: Upload Snapshots
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs:
+      - build-and-test
+      - test-closure-compiler-npm
+    steps:
+      - name: Setup Node.js (${{ env.NODE_VERSION }})
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Grab Snapshot Bundles
+        uses: actions/download-artifact@v2
+        with:
+          name: snapshot_bundles
+          path: .
+
+      - name: Upload Snapshot Bundles
+        run: .github/ci_support/upload_sonatype_snapshot_bundles.js
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
