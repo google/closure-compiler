@@ -19,6 +19,10 @@ if [ -z $TRAVIS_BUILD_DIR ]; then
   TRAVIS_BUILD_DIR=`pwd`
 fi
 
+if [ -z $TRAVIS_BUILD_DIR ]; then
+  TRAVIS_BUILD_DIR=`pwd`
+fi
+
 # Run yarn install so that dev dependencies are available
 yarn install && cd ${TRAVIS_BUILD_DIR}/node_modules/closure-compiler-npm && yarn install
 

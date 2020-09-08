@@ -210,8 +210,7 @@ public final class ClosureBundlerTest {
   }
 
   @Test
-  public void testFullWidthLowLineWithDefaultTranspilerIsOkay() throws Exception {
-    // The last character is something the compiler doesn't handle correctly
+  public void testFullWidthLowLine() throws Exception {
     String input = "var ａｅｓｔｈｅｔｉｃ＿";
     ClosureBundler bundler = new ClosureBundler();
     StringBuilder sb = new StringBuilder();
@@ -219,24 +218,6 @@ public final class ClosureBundlerTest {
         sb,
         SimpleDependencyInfo.builder("", "").build(),
         input);
-    assertThat(sb.toString()).isEqualTo(input);
-  }
-
-  // TODO(johnplaisted): If / when the compiler can parse full width low line in identifiers
-  // this should be okay to be transpiled.
-  @Test
-  public void testFullWidthLowLineInTranspiledCodeIsError() throws Exception {
-    // The last character is something the compiler doesn't handle correctly
-    String input = "let ａｅｓｔｈｅｔｉｃ＿";
-    ClosureBundler bundler = new ClosureBundler(BaseTranspiler.ES5_TRANSPILER);
-    StringBuilder sb = new StringBuilder();
-    try {
-      bundler.appendTo(sb, SimpleDependencyInfo.builder("", "").build(), input);
-      assertWithMessage("Expected an exception").fail();
-    } catch (TranspilationException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains("Parse error. Character '＿' (U+FF3F) is not a valid identifier start char");
-    }
+    assertThat(sb.toString()).isEqualTo("var \uff41\uff45\uff53\uff54\uff48\uff45\uff54\uff49\uff43\uff3f");
   }
 }
