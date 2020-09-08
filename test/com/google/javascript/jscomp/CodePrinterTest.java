@@ -551,6 +551,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
+  public void testPrettyPrintJSDoc() {
+    assertPrettyPrintSame("/** @type {number} */ \nvar x;\n");
+  }
+
+  @Test
   public void testPrintCast1() {
     assertPrint("var x = /** @type {number} */ (0);", "var x=0");
     assertPrettyPrintSame("var x = /** @type {number} */ (0);\n");

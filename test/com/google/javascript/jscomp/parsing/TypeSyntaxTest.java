@@ -202,8 +202,9 @@ public final class TypeSyntaxTest {
 
   @Test
   public void testFunctionReturn_typeInJsdocOnly() {
-    parse("function /** string */ foo() { return 'hello'; }",
-        "function/** string */ foo() {\n  return 'hello';\n}");
+    parse(
+        "function /** string */ foo() { return 'hello'; }",
+        "function/** string */ \nfoo() {\n  return 'hello';\n}");
   }
 
   @Test

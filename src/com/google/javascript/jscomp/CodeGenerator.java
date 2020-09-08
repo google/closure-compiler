@@ -123,6 +123,9 @@ public class CodeGenerator {
       // Don't print an empty jsdoc
       if (!jsdocAsString.equals("/** */ ")) {
         add(jsdocAsString);
+        if (prettyPrint && !node.isCast()) {
+          cc.endLine();
+        }
       }
     }
 
