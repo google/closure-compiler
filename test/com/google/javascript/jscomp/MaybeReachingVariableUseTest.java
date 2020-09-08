@@ -287,7 +287,8 @@ public final class MaybeReachingVariableUseTest {
   private void assertNotMatch(String src, boolean async) {
     Node root = computeUseDef(src, async);
     extractDefAndUsesFromInputLabels(compiler, scopeCreator, root);
-    assertThat(useDef.getUses("x", def)).doesNotContain(uses);
+    Collection<Node> result = useDef.getUses("x", def);
+    assertThat(result.containsAll(uses)).isFalse();
   }
 
   /** Computes reaching use on given source. */
