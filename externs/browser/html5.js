@@ -2294,6 +2294,7 @@ Text.prototype.getDestinationInsertionPoints = function() {};
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttracklist
  * @constructor
+ * @implements {EventTarget}
  * @implements {IArrayLike<!TextTrack>}
  */
 function TextTrackList() {}
@@ -2307,6 +2308,16 @@ TextTrackList.prototype.length;
  */
 TextTrackList.prototype.getTrackById = function(id) {};
 
+/** @override */
+TextTrackList.prototype.addEventListener = function(
+    type, listener, opt_useCapture) {};
+
+/** @override */
+TextTrackList.prototype.dispatchEvent = function(evt) {};
+
+/** @override */
+TextTrackList.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
 
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#texttrack
