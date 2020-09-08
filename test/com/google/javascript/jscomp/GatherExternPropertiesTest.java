@@ -270,7 +270,7 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
 
   private static Postcondition expectExterns(final String... properties) {
     return compiler ->
-        assertThat(compiler.getExternProperties()).containsExactly((Object[]) properties);
+        assertThat(compiler.getExternProperties()).containsExactlyElementsIn(properties);
   }
 
   private void assertExternProperties(String externs, String... properties) {
