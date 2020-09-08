@@ -427,6 +427,7 @@ public class JSTypeRegistry implements Serializable {
             .setNative(true)
             // Defer until `Object` is defined. .setImplicitPrototype(objectType)
             .build();
+    registerNativeType(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE, functionInstancePrototype);
 
     /**
      * `Function`

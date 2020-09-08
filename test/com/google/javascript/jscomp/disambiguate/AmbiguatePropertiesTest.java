@@ -694,6 +694,29 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFunctionInstanceProtoype_isInvalidating() {
+    String js =
+        lines(
+            "class Foo {",
+            "  bar() { }",
+            "}",
+            "",
+            "function addPrototypeProp(/** !Function */ ctor) {",
+            "  ctor.prototype.kip = 0;",
+            "}");
+    String output =
+        lines(
+            "class Foo {",
+            "  a() { }",
+            "}",
+            "",
+            "function addPrototypeProp(/** !Function */ ctor) {",
+            "  ctor.prototype.kip = 0;",
+            "}");
+    test(js, output);
+  }
+
+  @Test
   public void testTypeMismatch() {
     ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
     testSame(lines(

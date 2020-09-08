@@ -107,6 +107,7 @@ public final class InvalidatingTypes {
           registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
           registry.getNativeType(JSTypeNative.FUNCTION_TYPE),
           registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
+          registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_PROTOTYPE),
           registry.getNativeType(JSTypeNative.OBJECT_TYPE),
           registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
           registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE));
