@@ -54,7 +54,7 @@ sonatype_artifact_bundle(
     name = "compiler_externs_bundle",
     artifact_id = "closure-compiler-externs",
     jar = ":externs",
-    pom = "pom-externs.xml",
+    pom = "externs/pom.xml",
 )
 
 sonatype_artifact_bundle(
