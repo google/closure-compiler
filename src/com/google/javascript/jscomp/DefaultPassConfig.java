@@ -780,7 +780,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(ambiguateProperties);
     }
 
-    if (options.checkTypes || options.inferTypes) {
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
       passes.add(removeTypes);
     }
 
