@@ -1400,48 +1400,6 @@ function importScripts(var_args) {}
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @constructor
- * @implements {EventTarget}
- */
-function WebWorker() {}
-
-/** @override */
-WebWorker.prototype.addEventListener = function(type, listener, opt_options) {};
-
-/** @override */
-WebWorker.prototype.removeEventListener = function(
-    type, listener, opt_options) {};
-
-/** @override */
-WebWorker.prototype.dispatchEvent = function(evt) {};
-
-/**
- * Stops the worker process
- * @return {undefined}
- */
-WebWorker.prototype.terminate = function() {};
-
-/**
- * Posts a message to the worker thread.
- * @param {string} message
- * @return {undefined}
- */
-WebWorker.prototype.postMessage = function(message) {};
-
-/**
- * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent<*>): void}
- */
-WebWorker.prototype.onmessage;
-
-/**
- * Sent when the worker thread encounters an error.
- * @type {?function(!ErrorEvent): void}
- */
-WebWorker.prototype.onerror;
-
-/**
- * @see http://dev.w3.org/html5/workers/
  * @param {!TrustedScriptURL|string} scriptURL
  * @param {!WorkerOptions=} opt_options
  * @constructor
