@@ -1,0 +1,120 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Format reference: https://docs.github.com/en/actions/reference
+
+name: Compiler CI
+
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    # Daily at 12pm UTC
+    - cron: '0 12 * * *'
+
+env:
+  VERSION_NODEJS: '10.21.0'
+  UNSYMLINK_DIR: bazel-bin-unsymlink
+
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobs
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Java
+        # https://github.com/marketplace/actions/setup-java-jdk
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+          java-package: jdk
+          architecture: x64
+
+      - name: Setup Bazel
+        # https://github.com/marketplace/actions/actions-setup-bazel
+        uses: jwlawson/actions-setup-bazel@v1
+        with:
+          bazel-version: '2.2.0'
+
+        # Clone closure-compiler repo from the commit under test into current directory.
+      - name: Checkout Current closure-compiler Commit
+        # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: bazel build //:all
+
+      - name: Unit Tests
+        run: bazel test //:all
+
+      - name: Unsymlink Bazel Artifacts
+        # upload-artifact doesn't support paths with symlinks
+        run: |
+          mkdir -p ${{ env.UNSYMLINK_DIR }}
+          cp -t ${{ env.UNSYMLINK_DIR }} bazel-bin/compiler_unshaded_deploy.jar
+
+      # Share the following files with other jobs in this workflow. They can be grabbed using ID
+      # `unshaded_compiler`. This is made possible by uploading the files to GitHub controlled
+      # storage.
+      - name: Share Unshaded Compiler
+        # https://github.com/marketplace/actions/upload-a-build-artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: unshaded_compiler
+          path: ${{ env.UNSYMLINK_DIR }}/compiler_unshaded_deploy.jar
+          if-no-files-found: error
+
+  test-closure-compiler-npm:
+    name: Make Sure closure-compiler-npm is Compatible with this Compiler Build
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-test
+    steps:
+      - name: Setup Node.js
+        # https://github.com/marketplace/actions/setup-node-js-environment
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.VERSION_NODEJS }}
+
+        # Clone closure-compiler-npm repo from master into the current directory.
+      - name: Checkout Current closure-compiler-npm Commit
+        # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@v2
+        with:
+          repository: google/closure-compiler-npm
+          ref: master
+
+        # Clone closure-compiler repo from the commit under test into the npm repo compiler
+        # submodule
+      - name: Checkout Current closure-compiler Commit
+        # https://github.com/marketplace/actions/checkout
+        uses: actions/checkout@v2
+        with:
+          path: compiler
+
+      # Grab the compiler binary that was shared from `build-and-test` and put the file into
+      # ./compiler/bazel-bin.
+      - name: Grab Unshaded Compiler
+        # https://github.com/marketplace/actions/download-a-build-artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: unshaded_compiler
+          # Put the binary where bazel would have put it.
+          path: compiler/bazel-bin
+
+      - name: Test closure-compiler-npm
+        run: compiler/.github/ci_support/test_closure-compiler-npm.sh compiler/bazel-bin/compiler_unshaded_deploy.jar

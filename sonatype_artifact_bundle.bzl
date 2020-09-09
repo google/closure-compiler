@@ -38,24 +38,17 @@ Returns:
 _SNAPSHOT = "1.0-SNAPSHOT"
 
 def _sonatype_artifact_bundle(ctx):
-    # If there are missing defines, we choose to skip all actions for this target,
-    # rather than fail, so that:
-    #   - `bazel test //:all` still works
-    #   - defines can't be forgotten when intentionally building the bundle
-    #
-    # This way, only downstream actions that truly depend on the bundle are affected.
+    version = ctx.var.get("COMPILER_VERSION", _SNAPSHOT)
+    password = None
 
-    password = _warn_missing_define(ctx, "CLEARTEXT_GPG_PASSPHRASE")
-    if password == None:
-        return []
-
-    version = _warn_missing_define(ctx, "COMPILER_VERSION")
-    if version == None:
-        return []
-    elif version == _SNAPSHOT:
+    if version == _SNAPSHOT:
+        # SNAPSHOT versions don't need to be signed and can't be uploaded
+        # as a release, so there's no issue with a missing passphrase.
         pass
     elif not version.startswith("v") or not version[1:].isdigit():
         fail("--define=COMPILER_VERSION was malformed; got '{0}'".format(version))
+    else:
+        password = _fail_missing_define(ctx, "CLEARTEXT_GPG_PASSPHRASE")
 
     # 1. Rename the POM to have the mandatory base name "pom.xml"
     # 2. Confirm the POM is for the right artifact
@@ -93,7 +86,7 @@ def _sonatype_artifact_bundle(ctx):
         for suffix, file in jar_map.items()
         if file
     ]
-    signatures = [_gpg_signature(ctx, password, f) for f in srcs]
+    signatures = [_gpg_signature(ctx, password, f) for f in srcs if password]
     files_to_bundle = srcs + signatures
 
     # Set all bundle files to be at the top level of the JAR.
@@ -173,9 +166,8 @@ def _copy_file(ctx, file, name):
 def _declare_file(ctx, name):
     return ctx.actions.declare_file("{0}/{1}".format(ctx.attr.name, name))
 
-def _warn_missing_define(ctx, name):
+def _fail_missing_define(ctx, name):
     value = ctx.var.get(name, None)
     if value == None:
-        # buildifier: disable=print
-        print(ctx.label, "--define={0} was not set; assuming target should be skipped.".format(name))
+        fail(ctx.label, "--define={0} was not set".format(name))
     return value
