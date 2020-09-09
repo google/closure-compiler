@@ -16,6 +16,6 @@
 # Script that can be used by CI server for testing JsCompiler builds.
 set -e
 
-bazel build :all
+bazel build :compiler-j2cl 
 
 # TODO: Run other tests needed for open source verification
