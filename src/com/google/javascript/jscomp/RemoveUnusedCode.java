@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -95,7 +94,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   // Properties that are implicitly used as part of the JS language.
   private static final ImmutableSet<String> IMPLICITLY_USED_PROPERTIES =
-      ImmutableSet.of("length", "toString", "valueOf", "constructor");
+      ImmutableSet.of("length", "toString", "valueOf", "constructor", "prototype");
 
   private final AbstractCompiler compiler;
   private final AstAnalyzer astAnalyzer;
@@ -175,8 +174,7 @@ class RemoveUnusedCode implements CompilerPass {
     this.assumeGettersArePure = builder.assumeGettersArePure;
 
     // All Vars that are completely unremovable will share this VarInfo instance.
-    canonicalUnremovableVarInfo = new VarInfo();
-    canonicalUnremovableVarInfo.setIsExplicitlyNotRemovable();
+    canonicalUnremovableVarInfo = new CanonicalUnremovableVarInfo();
   }
 
   public static class Builder {
@@ -426,7 +424,7 @@ class RemoveUnusedCode implements CompilerPass {
                     .buildFunctionDeclaration(n);
             varInfo.addRemovable(functionDeclaration);
             if (parent.isExport()) {
-              varInfo.markAsReferenced();
+              varInfo.setIsExplicitlyNotRemovable();
             }
           } else {
             traverseFunction(n, scope);
@@ -532,7 +530,7 @@ class RemoveUnusedCode implements CompilerPass {
           // class name() {}
           // handled at a higher level
           checkState(!((parent.isFunction() || parent.isClass()) && parent.getFirstChild() == n));
-          traverseNameNode(n, scope).markAsReferenced();
+          traverseNameNode(n, scope).setIsExplicitlyNotRemovable();
         }
         break;
 
@@ -670,7 +668,7 @@ class RemoveUnusedCode implements CompilerPass {
     // We'll allow removal of compound assignment to a `this` property as long as the result of the
     // assignment is unused.
     // e.g. `this.x += 3;`
-    // TODO(nickreid): Why do we treat `this` properties specially? It it because `this` is const?
+    // TODO(nickreid): Why do we treat `this` properties specially? Is it because `this` is const?
     Node targetNode = compoundAssignNode.getFirstChild();
     Node valueNode = compoundAssignNode.getLastChild();
     if (targetNode.isGetProp()) {
@@ -1052,7 +1050,7 @@ class RemoveUnusedCode implements CompilerPass {
       VarInfo varInfo = traverseNameNode(lhs, scope);
       RemovableBuilder builder = new RemovableBuilder();
       traverseRemovableAssignValue(valueNode, builder, scope);
-      varInfo.addRemovable(builder.buildVariableAssign(assignNode));
+      varInfo.addRemovable(builder.buildVariableAssign(assignNode, varInfo));
     } else if (lhs.isGetElem()) {
       Node getElemObj = lhs.getFirstChild();
       Node getElemKey = lhs.getLastChild();
@@ -1073,7 +1071,7 @@ class RemoveUnusedCode implements CompilerPass {
           builder.addContinuation(new Continuation(getElemKey, scope));
         }
         traverseRemovableAssignValue(valueNode, builder, scope);
-        varInfo.addRemovable(builder.buildComputedPropertyAssign(assignNode, getElemKey));
+        varInfo.addRemovable(builder.buildComputedPropertyAssign(assignNode, getElemKey, varInfo));
       } else {
         traverseNode(getElemObj, scope);
         traverseNode(getElemKey, scope);
@@ -1094,7 +1092,7 @@ class RemoveUnusedCode implements CompilerPass {
         VarInfo varInfo = traverseNameNode(getPropLhs, scope);
         RemovableBuilder builder = new RemovableBuilder();
         traverseRemovableAssignValue(valueNode, builder, scope);
-        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
+        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode, varInfo));
       } else if (isDotPrototype(getPropLhs)) {
         // objExpression.prototype.propertyName = someValue
         Node objExpression = getPropLhs.getFirstChild();
@@ -1103,7 +1101,7 @@ class RemoveUnusedCode implements CompilerPass {
         if (objExpression.isName()) {
           // varName.prototype.propertyName = someValue
           VarInfo varInfo = traverseNameNode(getPropLhs.getFirstChild(), scope);
-          varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode));
+          varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode, varInfo));
         } else {
           // (someExpression).prototype.propertyName = someValue
           if (astAnalyzer.mayHaveSideEffects(objExpression)) {
@@ -1312,7 +1310,7 @@ class RemoveUnusedCode implements CompilerPass {
       // The class is non-local, because it is accessible by unknown code outside
       // of the scope where InnerName is defined.
       // e.g. `use(class InnerName {})`
-      varInfo.hasNonLocalOrNonLiteralValue = true;
+      varInfo.setHasNonLocalOrNonLiteralValue();
       varInfo.addRemovable(new RemovableBuilder().buildNamedClassExpression(classNode));
     }
     // If we're traversing the class expression, we've already decided we cannot remove it.
@@ -1384,7 +1382,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (NodeUtil.isExpressionResultUsed(function)) {
         // var f = function g() {};
         // The f is an alias for g, so g escapes from the scope where it is defined.
-        varInfo.hasNonLocalOrNonLiteralValue = true;
+        varInfo.setHasNonLocalOrNonLiteralValue();
       }
     }
 
@@ -1483,13 +1481,25 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   private boolean isIndependentlyRemovable(Removable removable) {
-    return (removeUnusedPrototypeProperties && removable.isPrototypeProperty())
-        // TODO(b/139319709): Combine these with "removeUnusedPrototypeProperties". The fact that
-        // only these two property type are conflated is arbitrary.
-        || (removeUnusedThisProperties
-            && (removable.isThisDotPropertyReference() || removable.isStaticProperty()))
-        || (removeUnusedObjectDefinePropertiesDefinitions
-            && removable.isObjectDefinePropertiesDefinition());
+    if (removable.isPrototypeProperty()) {
+      // `foo.prototype.prop = something;`
+      // `class C { prop() {} }`
+      return removeUnusedPrototypeProperties;
+    } else if (removable.isObjectDefinePropertiesDefinition()) {
+      // `Object.defineProperties({ prop: {...}});`
+      return removeUnusedObjectDefinePropertiesDefinitions;
+    } else if (removable.isThisDotPropertyReference()) {
+      // `this.prop = something;`
+      return removeUnusedThisProperties;
+    } else if (removable.isStaticProperty()) {
+      // `class Foo { static prop() {} }`
+      // `Foo.otherStaticProp = value;`
+      // TODO(b/139319709): removeUnusedThisProperties has ended up covering more than it was
+      // originally intended to cover for arbitrary reasons.
+      return removeUnusedThisProperties;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -1594,7 +1604,7 @@ class RemoveUnusedCode implements CompilerPass {
           continue;
         }
 
-        getVarInfo(getVarForNameNode(lValue, functionScope)).markAsReferenced();
+        getVarInfo(getVarForNameNode(lValue, functionScope)).setIsExplicitlyNotRemovable();
       }
       // `arguments` is never removable.
       return canonicalUnremovableVarInfo;
@@ -1636,10 +1646,6 @@ class RemoveUnusedCode implements CompilerPass {
     boolean isGlobal = var.isGlobal();
     if (var.isExtern()) {
       return canonicalUnremovableVarInfo;
-    } else if (isGlobal && !removeGlobals) {
-      return canonicalUnremovableVarInfo;
-    } else if (!isGlobal && !removeLocalVars) {
-      return canonicalUnremovableVarInfo;
     } else if (codingConvention.isExported(var.getName(), !isGlobal)) {
       return canonicalUnremovableVarInfo;
     } else if (var.isArguments()) {
@@ -1647,9 +1653,15 @@ class RemoveUnusedCode implements CompilerPass {
     } else {
       VarInfo varInfo = varInfoMap.get(var);
       if (varInfo == null) {
-        varInfo = new VarInfo();
+        varInfo = new RealVarInfo();
         if (var.getParentNode().isParamList()) {
-          varInfo.hasNonLocalOrNonLiteralValue = true;
+          varInfo.setHasNonLocalOrNonLiteralValue();
+        }
+        if (isGlobal ? !removeGlobals : !removeLocalVars) {
+          // Cannot use canonicalUnremovableVarInfo here, because each varInfo
+          // needs to track what value is assigned to it for the purpose of
+          // correctly allowing or preventing removal of properties set on it.
+          varInfo.setIsExplicitlyNotRemovable();
         }
         varInfoMap.put(var, varInfo);
       }
@@ -1740,18 +1752,31 @@ class RemoveUnusedCode implements CompilerPass {
   private abstract class Removable {
 
     private final List<Continuation> continuations;
+
+    /**
+     * If this object represents an assignment of a value to a property. This is the name of the
+     * property.
+     */
     @Nullable private final String propertyName;
+
+    /**
+     * If this object represents a variable declaration or assignment of a value, this is the node
+     * representing where the value is being stored. e.g. the LHS of an assignment.
+     */
+    @Nullable protected final Node targetNode;
+
     private final boolean isPrototypeDotPropertyReference;
     private final boolean isThisDotPropertyReference;
 
     private boolean continuationsAreApplied = false;
     private boolean isRemoved = false;
 
-    Removable(RemovableBuilder builder) {
+    Removable(Node targetNode, RemovableBuilder builder) {
       continuations = builder.continuations;
       propertyName = builder.propertyName;
       isPrototypeDotPropertyReference = builder.isPrototypeDotPropertyReference;
       isThisDotPropertyReference = builder.isThisDotPropertyReference;
+      this.targetNode = targetNode;
     }
 
     String getPropertyName() {
@@ -1803,6 +1828,15 @@ class RemoveUnusedCode implements CompilerPass {
 
     boolean isAssignedValueLocal() {
       return false; // assume non-local by default
+    }
+
+    /**
+     * @return the Node representing the local value that is being assigned or `null` if the value
+     *     is non-local or cannot be determined.
+     */
+    @Nullable
+    Node getLocalAssignedValue() {
+      return null;
     }
 
     /** Is this a direct assignment to `varName.prototype`? */
@@ -1918,16 +1952,20 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     Assign buildNamedPropertyAssign(Node assignNode, Node propertyNode) {
+      return buildNamedPropertyAssign(assignNode, propertyNode, null);
+    }
+
+    Assign buildNamedPropertyAssign(Node assignNode, Node propertyNode, @Nullable VarInfo varInfo) {
       this.propertyName = propertyNode.getString();
-      return new Assign(this, assignNode, Kind.NAMED_PROPERTY, propertyNode);
+      return new Assign(this, assignNode, Kind.NAMED_PROPERTY, propertyNode, varInfo);
     }
 
-    Assign buildComputedPropertyAssign(Node assignNode, Node propertyNode) {
-      return new Assign(this, assignNode, Kind.COMPUTED_PROPERTY, propertyNode);
+    Assign buildComputedPropertyAssign(Node assignNode, Node propertyNode, VarInfo varInfo) {
+      return new Assign(this, assignNode, Kind.COMPUTED_PROPERTY, propertyNode, varInfo);
     }
 
-    Assign buildVariableAssign(Node assignNode) {
-      return new Assign(this, assignNode, Kind.VARIABLE, /* propertyNode */ null);
+    Assign buildVariableAssign(Node assignNode, VarInfo varInfo) {
+      return new Assign(this, assignNode, Kind.VARIABLE, /* propertyNode */ null, varInfo);
     }
 
     ClassSetupCall buildClassSetupCall(Node callNode) {
@@ -1964,7 +2002,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node referenceNode;
 
     UnusedReadReference(RemovableBuilder builder, Node referenceNode) {
-      super(builder);
+      super(/* targetNode= */ null, builder);
       // TODO(bradfordcsmith): handle `name;` and `name.property;` references
       checkState(
           isThisDotProperty(referenceNode) || isDotPrototypeDotProperty(referenceNode),
@@ -2006,7 +2044,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node instanceofNode;
 
     InstanceofName(RemovableBuilder builder, Node instanceofNode) {
-      super(builder);
+      super(/* targetNode= */ null, builder);
       checkArgument(instanceofNode.isInstanceOf(), instanceofNode);
       this.instanceofNode = instanceofNode;
     }
@@ -2043,7 +2081,7 @@ class RemoveUnusedCode implements CompilerPass {
     @Nullable final Node toPreserve;
 
     IncOrDecOp(RemovableBuilder builder, Node incOrDecNode, @Nullable Node toPreserve) {
-      super(builder);
+      super(incOrDecNode.getOnlyChild(), builder);
       checkArgument(incOrDecNode.isInc() || incOrDecNode.isDec(), incOrDecNode);
 
       Node arg = incOrDecNode.getOnlyChild();
@@ -2089,18 +2127,15 @@ class RemoveUnusedCode implements CompilerPass {
   private class IndirectAssign extends Removable {
     /** The subtree which can be removed if the assignment is removable. */
     final Node root;
-    /** The l-value expression below root. */
-    final Node targetNode;
 
     IndirectAssign(RemovableBuilder builder, Node root, Node targetNode) {
-      super(builder);
+      super(targetNode, builder);
 
       Node rootParent = root.getParent();
       checkState(rootParent.isDestructuringPattern() || rootParent.isParamList(), rootParent);
       checkState(targetNode.isName() || targetNode.isGetProp(), targetNode);
 
       this.root = root;
-      this.targetNode = targetNode;
     }
 
     @Override
@@ -2216,7 +2251,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node polyfillNode;
 
     Polyfill(RemovableBuilder builder, Node polyfillNode) {
-      super(builder);
+      super(/* targetNode= */ null, builder);
       this.polyfillNode = polyfillNode;
     }
 
@@ -2235,7 +2270,9 @@ class RemoveUnusedCode implements CompilerPass {
     final Node classDeclarationNode;
 
     ClassDeclaration(RemovableBuilder builder, Node classDeclarationNode) {
-      super(builder);
+      // First child of the CLASS is the NAME node for the name to which the class is being
+      // assigned.
+      super(classDeclarationNode.getFirstChild(), builder);
       this.classDeclarationNode = classDeclarationNode;
     }
 
@@ -2245,8 +2282,19 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
+    boolean isVariableAssignment() {
+      return true;
+    }
+
+    @Override
     boolean isAssignedValueLocal() {
       return true;
+    }
+
+    @Nullable
+    @Override
+    Node getLocalAssignedValue() {
+      return classDeclarationNode;
     }
 
     @Override
@@ -2259,7 +2307,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node classNode;
 
     NamedClassExpression(RemovableBuilder builder, Node classNode) {
-      super(builder);
+      super(classNode.getFirstChild(), builder);
       this.classNode = classNode;
     }
 
@@ -2286,7 +2334,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node propertyNode;
 
     ClassOrPrototypeNamedProperty(RemovableBuilder builder, Node propertyNode) {
-      super(builder);
+      super(/* targetNode= */ null, builder);
       this.propertyNode = propertyNode;
     }
 
@@ -2319,7 +2367,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node propertyNode;
 
     ObjectDefinePropertiesDefinition(RemovableBuilder builder, Node propertyNode) {
-      super(builder);
+      super(/* targetNode= */ null, builder);
       this.propertyNode = propertyNode;
     }
 
@@ -2338,7 +2386,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node functionDeclarationNode;
 
     FunctionDeclaration(RemovableBuilder builder, Node functionDeclarationNode) {
-      super(builder);
+      super(functionDeclarationNode.getFirstChild(), builder);
       this.functionDeclarationNode = functionDeclarationNode;
     }
 
@@ -2348,9 +2396,20 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     @Override
+    boolean isVariableAssignment() {
+      return true;
+    }
+
+    @Override
     boolean isAssignedValueLocal() {
       // The declared function is always created locally.
       return true;
+    }
+
+    @Nullable
+    @Override
+    Node getLocalAssignedValue() {
+      return functionDeclarationNode;
     }
 
     @Override
@@ -2363,7 +2422,7 @@ class RemoveUnusedCode implements CompilerPass {
     private final Node declarationStatement;
 
     public NameDeclarationStatement(RemovableBuilder builder, Node declarationStatement) {
-      super(builder);
+      super(declarationStatement.getOnlyChild(), builder);
       checkArgument(NodeUtil.isNameDeclaration(declarationStatement), declarationStatement);
       this.declarationStatement = declarationStatement;
     }
@@ -2388,11 +2447,31 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     boolean isAssignedValueLocal() {
-      Node nameNode = declarationStatement.getOnlyChild();
-      Node valueNode = nameNode.getFirstChild();
-      return valueNode == null
-          || isLocalDefaultValueAssignment(nameNode, valueNode)
-          || NodeUtil.evaluatesToLocalValue(valueNode);
+      final Node nameNode = declarationStatement.getOnlyChild();
+      final Node initialValueNode = nameNode.getFirstChild();
+      if (initialValueNode == null) {
+        // `var foo;`
+        // the "assigned" value is undefined, which should be considered a "local" value,
+        // since it is a constant.
+        return true;
+      }
+      // Handle `var name = name || defaultValue;`
+      final Node valueNode = maybeUnwrapQnameOrDefaultValueNode(nameNode, initialValueNode);
+      return NodeUtil.evaluatesToLocalValue(valueNode);
+    }
+
+    @Nullable
+    @Override
+    Node getLocalAssignedValue() {
+      final Node nameNode = declarationStatement.getOnlyChild();
+      final Node initialValueNode = nameNode.getFirstChild();
+      if (initialValueNode == null) {
+        // `var foo;` has no node to represent the `undefined` value that is assigned.
+        return null;
+      }
+      // Handle `var name = name || defaultValue;`
+      final Node valueNode = maybeUnwrapQnameOrDefaultValueNode(nameNode, initialValueNode);
+      return NodeUtil.evaluatesToLocalValue(valueNode) ? valueNode : null;
     }
 
     @Override
@@ -2402,14 +2481,19 @@ class RemoveUnusedCode implements CompilerPass {
   }
 
   /**
-   * True if targetNode is a qualified name and the valueNode is of the form `targetQualifiedName ||
-   * localValue`.
+   * @param targetNode node to which a value is being assigned
+   * @param valueNode value being assigned
+   * @return If `valueNode` has the form `qualifiedName || defaultValue` and `qualifiedName` matches
+   *     `targetNode`, return `defaultValue`. Otherwise return `valueNode`.
    */
-  private static boolean isLocalDefaultValueAssignment(Node targetNode, Node valueNode) {
-    return valueNode.isOr()
-        && targetNode.isQualifiedName()
-        && valueNode.getFirstChild().isEquivalentTo(targetNode)
-        && NodeUtil.evaluatesToLocalValue(valueNode.getLastChild());
+  private static Node maybeUnwrapQnameOrDefaultValueNode(Node targetNode, Node valueNode) {
+    if (valueNode.isOr() && targetNode.isQualifiedName()) {
+      final Node lhsOfOr = checkNotNull(valueNode.getFirstChild());
+      if (lhsOfOr.isEquivalentTo(targetNode)) {
+        return valueNode.getLastChild();
+      }
+    }
+    return valueNode;
   }
 
   enum Kind {
@@ -2428,18 +2512,36 @@ class RemoveUnusedCode implements CompilerPass {
     final Node assignNode;
     final Kind kind;
 
+    /**
+     * The VarInfo associated with the LHS of the assignment.
+     *
+     * <p>The VarInfo for X in the following cases. `null` for all others.
+     *
+     * <pre>
+     *   <code>
+     *     X = class {};
+     *     X.prop = 1;
+     *     X.prototype.prop = 1;
+     *     X[prop] = 1;
+     *   </code>
+     * </pre>
+     */
+    @Nullable final VarInfo varInfo;
+
     Assign(
         RemovableBuilder builder,
         Node assignNode,
         Kind kind,
-        @Nullable Node propertyNode) {
-      super(builder);
+        @Nullable Node propertyNode,
+        @Nullable VarInfo varInfo) {
+      super(assignNode.getFirstChild(), builder);
       checkArgument(NodeUtil.isAssignmentOp(assignNode), assignNode);
       if (kind == Kind.VARIABLE) {
         checkArgument(
             propertyNode == null,
             "got property node for simple variable assignment: %s",
             propertyNode);
+        checkArgument(varInfo != null, "missing VarInfo for variable assignment: %s", propertyNode);
       } else {
         checkArgument(propertyNode != null, "missing property node");
         if (kind == Kind.NAMED_PROPERTY) {
@@ -2448,6 +2550,7 @@ class RemoveUnusedCode implements CompilerPass {
       }
       this.assignNode = assignNode;
       this.kind = kind;
+      this.varInfo = varInfo;
     }
 
     /** True for `varName = value` assignments. */
@@ -2458,14 +2561,25 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     boolean isAssignedValueLocal() {
+      return getLocalAssignedValue() != null;
+    }
+
+    @Nullable
+    @Override
+    Node getLocalAssignedValue() {
       if (NodeUtil.isExpressionResultUsed(assignNode)) {
         // assigned value may escape or be aliased
-        return false;
+        return null;
       } else {
-        Node targetNode = assignNode.getFirstChild();
-        Node valueNode = targetNode.getNext();
-        return NodeUtil.evaluatesToLocalValue(valueNode)
-            || isLocalDefaultValueAssignment(targetNode, valueNode);
+        // Handle `qname = qname || defaultValue;`
+        Node valueNode =
+            maybeUnwrapQnameOrDefaultValueNode(
+                assignNode.getFirstChild(), assignNode.getLastChild());
+        if (NodeUtil.evaluatesToLocalValue(valueNode)) {
+          return valueNode;
+        } else {
+          return null;
+        }
       }
     }
 
@@ -2489,12 +2603,14 @@ class RemoveUnusedCode implements CompilerPass {
 
     @Override
     public boolean isStaticProperty() {
-      Node lhs = assignNode.getFirstChild();
-      if (lhs.isGetProp()) {
-        // something.propName = someValue
-        Node getPropLhs = lhs.getFirstChild();
-        JSType lhsType = getPropLhs.getJSType();
-        return lhsType != null && (lhsType.isConstructor() || lhsType.isInterface());
+      if (kind == Kind.NAMED_PROPERTY
+          && varInfo != null
+          && varInfo.hasFunctionOrClassLiteralValue()) {
+        // We have either
+        // `classOrFunctionVar.prop = something;` which is static
+        // or
+        // `classOrFunctionVar.prototype.prop = something;` which is not.
+        return targetNode.getFirstChild().isName();
       } else {
         return false;
       }
@@ -2539,7 +2655,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node assignNode;
 
     AnonymousPrototypeNamedPropertyAssign(RemovableBuilder builder, Node assignNode) {
-      super(builder);
+      super(assignNode.getFirstChild(), builder);
       checkNotNull(builder.propertyName);
       checkArgument(assignNode.isAssign(), assignNode);
       this.assignNode = assignNode;
@@ -2598,7 +2714,7 @@ class RemoveUnusedCode implements CompilerPass {
     final Node callNode;
 
     ClassSetupCall(RemovableBuilder builder, Node callNode) {
-      super(builder);
+      super(/* targetNode= */ null, builder);
       this.callNode = callNode;
     }
 
@@ -2674,7 +2790,97 @@ class RemoveUnusedCode implements CompilerPass {
     return alreadyRemoved(parent);
   }
 
-  private class VarInfo {
+  /**
+   * Tracks whether a variable is removable or not, including tracking the Removable objects
+   * associated with it.
+   */
+  private interface VarInfo {
+
+    /**
+     * Add a Removable representing code that must be removed if this variable is removed.
+     *
+     * <ul>
+     *   <li>The contents of the Removable could cause the variable to be no longer safe to remove.
+     *   <li>If the variable is not safe to remove, this method will either apply the continuations
+     *       within the `removable` or allow it to be considered for independent removal.
+     * </ul>
+     */
+    void addRemovable(Removable removable);
+
+    /** At the current point of execution, does the variable appear safe to remove? */
+    boolean isRemovable();
+
+    /**
+     * Record that the variable cannot be removed.
+     *
+     * <p>If the variable was previously considered safe to remove, then this method will examine
+     * all of the `Removable` objects associated with this variable and either apply their
+     * continuations or consider them for independent removal.
+     */
+    void setIsExplicitlyNotRemovable();
+
+    /**
+     * Record that at least one value assigned to the variable is non-local (comes from or escapes
+     * to another scope) and / or non-literal.
+     */
+    void setHasNonLocalOrNonLiteralValue();
+
+    /** Is at least one value assigned to the variable a function or class literal? */
+    boolean hasFunctionOrClassLiteralValue();
+
+    /**
+     * Invokes the `remove()` method on all removables associated with this variable.
+     *
+     * <p>Does nothing if the variable has been found to be unsafe to remove.
+     */
+    void removeAllRemovables();
+  }
+
+  /**
+   * Represents a variable that we know can never be removed regardless of how it is used.
+   *
+   * <p>We create just one instance of this class and use it for many variables in order to save
+   * memory.
+   */
+  private final class CanonicalUnremovableVarInfo implements VarInfo {
+
+    @Override
+    public void addRemovable(Removable removable) {
+      // Immediately pass the argument off for potential independent removal.
+      considerForIndependentRemoval(removable);
+    }
+
+    @Override
+    public boolean isRemovable() {
+      return false;
+    }
+
+    @Override
+    public void setIsExplicitlyNotRemovable() {
+      // nothing to do
+    }
+
+    @Override
+    public void setHasNonLocalOrNonLiteralValue() {
+      // nothing to do
+    }
+
+    @Override
+    public boolean hasFunctionOrClassLiteralValue() {
+      // Returning false here will prevent some properties assigned on unremovable variables from
+      // being independently removed, but returning `true` would cause incorrect removal of
+      // properties.
+      return false;
+    }
+
+    @Override
+    public void removeAllRemovables() {
+      // nothing to do
+    }
+  }
+
+  /** Tracks the removable code and other state related to variables we may be able to remove. */
+  private final class RealVarInfo implements VarInfo {
     /**
      * Objects that represent variable declarations, assignments, or class setup calls that can
      * be removed.
@@ -2686,12 +2892,43 @@ class RemoveUnusedCode implements CompilerPass {
 
     boolean isEntirelyRemovable = true;
 
+    // At least one assignment to the variable is a non-local and/or non-literal value.
     boolean hasNonLocalOrNonLiteralValue = false;
+
+    // NOTE: We are assuming that if one value assigned to a variable is a class or function
+    //     literal, than it is very likely that all other values, if any, assigned to the variable
+    //     are functions or classes. At present this information is used only to decide whether
+    //     `varName.propName = something` should be considered to be an ES5-style static property.
+    //     If this assumption is wrong we may end up removing `propName` even though it's not
+    //     actually a static class property. This seems a reasonable risk, because that removal
+    //     would only occur if there were no references to `propName` anywhere in the sources or
+    //     externs.
+    //
+    // At least one assignment to the variable is a function or class literal.
+    boolean hasFunctionOrClassLiteralValue = false;
     boolean requiresLocalLiteralValueForRemoval = false;
 
-    void addRemovable(Removable removable) {
-      if (!removable.isAssignedValueLocal()
-          && (removable.isVariableAssignment() || removable.isPrototypeAssignment())) {
+    @Override
+    public void addRemovable(Removable removable) {
+      if (removable.isVariableAssignment()) {
+        // class name {}
+        // function name {}
+        // let name = something;
+        // name = something;
+        // let {a} = something;
+        if (removable.isAssignedValueLocal()) {
+          final Node localValue = removable.getLocalAssignedValue();
+          // Still have to check for null local value because of variable declarations
+          // without initial values.
+          // `var a;` isAssignedValueLocal() == true but getLocalAssignedValue() == null
+          if (localValue != null && (localValue.isFunction() || localValue.isClass())) {
+            hasFunctionOrClassLiteralValue = true;
+          }
+        } else {
+          hasNonLocalOrNonLiteralValue = true;
+        }
+      } else if (removable.isPrototypeAssignment() && !removable.isAssignedValueLocal()) {
+        // `name.prototype = someNonLocalValue;`
         hasNonLocalOrNonLiteralValue = true;
       }
       if (removable.preventsRemovalOfVariableWithNonLocalValueOrPrototype()) {
@@ -2709,21 +2946,13 @@ class RemoveUnusedCode implements CompilerPass {
       }
     }
 
-    /**
-     * Marks this variable as referenced and evaluates any continuations if not previously marked as
-     * referenced.
-     *
-     * @return true if the variable was not already marked as referenced
-     */
-    void markAsReferenced() {
-      setIsExplicitlyNotRemovable();
-    }
-
-    boolean isRemovable() {
+    @Override
+    public boolean isRemovable() {
       return isEntirelyRemovable;
     }
 
-    void setIsExplicitlyNotRemovable() {
+    @Override
+    public void setIsExplicitlyNotRemovable() {
       if (isEntirelyRemovable) {
         isEntirelyRemovable = false;
         for (Removable r : removables) {
@@ -2733,7 +2962,18 @@ class RemoveUnusedCode implements CompilerPass {
       }
     }
 
-    void removeAllRemovables() {
+    @Override
+    public void setHasNonLocalOrNonLiteralValue() {
+      this.hasNonLocalOrNonLiteralValue = true;
+    }
+
+    @Override
+    public boolean hasFunctionOrClassLiteralValue() {
+      return hasFunctionOrClassLiteralValue;
+    }
+
+    @Override
+    public void removeAllRemovables() {
       checkState(isEntirelyRemovable);
       for (Removable removable : removables) {
         removable.remove(compiler);
@@ -2933,7 +3173,7 @@ class RemoveUnusedCode implements CompilerPass {
     private final Node nameNode;
 
     private VanillaForNameDeclaration(RemovableBuilder builder, Node nameNode) {
-      super(builder);
+      super(nameNode, builder);
       this.nameNode = nameNode;
     }
 
