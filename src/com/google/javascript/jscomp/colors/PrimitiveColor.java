@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp.colors;
 
 import com.google.common.collect.ImmutableCollection;
+import com.google.errorprone.annotations.Immutable;
 
 /** Value types that are a) not user-defined and b) do not need individual classes */
+@Immutable
 public enum PrimitiveColor implements Color {
   // JS primitive types
   NUMBER,

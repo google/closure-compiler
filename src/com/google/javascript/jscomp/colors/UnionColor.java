@@ -21,9 +21,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.Immutable;
 
 /** A set of multiple {@link Color}s. */
 @AutoValue
+@Immutable
 public abstract class UnionColor implements Color {
 
   public static UnionColor create(ImmutableSet<Color> alternates) {

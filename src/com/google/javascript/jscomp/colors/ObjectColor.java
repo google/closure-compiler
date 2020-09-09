@@ -19,12 +19,14 @@ package com.google.javascript.jscomp.colors;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.Immutable;
 import javax.annotation.Nullable;
 
 /**
  * A user-defined object type. For now each type is defined by a unique class name and file source.
  */
 @AutoValue
+@Immutable
 public abstract class ObjectColor implements Color {
 
   @Override

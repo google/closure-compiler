@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp.colors;
 
 import com.google.common.collect.ImmutableCollection;
+import com.google.errorprone.annotations.Immutable;
 
 /** A simplified version of a Closure or TS type for use by optimizations */
+@Immutable
 public interface Color {
 
   boolean isPrimitive();
