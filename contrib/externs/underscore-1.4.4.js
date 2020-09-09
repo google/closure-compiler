@@ -18,7 +18,6 @@
  * @fileoverview Externs for Underscore 1.4.4.
  *
  * TODO: Wrapper objects.
- * TODO: _.bind - for some reason this plays up in practice.
  *
  * @see http://documentcloud.github.com/underscore/
  * @externs
@@ -30,6 +29,17 @@
  * @constructor
  */
 function _(obj) {}
+
+/**
+ * @suppress {checkPrototypalTypes} ignore clash with Function.prototype.bind
+ * @param {!Function} func The function to be bound
+ * @param {*} selfObj The object to use as `this` when calling the bound
+ *     function.
+ * @param {...*} var_args Optional additional arguments to always pass to the
+ *     bound function.
+ * @return {!Function} A partially-applied form of the argument function
+ */
+_.bind;
 
 // Collection functions
 
