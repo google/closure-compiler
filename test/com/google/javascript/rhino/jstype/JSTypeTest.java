@@ -322,7 +322,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(FUNCTION_TYPE);
 
-    assertThat(FUNCTION_TYPE.isNominalConstructor()).isTrue();
+    assertThat(FUNCTION_TYPE.isNominalConstructorOrInterface()).isTrue();
   }
 
   /** Tests the behavior of the Bottom Object type. */
@@ -446,7 +446,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(NO_OBJECT_TYPE);
 
-    assertThat(NO_OBJECT_TYPE.isNominalConstructor()).isFalse();
+    assertThat(NO_OBJECT_TYPE.isNominalConstructorOrInterface()).isFalse();
   }
 
   /** Tests the behavior of the Bottom type. */
@@ -567,7 +567,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(NO_TYPE);
 
-    assertThat(NO_TYPE.isNominalConstructor()).isFalse();
+    assertThat(NO_TYPE.isNominalConstructorOrInterface()).isFalse();
   }
 
   /** Tests the behavior of the unresolved Bottom type. */
@@ -856,8 +856,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     Asserts.assertResolvesToSame(ARRAY_TYPE);
 
-    assertThat(ARRAY_TYPE.isNominalConstructor()).isFalse();
-    assertThat(ARRAY_TYPE.getConstructor().isNominalConstructor()).isTrue();
+    assertThat(ARRAY_TYPE.isNominalConstructorOrInterface()).isFalse();
+    assertThat(ARRAY_TYPE.getConstructor().isNominalConstructorOrInterface()).isTrue();
   }
 
   /** Tests the behavior of the unknown type. */
@@ -970,7 +970,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(UNKNOWN_TYPE.getDisplayName()).isEqualTo("Unknown");
 
     Asserts.assertResolvesToSame(UNKNOWN_TYPE);
-    assertThat(UNKNOWN_TYPE.isNominalConstructor()).isFalse();
+    assertThat(UNKNOWN_TYPE.isNominalConstructorOrInterface()).isFalse();
 
     assertThat(UNKNOWN_TYPE.getPropertyType("abc")).isEqualTo(UNKNOWN_TYPE);
   }
@@ -987,7 +987,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(CHECKED_UNKNOWN_TYPE.getDisplayName()).isEqualTo("Unknown");
 
     Asserts.assertResolvesToSame(CHECKED_UNKNOWN_TYPE);
-    assertThat(CHECKED_UNKNOWN_TYPE.isNominalConstructor()).isFalse();
+    assertThat(CHECKED_UNKNOWN_TYPE.isNominalConstructorOrInterface()).isFalse();
 
     assertThat(CHECKED_UNKNOWN_TYPE.getPropertyType("abc")).isEqualTo(CHECKED_UNKNOWN_TYPE);
   }
@@ -1115,7 +1115,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(ALL_TYPE.getDisplayName()).isEqualTo("<Any Type>");
 
     Asserts.assertResolvesToSame(ALL_TYPE);
-    assertThat(ALL_TYPE.isNominalConstructor()).isFalse();
+    assertThat(ALL_TYPE.isNominalConstructorOrInterface()).isFalse();
   }
 
   /** Tests the behavior of the Object type (the object at the top of the JavaScript hierarchy). */
@@ -1271,8 +1271,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(OBJECT_TYPE.getImplicitPrototype().isNativeObjectType()).isTrue();
 
     Asserts.assertResolvesToSame(OBJECT_TYPE);
-    assertThat(OBJECT_TYPE.isNominalConstructor()).isFalse();
-    assertThat(OBJECT_TYPE.getConstructor().isNominalConstructor()).isTrue();
+    assertThat(OBJECT_TYPE.isNominalConstructorOrInterface()).isFalse();
+    assertThat(OBJECT_TYPE.getConstructor().isNominalConstructorOrInterface()).isTrue();
   }
 
   /** Tests the behavior of the number value type. */
@@ -1539,7 +1539,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(NUMBER_TYPE.getDisplayName()).isEqualTo("number");
 
     Asserts.assertResolvesToSame(NUMBER_TYPE);
-    assertThat(NUMBER_TYPE.isNominalConstructor()).isFalse();
+    assertThat(NUMBER_TYPE.isNominalConstructorOrInterface()).isFalse();
   }
 
   /** Tests the behavior of the null type. */
@@ -1690,7 +1690,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         createUnionType(forwardDeclaredNamedType, NULL_TYPE),
         NULL_TYPE.getGreatestSubtype(
             createUnionType(forwardDeclaredNamedType, NULL_TYPE)));
-    assertThat(NULL_TYPE.isNominalConstructor()).isFalse();
+    assertThat(NULL_TYPE.isNominalConstructorOrInterface()).isFalse();
 
     assertThat(NULL_TYPE.differsFrom(UNKNOWN_TYPE)).isTrue();
   }
@@ -1898,8 +1898,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(DATE_TYPE.isNativeObjectType()).isTrue();
 
     Asserts.assertResolvesToSame(DATE_TYPE);
-    assertThat(DATE_TYPE.isNominalConstructor()).isFalse();
-    assertThat(DATE_TYPE.getConstructor().isNominalConstructor()).isTrue();
+    assertThat(DATE_TYPE.isNominalConstructorOrInterface()).isFalse();
+    assertThat(DATE_TYPE.getConstructor().isNominalConstructorOrInterface()).isTrue();
   }
 
   /** Tests the behavior of the RegExp type. */
@@ -2037,8 +2037,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(REGEXP_TYPE.isNativeObjectType()).isTrue();
 
     Asserts.assertResolvesToSame(REGEXP_TYPE);
-    assertThat(REGEXP_TYPE.isNominalConstructor()).isFalse();
-    assertThat(REGEXP_TYPE.getConstructor().isNominalConstructor()).isTrue();
+    assertThat(REGEXP_TYPE.isNominalConstructorOrInterface()).isFalse();
+    assertThat(REGEXP_TYPE.getConstructor().isNominalConstructorOrInterface()).isTrue();
   }
 
   /** Tests the behavior of the string object type. */
@@ -2194,8 +2194,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertThat(STRING_OBJECT_TYPE.hasDisplayName()).isTrue();
     assertThat(STRING_OBJECT_TYPE.getDisplayName()).isEqualTo("String");
-    assertThat(STRING_OBJECT_TYPE.isNominalConstructor()).isFalse();
-    assertThat(STRING_OBJECT_TYPE.getConstructor().isNominalConstructor()).isTrue();
+    assertThat(STRING_OBJECT_TYPE.isNominalConstructorOrInterface()).isFalse();
+    assertThat(STRING_OBJECT_TYPE.getConstructor().isNominalConstructorOrInterface()).isTrue();
   }
 
   /** Tests the behavior of the string value type. */
@@ -2310,7 +2310,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(STRING_TYPE.findPropertyType("unknownProperty")).isNull();
 
     Asserts.assertResolvesToSame(STRING_TYPE);
-    assertThat(STRING_TYPE.isNominalConstructor()).isFalse();
+    assertThat(STRING_TYPE.isNominalConstructorOrInterface()).isFalse();
   }
 
   /** Tests the behavior of the symbol type. */

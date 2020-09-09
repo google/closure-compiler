@@ -644,7 +644,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSType type = testParseType(
         "function (new:Object)", "function(new:Object): ?");
     assertThat(type.isConstructor()).isTrue();
-    assertThat(type.isNominalConstructor()).isFalse();
+    assertThat(type.isNominalConstructorOrInterface()).isFalse();
   }
 
   @Test
@@ -654,7 +654,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         // toString skips unknowns, but isConstructor reveals the truth.
         "function(): ?");
     assertThat(type.isConstructor()).isTrue();
-    assertThat(type.isNominalConstructor()).isFalse();
+    assertThat(type.isNominalConstructorOrInterface()).isFalse();
   }
 
   @Test
@@ -666,7 +666,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Test
   public void testNominalConstructor() {
     ObjectType type = testParseType("Array", "(Array|null)").dereference();
-    assertThat(type.getConstructor().isNominalConstructor()).isTrue();
+    assertThat(type.getConstructor().isNominalConstructorOrInterface()).isTrue();
   }
 
   @Test

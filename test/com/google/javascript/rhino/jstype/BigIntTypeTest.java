@@ -396,9 +396,9 @@ public class BigIntTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testIsNotNominalConstructor() {
-    assertThat(BIGINT_TYPE.isNominalConstructor()).isFalse();
-    assertThat(BIGINT_OBJECT_TYPE.isNominalConstructor()).isFalse();
-    assertThat(BIGINT_OBJECT_TYPE.getConstructor().isNominalConstructor()).isTrue();
+    assertThat(BIGINT_TYPE.isNominalConstructorOrInterface()).isFalse();
+    assertThat(BIGINT_OBJECT_TYPE.isNominalConstructorOrInterface()).isFalse();
+    assertThat(BIGINT_OBJECT_TYPE.getConstructor().isNominalConstructorOrInterface()).isTrue();
   }
 
   @Test

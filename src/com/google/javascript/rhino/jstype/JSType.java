@@ -624,7 +624,7 @@ public abstract class JSType implements Serializable {
    * Whether this type is the original constructor of a nominal type.
    * Does not include structural constructors.
    */
-  public final boolean isNominalConstructor() {
+  public final boolean isNominalConstructorOrInterface() {
     if (isConstructor() || isInterface()) {
       FunctionType fn = toMaybeFunctionType();
       if (fn == null) {
