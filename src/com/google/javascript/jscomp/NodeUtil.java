@@ -900,7 +900,7 @@ public final class NodeUtil {
    *
    * @param block The node.
    */
-  static boolean isEmptyBlock(Node block) {
+  public static boolean isEmptyBlock(Node block) {
     if (!block.isBlock()) {
       return false;
     }
@@ -2269,10 +2269,8 @@ public final class NodeUtil {
     return n.isVanillaFor() || n.isForIn() || n.isForOf() || n.isForAwaitOf();
   }
 
-  /**
-   * Determines whether the given node is a FOR, DO, or WHILE node.
-   */
-  static boolean isLoopStructure(Node n) {
+  /** Determines whether the given node is a FOR, DO, or WHILE node. */
+  public static boolean isLoopStructure(Node n) {
     switch (n.getToken()) {
       case FOR:
       case FOR_IN:
@@ -2288,10 +2286,10 @@ public final class NodeUtil {
 
   /**
    * @param n The node to inspect.
-   * @return If the node, is a FOR, WHILE, or DO, it returns the node for
-   * the code BLOCK, null otherwise.
+   * @return If the node, is a FOR, WHILE, or DO, it returns the node for the code BLOCK, null
+   *     otherwise.
    */
-  static Node getLoopCodeBlock(Node n) {
+  public static Node getLoopCodeBlock(Node n) {
     switch (n.getToken()) {
       case FOR:
       case FOR_IN:
@@ -5650,7 +5648,8 @@ public final class NodeUtil {
     return n.getFirstChild().matchesQualifiedName(targetMethod);
   }
 
-  static ImmutableSet<String> collectExternVariableNames(AbstractCompiler compiler, Node externs) {
+  public static ImmutableSet<String> collectExternVariableNames(
+      AbstractCompiler compiler, Node externs) {
     ReferenceCollectingCallback externsRefs =
         new ReferenceCollectingCallback(
             compiler,

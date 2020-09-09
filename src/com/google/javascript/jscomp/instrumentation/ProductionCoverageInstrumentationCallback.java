@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.instrumentation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -23,6 +23,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.Base64VLQ;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.AstManipulations;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.VariableMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;

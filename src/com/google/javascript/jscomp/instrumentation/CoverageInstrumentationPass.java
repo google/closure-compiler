@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.instrumentation;
 
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.jscomp.VariableMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
@@ -27,15 +32,18 @@ import java.util.Map;
 
 /** This code implements the instrumentation pass over the AST (returned by JSCompiler). */
 @GwtIncompatible("FileInstrumentationData")
-class CoverageInstrumentationPass implements CompilerPass {
+public class CoverageInstrumentationPass implements CompilerPass {
 
   final AbstractCompiler compiler;
   private final Map<String, FileInstrumentationData> instrumentationData;
   private final CoverageReach reach;
   private final InstrumentOption instrumentOption;
 
+  private final String productionInstrumentationArrayName;
+
   public static final String JS_INSTRUMENTATION_OBJECT_NAME = "__jscov";
 
+  /** Configures which statements in the AST should be instrumented */
   public enum CoverageReach {
     ALL,         // Instrument all statements.
     CONDITIONAL  // Do not instrument global statements.
@@ -43,16 +51,20 @@ class CoverageInstrumentationPass implements CompilerPass {
 
   /** @param compiler the compiler which generates the AST. */
   public CoverageInstrumentationPass(
-      AbstractCompiler compiler, CoverageReach reach, InstrumentOption instrumentOption) {
+      AbstractCompiler compiler,
+      CoverageReach reach,
+      InstrumentOption instrumentOption,
+      String productionInstrumentationArrayName) {
     this.compiler = compiler;
     this.reach = reach;
     this.instrumentOption = instrumentOption;
+    this.productionInstrumentationArrayName = productionInstrumentationArrayName;
     instrumentationData = new LinkedHashMap<>();
   }
 
   @Deprecated
   public CoverageInstrumentationPass(AbstractCompiler compiler, CoverageReach reach) {
-    this(compiler, reach, InstrumentOption.LINE_ONLY);
+    this(compiler, reach, InstrumentOption.LINE_ONLY, "");
   }
 
   /**
@@ -95,14 +107,14 @@ class CoverageInstrumentationPass implements CompilerPass {
             rootNode,
             new BranchCoverageInstrumentationCallback(compiler, instrumentationData));
       } else if (instrumentOption == InstrumentOption.PRODUCTION) {
-        String arrayName = compiler.getOptions().getProductionInstrumentationArrayName();
 
         ProductionCoverageInstrumentationCallback productionCoverageInstrumentationCallback =
-            new ProductionCoverageInstrumentationCallback(compiler, arrayName);
+            new ProductionCoverageInstrumentationCallback(
+                compiler, productionInstrumentationArrayName);
 
         NodeTraversal.traverse(compiler, rootNode, productionCoverageInstrumentationCallback);
 
-        checkIfArrayNameExternDeclared(externsNode, arrayName);
+        checkIfArrayNameExternDeclared(externsNode, productionInstrumentationArrayName);
 
         VariableMap instrumentationMapping =
             productionCoverageInstrumentationCallback.getInstrumentationMapping();
@@ -121,8 +133,7 @@ class CoverageInstrumentationPass implements CompilerPass {
       }
 
       if (instrumentOption == InstrumentOption.PRODUCTION) {
-        addProductionHeaderCode(
-            firstScript, compiler.getOptions().getProductionInstrumentationArrayName());
+        addProductionHeaderCode(firstScript, productionInstrumentationArrayName);
       } else {
         addHeaderCode(firstScript);
       }

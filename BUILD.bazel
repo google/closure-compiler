@@ -120,6 +120,7 @@ oss_java_library(
                 "src/com/google/javascript/jscomp/disambiguate/**/*.java",
                 "src/com/google/javascript/jscomp/graph/**/*.java",
                 "src/com/google/javascript/jscomp/ijs/**/*.java",
+                "src/com/google/javascript/jscomp/instrumentation/**/*.java",
                 "src/com/google/javascript/jscomp/resources/**/*.java",
                 "src/com/google/javascript/jscomp/lint/**/*.java",
                 "src/com/google/javascript/jscomp/modules/**/*.java",

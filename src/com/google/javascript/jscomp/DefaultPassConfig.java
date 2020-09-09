@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclar
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
-import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.ScopedAliases.InvalidModuleGetHandling;
@@ -39,6 +38,8 @@ import com.google.javascript.jscomp.disambiguate.AmbiguateProperties;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.jscomp.ijs.ConvertToTypedInterface;
+import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
+import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
@@ -2729,7 +2730,8 @@ public final class DefaultPassConfig extends PassConfig {
                   new CoverageInstrumentationPass(
                       compiler,
                       CoverageReach.CONDITIONAL,
-                      options.getInstrumentForCoverageOption()))
+                      options.getInstrumentForCoverageOption(),
+                      options.getProductionInstrumentationArrayName()))
           .setFeatureSetForOptimizations()
           .build();
 
