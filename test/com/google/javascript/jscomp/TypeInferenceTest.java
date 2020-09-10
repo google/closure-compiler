@@ -311,6 +311,14 @@ public final class TypeInferenceTest {
     verify(name, registry.getNativeType(type));
   }
 
+  private void verifyUnequal(String name, JSType type) {
+    assertWithMessage("Mismatch for " + name).about(types()).that(getType(name)).isNotEqualTo(type);
+  }
+
+  private void verifyUnequal(String name, JSTypeNative type) {
+    verifyUnequal(name, registry.getNativeType(type));
+  }
+
   private void verifySubtypeOf(String name, JSType type) {
     JSType varType = getType(name);
     assertWithMessage("The variable " + name + " is missing a type.").that(varType).isNotNull();
@@ -375,6 +383,22 @@ public final class TypeInferenceTest {
   public void testVar() {
     inFunction("var x = 1;");
     verify("x", NUMBER_TYPE);
+  }
+
+  // https://github.com/google/closure-compiler/issues/3678
+  @Test
+  public void testMissingTypeAnnotationsInfersUnknownReturnInArrow() {
+    inFunction("const getNum = () => 2; const a = getNum();");
+    verifyUnequal("a", NUMBER_TYPE);
+    verify("a", UNKNOWN_TYPE);
+  }
+
+  // https://github.com/google/closure-compiler/issues/3678
+  @Test
+  public void testMissingTypeAnnotationsInfersUnknownReturn() {
+    inFunction("const getNum = function() {return 2; }; const a = getNum();");
+    verifyUnequal("a", NUMBER_TYPE);
+    verify("a", UNKNOWN_TYPE);
   }
 
   @Test
