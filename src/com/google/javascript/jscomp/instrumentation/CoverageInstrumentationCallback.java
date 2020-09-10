@@ -86,10 +86,8 @@ class CoverageInstrumentationCallback extends
 
     // Note line as instrumented
     String fileName = getFileName(traversal);
-    if (!instrumentationData.containsKey(fileName)) {
-      instrumentationData.put(fileName,
-                              new FileInstrumentationData(fileName, arrayName));
-    }
+    instrumentationData.computeIfAbsent(
+        fileName, (String k) -> new FileInstrumentationData(k, arrayName));
     instrumentationData.get(fileName).setLineAsInstrumented(lineNumber);
 
     return exprNode.useSourceInfoIfMissingFromForTree(node);

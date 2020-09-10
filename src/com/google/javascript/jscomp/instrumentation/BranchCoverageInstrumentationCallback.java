@@ -91,10 +91,8 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
       if (!hasDefaultBlock) {
         addDefaultBlock(node);
       }
-      if (!instrumentationData.containsKey(fileName)) {
-        instrumentationData.put(
-            fileName, new FileInstrumentationData(fileName, createArrayName(traversal)));
-      }
+      instrumentationData.computeIfAbsent(
+          fileName, (String k) -> new FileInstrumentationData(k, createArrayName(traversal)));
       processBranchInfo(node, instrumentationData.get(fileName), getChildrenBlocks(node));
     } else if (NodeUtil.isLoopStructure(node)) {
       List<Node> blocks = getChildrenBlocks(node);
@@ -124,10 +122,8 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
           }
         }
       }
-      if (!instrumentationData.containsKey(fileName)) {
-        instrumentationData.put(
-            fileName, new FileInstrumentationData(fileName, createArrayName(traversal)));
-      }
+      instrumentationData.computeIfAbsent(
+          fileName, (String k) -> new FileInstrumentationData(k, createArrayName(traversal)));
       processBranchInfo(node, instrumentationData.get(fileName), blocks);
     }
   }
@@ -177,9 +173,8 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
 
     // Note line as instrumented
     String fileName = traversal.getSourceName();
-    if (!instrumentationData.containsKey(fileName)) {
-      instrumentationData.put(fileName, new FileInstrumentationData(fileName, arrayName));
-    }
+    instrumentationData.computeIfAbsent(
+        fileName, (String k) -> new FileInstrumentationData(k, arrayName));
     return exprNode.useSourceInfoIfMissingFromForTree(node);
   }
 
