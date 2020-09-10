@@ -22,7 +22,7 @@ load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
 package(licenses = ["notice"])
 
 filegroup(
-    name = "artifact_bundles",
+    name = "sonatype_bundles",
     srcs = [
         ":compiler_externs_bundle",
         ":compiler_main_bundle",
