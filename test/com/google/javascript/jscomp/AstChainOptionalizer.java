@@ -146,6 +146,7 @@ public class AstChainOptionalizer {
           "goog.mixin",
           "goog$mixin",
           "goog.reflect.cache",
+          "goog.reflect.object",
           "goog.reflect.objectProperty",
           "Math.random",
           "JSCompiler_stubMethod",
