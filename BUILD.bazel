@@ -199,7 +199,7 @@ gen_java_tests(
             "test/com/google/javascript/jscomp/CommandLineRunnerTest.java",
             "test/com/google/javascript/jscomp/CompilerTest.java",
             "test/com/google/javascript/jscomp/ConformanceAllowlisterTest.java",
-            "test/com/google/javascript/jscomp/CoverageInstrumentationPassTest.java",
+            "test/com/google/javascript/jscomp/instrumentation/CoverageInstrumentationPassTest.java",
             "test/com/google/javascript/jscomp/SourceMapJsLangTest.java",
             "test/com/google/javascript/jscomp/integration/IntegrationTest.java",
             "test/com/google/javascript/refactoring/examples/*.java",
