@@ -2608,37 +2608,24 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testIgnoreSpecializedProperties2() {
-    String js = lines(
-        "/** @const */",
-        "var ns = function() {};",
-        "/** @type {?number} */",
-        "ns.num;",
-        "function f() {",
-        "  if (ns.num !== null) {",
-        "    return ns.num + 1;",
-        "  }",
-        "}",
-        "/** @constructor */",
-        "function Foo() {",
-        "  this.num = 123;",
-        "}");
+    String js =
+        lines(
+            "/** @const */",
+            "var ns = function() {};",
+            // the type of `ns` is invalidating, so we can't rename `num` anywhere
+            "/** @type {?number} */",
+            "ns.num;",
+            "function f() {",
+            "  if (ns.num !== null) {",
+            "    return ns.num + 1;",
+            "  }",
+            "}",
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.num = 123;",
+            "}");
 
-    String otiOutput = lines(
-        "/** @const */",
-        "var ns = function() {};",
-        "/** @type {?number} */",
-        "ns.function____undefined$num;",
-        "function f() {",
-        "  if (ns.function____undefined$num !== null) {",
-        "    return ns.function____undefined$num + 1;",
-        "  }",
-        "}",
-        "/** @constructor */",
-        "function Foo() {",
-        "  this.Foo$num = 123;",
-        "}");
-
-    testSets("", js, otiOutput, "{num=[[Foo], [function(): undefined]]}");
+    testSets("", js, js, "{}");
   }
 
   @Test

@@ -1376,7 +1376,11 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     return map.getTemplateKeys().subList(map.size() - ctorOnlyKeyCount, map.size());
   }
 
-  boolean createsAmbiguousObjects() {
+  /**
+   * Returns true if the constructor does not come from a literal class or function in the AST, or
+   * if it extends such an ambiguous constructor
+   */
+  public final boolean createsAmbiguousObjects() {
     if (this.constructorAmbiguity == ConstructorAmbiguity.UNKNOWN) {
       constructorAmbiguity = calculateConstructorAmbiguity();
     }

@@ -255,10 +255,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     return "(" + suffix + ")";
   }
 
-  public boolean isAmbiguousObject() {
-    return !hasReferenceName();
-  }
-
   public final ObjectType getRawType() {
     TemplatizedType t = toMaybeTemplatizedType();
     return t == null ? this : t.getReferencedType();

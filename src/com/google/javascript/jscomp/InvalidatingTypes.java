@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -72,14 +73,37 @@ public final class InvalidatingTypes {
     }
 
     return types.contains(objType)
-        // Don't disambiguate properties on object literals, e.g. var obj = {a: 'a', b: 'b'};
-        || this.isInvalidatingDueToAmbiguity(objType)
+        // Don't disambiguate properties on object types that are structurally compared or that
+        // don't come from a literal class or function definition
+        || isAmbiguousOrStructuralType(objType)
         || (!allowEnums && objType.isEnumType())
         || (!allowScalars && objType.isBoxableScalar());
   }
 
-  private boolean isInvalidatingDueToAmbiguity(ObjectType type) {
-    return type.isAmbiguousObject();
+  // Returns true if any of the following hold:
+  //  - this type obeys structural subtyping rules, as opposed to nominal subtyping
+  //  - this type is some JSDoc-only or anonymous type like a mixin, as opposed to a class or
+  //    function literal
+  private static boolean isAmbiguousOrStructuralType(ObjectType type) {
+    if (type.isEnumType()) {
+      // enum types are created via object literals, which are normally structural, but Closure
+      // special-cases them to behave as if nominal.
+      return false;
+    } else if (type.isEnumElementType()) {
+      ObjectType primitive = type.toMaybeEnumElementType().getPrimitiveType().toMaybeObjectType();
+      // Treat an Enum<Foo> identically to a Foo
+      return primitive == null || isAmbiguousOrStructuralType(primitive);
+    } else if (type.isFunctionType()) {
+      return !type.isNominalConstructorOrInterface();
+    } else if (type.isFunctionPrototypeType()) {
+      FunctionType ownerFunction = type.getOwnerFunction();
+      return ownerFunction == null || !ownerFunction.isNominalConstructorOrInterface();
+    } else if (type.isInstanceType()) {
+      FunctionType ctor = type.getConstructor();
+      return ctor == null || ctor.createsAmbiguousObjects();
+    }
+
+    return true;
   }
 
   /** Builder */

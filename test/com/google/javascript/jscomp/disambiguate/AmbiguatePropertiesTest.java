@@ -546,19 +546,34 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPropertyAddedToFunction() {
-    test("var foo = function(){}; foo.prop = '';",
-         "var foo = function(){}; foo.a = '';");
+    testSame("var foo = function(){}; foo.prop = '';");
   }
 
   @Test
   public void testPropertyAddedToFunctionIndirectly() {
-    test(
+    testSame(
         lines(
             "var foo = function(){}; foo.prop = ''; foo.baz = '';",
-            "function f(/** function(): void */ fun) { fun.bar = ''; fun.baz = ''; }"),
-        lines(
-            "var foo = function(){}; foo.a = ''; foo.baz = '';",
             "function f(/** function(): void */ fun) { fun.bar = ''; fun.baz = ''; }"));
+  }
+
+  @Test
+  public void testConstructorTreatedAsSubtypeOfFunction() {
+    String js =
+        lines(
+            "Function.prototype.a = 1;", //
+            "/** @constructor */",
+            "function F() {}",
+            "F.y = 2;");
+
+    String output =
+        lines(
+            "Function.prototype.a = 1;", //
+            // F is a subtype of Function, so we can't ambiguate "F.b" to "F.a".
+            "/** @constructor */",
+            "function F() {}",
+            "F.b = 2;");
+    test(js, output);
   }
 
   @Test
@@ -922,32 +937,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "/** @interface @extends {Foo} */ function Bar(){};",
             "/** @constructor @implements {Foo} */ function Baz(){};",
             "Baz.prototype.a = function(){};"));
-  }
-
-  @Test
-  public void testFunctionSubType() {
-    String js = lines(
-        "Function.prototype.a = 1;",
-        "function f() {}",
-        "f.y = 2;\n");
-    String output = lines(
-        "Function.prototype.a = 1;",
-        "function f() {}",
-        "f.b = 2;\n");
-    test(js, output);
-  }
-
-  @Test
-  public void testFunctionSubType2() {
-    String js = lines(
-        "Function.prototype.a = 1;",
-        "/** @constructor */ function F() {}",
-        "F.y = 2;\n");
-    String output = lines(
-        "Function.prototype.a = 1;",
-        "/** @constructor */ function F() {}",
-        "F.b = 2;\n");
-    test(js, output);
   }
 
   @Test
@@ -1856,5 +1845,180 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  a() {}",
             "}",
             "const {['method']: method} = new Foo();"));
+  }
+
+  @Test
+  public void testMixinPropertiesNotAmbiguated() {
+    test(
+        lines(
+            "", //
+            "class A {",
+            "  constructor() {",
+            "    this.aProp = 'aProp';",
+            "  }",
+            "}",
+            "",
+            "/**",
+            " * @template T",
+            " * @param {function(new: T)} baseType",
+            " * @return {?}",
+            " */",
+            "function mixinX(baseType) {",
+            "  return class extends baseType {",
+            "    constructor() {",
+            "      super();",
+            "      this.x = 'x';",
+            "    }",
+            "  };",
+            "}",
+            "/** @constructor @extends {A} */",
+            "const BSuper = mixinX(A);",
+            "",
+            "class B extends BSuper {",
+            "  constructor() {",
+            "    super();",
+            "    this.bProp = 'bProp';",
+            "  }",
+            "}",
+            "",
+            ""),
+        lines(
+            "", //
+            "class A {",
+            "  constructor() {",
+            "    this.a = 'aProp';",
+            "  }",
+            "}",
+            "",
+            "/**",
+            " * @template T",
+            " * @param {function(new: T)} baseType",
+            " * @return {?}",
+            " */",
+            "function mixinX(baseType) {",
+            "  return class extends baseType {",
+            "    constructor() {",
+            "      super();",
+            "      this.x = 'x';",
+            "    }",
+            "  };",
+            "}",
+            "/** @constructor @extends {A} */",
+            "const BSuper = mixinX(A);",
+            "",
+            "class B extends BSuper {",
+            "  constructor() {",
+            "    super();",
+            // Note that ambiguating 'bProp' => 'a' would be incorrect because BSuper extends A via
+            // the mixin, so 'bProp' would conflict with 'aProp'. JSCompiler doesn't actually track
+            // that B extends A. Instead it conservatively invalidates all properties on B because
+            // BSuper is from a mixin, not a class literal.
+            "    this.bProp = 'bProp';",
+            "  }",
+            "}",
+            "",
+            ""));
+  }
+
+  @Test
+  public void testMixinPrototypePropertiesNotAmbiguated() {
+    test(
+        lines(
+            "", //
+            "class A {",
+            "  aMethod() {}",
+            "}",
+            "",
+            "function mixinX(baseType) {",
+            "  return class extends baseType {",
+            "    x() {}",
+            "  };",
+            "}",
+            "/** @constructor @extends {A} */",
+            "const BSuper = mixinX(A);",
+            "",
+            "class B extends BSuper {",
+            "  bMethod() {}",
+            "}",
+            "",
+            ""),
+        lines(
+            "", //
+            "class A {",
+            "  a() {}",
+            "}",
+            "",
+            "function mixinX(baseType) {",
+            "  return class extends baseType {",
+            "    x() {}",
+            "  };",
+            "}",
+            "/** @constructor @extends {A} */",
+            "const BSuper = mixinX(A);",
+            "",
+            "class B extends BSuper {",
+            // Note that ambiguating 'bMethod' => 'a' would be incorrect because BSuper extends A
+            // via the mixin, so 'bMethod' would conflict with 'aMethod'.
+            "  b() {}",
+            "}",
+            "",
+            ""));
+  }
+
+  @Test
+  public void testMixinConstructorPropertiesNotAmbiguated() {
+    // TODO(b/168133634): ambiguation is potentially breaking code here by ambiguating static
+    // method overrides to the same name
+    test(
+        lines(
+            "", //
+            "class A {",
+            "  static aMethod() {}",
+            "}",
+            "",
+            "/**",
+            " * @template T",
+            " * @param {function(new: T)} baseType",
+            " * @return {?}",
+            " */",
+            "function mixinX(baseType) {",
+            "  return class extends baseType {",
+            "    static x() {}",
+            "  };",
+            "}",
+            "/** @constructor @extends {A} */",
+            "const BSuper = mixinX(A);",
+            "",
+            "class B extends BSuper {",
+            "  static bMethod() {}",
+            "}",
+            "",
+            ""),
+        lines(
+            "", //
+            "class A {",
+            "  static a() {}",
+            "}",
+            "",
+            "/**",
+            " * @template T",
+            " * @param {function(new: T)} baseType",
+            " * @return {?}",
+            " */",
+            "function mixinX(baseType) {",
+            "  return class extends baseType {",
+            // unsafe - overrides aMethod
+            "    static a() {}",
+            "  };",
+            "}",
+            "/** @constructor @extends {A} */",
+            "const BSuper = mixinX(A);",
+            "",
+            "class B extends BSuper {",
+            // unsafe - overrides aMethod and x
+            "  static a() {}",
+            "}",
+            "",
+            ""));
   }
 }
