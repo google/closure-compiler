@@ -17,13 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.rhino.Node;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -36,13 +30,6 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class MustBeReachingVariableDefTest {
-
-  private MustBeReachingVariableDef defUse = null;
-  private Node def = null;
-  private Node use = null;
-
-  public static final String EXTERNS = "var goog = {}";
-
   @Test
   public void testStraightLine() {
     assertMatch("D:var x=1; U: x");
@@ -160,7 +147,7 @@ public final class MustBeReachingVariableDefTest {
 
   @Test
   public void testExterns() {
-    assertNotMatch("D: goog = {}; U: goog");
+    assertNotMatch("var goog = {}; D:goog = {}; U: goog");
   }
 
   @Test
@@ -178,26 +165,22 @@ public final class MustBeReachingVariableDefTest {
 
   @Test
   public void testFunctionParams1() {
-    computeDefUse("if (param2) { D: param1 = 1; U: param1 }");
-    assertThat(defUse.getDefNode("param1", use)).isSameInstanceAs(def);
+    assertNotMatch("if (x) { D: x = 1; U: x }");
   }
 
   @Test
   public void testFunctionParams2() {
-    computeDefUse("if (param2) { D: param1 = 1} U: param1");
-    assertThat(defUse.getDefNode("param1", use)).isNotSameInstanceAs(def);
+    assertNotMatch("if (y) { D: x = 1} U: x");
   }
 
   @Test
   public void testArgumentsObjectModifications() {
-    computeDefUse("D: param1 = 1; arguments[0] = 2; U: param1");
-    assertThat(defUse.getDefNode("param1", use)).isNotSameInstanceAs(def);
+    assertNotMatch("D: x = 1; arguments[0] = 2; U: x");
   }
 
   @Test
   public void testArgumentsObjectEscaped() {
-    computeDefUse("D: param1 = 1; var x = arguments; x[0] = 2; U: param1");
-    assertThat(defUse.getDefNode("param1", use)).isNotSameInstanceAs(def);
+    assertNotMatch("D: x = 1; var y = arguments; y[0] = 2; U: x");
   }
 
   @Test
@@ -240,62 +223,19 @@ public final class MustBeReachingVariableDefTest {
    * Asserts that the use of x at U: is the definition of x at D:.
    */
   private void assertMatch(String src) {
-    computeDefUse(src);
-    assertThat(defUse.getDefNode("x", use)).isSameInstanceAs(def);
+    ReachingUseDefTester tester = ReachingUseDefTester.create();
+    tester.computeReachingDef(src);
+    tester.extractDefAndUsesFromInputLabels();
+    assertThat(tester.getComputedDef()).isSameInstanceAs(tester.getExtractedDef());
   }
 
   /**
    * Asserts that the use of x at U: is not the definition of x at D:.
    */
   private void assertNotMatch(String src) {
-    computeDefUse(src);
-    assertThat(defUse.getDefNode("x", use)).isNotSameInstanceAs(def);
-  }
-
-  /**
-   * Computes reaching definition on given source.
-   */
-  private void computeDefUse(String src) {
-    Compiler compiler = new Compiler();
-    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-    CompilerOptions options = new CompilerOptions();
-    options.setCodingConvention(new GoogleCodingConvention());
-    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
-    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    compiler.getOptions().setLanguageOut(LanguageMode.ECMASCRIPT_NEXT_IN);
-    SyntacticScopeCreator scopeCreator = new SyntacticScopeCreator(compiler);
-    src = "function _FUNCTION(param1, param2){" + src + "}";
-    Node script = compiler.parseTestCode(src);
-    Node root = script.getFirstChild();
-    Node functionBlock = root.getLastChild();
-    assertThat(compiler.getErrorCount()).isEqualTo(0);
-    Scope globalScope = scopeCreator.createScope(script, null);
-    Scope functionScope = scopeCreator.createScope(root, globalScope);
-    Scope funcBlockScope = scopeCreator.createScope(functionBlock, functionScope);
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, root);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
-    defUse = new MustBeReachingVariableDef(cfg, funcBlockScope, compiler, scopeCreator);
-    defUse.analyze();
-    def = null;
-    use = null;
-    NodeTraversal.traverse(compiler, root, new LabelFinder());
-    assertWithMessage("Code should have an instruction labeled D").that(def).isNotNull();
-    assertWithMessage("Code should have an instruction labeled U").that(use).isNotNull();
-  }
-
-  /** Finds the D: and U: label and store which node they point to. */
-  // TODO(rishipal): This same class is duplicated in ComputeReachableUsesTest.
-  private class LabelFinder extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isLabel()) {
-        if (n.getFirstChild().getString().equals("D")) {
-          def = n.getLastChild();
-        } else if (n.getFirstChild().getString().equals("U")) {
-          use = n.getLastChild();
-        }
-      }
-    }
+    ReachingUseDefTester tester = ReachingUseDefTester.create();
+    tester.computeReachingDef(src);
+    tester.extractDefAndUsesFromInputLabels();
+    assertThat(tester.getComputedDef()).isNotSameInstanceAs(tester.getExtractedDef());
   }
 }

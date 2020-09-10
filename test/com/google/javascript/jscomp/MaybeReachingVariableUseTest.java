@@ -17,15 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -41,12 +33,6 @@ import org.junit.runners.JUnit4;
 // TODO(rishipal): Consider classifying these tests based on the position of `D` and `U` in input.
 @RunWith(JUnit4.class)
 public final class MaybeReachingVariableUseTest {
-
-  Compiler compiler;
-  SyntacticScopeCreator scopeCreator;
-  private MaybeReachingVariableUse useDef = null;
-  private Node def = null;
-  private List<Node> uses = null;
 
   // Illustrates that the label D needn't correspond to a definition of `x` in these tests, but is
   // symbolic of any program point at which we want to check the use U is upward exposed (reachable)
@@ -93,7 +79,7 @@ public final class MaybeReachingVariableUseTest {
 
   // This test shows that MaybeReachingVariableUseTest does not use data flow(values) in
   // conditionals but relies only on static CFG edges to find whether a use reaches a def.
-  // TODO(rishipal): Make Control flow analysis smarter about short ciruiting and update this test.
+  // TODO(rishipal): Make Control flow analysis smarter about short circuiting and update this test.
   @Test
   public void testShortCircuiting_usesOnlyCFGEdges() {
 
@@ -268,11 +254,10 @@ public final class MaybeReachingVariableUseTest {
 
   /** The def of `x` at D: may be used by the read of `x` at U:. */
   private void assertMatch(String src, boolean async) {
-    Node root = computeUseDef(src, async);
-    extractDefAndUsesFromInputLabels(compiler, scopeCreator, root);
-
-    Collection<Node> result = useDef.getUses("x", def);
-    assertThat(result).containsAtLeastElementsIn(uses);
+    ReachingUseDefTester tester = ReachingUseDefTester.create();
+    tester.computeReachingUses(src, async);
+    tester.extractDefAndUsesFromInputLabels();
+    assertThat(tester.getComputedUses()).containsAtLeastElementsIn(tester.getExtractedUses());
   }
 
   private void assertNotMatch(String src) {
@@ -285,66 +270,9 @@ public final class MaybeReachingVariableUseTest {
 
   /** The def of `x` at D: is not used by the read of `x` at U:. */
   private void assertNotMatch(String src, boolean async) {
-    Node root = computeUseDef(src, async);
-    extractDefAndUsesFromInputLabels(compiler, scopeCreator, root);
-    Collection<Node> result = useDef.getUses("x", def);
-    assertThat(result.containsAll(uses)).isFalse();
-  }
-
-  /** Computes reaching use on given source. */
-  private Node computeUseDef(String src, boolean async) {
-    compiler = createCompiler();
-    scopeCreator = new SyntacticScopeCreator(compiler);
-    src = (async ? "async " : "") + "function _FUNCTION(param1, param2){" + src + "}";
-    Node script = compiler.parseTestCode(src);
-    Node root = script.getFirstChild();
-    Node functionBlock = root.getLastChild();
-    assertThat(compiler.getErrors()).isEmpty();
-    Scope globalScope = scopeCreator.createScope(script, null);
-    Scope functionScope = scopeCreator.createScope(root, globalScope);
-    Scope funcBlockScope = scopeCreator.createScope(functionBlock, functionScope);
-    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, root);
-    ControlFlowGraph<Node> cfg = cfa.getCfg();
-    useDef = new MaybeReachingVariableUse(cfg, funcBlockScope, compiler, scopeCreator);
-    useDef.analyze();
-    return root;
-  }
-
-  private static Compiler createCompiler() {
-    Compiler compiler = new Compiler();
-    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    compiler.initOptions(options);
-    return compiler;
-  }
-
-  // Run `LabelFinder` to find the `D:` and `U:` labels and save the def and uses of `x`
-  private void extractDefAndUsesFromInputLabels(
-      Compiler compiler, SyntacticScopeCreator scopeCreator, Node root) {
-    def = null;
-    uses = new ArrayList<>();
-    new NodeTraversal(compiler, new LabelFinder(), scopeCreator).traverse(root);
-    assertWithMessage("Code should have an instruction labeled D").that(def).isNotNull();
-    assertWithMessage("Code should have an instruction labeled starting withing U")
-        .that(uses.isEmpty())
-        .isFalse();
-  }
-
-  /**
-   * Finds the D: and U: label and store which node they point to.
-   */
-  private class LabelFinder extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isLabel()) {
-        if (n.getFirstChild().getString().equals("D")) {
-          def = n.getLastChild();
-        } else if (n.getFirstChild().getString().startsWith("U")) {
-          uses.add(n.getLastChild());
-        }
-      }
-    }
+    ReachingUseDefTester tester = ReachingUseDefTester.create();
+    tester.computeReachingUses(src, async);
+    tester.extractDefAndUsesFromInputLabels();
+    assertThat(tester.getComputedUses().containsAll(tester.getExtractedUses())).isFalse();
   }
 }
