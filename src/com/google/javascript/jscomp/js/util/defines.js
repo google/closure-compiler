@@ -54,3 +54,17 @@ $jscomp.SIMPLE_FROUND_POLYFILL = false;
  * @define {boolean}
  */
 $jscomp.ISOLATE_POLYFILLS = false;
+
+/**
+ * Should we unconditionally override a native Promise implementation with our
+ * own?
+ * @define {boolean}
+ */
+$jscomp.FORCE_POLYFILL_PROMISE = false;
+
+/**
+ * Whether to enhance the basic promise polyfill with unhandled rejection event
+ * support.
+ * @define {boolean}
+ */
+$jscomp.ENABLE_UNHANDLED_REJECTION_POLYFILL = false;

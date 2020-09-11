@@ -16,15 +16,9 @@
 
 'require base';
 'require es6/util/makeiterator';
+'require util/defines';
 'require util/global';
 'require util/polyfill';
-
-/**
- * Should we unconditionally override a native Promise implementation with our
- * own?
- * @define {boolean}
- */
-$jscomp.FORCE_POLYFILL_PROMISE = false;
 
 
 $jscomp.polyfill('Promise',
@@ -172,6 +166,12 @@ $jscomp.polyfill('Promise',
      */
     this.onSettledCallbacks_ = [];
 
+    /**
+     * Whether the rejection has any handler when the promise is rejected.
+     * @private {boolean}
+     */
+    this.isRejectionHandled_ = false;
+
     var resolveAndReject = this.createResolveAndReject_();
     try {
       executor(resolveAndReject.resolve, resolveAndReject.reject);
@@ -304,7 +304,64 @@ $jscomp.polyfill('Promise',
     }
     this.state_ = settledState;
     this.result_ = valueOrReason;
+    if (this.state_ === PromiseState.REJECTED &&
+        $jscomp.ENABLE_UNHANDLED_REJECTION_POLYFILL) {
+      this.scheduleUnhandledRejectionCheck_();
+    }
     this.executeOnSettledCallbacks_();
+  };
+
+  PolyfillPromise.prototype.scheduleUnhandledRejectionCheck_ = function() {
+    var self = this;
+    nativeSetTimeout(function() {
+      if (self.notifyUnhandledRejection_()) {
+        // console may not exist on IE 9.
+        var nativeConsole = $jscomp.global['console'];
+        if (typeof nativeConsole !== 'undefined') {
+          nativeConsole.error(self.result_);
+        }
+      }
+    }, 1);
+  };
+
+  /**
+   * Dispatches `unhandledrejection` event if the rejection is unhandled.
+   * @return {boolean} False means the fallback handler does not need to run. It
+   *     is either because rejection handlers are detected or one of the
+   *     `unhandledjrection` event handlers call `preventDefault()`.
+   *     True otherwise.
+   * @private
+   */
+  PolyfillPromise.prototype.notifyUnhandledRejection_ = function() {
+    if (this.isRejectionHandled_) {
+      return false;
+    }
+    var NativeCustomEvent = $jscomp.global['CustomEvent'];
+    var NativeEvent = $jscomp.global['Event'];
+    var nativeDispatchEvent = $jscomp.global['dispatchEvent'];
+    if (typeof nativeDispatchEvent === 'undefined') {
+      return true;
+    }
+
+    var event;
+    if (typeof NativeCustomEvent === 'function') {
+      event =
+          new NativeCustomEvent('unhandledrejection', {cancelable: true});
+    } else if (typeof NativeEvent === 'function') {
+      // CustomEvent is not available in FireFox < 48 in workers.
+      // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent
+      event = new NativeEvent('unhandledrejection', {cancelable: true});
+    } else {
+      // IE does not support CustomEvent constructor.
+      event = $jscomp.global['document'].createEvent('CustomEvent');
+      event.initCustomEvent(
+          'unhandledrejection', /** canBubbleArg */ false,
+          /** cancelableArg */ true, event);
+    }
+    event.promise = this;
+    event.reason = this.result_;
+
+    return nativeDispatchEvent(event);
   };
 
   PolyfillPromise.prototype.executeOnSettledCallbacks_ = function() {
@@ -413,6 +470,7 @@ $jscomp.polyfill('Promise',
     } else {
       this.onSettledCallbacks_.push(callback);
     }
+    this.isRejectionHandled_ = true;
   };
 
   // called locally, so give it a name
