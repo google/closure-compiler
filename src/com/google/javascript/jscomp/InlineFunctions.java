@@ -415,6 +415,7 @@ class InlineFunctions implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
           // Function calls
+        case OPTCHAIN_CALL:
         case CALL:
           Node child = n.getFirstChild();
           String name = null;
@@ -458,7 +459,7 @@ class InlineFunctions implements CompilerPass {
       return true;
     }
 
-    if (parent.isCall() && parent.getFirstChild() == name) {
+    if (NodeUtil.isNormalOrOptChainCall(parent) && parent.getFirstChild() == name) {
       // This is a normal reference to the function.
       return true;
     }

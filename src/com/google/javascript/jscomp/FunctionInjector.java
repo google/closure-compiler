@@ -337,7 +337,7 @@ class FunctionInjector {
   }
 
   private static boolean hasSpreadCallArgument(Node callNode) {
-    checkArgument(callNode.isCall(), callNode);
+    checkArgument(NodeUtil.isNormalOrOptChainCall(callNode), callNode);
     for (Node arg = callNode.getSecondChild(); arg != null; arg = arg.getNext()) {
       if (arg.isSpread()) {
         return true;
