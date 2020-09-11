@@ -1,0 +1,10 @@
+#!/bin/sh
+
+. /usr/lib/java-wrappers/java-wrappers.sh
+
+MAIN=com.google.javascript.jscomp.CommandLineRunner
+JARS=closure-compiler
+
+find_java_runtime
+find_jars ${JARS}
+run_java ${MAIN} "$@"
