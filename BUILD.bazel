@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:expand_template_with_defines.bzl", "expand_template_with_defines")
-load("//:oss_java_library.bzl", "oss_java_library")
-load("//:sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
+load("//:bazel/expand_template_with_defines.bzl", "expand_template_with_defines")
+load("//:bazel/oss_java_library.bzl", "oss_java_library")
+load("//:bazel/sonatype_artifact_bundle.bzl", "sonatype_artifact_bundle")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@com_google_j2cl//build_defs:rules.bzl", "j2cl_application", "j2cl_import", "j2cl_library")
 load("@google_bazel_common//testing:test_defs.bzl", "gen_java_tests")
