@@ -328,6 +328,9 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
 
   @Test
   public void testES6StaticProperty() {
+    // TODO(bradfordcsmith): Neither type checker understands ES6 classes yet.
+    disableTypeCheck();
+
     test(
         "class C { static prop() {} }", // preserve newline
         "class C {                  }");
@@ -335,7 +338,10 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
 
   @Test
   public void testES6StaticProperty2() {
-    test("class C {} C.prop = 1;", "class C {}");
+    disableTypeCheck();
+
+    // TODO(bradfordcsmith): When NTI understands ES6 classes it will allow removal of `C.prop = 1`.
+    testSame("class C {} C.prop = 1;");
   }
 
   @Test
