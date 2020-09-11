@@ -571,3 +571,33 @@ InputEvent.prototype.inputType;
 
 /** @type {?DataTransfer} */
 InputEvent.prototype.dataTransfer;
+
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://html.spec.whatwg.org/multipage/webappapis.html#promiserejectioneventinit
+ */
+function PromiseRejectionEventInit() {}
+
+/** @type {undefined|!Promise<*>} */
+PromiseRejectionEventInit.prototype.promise;
+
+/** @type {*} */
+PromiseRejectionEventInit.prototype.reason;
+
+
+/**
+ * @constructor
+ * @extends {Event}
+ * @param {string} type
+ * @param {PromiseRejectionEventInit=} eventInitDict
+ * @see https://html.spec.whatwg.org/multipage/webappapis.html#promiserejectionevent
+ */
+function PromiseRejectionEvent(type, eventInitDict) {}
+
+/** @type {!Promise<*>} */
+PromiseRejectionEvent.prototype.promise;
+
+/** @type {*} */
+PromiseRejectionEvent.prototype.reason;
