@@ -44,12 +44,9 @@ def oss_java_library(
         **_copy_and_merge(shared_attrs, javadoc_attrs)
     )
 
-    native.genrule(
+    native.alias(
         name = name + ".sources",
-        srcs = shared_attrs["srcs"],
-        outs = [name + "_sources.jar"],
-        cmd = "$(JAVABASE)/bin/jar cf $@ $(SRCS)",
-        toolchains = ["@bazel_tools//tools/jdk:current_java_runtime"],
+        actual = "lib{0}-src.jar".format(name),
     )
 
 def _copy_and_merge(to_copy, to_merge):
