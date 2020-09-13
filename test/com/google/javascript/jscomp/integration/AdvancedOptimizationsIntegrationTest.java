@@ -1677,6 +1677,59 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         "const {a: {log: a}} = window; alert(a);");
   }
 
+  @Test
+  public void testObjectLiteralPropertyNamesUsedInDestructuringAssignment() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    externs =
+        ImmutableList.of(
+            new TestExternsBuilder().addMath().addConsole().buildExternsFile("externs.js"));
+    test(
+        options,
+        lines(
+            "const X = { a: 1, b: 2 };", //
+            "const { a, b } = X;",
+            "console.log(a, b);",
+            ""),
+        "console.log(1,2);");
+
+    test(
+        options,
+        lines(
+            "const X = { a: 1, b: 2 };", //
+            "let { a, b } = X;",
+            "const Y = { a: 4, b: 5 };",
+            "({ a, b } = Y);",
+            "console.log(a, b);",
+            ""),
+        lines(
+            "", //
+            "let {a, b} = {a:1, b:2};",
+            "({a, b} = {a:4, b:5});",
+            "console.log(a, b);"));
+
+    // Demonstrates https://github.com/google/closure-compiler/issues/3671
+    test(
+        options,
+        lines(
+            "const X = { a: 1, b: 2 };", //
+            "const Y = { a: 1, b: 2 };",
+            // CollapseProperties doesn't realize that this usage of X & Y makes it unsafe to
+            // collapse their properties.
+            "const { a, b } = Math.random() ? X : Y;",
+            "console.log(a, b);",
+            ""),
+        lines(
+            "const a = {},",
+            "      b = {},",
+            "      {a:c, b:d} = Math.random() ? a : b;", //
+            "console.log(c, d);",
+            ""));
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   public CompilerOptions createCompilerOptions() {
@@ -1686,6 +1739,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossChunkNames(true);
     options.setAssumeGettersArePure(false);
+    // Make the test mismatch results easier to read
+    options.setPrettyPrint(true);
+    // Starting the output with `'use strict';` is just noise.
+    options.setEmitUseStrict(false);
     return options;
   }
 

@@ -737,6 +737,19 @@ public class TestExternsBuilder {
           "$jscomp.inherits = function(subClass, superClass) {};",
           "");
 
+  private static final String MATH_EXTERNS =
+      lines(
+          "", //
+          "/** @const */",
+          "var Math = {};",
+          "",
+          "/**",
+          " * @return {number}",
+          " * @nosideeffects",
+          " */",
+          "Math.random = function() {};",
+          "");
+
   private boolean includeBigIntExterns = false;
   private boolean includeIterableExterns = false;
   private boolean includeStringExterns = false;
@@ -751,6 +764,7 @@ public class TestExternsBuilder {
   private boolean includeEs6ClassTranspilationExterns = false;
   private boolean includeReflectExterns = false;
   private boolean includeClosureExterns = false;
+  private boolean includeMathExterns = false;
   private final List<String> extraExterns = new ArrayList<>();
 
   public TestExternsBuilder addBigInt() {
@@ -842,6 +856,11 @@ public class TestExternsBuilder {
     return this;
   }
 
+  public TestExternsBuilder addMath() {
+    includeMathExterns = true;
+    return this;
+  }
+
   public TestExternsBuilder addExtra(String... lines) {
     Collections.addAll(extraExterns, lines);
     return this;
@@ -884,6 +903,9 @@ public class TestExternsBuilder {
     }
     if (includeAsyncIterableExterns) {
       externSections.add(ASYNC_ITERABLE_EXTERNS);
+    }
+    if (includeMathExterns) {
+      externSections.add(MATH_EXTERNS);
     }
     if (includeEs6ClassTranspilationExterns) {
       externSections.add(ES6_CLASS_TRANSPILATION_EXTERNS);
