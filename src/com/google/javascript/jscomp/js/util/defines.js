@@ -67,4 +67,4 @@ $jscomp.FORCE_POLYFILL_PROMISE = false;
  * support.
  * @define {boolean}
  */
-$jscomp.ENABLE_UNHANDLED_REJECTION_POLYFILL = false;
+$jscomp.ENABLE_UNHANDLED_REJECTION_POLYFILL = true;

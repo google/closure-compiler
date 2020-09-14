@@ -83,7 +83,21 @@ function mutationObserverMicrotask(callback) {
   node.data = 'foo';
 }
 
+/** @return {boolean} Whether Promise is natively supported. */
+function hasNativePromise() {
+  return Promise.toString().includes('[native code]');
+}
+
+/** @return {boolean} Whether PromiseRejectionEvent is natively supported. */
+function hasPromiseRejectionEvent() {
+  return typeof PromiseRejectionEvent !== 'undefined';
+}
+
 testSuite({
+  shouldRunTests() {
+    // Skip browsers that natively support promise but not unhandledrejection.
+    return !hasNativePromise() || hasPromiseRejectionEvent();
+  },
   testPromiseReject() {
     // `unhandledrejection` thrown from Promise.reject.
     return expectUnhandledRejectionEvent(() => {
