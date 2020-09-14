@@ -43,16 +43,16 @@ public abstract class RefasterJsTestCase {
     return new AutoValue_RefasterJsTestCase.Builder();
   }
 
-  /** Path of the resource containing the RefasterJs template to apply. */
+  /** Path of the JAR resource containing the RefasterJs template to apply. */
   public abstract String getTemplatePath();
 
-  /** Path of the resource containing the input JS file. */
+  /** Path of the external file containing the input JS. */
   public abstract String getInputPath();
 
-  /** Paths of the resources containing the expected output JS files. */
+  /** Paths of the external files containing the expected output JS. */
   public abstract ImmutableSet<String> getExpectedOutputPaths();
 
-  /** Paths of the resources containing other JS files to include. */
+  /** Paths of the external files containing other JS to include. */
   public abstract ImmutableSet<String> getAdditionalSourcePaths();
 
   /** Builder */

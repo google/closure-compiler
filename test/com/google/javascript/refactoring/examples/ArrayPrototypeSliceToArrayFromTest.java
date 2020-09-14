@@ -30,7 +30,6 @@ public class ArrayPrototypeSliceToArrayFromTest {
 
   /** The RefasterJs template to use. */
   private static final String ARRAY_PROTOTYPE_SLICE_TO_ARRAY_FROM_TEMPLATE =
-      "src/" +
       "com/google/javascript/refactoring/examples/refasterjs/array_prototype_slice_to_array_from.js";
 
   @Test

@@ -30,7 +30,6 @@ public class ArrayIndexOfToIncludesTest {
 
   /** The RefasterJs template to use. */
   private static final String ARRAY_INDEXOF_TO_INCLUDES_TEMPLATE =
-      "src/" +
       "com/google/javascript/refactoring/examples/refasterjs/array_indexof_to_includes.js";
 
   @Test

@@ -30,12 +30,10 @@ public class SetLocationTest {
 
   /** The RefasterJs template to use for Location#href. */
   private static final String SET_LOCATION_HREF_TEMPLATE =
-      "src/" +
       "com/google/javascript/refactoring/examples/refasterjs/set_location_href.js";
 
   /** The RefasterJs template to use for Window#location. */
   private static final String SET_WINDOW_LOCATION_TEMPLATE =
-      "src/" +
       "com/google/javascript/refactoring/examples/refasterjs/set_window_location.js";
 
   @Test

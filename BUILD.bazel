@@ -193,17 +193,6 @@ gen_java_tests(
             "src/**/testing/**/*.java",
         ],
         exclude = [
-            # TODO(nickreid): Reenable these when we stop running them with
-            # Maven. Runfiles make them too hard to get them to pass under Maven
-            # and Bazel together.
-            "test/com/google/javascript/jscomp/CommandLineRunnerTest.java",
-            "test/com/google/javascript/jscomp/CompilerTest.java",
-            "test/com/google/javascript/jscomp/ConformanceAllowlisterTest.java",
-            "test/com/google/javascript/jscomp/instrumentation/CoverageInstrumentationPassTest.java",
-            "test/com/google/javascript/jscomp/SourceMapJsLangTest.java",
-            "test/com/google/javascript/jscomp/integration/IntegrationTest.java",
-            "test/com/google/javascript/refactoring/examples/*.java",
-        ] + [
             # These files are only needed by the GWT/J2CL build of the compiler.
             "**/super*/**/*.java",
             "**/j2cl/**/*.java",
@@ -233,8 +222,14 @@ gen_java_tests(
 
 java_library(
     name = "compiler_tests_resources",
+    # These files are read from runfiles.
+    data = [
+        "contrib/externs/chai-3.5.js",
+    ] + glob([
+        "test/com/google/javascript/jscomp/testdata/**/*",
+        "test/com/google/javascript/refactoring/examples/testdata/**/*",
+    ]),
     resources = glob([
-        "test/com/google/javascript/refactoring/examples/testdata/**/*.js",
         "src/com/google/javascript/refactoring/examples/refasterjs/**/*.js",
     ]),
 )

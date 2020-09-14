@@ -34,7 +34,6 @@ public class ChaiExpectToAssertTest {
 
   /** The RefasterJs template to use. */
   private static final String NAVIGATIONAL_XSS_SINKS_TEMPLATE =
-      "src/" +
       "com/google/javascript/refactoring/examples/refasterjs/chai_expect_to_assert.js";
 
   @Test
