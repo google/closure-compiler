@@ -18,10 +18,8 @@ package com.google.javascript.jscomp;
 
 import java.io.Serializable;
 
-/**
- * Id generator used in CrossModuleMotion.
- */
-class IdGenerator implements Serializable {
+/** Id generator used in CrossModuleMotion. */
+public class IdGenerator implements Serializable {
 
   /**
    * Ids for cross-module method stubbing, so that each method has
@@ -36,10 +34,8 @@ class IdGenerator implements Serializable {
     return currentId != 0;
   }
 
-  /**
-   * Creates a new id for stubbing a method.
-   */
-  int newId() {
+  /** Creates a new id for stubbing a method. */
+  public int newId() {
     return currentId++;
   }
 }

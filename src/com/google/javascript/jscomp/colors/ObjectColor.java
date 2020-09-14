@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.colors;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
@@ -49,9 +50,9 @@ public abstract class ObjectColor implements Color {
     throw new UnsupportedOperationException();
   }
 
-  public abstract String getClassName();
+  public abstract String getId();
 
-  public abstract String getFilename();
+  public abstract DebugInfo getDebugInfo();
 
   // given `function Foo() {}` or `class Foo {}`, color of Foo.prototype. null otherwise.
   @Nullable
@@ -70,9 +71,7 @@ public abstract class ObjectColor implements Color {
   /** Builder for ObjectColors */
   @AutoValue.Builder
   public abstract static class Builder {
-    public abstract Builder setClassName(String value);
-
-    public abstract Builder setFilename(String value);
+    public abstract Builder setId(String value);
 
     public abstract Builder setInvalidating(boolean value);
 
@@ -82,11 +81,20 @@ public abstract class ObjectColor implements Color {
 
     public abstract Builder setInstanceColor(Color instanceColor);
 
+    public abstract Builder setDebugInfo(DebugInfo debugInfo);
+
+    @VisibleForTesting
+    public Builder setDebugName(String name) {
+      setDebugInfo(DebugInfo.builder().setClassName(name).build());
+      return this;
+    }
+
     public abstract ObjectColor build();
   }
 
   public static Builder builder() {
     return new AutoValue_ObjectColor.Builder()
+        .setDebugInfo(DebugInfo.EMPTY)
         .setInvalidating(false)
         .setDisambiguationSupertypes(ImmutableList.of());
   }

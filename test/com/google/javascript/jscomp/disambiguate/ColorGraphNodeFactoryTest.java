@@ -80,7 +80,7 @@ public final class ColorGraphNodeFactoryTest {
     // Given
     ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
 
-    Color fooType = ObjectColor.builder().setClassName("Foo").setFilename("test.js").build();
+    Color fooType = ObjectColor.builder().setId("Foo").build();
     ColorGraphNode flatFoo = factory.createNode(fooType);
 
     // When
@@ -98,8 +98,8 @@ public final class ColorGraphNodeFactoryTest {
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
             PrimitiveColor.NUMBER,
-            ObjectColor.builder().setClassName("Foo").setFilename("test.js").build(),
-            ObjectColor.builder().setClassName("Bar").setFilename("test.js").build());
+            ObjectColor.builder().setId("Foo").build(),
+            ObjectColor.builder().setId("Bar").build());
 
     // When
     ImmutableSet<ColorGraphNode> flatSamples =
@@ -119,8 +119,8 @@ public final class ColorGraphNodeFactoryTest {
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
             PrimitiveColor.NUMBER,
-            ObjectColor.builder().setClassName("Foo").setFilename("test.js").build(),
-            ObjectColor.builder().setClassName("Bar").setFilename("test.js").build());
+            ObjectColor.builder().setId("Foo").build(),
+            ObjectColor.builder().setId("Bar").build());
 
     // When
     ImmutableSet<ColorGraphNode> flatSamples =
@@ -154,8 +154,8 @@ public final class ColorGraphNodeFactoryTest {
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
             PrimitiveColor.NUMBER,
-            ObjectColor.builder().setClassName("Foo").setFilename("test.js").build(),
-            ObjectColor.builder().setClassName("Bar").setFilename("test.js").build());
+            ObjectColor.builder().setId("Foo").build(),
+            ObjectColor.builder().setId("Bar").build());
 
     return sampleTypes.stream().map(factory::createNode).collect(toImmutableSet());
   }
