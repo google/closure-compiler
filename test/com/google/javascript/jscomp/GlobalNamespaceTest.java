@@ -642,6 +642,27 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testConditionalDestructuringDoesNotHideAliasingGet() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "", //
+                "const ns1 = {a: 3};",
+                "const ns2 = {b: 3};",
+                // Creates an aliasing get for both ns1 and ns2
+                "const {a, b} = Math.random() ? ns1 : ns2;",
+                ""));
+
+    Name ns1 = namespace.getSlot("ns1");
+    assertThat(ns1.getAliasingGets()).isEqualTo(1);
+    assertThat(ns1.getTotalGets()).isEqualTo(1);
+
+    Name ns2 = namespace.getSlot("ns2");
+    assertThat(ns2.getAliasingGets()).isEqualTo(1);
+    assertThat(ns2.getTotalGets()).isEqualTo(1);
+  }
+
+  @Test
   public void testNestedObjectPatternAliasInDeclaration() {
     GlobalNamespace namespace = parse("const ns = {a: {b: 3}}; const {a: {b}} = ns;");
 

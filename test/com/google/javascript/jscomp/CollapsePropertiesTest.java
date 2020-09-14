@@ -2214,6 +2214,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConditionalDestructuringAssignment() {
+    testSame(
+        lines(
+            "const X = { a: 1, b: 2 };", //
+            // Destructuring assignment effectively creates an alias for
+            // X and its properties.
+            // Make sure conditional assignment doesn't hide this.
+            "const {a, b} = false || X;",
+            "console.log(a, b);",
+            ""));
+  }
+
+  @Test
   public void testDestructuredClassAlias() {
     test(
         lines(

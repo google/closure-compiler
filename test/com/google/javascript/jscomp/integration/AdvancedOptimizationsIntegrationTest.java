@@ -1717,15 +1717,15 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         lines(
             "const X = { a: 1, b: 2 };", //
             "const Y = { a: 1, b: 2 };",
-            // CollapseProperties doesn't realize that this usage of X & Y makes it unsafe to
-            // collapse their properties.
+            // Conditional destructuring assignment makes it unsafe to collapse
+            // the properties on X and Y.
             "const { a, b } = Math.random() ? X : Y;",
             "console.log(a, b);",
             ""),
         lines(
-            "const a = {},",
-            "      b = {},",
-            "      {a:c, b:d} = Math.random() ? a : b;", //
+            "const a = { a: 1, b: 2},", //
+            "      b = { a: 1, b: 2},",
+            "      {a:c, b:d} = Math.random() ? a : b;",
             "console.log(c, d);",
             ""));
   }
