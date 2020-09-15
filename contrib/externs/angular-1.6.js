@@ -456,9 +456,18 @@ angular.Component.prototype.transclude;
 angular.Component.prototype.require;
 
 
+/**
+ * @see https://code.angularjs.org/1.6.10/docs/api/auto/service/$injector#-inject-annotation
+ * @extends {Function}
+ * @interface
+ */
+angular.InjectableFunctionInterface;
+
+/** @type {!Array<string>} */
+angular.InjectableFunctionInterface.prototype.$inject;
 
 /**
- * @typedef {(Function|Array<string|Function>)}
+ * @typedef {(angular.InjectableFunctionInterface|Function|Array<string|Function>)}
  */
 angular.Injectable;
 
