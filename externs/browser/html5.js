@@ -61,6 +61,30 @@ Node.prototype.isConnected;
 HTMLScriptElement.prototype.async;
 
 /**
+ * @type {string?}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#the-script-element
+ */
+HTMLScriptElement.prototype.crossOrigin;
+
+/**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#the-script-element
+ */
+HTMLScriptElement.prototype.integrity;
+
+/**
+ * @type {boolean}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#the-script-element
+ */
+HTMLScriptElement.prototype.noModule;
+
+/**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#the-script-element
+ */
+HTMLScriptElement.prototype.referrerPolicy;
+
+/**
  * @constructor
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#the-canvas-element
  * @extends {HTMLElement}
