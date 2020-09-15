@@ -87,6 +87,12 @@ java_binary(
     runtime_deps = [":compiler_lib"],
 )
 
+java_binary(
+    name = "instrumentationReporter",
+    main_class = "com.google.javascript.jscomp.instrumentation.reporter.ProductionInstrumentationReporter",
+    runtime_deps = [":compiler_lib"],
+)
+
 java_library(
     name = "externs",
     resources = [":externs_zip"],
