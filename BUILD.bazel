@@ -144,6 +144,7 @@ oss_java_library(
             ],
         ),
         deps = [
+            "//src/com/google/debugging/sourcemap/proto:mapping_java_proto",
             "@args4j_args4j",
             "@com_google_code_gson_gson",
             "@com_google_guava_failureaccess//jar",
@@ -204,6 +205,7 @@ gen_java_tests(
     deps = [
         ":compiler_lib",
         ":compiler_tests_resources",
+        "//src/com/google/debugging/sourcemap/proto:mapping_java_proto",
         "@args4j_args4j",
         "@com_google_code_gson_gson",
         "@com_google_guava_failureaccess//jar",

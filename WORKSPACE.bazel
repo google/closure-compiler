@@ -49,6 +49,26 @@ maven_import(
     licenses = ["notice"],
 )
 
+git_repository(
+    name = "protobuf_proto_rules",
+    commit = "218ffa7dfa5408492dc86c01ee637614f8695c45",
+    remote = "git://github.com/bazelbuild/rules_proto.git",
+)
+
+load("@protobuf_proto_rules//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+rules_proto_dependencies()
+rules_proto_toolchains()
+
+git_repository(
+    name = "protobuf_java_rules",
+    commit = "d7bf804c8731edd232cb061cb2a9fe003a85d8ee",
+    remote = "git://github.com/bazelbuild/rules_java.git",
+)
+
+load("@protobuf_java_rules//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
+rules_java_dependencies()
+rules_java_toolchains()
+
 ## Load J2CL repo ##
 
 http_archive(
