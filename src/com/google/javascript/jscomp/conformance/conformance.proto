@@ -11,12 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-// MOE:begin_strip
-// NOTE: When touching this file, please see go/updating-protos for instructions
-// on updating the checked-in compiled versions in
-//   //third_party/java_src/jscomp/opensource
-// MOE:end_strip
 syntax = "proto2";
 
 package jscomp;

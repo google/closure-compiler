@@ -32,15 +32,6 @@ maven_import(
 )
 
 maven_import(
-    # https://github.com/protocolbuffers/protobuf
-    group_id ="com.google.protobuf",
-    artifact_id = "protobuf-java",
-    version ="3.11.1",
-    sha256 = "4a01db8277b79eaf84151013f3348a4d24720c8c9e1b33e5ed292caca5567cf1",
-    licenses = ["notice"],
-)
-
-maven_import(
     # https://github.com/google/re2j
     group_id ="com.google.re2j",
     artifact_id = "re2j",
