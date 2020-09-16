@@ -2296,7 +2296,31 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantProperty1a() {
+  public void testConstantPropertyByJsdoc_initialAssignmentOk() {
+    testNoWarning(
+        lines(
+            "/** @constructor */ function A() {",
+            "  /** @const */ this.bar = 3;",
+            "}",
+            "/** @constructor */ function B() {",
+            "  /** @const */ this.bar = 3;",
+            "}"));
+  }
+
+  @Test
+  public void testConstantPropertyByConvention_initialAssignmentOk() {
+    testNoWarning(
+        lines(
+            "/** @constructor */ function A() {",
+            "  this.BAR = 3;",
+            "}",
+            "/** @constructor */ function B() {",
+            "  this.BAR = 3;",
+            "}"));
+  }
+
+  @Test
+  public void testConstantPropertyByJsdoc_reassignmentWarns() {
     testError(
         "/** @constructor */ function A() {"
         + "/** @const */ this.bar = 3;}"
@@ -2328,7 +2352,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantProperty1b() {
+  public void testConstantPropertyByConvention_reassignmentWarns() {
     testError(
         "/** @constructor */ function A() {"
         + "this.BAR = 3;}"
@@ -2338,7 +2362,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantProperty2a() {
+  public void testConstantPropertyByJsdocOnPrototype_reassignmentWarns() {
     testError(
         "/** @constructor */ function Foo() {}"
         + "/** @const */ Foo.prototype.prop = 2;"
@@ -2348,7 +2372,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantProperty2b() {
+  public void testConstantPropertyByConventionOnPrototype_reassignmentWarns() {
     testError(
         "/** @constructor */ function Foo() {}"
         + "Foo.prototype.PROP = 2;"
@@ -2358,7 +2382,12 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNamespaceConstantProperty1() {
+  public void testConstantPropertyOnConstNamespaceByAssignment_initialAssignmentOk() {
+    testNoWarning(lines("/** @const */ var o = {};", "/** @const */ o.x = 1;"));
+  }
+
+  @Test
+  public void testConstantPropertyOnConstNamespaceByAssignment_reassignmentWarns() {
     testError(
         ""
         + "/** @const */ var o = {};\n"
@@ -2368,7 +2397,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNamespaceConstantProperty2() {
+  public void testConstantPropertyOnNamespaceByAssignment_reassignmentWarns() {
     testError(
         "var o = {};\n"
         + "/** @const */ o.x = 1;\n"
@@ -2377,7 +2406,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNamespaceConstantProperty2a() {
+  public void testNamespaceConstantPropertyOnNamespace_assigningSeparateNamespacesOk() {
     testSame("/** @const */ var o = {};\n"
         + "/** @const */ o.x = 1;\n"
         + "/** @const */ var o2 = {};\n"
@@ -2385,36 +2414,34 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNamespaceConstantProperty3() {
+  public void testConstantPropertyOnObjectLiteralByLiteralKey_initialAssignmentOk() {
+    testNoWarning(lines("var o = {", "  /** @const */ x: 1", " };"));
+  }
+
+  @Test
+  public void testConstantPropertyOnObjectLiteralByLiteralKey_reassignmentWarns() {
     testError(
-        "/** @const */ var o = {};\n"
-        + "/** @const */ o.x = 1;"
-        + "o.x = 2;",
+        lines("var o = {", "  /** @const */ x: 1", " };", "o.x = 2;"),
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
-  public void testConstantProperty3a1() {
-    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
-    testSame("var o = { /** @const */ x: 1 };" + "o.x = 2;");
+  public void testConstantPropertyOnConstObjectLiteralByLiteralKey_reassignmentWarns() {
+    testError(
+        lines("/** @const */", "var o = {", "  /** @const */ x: 1", " };", "o.x = 2;"),
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
-  public void testConstantProperty3a2() {
-    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
-    testSame("/** @const */ var o = { /** @const */ x: 1 };" + "o.x = 2;");
+  public void testConstantPropertyOnObjectLiteralByConvention_reassignmentWarns() {
+    testError(lines("var o = {", "  XYZ: 1", " };", "o.XYZ = 2;"), CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
-  public void testConstantProperty3b1() {
-    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
-    testSame("var o = { XYZ: 1 };" + "o.XYZ = 2;");
-  }
-
-  @Test
-  public void testConstantProperty3b2() {
-    // Known broken: Should be `error(CONST_PROPERTY_REASSIGNED_VALUE)`.
-    testSame("/** @const */ var o = { XYZ: 1 };" + "o.XYZ = 2;");
+  public void testConstantPropertyOnConstObjectLiteralByConvention_reassignmentWarns() {
+    testError(
+        lines("/** @const */ var o = {", "  XYZ: 1", "};", "o.XYZ = 2;"),
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
@@ -2628,6 +2655,77 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + "/** @param {number} a */\n"
         + "function Bar(a) {};\n"
         + "Bar.CONST = 100;\n");
+  }
+
+  @Test
+  public void testNamespaceOnStructuralInterface() {
+    // NOTE: The FooStatic pattern is not uncommon in TS externs.  If additional sub-namespaces are
+    // defined underneath, tsickle generates code that looks like this.  It is important that the
+    // moment.unitOfTime declaration be treated as a declaration so that it doesn't just look like
+    // a mutation of the readonly property that it just defined.
+    testNoWarning(
+        lines(
+            "/** @externs */",
+            "/** @record */",
+            "function MomentStatic() {}",
+            "/** @return {number} */",
+            "MomentStatic.prototype.now = function() {};",
+            "/** @const */",
+            "moment.unitOfTime = {};",
+            "/** @const {!MomentStatic} */",
+            "var moment;"));
+  }
+
+  @Test
+  public void testConstantPropertyOnStructuralInterfaceByJsdoc_initializeFromObjLitOk() {
+    testNoWarning(
+        lines(
+            "/** @record */",
+            "function Foo() {",
+            "  /** @const {number} */ this.bar;",
+            "}",
+            "var /** !Foo */ foo = {bar: 1};",
+            "var /** !Foo */ baz = {bar: 2};"));
+  }
+
+  @Test
+  public void testConstantPropertyOnStructuralInterfaceByJsdoc_reassignmentWarns() {
+    testError(
+        lines(
+            "/** @record */",
+            "function Foo() {",
+            "  /** @const {number} */ this.bar;",
+            "}",
+            "var /** !Foo */ foo = {bar: 1};",
+            "foo.bar = 2;"),
+        CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  @Test
+  public void testConstantPropertyOnStructuralInterfaceByJsdoc_assignmentOnOpaqueObjectWarns() {
+    testError(
+        lines(
+            "/** @record */",
+            "function Foo() {",
+            "  /** @const {number} */ this.bar;",
+            "}",
+            "function f(/** !Foo */ foo) {",
+            "  foo.bar = 2;",
+            "}"),
+        CONST_PROPERTY_REASSIGNED_VALUE);
+  }
+
+  @Test
+  public void testConstantPropertyOnStructuralInterfaceByConvention_reassignmentWarns() {
+    testError(
+        lines(
+            "/** @record */",
+            "function Foo() {",
+            "  /** @type {number} */ this.BAR;",
+            "}",
+            "var /** !Foo */ foo = {BAR: 1};",
+            "foo.BAR = 2;"),
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   @Test
