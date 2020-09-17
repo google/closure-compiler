@@ -1901,7 +1901,7 @@ public abstract class CompilerTestCase {
             .build());
     TranspilationPasses.addEs6ModulePass(
         factories, new PreprocessorSymbolTable.CachedInstanceFactory());
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     TranspilationPasses.addTranspilationRuntimeLibraries(factories, options);
     TranspilationPasses.addPostCheckTranspilationPasses(factories, options);
