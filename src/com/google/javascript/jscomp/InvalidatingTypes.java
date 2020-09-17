@@ -71,6 +71,9 @@ public final class InvalidatingTypes {
     if (objType == null) {
       return !allowScalars;
     }
+    if (objType.isTemplatizedType()) {
+      objType = objType.toMaybeTemplatizedType().getReferencedType();
+    }
 
     return types.contains(objType)
         // Don't disambiguate properties on object types that are structurally compared or that
@@ -216,6 +219,9 @@ public final class InvalidatingTypes {
     private void recordTypeWithReason(JSType type, Node location) {
       if (type == null || !type.isObjectType()) {
         return;
+      }
+      if (type.isTemplatizedType()) {
+        type = type.toMaybeTemplatizedType().getReferencedType();
       }
 
       this.types.add(type);

@@ -2682,6 +2682,30 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMismatchForbiddenInvalidationOnTemplatizedType() {
+    test(
+        srcs(
+            lines(
+                "/** @constructor @template T */",
+                "function F() {}",
+                "",
+                "const /** !F<string> */ f = new F();",
+                "",
+                "/** @type {number} */",
+                "const n = f;", // create mismatch involving F<string>
+                "",
+                "/** @param {!F<number>} f*/",
+                "function g(f) {",
+                "  f.foobar = 0;",
+                "}")),
+        error(INVALIDATION)
+            .withMessageContaining(
+                "access on type 'F<number>'. It became invalidating due to mismatches or"
+                    + " structural matches at the following locations:\n"
+                    + "testcode:7:10"));
+  }
+
+  @Test
   public void testDontCrashOnNonConstructorsWithPrototype() {
     String externs = lines(
         "function f(x) { return x; }",

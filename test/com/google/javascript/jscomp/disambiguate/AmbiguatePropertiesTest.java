@@ -2017,4 +2017,32 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "",
             ""));
   }
+
+  @Test
+  public void testObjectUsedAsMapIsInvalidating() {
+    ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
+    test(
+        lines(
+            "/** @param {!Object<string>} obj */",
+            "function f(obj) {",
+            "  return obj.x;",
+            "}",
+            "class OtherClass {",
+            "  constructor() {",
+            "    this.y = 0;",
+            "  }",
+            "}"),
+        lines(
+            "/** @param {!Object<string>} obj */",
+            "function f(obj) {",
+            // Can't ambiguate this 'x' to 'a' since we don't track different Object types uniquely
+            // and OtherClass is also assignable to !Object<string>
+            "  return obj.x;",
+            "}",
+            "class OtherClass {",
+            "  constructor() {",
+            "    this.a = 0;",
+            "  }",
+            "}"));
+  }
 }

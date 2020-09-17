@@ -508,6 +508,10 @@ public class DisambiguateProperties implements CompilerPass {
       return;
     }
 
+    if (t.isTemplatizedType()) {
+      printErrorLocations(locations, t.toMaybeTemplatizedType().getReferencedType());
+    }
+
     invalidationMap.get(t).stream()
         .limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY)
         .map((l) -> l.getSourceFileName() + ":" + l.getLineno() + ":" + l.getCharno())
