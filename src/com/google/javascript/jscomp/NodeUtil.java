@@ -4728,7 +4728,7 @@ public final class NodeUtil {
   @Deprecated
   static boolean isConstantByConvention(CodingConvention convention, Node node) {
     Node parent = node.getParent();
-    if (parent.isGetProp() && node == parent.getLastChild()) {
+    if (isNormalOrOptChainGetProp(parent) && node == parent.getLastChild()) {
       return convention.isConstantKey(node.getString());
     } else if (mayBeObjectLitKey(node)) {
       return convention.isConstantKey(node.getString());

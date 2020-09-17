@@ -403,10 +403,11 @@ class Normalize implements CompilerPass {
       }
 
       // There are only two cases where a string token
-      // may be a variable reference: The right side of a GETPROP
+      // may be a variable reference: The right side of a GETPROP (or OPTCHAIN_GETPROP)
       // or an OBJECTLIT key.
       boolean isObjLitKey = NodeUtil.mayBeObjectLitKey(n);
-      boolean isProperty = isObjLitKey || (parent.isGetProp() && parent.getLastChild() == n);
+      boolean isProperty =
+          isObjLitKey || (NodeUtil.isNormalOrOptChainGetProp(parent) && parent.getLastChild() == n);
       if (n.isName() || isProperty) {
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (!isMarkedConstant
