@@ -94,13 +94,16 @@ public final class InvalidatingTypes {
       // Treat an Enum<Foo> identically to a Foo
       return primitive == null || isAmbiguousOrStructuralType(primitive);
     } else if (type.isFunctionType()) {
-      return !type.isNominalConstructorOrInterface();
+      return !type.isNominalConstructorOrInterface()
+          || type.toMaybeFunctionType().isAmbiguousConstructor();
     } else if (type.isFunctionPrototypeType()) {
       FunctionType ownerFunction = type.getOwnerFunction();
-      return ownerFunction == null || !ownerFunction.isNominalConstructorOrInterface();
+      return ownerFunction == null
+          || !ownerFunction.isNominalConstructorOrInterface()
+          || ownerFunction.isAmbiguousConstructor();
     } else if (type.isInstanceType()) {
       FunctionType ctor = type.getConstructor();
-      return ctor == null || ctor.createsAmbiguousObjects();
+      return ctor == null || ctor.isAmbiguousConstructor();
     }
 
     return true;
@@ -115,7 +118,7 @@ public final class InvalidatingTypes {
     private boolean allowEnums = false;
     private boolean allowScalars = false;
 
-    // TODO(b/160269908): Investigate making this always false, instead of always true.
+    // TODO(b/160615581): Investigate making this always false, instead of always true.
     private final boolean alsoInvalidateRelatedTypes = true;
 
     private ImmutableSet.Builder<JSType> types;

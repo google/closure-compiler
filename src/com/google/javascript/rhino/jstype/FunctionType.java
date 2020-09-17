@@ -98,8 +98,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
   enum ConstructorAmbiguity {
     UNKNOWN,
-    CONSTRUCTS_AMBIGUOUS_OBJECTS,
-    CONSTRUCTS_UNAMBIGUOUS_OBJECTS
+    IS_AMBIGUOUS_CONSTRUCTOR,
+    IS_UNAMBIGUOUS_CONSTRUCTOR,
   }
 
   private ConstructorAmbiguity constructorAmbiguity = ConstructorAmbiguity.UNKNOWN;
@@ -1380,39 +1380,39 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    * Returns true if the constructor does not come from a literal class or function in the AST, or
    * if it extends such an ambiguous constructor
    */
-  public final boolean createsAmbiguousObjects() {
+  public final boolean isAmbiguousConstructor() {
     if (this.constructorAmbiguity == ConstructorAmbiguity.UNKNOWN) {
       constructorAmbiguity = calculateConstructorAmbiguity();
     }
-    return constructorAmbiguity == ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+    return constructorAmbiguity == ConstructorAmbiguity.IS_AMBIGUOUS_CONSTRUCTOR;
   }
 
   private ConstructorAmbiguity calculateConstructorAmbiguity() {
     final ConstructorAmbiguity constructorAmbiguity;
     if (isUnknownType()) {
-      constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+      constructorAmbiguity = ConstructorAmbiguity.IS_AMBIGUOUS_CONSTRUCTOR;
     } else if (isNativeObjectType()) {
       // native types other than unknown are never ambiguous
-      constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_UNAMBIGUOUS_OBJECTS;
+      constructorAmbiguity = ConstructorAmbiguity.IS_UNAMBIGUOUS_CONSTRUCTOR;
     } else {
       FunctionType superConstructor = getSuperClassConstructor();
       if (superConstructor == null) {
         // TODO(bradfordcsmith): Why is superConstructor ever null here?
-        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
-      } else if (superConstructor.createsAmbiguousObjects()) {
+        constructorAmbiguity = ConstructorAmbiguity.IS_AMBIGUOUS_CONSTRUCTOR;
+      } else if (superConstructor.isAmbiguousConstructor()) {
         // Subclasses of ambiguous objects are also ambiguous
-        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+        constructorAmbiguity = ConstructorAmbiguity.IS_AMBIGUOUS_CONSTRUCTOR;
       } else if (source != null) {
         // We can see the definition of the class, so we know all properties it directly declares
         // or references.
         // The same is true for its superclass (previous condition).
-        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_UNAMBIGUOUS_OBJECTS;
+        constructorAmbiguity = ConstructorAmbiguity.IS_UNAMBIGUOUS_CONSTRUCTOR;
       } else if (isDelegateProxy()) {
         // Type was created by the compiler as a proxy that inherits from the real type that was in
         // the code.
         // Since we've made it this far, we know the real type creates unambiguous objects.
         // Therefore, the proxy does, too.
-        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_UNAMBIGUOUS_OBJECTS;
+        constructorAmbiguity = ConstructorAmbiguity.IS_UNAMBIGUOUS_CONSTRUCTOR;
       } else {
         // Type was created directly from JSDoc without a function or class literal.
         // e.g.
@@ -1423,7 +1423,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         //  */
         // const MyImpl = createMyImpl();
         // The actual properties on this class are hidden from us, so we must consider it ambiguous.
-        constructorAmbiguity = ConstructorAmbiguity.CONSTRUCTS_AMBIGUOUS_OBJECTS;
+        constructorAmbiguity = ConstructorAmbiguity.IS_AMBIGUOUS_CONSTRUCTOR;
       }
     }
     return constructorAmbiguity;

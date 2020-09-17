@@ -1959,7 +1959,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "class B extends BSuper {",
             // Note that ambiguating 'bMethod' => 'a' would be incorrect because BSuper extends A
             // via the mixin, so 'bMethod' would conflict with 'aMethod'.
-            "  b() {}",
+            "  bMethod() {}",
             "}",
             "",
             ""));
@@ -1967,8 +1967,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testMixinConstructorPropertiesNotAmbiguated() {
-    // TODO(b/168133634): ambiguation is potentially breaking code here by ambiguating static
-    // method overrides to the same name
     test(
         lines(
             "", //
@@ -2007,16 +2005,14 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             " */",
             "function mixinX(baseType) {",
             "  return class extends baseType {",
-            // unsafe - overrides aMethod
-            "    static a() {}",
+            "    static x() {}",
             "  };",
             "}",
             "/** @constructor @extends {A} */",
             "const BSuper = mixinX(A);",
             "",
             "class B extends BSuper {",
-            // unsafe - overrides aMethod and x
-            "  static a() {}",
+            "  static bMethod() {}",
             "}",
             "",
             ""));
