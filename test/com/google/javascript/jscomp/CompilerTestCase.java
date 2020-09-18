@@ -1119,16 +1119,6 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Verifies that the compiler generates the given error for the given input.
-   *
-   * @param js Input
-   * @param error Expected error
-   */
-  protected void testError(String externs, String js, DiagnosticType error) {
-    test(externs(externs), srcs(js), error(error));
-  }
-
-  /**
    * Verifies that the compiler generates the given error and description for the given input.
    */
   protected void testError(String js, DiagnosticType error, String description) {
@@ -1248,13 +1238,11 @@ public abstract class CompilerTestCase {
     test(srcs(inputs), warning(warning).withMessage(description));
   }
 
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
-   */
+  /** Verifies that the compiler generates the given warning for the given input. */
   protected void testWarning(
-      String externs, String js, DiagnosticType warning, String description) {
+      Externs externs, Sources srcs, DiagnosticType warning, String description) {
     assertThat(warning).isNotNull();
-    test(externs(externs), srcs(js), warning(warning).withMessage(description));
+    test(externs, srcs, warning(warning).withMessage(description));
   }
 
   /**
@@ -1273,11 +1261,9 @@ public abstract class CompilerTestCase {
     test(srcs);
   }
 
-  /**
-   * Verifies that the compiler generates no warnings for the given input.
-   */
-  public void testNoWarning(String externs, String js) {
-    test(externs(externs), srcs(js));
+  /** Verifies that the compiler generates no warnings for the given input. */
+  public void testNoWarning(Externs externs, Sources srcs) {
+    test(externs, srcs);
   }
 
   /**

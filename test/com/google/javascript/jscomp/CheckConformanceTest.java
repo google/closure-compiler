@@ -495,29 +495,30 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "foo.blink();");
 
     testWarning(
-        externs,
-        "'foo'.blink;",
+        externs(externs),
+        srcs("'foo'.blink;"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: blink is annoying");
 
     testWarning(
-        externs,
-        "'foo'.blink();",
+        externs(externs),
+        srcs("'foo'.blink();"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: blink is annoying");
 
     testWarning(
-        externs,
-        "String('foo').blink();",
+        externs(externs),
+        srcs("String('foo').blink();"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: blink is annoying");
 
     testWarning(
-        externs,
-        "foo.blink();",
+        externs(externs),
+        srcs("foo.blink();"),
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
         "Possible violation: blink is annoying\n"
-        + "The type information available for this expression is too loose to ensure conformance.");
+            + "The type information available for this expression is too loose to ensure"
+            + " conformance.");
   }
 
   @Test
@@ -597,18 +598,18 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "/** @constructor @extends {Element} */ function HTMLScriptElement() {}\n");
 
     testWarning(
-        externs,
-        "(new HTMLScriptElement).textContent = 'alert(1);'",
+        externs(externs),
+        srcs("(new HTMLScriptElement).textContent = 'alert(1);'"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: Setting content of <script> is dangerous.");
 
     testWarning(
-        externs,
-        "HTMLScriptElement.prototype.textContent = 'alert(1);'",
+        externs(externs),
+        srcs("HTMLScriptElement.prototype.textContent = 'alert(1);'"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: Setting content of <script> is dangerous.");
 
-    testNoWarning(externs, "(new Element).textContent = 'safe'");
+    testNoWarning(externs(externs), srcs("(new Element).textContent = 'safe'"));
   }
 
   @Test
@@ -623,13 +624,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "}");
 
     testNoWarning(
-        DEFAULT_EXTERNS + lines(
-            "/** @constructor */",
-            "function Bar() {}",
-            "Bar.prototype.method = function() {};"),
-        lines(
-            "function Foo() {}",
-            "Foo.prototype.method = function() {};"));
+        externs(
+            DEFAULT_EXTERNS
+                + lines(
+                    "/** @constructor */",
+                    "function Bar() {}",
+                    "Bar.prototype.method = function() {};")),
+        srcs(lines("function Foo() {}", "Foo.prototype.method = function() {};")));
   }
 
   private void testConformance(String src1, String src2) {
@@ -1120,7 +1121,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String code =
         "/** @constructor @param {...*} a */ function C(a) {}\n";
 
-    testNoWarning(EXTERNS + "goog.inherits;", code + "goog.inherits(A, C);");
+    testNoWarning(externs(EXTERNS + "goog.inherits;"), srcs(code + "goog.inherits(A, C);"));
   }
 
   @Test
@@ -2141,49 +2142,45 @@ public final class CheckConformanceTest extends CompilerTestCase {
     String externs = EXTERNS + "String.prototype.prop;";
 
     testWarning(
-        externs,
-        "/** @param {string|null} n */ function f(n) { alert(n.prop); }",
+        externs(externs),
+        srcs("/** @param {string|null} n */ function f(n) { alert(n.prop); }"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 
     testWarning(
-        externs,
-        "/** @param {string|null} n */ function f(n) { alert(n['prop']); }",
+        externs(externs),
+        srcs("/** @param {string|null} n */ function f(n) { alert(n['prop']); }"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 
     testWarning(
-        externs,
-        "/** @param {string|null} n */"
-        + "function f(n) { alert('prop' in n); }",
+        externs(externs),
+        srcs("/** @param {string|null} n */" + "function f(n) { alert('prop' in n); }"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 
     testWarning(
-        externs,
-        "/** @param {string|undefined} n */ function f(n) { alert(n.prop); }",
+        externs(externs),
+        srcs("/** @param {string|undefined} n */ function f(n) { alert(n.prop); }"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 
     testWarning(
-        externs,
-        "/** @param {?Function} fnOrNull */ function f(fnOrNull) { fnOrNull(); }",
+        externs(externs),
+        srcs("/** @param {?Function} fnOrNull */ function f(fnOrNull) { fnOrNull(); }"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 
     testWarning(
-        externs,
-        "/** @param {?Function} fnOrNull */ function f(fnOrNull) { new fnOrNull(); }",
+        externs(externs),
+        srcs("/** @param {?Function} fnOrNull */ function f(fnOrNull) { new fnOrNull(); }"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 
     testNoWarning(
-        externs,
-        "/** @param {string} n */ function f(n) { alert(n.prop); }");
+        externs(externs), srcs("/** @param {string} n */ function f(n) { alert(n.prop); }"));
 
-    testNoWarning(
-        externs,
-        "/** @param {?} n */ function f(n) { alert(n.prop); }");
+    testNoWarning(externs(externs), srcs("/** @param {?} n */ function f(n) { alert(n.prop); }"));
   }
 
   @Test
@@ -2196,15 +2193,15 @@ public final class CheckConformanceTest extends CompilerTestCase {
     final String code = "/** @param {?String} n */ function f(n) { alert(n.prop); }";
 
     testWarning(
-        externs,
-        code,
+        externs(externs),
+        srcs(code),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");
 
     configuration =
         config(rule("BanNullDeref"), "My rule message", value("String"));
 
-    testNoWarning(externs, code);
+    testNoWarning(externs(externs), srcs(code));
   }
 
   @Test
@@ -2223,7 +2220,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
     final String code = lines(
         "/** @return {void} n */",
         "function f() { alert(ns.Type.State.OPEN); }");
-    testNoWarning(typedefExterns, code);
+    testNoWarning(externs(typedefExterns), srcs(code));
   }
 
   @Test
@@ -2300,20 +2297,20 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "/** @constructor */ goog.dom.DomHelper = function() {};");
 
     testWarning(
-        externs,
-        "document.createElement('script');",
+        externs(externs),
+        srcs("document.createElement('script');"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateElement Message");
 
     testWarning(
-        externs,
-        "new goog.dom.DomHelper().createElement('script');",
+        externs(externs),
+        srcs("new goog.dom.DomHelper().createElement('script');"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateElement Message");
 
     testWarning(
-        externs,
-        "function f(/** ?Document */ doc) { doc.createElement('script'); }",
+        externs(externs),
+        srcs("function f(/** ?Document */ doc) { doc.createElement('script'); }"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateElement Message");
 
@@ -2370,8 +2367,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "/** @constructor */ goog.dom.DomHelper = function() {};");
 
     testWarning(
-        externs,
-        "new goog.dom.DomHelper().createDom('iframe', {'src': src});",
+        externs(externs),
+        srcs("new goog.dom.DomHelper().createDom('iframe', {'src': src});"),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
@@ -2459,19 +2456,18 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "/** @constructor */ function HTMLDivElement() {}\n");
 
     testWarning(
-        externs,
-        lines(
-            "function f(/** !goog.dom.TagName<!HTMLDivElement> */ div) {",
-            "  goog.dom.createDom(div, 'red');",
-            "}"),
+        externs(externs),
+        srcs(
+            lines(
+                "function f(/** !goog.dom.TagName<!HTMLDivElement> */ div) {",
+                "  goog.dom.createDom(div, 'red');",
+                "}")),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
     testWarning(
-        externs,
-        lines(
-            "const TagName = goog.dom.TagName;",
-            "goog.dom.createDom(TagName.DIV, 'red');"),
+        externs(externs),
+        srcs(lines("const TagName = goog.dom.TagName;", "goog.dom.createDom(TagName.DIV, 'red');")),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
   }
@@ -2496,11 +2492,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
             "/** @constructor */ function HTMLHeadingElement() {}\n");
 
     testWarning(
-        externs,
-        lines(
-            "function f(/** !goog.dom.TagName<!HTMLHeadingElement> */ heading) {",
-            "  goog.dom.createDom(heading, 'red');",
-            "}"),
+        externs(externs),
+        srcs(
+            lines(
+                "function f(/** !goog.dom.TagName<!HTMLHeadingElement> */ heading) {",
+                "  goog.dom.createDom(heading, 'red');",
+                "}")),
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
   }

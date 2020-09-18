@@ -3035,59 +3035,65 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);
     allowExternsChanges();
     testNoWarning(
-        lines(
-            "/** @typeSummary */",
-            "goog.module('mod_B');",
-            "",
-            "/** @interface */ function B(){}",
-            "",
-            "exports = B;"),
-        lines(
-            "goog.module('mod_A');",
-            "",
-            "var B = goog.require('mod_B');",
-            "",
-            "/** @constructor @implements {B} */",
-            "function A() {}"));
+        externs(
+            lines(
+                "/** @typeSummary */",
+                "goog.module('mod_B');",
+                "",
+                "/** @interface */ function B(){}",
+                "",
+                "exports = B;")),
+        srcs(
+            lines(
+                "goog.module('mod_A');",
+                "",
+                "var B = goog.require('mod_B');",
+                "",
+                "/** @constructor @implements {B} */",
+                "function A() {}")));
 
     testNoWarning(
-        lines(
-            "/** @typeSummary */",
-            "goog.loadModule(function(exports) { 'use strict';",
-            "  goog.module('mod_B');",
-            "",
-            "  /** @interface */ function B(){}",
-            "",
-            "  exports = B;",
-            "  return exports;",
-            "});"),
-        lines(
-            "goog.module('mod_A');",
-            "",
-            "var B = goog.require('mod_B');",
-            "",
-            "/** @constructor @implements {B} */",
-            "function A() {}"));
+        externs(
+            lines(
+                "/** @typeSummary */",
+                "goog.loadModule(function(exports) { 'use strict';",
+                "  goog.module('mod_B');",
+                "",
+                "  /** @interface */ function B(){}",
+                "",
+                "  exports = B;",
+                "  return exports;",
+                "});")),
+        srcs(
+            lines(
+                "goog.module('mod_A');",
+                "",
+                "var B = goog.require('mod_B');",
+                "",
+                "/** @constructor @implements {B} */",
+                "function A() {}")));
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     testNoWarning(
-        lines(
-            "/** @typeSummary */",
-            "goog.loadModule(function(exports) { 'use strict';",
-            "  goog.module('mod_B');",
-            "",
-            "  /** @interface */ function B(){}",
-            "",
-            "  exports.B = B;",
-            "  return exports;",
-            "});"),
-        lines(
-            "goog.module('mod_A');",
-            "",
-            "var {B} = goog.require('mod_B');",
-            "",
-            "/** @constructor @implements {B} */",
-            "function A() {}"));
+        externs(
+            lines(
+                "/** @typeSummary */",
+                "goog.loadModule(function(exports) { 'use strict';",
+                "  goog.module('mod_B');",
+                "",
+                "  /** @interface */ function B(){}",
+                "",
+                "  exports.B = B;",
+                "  return exports;",
+                "});")),
+        srcs(
+            lines(
+                "goog.module('mod_A');",
+                "",
+                "var {B} = goog.require('mod_B');",
+                "",
+                "/** @constructor @implements {B} */",
+                "function A() {}")));
   }
 
   @Test

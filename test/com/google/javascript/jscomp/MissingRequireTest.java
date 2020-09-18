@@ -611,7 +611,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
   @Test
   public void testPassConstantFromExterns() {
-    testNoWarning("var example;", "alert(example.Constants.FOO);");
+    testNoWarning(externs("var example;"), srcs("alert(example.Constants.FOO);"));
   }
 
   @Test

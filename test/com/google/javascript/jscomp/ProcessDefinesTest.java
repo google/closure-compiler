@@ -164,9 +164,9 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   @Test
   public void testNonDefineInExternsPlusUsage() {
     testError(
-        DEFAULT_EXTERNS + "/** @const {boolean} */ var EXTERN_NON_DEF;",
-        "/** @define {boolean} */ var DEF = EXTERN_NON_DEF",
-        ProcessDefines.INVALID_DEFINE_VALUE);
+        externs(DEFAULT_EXTERNS + "/** @const {boolean} */ var EXTERN_NON_DEF;"),
+        srcs("/** @define {boolean} */ var DEF = EXTERN_NON_DEF"),
+        error(ProcessDefines.INVALID_DEFINE_VALUE));
   }
 
   @Test

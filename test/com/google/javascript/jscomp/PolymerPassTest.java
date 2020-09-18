@@ -640,12 +640,13 @@ public class PolymerPassTest extends CompilerTestCase {
     allowSourcelessWarnings(); // the missing Polymer externs warning has no source, since it's not
     // about any particular file
     testError(
-        /* externs= */ "",
-        lines(
-            "var X = Polymer({", //
-            "  is: 'x-element',",
-            "});"),
-        PolymerPassErrors.POLYMER_MISSING_EXTERNS);
+        externs(""),
+        srcs(
+            lines(
+                "var X = Polymer({", //
+                "  is: 'x-element',",
+                "});")),
+        error(PolymerPassErrors.POLYMER_MISSING_EXTERNS));
   }
 
   @Test
@@ -5264,12 +5265,12 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   @Override
-  public void testError(String externs, String js, DiagnosticType error) {
+  public void testError(Externs externs, Sources srcs, Diagnostic error) {
     polymerVersion = 1;
-    super.testError(externs, js, error);
+    super.testError(externs, srcs, error);
 
     polymerVersion = 2;
-    super.testError(externs, js, error);
+    super.testError(externs, srcs, error);
   }
 
   @Override

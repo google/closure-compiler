@@ -330,7 +330,7 @@ public final class VarCheckTest extends CompilerTestCase {
   @Test
   public void testVarReferenceInExterns_withEs6Modules() {
     // vars in ES6 modules are not in global scope, so foo is undefined.
-    testError("foo;", "export var foo;", VarCheck.UNDEFINED_VAR_ERROR);
+    testError(externs("foo;"), srcs("export var foo;"), error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   @Test
@@ -1046,7 +1046,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testGoogForwardDeclare_canBeReferencedInExternsIfInCode() {
     testNoWarning(
         // Allow referencing `goog` in externs even though it is actually only defined in code.
-        "goog.forwardDeclare('a.b.C');", "var /** !a.b.C */ c; var goog;");
+        externs("goog.forwardDeclare('a.b.C');"), srcs("var /** !a.b.C */ c; var goog;"));
     checkSynthesizedExtern(
         // Don't synthesize an extern for 'goog'.
         "goog.forwardDeclare('a.b.C');",

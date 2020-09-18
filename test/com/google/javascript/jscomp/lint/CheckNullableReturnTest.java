@@ -256,8 +256,8 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
   public void testNonfunctionTypeDoesntCrash() {
     enableClosurePass();
     testNoWarning(
-        DEFAULT_EXTERNS,
-        "goog.forwardDeclare('FunType'); /** @type {!FunType} */ (function() { return; })");
+        externs(DEFAULT_EXTERNS),
+        srcs("goog.forwardDeclare('FunType'); /** @type {!FunType} */ (function() { return; })"));
   }
 
   private static String createFunction(String body) {
