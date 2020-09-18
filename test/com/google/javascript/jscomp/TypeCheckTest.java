@@ -1127,36 +1127,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testTypeOfReduction8() {
-    testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @param {number|string} x\n@return {string} */\n" +
-        "function f(x) {\n" +
-        "return goog.isString(x) && x.length == 3 ? x : 'a';\n" +
-        "}", null);
-  }
-
-  @Test
-  public void testTypeOfReduction9() {
-    testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @param {!Array|string} x\n@return {string} */\n" +
-        "function f(x) {\n" +
-        "return goog.isArray(x) ? 'a' : x;\n" +
-        "}", null);
-  }
-
-  @Test
-  public void testTypeOfReduction10() {
-    testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @param {Array|string} x\n@return {Array} */\n" +
-        "function f(x) {\n" +
-        "return goog.isArray(x) ? x : [];\n" +
-        "}", null);
-  }
-
-  @Test
   public void testTypeOfReduction11() {
     testClosureTypes(
         CLOSURE_DEFS +
@@ -1240,16 +1210,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "function(a) {this.a = a};\n" +
         "/** @return {string} */ T.prototype.f = function() {\n" +
         "return typeof this.a == 'string' ? this.a : 'a'; }");
-  }
-
-  @Test
-  public void testQualifiedNameReduction4() {
-    testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @param {string|Array} a\n@constructor */ var T = " +
-        "function(a) {this.a = a};\n" +
-        "/** @return {string} */ T.prototype.f = function() {\n" +
-        "return goog.isString(this.a) ? this.a : 'a'; }", null);
   }
 
   @Test
@@ -3417,20 +3377,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testInnerFunction6() {
-    testClosureTypes(
-        CLOSURE_DEFS +
-        "function f() {" +
-        " var x = 0 || function() {};\n" +
-        " function g() { if (goog.isFunction(x)) { x(1); } }" +
-        " g();" +
-        "}",
-        "Function x: called with 1 argument(s). " +
-        "Function requires at least 0 argument(s) " +
-        "and no more than 0 argument(s).");
-  }
-
-  @Test
   public void testInnerFunction6NullishCoalesce() {
     testClosureTypes(
         lines(
@@ -3443,21 +3389,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "Function x: called with 1 argument(s). "
             + "Function requires at least 0 argument(s) "
             + "and no more than 0 argument(s).");
-  }
-
-  @Test
-  public void testInnerFunction7() {
-    testClosureTypes(
-        CLOSURE_DEFS +
-        "function f() {" +
-        " /** @type {number|function()} */" +
-        " var x = 0 || function() {};\n" +
-        " function g() { if (goog.isFunction(x)) { x(1); } }" +
-        " g();" +
-        "}",
-        "Function x: called with 1 argument(s). " +
-        "Function requires at least 0 argument(s) " +
-        "and no more than 0 argument(s).");
   }
 
   @Test
@@ -8755,66 +8686,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "};"),
         (String) null,
         /* isError= */ false);
-  }
-
-  @Test
-  public void testClosure1() {
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string|undefined} */var a;"
-            + "/** @type {string} */"
-            + "var b = goog.isDef(a) ? a : 'default';",
-        null);
-  }
-
-  @Test
-  public void testClosure2() {
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string?} */var a;"
-            + "/** @type {string} */"
-            + "var b = goog.isNull(a) ? 'default' : a;",
-        null);
-  }
-
-  @Test
-  public void testClosure3() {
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string|null|undefined} */var a;"
-            + "/** @type {string} */"
-            + "var b = goog.isDefAndNotNull(a) ? a : 'default';",
-        null);
-  }
-
-  @Test
-  public void testClosure4() {
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string|undefined} */var a;"
-            + "/** @type {string} */"
-            + "var b = !goog.isDef(a) ? 'default' : a;",
-        null);
-  }
-
-  @Test
-  public void testClosure5() {
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string?} */var a;"
-            + "/** @type {string} */"
-            + "var b = !goog.isNull(a) ? a : 'default';",
-        null);
-  }
-
-  @Test
-  public void testClosure6() {
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "/** @type {string|null|undefined} */var a;"
-            + "/** @type {string} */"
-            + "var b = !goog.isDefAndNotNull(a) ? 'default' : a;",
-        null);
   }
 
   @Test

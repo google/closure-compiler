@@ -32,7 +32,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_RESOLVED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
@@ -1771,47 +1770,6 @@ public final class TypeInferenceTest {
 
     verify("out1", startType);
     verify("y", STRING_OBJECT_TYPE);
-  }
-
-  @Test
-  public void testAssertWithIsDefAndNotNull() {
-    JSType startType = createNullableType(NUMBER_TYPE);
-    assuming("x", startType);
-    inFunction(
-        "out1 = x;" +
-        "goog.asserts.assert(goog.isDefAndNotNull(x));" +
-        "out2 = x;");
-    verify("out1", startType);
-    verify("out2", NUMBER_TYPE);
-  }
-
-  @Test
-  public void testIsDefAndNoResolvedType() {
-    JSType startType = createUndefinableType(NO_RESOLVED_TYPE);
-    assuming("x", startType);
-    inFunction(
-        "out1 = x;" +
-        "if (goog.isDef(x)) { out2a = x; out2b = x.length; out2c = x; }" +
-        "out3 = x;" +
-        "if (goog.isDef(x)) { out4 = x; }");
-    verify("out1", startType);
-    verify("out2a", NO_RESOLVED_TYPE);
-    verify("out2b", CHECKED_UNKNOWN_TYPE);
-    verify("out2c", NO_RESOLVED_TYPE);
-    verify("out3", startType);
-    verify("out4", NO_RESOLVED_TYPE);
-  }
-
-  @Test
-  public void testAssertWithNotIsNull() {
-    JSType startType = createNullableType(NUMBER_TYPE);
-    assuming("x", startType);
-    inFunction(
-        "out1 = x;" +
-        "goog.asserts.assert(!goog.isNull(x));" +
-        "out2 = x;");
-    verify("out1", startType);
-    verify("out2", NUMBER_TYPE);
   }
 
   @Test

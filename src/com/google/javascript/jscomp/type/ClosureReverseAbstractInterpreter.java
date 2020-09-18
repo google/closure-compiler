@@ -16,12 +16,8 @@
 
 package com.google.javascript.jscomp.type;
 
-import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -36,16 +32,11 @@ import java.util.Map;
 import javax.annotation.CheckReturnValue;
 
 /**
- * A reverse abstract interpreter (RAI) for specific closure patterns such as
- * {@code goog.isObject}.
+ * A reverse abstract interpreter (RAI) for specific closure patterns such as {@code goog.isObject}.
  */
-public final class ClosureReverseAbstractInterpreter
-    extends ChainableReverseAbstractInterpreter {
+public final class ClosureReverseAbstractInterpreter extends ChainableReverseAbstractInterpreter {
 
-  /**
-   * For when {@code goog.isObject} returns true. This includes functions, but
-   * not {@code null}.
-   */
+  /** For when {@code goog.isObject} returns true. This includes functions, but not {@code null}. */
   private final Visitor<JSType> restrictToObjectVisitor =
       new RestrictByTrueTypeOfResultVisitor() {
         @Override
@@ -86,54 +77,6 @@ public final class ClosureReverseAbstractInterpreter
     this.restricters =
         new ImmutableMap.Builder<String, Function<TypeRestriction, JSType>>()
             .put(
-                "isDef",
-                p -> {
-                  if (p.outcome) {
-                    return p.type != null ? p.type.restrictByNotUndefined() : null;
-                  } else {
-                    return p.type != null
-                        ? getNativeType(VOID_TYPE).getGreatestSubtype(p.type)
-                        : null;
-                  }
-                })
-            .put(
-                "isNull",
-                p -> {
-                  if (p.outcome) {
-                    return p.type != null
-                        ? getNativeType(NULL_TYPE).getGreatestSubtype(p.type)
-                        : null;
-                  } else {
-                    return p.type != null ? p.type.restrictByNotNull() : null;
-                  }
-                })
-            .put(
-                "isDefAndNotNull",
-                p -> {
-                  if (p.outcome) {
-                    return p.type != null ? p.type.restrictByNotNullOrUndefined() : null;
-                  } else {
-                    return p.type != null
-                        ? getNativeType(NULL_VOID).getGreatestSubtype(p.type)
-                        : null;
-                  }
-                })
-            .put("isString", p -> getRestrictedByTypeOfResult(p.type, "string", p.outcome))
-            .put("isBoolean", p -> getRestrictedByTypeOfResult(p.type, "boolean", p.outcome))
-            .put("isNumber", p -> getRestrictedByTypeOfResult(p.type, "number", p.outcome))
-            .put("isFunction", p -> getRestrictedByTypeOfResult(p.type, "function", p.outcome))
-            .put(
-                "isArray",
-                p -> {
-                  if (p.type == null) {
-                    return p.outcome ? getNativeType(ARRAY_TYPE) : null;
-                  }
-
-                  Visitor<JSType> visitor =
-                      p.outcome ? restrictToArrayVisitor : restrictToNotArrayVisitor;
-                  return p.type.visit(visitor);
-                })
-            .put(
                 "isObject",
                 p -> {
                   if (p.type == null) {
@@ -154,21 +97,18 @@ public final class ClosureReverseAbstractInterpreter
       Node callee = condition.getFirstChild();
       Node param = condition.getLastChild();
       if (callee.isGetProp() && param.isQualifiedName()) {
-        JSType paramType =  getTypeIfRefinable(param, blindScope);
+        JSType paramType = getTypeIfRefinable(param, blindScope);
         Node left = callee.getFirstChild();
         Node right = callee.getLastChild();
-        if (left.isName() && "goog".equals(left.getString()) &&
-            right.isString()) {
-          Function<TypeRestriction, JSType> restricter =
-              restricters.get(right.getString());
+        if (left.isName() && "goog".equals(left.getString()) && right.isString()) {
+          Function<TypeRestriction, JSType> restricter = restricters.get(right.getString());
           if (restricter != null) {
             return restrictParameter(param, paramType, blindScope, restricter, outcome.isTruthy());
           }
         }
       }
     }
-    return nextPreciserScopeKnowingConditionOutcome(
-        condition, blindScope, outcome);
+    return nextPreciserScopeKnowingConditionOutcome(condition, blindScope, outcome);
   }
 
   @CheckReturnValue
