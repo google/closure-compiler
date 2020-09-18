@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.rhino.Node;
+import com.google.javascript.jscomp.DiagnosticType;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,19 +70,15 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
+    return (externs, root) -> {
+      Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
+      propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {
-        Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
-        propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
+      // This must be created after type checking is run as it depends on
+      // any mismatches found during checking.
+      lastPass = new DisambiguateProperties(compiler, propertiesToErrorFor);
 
-        // This must be created after type checking is run as it depends on
-        // any mismatches found during checking.
-        lastPass = new DisambiguateProperties(compiler, propertiesToErrorFor);
-
-        lastPass.process(externs, root);
-      }
+      lastPass.process(externs, root);
     };
   }
 
@@ -2565,6 +2561,40 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets("", js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
   }
 
+  // Tests that the optional chain accesses to the old property name get replaced with optional
+  // chain accesses to the new property name.
+  @Test
+  public void testSimpleOptionalChain() {
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            " this.a = 0;",
+            "}",
+            // optional chain access must disambiguate to `this?.Foo$a`
+            "Foo.prototype.f = function() { return this?.a;}",
+            "/** @constructor */",
+            "function Bar() {",
+            " this.a = 0;",
+            "}",
+            // optional chain access must disambiguate to `this?.Bar$a`
+            "Bar.prototype.f = function() { return this?.a;}");
+    String output =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            " this.Foo$a = 0;",
+            "}",
+            "Foo.prototype.Foo_prototype$f = function() { return this?.Foo$a;}", //  `this?.Foo$a`
+            "/** @constructor */",
+            "function Bar() {",
+            " this.Bar$a = 0;",
+            "}",
+            "Bar.prototype.Bar_prototype$f = function() { return this?.Bar$a;}" // `this?.Bar$a`
+            );
+    test(srcs(js), expected(output));
+  }
+
   @Test
   public void testIgnoreSpecializedProperties() {
     String js = lines(
@@ -2602,6 +2632,50 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "  this.Bar$a = 3;",
         "  this.Bar$b = 2;",
         "}");
+
+    test(srcs(js), expected(output));
+  }
+
+  @Test
+  public void testIgnoreSpecializedProperties_optionalChaining() {
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {?Array<number>} */",
+            "  this.a = null;",
+            "  this.b = 1;",
+            "}",
+            "Foo.prototype.f = function() {",
+            // optional chain access must disambiguate to `this?.Foo$a`
+            "  if (this?.a == null) {",
+            "    this.a = [];",
+            "  }",
+            "};",
+            "/** @constructor */",
+            "function Bar() {",
+            "  this.a = 3;",
+            "  this.b = 2;",
+            "}");
+
+    String output =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {?Array<number>} */",
+            "  this.Foo$a = null;",
+            "  this.Foo$b = 1;",
+            "}",
+            "Foo.prototype.f = function() {",
+            "  if (this?.Foo$a == null) {",
+            "    this.Foo$a = [];",
+            "  }",
+            "};",
+            "/** @constructor */",
+            "function Bar() {",
+            "  this.Bar$a = 3;",
+            "  this.Bar$b = 2;",
+            "}");
 
     test(srcs(js), expected(output));
   }
@@ -2787,6 +2861,23 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSame(js);
   }
 
+  // For optional chaining version of the above test, ctor is not inferred as the constructor type.
+  @Test
+  public void testConstructingUnknownInstance_optionalChaining() {
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.abc = 123;",
+            "}",
+            "/** @param {function(new:?)} ctor */",
+            "function f(ctor) {",
+            "  if (ctor?.abc) { return ctor?.abc; }",
+            "}");
+    testWarning(
+        js, DiagnosticType.error("JSC_INEXISTENT_PROPERTY", "Property abc never defined on ctor"));
+  }
+
   // TODO(b/142431852): Delete this test as obsolete.
   @Test
   public void testDontCrashWhenConstructingPrimitve() {
@@ -2808,6 +2899,29 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "f(0);");
 
     testSame(js);
+  }
+
+  @Test
+  public void testConstructingPrimitve_optionalChain() {
+    String js =
+        lines(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.abc = 123;",
+            "}",
+            "/**",
+            " * @template T",
+            " * @param {T} value",
+            " * @param {function(new:T)=} ctor",
+            " */",
+            "function f(value, ctor) {",
+            "  if (ctor?.abc) { return ctor?.abc; }",
+            "}",
+            // Bind `T` to `number` at this invocation.
+            "f(0);");
+
+    testWarning(
+        js, DiagnosticType.error("JSC_INEXISTENT_PROPERTY", "Property abc never defined on ctor"));
   }
 
   @Test
@@ -2944,6 +3058,23 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "",
         "var args = [1, 2];",
         "goog.array.foobar(...args);");
+
+    // TODO(b/37673673): This should compile with no errors.
+    test(srcs(js), error(INVALIDATION).withMessageContaining("foobar"));
+  }
+
+  @Test
+  public void testInvalidationOnNamespaceType_optionalChaining() {
+    enableTranspile();
+
+    String js =
+        lines(
+            "var goog = {};",
+            "goog.array = {};",
+            "goog.array.foobar = function(var_args) {}",
+            "",
+            "var args = [1, 2];",
+            "goog.array.foobar?.(...args);");
 
     // TODO(b/37673673): This should compile with no errors.
     test(srcs(js), error(INVALIDATION).withMessageContaining("foobar"));
@@ -3925,11 +4056,11 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   /**
-   * Compiles the code and checks that the set of types for each field matches
-   * the expected value.
+   * Compiles the code and checks that the set of types for each field matches the expected value.
    *
-   * <p>The format for the set of types for fields is:
-   * {field=[[Type1, Type2]]}
+   * <p>The format for the set of types for fields is: {field=[[Type1, Type2]]}
+   *
+   * <p>The fields and their corresponding types must be passed in a sorted order.
    */
   private void testSets(String js, final String fieldTypes) {
     test(srcs(js));
@@ -3940,6 +4071,8 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
    * Compiles the code and checks that the set of types for each field matches the expected value.
    *
    * <p>The format for the set of types for fields is: {field=[[Type1, Type2]]}
+   *
+   * <p>The fields and their corresponding types must be passed in a sorted order.
    */
   private void testSets(String js, final String fieldTypes, DiagnosticGroup warning) {
     ignoreWarnings(warning);

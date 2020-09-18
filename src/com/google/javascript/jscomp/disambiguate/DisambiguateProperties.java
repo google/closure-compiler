@@ -63,7 +63,7 @@ import javax.annotation.Nullable;
  * name. Two properties are considered related if they share a definition on their prototype chains,
  * or if they are potentially referenced together via union types.
  *
- * <p>Renamimg only occurs if there are two or more distinct properties with the same name.
+ * <p>Renaming only occurs if there are two or more distinct properties with the same name.
  *
  * <p>This pass allows other passes, such as inlining and code removal to take advantage of type
  * information implicitly.
@@ -395,7 +395,7 @@ public class DisambiguateProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, externs, new FindExternProperties());
     // Look at each unquoted property access and decide if that property will
     // be renamed.
-    NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
+    NodeTraversal.traverse(compiler, root, new FindRenamableProperties());
     // Do the actual renaming.
     renameProperties();
     // Update any getters and setters we renamed.
@@ -417,7 +417,7 @@ public class DisambiguateProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // TODO(johnlenz): Support object-literal property definitions.
-      if (n.isGetProp()) {
+      if (n.isGetProp() || n.isOptChainGetProp()) {
         Node recv = n.getFirstChild();
         JSType recvType = getType(recv);
         Property prop = getProperty(n.getLastChild().getString());
@@ -522,14 +522,14 @@ public class DisambiguateProperties implements CompilerPass {
    * Traverses the tree, building a map from field names to Nodes for all fields that can be
    * renamed.
    */
-  private class FindRenameableProperties extends AbstractScopedCallback {
+  private class FindRenamableProperties extends AbstractScopedCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isGetProp()) {
+      if (NodeUtil.isNormalOrOptChainGetProp(n)) {
         handleGetProp(n);
       } else if (n.isObjectLit()) {
         handleObjectLit(n);
-      } else if (n.isCall()) {
+      } else if (NodeUtil.isNormalOrOptChainCall(n)) {
         handleCall(n);
       } else if (n.isClass()) {
         handleClass(n);
@@ -598,8 +598,12 @@ public class DisambiguateProperties implements CompilerPass {
       String functionName = target.getOriginalQualifiedName();
       if (functionName != null
           && compiler.getCodingConvention().isPropertyRenameFunction(functionName)) {
+        // We intentionally do not handle optional `goog.reflect.objectProperty?.()` because we
+        // expect it to be defined or polyfill-ed
         handlePropertyRenameFunctionCall(call, functionName);
       } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
+        // We intentionally do not check optional Object.defineProperties?.() because we expect it
+        // to be defined or polyfill-ed
         handleObjectDefineProperties(call);
       }
     }
