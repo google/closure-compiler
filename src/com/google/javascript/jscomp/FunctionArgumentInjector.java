@@ -43,10 +43,6 @@ class FunctionArgumentInjector {
 
   static final String REST_MARKER = "rest param";
 
-  static final String DEFAULT_MARKER = "Default Value";
-
-  static final String OBJECT_PATTERN_MARKER = "object pattern";
-
   private final AstAnalyzer astAnalyzer;
 
   FunctionArgumentInjector(AstAnalyzer astAnalyzer) {
@@ -381,6 +377,9 @@ class FunctionArgumentInjector {
         case OR:
         case HOOK:
         case COALESCE:
+        case OPTCHAIN_CALL:
+        case OPTCHAIN_GETELEM:
+        case OPTCHAIN_GETPROP:
           return true;
         default:
           break;
