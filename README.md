@@ -7,7 +7,7 @@ The [Closure Compiler](https://developers.google.com/closure/compiler/) is a too
 
 ## Getting Started
  * Pre-compiled releases of the compiler are available via:
-   - [Maven](https://github.com/google/closure-compiler/wiki/Maven)
+   - [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler)
    - [NPM](https://www.npmjs.com/package/google-closure-compiler) - includes java, native and javascript versions.
  * See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
