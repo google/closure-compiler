@@ -764,10 +764,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(rewriteGlobalDeclarationsForTryCatchWrapping);
     }
 
-    if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.MAPPED) {
-      passes.add(nameMappedAnonymousFunctions);
-    }
-
     // The mapped name anonymous function pass makes use of information that
     // the extract prototype member declarations pass removes so the former
     // happens before the latter.
@@ -855,10 +851,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.foldConstants) {
       passes.add(latePeepholeOptimizations);
-    }
-
-    if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.UNMAPPED) {
-      passes.add(nameUnmappedAnonymousFunctions);
     }
 
     // If side-effects were protected, remove the protection now.
@@ -2376,12 +2368,10 @@ public final class DefaultPassConfig extends PassConfig {
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
               (compiler) -> {
-                boolean preserveAnonymousFunctionNames =
-                    options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
                 return new RemoveUnusedCode.Builder(compiler)
                     .removeLocalVars(options.removeUnusedLocalVars)
                     .removeGlobals(options.removeUnusedVars)
-                    .preserveFunctionExpressionNames(preserveAnonymousFunctionNames)
+                    .preserveFunctionExpressionNames(false)
                     .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
                     .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
                     .removeUnusedObjectDefinePropertiesDefinitions(
@@ -2514,31 +2504,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  private final PassFactory nameUnmappedAnonymousFunctions =
-      PassFactory.builder()
-          .setName(PassNames.NAME_ANONYMOUS_FUNCTIONS)
-          .setInternalFactory(NameAnonymousFunctions::new)
-          .setFeatureSetForOptimizations()
-          .build();
-
-  private final PassFactory nameMappedAnonymousFunctions =
-      PassFactory.builder()
-          .setName(PassNames.NAME_ANONYMOUS_FUNCTIONS)
-          .setInternalFactory(
-              (compiler) ->
-                  new CompilerPass() {
-                    @Override
-                    public void process(Node externs, Node root) {
-                      NameAnonymousFunctionsMapped naf =
-                          new NameAnonymousFunctionsMapped(
-                              compiler, options.inputAnonymousFunctionNamingMap);
-                      naf.process(externs, root);
-                      compiler.setAnonymousFunctionNameMap(naf.getFunctionMap());
-                    }
-                  })
-          .setFeatureSetForOptimizations()
-          .build();
-
   /** Alias string literals with global variables, to avoid creating lots of transient objects. */
   private final PassFactory aliasStrings =
       PassFactory.builder()
@@ -2664,10 +2629,7 @@ public final class DefaultPassConfig extends PassConfig {
   private VariableMap runVariableRenaming(
       AbstractCompiler compiler, VariableMap prevVariableMap,
       Node externs, Node root) {
-    char[] reservedChars =
-        options.anonymousFunctionNaming.getReservedCharacters();
-    boolean preserveAnonymousFunctionNames =
-        options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
+    char[] reservedChars = null;
     Set<String> reservedNames = new HashSet<>();
     if (options.renamePrefixNamespace != null) {
       // don't use the prefix name as a global symbol.
@@ -2675,17 +2637,18 @@ public final class DefaultPassConfig extends PassConfig {
     }
     reservedNames.addAll(compiler.getExportedNames());
     reservedNames.addAll(ParserRunner.getReservedVars());
-    RenameVars rn = new RenameVars(
-        compiler,
-        options.renamePrefix,
-        options.variableRenaming == VariableRenamingPolicy.LOCAL,
-        preserveAnonymousFunctionNames,
-        options.generatePseudoNames,
-        options.preferStableNames,
-        prevVariableMap,
-        reservedChars,
-        reservedNames,
-        options.nameGenerator);
+    RenameVars rn =
+        new RenameVars(
+            compiler,
+            options.renamePrefix,
+            options.variableRenaming == VariableRenamingPolicy.LOCAL,
+            /* preserveFunctionExpressionNames= */ false,
+            options.generatePseudoNames,
+            options.preferStableNames,
+            prevVariableMap,
+            reservedChars,
+            reservedNames,
+            options.nameGenerator);
     rn.process(externs, root);
     return rn.getVariableMap();
   }

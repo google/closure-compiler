@@ -126,8 +126,6 @@ final class RenameVars implements CompilerPass {
   /**
    * Whether function expression names should be preserved. Typically, for
    * debugging purposes.
-   *
-   * @see NameAnonymousFunctions
    */
   private final boolean preserveFunctionExpressionNames;
 

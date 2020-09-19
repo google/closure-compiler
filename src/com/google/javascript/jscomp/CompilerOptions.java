@@ -671,12 +671,6 @@ public class CompilerOptions implements Serializable {
   /** Input sourcemap files, indexed by the JS files they refer to */
   ImmutableMap<String, SourceMapInput> inputSourceMaps;
 
-  /** Give anonymous functions names for easier debugging */
-  public AnonymousFunctionNamingPolicy anonymousFunctionNaming;
-
-  /** Input anonymous function renaming map. */
-  VariableMap inputAnonymousFunctionNamingMap;
-
   /**
    * Input variable renaming map.
    * <p>During renaming, the compiler uses this map and the inputPropertyMap to
@@ -1363,7 +1357,6 @@ public class CompilerOptions implements Serializable {
     devirtualizeMethods = false;
     disambiguateProperties = false;
     ambiguateProperties = false;
-    anonymousFunctionNaming = AnonymousFunctionNamingPolicy.OFF;
     exportTestFunctions = false;
     nameGenerator = new DefaultNameGenerator();
 
@@ -2406,15 +2399,6 @@ public class CompilerOptions implements Serializable {
     return this.ambiguateProperties;
   }
 
-  public void setAnonymousFunctionNaming(
-      AnonymousFunctionNamingPolicy anonymousFunctionNaming) {
-    this.anonymousFunctionNaming = anonymousFunctionNaming;
-  }
-
-  public void setInputAnonymousFunctionNamingMap(VariableMap inputMap) {
-    this.inputAnonymousFunctionNamingMap = inputMap;
-  }
-
   public void setInputVariableMap(VariableMap inputVariableMap) {
     this.inputVariableMap = inputVariableMap;
   }
@@ -2908,7 +2892,6 @@ public class CompilerOptions implements Serializable {
             .add("allowHotswapReplaceScript", allowsHotswapReplaceScript())
             .add("ambiguateProperties", ambiguateProperties)
             .add("angularPass", angularPass)
-            .add("anonymousFunctionNaming", anonymousFunctionNaming)
             .add("assumeClosuresOnlyCaptureReferences", assumeClosuresOnlyCaptureReferences)
             .add("assumeGettersArePure", assumeGettersArePure)
             .add("assumeStrictThis", assumeStrictThis())
@@ -2978,7 +2961,6 @@ public class CompilerOptions implements Serializable {
             .add("inlineLocalVariables", inlineLocalVariables)
             .add("inlineProperties", inlineProperties)
             .add("inlineVariables", inlineVariables)
-            .add("inputAnonymousFunctionNamingMap", inputAnonymousFunctionNamingMap)
             .add("inputDelimiter", inputDelimiter)
             .add("inputPropertyMap", inputPropertyMap)
             .add("inputSourceMaps", inputSourceMaps)
@@ -3463,7 +3445,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public char[] getPropertyReservedNamingFirstChars() {
-    char[] reservedChars = anonymousFunctionNaming.getReservedCharacters();
+    char[] reservedChars = null;
     if (polymerVersion != null && polymerVersion > 1) {
       if (reservedChars == null) {
         reservedChars = POLYMER_PROPERTY_RESERVED_FIRST_CHARS;
@@ -3481,7 +3463,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public char[] getPropertyReservedNamingNonFirstChars() {
-    char[] reservedChars = anonymousFunctionNaming.getReservedCharacters();
+    char[] reservedChars = null;
     if (polymerVersion != null && polymerVersion > 1) {
       if (reservedChars == null) {
         reservedChars = POLYMER_PROPERTY_RESERVED_NON_FIRST_CHARS;

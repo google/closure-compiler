@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCommandLineRunner;
-import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CompilationLevel;
@@ -1922,9 +1921,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setRemoveUnusedVariables(Reach.ALL);
     test(options, code, "(function() {})();var g = function() {}; g();");
-
-    options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
-    test(options, code, "(function f() {})();var g = function $g$() {}; g();");
   }
 
   @Test
@@ -2028,45 +2024,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.rewriteGlobalDeclarationsForTryCatchWrapping = true;
     test(options, code, "var f = function() { return 3; }; var x = f();");
-  }
-
-  @Test
-  public void testNameAnonymousFunctions() {
-    CompilerOptions options = createCompilerOptions();
-    String code = "var f = function() {};";
-    testSame(options, code);
-
-    options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.MAPPED);
-    test(options, code, "var f = function $() {}");
-    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNotNull();
-
-    options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
-    test(options, code, "var f = function $f$() {}");
-    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNull();
-  }
-
-  @Test
-  public void testNameAnonymousFunctionsWithVarRemoval() {
-    CompilerOptions options = createCompilerOptions();
-    options.setRemoveUnusedVariables(CompilerOptions.Reach.LOCAL_ONLY);
-    options.setInlineVariables(true);
-    String code = "var f = function longName() {}; var g = function() {};" +
-        "function longerName() {} var i = longerName;";
-    test(options, code,
-         "var f = function() {}; var g = function() {}; " +
-         "var i = function() {};");
-
-    options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.MAPPED);
-    test(options, code,
-        "var f = function longName() {}; var g = function $() {};"
-        + "var i = function longerName(){};");
-    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNotNull();
-
-    options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
-    test(options, code,
-        "var f = function longName() {}; var g = function $g$() {};"
-        + "var i = function longerName(){};");
-    assertThat(lastCompiler.getResult().namedAnonFunctionMap).isNull();
   }
 
   @Test

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.debugger.common;
 
 import static java.util.Comparator.comparing;
 
-import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -923,46 +922,6 @@ public enum CompilationParam {
     @Override
     public boolean isApplied(CompilerOptions options) {
       return options.generatePseudoNames;
-    }
-  },
-
-  /** Give anonymous functions names for easier debugging */
-  NAME_ANONYMOUS_FUNCTIONS(ParamGroup.MISC) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      if (value) {
-        options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
-      }
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.UNMAPPED;
-    }
-
-    @Override
-    public String getJavaInfo() {
-      return "options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED)";
-    }
-  },
-
-  /** Give anonymous functions mapped names for easier debugging */
-  NAME_ANONYMOUS_FUNCTIONS_MAPPED(ParamGroup.MISC) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      if (value) {
-        options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.MAPPED);
-      }
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.MAPPED;
-    }
-
-    @Override
-    public String getJavaInfo() {
-      return "options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.MAPPED)";
     }
   },
 

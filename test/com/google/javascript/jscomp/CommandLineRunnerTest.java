@@ -801,10 +801,9 @@ public final class CommandLineRunnerTest {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
     args.add("--warning_level=QUIET");
     args.add("--debug=true");
-    test("function Foo() {}" +
-        "Foo.x = 1;" +
-        "function f() {throw new Foo().x;} f();",
-        "throw (new function Foo() {}).$x$;");
+    test(
+        "function Foo() {}" + "Foo.x = 1;" + "function f() {throw new Foo().x;} f();",
+        "throw (new function() {}).$x$;");
   }
 
   @Test

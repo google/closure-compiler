@@ -91,7 +91,6 @@ public enum CompilationLevel {
   }
 
   public void setDebugOptionsForCompilationLevel(CompilerOptions options) {
-    options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
     options.generatePseudoNames = true;
     options.removeClosureAsserts = false;
     options.removeJ2clAsserts = false;
