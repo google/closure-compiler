@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package jscomp;
+
+option java_package = "com.google.javascript.jscomp.serialization";
+option java_multiple_files = true;
+
+// All of these proto definitions are in flux.  Please don't depend on them.
+
+message TypePool {
+  repeated Type type = 1;
+  // edges used for Closure Compiler property disambiguation/ambiguation
+  repeated SubtypingEdge disambiguation_edges = 2;
+}
+
+message TypePointer {
+  // required
+  oneof type {
+    int32 pool_offset = 1;
+    NativeType native_type = 2;
+  }
+  // for debugging only -- may not be present
+  string description_for_debug = 3;
+}
+
+message SubtypingEdge {
+  TypePointer subtype = 1;
+  TypePointer supertype = 2;
+}
+
+message UnionType {
+  repeated TypePointer union_member = 1;
+}
+
+message ObjectType {
+  // If true, type-based property optimizations will back off optimizations on
+  // properties related to this type.
+  bool is_invalidating = 2;
+  TypePointer instance_type = 3;
+  TypePointer prototype = 4;
+  string uuid = 5;
+
+  // TODO: move these into a separate message
+  string class_name = 1;
+  string filename = 9;
+}
+
+message Type {
+  oneof kind {
+    ObjectType object = 2;
+    UnionType union = 4;
+  }
+}
+
+/*
+ * Types that are built-in to a JavaScript engine and other types that occur
+ * very commonly in a JS program.
+ */
+enum NativeType {
+  // Type-system only type: The Closure '*' and '?', or TS 'any' and 'unknown'
+  // or the bottom type. (For the purposes of optimization we believe all these
+  // types may be treated identically)
+  UNKNOWN_TYPE = 0;
+
+  // JS primitive types
+  BOOLEAN_TYPE = 1;
+  STRING_TYPE = 2;
+  NUMBER_TYPE = 3;
+  // Optimizations treat null and void identically
+  NULL_OR_VOID_TYPE = 4;
+  SYMBOL_TYPE = 6;
+  BIGINT_TYPE = 7;
+
+  // Common object types
+  OBJECT_TYPE = 8;
+  OBJECT_FUNCTION_TYPE = 9;
+  OBJECT_PROTOTYPE = 10;
+
+  FUNCTION_TYPE = 11;
+  FUNCTION_FUNCTION_TYPE = 12;
+  FUNCTION_PROTOTYPE = 13;
+
+  REGEXP_TYPE = 14;
+  REGEXP_FUNCTION_TYPE = 15;
+}

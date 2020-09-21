@@ -77,6 +77,15 @@ load("@com_google_j2cl//build_defs:rules.bzl", "setup_j2cl_workspace", "j2cl_mav
 
 setup_j2cl_workspace()
 
+git_repository(
+    name = "protobuf_j2cl_rules",
+    commit = "abd9123e04713c9d8243c658970a438b4a4a0bf8",
+    remote = "git://github.com/google/j2cl-protobuf.git",
+)
+
+load("@protobuf_j2cl_rules//:repository.bzl", "load_j2cl_proto_repo_deps")
+load_j2cl_proto_repo_deps()
+
 
 ## Load Elemental2 repo ##
 

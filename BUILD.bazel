@@ -125,6 +125,7 @@ oss_java_library(
                 "src/com/google/javascript/jscomp/modules/**/*.java",
                 "src/com/google/javascript/jscomp/parsing/**/*.java",
                 "src/com/google/javascript/jscomp/regex/**/*.java",
+                "src/com/google/javascript/jscomp/serialization/**/*.java",
                 "src/com/google/javascript/jscomp/transpile/**/*.java",
                 "src/com/google/javascript/jscomp/type/**/*.java",
                 "src/com/google/javascript/refactoring/**/*.java",
@@ -145,6 +146,7 @@ oss_java_library(
         deps = [
             "//src/com/google/debugging/sourcemap/proto:mapping_java_proto",
             "//src/com/google/javascript/jscomp/conformance:conformance_java_proto",
+            "//src/com/google/javascript/rhino/typed_ast:typed_ast_java_proto",
             "@args4j_args4j",
             "@com_google_code_gson_gson",
             "@com_google_guava_failureaccess//jar",
@@ -207,6 +209,7 @@ gen_java_tests(
         ":compiler_tests_resources",
         "//src/com/google/debugging/sourcemap/proto:mapping_java_proto",
         "//src/com/google/javascript/jscomp/conformance:conformance_java_proto",
+        "//src/com/google/javascript/rhino/typed_ast:typed_ast_java_proto",
         "@args4j_args4j",
         "@com_google_code_gson_gson",
         "@com_google_guava_failureaccess//jar",
@@ -275,6 +278,7 @@ j2cl_library(
             "src/com/google/javascript/jscomp/regex/**/*.java",
             "src/com/google/javascript/jscomp/parsing/**/*.java",
             "src/com/google/javascript/jscomp/modules/**/*.java",
+            # "src/com/google/javascript/jscomp/serialization/**/*.java",
             "src/com/google/javascript/jscomp/type/**/*.java",
             "src/com/google/javascript/jscomp/graph/**/*.java",
             "src/com/google/javascript/jscomp/resources/GwtProperties.*",
@@ -286,6 +290,7 @@ j2cl_library(
             "src/com/google/javascript/jscomp/gwt/super/**/*.js",
         ],
         exclude = [
+            "src/com/google/javascript/rhino/serialization/**/*.java",
             "**/super-gwt/**",
             "**/testing/**",
             "src/com/google/javascript/jscomp/deps/PathUtil.java",
@@ -293,6 +298,7 @@ j2cl_library(
     ),
     js_suppress = ["deprecated"],
     deps = [
+        # "//src/com/google/javascript/rhino/typed_ast:typed_ast_j2cl_proto",
         ":auto_value-j2cl",
         "@com_google_code_findbugs_jsr305-j2cl",
         "@com_google_elemental2//:elemental2-core-j2cl",
