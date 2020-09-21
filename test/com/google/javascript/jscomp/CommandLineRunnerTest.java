@@ -2534,7 +2534,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testInstrumentCodeByLine() {
-    args.add("--instrument_code=LINE");
+    args.add("--instrument_for_coverage_option=LINE");
 
     test(
         "function foo(){ const answerToAll = 42; }",
@@ -2550,7 +2550,7 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testInstrumentCodeByBranch() {
-    args.add("--instrument_code=BRANCH");
+    args.add("--instrument_for_coverage_option=BRANCH");
 
     test(
         "function foo(){ const answerToAll = 42; }",
@@ -2563,14 +2563,14 @@ public final class CommandLineRunnerTest {
 
   @Test
   public void testInstrumentCodeMappingFileNotSet() {
-    args.add("--instrument_code=PRODUCTION");
+    args.add("--instrument_for_coverage_option=PRODUCTION");
 
     FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
             "Expected --instrument_mapping_report to be set when "
-                + "--instrument_code is set to Production");
+                + "--instrument_for_coverage_option is set to Production");
   }
 
   @Test
@@ -2581,13 +2581,13 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            "Expected --instrument_code to be passed with PRODUCTION "
+            "Expected --instrument_for_coverage_option to be passed with PRODUCTION "
                 + "when --instrument_mapping_report is set");
   }
 
   @Test
   public void testInstrumentCodeProductionArrayArgNotSet() {
-    args.add("--instrument_code=PRODUCTION");
+    args.add("--instrument_for_coverage_option=PRODUCTION");
     args.add("--instrument_mapping_report=someFile.txt");
 
     FlagUsageException e = assertThrows(FlagUsageException.class, () -> compile("", args));
@@ -2595,7 +2595,7 @@ public final class CommandLineRunnerTest {
         .hasMessageThat()
         .isEqualTo(
             "Expected --production_instrumentation_array_name to be set when "
-                + "--instrument_code is set to Production");
+                + "--instrument_for_coverage_option is set to Production");
   }
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
@@ -2605,7 +2605,7 @@ public final class CommandLineRunnerTest {
     Path tempFolderPath = folder.getRoot().toPath();
     String filePath = tempFolderPath + "\\someFile.txt";
 
-    args.add("--instrument_code=PRODUCTION");
+    args.add("--instrument_for_coverage_option=PRODUCTION");
     args.add("--instrument_mapping_report=" + filePath);
     args.add("--production_instrumentation_array_name=ist_arr");
     args.add("--language_out=NO_TRANSPILE");

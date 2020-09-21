@@ -277,7 +277,7 @@ public class CommandLineRunner extends
         usage =
             "File where the encoded parameters created by Production "
                 + "Instrumentation are mapped to their pre-encoded values. Must "
-                + "be used in tandem with --instrument_code=PRODUCTION")
+                + "be used in tandem with --instrument_for_coverage_option=PRODUCTION")
     private String instrumentationMappingOutputFile = "";
 
     @Option(name = "--create_renaming_reports",
@@ -864,14 +864,14 @@ public class CommandLineRunner extends
     private boolean helpMarkdown = false;
 
     @Option(
-        name = "--instrument_code",
+        name = "--instrument_for_coverage_option",
         usage =
             "Enable code instrumentation to perform code coverage analysis. Options are:\n"
                 + " 1. NONE (default)\n"
                 + " 2. LINE - Instrument code by line.\n"
                 + " 3. BRANCH - Instrument code by branch.\n"
                 + " 4. PRODUCTION - Function Instrumentation on compiled JS code.\n")
-    private String instrumentCode = "NONE";
+    private String instrumentForCoverageOption = "NONE";
 
     @Option(
         name = "--production_instrumentation_array_name",
@@ -904,9 +904,12 @@ public class CommandLineRunner extends
             parser, "Bad value for --compilation_level: " + compilationLevel);
       }
 
-      instrumentCodeParsed = InstrumentOption.fromString(Ascii.toUpperCase(instrumentCode));
+      instrumentCodeParsed =
+          InstrumentOption.fromString(Ascii.toUpperCase(instrumentForCoverageOption));
       if (instrumentCodeParsed == null) {
-        throw new CmdLineException(parser, "Bad value for --instrument_code: " + instrumentCode);
+        throw new CmdLineException(
+            parser,
+            "Bad value for --instrument_for_coverage_option: " + instrumentForCoverageOption);
       }
     }
 
@@ -1954,13 +1957,13 @@ public class CommandLineRunner extends
         && Strings.isNullOrEmpty(flags.instrumentationMappingOutputFile)) {
       throw new FlagUsageException(
           "Expected --instrument_mapping_report to be set when "
-              + "--instrument_code is set to Production");
+              + "--instrument_for_coverage_option is set to Production");
     }
 
     if (!Strings.isNullOrEmpty(flags.instrumentationMappingOutputFile)
         && flags.instrumentCodeParsed != InstrumentOption.PRODUCTION) {
       throw new FlagUsageException(
-          "Expected --instrument_code to be passed with PRODUCTION "
+          "Expected --instrument_for_coverage_option to be passed with PRODUCTION "
               + "when --instrument_mapping_report is set");
     }
 
@@ -1968,7 +1971,7 @@ public class CommandLineRunner extends
         && flags.instrumentCodeParsed == InstrumentOption.PRODUCTION) {
       throw new FlagUsageException(
           "Expected --production_instrumentation_array_name to be set when "
-              + "--instrument_code is set to Production");
+              + "--instrument_for_coverage_option is set to Production");
     }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
     options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
