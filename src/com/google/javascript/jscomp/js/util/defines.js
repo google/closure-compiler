@@ -61,10 +61,3 @@ $jscomp.ISOLATE_POLYFILLS = false;
  * @define {boolean}
  */
 $jscomp.FORCE_POLYFILL_PROMISE = false;
-
-/**
- * Whether to enhance the basic promise polyfill with unhandled rejection event
- * support.
- * @define {boolean}
- */
-$jscomp.ENABLE_UNHANDLED_REJECTION_POLYFILL = true;

@@ -304,8 +304,7 @@ $jscomp.polyfill('Promise',
     }
     this.state_ = settledState;
     this.result_ = valueOrReason;
-    if (this.state_ === PromiseState.REJECTED &&
-        $jscomp.ENABLE_UNHANDLED_REJECTION_POLYFILL) {
+    if (this.state_ === PromiseState.REJECTED) {
       this.scheduleUnhandledRejectionCheck_();
     }
     this.executeOnSettledCallbacks_();
