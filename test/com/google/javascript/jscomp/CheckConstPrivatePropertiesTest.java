@@ -224,16 +224,14 @@ public final class CheckConstPrivatePropertiesTest extends CompilerTestCase {
   @Test
   public void testClassPropModified_multiFile() {
     testWarning(
-        new String[] {
-          "class A { constructor() { /** @private */ this.a = 2; } }",
-          "class B { constructor() { /** @private */ this.a = 1; this.a = 4; } }",
-        },
+        srcs(
+            "class A { constructor() { /** @private */ this.a = 2; } }", //
+            "class B { constructor() { /** @private */ this.a = 1; this.a = 4; } }"),
         MISSING_CONST_PROPERTY);
     testSame(
-        new String[] {
-          "class A { constructor() { /** @private */ this.a = 2; this.a = 3; } }",
-          "class B { constructor() { /** @private */ this.a = 2; this.a = 4; } }",
-        });
+        srcs(
+            "class A { constructor() { /** @private */ this.a = 2; this.a = 3; } }", //
+            "class B { constructor() { /** @private */ this.a = 2; this.a = 4; } }"));
   }
 
   @Test

@@ -1148,9 +1148,9 @@ public abstract class CompilerTestCase {
    * @param js Input
    * @param error Expected error
    */
-  protected void testError(String[] js, DiagnosticType error) {
+  protected void testError(Sources js, DiagnosticType error) {
     assertThat(error).isNotNull();
-    test(srcs(js), error(error));
+    test(js, error(error));
   }
 
   /**
@@ -1203,12 +1203,10 @@ public abstract class CompilerTestCase {
     test(externs, srcs, warning);
   }
 
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
-   */
-  protected void testWarning(String[] js, DiagnosticType warning) {
+  /** Verifies that the compiler generates the given warning for the given input. */
+  protected void testWarning(Sources srcs, DiagnosticType warning) {
     assertThat(warning).isNotNull();
-    test(srcs(js), warning(warning));
+    test(srcs, warning(warning));
   }
 
   /**
@@ -1264,13 +1262,6 @@ public abstract class CompilerTestCase {
   /** Verifies that the compiler generates no warnings for the given input. */
   public void testNoWarning(Externs externs, Sources srcs) {
     test(externs, srcs);
-  }
-
-  /**
-   * Verifies that the compiler generates no warnings for the given input.
-   */
-  public void testNoWarning(String[] js) {
-    test(srcs(js));
   }
 
   /**
@@ -1424,17 +1415,6 @@ public abstract class CompilerTestCase {
    */
   protected void testSame(List<SourceFile> js) {
     test(srcs(js), expected(js));
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input,
-   * and emits the given warning.
-   *
-   * @param js Inputs and outputs
-   * @param warning Expected warning, or null if no warning is expected
-   */
-  protected void testSameWarning(String[] js, DiagnosticType warning) {
-    test(srcs(js), expected(js), warning(warning));
   }
 
   /**

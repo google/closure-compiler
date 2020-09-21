@@ -413,7 +413,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   @Test
   public void testDuplicateProvides() {
     testError(
-        new String[] {"goog.provide('duplciated');", "goog.provide('duplciated');"},
+        srcs("goog.provide('duplciated');", "goog.provide('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
   }
 
@@ -427,61 +427,51 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   @Test
   public void testDuplicateProvideAndGoogModule() {
     testError(
-        new String[] {"goog.provide('duplciated');", "goog.module('duplciated');"},
+        srcs("goog.provide('duplciated');", "goog.module('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
     testError(
-        new String[] {"goog.module('duplciated');", "goog.provide('duplciated');"},
+        srcs("goog.module('duplciated');", "goog.provide('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
   public void testDuplicateProvideAndEs6Module() {
     testError(
-        new String[] {
-          "goog.provide('duplciated');", "export {}; goog.declareModuleId('duplciated');"
-        },
+        srcs("goog.provide('duplciated');", "export {}; goog.declareModuleId('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_NAMESPACE);
     testError(
-        new String[] {
-          "export {}; goog.declareModuleId('duplciated');", "goog.provide('duplciated');"
-        },
+        srcs("export {}; goog.declareModuleId('duplciated');", "goog.provide('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
   public void testDuplicateGoogModules() {
     testError(
-        new String[] {"goog.module('duplciated');", "goog.module('duplciated');"},
+        srcs("goog.module('duplciated');", "goog.module('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
   public void testDuplicateGoogAndEs6Module() {
     testError(
-        new String[] {
-          "goog.module('duplciated');", "export {}; goog.declareModuleId('duplciated');"
-        },
+        srcs("goog.module('duplciated');", "export {}; goog.declareModuleId('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
     testError(
-        new String[] {
-          "export {}; goog.declareModuleId('duplciated');", "goog.module('duplciated');"
-        },
+        srcs("export {}; goog.declareModuleId('duplciated');", "goog.module('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 
   @Test
   public void testDuplicatEs6Modules() {
     testError(
-        new String[] {
-          "export {}; goog.declareModuleId('duplciated');",
-          "export {}; goog.declareModuleId('duplciated');"
-        },
+        srcs(
+            "export {}; goog.declareModuleId('duplciated');",
+            "export {}; goog.declareModuleId('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
     testError(
-        new String[] {
-          "export {}; goog.declareModuleId('duplciated');",
-          "export {}; goog.declareModuleId('duplciated');"
-        },
+        srcs(
+            "export {}; goog.declareModuleId('duplciated');",
+            "export {}; goog.declareModuleId('duplciated');"),
         ClosurePrimitiveErrors.DUPLICATE_MODULE);
   }
 

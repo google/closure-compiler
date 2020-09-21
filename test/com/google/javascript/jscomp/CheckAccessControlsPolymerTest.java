@@ -77,73 +77,75 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
 
   @Test
   public void testPrivateMethodInBehavior() {
-    testNoWarning(new String[] {
-      lines(
-        "/** @polymerBehavior */",
-        "var Behavior = {",
-        "  /** @private */",
-        "  foo_: function() {},",
-        "  bar: function() { this.foo_(); },",
-        "};"),
-      lines(
-        "var AnElement = Polymer({",
-        "  is: 'an-element',",
-        "  behaviors: [Behavior],",
-        "});")
-    });
+    test(
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "var Behavior = {",
+                "  /** @private */",
+                "  foo_: function() {},",
+                "  bar: function() { this.foo_(); },",
+                "};"),
+            lines(
+                "var AnElement = Polymer({",
+                "  is: 'an-element',",
+                "  behaviors: [Behavior],",
+                "});")));
   }
 
   @Test
   public void testPrivateMethodFromBehaviorUsedInElement() {
-    testError(new String[] {
-      lines(
-        "/** @polymerBehavior */",
-        "var Behavior = {",
-        "  /** @private */",
-        "  foo_: function() {},",
-        "};"),
-      lines(
-        "var AnElement = Polymer({",
-        "  is: 'an-element',",
-        "  behaviors: [Behavior],",
-        "  bar: function() { this.foo_(); },",
-        "});")
-    }, BAD_PRIVATE_PROPERTY_ACCESS);
+    testError(
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "var Behavior = {",
+                "  /** @private */",
+                "  foo_: function() {},",
+                "};"),
+            lines(
+                "var AnElement = Polymer({",
+                "  is: 'an-element',",
+                "  behaviors: [Behavior],",
+                "  bar: function() { this.foo_(); },",
+                "});")),
+        BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   @Test
   public void testPrivatePropertyInBehavior() {
-    testNoWarning(new String[] {
-      lines(
-        "/** @polymerBehavior */",
-        "var Behavior = {",
-        "  /** @private */",
-        "  foo_: 'foo',",
-        "  bar: function() { alert(this.foo_); },",
-        "};"),
-      lines(
-        "var AnElement = Polymer({",
-        "  is: 'an-element',",
-        "  behaviors: [Behavior],",
-        "});")
-    });
+    test(
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "var Behavior = {",
+                "  /** @private */",
+                "  foo_: 'foo',",
+                "  bar: function() { alert(this.foo_); },",
+                "};"),
+            lines(
+                "var AnElement = Polymer({",
+                "  is: 'an-element',",
+                "  behaviors: [Behavior],",
+                "});")));
   }
 
   @Test
   public void testPrivatePropertyFromBehaviorUsedInElement() {
-    testError(new String[] {
-      lines(
-        "/** @polymerBehavior */",
-        "var Behavior = {",
-        "  /** @private */",
-        "  foo_: 'foo',",
-        "};"),
-      lines(
-        "var AnElement = Polymer({",
-        "  is: 'an-element',",
-        "  behaviors: [Behavior],",
-        "  bar: function() { alert(this.foo_); },",
-        "});")
-    }, BAD_PRIVATE_PROPERTY_ACCESS);
+    testError(
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "var Behavior = {",
+                "  /** @private */",
+                "  foo_: 'foo',",
+                "};"),
+            lines(
+                "var AnElement = Polymer({",
+                "  is: 'an-element',",
+                "  behaviors: [Behavior],",
+                "  bar: function() { alert(this.foo_); },",
+                "});")),
+        BAD_PRIVATE_PROPERTY_ACCESS);
   }
 }

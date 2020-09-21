@@ -280,14 +280,14 @@ public final class CheckNullabilityModifiersTest extends CompilerTestCase {
   }
 
   private void checkMissingWarning(String... js) {
-    testWarning(js, CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC);
+    testWarning(srcs(js), CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC);
   }
 
   private void checkNullMissingWarning(String... js) {
-    testWarning(js, CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC);
+    testWarning(srcs(js), CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC);
   }
 
   private void checkRedundantWarning(String... js) {
-    testWarning(js, CheckNullabilityModifiers.REDUNDANT_NULLABILITY_MODIFIER_JSDOC);
+    testWarning(srcs(js), CheckNullabilityModifiers.REDUNDANT_NULLABILITY_MODIFIER_JSDOC);
   }
 }

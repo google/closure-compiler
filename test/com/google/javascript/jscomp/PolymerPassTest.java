@@ -2529,22 +2529,21 @@ public class PolymerPassTest extends CompilerTestCase {
   public void testBehaviorWithPrivateMethod() {
     enableCheckAccessControls();
     testWarning(
-        new String[] {
-          lines(
-              "/** @polymerBehavior */",
-              "var FunBehavior = {",
-              "  /** @private */",
-              "  doSomethingFun: function() {},",
-              "};"),
-          lines(
-              "var A = Polymer({",
-              "  is: 'x-element',",
-              "  callBehaviorMethod: function() {",
-              "    this.doSomethingFun();",
-              "  },",
-              "  behaviors: [ FunBehavior ],",
-              "});"),
-        },
+        srcs(
+            lines(
+                "/** @polymerBehavior */",
+                "var FunBehavior = {",
+                "  /** @private */",
+                "  doSomethingFun: function() {},",
+                "};"),
+            lines(
+                "var A = Polymer({",
+                "  is: 'x-element',",
+                "  callBehaviorMethod: function() {",
+                "    this.doSomethingFun();",
+                "  },",
+                "  behaviors: [ FunBehavior ],",
+                "});")),
         CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS);
   }
 

@@ -2083,17 +2083,13 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: StrictBanUnresolvedType Message\nReference to type 'Foo' never resolved.");
 
     testWarning(
-        new String[] {
-          "goog.forwardDeclare('Foo'); /** @param {!Foo} a */ var f;",
-           "f(5);",
-        },
+        srcs("goog.forwardDeclare('Foo'); /** @param {!Foo} a */ var f;", "f(5);"),
         TypeValidator.TYPE_MISMATCH_WARNING);
 
     testWarning(
-        new String[] {
-          "goog.forwardDeclare('Foo'); /** @return {!Foo} */ var f;",
-          "f();",
-        },
+        srcs(
+            "goog.forwardDeclare('Foo'); /** @return {!Foo} */ var f;", //
+            "f();"),
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
