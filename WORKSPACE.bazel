@@ -17,8 +17,8 @@ maven_import(
     # http://args4j.kohsuke.org/index.html
     group_id = "args4j",
     artifact_id = "args4j",
-    version = "2.0.26",
-    sha256 = "989bda2321ea073a03686e9d4437ea4928c72c99f993f9ca6fab24615f0771a4",
+    version = "2.33",
+    sha256 = "91ddeaba0b24adce72291c618c00bbdce1c884755f6c4dba9c5c46e871c69ed6",
     licenses = ["notice"],
 )
 
