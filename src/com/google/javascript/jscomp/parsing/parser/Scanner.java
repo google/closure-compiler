@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
  * <p>7 Lexical Conventions
  */
 public class Scanner {
-  private final boolean parseTypeSyntax;
+
   private final ErrorReporter errorReporter;
   private final SourceFile source;
   private final LineNumberScanner lineNumberScanner;
@@ -44,20 +44,17 @@ public class Scanner {
   private int typeParameterLevel;
 
   public Scanner(
-      boolean parseTypeSyntax,
       ErrorReporter errorReporter,
       CommentRecorder commentRecorder,
       SourceFile source) {
-    this(parseTypeSyntax, errorReporter, commentRecorder, source, 0);
+    this(errorReporter, commentRecorder, source, 0);
   }
 
   public Scanner(
-      boolean parseTypeSyntax,
       ErrorReporter errorReporter,
       CommentRecorder commentRecorder,
       SourceFile file,
       int offset) {
-    this.parseTypeSyntax = parseTypeSyntax;
     this.errorReporter = errorReporter;
     this.commentRecorder = commentRecorder;
     this.source = file;
@@ -813,7 +810,7 @@ public class Scanner {
       return createToken(TokenType.ERROR, beginToken);
     }
 
-    Keywords k = Keywords.get(value, parseTypeSyntax);
+    Keywords k = Keywords.get(value);
     if (k != null) {
       return new Token(k.type, getTokenRange(beginToken));
     }

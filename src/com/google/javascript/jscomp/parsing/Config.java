@@ -55,9 +55,7 @@ public abstract class Config {
     ECMASCRIPT_2020(FeatureSet.ES2020_MODULES),
     ES_NEXT(FeatureSet.ES_NEXT),
     ES_NEXT_IN(FeatureSet.ES_NEXT_IN),
-    UNSUPPORTED(FeatureSet.ES_UNSUPPORTED),
-    TYPESCRIPT(FeatureSet.TYPESCRIPT),
-    ;
+    UNSUPPORTED(FeatureSet.ES_UNSUPPORTED);
 
     public final FeatureSet featureSet;
 
@@ -149,7 +147,7 @@ public abstract class Config {
 
   public static Builder builder() {
     return new AutoValue_Config.Builder()
-        .setLanguageMode(LanguageMode.TYPESCRIPT)
+        .setLanguageMode(LanguageMode.UNSUPPORTED)
         .setStrictMode(StrictMode.STRICT)
         .setJsDocParsingMode(JsDocParsing.TYPES_ONLY)
         .setRunMode(RunMode.STOP_AFTER_ERROR)

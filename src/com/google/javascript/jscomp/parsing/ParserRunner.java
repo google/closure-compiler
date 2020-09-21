@@ -162,10 +162,6 @@ public final class ParserRunner {
     boolean isStrictMode = config.strictMode().isStrict();
     Mode parserConfigLanguageMode = null;
     switch (languageMode) {
-      case TYPESCRIPT:
-        parserConfigLanguageMode = Mode.TYPESCRIPT;
-        break;
-
       case ECMASCRIPT3:
         parserConfigLanguageMode = Mode.ES3;
         break;

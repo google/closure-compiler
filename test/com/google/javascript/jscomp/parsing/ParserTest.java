@@ -5033,6 +5033,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("(...xs, x) => xs", "')' expected");
     parseError(
         "function f(...a[0]) {}", "Only an identifier or destructuring pattern is allowed here.");
+    parseError("function f(...y, z) {}", "A rest parameter must be last in a parameter list.");
 
     expectFeatures(Feature.REST_PARAMETERS);
     parse("function f(...b) {}");
@@ -6163,9 +6164,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testImportExportTypescriptKeyword() {
-    mode = LanguageMode.TYPESCRIPT;
-    parseError("export { namespace };", "cannot use keyword 'namespace' here.");
-
     mode = LanguageMode.ECMASCRIPT6;
     parse("export { namespace };");
     parse("import { namespace } from './input0.js';");

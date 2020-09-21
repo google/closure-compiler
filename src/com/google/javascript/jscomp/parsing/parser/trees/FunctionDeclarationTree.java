@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
-import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import javax.annotation.Nullable;
 
@@ -33,15 +32,12 @@ public class FunctionDeclarationTree extends ParseTree {
   }
 
   @Nullable public final IdentifierToken name;
-  @Nullable public final GenericTypeListTree generics;
   public final FormalParameterListTree formalParameterList;
-  @Nullable public final ParseTree returnType;
   public final ParseTree functionBody;
   public final boolean isStatic;
   public final boolean isGenerator;
   public final boolean isOptional;
   public final boolean isAsync;
-  @Nullable public final TokenType access;
   public final Kind kind;
 
   public static Builder builder(Kind kind) {
@@ -52,14 +48,11 @@ public class FunctionDeclarationTree extends ParseTree {
     super(ParseTreeType.FUNCTION_DECLARATION, builder.location);
 
     this.name = builder.name;
-    this.generics = builder.generics;
     this.isStatic = builder.isStatic;
     this.isGenerator = builder.isGenerator;
     this.isOptional = builder.isOptional;
-    this.access = builder.access;
     this.kind = checkNotNull(builder.kind);
     this.formalParameterList = checkNotNull(builder.formalParameterList);
-    this.returnType = builder.returnType;
     this.functionBody = checkNotNull(builder.functionBody);
     this.isAsync = builder.isAsync;
   }
@@ -71,11 +64,8 @@ public class FunctionDeclarationTree extends ParseTree {
     private final Kind kind;
 
     @Nullable private IdentifierToken name = null;
-    @Nullable private GenericTypeListTree generics = null;
     @Nullable private FormalParameterListTree formalParameterList = null;
-    @Nullable private ParseTree returnType = null;
     @Nullable private ParseTree functionBody = null;
-    @Nullable private TokenType access = null;
     private boolean isStatic = false;
     private boolean isGenerator = false;
     private boolean isOptional = false;
@@ -97,16 +87,6 @@ public class FunctionDeclarationTree extends ParseTree {
     }
 
     /**
-     * Optional generics information.
-     *
-     * <p> Default is {@code null}.
-     */
-    public Builder setGenerics(GenericTypeListTree generics) {
-      this.generics = generics;
-      return this;
-    }
-
-    /**
      * Required parameter list.
      */
     public Builder setFormalParameterList(FormalParameterListTree formalParameterList) {
@@ -115,31 +95,10 @@ public class FunctionDeclarationTree extends ParseTree {
     }
 
     /**
-     * Optional return type.
-     *
-     * <p> Default is {@code null}.
-     */
-    public Builder setReturnType(ParseTree returnType) {
-      this.returnType = returnType;
-      return this;
-    }
-
-    /**
      * Required function body.
      */
     public Builder setFunctionBody(ParseTree functionBody) {
       this.functionBody = functionBody;
-      return this;
-    }
-
-    /**
-     * Optional TypeScript accessibility modifier (PUBLIC, PROTECTED, PRIVATE).
-     *
-     * <p> Default is {@code null}.
-     * Only relevant for method member declaration.
-     */
-    public Builder setAccess(TokenType access) {
-      this.access = access;
       return this;
     }
 

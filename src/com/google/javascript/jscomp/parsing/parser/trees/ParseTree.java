@@ -76,8 +76,6 @@ public class ParseTree {
     return (ComputedPropertyGetterTree) this; }
   public ComputedPropertyMethodTree asComputedPropertyMethod() {
     return (ComputedPropertyMethodTree) this; }
-  public ComputedPropertyMemberVariableTree asComputedPropertyMemberVariable() {
-    return (ComputedPropertyMemberVariableTree) this; }
   public ComputedPropertySetterTree asComputedPropertySetter() {
     return (ComputedPropertySetterTree) this; }
   public ConditionalExpressionTree asConditionalExpression() {
@@ -127,7 +125,6 @@ public class ParseTree {
     return (OptionalMemberLookupExpressionTree) this;
   }
 
-  public MemberVariableTree asMemberVariable() { return (MemberVariableTree) this; }
   public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
     return (MissingPrimaryExpressionTree) this; }
   public NewExpressionTree asNewExpression() { return (NewExpressionTree) this; }
@@ -170,16 +167,6 @@ public class ParseTree {
   public ThisExpressionTree asThisExpression() { return (ThisExpressionTree) this; }
   public ThrowStatementTree asThrowStatement() { return (ThrowStatementTree) this; }
   public TryStatementTree asTryStatement() { return (TryStatementTree) this; }
-  public TypeNameTree asTypeName() { return (TypeNameTree) this; }
-  public TypedParameterTree asTypedParameter() { return (TypedParameterTree) this; }
-  public OptionalParameterTree asOptionalParameter() { return (OptionalParameterTree) this; }
-  public ParameterizedTypeTree asParameterizedType() { return (ParameterizedTypeTree) this; }
-  public ArrayTypeTree asArrayType() { return (ArrayTypeTree) this; }
-  public RecordTypeTree asRecordType() { return (RecordTypeTree) this; }
-  public UnionTypeTree asUnionType() { return (UnionTypeTree) this; }
-  public FunctionTypeTree asFunctionType() { return (FunctionTypeTree) this; }
-  public TypeQueryTree asTypeQuery() { return (TypeQueryTree) this; }
-  public GenericTypeListTree asGenericTypeList() { return (GenericTypeListTree) this; }
   public UnaryExpressionTree asUnaryExpression() { return (UnaryExpressionTree) this; }
   public VariableDeclarationListTree asVariableDeclarationList() {
     return (VariableDeclarationListTree) this; }
@@ -192,17 +179,6 @@ public class ParseTree {
   public AwaitExpressionTree asAwaitExpression() {
     return (AwaitExpressionTree) this;
   }
-  public InterfaceDeclarationTree asInterfaceDeclaration() {
-    return (InterfaceDeclarationTree) this;
-  }
-  public EnumDeclarationTree asEnumDeclaration() { return (EnumDeclarationTree) this; }
-  public TypeAliasTree asTypeAlias() { return (TypeAliasTree) this; }
-  public AmbientDeclarationTree asAmbientDeclaration() { return (AmbientDeclarationTree) this; }
-  public NamespaceDeclarationTree asNamespaceDeclaration() {
-    return (NamespaceDeclarationTree) this;
-  }
-  public IndexSignatureTree asIndexSignature() { return (IndexSignatureTree) this; }
-  public CallSignatureTree asCallSignature() { return (CallSignatureTree) this; }
 
   public NewTargetExpressionTree asNewTargetExpression() {
     return (NewTargetExpressionTree) this;
