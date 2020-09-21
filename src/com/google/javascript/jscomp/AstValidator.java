@@ -721,7 +721,6 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateInterface(Node n) {
-    validateFeature(Feature.INTERFACE, n);
     validateNodeType(Token.INTERFACE, n);
     validateChildCount(n);
     Node name = n.getFirstChild();
@@ -1864,13 +1863,11 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateTypeAlias(Node n) {
-    validateFeature(Feature.TYPE_ALIAS, n);
     validateNodeType(Token.TYPE_ALIAS, n);
     validateChildCount(n);
   }
 
   private void validateAmbientDeclaration(Node n) {
-    validateFeature(Feature.AMBIENT_DECLARATION, n);
     validateNodeType(Token.DECLARE, n);
     validateAmbientDeclarationHelper(n.getFirstChild());
   }
@@ -1906,7 +1903,6 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateNamespace(Node n, boolean isAmbient) {
-    validateFeature(Feature.NAMESPACE_DECLARATION, n);
     validateNodeType(Token.NAMESPACE, n);
     validateChildCount(n);
     validateNamespaceName(n.getFirstChild());

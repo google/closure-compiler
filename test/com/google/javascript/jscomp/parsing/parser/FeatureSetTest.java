@@ -29,19 +29,19 @@ import org.junit.runners.JUnit4;
 public final class FeatureSetTest {
   @Test
   public void testContains() {
-    assertFS(FeatureSet.TYPESCRIPT).has(Feature.AMBIENT_DECLARATION);
+    assertFS(FeatureSet.TYPESCRIPT).has(Feature.TYPE_ANNOTATION);
     assertFS(FeatureSet.TYPESCRIPT).has(Feature.MODULES);
   }
 
   @Test
   public void testWithoutModules() {
-    assertFS(FeatureSet.TYPESCRIPT.without(Feature.MODULES)).has(Feature.AMBIENT_DECLARATION);
+    assertFS(FeatureSet.TYPESCRIPT.without(Feature.MODULES)).has(Feature.TYPE_ANNOTATION);
     assertFS(FeatureSet.TYPESCRIPT.without(Feature.MODULES)).doesNotHave(Feature.MODULES);
   }
 
   @Test
   public void testWithoutTypes() {
-    assertFS(FeatureSet.TYPESCRIPT.withoutTypes()).doesNotHave(Feature.AMBIENT_DECLARATION);
+    assertFS(FeatureSet.TYPESCRIPT.withoutTypes()).doesNotHave(Feature.TYPE_ANNOTATION);
     assertFS(FeatureSet.TYPESCRIPT.withoutTypes()).has(Feature.MODULES);
   }
 

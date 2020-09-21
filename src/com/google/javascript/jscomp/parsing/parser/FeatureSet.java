@@ -213,20 +213,8 @@ public final class FeatureSet implements Serializable {
     // ES_NEXT_IN
     NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT_IN),
 
-    // TypeScript type syntax that will never be implemented in browsers
-    ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
-    AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
-    CALL_SIGNATURE("call signature", LangVersion.TYPESCRIPT),
-    CONSTRUCTOR_SIGNATURE("constructor signature", LangVersion.TYPESCRIPT),
-    ENUM("enum", LangVersion.TYPESCRIPT),
-    GENERICS("generics", LangVersion.TYPESCRIPT),
-    IMPLEMENTS("implements", LangVersion.TYPESCRIPT),
-    INDEX_SIGNATURE("index signature", LangVersion.TYPESCRIPT),
-    INTERFACE("interface", LangVersion.TYPESCRIPT),
-    MEMBER_VARIABLE_IN_CLASS("member variable in class", LangVersion.TYPESCRIPT),
-    NAMESPACE_DECLARATION("namespace declaration", LangVersion.TYPESCRIPT),
-    OPTIONAL_PARAMETER("optional parameter", LangVersion.TYPESCRIPT),
-    TYPE_ALIAS("type alias", LangVersion.TYPESCRIPT),
+    // TypeScript type syntax that will never be implemented in browsers. Only used as an indicator
+    // to the CodeGenerator that it should handle type syntax.
     TYPE_ANNOTATION("type annotation", LangVersion.TYPESCRIPT);
 
     private final String name;
