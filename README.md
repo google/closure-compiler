@@ -34,82 +34,33 @@ pitfalls.
 
 Note: The Closure Compiler requires [Java 8 or higher](https://www.java.com/).
 
-### Using [Maven](https://maven.apache.org/)
+### Using [Bazel](https://bazel.build/)
 
-1.  Download [Maven](https://maven.apache.org/download.cgi).
+1.  Install
+    [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
 
-1.  Add sonatype snapshots repository to `~/.m2/settings.xml`:
+2.  On the command line, at the root of this project, run
 
-    ```xml
-    <profile>
-      <id>allow-snapshots</id>
-      <activation><activeByDefault>true</activeByDefault></activation>
-      <repositories>
-        <repository>
-          <id>snapshots-repo</id>
-          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-          <releases><enabled>false</enabled></releases>
-          <snapshots><enabled>true</enabled></snapshots>
-        </repository>
-      </repositories>
-    </profile>
+    ```sh
+    bazelisk build //:compiler_unshaded_deploy.jar
     ```
 
-1.  On the command line, at the root of this project, run `mvn -DskipTests`
-    (omit the `-DskipTests` if you want to run all the unit tests too).
+    This will produce a JAR called `bazel-bin/compiler_unshaded_deploy.jar`. You
+    can run this JAR as per the [Running section](#running) of this Readme.
 
-    This will produce a jar file called
-    `target/closure-compiler-1.0-SNAPSHOT.jar`. You can run this jar as per the
-    [Running section](#running) of this Readme. If you want to depend on the
-    compiler via Maven in another Java project, use the
-    `com.google.javascript/closure-compiler-unshaded` artifact.
+    If you want to integrate the compiler into a larger Java program, depend on
+    `//:compiler_shaded_deploy.jar` instead.
 
-    Running `mvn -DskipTests -pl
-    externs/pom.xml,pom-main.xml,pom-main-shaded.xml` will skip building the GWT
-    version of the compiler. This can speed up the build process significantly.
+### Using an IDE
 
-### Using [Eclipse](https://www.eclipse.org/)
-
-1.  Download and open [Eclipse IDE](https://www.eclipse.org/). Disable
-    `Project > Build automatically` during this process.
-1.  On the command line, at the root of this project, run `mvn eclipse:eclipse
-    -DdownloadSources=true` to download JARs and build Eclipse project
-    configuration.
-1.  Run `mvn clean` and `mvn -DskipTests` to ensure AutoValues are generated and
-    updated.
-1.  In Eclipse, navigate to `File > Import > Maven > Existing Maven Projects`
-    and browse to closure-compiler.
-1.  Import both closure-compiler and the nested externs project.
-1.  Disregard the warnings about maven-antrun-plugin and build errors.
-1.  Configure the project to use the
-    [Google Eclipse style guide](https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml)
-1.  Edit `.classpath` in closure-compiler-parent.
-
-    Delete:
-
-    ```xml
-    <classpathentry kind="src" path="src" ... />
-    ```
-
-    Add:
-
-    ```xml
-    <classpathentry excluding="com/google/debugging/sourcemap/super/**|com/google/javascript/jscomp/debugger/gwt/DebuggerGwtMain.java|com/google/javascript/jscomp/gwt/|com/google/javascript/jscomp/resources/super-gwt/**" kind="src" path="src"/>
-    <classpathentry kind="src" path="target/generated-sources/annotations"/>
-    ```
-
-1.  Ensure the Eclipse project settings specify 1.8 compliance level in "Java
-    Compiler".
-1.  Build project in Eclipse (right click on the project
-    `closure-compiler-parent` and select `Build Project`).
-1.  See *Using Maven* above to build the JAR.
+See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html)
 
 ## Running
 
 On the command line, at the root of this project, type
 
-```
-java -jar target/closure-compiler-1.0-SNAPSHOT.jar
+```sh
+bazel-bin/compiler_unshaded_deploy.jar
 ```
 
 This starts the compiler in interactive mode. Type
