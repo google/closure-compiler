@@ -588,6 +588,46 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewrite_argInsideOptionalChainingCall() {
+    String source =
+        lines(
+            "function a(){}",
+            "a.prototype.foo = function(args) {return args};",
+            "var o = new a;",
+            "a?.(o.foo())");
+
+    String expected =
+        lines(
+            "function a(){}",
+            "var JSCompiler_StaticMethods_foo = ",
+            "  function(JSCompiler_StaticMethods_foo$self, args) {return args};",
+            "var o = new a;",
+            "a?.(JSCompiler_StaticMethods_foo(o))");
+
+    test(source, expected);
+  }
+
+  @Test
+  public void testRewrite_lhsOfOptionalChainingCall() {
+    String source =
+        lines(
+            "function a(){}",
+            "a.prototype.foo = function(args) {return args};",
+            "var o = new a;",
+            "o.foo()?.a");
+
+    String expected =
+        lines(
+            "function a(){}",
+            "var JSCompiler_StaticMethods_foo = ",
+            "  function(JSCompiler_StaticMethods_foo$self, args) {return args};",
+            "var o = new a;",
+            "JSCompiler_StaticMethods_foo(o)?.a");
+
+    test(source, expected);
+  }
+
+  @Test
   public void testNoRewriteVarArgs() {
     String source =
         lines(
@@ -689,6 +729,15 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoRewrite_optionalChaining() {
+    testSame(
+        lines(
+            NoRewriteNonCallReferenceTestInput.BASE, //
+            "o.foo();", // We need at least one normal call to trigger rewriting.
+            "o.foo?.();"));
+  }
+
+  @Test
   public void testNoRewrite_nonCallReference_viaNew() {
     // TODO(nickreid): Add rewriting support for this.
     testSame(
@@ -757,6 +806,17 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNoRewrite_optionalChainGetProp() {
+    String source =
+        lines(
+            "function a(){}",
+            "a.prototype.foo = function(args) {return args};",
+            "var o = new a;",
+            "o?.foo()");
+    testSame(source);
+  }
+
+  @Test
   public void testRewrite_definedUsingGetElem_withArgs_callUsingGetProp() {
     String source =
         lines(
@@ -775,6 +835,17 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
             "a.prototype.foo = function(args) {return args};",
             "var o = new a;",
             "o['foo']");
+    testSame(source);
+  }
+
+  @Test
+  public void testNoRewrite_optionalChainingGetElemAccess() {
+    String source =
+        lines(
+            "function a(){}",
+            "a.prototype.foo = function(args) {return args};",
+            "var o = new a;",
+            "o?.['foo']");
     testSame(source);
   }
 
