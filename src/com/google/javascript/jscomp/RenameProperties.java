@@ -334,6 +334,7 @@ class RenameProperties implements CompilerPass {
         case COMPUTED_PROP:
           break;
         case GETPROP:
+        case OPTCHAIN_GETPROP:
           Node propNode = n.getSecondChild();
           if (propNode.isString()) {
             if (compiler.getCodingConvention().blockRenamingForProperty(
@@ -377,6 +378,7 @@ class RenameProperties implements CompilerPass {
           }
           break;
         case GETELEM:
+        case OPTCHAIN_GETELEM:
           // If this is a quoted property access (e.g. x['myprop']), we need to
           // ensure that we never rename some other property in a way that
           // could conflict with this quoted name.
@@ -441,7 +443,10 @@ class RenameProperties implements CompilerPass {
               }
             } else if (NodeUtil.isFunctionExpression(n)
                 && parent.isAssign()
-                && parent.getFirstChild().isGetProp()
+                && parent
+                    .getFirstChild()
+                    .isGetProp() // JSCompiler does not handle optional calls to property rename
+                // function
                 && compiler
                     .getCodingConvention()
                     .isPropertyRenameFunction(parent.getFirstChild().getOriginalQualifiedName())) {

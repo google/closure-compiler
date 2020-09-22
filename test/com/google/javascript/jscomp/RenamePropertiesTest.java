@@ -80,6 +80,19 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testPrototypeProperties_optionalChaining() {
+    test(
+        lines(
+            "Bar.prototype.getA = function(){}; bar?.getA();",
+            "Bar.prototype.getB = function(){};",
+            "Bar.prototype.getC = function(){};"),
+        lines(
+            "Bar.prototype.a = function(){}; bar?.a();",
+            "Bar.prototype.b = function(){};",
+            "Bar.prototype.c = function(){}"));
+  }
+
+  @Test
   public void testExportedByConventionPrototypeProperties() {
     test("Bar.prototype.getA = function(){}; bar.getA();" +
          "Bar.prototype.getBExported = function(){}; bar.getBExported()",
@@ -111,12 +124,18 @@ public final class RenamePropertiesTest extends CompilerTestCase {
 
     test("Bar.prototype = {set getA(x){}}; bar.getA;",
          "Bar.prototype = {set a(x){}}; bar.a;");
+
+    test("Bar.prototype = {set getA(x){}}; bar?.getA;", "Bar.prototype = {set a(x){}}; bar?.a;");
   }
 
   @Test
   public void testMixedQuotedAndUnquotedObjLitKeys1() {
     test("Bar = {getA: function(){}, 'getB': function(){}}; bar.getA();",
          "Bar = {a: function(){}, 'getB': function(){}}; bar.a();");
+
+    test(
+        "Bar = {getA: function(){}, 'getB': function(){}}; bar?.getA();",
+        "Bar = {a: function(){}, 'getB': function(){}}; bar?.a();");
   }
 
   @Test
@@ -128,6 +147,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testQuotedPrototypeProperty() {
     testSame("Bar.prototype['getA'] = function(){}; bar['getA']();");
+    testSame("Bar.prototype['getA'] = function(){}; bar?.['getA']();");
   }
 
   @Test
@@ -140,6 +160,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   public void testRenamePropertiesWithLeadingUnderscores() {
     test("Bar.prototype = {_getA: function(){}, _b: 0}; bar._getA();",
          "Bar.prototype = {a: function(){}, b: 0}; bar.a();");
+
+    test(
+        "Bar.prototype = {_getA: function(){}, _b: 0}; bar?._getA();",
+        "Bar.prototype = {a: function(){}, b: 0}; bar?.a();");
   }
 
   @Test
@@ -175,6 +199,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   public void testReadPropertyOfThis() {
     test("f(this.prop);",
          "f(this.a);");
+
+    test("f(this?.prop);", "f(this?.a);");
   }
 
   @Test
@@ -189,6 +215,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
          " foo.prop2Exported; }",
          "function x() { var foo = {a: 'bar', prop2Exported: 'baz'};" +
          " foo.prop2Exported; }");
+
+    test(
+        "function x() { var foo = {prop1: 'bar', prop2Exported: 'baz'};foo?.prop2Exported; }",
+        "function x() { var foo = {a: 'bar', prop2Exported: 'baz'}; foo?.prop2Exported; }");
   }
 
   @Test
@@ -238,6 +268,11 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   public void testRenamePropertiesFunctionCall1() {
     test("var foo = {myProp: 0}; f(foo[JSCompiler_renameProperty('myProp')]);",
          "var foo = {a: 0}; f(foo['a']);");
+    // JSCompiler does not handle optional calls to `JSCompiler_renameProperty`. The
+    // OPTCHAIN_GETELEM is handled consistently with regular GETELEM.
+    test(
+        "var foo = {myProp: 0}; f(foo?.[JSCompiler_renameProperty('myProp')]);",
+        "var foo = {a: 0}; f(foo?.['a']);");
   }
 
   @Test
