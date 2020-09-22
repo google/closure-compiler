@@ -24,8 +24,8 @@
 /** @constructor */
 function TrustedHTML() {}
 
-/** @constructor */
-function TrustedScript() {}
+// function TrustedScript() was moved to `es3.js` so that is could be used by
+// `eval()`.
 
 /** @constructor */
 function TrustedScriptURL() {}

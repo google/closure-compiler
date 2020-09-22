@@ -375,8 +375,23 @@ function parseFloat(num) {}
  */
 function parseInt(num, base) {}
 
+
 /**
- * @param {string} code
+ * Represents a string of JavaScript code that is known to have come from a
+ * trusted source. Part of Trusted Types.
+ *
+ * The main body Trusted Types type definitions reside in the  file
+ * `w3c_trusted_types.js`. This definition was placed here so that it would be
+ * accessible to `eval()`.
+ *
+ * @constructor
+ * @see https://w3c.github.io/webappsec-trusted-types/dist/spec/#trusted-script
+ */
+function TrustedScript() {}
+
+
+/**
+ * @param {string|!TrustedScript} code
  * @return {*}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
  */
@@ -2461,7 +2476,6 @@ function TypeError(opt_message, opt_file, opt_line) {}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError
  */
 function URIError(opt_message, opt_file, opt_line) {}
-
 
 // JScript extensions.
 // @see http://msdn.microsoft.com/en-us/library/894hfyb4(VS.80).aspx
