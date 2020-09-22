@@ -63,6 +63,7 @@ import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -775,6 +776,10 @@ public final class DefaultPassConfig extends PassConfig {
         && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED
         && options.isTypecheckingEnabled()) {
       passes.add(ambiguateProperties);
+    }
+
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
     }
 
     if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
@@ -2852,6 +2857,14 @@ public final class DefaultPassConfig extends PassConfig {
                   new CheckConformance(
                       compiler, ImmutableList.copyOf(options.getConformanceConfigs())))
           .setFeatureSetForChecks()
+          .build();
+
+  /** Convert types from type-checking to optimization "colors" */
+  private final PassFactory typesToColors =
+      PassFactory.builder()
+          .setName("typesToColors")
+          .setInternalFactory(ConvertTypesToColors::new)
+          .setFeatureSetForOptimizations()
           .build();
 
   /** Remove types */
