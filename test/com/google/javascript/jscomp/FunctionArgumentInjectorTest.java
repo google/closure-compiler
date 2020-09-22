@@ -786,5 +786,4 @@ public final class FunctionArgumentInjectorTest {
     assertThat(compiler.getErrors()).isEmpty();
     return n;
   }
-
 }

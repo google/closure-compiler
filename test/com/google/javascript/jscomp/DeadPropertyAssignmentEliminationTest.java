@@ -127,6 +127,15 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  if (true) { this.a = 20; } else { this.a = 30; }",
             "}"));
 
+    // We don't handle conditionals at all.
+    testSame(
+        lines(
+            "var bar = function(x)  {};",
+            "var foo = function() {",
+            "  this.a = 10;", // must preserve this assignment
+            "  bar?.(this.a = 20);",
+            "}"));
+
     // However, we do handle everything up until the conditional.
     test(
         lines(
@@ -140,6 +149,23 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  10;",
             "  this.a = 20;",
             "  if (true) { this.a = 20; } else { this.a = 30; }",
+            "}"));
+
+    // However, we do handle everything up until the conditional.
+    test(
+        lines(
+            "var bar = function(x)  {};",
+            "var foo = function() {",
+            "  this.a = 10;", // this is a dead assignment and must be eliminated
+            "  this.a = 20;",
+            "  bar?.(this.a = 30);",
+            "}"),
+        lines(
+            "var bar = function(x)  {};",
+            "var foo = function() {",
+            "  10;",
+            "  this.a = 20;",
+            "  bar?.(this.a = 30);",
             "}"));
   }
 
@@ -169,6 +195,14 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "var foo = function() {",
             "  a.b.c = 20;",
             "  doSomething();",
+            "  a.b.c = 30;",
+            "}"));
+
+    testSame(
+        lines(
+            "var foo = function() {", // to preserve newlines
+            "  a.b.c = 20;",
+            "  doSomething?.();",
             "  a.b.c = 30;",
             "}"));
 
@@ -221,13 +255,19 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
         lines(
             "var foo = function() {",
             "  a.b.c = 20;",
-            "  doSomething(a.b.c = 25);",
+            "  doSomething(a.b.c = 25);", // unconditional assignment in arg renders above
+            // assignment dead.
             "  a.b.c = 30;",
             "}"),
         lines(
+            "var foo = function() {", "  20;", "  doSomething(a.b.c = 25);", "  a.b.c = 30;", "}"));
+
+    testSame(
+        lines(
             "var foo = function() {",
-            "  20;",
-            "  doSomething(a.b.c = 25);",
+            "  a.b.c = 20;",
+            "  doSomething?.(a.b.c = 25);", // conditional assignment in optional chain arg keeps
+            // above assignment alive.
             "  a.b.c = 30;",
             "}"));
   }
@@ -327,9 +367,27 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     testSame(
         lines(
             "/** @constructor */",
+            "var foo = function(str) {",
+            "  this.x = 5;",
+            "  var y = this?.[str];",
+            "  this.x = 10;",
+            "}"));
+
+    testSame(
+        lines(
+            "/** @constructor */",
             "var foo = function(x, str) {",
             "  x.y = 5;",
             "  var y = x[str];",
+            "  x.y = 10;",
+            "}"));
+
+    testSame(
+        lines(
+            "/** @constructor */",
+            "var foo = function(x, str) {",
+            "  x.y = 5;",
+            "  var y = x?.[str];",
             "  x.y = 10;",
             "}"));
   }
@@ -419,6 +477,24 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   }
 
   @Test
+  public void optionalChaining() {
+    testSame(
+        lines(
+            "function f(x) {",
+            "  return bar(x.p = 2)?.(x.p = 3);", // second assignment conditionally executes, hence
+            // marks property `p` as read.
+            "}"));
+
+    testSame(
+        lines(
+            "function foo() {",
+            "    this.p = 123;",
+            "    var z = this?.p;", // marks property `p` as read
+            "    this.p = 234;",
+            "}"));
+  }
+
+  @Test
   public void testBrackets() {
     testSame(
         lines(
@@ -429,6 +505,8 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  // This pass does not currently use the control-flow graph. Hence, dead assignments in some of the
+  // following tests get preserved even when they are safe to delete.
   @Test
   public void testFor() {
     testSame(
@@ -493,6 +571,8 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
+  // This pass does not currently use the control-flow graph. Hence, dead assignments in some of the
+  // following tests get preserved even when they are safe to delete.
   @Test
   public void testWhile() {
     testSame(
@@ -632,6 +712,17 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  try {",
             "    x.p = 1;",
             "    maybeThrow();",
+            "    x.p = 2;",
+            "  } catch (e) {",
+            "  }",
+            "}"));
+
+    testSame(
+        lines(
+            "function f(x) {",
+            "  try {",
+            "    x.p = 1;",
+            "    maybeThrow?.();",
             "    x.p = 2;",
             "  } catch (e) {",
             "  }",
@@ -816,6 +907,16 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  }",
             "}"));
 
+    testSame(
+        lines(
+            "class Foo {",
+            "  constructor() {",
+            "    this.p = 123;",
+            "    var z = this?.p;",
+            "    this.p = 234;",
+            "  }",
+            "}"));
+
     test(
         lines(
             "class Foo {",
@@ -884,6 +985,19 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  var foo = new Foo()",
             "  foo.enabled = true;",
             "  var f = foo.bar;",
+            "  foo.enabled = false;",
+            "}"));
+
+    testSame(
+        lines(
+            "/** @constructor */ function Foo() { this.enabled = false; };",
+            "Object.defineProperties(Foo.prototype, {bar: {",
+            "  get: function () { return this.enabled ? 'enabled' : 'disabled'; }",
+            "}});",
+            "function f() {",
+            "  var foo = new Foo()",
+            "  foo.enabled = true;",
+            "  var f = foo?.bar;",
             "  foo.enabled = false;",
             "}"));
 
@@ -992,6 +1106,21 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  return ret;",
             "};")
     );
+
+    testSame(
+        lines(
+            "var bar = {",
+            "  enabled: false,",
+            "  get baz() {",
+            "    return this.enabled ? 'enabled' : 'disabled';",
+            "  }",
+            "};",
+            "function f() {",
+            "  bar.enabled = true;",
+            "  var ret = bar?.baz;",
+            "  bar.enabled = false;",
+            "  return ret;",
+            "};"));
   }
 
   @Test

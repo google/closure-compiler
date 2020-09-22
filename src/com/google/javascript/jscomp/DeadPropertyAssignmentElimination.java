@@ -333,6 +333,9 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
         case OR:
         case HOOK:
         case COALESCE:
+        case OPTCHAIN_CALL:
+        case OPTCHAIN_GETELEM:
+        case OPTCHAIN_GETPROP:
           return true;
         default:
           return false;

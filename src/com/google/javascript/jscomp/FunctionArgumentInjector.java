@@ -212,7 +212,6 @@ class FunctionArgumentInjector {
    *   undefined=2
    *
    * @param n The node in question.
-   * @param parent The parent of the node.
    * @param names The set of names to check.
    * @param unsafe The set of names that require aliases.
    * @param inInnerFunction Whether the inspection is occurring on a inner function.
@@ -249,7 +248,6 @@ class FunctionArgumentInjector {
    *   function (x) {var x;}
    *
    * @param n The NAME node in question.
-   * @param parent The parent of the node.
    */
   private static boolean canNameValueChange(Node n) {
     return NodeUtil.isLValue(n)
