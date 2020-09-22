@@ -14,40 +14,25 @@
  * limitations under the License.
  */
 
-package java.text;
+package com.google.javascript.rhino;
 
-/**
- * A simple MessageFormat that only supports string replacement.
- */
-public class MessageFormat {
-  private String pattern;
+import com.google.javascript.jscomp.resources.GwtProperties;
 
-  public MessageFormat(String pattern) {
-    applyPattern(pattern);
-  }
+class ErrorFormat {
 
-  public void applyPattern(String pattern) {
-    this.pattern = pattern;
-  }
+  private static final GwtProperties BUNDLE =
+      GwtProperties.loadFromResource("rhino/Messages.properties");
 
-  public static String format(String pattern, Object... args) {
-    return justFormat(pattern, args);
-  }
-
-  public final String format(Object obj) {
-    if (obj instanceof Object[]) {
-      return justFormat(pattern, (Object[]) obj);
-    } else {
-      return justFormat(pattern, new Object[] {obj});
-    }
+  static String format(String key, Object... args) {
+    return justFormat(BUNDLE.getProperty(key), args);
   }
 
   private static String justFormat(String s, Object... args) {
+    // Note that this doesn't hand single-quote hence not compatible with MessageFormat.
+    // TODO: consider moving to a simple shared message format implementation in both JVM and Web.
     for (int i = 0; i < args.length; i++) {
       String toReplace = "{" + i + "}";
-      while (s.contains(toReplace)) {
-        s = s.replace(toReplace, String.valueOf(args[i]));
-      }
+      s = s.replace(toReplace, String.valueOf(args[i]));
     }
     return s;
   }

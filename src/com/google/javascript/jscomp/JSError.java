@@ -63,7 +63,7 @@ public abstract class JSError implements Serializable {
   public static JSError make(DiagnosticType type, String... arguments) {
     return new AutoValue_JSError(
         type,
-        type.format.format(arguments),
+        type.format(arguments),
         DEFAULT_SOURCENAME,
         DEFAULT_LINENO,
         DEFAULT_CHARNO,
@@ -83,7 +83,7 @@ public abstract class JSError implements Serializable {
   public static JSError make(
       String sourceName, int lineno, int charno, DiagnosticType type, String... arguments) {
     return new AutoValue_JSError(
-        type, type.format.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, type.level);
+        type, type.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, type.level);
   }
 
   /**
@@ -103,7 +103,7 @@ public abstract class JSError implements Serializable {
       DiagnosticType type,
       String... arguments) {
     return new AutoValue_JSError(
-        type, type.format.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, level);
+        type, type.format(arguments), sourceName, lineno, charno, DEFAULT_NODE, level);
   }
 
   /**
@@ -116,7 +116,7 @@ public abstract class JSError implements Serializable {
   public static JSError make(Node n, DiagnosticType type, String... arguments) {
     return new AutoValue_JSError(
         type,
-        type.format.format(arguments),
+        type.format(arguments),
         n.getSourceFileName(),
         n.getLineno(),
         n.getCharno(),
@@ -128,7 +128,7 @@ public abstract class JSError implements Serializable {
   public static JSError make(Node n, CheckLevel level, DiagnosticType type, String... arguments) {
     return new AutoValue_JSError(
         type,
-        type.format.format(arguments),
+        type.format(arguments),
         n.getSourceFileName(),
         n.getLineno(),
         n.getCharno(),

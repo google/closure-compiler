@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The Closure Compiler Authors.
+ * Copyright 2020 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.common.io;
+package com.google.javascript.jscomp.parsing;
 
-import java.io.IOException;
+import com.google.javascript.jscomp.resources.GwtProperties;
 
-/** GWT compatible no-op replacement for {@code CharSink} */
-public final class CharSink {
-  public void write(CharSequence chars) throws IOException {}
+final class ParserConfiguration {
+  private static final GwtProperties BUNDLE =
+      GwtProperties.loadFromResource("parsing/ParserConfig.properties");
+
+  public static String getString(String key) {
+    return BUNDLE.getProperty(key);
+  }
+
+  private ParserConfiguration() {}
 }

@@ -98,8 +98,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
       throw new IllegalArgumentException("a source must have a name");
     }
 
-    if (!"/".equals(File.separator)) {
-      this.fileName = fileName.replace(File.separator, "/");
+    if (!"/".equals(Platform.getFileSeperator())) {
+      this.fileName = fileName.replace(Platform.getFileSeperator(), "/");
     } else {
       this.fileName = fileName;
     }
@@ -401,14 +401,15 @@ public class SourceFile implements StaticSourceFile, Serializable {
   private static final String BANG_SLASH = "!/";
 
   private static boolean isZipEntry(String path) {
-    return path.contains(".zip!" + File.separator)
+    return path.contains(".zip!" + Platform.getFileSeperator())
         && (path.endsWith(".js") || path.endsWith(".js.map"));
   }
 
   @GwtIncompatible("java.io.File")
   private static SourceFile fromZipEntry(String zipURL, Charset inputCharset, SourceKind kind) {
     checkArgument(isZipEntry(zipURL));
-    String[] components = zipURL.split(Pattern.quote(BANG_SLASH.replace("/", File.separator)));
+    String[] components =
+        zipURL.split(Pattern.quote(BANG_SLASH.replace("/", Platform.getFileSeperator())));
     try {
       String zipPath = components[0];
       String relativePath = components[1];
@@ -440,7 +441,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
         .withCharset(inputCharset)
         .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
         .buildFromZipEntry(
-            new ZipEntryReader(absoluteZipPath, entryPath.replace(File.separator, "/")));
+            new ZipEntryReader(
+                absoluteZipPath, entryPath.replace(Platform.getFileSeperator(), "/")));
   }
 
   @GwtIncompatible("java.io.File")

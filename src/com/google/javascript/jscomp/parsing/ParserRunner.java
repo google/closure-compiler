@@ -37,18 +37,13 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.Set;
 import javax.annotation.Nullable;
 
 /** parser runner */
 public final class ParserRunner {
 
-  private static final String CONFIG_RESOURCE =
-      "com.google.javascript.jscomp.parsing.ParserConfig";
-
   private static Set<String> annotationNames = null;
-
   private static Set<String> suppressionNames = null;
   private static Set<String> reservedVars = null;
   private static Set<String> closurePrimitiveNames = null;
@@ -110,11 +105,10 @@ public final class ParserRunner {
       return;
     }
 
-    ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
-    annotationNames = extractList(config.getString("jsdoc.annotations"));
-    suppressionNames = extractList(config.getString("jsdoc.suppressions"));
-    closurePrimitiveNames = extractList(config.getString("jsdoc.primitives"));
-    reservedVars = extractList(config.getString("compiler.reserved.vars"));
+    annotationNames = extractList(ParserConfiguration.getString("jsdoc.annotations"));
+    suppressionNames = extractList(ParserConfiguration.getString("jsdoc.suppressions"));
+    closurePrimitiveNames = extractList(ParserConfiguration.getString("jsdoc.primitives"));
+    reservedVars = extractList(ParserConfiguration.getString("compiler.reserved.vars"));
   }
 
   private static ImmutableSet<String> extractList(String configProp) {

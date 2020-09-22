@@ -282,9 +282,14 @@ public class Parser {
       eat(TokenType.END_OF_FILE);
       return new ProgramTree(
           getTreeLocation(start), sourceElements, commentRecorder.getComments());
-    } catch (StackOverflowError e) {
-      reportError("Too deep recursion while parsing");
-      return null;
+    } catch (Error e) {
+      // We are checking the error message instead of catching StackOverflowError since
+      // StackOverflowError is not emulated on the Web.
+      if (e.toString().contains("java.lang.StackOverflowError")) {
+        reportError("Too deep recursion while parsing");
+        return null;
+      }
+      throw e;
     }
   }
 

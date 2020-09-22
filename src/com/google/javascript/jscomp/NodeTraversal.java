@@ -830,7 +830,7 @@ public class NodeTraversal {
   }
 
   private void handleScript(Node n, Node parent) {
-    if (Thread.interrupted()) {
+    if (Platform.isThreadInterrupted()) {
       throw new RuntimeException(new InterruptedException());
     }
     setChangeScope(n);
@@ -1347,7 +1347,7 @@ public class NodeTraversal {
   }
 
   private void initTraversal(Node traversalRoot) {
-    if (Thread.interrupted()) {
+    if (Platform.isThreadInterrupted()) {
       throw new RuntimeException(new InterruptedException());
     }
     Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(traversalRoot);

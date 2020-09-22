@@ -230,8 +230,7 @@ public final class PerformanceTracker {
   }
 
   private int getAllocatedMegabytes() {
-    Runtime javaRuntime = Runtime.getRuntime();
-    return bytesToMB(javaRuntime.totalMemory() - javaRuntime.freeMemory());
+    return bytesToMB(Platform.totalMemory() - Platform.freeMemory());
   }
 
   public boolean tracksSize() {

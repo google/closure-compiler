@@ -39,11 +39,8 @@
 
 package com.google.javascript.rhino;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import javax.annotation.Nullable;
 
 /**
@@ -103,28 +100,6 @@ public class SimpleErrorReporter implements ErrorReporter {
     }
 
     private static String getMessage(String messageId, Object... arguments) {
-      final String defaultResource = "com.google.javascript.rhino.Messages";
-
-      Locale locale = Locale.getDefault();
-
-      // ResourceBundle does caching.
-      ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
-
-      String formatString;
-      try {
-        formatString = rb.getString(messageId);
-      } catch (java.util.MissingResourceException mre) {
-          throw new RuntimeException
-              ("no message resource found for message property " + messageId);
-      }
-
-      /*
-       * It's OK to format the string, even if 'arguments' is empty;
-       * we need to format it anyway, to make double ''s collapse to
-       * single 's.
-       */
-      MessageFormat formatter = new MessageFormat(formatString);
-      return formatter.format(arguments);
-    }
-
+    return ErrorFormat.format(messageId, arguments);
+  }
 }

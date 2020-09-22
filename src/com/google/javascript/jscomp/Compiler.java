@@ -65,7 +65,6 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -274,7 +273,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private Set<String> externProperties = null;
   private AccessorSummary accessorSummary = AccessorSummary.create(ImmutableMap.of());
 
-  private static final Joiner pathJoiner = Joiner.on(File.separator);
+  private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
 
   // Starts at 0, increases as "interesting" things happen.
   // Nothing happens at time START_TIME, the first pass starts at time 1.

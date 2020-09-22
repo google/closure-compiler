@@ -67,6 +67,11 @@ public class GwtProperties {
     // If no : or =, delimiter is first whitespace.
     return line.indexOf(' ');
   }
+
+  public static GwtProperties loadFromResource(String resourceName) {
+    return load(ResourceLoader.loadTextResource(null, resourceName));
+  }
+
   /**
    * Constructs a new {@link GwtProperties} from the given source string.
    *

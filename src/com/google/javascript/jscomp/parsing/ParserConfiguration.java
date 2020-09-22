@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Closure Compiler Authors.
+ * Copyright 2020 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.google.javascript.jscomp.parsing;
 
-package java.lang;
+import java.util.ResourceBundle;
 
-/** GWT compatible no-op replacement for {@code StackOverflowError} */
-public class StackOverflowError extends Error {
+final class ParserConfiguration {
+
+  public static String getString(String name) {
+    return ResourceBundle.getBundle("com.google.javascript.jscomp.parsing.ParserConfig")
+        .getString(name);
+  }
+
+  private ParserConfiguration() {}
 }

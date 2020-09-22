@@ -284,8 +284,7 @@ public class AllowlistWarningsGuard extends WarningsGuard {
         out.append("\n# Warning ")
             .append(type.key)
             .append(": ")
-            .println(Iterables.get(
-                LINE_SPLITTER.split(type.format.toPattern()), 0));
+            .println(Iterables.get(LINE_SPLITTER.split(type.format), 0));
 
         for (String warning : warningsByType.get(type)) {
           out.println(warning);

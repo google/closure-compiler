@@ -64,7 +64,6 @@ import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.UnknownType;
 import com.google.javascript.rhino.jstype.Visitor;
 import java.io.Serializable;
-import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -1160,10 +1159,10 @@ class TypeValidator implements Serializable {
       mismatchStr = Joiner.on(",").join(mismatch);
     }
      if (missingStr.length() > 0 || mismatchStr.length() > 0) {
-      return MessageFormat.format(
+      return Platform.formatMessage(
           FOUND_REQUIRED_MISSING, description, foundStr, requiredStr, missingStr, mismatchStr);
     } else {
-      return MessageFormat.format(FOUND_REQUIRED, description, foundStr, requiredStr);
+      return Platform.formatMessage(FOUND_REQUIRED, description, foundStr, requiredStr);
     }
   }
 
