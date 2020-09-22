@@ -20,10 +20,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.javascript</groupId>
-  <artifactId>closure-compiler-unshaded</artifactId>
+  <artifactId>closure-compiler</artifactId>
   <packaging>jar</packaging>
 
-  <name>Closure Compiler Unshaded</name>
+  <name>Closure Compiler</name>
   <version>1.0-SNAPSHOT</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
@@ -41,21 +41,6 @@
     <groupId>com.google.javascript</groupId>
     <artifactId>closure-compiler-main</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <relativePath>pom-main.xml</relativePath>
+    <relativePath>closure-compiler-main.pom.xml</relativePath>
   </parent>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
 </project>

@@ -37,7 +37,7 @@ sonatype_artifact_bundle(
     artifact_id = "closure-compiler",
     jar = ":compiler_shaded.jar",
     javadoc = ":compiler_lib.javadoc",
-    pom = "pom-main-shaded.xml",
+    pom = "maven/closure-compiler.pom.xml",
     sources = ":compiler_lib.sources",
 )
 
@@ -46,7 +46,7 @@ sonatype_artifact_bundle(
     artifact_id = "closure-compiler-unshaded",
     jar = ":compiler_unshaded_deploy.jar",
     javadoc = ":compiler_lib.javadoc",
-    pom = "pom-main-unshaded.xml",
+    pom = "maven/closure-compiler-unshaded.pom.xml",
     sources = ":compiler_lib.sources",
 )
 
@@ -54,19 +54,19 @@ sonatype_artifact_bundle(
     name = "compiler_externs_bundle",
     artifact_id = "closure-compiler-externs",
     jar = ":externs",
-    pom = "externs/pom.xml",
+    pom = "maven/closure-compiler-externs.pom.xml",
 )
 
 sonatype_artifact_bundle(
     name = "compiler_main_bundle",
     artifact_id = "closure-compiler-main",
-    pom = "pom-main.xml",
+    pom = "maven/closure-compiler-main.pom.xml",
 )
 
 sonatype_artifact_bundle(
     name = "compiler_parent_bundle",
     artifact_id = "closure-compiler-parent",
-    pom = "pom.xml",
+    pom = "maven/closure-compiler-parent.pom.xml",
 )
 
 jar_jar(
