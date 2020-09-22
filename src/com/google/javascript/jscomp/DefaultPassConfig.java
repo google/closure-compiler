@@ -2367,22 +2367,21 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.REMOVE_UNUSED_CODE)
           .setRunInFixedPointLoop(true)
           .setInternalFactory(
-              (compiler) -> {
-                return new RemoveUnusedCode.Builder(compiler)
-                    .removeLocalVars(options.removeUnusedLocalVars)
-                    .removeGlobals(options.removeUnusedVars)
-                    .preserveFunctionExpressionNames(false)
-                    .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
-                    .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
-                    .removeUnusedObjectDefinePropertiesDefinitions(
-                        options.isRemoveUnusedClassProperties())
-                    // If we are forcing injection of some library code, don't remove polyfills.
-                    // Otherwise, we might end up removing polyfills the user specifically asked to
-                    // include.
-                    .removeUnusedPolyfills(options.forceLibraryInjection.isEmpty())
-                    .assumeGettersArePure(options.getAssumeGettersArePure())
-                    .build();
-              })
+              (compiler) ->
+                  new RemoveUnusedCode.Builder(compiler)
+                      .removeLocalVars(options.removeUnusedLocalVars)
+                      .removeGlobals(options.removeUnusedVars)
+                      .preserveFunctionExpressionNames(false)
+                      .removeUnusedPrototypeProperties(options.removeUnusedPrototypeProperties)
+                      .removeUnusedThisProperties(options.isRemoveUnusedClassProperties())
+                      .removeUnusedObjectDefinePropertiesDefinitions(
+                          options.isRemoveUnusedClassProperties())
+                      // If we are forcing injection of some library code, don't remove polyfills.
+                      // Otherwise, we might end up removing polyfills the user specifically asked
+                      // to include.
+                      .removeUnusedPolyfills(options.forceLibraryInjection.isEmpty())
+                      .assumeGettersArePure(options.getAssumeGettersArePure())
+                      .build())
           .setFeatureSetForOptimizations()
           .build();
 

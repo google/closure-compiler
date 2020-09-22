@@ -75,19 +75,17 @@ public final class ClosureReverseAbstractInterpreter extends ChainableReverseAbs
   public ClosureReverseAbstractInterpreter(final JSTypeRegistry typeRegistry) {
     super(typeRegistry);
     this.restricters =
-        new ImmutableMap.Builder<String, Function<TypeRestriction, JSType>>()
-            .put(
-                "isObject",
-                p -> {
-                  if (p.type == null) {
-                    return p.outcome ? getNativeType(OBJECT_TYPE) : null;
-                  }
+        ImmutableMap.of(
+            "isObject",
+            p -> {
+              if (p.type == null) {
+                return p.outcome ? getNativeType(OBJECT_TYPE) : null;
+              }
 
-                  Visitor<JSType> visitor =
-                      p.outcome ? restrictToObjectVisitor : restrictToNotObjectVisitor;
-                  return p.type.visit(visitor);
-                })
-            .build();
+              Visitor<JSType> visitor =
+                  p.outcome ? restrictToObjectVisitor : restrictToNotObjectVisitor;
+              return p.type.visit(visitor);
+            });
   }
 
   @Override
