@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
@@ -35,12 +36,8 @@ public final class OptionalChainingIntegrationTest extends IntegrationTestCase {
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    // TODO(b/145761297): Add non-transpiling test cases when the optimization passes have been
-    //     updated to handle optional chaining.
-    // Default to testing with transpilation, since that will be the most common use case for
-    // awhile.
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
@@ -54,7 +51,7 @@ public final class OptionalChainingIntegrationTest extends IntegrationTestCase {
   @Test
   public void bareMinimumTranspileTest() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2019); // transpile
 
     externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
     test(
@@ -77,5 +74,77 @@ public final class OptionalChainingIntegrationTest extends IntegrationTestCase {
             "maybeLog(new MyClass());",
             ""),
         "console.log('log message');");
+  }
+
+  @Test
+  public void testRemoveUnusedCode() {
+    CompilerOptions options = createCompilerOptions();
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    test(
+        options,
+        lines(
+            "class MyClass {", //
+            "  method() {",
+            "    return 4;",
+            "  }",
+            "}",
+            "",
+            "/**",
+            " * @param {?MyClass} maybeMyClass",
+            " */",
+            "function maybeLog(maybeMyClass) {",
+            "  maybeMyClass?.method()", // optional chaining call
+            "}",
+            "",
+            "maybeLog(new MyClass());",
+            ""),
+        "");
+  }
+
+  @Test
+  public void testInline() {
+    CompilerOptions options = createCompilerOptions();
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    test(
+        options,
+        lines(
+            "class MyClass {", //
+            "  method() {",
+            "    return 4;",
+            "  }",
+            "}",
+            "let x = (new MyClass()).method();", // regular call gets devirtualized and inlined
+            "console.log(x);",
+            ""),
+        "console.log(4);");
+
+    test(
+        options,
+        lines(
+            "class MyClass {", //
+            "  method() {",
+            "    return 4;",
+            "  }",
+            "}",
+            "let x = (new MyClass())?.method();",
+            "console.log(x);",
+            ""),
+        lines(
+            "class a {", //
+            "  a() {",
+            "    return 4;",
+            "  }",
+            "}",
+            // optional call is not devirtualized and not inlined
+            "console.log((new a)?.a());"));
+  }
+
+  @Test
+  public void testCheckTypes() {
+    CompilerOptions options = createCompilerOptions();
+    externs = ImmutableList.of(new TestExternsBuilder().addConsole().buildExternsFile("externs"));
+    options.setCheckTypes(true);
+    // JSC_WRONG_ARGUMENT_COUNT error is reported
+    test(options, "var x = x || {}; x.f = function() {}; x?.f(3);", DiagnosticGroups.CHECK_TYPES);
   }
 }
