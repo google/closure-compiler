@@ -40,6 +40,9 @@ public class AstChainOptionalizer {
     // Only the first link in a chain starts a new optional chain.
     // x[prop].y() -> x?.[prop].y()
     FIRST_NODE_ONLY,
+    // Only the last link in a chain starts a new optional chain.
+    // x[prop].y() -> x.[prop].y?.()
+    LAST_NODE_ONLY,
   }
 
   /** Builds a new AstOptionalizer. */
@@ -107,6 +110,17 @@ public class AstChainOptionalizer {
         // `super?.` is not allowed.
         return;
       }
+      if (chainStartStrategy == ChainStartStrategy.LAST_NODE_ONLY && n.isFirstChildOf(parent)) {
+        switch (parent.getToken()) {
+          case CALL:
+          case GETELEM:
+          case GETPROP:
+            // Don't convert this node, because it's not the tail end of a chain.
+            return;
+          default:
+            break;
+        }
+      }
       final Token optChainToken;
       switch (n.getToken()) {
         case CALL:
@@ -143,8 +157,10 @@ public class AstChainOptionalizer {
           "Object.defineProperties",
           "goog.addSingletonGetter",
           "goog.inherits",
+          "goog.loadModule",
           "goog.mixin",
           "goog$mixin",
+          "goog.module",
           "goog.reflect.cache",
           "goog.reflect.object",
           "goog.reflect.objectProperty",
