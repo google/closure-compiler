@@ -325,8 +325,10 @@ PerformanceObserver.prototype.observe = function(options) {};
 PerformanceObserver.prototype.disconnect = function() {};
 
 /**
- * See https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver/takeRecords
- * @return {!PerformanceObserverEntryList}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver/takeRecords
+ * @see https://www.w3.org/TR/performance-timeline-2/#takerecords-method
+ * @return {!Array<!PerformanceEntry>} The current PerformanceEntry list stored
+ *     in the performance observer buffer, emptying it out.
  */
 PerformanceObserver.prototype.takeRecords = function() {};
 
