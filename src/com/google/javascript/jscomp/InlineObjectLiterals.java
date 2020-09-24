@@ -432,10 +432,14 @@ class InlineObjectLiterals implements CompilerPass {
       if (defined) {
         vnode = init.getParent();
         fillInitialValues(init, initvals);
+      } else if (v.getParentNode().isLet() || v.getParentNode().isConst()) {
+        // Find the beginning of the current scope.
+        vnode = v.getScope().getRootNode().getFirstChild();
       } else {
         // Find the beginning of the function body / script.
         vnode = v.getScope().getClosestHoistScope().getRootNode().getFirstChild();
       }
+
       checkState(NodeUtil.isStatement(vnode), vnode);
 
       for (Map.Entry<String, String> entry : varmap.entrySet()) {

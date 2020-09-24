@@ -78,6 +78,7 @@ abstract class IntegrationTestCase {
                       " * @nosideeffects",
                       " */",
                       "Math.pow = function(n1, n2) {};",
+                      "Math.random = function() {}",
                       "var isNaN;",
                       "var Infinity;",
                       "/**",

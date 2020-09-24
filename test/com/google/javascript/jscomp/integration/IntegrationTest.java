@@ -3849,6 +3849,47 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   @Test
+  public void testNoCrashInliningObjectLiteral_propertyAccessOnReturnValue_conditionally() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    String src =
+        lines(
+            "const b = () => ({ x: '' })",
+            "    function main() {",
+            "let a;",
+            "if (Math.random()) {",
+            "a = b();",
+            "alert(a.x);",
+            "}",
+            "}",
+            "main();");
+
+    String expected = "'use strict';Math.random()&&alert(\"\")";
+
+    test(options, src, expected);
+  }
+
+  @Test
+  public void testNoCrashInliningObjectLiteral_propertyAccessOnReturnValue_unconditionally() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    String src =
+        lines(
+            "const b = () => ({ x: '' })",
+            "function main() {",
+            "  let a;",
+            "  a = b();",
+            "  alert(a.x);",
+            "}",
+            "main();");
+    String expected = "'use strict';alert(\"\")";
+
+    test(options, src, expected);
+  }
+
+  @Test
   public void testNoDevirtualization_whenSingleDefinitionInSource_ifNameCollidesWithExtern() {
     // See https://github.com/google/closure-compiler/issues/3040
     //

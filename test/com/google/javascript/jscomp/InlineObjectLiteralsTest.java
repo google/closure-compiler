@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2017;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 
 import org.junit.Before;
@@ -108,6 +109,93 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
          "var a = {x:x, y:y};" +
          "var JSCompiler_object_inline_a_0=a;" +
          "f(JSCompiler_object_inline_a_0.x, JSCompiler_object_inline_a_0.y);");
+  }
+
+  // https://github.com/google/closure-compiler/issues/3658
+  @Test
+  public void testNoCrashInliningObjectLiteral_conditionalAssignmentToObject_es2017() {
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
+    getOptions().setLanguageOut(ECMASCRIPT_2017);
+
+    String src = "{let a;if(Math.random()){a={x:''};console.log(a.x)}};";
+    String expected =
+        lines(
+            "{",
+            "  var JSCompiler_object_inline_x_0;",
+            "  if (Math.random()) {",
+            "    JSCompiler_object_inline_x_0 = '', true;",
+            "    console.log(JSCompiler_object_inline_x_0);",
+            "  }",
+            "};");
+
+    test(src, expected);
+  }
+
+  @Test
+  public void testNoInlining_propertyAccessOnVar_unconditionalAssignmentToObject_es2017() {
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
+    getOptions().setLanguageOut(ECMASCRIPT_2017);
+
+    // `var` declaration corresponds to global scope: ineligible for inlining object literal
+    String src = "{var a; a={x:\"\"};console.log(a.x);}";
+    testSame(src);
+  }
+
+  // https://github.com/google/closure-compiler/issues/3658
+  @Test
+  public void testNoCrashInliningObjectLiteral_unconditionalAssignmentToObject_es2017() {
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
+    getOptions().setLanguageOut(ECMASCRIPT_2017);
+
+    String src = "{let a; a={x:\"\"};console.log(a.x);}";
+    String expected =
+        lines(
+            "{",
+            "  var JSCompiler_object_inline_x_0;",
+            "  JSCompiler_object_inline_x_0 = \"\", true;",
+            "  console.log(JSCompiler_object_inline_x_0);",
+            "}");
+    test(src, expected);
+  }
+
+  // https://github.com/google/closure-compiler/issues/3658
+  @Test
+  public void testNoInliningObjectLiteral_conditionalAssignmentToReturnValue_es2017() {
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
+    getOptions().setLanguageOut(ECMASCRIPT_2017);
+
+    String src =
+        lines(
+            "const b = () => ({ x: '' })",
+            "function main() {",
+            "  let a;",
+            "  if (Math.random()) {",
+            // regardless of scope, only direct assignments to object literals get inlined.
+            "    a = b();",
+            "    alert(a.x);",
+            "  }",
+            "}",
+            "main();");
+    testSameLocal(src);
+  }
+
+  // https://github.com/google/closure-compiler/issues/3658
+  @Test
+  public void testNoInliningObjectLiteral_unconditionalAssignmentToReturnValue_es2017() {
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
+    getOptions().setLanguageOut(ECMASCRIPT_2017);
+
+    String src =
+        lines(
+            "const b = () => ({ x: '' })",
+            "function main() {",
+            "  let a;",
+            // regardless of scope, only direct assignments to object literals get inlined.
+            "  a = b();",
+            "  alert(a.x);",
+            "}",
+            "main();");
+    testSameLocal(src);
   }
 
   @Test
