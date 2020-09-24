@@ -40,6 +40,15 @@ maven_import(
     licenses = ["notice"],
 )
 
+maven_import(
+    # https://ant.apache.org/
+    group_id ="org.apache.ant",
+    artifact_id = "ant",
+    version ="1.9.7",
+    sha256 = "9a5dbe3f5f2cb91854c8682cab80178afa412ab35a5ab718bf39ce01b3435d93",
+    licenses = ["notice"],
+)
+
 git_repository(
     name = "protobuf_proto_rules",
     commit = "218ffa7dfa5408492dc86c01ee637614f8695c45",
