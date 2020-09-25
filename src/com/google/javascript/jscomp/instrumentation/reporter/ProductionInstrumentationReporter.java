@@ -115,9 +115,9 @@ final class ProductionInstrumentationReporter {
     File myObj = new File(fileName);
     myObj.createNewFile();
 
-    Writer myWriter = Files.newBufferedWriter(Paths.get(fileName), UTF_8);
-    myWriter.write(fileContents);
-    myWriter.close();
+    try (Writer myWriter = Files.newBufferedWriter(Paths.get(fileName), UTF_8)) {
+      myWriter.write(fileContents);
+    }
   }
 
   private void doMain(String[] args) throws IOException {
