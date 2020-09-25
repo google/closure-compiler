@@ -95,7 +95,7 @@ public final class GlobalNamespaceTest {
 
   @Test
   public void testReferencesToUndefinedRootName() {
-    GlobalNamespace namespace = parse("a; a.b = 0; a.b;");
+    GlobalNamespace namespace = parse("a; a.b = 0; a.b; a?.b");
     assertThat(namespace.getSlot("a")).isNull();
     assertThat(namespace.getSlot("a.b")).isNull();
   }
@@ -224,15 +224,33 @@ public final class GlobalNamespaceTest {
                 "  static staticMethod() {}",
                 "}",
                 "class Subclass extends Superclass {}",
-                "Subclass.staticMethod();"));
+                "Subclass.staticMethod();",
+                "Subclass.staticMethod?.();",
+                "Subclass?.staticMethod();"));
+
+    Name superclass = namespace.getOwnSlot("Superclass");
+    assertThat(superclass.getSubclassingGets()).isEqualTo(1);
 
     Name superclassStaticMethod = namespace.getOwnSlot("Superclass.staticMethod");
     assertThat(superclassStaticMethod.getRefs()).hasSize(1);
     assertThat(superclassStaticMethod.getDeclaration()).isNotNull();
 
     Name subclassStaticMethod = namespace.getOwnSlot("Subclass.staticMethod");
-    assertThat(subclassStaticMethod.getRefs()).hasSize(1);
+    // 2 references:
+    // `Subclass.staticMethod()`
+    // `Subclass.staticMethod?.()`
+    // `SubClass?.staticMethod()` is a reference to `SubClass`, but not
+    // to `SubClass.staticmethod`.
+    assertThat(subclassStaticMethod.getRefs()).hasSize(2);
     assertThat(subclassStaticMethod.getDeclaration()).isNull();
+    assertThat(subclassStaticMethod.getCallGets()).isEqualTo(2);
+
+    Name subclass = namespace.getOwnSlot("Subclass");
+    assertThat(subclass.getRefs()).hasSize(2);
+    // `class Subclass` is the declaration reference
+    assertThat(subclass.getDeclaration()).isNotNull();
+    // `SubClass?.staticMethod` is an aliasing get on `SubClass`
+    assertThat(subclass.getAliasingGets()).isEqualTo(1);
   }
 
   @Test
@@ -846,6 +864,16 @@ public final class GlobalNamespaceTest {
   @Test
   public void testCannotCollapseAliasedObjectLitProperty() {
     GlobalNamespace namespace = parse("var foo = {prop: 0}; use(foo);");
+
+    Name fooProp = namespace.getSlot("foo.prop");
+
+    // We should not convert foo.prop -> foo$prop because use(foo) might read foo.prop
+    assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testCannotCollapseObjectLitPropertyEscapedWithOptionalCall() {
+    GlobalNamespace namespace = parse("var foo = {prop: 0}; use?.(foo);");
 
     Name fooProp = namespace.getSlot("foo.prop");
 

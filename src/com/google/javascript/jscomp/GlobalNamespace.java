@@ -54,6 +54,13 @@ import javax.annotation.Nullable;
  * Builds a namespace of all qualified names whose root is in the global scope or a module, plus an
  * index of all references to those global names.
  *
+ * <p>This class tracks assignments to qualified names (e.g. `a.b.c`), because we often want to
+ * treat them as if they were global variables (e.g. CollapseProperties). However, when a qualified
+ * name begins an optional chain, we will not consider the optional chain to be part of the
+ * qualified name (e.g. `a.b?.c` is the qualified name `a.b` with an optional reference to property
+ * `c`.) We will record such optional chains as ALIASING_GET references to the non-optional
+ * qualified name part.
+ *
  * <p>When used as a StaticScope this class acts like a single parentless global scope. The module
  * references are currently only accessible by {@link #getNameFromModule(ModuleMetadata, String)},
  * as many use cases only care about global names. (This may change as module rewriting is moved
@@ -445,6 +452,9 @@ class GlobalNamespace
           break;
         case NAME:
         case GETPROP:
+          // OPTCHAIN_GETPROP is intentionally not included in this case.
+          // "a.b?.c" is not a reference to the global name "a.b.c" for the
+          // purposes of GlobalNamespace.
           // TODO(b/127505242): CAST parents may indicate a set.
           // This may be a variable get or set.
           switch (parent.getToken()) {
@@ -823,6 +833,7 @@ class GlobalNamespace
         case NEG:
           type = Ref.Type.DIRECT_GET;
           break;
+        case OPTCHAIN_CALL:
         case CALL:
           if (n == parent.getFirstChild()) {
             // It is a call target
