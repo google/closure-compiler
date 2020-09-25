@@ -1,0 +1,191 @@
+{
+  "totalReportsParsed": 1,
+  "percentOfFunctionsExecuted": 57.14,
+  "percentOfBranchesExecuted": 33.33,
+  "result": [
+    {
+      "fileName": "fib.js",
+      "percentOfFunctionsExecuted": 100.0,
+      "percentOfBranchesExecuted": 100.0,
+      "profilingResultPerFunction": {
+        "fib": [
+          {
+            "param": "C",
+            "type": "BRANCH",
+            "lineNo": 2,
+            "colNo": 1,
+            "executed": 100.0,
+            "data": {
+              "frequency": 5
+            }
+          },
+          {
+            "param": "E",
+            "type": "BRANCH_DEFAULT",
+            "lineNo": 2,
+            "colNo": 1,
+            "executed": 100.0,
+            "data": {
+              "frequency": 4
+            }
+          },
+          {
+            "param": "G",
+            "type": "FUNCTION",
+            "lineNo": 1,
+            "colNo": 0,
+            "executed": 100.0,
+            "data": {
+              "frequency": 9
+            }
+          }
+        ],
+        "main": [
+          {
+            "param": "I",
+            "type": "FUNCTION",
+            "lineNo": 9,
+            "colNo": 0,
+            "executed": 100.0,
+            "data": {
+              "frequency": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fileName": "InstrumentCode.js",
+      "percentOfFunctionsExecuted": 40.0,
+      "percentOfBranchesExecuted": 14.29,
+      "profilingResultPerFunction": {
+        "module$contents$instrument$code_instrumentCode": [
+          {
+            "param": "K",
+            "type": "BRANCH",
+            "lineNo": 20,
+            "colNo": 4,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "M",
+            "type": "BRANCH_DEFAULT",
+            "lineNo": 20,
+            "colNo": 4,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "O",
+            "type": "BRANCH",
+            "lineNo": 18,
+            "colNo": 2,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "S",
+            "type": "BRANCH",
+            "lineNo": 15,
+            "colNo": 1,
+            "executed": 100.0,
+            "data": {
+              "frequency": 1
+            }
+          },
+          {
+            "param": "U",
+            "type": "BRANCH_DEFAULT",
+            "lineNo": 15,
+            "colNo": 1,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "W",
+            "type": "FUNCTION",
+            "lineNo": 13,
+            "colNo": 2,
+            "executed": 100.0,
+            "data": {
+              "frequency": 1
+            }
+          }
+        ],
+        "<Anonymous>": [
+          {
+            "param": "Q",
+            "type": "FUNCTION",
+            "lineNo": 30,
+            "colNo": 17,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "Y",
+            "type": "FUNCTION",
+            "lineNo": 50,
+            "colNo": 19,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "gB",
+            "type": "FUNCTION",
+            "lineNo": 57,
+            "colNo": 19,
+            "executed": 100.0,
+            "data": {
+              "frequency": 1
+            }
+          }
+        ],
+        "module$contents$instrument$code_download": [
+          {
+            "param": "a",
+            "type": "BRANCH",
+            "lineNo": 41,
+            "colNo": 4,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "c",
+            "type": "BRANCH_DEFAULT",
+            "lineNo": 41,
+            "colNo": 4,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          },
+          {
+            "param": "e",
+            "type": "FUNCTION",
+            "lineNo": 39,
+            "colNo": 2,
+            "executed": 0.0,
+            "data": {
+              "frequency": 0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

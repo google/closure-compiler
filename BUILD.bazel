@@ -87,6 +87,12 @@ java_binary(
     runtime_deps = [":compiler_lib"],
 )
 
+java_binary(
+    name = "instrumentationReporter",
+    main_class = "com.google.javascript.jscomp.instrumentation.reporter.ProductionInstrumentationReporter",
+    runtime_deps = [":compiler_lib"],
+)
+
 java_library(
     name = "externs",
     resources = [":externs_zip"],
@@ -216,6 +222,7 @@ java_library(
         "contrib/externs/chai-3.5.js",
     ] + glob([
         "test/com/google/javascript/jscomp/testdata/**/*",
+        "test/com/google/javascript/jscomp/instrumentation/reporter/testdata/**/*",
         "test/com/google/javascript/refactoring/examples/testdata/**/*",
     ]),
     resources = glob([
