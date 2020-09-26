@@ -81,6 +81,41 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "    alert(a.b.staticProp);", // value inlined
             "  }",
             "}"));
+    test(
+        lines(
+            "var a = {};",
+            "/** @constructor */ a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "/** @constructor */",
+            "function f() { ",
+            "  while (true) { ",
+            "    var b = a.b;",
+            "    alert(b?.staticProp);",
+            "  }",
+            "}"),
+        lines(
+            "var a = {};",
+            "/** @constructor */ a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "/** @constructor */",
+            "function f() {",
+            "  for(; true; ) {",
+            "    var b = null;", // replaced with null
+            "    alert(a.b?.staticProp);", // value inlined
+            "  }",
+            "}"));
+    testSame(
+        lines(
+            "var a = {};",
+            "/** @constructor */ a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "/** @constructor */",
+            "function f() { ",
+            "  while (true) { ",
+            "    var b = a?.b;", // not inlined when optional chain
+            "    alert(b?.staticProp);",
+            "  }",
+            "}"));
   }
 
   @Test
@@ -104,6 +139,39 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  var b = null;", // replaced with null
             "  for (;true;)", // converted to for-loop
             "    alert(a.b.staticProp);", // inlined
+            "}"));
+    test(
+        lines(
+            "var a = {};",
+            "a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "function f() { ",
+            "  var b = a.b;",
+            "  while (true) { ",
+            "    alert(b?.staticProp);", // reference with opt chain
+            "  }",
+            "}"),
+        lines(
+            "var a = {};",
+            "a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "function f() {",
+            "  var b = null;", // replaced with null
+            "  for (;true;)", // converted to for-loop
+            "    alert(a.b?.staticProp);", // inlined
+            "}"));
+
+    testSame(
+        lines(
+            "var a = {};",
+            "a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "function f() { ",
+            // Not an alias for `a.b` when it's an optional chain.
+            "  var b = a?.b;",
+            "  while (true) { ",
+            "    alert(b?.staticProp);",
+            "  }",
             "}"));
   }
 
@@ -179,6 +247,20 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  alias = function() {}",
             "}"),
         AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function a() {}",
+            "a.b = {};",
+            "a.b.staticProp = 5;",
+            "function f() {",
+            "  var alias = a;",
+            // Make sure a property reference via optional chain is still
+            // recognized as unsafe.
+            "  use(alias?.b.staticProp);", // Unsafe because a.b.staticProp becomes a$b$staticProp.
+            "  alias = function() {}",
+            "}"),
+        AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
 
   @Test
@@ -218,6 +300,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testAliasingOfReassignedProperty1() {
     testSame("var obj = {foo: 3}; var foo = obj.foo; obj.foo = 42; alert(foo);");
+    testSame("var obj = {foo: 3}; var foo = obj?.foo; obj.foo = 42; alert(foo);");
   }
 
   @Test
@@ -228,6 +311,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Test
   public void testAliasingOfReassignedProperty3() {
     testSame("var obj = {foo: {bar: 3}}; var bar = obj.foo.bar; obj.foo = {}; alert(bar);");
+    testSame("var obj = {foo: {bar: 3}}; var bar = obj.foo?.bar; obj.foo = {}; alert(bar);");
+    testSame("var obj = {foo: {bar: 3}}; var bar = obj?.foo.bar; obj.foo = {}; alert(bar);");
   }
 
   @Test
@@ -250,6 +335,15 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var foo = null;",
             "ns = ns || {};",
             "alert(ns.ctor.foo);"));
+    testSame(
+        lines(
+            "var ns = {};",
+            "/** @constructor */ ns.ctor = function() {};",
+            "ns.ctor.foo = 3;",
+            // optional chain means this isn't a real alias
+            "var foo = ns.ctor?.foo;",
+            "ns = ns || {};", // safe reinitialization of ns.
+            "alert(foo);"));
   }
 
   @Test
@@ -419,6 +513,14 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "use(a.b);",
             "(function() { a.b.c = 0; })();",
             "a.b.c;"));
+    testSame(
+        lines(
+            "var a = {};",
+            "a.b = {};",
+            "var d = a?.b;", // optional chain makes this no longer an alias
+            "use(d);",
+            "(function() { a.b.c = 0; })();",
+            "a.b.c;"));
   }
 
   @Test
@@ -474,13 +576,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "a.b = 1;",
             "var c = a;",
             "c.b = 2;",
-            "a.b == c.b;"),
+            "a?.b == c?.b;"),
         lines(
             "var a = function() {};", //
             "a.b = 1;",
             "var c = null;",
             "a.b = 2;",
-            "a.b == a.b;"));
+            "a?.b == a?.b;"));
   }
 
   @Test
@@ -498,6 +600,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "a.b.c = 1;",
             "var d = null;",
             "a.b.c == a.b.c"));
+    testSame(
+        lines(
+            "var a = {};", //
+            "a.b = function() {};",
+            "a.b.c = 1;",
+            "var d = a?.b;", // optional chain prevents this being a true alias
+            "a.b.c == d?.c;"));
   }
 
   @Test
@@ -638,6 +747,23 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  var tmp;",
             "  tmp = null;",
             "  Main.doSomething(5);",
+            "}"));
+    test(
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  tmp = Main;",
+            "  tmp?.doSomething(5);",
+            "}"),
+        lines(
+            "/** @constructor @struct */ var Main = function() {};",
+            "Main.doSomething = function(i) {}",
+            "function f() {",
+            "  var tmp;",
+            "  tmp = null;",
+            "  Main?.doSomething(5);",
             "}"));
   }
 
@@ -978,6 +1104,14 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "a.b.c = function() {};",
             "a.b.d = null;",
             "use(a.b.c);"));
+    testSame(
+        lines(
+            "var a = {}", //
+            "a.b = {};",
+            "a.b.c = function() {};",
+            "a.b.d = a.b.c;",
+            // reference to alias via optional chain stops inlining
+            "use(a.b?.d);"));
   }
 
   @Test
@@ -994,6 +1128,19 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "function f() {",
             "  var x = null;",
             "  f(a.b.c);",
+            "}"));
+    test(
+        lines(
+            "var a = { b: { c: 5 } }", //
+            "function f() {",
+            "  var x = a.b;",
+            "  f(x?.c);",
+            "}"),
+        lines(
+            "var a = { b: { c: 5 } }", //
+            "function f() {",
+            "  var x = null;",
+            "  f(a.b?.c);",
             "}"));
   }
 
@@ -1176,6 +1323,27 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGlobalAliasWithPropertiesAndOptChainReference() {
+    test(
+        lines(
+            "var ns = {}", //
+            "ns.Foo = function() {};",
+            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "ns.Bar = ns.Foo;",
+            "/** @enum { number } */ ns.Bar.Other = { X: 1, Y: 2 };",
+            "var x = function() { use(ns.Bar?.Other.X) };",
+            "use(x)"),
+        lines(
+            "var ns = {}", //
+            "ns.Foo = function() {};",
+            "/** @enum { number } */ ns.Foo.EventType = { A: 1, B: 2 };",
+            "ns.Bar = null;",
+            "/** @enum { number } */ ns.Foo.Other = { X: 1, Y: 2 };",
+            "var x = function() { use(ns.Foo?.Other.X) };",
+            "use(x)"));
+  }
+
+  @Test
   public void testGlobalAliasWithPropertiesAsNestedObjectLits() {
     test(
         lines(
@@ -1271,7 +1439,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  var x = a;",
             "  f(x.b);",
             "  f(x.c);",
-            "  f(x.c.d);",
+            "  f(x.c?.d);",
             "}"),
         lines(
             "var a = { b: 3, c: { d: 5 } }", //
@@ -1279,7 +1447,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  var x = null;",
             "  f(a.b);",
             "  f(a.c);",
-            "  f(a.c.d)",
+            "  f(a.c?.d)",
             "}"));
   }
 
@@ -2096,6 +2264,28 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "ns1.A.staticProp = {foo: 'bar'};",
             "ns2.B = class extends ns1.A {}",
             "use(ns1.A.staticProp.bar);"));
+    test(
+        lines(
+            "var ns1 = {}, ns2 = {};",
+            "ns1.A = class {};",
+            "ns1.A.staticProp = {foo: 'bar'};",
+            "ns2.B = class extends ns1.A {}",
+            "use(ns2.B.staticProp?.bar);"),
+        lines(
+            "var ns1 = {}, ns2 = {};",
+            "ns1.A = class {};",
+            "ns1.A.staticProp = {foo: 'bar'};",
+            "ns2.B = class extends ns1.A {}",
+            "use(ns1.A.staticProp?.bar);"));
+    testSame(
+        lines(
+            "var ns1 = {}, ns2 = {};",
+            "ns1.A = class {};",
+            "ns1.A.staticProp = {foo: 'bar'};",
+            "ns2.B = class extends ns1.A {}",
+            // ns2.B isn't an alias for ns1.A, so it isn't inlined.
+            // ns2.B?.staticProp isn't an alias, because it's an optional chain.
+            "use(ns2.B?.staticProp.bar);"));
   }
 
   @Test
@@ -2351,6 +2541,22 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var global_DEBUG = null;",
             "foo.DEBUG = null;",
             "alert(goog.DEBUG);"));
+    test(
+        lines(
+            "var goog = {};",
+            "goog.DEBUG = false;",
+            "var foo = {};",
+            "var global_DEBUG = goog.DEBUG;",
+            "foo.DEBUG = global_DEBUG;",
+            "alert(foo?.DEBUG);"),
+        lines(
+            "var goog = {};",
+            "goog.DEBUG = false;",
+            "var foo = {};",
+            "var global_DEBUG = null;",
+            // Does not get inlined because of the optional chain reference
+            "foo.DEBUG = goog.DEBUG;",
+            "alert(foo?.DEBUG);"));
   }
 
   @Test

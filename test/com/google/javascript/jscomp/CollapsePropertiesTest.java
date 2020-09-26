@@ -137,6 +137,30 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "C.p = 1;",
             "alert(C$p_);",
             ""));
+    test(
+        lines(
+            "class C {",
+            "  /** @param {number} v */",
+            "  static set p(v) { this.p_ = v; }",
+            "}",
+            // declaration and initialization of private static field
+            "/** @private {number} */",
+            "C.p_ = 0;",
+            // changing private static field through setter property
+            "C.p = 1;",
+            "alert?.(C?.p_);",
+            ""),
+        lines(
+            "class C {",
+            "  /** @param {number} v */",
+            "  static set p(v) { this.p_ = v; }",
+            "}",
+            // TODO(b/130682799): C.p_ should not be collapsed
+            "/** @private {number} */",
+            "var C$p_ = 0;",
+            "C.p = 1;",
+            "alert?.(C?.p_);",
+            ""));
   }
 
   @Test
@@ -222,6 +246,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "obj$setP(1);",
             "alert(obj$p_);",
             ""));
+    testSame(
+        lines(
+            "const obj = {",
+            "  /** @private {number} */",
+            "  p_: 0,",
+            "  /**",
+            "   * @this {{p_: number}}",
+            "   * @param {number} v",
+            "   */",
+            "  setP(v) { this.p_ = v; }",
+            "}",
+            "obj.setP?.(1);",
+            "alert(obj?.p_);",
+            ""));
   }
 
   @Test
@@ -244,6 +282,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  get p() { return this.p_; }",
             "}",
             "alert(obj.p);",
+            ""));
+    testSame(
+        lines(
+            "const obj = {",
+            "  /** @private {number} */",
+            "  p_: 0,",
+            "  /** @type {number} */",
+            "  get p() { return this?.p_; }",
+            "}",
+            "alert(obj?.p);",
             ""));
   }
 
@@ -270,13 +318,28 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "obj.p = 1;",
             "alert(obj$p_);",
             ""));
+    testSame(
+        lines(
+            "const obj = {",
+            "  /** @private {number} */",
+            "  p_: 0,",
+            "  /** @param {number} v */",
+            "  set p(v) { this.p_ = v; }",
+            "}",
+            "obj.p = 1;",
+            "alert?.(obj?.p_);",
+            ""));
   }
 
   @Test
   public void testMultiLevelCollapse() {
+
     test(
         "var a = {}; a.b = {}; a.b.c = {}; var d = 1; d = a.b.c;",
-        "var a$b$c = {}; var d = 1; d = a$b$c;");
+        "var                   a$b$c = {}; var d = 1; d = a$b$c;");
+    test(
+        "var a = {}; a.b = {}; a.b.c = {}; var d = 1; d = a.b?.c;",
+        "var         a$b = {}; a$b.c = {}; var d = 1; d = a$b?.c;");
 
     test(
         "var a = {}; a.b = {}; /** @nocollapse */ a.b.c = {}; var d = 1; d = a.b.c;",
@@ -347,20 +410,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjLitAssignmentDepth1() {
+
     test(
         "var a = {b: {}, c: {}}; var d = 1; var e = 1; d = a.b; e = a.c",
         "var a$b = {}; var a$c = {}; var d = 1; var e = 1; d = a$b; e = a$c");
+    testSame("var a = {b: {}, c: {}}; var d = 1; var e = 1; d = a?.b; e = a?.c");
 
     test(
         "var a = {b: {}, /** @nocollapse */ c: {}}; var d = 1; d = a.b; var e = 1; e = a.c",
         "var a$b = {}; var a = { /** @nocollapse */c: {}}; var d = 1; d = a$b; var e = 1; e = a.c");
+    testSame("var a = {b: {}, /** @nocollapse */ c: {}}; var d = 1; d = a?.b; var e = 1; e = a?.c");
   }
 
   @Test
   public void testObjLitAssignmentDepth2() {
+
     test(
         "var a = {}; a.b = {c: {}, d: {}}; var e = 1; e = a.b.c; var f = 1; f = a.b.d",
         "var a$b$c = {}; var a$b$d = {}; var e = 1; e = a$b$c; var f = 1; f = a$b$d;");
+    test(
+        "var a = {}; a.b = {c: {}, d: {}}; var e = 1; e = a.b?.c; var f = 1; f = a.b?.d",
+        "var         a$b = {c: {}, d: {}}; var e = 1; e = a$b?.c; var f = 1; f = a$b?.d;");
 
     test(
         lines(
@@ -369,6 +439,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var a$b$c = {}; var a$b = { /** @nocollapse */ d: {}}; var e = 1; e = a$b$c;",
             "var f = 1; f = a$b.d;"));
+    test(
+        lines(
+            "var a = {}; a.b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a.b?.c;",
+            "var f = 1; f = a.b?.d"),
+        lines(
+            "var         a$b = {c: {}, /** @nocollapse */ d: {}}; var e = 1; e = a$b?.c;",
+            "var f = 1; f = a$b?.d;"));
   }
 
   @Test
@@ -417,32 +494,37 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalObjectNameInBooleanExpressionDepth1_2() {
+
     test(
         "var a = {b: 0}; a.c = 1; if (!(a && a.c)) x();",
         "var a$b = 0; var a = {}; var a$c = 1; if (!(a && a$c)) x();");
+    testSame("var a = {b: 0}; a.c = 1; if (!(a && a?.c)) x?.();");
 
-    test(
-        "var a = {/** @nocollapse */ b: 0}; a.c = 1; if (!(a && a.c)) x();",
-        "var a = {/** @nocollapse */ b: 0}; var a$c = 1; if (!(a && a$c)) x();");
+    testSame("var a = {/** @nocollapse */ b: 0}; a.c = 1; if (!(a && a?.c)) x?.();");
 
     test(
         "var a = {b: 0}; /** @nocollapse */ a.c = 1; if (!(a && a.c)) x();",
         "var a$b = 0; var a = {}; /** @nocollapse */ a.c = 1; if (!(a && a.c)) x();");
+    testSame("var a = {b: 0}; /** @nocollapse */ a.c = 1; if (!(a && a?.c)) x?.();");
   }
 
   @Test
   public void testGlobalObjectNameInBooleanExpressionDepth1_3() {
+
     test(
         "var a = {b: 0}; a.c = 1; while (a || a.c) x();",
         "var a$b = 0; var a = {}; var a$c = 1; while (a || a$c) x();");
+    testSame("var a = {b: 0}; a.c = 1; while (a || a?.c) x?.();");
 
     test(
         "var a = {/** @nocollapse */ b: 0}; a.c = 1; while (a || a.c) x();",
         "var a = {/** @nocollapse */ b: 0}; var a$c = 1; while (a || a$c) x();");
+    testSame("var a = {/** @nocollapse */ b: 0}; a.c = 1; while (a || a?.c) x?.();");
 
     test(
         "var a = {b: 0}; /** @nocollapse */ a.c = 1; while (a || a.c) x();",
         "var a$b = 0; var a = {}; /** @nocollapse */ a.c = 1; while (a || a.c) x();");
+    testSame("var a = {b: 0}; /** @nocollapse */ a.c = 1; while (a || a?.c) x?.();");
   }
 
   @Test
@@ -476,15 +558,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalObjectNameInBooleanExpressionDepth2() {
+
     test(
         "var a = {b: {}}; a.b.c = 1; if (a.b) x(a.b.c);",
         "var a$b = {}; var a$b$c = 1; if (a$b) x(a$b$c);");
+    testSame("var a = {b: {}}; a.b.c = 1; if (a?.b) x?.(a.b?.c);");
 
     testSame("var a = {/** @nocollapse */ b: {}}; a.b.c = 1; if (a.b) x(a.b.c);");
 
     test(
         "var a = {b: {}}; /** @nocollapse */ a.b.c = 1; if (a.b) x(a.b.c);",
         "var a$b = {}; /** @nocollapse */ a$b.c = 1; if (a$b) x(a$b.c);");
+    testSame("var a = {b: {}}; /** @nocollapse */ a.b.c = 1; if (a?.b) x?.(a.b?.c);");
   }
 
   @Test
@@ -506,9 +591,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalFunctionNameInBooleanExpressionDepth1() {
+
     test(
-        "function a() {} a.c = 1; if (a) x(a.c);", //
+        "function a() {}     a.c = 1; if (a) x(a.c);", //
         "function a() {} var a$c = 1; if (a) x(a$c);");
+    testSame("function a() {} a.c = 1; if (a) x?.(a?.c);");
 
     test(
         "function a() {} /** @nocollapse */ a.c = 1; if (a) x(a.c);",
@@ -517,9 +604,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalFunctionNameInBooleanExpressionDepth2() {
+
     test(
         "var a = {b: function(){}}; a.b.c = 1; if (a.b) x(a.b.c);",
         "var a$b = function(){}; var a$b$c = 1; if (a$b) x(a$b$c);");
+    testSame("var a = {b: function(){}}; a.b.c = 1; if (a?.b) x?.(a.b?.c);");
 
     testSame(
         lines(
@@ -531,6 +620,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var a = {b: function(){}}; /** @nocollapse */ a.b.c = 1; ", //
             "if (a.b) x(a.b.c);"),
         "var a$b = function(){}; /** @nocollapse */ a$b.c = 1; if (a$b) x(a$b.c);");
+    testSame(
+        lines(
+            "var a = {b: function(){}};", //
+            "/** @nocollapse */ a.b.c = 1;",
+            "if (a?.b) x?.(a.b?.c);"));
   }
 
   @Test
@@ -605,6 +699,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "  alert(obj$val);",
             "}"));
+    testSame(
+        lines(
+            "var obj = {};",
+            "for (var i = 0; i < 2; i++) {",
+            "  if (i == 0) {",
+            "    obj.val = 1;",
+            "  }",
+            "  alert?.(obj?.val);",
+            "}"));
   }
 
   @Test
@@ -622,6 +725,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = {c: 0}; var d = 1; d = a.b; a.b.c == d.c;",
         "var a$b = {c: 0}; var d = 1; d = a$b; a$b.c == d.c;");
+    testSame("var a = {}; a.b = {c: 0}; var d = 1; d = a?.b; a.b?.c == d?.c;");
 
     test(
         lines(
@@ -635,6 +739,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = {c: 0}; for (var p in a.b) { e(a.b[p]); }",
         "var a$b = {c: 0}; for (var p in a$b) { e(a$b[p]); }");
+    testSame("var a = {}; a.b = {c: 0}; for (var p in a?.b) { e?.(a.b?.[p]); }");
   }
 
   @Test
@@ -665,6 +770,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "/** @enum */ var a = {b: 0}; var c = 1; c = a; c.b = 1; a.b != c.b;",
         "var a$b = 0; /** @enum */ var a = {b: a$b}; var c = 1; c = a; c.b = 1; a$b != c.b;");
+    test(
+        "             /** @enum */ var a = {b:   0}; var c = 1; c = a; c.b = 1; a?.b != c?.b;",
+        "var a$b = 0; /** @enum */ var a = {b: a$b}; var c = 1; c = a; c.b = 1; a?.b != c?.b;");
 
     test(
         "/** @enum */ var a = { /** @nocollapse */ b: 0}; var c = 1; c = a; c.b = 1; a.b == c.b;",
@@ -701,11 +809,23 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var a$b$c = 0; /** @enum */ var a$b = {c: a$b$c};",
             "var d = 1; d = a$b; d.c = 1; a$b$c != d.c;"));
+    testSame(
+        srcs(
+            lines(
+                "var a = {}; /** @enum */ a.b = {c: 0};", //
+                "var d = 1; d = a?.b; d.c = 1; a.b?.c != d?.c;")),
+        warning(PARTIAL_NAMESPACE_WARNING));
 
     testSame(
         lines(
             "var a = {}; /** @nocollapse @enum */ a.b = {c: 0};",
             "var d = 1; d = a.b; d.c = 1; a.b.c == d.c;"));
+    testSame(
+        srcs(
+            lines(
+                "var a = {}; /** @nocollapse @enum */ a.b = {c: 0};",
+                "var d = 1; d = a?.b; d.c = 1; a.b?.c == d?.c;")),
+        warning(PARTIAL_NAMESPACE_WARNING));
 
     test(
         lines(
@@ -714,6 +834,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "/** @enum */ var a$b = { /** @nocollapse */ c: 0};",
             "var d = 1; d = a$b; d.c = 1; a$b.c == d.c;"));
+    testSame(
+        srcs(
+            lines(
+                "var a = {}; /** @enum */ a.b = {/** @nocollapse */ c: 0};",
+                "var d = 1; d = a?.b; d.c = 1; a.b?.c == d?.c;")),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -725,6 +851,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var a$b$c = 0; /** @enum */ var a$b = {c: a$b$c};",
             "for (var p in a$b) { f(a$b[p]); }"));
+    testSame(
+        srcs(
+            lines(
+                "var a = {}; /** @enum */ a.b = {c: 0};", //
+                "for (var p in a?.b) { f?.(a.b?.[p]); }")),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -741,6 +873,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; /** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c; searchEnum(a.b);",
         "var a$b$c = {d: 1}; /** @enum {Object} */ var a$b = {c: a$b$c}; a$b$c; searchEnum(a$b)");
+    testSame(
+        srcs(
+            lines(
+                "var a = {};", //
+                "/** @enum {Object} */",
+                "a.b = {c: {d: 1}};",
+                "a.b?.c;",
+                "searchEnum(a?.b);")),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -753,6 +894,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var a$b$c = {d: 1}; /** @enum {Object} */ var a$b = {c: a$b$c}; a$b$c.d; ",
             "searchEnum(a$b)"));
+    testSame(
+        srcs(
+            lines(
+                "var a = {}; ",
+                "/** @enum {Object} */ a.b = {c: {d: 1}};",
+                "a.b.c?.d;",
+                "searchEnum?.(a?.b);")),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -763,6 +912,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c;",
             "searchEnum(a.b.c);"),
         "var a$b$c = {d: 1}; a$b$c; searchEnum(a$b$c);");
+    test(
+        lines(
+            "var a = {}; ",
+            "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b?.c;",
+            "searchEnum?.(a.b?.c);"),
+        lines(
+            "var a$b$c = {d:1};",
+            "/** @enum {!Object} */ var a$b = {c:a$b$c};",
+            "a$b?.c;",
+            "searchEnum?.(a$b?.c);"));
   }
 
   @Test
@@ -773,6 +932,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "/** @enum {Object} */ a.b = {c: {d: 1}}; a.b.c.d;",
             "searchEnum(a.b.c);"),
         "var a$b$c = {d: 1}; a$b$c.d; searchEnum(a$b$c);");
+    test(
+        lines(
+            "var a = {}; ",
+            "/** @enum {Object} */",
+            "a.b = {c: {d: 1}};",
+            "a.b.c?.d;",
+            "searchEnum?.(a.b?.c);"),
+        lines(
+            "var a$b$c = {d:1};",
+            "/** @enum {!Object} */",
+            "var a$b = {c:a$b$c};",
+            "a$b$c?.d;",
+            "searchEnum?.(a$b?.c);"));
   }
 
   @Test
@@ -877,6 +1049,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "d = a$b;",
             "a$b.c == d.c;"),
         warning(PARTIAL_NAMESPACE_WARNING));
+    testSame(
+        srcs(
+            lines(
+                "var a = {};",
+                "a.b = {};",
+                "/** @constructor */",
+                "a.b.c = function(){};",
+                "var d = 1;",
+                "d = a?.b;",
+                "a.b?.c == d?.c;")),
+        // 2 warnings (for `a` and for `a.b`)
+        warning(PARTIAL_NAMESPACE_WARNING),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -884,6 +1069,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){}; f(a.b); a.b.c;",
         "var a$b = {}; /** @constructor */ a$b.c = function(){}; f(a$b); a$b.c;",
+        warning(PARTIAL_NAMESPACE_WARNING));
+    testSame(
+        srcs("var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){}; f?.(a?.b); a.b?.c;"),
+        // 2 warnings (`a` and `a.b`)
+        warning(PARTIAL_NAMESPACE_WARNING),
         warning(PARTIAL_NAMESPACE_WARNING));
   }
 
@@ -893,6 +1083,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var a = {}; a.b = {}; /** @constructor */ a.b.c = function(){}; new f(a.b); a.b.c;",
         "var a$b = {}; /** @constructor */ a$b.c = function(){}; new f(a$b); a$b.c;",
         warning(PARTIAL_NAMESPACE_WARNING));
+    testSame(
+        srcs(
+            lines(
+                "var a = {};",
+                "a.b = {};",
+                "/** @constructor */",
+                "a.b.c = function(){};",
+                "new f(a?.b); a.b?.c;")),
+        // 2 warnings (`a` and `a.b`)
+        warning(PARTIAL_NAMESPACE_WARNING),
+        warning(PARTIAL_NAMESPACE_WARNING));
   }
 
   @Test
@@ -900,6 +1101,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; /** @constructor */ a.b = function(){}; a.b.c = {d:3}; new f(a.b.c); a.b.c.d;",
         "/** @constructor */ var a$b = function(){}; var a$b$c = {d:3}; new f(a$b$c); a$b$c.d;");
+
+    test(
+        lines(
+            "var a = {};", //
+            "/** @constructor */",
+            "a.b = function(){};",
+            "a.b.c = {d:3};",
+            "new f(a.b?.c);",
+            "a.b.c?.d;"),
+        lines(
+            "/** @constructor */",
+            "var a$b = function(){};",
+            "var a$b$c = {d:3};",
+            // TODO(b/148237949): Collapsing breaks this reference
+            "new f(a$b?.c);",
+            "a$b$c?.d;"));
 
     testSame(
         lines(
@@ -926,9 +1143,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testNestedObjLit() {
+
     test(
         "var a = {}; a.b = {f: 0, c: {d: 1}}; var e = 1; e = a.b.c.d",
         "var a$b$f = 0; var a$b$c$d = 1; var e = 1; e = a$b$c$d;");
+    test(
+        "var a = {}; a.b = {f : 0,         c : {d: 1}}; var e = 1; e = a.b.c?.d",
+        "var            a$b$f = 0; var a$b$c = {d: 1} ; var e = 1; e = a$b$c?.d;");
 
     test(
         "var a = {}; a.b = {f: 0, /** @nocollapse */ c: {d: 1}}; var e = 1; e = a.b.c.d",
@@ -941,9 +1162,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPropGetInsideAnObjLit() {
+
     test(
         "var x = {}; x.y = 1; var a = {}; a.b = {c: x.y}", //
         "var x$y = 1; var a$b$c = x$y;");
+    test(
+        "var x = {}; x.y = 1; var a = {}; a.b = {c : x?.y}", //
+        "var x = {}; x.y = 1; var            a$b$c = x?.y;");
 
     test(
         "var x = {}; /** @nocollapse */ x.y = 1; var a = {}; a.b = {c: x.y}",
@@ -952,6 +1177,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var x = {}; x.y = 1; var a = {}; a.b = { /** @nocollapse */ c: x.y}",
         "var x$y = 1; var a$b = { /** @nocollapse */ c: x$y};");
+    test(
+        "var x = {}; x.y = 1; var a = {}; a.b = { /** @nocollapse */ c: x?.y}",
+        "var x = {}; x.y = 1; var         a$b = { /** @nocollapse */ c: x?.y};");
 
     testSame(
         lines(
@@ -961,13 +1189,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjLitWithQuotedKeyThatDoesNotGetRead() {
+
     test(
         "var a = {}; a.b = {c: 0, 'd': 1}; var e = 1; e = a.b.c;",
         "var a$b$c = 0; var a$b$d = 1; var e = 1; e = a$b$c;");
+    test(
+        "var a = {}; a.b = {c: 0, 'd': 1}; var e = 1; e = a.b?.c;",
+        "var         a$b = {c: 0, 'd': 1}; var e = 1; e = a$b?.c;");
 
     test(
         "var a = {}; a.b = {c: 0, /** @nocollapse */ 'd': 1}; var e = 1; e = a.b.c;",
         "var a$b$c = 0; var a$b = {/** @nocollapse */ 'd': 1}; var e = 1; e = a$b$c;");
+    test(
+        "var a = {}; a.b = {c: 0, /** @nocollapse */ 'd': 1}; var e = 1; e = a.b?.c;",
+        "var         a$b = {c: 0, /** @nocollapse */ 'd': 1}; var e = 1; e = a$b?.c;");
   }
 
   @Test
@@ -983,11 +1218,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjLitWithQuotedKeyThatDoesNotGetReadComputed() {
+
     // quoted/computed does not get read
     test(
-        "var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;",
-        // "var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;"
-        "var a$b$c = 0; var e = 1; e = a$b$c"); // incorrect
+        "   var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;",
+        // "var         a$b = {c: 0, ['d']: 1}; var e = 1; e = a$b.c;"
+        "   var            a$b$c = 0          ; var e = 1; e = a$b$c"); // incorrect
+    test(
+        "var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b?.c;",
+        "var         a$b = {c: 0, ['d']: 1}; var e = 1; e = a$b?.c");
 
     // quoted/computed gets read
     test(
@@ -1095,9 +1334,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalVarSetToObjLitConditionally2() {
+
     test(
         "if (x) var a = {b: 0}; var c = 1; c = a.b; var d = a.c;",
         "if (x){ var a$b = 0; var a = {}; }var c = 1; c = a$b; var d = a.c;");
+    testSame("if (x) var a = {b: 0}; var c = 1; c = a?.b; var d = a?.c;");
 
     testSame("if (x) var a = {/** @nocollapse */ b: 0}; var c = 1; c = a.b; var d = a.c;");
   }
@@ -1155,9 +1396,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjectPropertyResetInLocalScope() {
+
     test(
         "var z = {}; z.a = 0; function f() {z.a = 5; return z.a}",
         "var z$a = 0; function f() {z$a = 5; return z$a}");
+    testSame("var z = {}; z.a = 0; function f() {z.a = 5; return z?.a}");
 
     testSame(
         lines(
@@ -1172,9 +1415,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testFunctionPropertyResetInLocalScope() {
+
     test(
-        "function z() {} z.a = 0; function f() {z.a = 5; return z.a}",
+        "function z() {}     z.a = 0; function f() {z.a = 5; return z.a}",
         "function z() {} var z$a = 0; function f() {z$a = 5; return z$a}");
+    testSame("function z() {} z.a = 0; function f() {z.a = 5; return z?.a}");
 
     testSame(
         lines(
@@ -1287,6 +1532,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {b: 0}; function f() { a.c = 5; return a.c; }",
         "var a$b = 0; var a$c; function f() { a$c = 5; return a$c; }");
+    testSame("var a = {b: 0}; function f() { a.c = 5; return a?.c; }");
   }
 
   @Test
@@ -1294,6 +1540,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = {}; (function() {a.b.c = 0;})(); x = a.b.c;",
         "var a$b$c; (function() {a$b$c = 0;})(); x = a$b$c;");
+    test(
+        "var a = {}; a.b = {}; (function() {a.b.c = 0;})(); x = a.b?.c;",
+        "var         a$b = {}; (function() {a$b.c = 0;})(); x = a$b?.c;");
   }
 
   @Test
@@ -1301,6 +1550,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "function a() {} function f() { a.c = 5; return a.c; }",
         "function a() {} var a$c; function f() { a$c = 5; return a$c; }");
+    testSame("function a() {} function f() { a.c = 5; return a?.c; }");
   }
 
   @Test
@@ -1324,6 +1574,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var a$b = function (){}; var d = 1; d = a$b;", //
             "(function() {a$b.c = 0;})(); a$b.c;"));
+    testSame(
+        lines(
+            "var a = {}; a.b = function (){}; var d = 1; d = a?.b;",
+            "(function() {a.b.c = 0;})(); a.b?.c;"));
   }
 
   @Test
@@ -1353,9 +1607,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testGlobalNameReferencedInLocalScopeBeforeDefined2() {
+
     test(
         "var a = {b: 0}; function f() { return a.c; } a.c = 1;",
         "var a$b = 0; function f() { return a$c; } var a$c = 1;");
+    testSame("var a = {b: 0}; function f() { return a?.c; } a.c = 1;");
   }
 
   @Test
@@ -1401,9 +1657,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testFunctionAlias1() {
+
     test(
         "var a = {}; a.b = {}; a.b.c = function(){}; a.b.d = a.b.c;a.b.d=null",
         "var a$b$c = function(){}; var a$b$d = a$b$c;a$b$d=null;");
+    test(
+        "var a = {}; a.b = {}; a.b.c = function(){}; a.b.d = a.b?.c; a.b.d=null",
+        "var         a$b = {}; a$b.c = function(){}; a$b.d = a$b?.c; a$b.d=null;");
   }
 
   @Test
@@ -1422,6 +1682,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var a$b$c = function(){}; a$b$c.prototype.d = function(){}; ", //
             "new a$b$c().d();"));
+    test(
+        lines(
+            "var a = {}; a.b = {}; a.b.c = function(){}; ",
+            "a.b.c.prototype.d = function(){}; (new a.b.c()).d?.();"),
+        lines(
+            "var a$b$c = function(){}; a$b$c.prototype.d = function(){}; ", //
+            "(new a$b$c).d?.();"));
   }
 
   @Test
@@ -1451,9 +1718,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testReadUndefinedPropertyDepth2() {
+
     test(
         "var a = {b: {c: 0}}; f(a.b.c); f(a.b.d);",
         "var a$b$c = 0; var a$b = {}; f(a$b$c); f(a$b.d);");
+    test(
+        "var a = {b : {c: 0}}; f?.(a.b?.c); f?.(a.b?.d);",
+        "var    a$b = {c: 0} ; f?.(a$b?.c); f?.(a$b?.d);");
   }
 
   @Test
@@ -1557,11 +1828,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testFunctionGivenTwoNames() {
+
     // It's okay to collapse f's properties because g is not added to the
     // global scope as an alias for f. (Try it in your browser.)
     test(
         "var f = function g() {}; f.a = 1; h(f.a);",
         "var f = function g() {}; var f$a = 1; h(f$a);");
+    testSame("var f = function g() {}; f.a = 1; h?.(f?.a);");
   }
 
   @Test
@@ -1571,9 +1844,11 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjLitWithUnusedNumericKey() {
+
     test(
-        "var a = {40: {}, c: {}}; var e = 1; e =  a.c;",
-        "var a$1 = {}; var a$c = {}; var e = 1; e = a$c");
+        "var a = {40: {},       c : {}}; var e = 1; e = a.c;",
+        "var    a$1 = {}; var a$c = {} ; var e = 1; e = a$c"); // incorrect
+    testSame("var a = {40: {}, c: {}}; var e = 1; e =  a?.c;");
   }
 
   @Test
@@ -1611,6 +1886,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var x = {y: 1}; a = b = x.y;", //
         "var x$y = 1; a = b = x$y;");
+    testSame("var x = {y: 1}; a = b = x?.y;");
   }
 
   @Test
@@ -1687,6 +1963,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPeerAndSubpropertyOfUncollapsibleProperty() {
+
     test(
         lines(
             "var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;", //
@@ -1694,6 +1971,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var x$y; var a = x$y = 0; var x$w = 1; x$y.z = 2;", //
             "b = x$w; c = x$y.z;"));
+    testSame(
+        lines(
+            "var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;", //
+            "b = x?.w; c = x.y?.z;"));
   }
 
   @Test
@@ -1743,12 +2024,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPropertiesOnBothSidesOfAssignment() {
+
     // This verifies that replacements are done in the right order. Collapsing
     // the l-value in an assignment affects the parse tree immediately above
     // the r-value, so we update all rvalues before any lvalues.
     test(
         "var a = {b: 0}; a.c = a.b;a.c = null", //
         "var a$b = 0; var a$c = a$b;a$c = null");
+    testSame("var a = {b: 0}; a.c = a?.b; a.c = null");
   }
 
   @Test
@@ -1840,8 +2123,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testHasOwnProperty() {
+
     testSame("var a = {b: 3}; if (a.hasOwnProperty(foo)) { alert('ok'); }");
-    testSame("var a = {b: 3}; if (a.hasOwnProperty(foo)) { alert('ok'); } a.b;");
+    testSame("var a = {b: 3}; if (a.hasOwnProperty(foo)) { alert('ok'); } a?.b;");
   }
 
   @Test
@@ -1861,6 +2145,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testHasOwnPropertyNested() {
+
     test(
         "var a = {b: {c: 3}}; if (a.b.hasOwnProperty('c')) { alert('ok'); }",
         "var a$b =   {c: 3};  if (a$b.hasOwnProperty('c')) { alert('ok'); }");
@@ -1868,12 +2153,19 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var a = {b: {c: 3}}; if (a.b.hasOwnProperty('c')) { alert('ok'); } a.b.c;",
         "var a$b =   {c: 3};  if (a$b.hasOwnProperty('c')) { alert('ok'); } a$b.c;");
     test(
+        "var a = {b: {c: 3}}; if (a.b.hasOwnProperty('c')) { alert('ok'); } a.b?.c;",
+        "var a$b =   {c: 3};  if (a$b.hasOwnProperty('c')) { alert('ok'); } a$b?.c;");
+    test(
         "var a = {}; a.b = function(p) { log(a.b.c.hasOwnProperty(p)); }; a.b.c = {};",
         "var a$b = function(p) { log(a$b$c.hasOwnProperty(p)); }; var a$b$c = {};");
+    test(
+        "var a = {}; a.b = function(p) { log(a.b.c?.hasOwnProperty(p)); };     a.b.c = {};",
+        "var         a$b = function(p) { log(a$b$c?.hasOwnProperty(p)); }; var a$b$c = {};");
   }
 
   @Test
   public void testHasOwnPropertyMultiple() {
+
     testSame("var a = {b: 3, c: 4, d: 5}; if (a.hasOwnProperty(prop)) { alert('ok'); }");
   }
 
@@ -1885,19 +2177,43 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = {b: 3, [Symbol('c')]: 4}; alert(Object.getOwnPropertySymbols(a));");
   }
 
-  private static final String COMMON_ENUM =
-      "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};";
-
   @Test
   public void testEnumOfObjects1() {
     test(
-        lines(COMMON_ENUM + "for (var key in Foo.A) {}"),
-        "var Foo$A = {c: 2}; var Foo$B$c = 3; for (var key in Foo$A) {}");
+        lines(
+            "/** @enum {Object} */", //
+            "var Foo = {A: {c: 2}, B: {c: 3}};",
+            "for (var key in Foo.A) {}"),
+        lines(
+            "var Foo$A = {c: 2};", //
+            "var Foo$B$c = 3;",
+            "for (var key in Foo$A) {}"));
+    test(
+        lines(
+            "/** @enum {Object} */", //
+            "var Foo = {A: {c: 2}, B: {c: 3}};",
+            "for (var key in Foo?.A) {}"),
+        lines(
+            "var Foo$A = {c: 2};",
+            "var Foo$B = {c: 3};",
+            "/** @enum {!Object} */",
+            "var Foo = {A:Foo$A, B:Foo$B};",
+            "for (var key in Foo?.A) {}"));
   }
 
   @Test
   public void testEnumOfObjects2() {
-    test(lines(COMMON_ENUM + "foo(Foo.A.c);"), "var Foo$A$c = 2; var Foo$B$c = 3; foo(Foo$A$c);");
+    test(
+        lines(
+            "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};", //
+            "foo(Foo.A.c);"),
+        "var Foo$A$c = 2; var Foo$B$c = 3; foo(Foo$A$c);");
+    test(
+        lines(
+            "/** @enum {Object} */", //
+            "var Foo = {A: {c: 2}, B: {c: 3}};",
+            "foo?.(Foo.A?.c);"),
+        lines("var Foo$A = {c: 2};", "var Foo$B$c = 3;", "foo?.(Foo$A?.c);"));
   }
 
   @Test
@@ -1915,15 +2231,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnumOfObjects4() {
+
     // Note that this produces bad code, but that's OK, because
     // checkConsts will yell at you for reassigning an enum value.
     // (enum values have to be constant).
     test(
-        lines(COMMON_ENUM + "for (var key in Foo) {} Foo.A = 3; alert(Foo.A);"),
+        lines(
+            "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};",
+            "for (var key in Foo) {} Foo.A = 3; alert(Foo.A);"),
         lines(
             "var Foo$A = {c: 2}; var Foo$B = {c: 3};",
             "/** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};",
             "for (var key in Foo) {} Foo$A = 3; alert(Foo$A);"));
+    test(
+        lines(
+            "/** @enum {Object} */ var Foo = {A: {c: 2}, B: {c: 3}};",
+            "for (var key in Foo) {} Foo.A = 3; alert?.(Foo?.A);"),
+        lines(
+            "var Foo$A = {c: 2}; var Foo$B = {c: 3};",
+            "/** @enum {Object} */ var Foo = {A: Foo$A, B: Foo$B};",
+            "var key;",
+            "for (key in Foo) {} Foo$A = 3; alert?.(Foo?.A);"));
   }
 
   @Test
@@ -2192,6 +2520,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "foo.bar = 3;",
             "var foo$baz = 3;",
             "delete foo.bar;"));
+    testSame(
+        lines(
+            "var foo = {};", //
+            "foo.bar = 3;",
+            "foo.baz = 3;",
+            "delete foo?.bar;"));
   }
 
   @Test
@@ -2209,6 +2543,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var foo = {bar: 3, baz: 3};", //
             "delete foo.bar;"),
         "var foo$baz=3;var foo={bar:3};delete foo.bar");
+    testSame(
+        lines(
+            "var foo = {bar: 3, baz: 3};", //
+            "delete foo?.bar;"));
   }
 
   @Test
@@ -2229,12 +2567,28 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testDelete6() {
     test(
         lines(
-            "var x = {};", "x.foo = {};", "x.foo.bar = 3;", "x.foo.baz = 3;", "delete x.foo.bar;"),
+            "var x = {};", //
+            "x.foo = {};",
+            "x.foo.bar = 3;",
+            "x.foo.baz = 3;",
+            "delete x.foo.bar;"),
         lines(
             "var x$foo = {};", //
             "x$foo.bar = 3;",
             "var x$foo$baz = 3;",
             "delete x$foo.bar;"));
+    test(
+        lines(
+            "var x = {};", //
+            "x.foo = {};",
+            "x.foo.bar = 3;",
+            "x.foo.baz = 3;",
+            "delete x.foo?.bar;"),
+        lines(
+            "var x$foo = {};", //
+            "x$foo.bar = 3;",
+            "x$foo.baz = 3;",
+            "delete x$foo?.bar;"));
   }
 
   @Test
@@ -2259,6 +2613,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         lines(
             "var x$foo$baz = 3; var x$foo = {bar: 3};", //
             "delete x$foo.bar;"));
+    test(
+        lines(
+            "var x = {};", //
+            "x.foo = {bar: 3, baz: 3};",
+            "delete x.foo?.bar;"),
+        lines(
+            "var x$foo = {bar:3, baz:3};", //
+            "delete x$foo?.bar;"));
   }
 
   @Test
@@ -2295,6 +2657,42 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "/** @constructor */ var x$foo$Bar = function() {};",
             "delete x.foo;"),
         warning(NAMESPACE_REDEFINED_WARNING));
+    testSame(
+        srcs(
+            lines(
+                "var x = {};",
+                "x.foo = {};",
+                "/** @constructor */",
+                "x.foo.Bar = function() {};",
+                "delete x?.foo;")),
+        warning(PARTIAL_NAMESPACE_WARNING));
+  }
+
+  @Test
+  public void testDelete11WithOptionalChain() {
+    testWarning(
+        lines(
+            lines(
+                "var x = {};",
+                "x.foo = {};",
+                "/** @constructor */ x.foo.Bar = function() {};",
+                // It's weird, but it is allowed to delete an optional chain.
+                "delete x?.foo;")),
+        // The optional chain effectively creates an alias for `x`,
+        // so we get a partial namespace warning instead of a namespase
+        // redefined warning.
+        PARTIAL_NAMESPACE_WARNING);
+    testWarning(
+        lines(
+            lines(
+                "var x = {};",
+                "x.foo = {};",
+                "/** @constructor */ x.foo.Bar = function() {};",
+                "delete x.foo;",
+                // The optional chain starts late enough that it doesn't generate
+                // a partial namespace warning.
+                "x.foo.Bar?.baz")),
+        NAMESPACE_REDEFINED_WARNING);
   }
 
   @Test
@@ -2306,6 +2704,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testTypeDefAlias2() {
+
     // TODO(johnlenz): make CollapseProperties safer around aliases of
     // functions and object literals.  Currently, this pass trades correctness
     // for code size.  We should able to create a safer compromise by teaching
@@ -2320,7 +2719,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "if (random) { /** @typedef {D.L} */ M.L = D.L; }",
             "",
             "use(M.L);",
-            "use(M.L.A);\n"),
+            "use(M.L.A);"),
         lines(
             "/** @constructor */ var D = function() {};",
             "/** @constructor */ var D$L = function() {};",
@@ -2328,6 +2727,26 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "if (random) { /** @typedef {D.L} */ var M$L = D$L; }",
             "use(M$L);",
             "use(M$L.A);"));
+    test(
+        lines(
+            "/** @constructor */ var D = function() {};",
+            "/** @constructor */ D.L = function() {};",
+            "/** @type {D.L} */ D.L.A = new D.L();",
+            "",
+            "/** @const */ var M = {};",
+            "if (random) { /** @typedef {D.L} */ M.L = D?.L; }",
+            "",
+            "use?.(M?.L);",
+            "use?.(M.L?.A);"),
+        lines(
+            "/** @constructor */ var D = function() {};",
+            "/** @constructor */ var D$L = function() {};",
+            "/** @type {D.L} */ var D$L$A = new D$L();",
+            "/** @const */ var M = {};",
+            "if (random) { /** @typedef {D.L} */ M.L = D?.L; }",
+            // Similar to above, these optional chain references are broken by collapsing.
+            "use?.(M?.L);",
+            "use?.(M.L?.A);"));
   }
 
   @Test
@@ -2461,6 +2880,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "function a() {} () => { a.c = 5; return a.c; }",
         "function a() {} var a$c; () => { a$c = 5; return a$c; }");
+    testSame("function a() {} () => { a.c = 5; return a?.c; }");
 
     // Reassign function property
     test(
@@ -2588,22 +3008,29 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var a = {b: {c: 0}}; var {...d} = a.b; use(a.b.c);", //
         // `d` is a dead name that will be eliminated by other optimzation.
         "var a$b = {c: 0}; var {...d} = a$b; use(a$b.c);");
+    testSame("var a = {b: {c: 0}}; var {...d} = a?.b; use?.(a.b?.c);");
 
     // "a.b.c" is not aliased by the REST in this case.
     test(
         "var a = {b: {c: 0}}; var {d: {...d}} = a.b; use(a.b.c);", //
         "var a$b = {c: 0}; var {d: {...d}} = a$b; use(a$b.c);");
+    testSame("var a = {b: {c: 0}}; var {d: {...d}} = a?.b; use?.(a.b?.c);");
   }
 
   @Test
   public void testCollapsePropertiesWhenDeclaredInObjectLitWithSpread() {
     testSame("var a = {b: 0, ...c}; use(a.b);");
+    testSame("var a = {b: 0, ...c}; use?.(a?.b);");
 
-    testSame("var a = {...c}; use(a.b);");
+    testSame("var a = {...c}; use?.(a?.b);");
 
     test(
         "var a = {...c, b: 0}; use(a.b);", //
         "var a$b = 0; use(a$b);");
+    testSame(
+        lines(
+            "var a = {...c, b: 0};", //
+            "use?.(a?.b);"));
   }
 
   @Test
@@ -2790,6 +3217,20 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var Bar$double$trouble;",
             "(function() { Bar$double$trouble = -1; })();",
             "use(Bar$double$trouble);"));
+    test(
+        lines(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "(function() { Bar.double.trouble = -1; })();",
+            "use?.(Bar.double?.trouble);"),
+        lines(
+            "var Bar$double = function(n) { return n * 2; };",
+            "class Bar {}",
+            "(function() { Bar$double.trouble = -1; })();",
+            "use?.(Bar$double?.trouble);"));
   }
 
   @Test
@@ -2808,6 +3249,23 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "class Bar {}",
             "var Bar$double$trouble = -1;",
             "use(Bar$double$trouble);"));
+    test(
+        lines(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double.trouble = -1;",
+            "use?.(Bar.double?.trouble);"),
+        lines(
+            "var Bar$double = function(n) {",
+            "  return n * 2;",
+            "}",
+            "class Bar {",
+            "}",
+            "Bar$double.trouble = -1;",
+            "use?.(Bar$double?.trouble);"));
   }
 
   @Test
@@ -2829,6 +3287,28 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "Bar$double.trouble = 4;",
             "use(Bar$double);",
             "use(Bar$double.trouble);"));
+    test(
+        srcs(
+            lines(
+                "class Bar {", //
+                "  static double(n) {",
+                "    return n*2",
+                "  }",
+                "}",
+                "Bar.double.trouble = 4;",
+                "use?.(Bar?.double);",
+                "use?.(Bar.double?.trouble);")),
+        expected(
+            lines(
+                "var Bar$double = function(n) {",
+                "  return n * 2;",
+                "};",
+                "class Bar {",
+                "}",
+                "Bar$double.trouble = 4;",
+                // TODO(b/148237949): collapsing breaks `Bar?.double` reference
+                "use?.(Bar?.double);",
+                "use?.(Bar$double?.trouble);")));
   }
 
   @Test
@@ -2980,6 +3460,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "class A {} A.foo = 'bar'; use(A.foo);", //
         "class A {} var A$foo = 'bar'; use(A$foo);");
+    test(
+        "class A {}     A.foo = 'bar'; use?.(A?.foo);", //
+        // TODO(b/148237949): collapsing breaks `A?.foo` reference
+        "class A {} var A$foo = 'bar'; use?.(A?.foo);");
 
     // Collapsing A.foo is known to be unsafe.
     test(
@@ -3040,6 +3524,25 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "if (A$staticProp) {",
             "  use(A$staticProp);",
             "}"));
+    test(
+        lines(
+            "class A {}",
+            "function addStaticPropToA() {",
+            "  A.staticProp = 5;",
+            "}",
+            "if (A?.staticProp) {",
+            "  use?.(A?.staticProp);",
+            "}"),
+        lines(
+            "class A {}",
+            "var A$staticProp;",
+            "function addStaticPropToA() {",
+            "  A$staticProp = 5;",
+            "}",
+            // TODO(b/148237949): collapsing breaks `A?.staticProp` reference
+            "if (A?.staticProp) {",
+            "  use?.(A?.staticProp);",
+            "}"));
   }
 
   @Test
@@ -3062,13 +3565,37 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "if (A$staticProp) {",
             "  use(A$staticProp);",
             "}"));
+    test(
+        lines(
+            "const A = class {}",
+            "function addStaticPropToA() {",
+            "  A.staticProp = 5;",
+            "}",
+            "if (A?.staticProp) {",
+            "  use?.(A?.staticProp);",
+            "}"),
+        lines(
+            "const A = class {}",
+            "var A$staticProp;",
+            "function addStaticPropToA() {",
+            "  A$staticProp = 5;",
+            "}",
+            // TODO(b/148237949): collapsing breaks `A?.staticProp` reference
+            "if (A?.staticProp) {",
+            "  use?.(A?.staticProp);",
+            "}"));
   }
 
   @Test
   public void testEs6ClassStaticInheritance() {
+
     test(
         "class A {} A.foo = 5; use(A.foo); class B extends A {}",
         "class A {} var A$foo = 5; use(A$foo); class B extends A {}");
+    test(
+        "class A {}     A.foo = 5; use?.(A?.foo); class B extends A {}",
+        // TODO(b/148237949): collapsing breaks `A?.foo` reference
+        "class A {} var A$foo = 5; use?.(A?.foo); class B extends A {}");
 
     // We potentially collapse unsafely when the subclass accesses a static property on its
     // superclass. However, AggressiveInlineAliases tries to rewrite inherited accesses to make this
@@ -3076,10 +3603,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "class A {}     A.foo = 5; use(A.foo); class B extends A {} use(B.foo);",
         "class A {} var A$foo = 5; use(A$foo); class B extends A {} use(B.foo);");
+    test(
+        "class A {}     A.foo = 5; use?.(A?.foo); class B extends A {} use?.(B?.foo);",
+        // TODO(b/148237949): collapsing breaks `A?.foo` reference
+        "class A {} var A$foo = 5; use?.(A?.foo); class B extends A {} use?.(B?.foo);");
 
     test(
         "class A {}     A.foo = 5; class B extends A {} use(B.foo);     B.foo = 6; use(B.foo);",
         "class A {} var A$foo = 5; class B extends A {} use(B$foo); var B$foo = 6; use(B$foo);");
+    test(
+        "class A {}     A.foo = 5; class B extends A {} use(B?.foo);     B.foo = 6; use(B?.foo);",
+        // TODO(b/148237949): collapsing breaks `B?.foo` reference
+        "class A {} var A$foo = 5; class B extends A {} use(B?.foo); var B$foo = 6; use(B?.foo);");
 
     testSame(
         lines(
@@ -3095,6 +3630,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEs6ClassExtendsChildClass() {
+
     test(
         lines(
             "class Thing {}",
@@ -3324,6 +3860,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testLetConstObjectAssignmentProperties() {
+
     // All qualified names - even for variables that are initially declared as LETS and CONSTS -
     // are being declared as VAR statements, but this is correct because we are only
     // collapsing for global names.
@@ -3331,6 +3868,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "let a = {}; a.b = {}; a.b.c = {}; let d = 1; d = a.b.c;",
         "var a$b$c = {}; let d = 1; d = a$b$c;");
+    test(
+        "let a = {}; a.b = {}; a.b.c = {}; let d = 1; d = a.b?.c;",
+        "var         a$b = {}; a$b.c = {}; let d = 1; d = a$b?.c;");
 
     test(
         "let a = {}; if(1)  { a.b = 1; }", //
@@ -3369,18 +3909,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   @Test
   public void testDefaultParameters() {
     testSame("var a = {b: 5}; function f(x=a) { alert(x.b); }");
+    testSame("var a = {b: 5}; function f(x=a) { alert?.(x?.b); }");
 
     test(
-        "var a = {b: {c: 5}}; function f(x=a.b) { alert(x.c); }",
-        "var a$b = {c: 5}; function f(x=a$b) { alert(x.c); }");
+        "var a   = {b: {c: 5}}; function f(x=a.b) { alert(x.c); }",
+        "var a$b =     {c: 5} ; function f(x=a$b) { alert(x.c); }");
+    testSame("var a = {b: {c: 5}}; function f(x=a?.b) { alert?.(x?.c); }");
 
     test(
         "var a = {b: 5}; function f(x=a.b) { alert(x); }",
         "var a$b = 5; function f(x=a$b) { alert(x); }");
+    testSame("var a = {b: 5}; function f(x=a?.b) { alert?.(x); }");
   }
 
   @Test
   public void testModuleExportsBasicCommonJs() {
+
     this.setupModuleExportsOnly();
 
     ArrayList<SourceFile> inputs = new ArrayList<>();
@@ -3401,6 +3945,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testModuleExportsBasicEsm() {
+
     this.setupModuleExportsOnly();
 
     ArrayList<SourceFile> inputs = new ArrayList<>();
@@ -3428,6 +3973,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testMutableModuleExportsBasicEsm() {
+
     this.setupModuleExportsOnly();
 
     ArrayList<SourceFile> inputs = new ArrayList<>();
@@ -3466,6 +4012,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testModuleExportsObjectCommonJs() {
+
     this.setupModuleExportsOnly();
 
     ArrayList<SourceFile> inputs = new ArrayList<>();
@@ -3495,6 +4042,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testModuleExportsObjectEsm() {
+
     this.setupModuleExportsOnly();
 
     ArrayList<SourceFile> inputs = new ArrayList<>();
@@ -3527,6 +4075,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testModuleExportsObjectSubPropertyCommonJs() {
+
     this.setupModuleExportsOnly();
 
     ArrayList<SourceFile> inputs = new ArrayList<>();
@@ -3554,6 +4103,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testModuleDynamicImportCommonJs() {
+
     this.setupModuleExportsOnly();
     this.setWebpackModulesById(
         ImmutableMap.of(

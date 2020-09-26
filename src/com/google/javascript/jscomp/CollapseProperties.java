@@ -419,9 +419,9 @@ class CollapseProperties implements CompilerPass {
     //   name a$b$c
     Node ref = NodeUtil.newName(compiler, alias, n, originalName);
     NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
-    if (parent.isCall() && n == parent.getFirstChild()) {
-      // The node was a call target, we are deliberately flatten these as
-      // we node the "this" isn't provided by the namespace. Mark it as such:
+    if (NodeUtil.isNormalOrOptChainCall(parent) && n == parent.getFirstChild()) {
+      // The node was a call target. We are deliberately flattening these as
+      // the "this" isn't provided by the namespace. Mark it as such:
       parent.putBooleanProp(Node.FREE_CALL, true);
     }
 
