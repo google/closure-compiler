@@ -398,6 +398,18 @@ final class ReplaceMessages extends JsMessageVisitor {
         // Note that "&" is not replaced because the translation can contain HTML entities.
         s = s.replace("<", "&lt;");
       }
+      if (options.getOrDefault("unescapeHtmlEntities", false)) {
+        // Unescape entities that need to be escaped when embedding HTML or XML in data/attributes
+        // of an HTML/XML document. See https://www.w3.org/TR/xml/#sec-predefined-ent.
+        // Note that "&amp;" must be the last to avoid "creating" new entities.
+        // To print an html entity in the resulting message, double-escape: `&amp;amp;`.
+        s =
+            s.replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&apos;", "'")
+                .replace("&quot;", "\"")
+                .replace("&amp;", "&");
+      }
       partNode = IR.string(s);
     }
 
@@ -428,6 +440,7 @@ final class ReplaceMessages extends JsMessageVisitor {
       }
       switch (optName) {
         case "html":
+        case "unescapeHtmlEntities":
           options.put(optName, value.isTrue());
           break;
         default:

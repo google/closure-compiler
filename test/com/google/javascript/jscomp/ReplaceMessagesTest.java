@@ -701,6 +701,30 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceUnescapeHtmlEntitiesMessage() {
+    test(
+        "/** @desc d */\n var MSG_A = goog.getMsg('A', {}, {unescapeHtmlEntities: true});",
+        "/** @desc d */\n var MSG_A = 'A';");
+    test(
+        "/** @desc d */\n"
+            + " var MSG_A = goog.getMsg('User&apos;s &lt; email &amp; address &gt; are"
+            + " &quot;correct&quot;', {}, {unescapeHtmlEntities: true});",
+        "/** @desc d */\n var MSG_A = 'User\\'s < email & address > are \"correct\"';");
+    test(
+        "/** @desc d */\n"
+            + " var MSG_A = goog.getMsg('&lt; {$startSpan}email &amp; address{$endSpan} &gt;', "
+            + "{'startSpan': '<span title=\"&lt;info&gt;\">', 'endSpan': '</span>'}, "
+            + "{unescapeHtmlEntities: true});",
+        "/** @desc d */\n var MSG_A = '< ' + ('<span title=\"&lt;info&gt;\">' + "
+            + "('email & address' + ('</span>' + (' >'))));");
+    test(
+        "/** @desc d */\n"
+            + " var MSG_A = goog.getMsg('&amp;lt;double &amp;amp; escaping&amp;gt;', {},"
+            + " {unescapeHtmlEntities: true});",
+        "/** @desc d */\n var MSG_A = '&lt;double &amp; escaping&gt;';");
+  }
+
+  @Test
   public void testReplaceHtmlMessageWithPlaceholder() {
     registerMessage(
         new JsMessage.Builder("MSG_A")
