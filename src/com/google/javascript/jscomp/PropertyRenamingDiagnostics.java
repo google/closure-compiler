@@ -23,9 +23,9 @@ public final class PropertyRenamingDiagnostics {
           "JSC_INVALIDATION",
           ""
               + "Property ''{0}'' was required to be disambiguated but was invalidated. This is due"
-              + " to an access on type ''{1}''. It became invalidating due to mismatches or"
-              + " structural matches at the following locations:\n"
-              + "{2}");
+              + " to an access on type ''{1}''. That type is inherently invalidating, or became"
+              + " invalidating due to mismatches or structural matches at the following locations:"
+              + "\n{2}");
 
   public static final DiagnosticType INVALIDATION_ON_TYPE =
       DiagnosticType.disabled(

@@ -2774,7 +2774,8 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
                 "}")),
         error(INVALIDATION)
             .withMessageContaining(
-                "access on type 'F<number>'. It became invalidating due to mismatches or"
+                "access on type 'F<number>'. That type is inherently invalidating,"
+                    + " or became invalidating due to mismatches or"
                     + " structural matches at the following locations:\n"
                     + "testcode:7:10"));
   }
