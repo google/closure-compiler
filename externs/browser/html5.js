@@ -4072,6 +4072,17 @@ HTMLInputElement.prototype.selectionDirection;
 HTMLInputElement.prototype.setSelectionRange = function(start, end, direction) {};
 
 /**
+ * @param {string} replacement
+ * @param {number=} start
+ * @param {number=} end
+ * @param {string=} selectionMode
+ * @see https://html.spec.whatwg.org/#dom-textarea/input-setrangetext
+ * @return {undefined}
+ */
+HTMLInputElement.prototype.setRangeText =
+    function(replacement, start, end, selectionMode) {};
+
+/**
  * @const {ValidityState}
  */
 HTMLInputElement.prototype.validity;

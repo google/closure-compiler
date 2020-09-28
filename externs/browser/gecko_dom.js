@@ -434,6 +434,17 @@ HTMLTextAreaElement.prototype.setSelectionRange =
     function(selectionStart, selectionEnd) {};
 
 /**
+ * @param {string} replacement
+ * @param {number=} start
+ * @param {number=} end
+ * @param {string=} selectionMode
+ * @see https://html.spec.whatwg.org/#dom-textarea/input-setrangetext
+ * @return {undefined}
+ */
+HTMLTextAreaElement.prototype.setRangeText =
+    function(replacement, start, end, selectionMode) {};
+
+/**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.buildID
  */
