@@ -94,13 +94,12 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsNext() {
-    // ES_NEXT currently has optional chaining feature, hence es_next will be returned by
-    // versionForDebugging().
-    // When optional chaining moves to es_2020 (and ES_NEXT will have no features), this test case
-    // will then have to change.
+    // ES_NEXT currently has no feature, hence ES_2020 will be returned by versionForDebugging().
+    // This will change when new features are added to ES_NEXT/ES_2021, so this test case will
+    // then have to change.
     // This is on purpose so the test case serves as documentation that we intentionally
     // have ES_NEXT the same as or different from the latest supported ES version.
-    assertThat(FeatureSet.ES_NEXT.versionForDebugging()).isEqualTo("es_next");
+    assertThat(FeatureSet.ES_NEXT.versionForDebugging()).isEqualTo("es_2020");
   }
 
   @Test

@@ -5572,7 +5572,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT_2019;
 
     parseWarning(
-        "a?.b", requiresLanguageModeMessage(LanguageMode.ES_NEXT, Feature.OPTIONAL_CHAINING));
+        "a?.b",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT_2020, Feature.OPTIONAL_CHAINING));
   }
 
   @Test

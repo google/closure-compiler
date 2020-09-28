@@ -206,9 +206,7 @@ public final class FeatureSet implements Serializable {
     BIGINT("bigint", LangVersion.ES2020),
     IMPORT_META("import.meta", LangVersion.ES2020),
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
-    // Optional chaining is part of the ES_2020 spec, hence in ES_NEXT until ES_2020 is allowed at
-    // input.
-    OPTIONAL_CHAINING("Optional chaining", LangVersion.ES_NEXT),
+    OPTIONAL_CHAINING("Optional chaining", LangVersion.ES2020),
 
     // ES_NEXT_IN
     NUMERIC_SEPARATOR("numeric separator", LangVersion.ES_NEXT_IN),
