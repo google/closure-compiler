@@ -19,19 +19,23 @@ package com.google.javascript.jscomp.disambiguate;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DefaultNameGenerator;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
-import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NameGenerator;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ObjectColor;
+import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.javascript.jscomp.colors.UnionColor;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -42,8 +46,6 @@ import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -58,11 +60,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Renames unrelated properties to the same name, using type information. This allows better
- * compression as more properties can be given short names.
+ * Renames unrelated properties to the same name, using {@link Color}s provided by the typechecker.
+ * This allows better compression as more properties can be given short names.
  *
- * <p>Properties are considered unrelated if they are never referenced from the same type or from a
- * subtype of each others' types, thus this pass is only effective if type checking is enabled.
+ * <p>Properties are considered unrelated if they are never referenced from the same color or from a
+ * subtype of each others' colors, thus this pass is only effective if type checking is enabled.
  *
  * <p>Example: <code>
  *   Foo.fooprop = 0;
@@ -98,7 +100,7 @@ public class AmbiguateProperties implements CompilerPass {
   /** Map from original property name to new name. Only used by tests. */
   private Map<String, String> renamingMap = null;
 
-  private TypeFlattener flattener = null;
+  private ColorGraphNodeFactory graphNodeFactory = null;
 
   /**
    * Sorts Property objects by their count, breaking ties alphabetically to ensure a deterministic
@@ -112,9 +114,6 @@ public class AmbiguateProperties implements CompilerPass {
         return p1.oldName.compareTo(p2.oldName);
       };
 
-  /** A set of types that invalidate properties from ambiguation. */
-  private final InvalidatingTypes invalidatingTypes;
-
   public AmbiguateProperties(
       AbstractCompiler compiler,
       char[] reservedFirstCharacters,
@@ -124,11 +123,6 @@ public class AmbiguateProperties implements CompilerPass {
     this.compiler = compiler;
     this.reservedFirstCharacters = reservedFirstCharacters;
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
-
-    this.invalidatingTypes = new InvalidatingTypes.Builder(compiler.getTypeRegistry())
-        .addAllTypeMismatches(compiler.getTypeMismatches())
-        .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
-        .build();
 
     this.externedNames =
         ImmutableSet.<String>builder().add("prototype").addAll(externProperties).build();
@@ -153,26 +147,21 @@ public class AmbiguateProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    TypeFlattener flattener =
-        new TypeFlattener(compiler.getTypeRegistry(), this.invalidatingTypes::isInvalidating);
-    this.flattener = flattener;
+    this.graphNodeFactory = ColorGraphNodeFactory.createFactory();
 
     // Find all property references and record the types on which they occur.
     // Populate stringNodesToRename, propertyMap, quotedNames.
     NodeTraversal.traverse(compiler, root, new ProcessPropertiesAndConstructors());
 
-    TypeGraphBuilder graphBuilder =
-        new TypeGraphBuilder(flattener, LowestCommonAncestorFinder::new);
-    graphBuilder.addAll(flattener.getAllKnownTypes());
-    DiGraph<FlatType, Object> typeGraph = graphBuilder.build();
-    // Cache the set of all flat types as it is rebuilt per call to getAllKnownTypes (but wait
-    // until after the typeGraph is built, as the process of building it may create new FlatTypes)
-    ImmutableSet<FlatType> allTypes = flattener.getAllKnownTypes();
-    for (FlatType flatType : allTypes) {
-      flatType.getSubtypeIds().set(flatType.getId()); // Init subtyping as reflexive.
+    ColorGraphBuilder graphBuilder =
+        new ColorGraphBuilder(graphNodeFactory, LowestCommonAncestorFinder::new);
+    graphBuilder.addAll(graphNodeFactory.getAllKnownTypes());
+    DiGraph<ColorGraphNode, Object> colorGraph = graphBuilder.build();
+    for (ColorGraphNode node : graphNodeFactory.getAllKnownTypes()) {
+      node.getSubtypeIds().set(node.getId()); // Init subtyping as reflexive.
     }
 
-    FixedPointGraphTraversal.<FlatType, Object>newReverseTraversal(
+    FixedPointGraphTraversal.<ColorGraphNode, Object>newReverseTraversal(
             (subtype, e, supertype) -> {
               /**
                * Cheap path for when we're sure there's going to be a change.
@@ -193,17 +182,17 @@ public class AmbiguateProperties implements CompilerPass {
               supertype.getSubtypeIds().or(subtype.getSubtypeIds());
               return supertype.getSubtypeIds().cardinality() > startSize;
             })
-        .computeFixedPoint(typeGraph);
+        .computeFixedPoint(colorGraph);
 
     // Fill in all transitive edges in subtyping graph per property
     for (Property prop : propertyMap.values()) {
-      if (prop.relatedTypesSeeds == null) {
+      if (prop.relatedColorsSeeds == null) {
         continue;
       }
-      for (FlatType flatType : prop.relatedTypesSeeds.keySet()) {
-        prop.relatedTypes.or(flatType.getSubtypeIds());
+      for (ColorGraphNode color : prop.relatedColorsSeeds.keySet()) {
+        prop.relatedColors.or(color.getSubtypeIds());
       }
-      prop.relatedTypesSeeds = null;
+      prop.relatedColorsSeeds = null;
     }
 
     ImmutableSet.Builder<String> reservedNames = ImmutableSet.<String>builder()
@@ -323,7 +312,7 @@ public class AmbiguateProperties implements CompilerPass {
      */
     @Override
     public boolean isIndependentOf(Property prop) {
-      return !this.relatedTypes.intersects(prop.relatedTypes);
+      return !this.relatedTypes.intersects(prop.relatedColors);
     }
 
     /**
@@ -332,7 +321,7 @@ public class AmbiguateProperties implements CompilerPass {
      */
     @Override
     public void addNode(Property prop) {
-      this.relatedTypes.or(prop.relatedTypes);
+      this.relatedTypes.or(prop.relatedColors);
     }
   }
 
@@ -372,7 +361,7 @@ public class AmbiguateProperties implements CompilerPass {
 
   /**
    * Finds all property references, recording the types on which they occur, and records all
-   * constructors and their instance types in the {@link TypeFlattener}.
+   * constructors and their instance types in the {@link ColorGraphNodeFactory}.
    */
   private class ProcessPropertiesAndConstructors extends AbstractPostOrderCallback {
     @Override
@@ -389,7 +378,7 @@ public class AmbiguateProperties implements CompilerPass {
         case NAME:
           // handle ES5-style classes
           if (NodeUtil.isNameDeclaration(parent) || parent.isFunction()) {
-            flattener.flatten(getJSType(n));
+            graphNodeFactory.createNode(getColor(n));
           }
           return;
 
@@ -413,10 +402,10 @@ public class AmbiguateProperties implements CompilerPass {
 
     private void processGetProp(Node getProp) {
       Node propNode = getProp.getSecondChild();
-      JSType type = getJSType(getProp.getFirstChild());
+      Color type = getColor(getProp.getFirstChild());
       maybeMarkCandidate(propNode, type);
       if (NodeUtil.isLhsOfAssign(getProp) || NodeUtil.isStatement(getProp.getParent())) {
-        flattener.flatten(type);
+        graphNodeFactory.createNode(type);
       }
     }
 
@@ -453,7 +442,7 @@ public class AmbiguateProperties implements CompilerPass {
         p.skipAmbiguating = true;
       } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
         Node typeObj = call.getSecondChild();
-        JSType type = getJSType(typeObj);
+        Color type = getColor(typeObj);
         Node objectLiteral = typeObj.getNext();
 
         if (!objectLiteral.isObjectLit()) {
@@ -466,7 +455,7 @@ public class AmbiguateProperties implements CompilerPass {
       }
     }
 
-    private void processObjectProperty(Node objectLit, Node key, JSType type) {
+    private void processObjectProperty(Node objectLit, Node key, Color type) {
       checkArgument(objectLit.isObjectLit() || objectLit.isObjectPattern(), objectLit);
       switch (key.getToken()) {
         case COMPUTED_PROP:
@@ -513,7 +502,7 @@ public class AmbiguateProperties implements CompilerPass {
 
       // The children of an OBJECTLIT node are keys, where the values
       // are the children of the keys.
-      JSType type = getJSType(objectLit);
+      Color type = getColor(objectLit);
       for (Node key = objectLit.getFirstChild(); key != null; key = key.getNext()) {
         processObjectProperty(objectLit, key, type);
       }
@@ -530,12 +519,15 @@ public class AmbiguateProperties implements CompilerPass {
     }
 
     private void processClass(Node classNode) {
-      JSType classConstructorType = getJSType(classNode);
-      flattener.flatten(classConstructorType);
-      JSType classPrototype =
-          classConstructorType.isFunctionType()
-              ? classConstructorType.toMaybeFunctionType().getPrototype()
-              : compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      Color classConstructorType = getColor(classNode);
+      graphNodeFactory.createNode(classConstructorType);
+      // In theory all CLASS colors should be a function with a known prototype, but in
+      // practice typecasts mean that this is not always the case.
+      Color classPrototype =
+          (classConstructorType.isObject()
+                  && ((ObjectColor) classConstructorType).getPrototype() != null)
+              ? ((ObjectColor) classConstructorType).getPrototype()
+              : PrimitiveColor.UNKNOWN;
       for (Node member : NodeUtil.getClassMembers(classNode).children()) {
         if (member.isQuotedString()) {
           // ignore get 'foo'() {} and prevent property name collisions
@@ -557,20 +549,20 @@ public class AmbiguateProperties implements CompilerPass {
           continue;
         }
 
-        JSType memberOwnerType = member.isStaticMember() ? classConstructorType : classPrototype;
+        Color memberOwnerColor = member.isStaticMember() ? classConstructorType : classPrototype;
 
         // member could be a MEMBER_FUNCTION_DEF, GETTER_DEF, or SETTER_DEF
-        maybeMarkCandidate(member, memberOwnerType);
+        maybeMarkCandidate(member, memberOwnerColor);
       }
     }
 
     /**
-     * If a property node is eligible for renaming, stashes a reference to it
-     * and increments the property name's access count.
+     * If a property node is eligible for renaming, stashes a reference to it and increments the
+     * property name's access count.
      *
      * @param n The STRING node for a property
      */
-    private void maybeMarkCandidate(Node n, JSType type) {
+    private void maybeMarkCandidate(Node n, Color type) {
       String name = n.getString();
       if (!externedNames.contains(name)) {
         stringNodesToRename.add(n);
@@ -578,27 +570,23 @@ public class AmbiguateProperties implements CompilerPass {
       }
     }
 
-    private Property recordProperty(String name, JSType type) {
+    private Property recordProperty(String name, Color color) {
       Property prop = getProperty(name);
-      prop.addType(type);
+      prop.addRelatedColor(color);
       return prop;
     }
   }
 
   private Property getProperty(String name) {
-    Property prop = propertyMap.computeIfAbsent(name, Property::new);
-    return prop;
+    return propertyMap.computeIfAbsent(name, Property::new);
   }
 
-  /**
-   * This method gets the JSType from the Node argument and verifies that it is
-   * present.
-   */
-  private JSType getJSType(Node n) {
-    JSType type = n.getJSType();
+  /** This method gets the Color from the Node argument or UNKNOWN if not present. */
+  private Color getColor(Node n) {
+    Color type = n.getColor();
     if (type == null) {
       // TODO(bradfordcsmith): This branch indicates a compiler bug. It should throw an exception.
-      return compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+      return PrimitiveColor.UNKNOWN;
     } else {
       return type;
     }
@@ -610,41 +598,46 @@ public class AmbiguateProperties implements CompilerPass {
     String newName;
     int numOccurrences;
     boolean skipAmbiguating;
-    // All types upon which this property was directly accessed. For "a.b" this includes "a"'s type
-    IdentityHashMap<FlatType, Integer> relatedTypesSeeds = null;
-    // includes relatedTypesSeeds + all subtypes of those seed types. For example if this property
+    // All colors upon which this property was directly accessed. For "a.b" this includes "a"'s type
+    IdentityHashMap<ColorGraphNode, Integer> relatedColorsSeeds = null;
+    // includes relatedTypesSeeds + all subtypes of those seed colors. For example if this property
     // was accessed off of Iterable, then this bitset will include Array as well.
-    final BitSet relatedTypes = new BitSet();
+    final BitSet relatedColors = new BitSet();
 
     Property(String name) {
       this.oldName = name;
     }
 
-    /** Marks this type as related to this property */
-    void addType(JSType newType) {
+    /** Marks this color as related to this property */
+    void addRelatedColor(Color color) {
       if (skipAmbiguating) {
         return;
       }
 
       ++numOccurrences;
 
-      if (newType.isUnionType()) {
-        // Note(lharker): deleting this line causes testPredeclaredType to fail. Apparently
-        // invaliding types cannot tell that (null|a.forward.declared.type) is invalidating.
-        newType = newType.restrictByNotNullOrUndefined();
+      if (color.isUnion()) {
+        // Remove null/undefined from unions instead of invalidating the union.
+        ImmutableSet<Color> nonNullColors =
+            color.getAlternates().stream()
+                .filter(alt -> !PrimitiveColor.NULL_OR_VOID.equals(alt))
+                .collect(toImmutableSet());
+        color =
+            nonNullColors.size() == 1
+                ? nonNullColors.iterator().next()
+                : UnionColor.create(nonNullColors);
       }
-
-      if (invalidatingTypes.isInvalidating(newType)) {
+      if (color.isInvalidating()) {
         skipAmbiguating = true;
         return;
       }
 
-      if (relatedTypesSeeds == null) {
-        this.relatedTypesSeeds = new IdentityHashMap<>();
+      if (relatedColorsSeeds == null) {
+        this.relatedColorsSeeds = new IdentityHashMap<>();
       }
 
-      FlatType newFlatType = flattener.flatten(newType);
-      relatedTypesSeeds.put(newFlatType, 0);
+      ColorGraphNode newColorGraphNode = graphNodeFactory.createNode(color);
+      relatedColorsSeeds.put(newColorGraphNode, 0);
     }
   }
 }

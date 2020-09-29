@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
+import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -124,6 +125,12 @@ public abstract class CompilerTestCase {
    * flag controls whether type checking runs before or after the pass.
    */
   private boolean typeCheckEnabled;
+
+  /**
+   * If true, run the ConvertTypesToColors pass and the {@link RemoveTypes} pass . Only works if
+   * enableTypeCheck() is on.
+   */
+  private boolean replaceTypesWithColors;
 
   /** If true performs the test using multistage compilation. */
   private boolean multistageCompilation;
@@ -856,6 +863,15 @@ public abstract class CompilerTestCase {
   protected final void disableTypeCheck() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeCheckEnabled = false;
+  }
+
+  /**
+   * Converts any inferred JSTypes attached to Nodes to Colors, also deleting any JSTypes or
+   * JSDocInfo references.
+   */
+  protected final void replaceTypesWithColors() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    replaceTypesWithColors = true;
   }
 
   protected final void enableCreateModuleMap() {
@@ -1643,6 +1659,11 @@ public abstract class CompilerTestCase {
         if (checkAstChangeMarking) {
           changeVerifier = new ChangeVerifier(compiler);
           changeVerifier.snapshot(mainRoot);
+        }
+
+        if (replaceTypesWithColors) {
+          new ConvertTypesToColors(compiler).process(externsRoot, mainRoot);
+          new RemoveTypes(compiler).process(externsRoot, mainRoot);
         }
 
         getProcessor(compiler).process(externsRoot, mainRoot);

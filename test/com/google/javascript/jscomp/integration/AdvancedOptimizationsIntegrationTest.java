@@ -2224,4 +2224,53 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "})({b: a});",
             "alert(a.a);"));
   }
+
+  @Test
+  public void testAmbiguateClassInstanceProperties() {
+    CompilerOptions options = createCompilerOptions();
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+
+    test(
+        options,
+        lines(
+            "class Foo {", //
+            "  constructor(foo) {",
+            "    this.foo = foo;",
+            "  }",
+            "}",
+            "class Bar {",
+            "  constructor(bar) {",
+            "    this.bar = bar;",
+            "  }",
+            "}",
+            "window['Foo'] = Foo;",
+            "window['Bar'] = Bar;",
+            "/**",
+            " * @param {!Foo} foo",
+            " * @param {!Bar} bar",
+            " */",
+            "window['foobar'] = function(foo, bar) {",
+            "  return foo.foo + bar.bar;",
+            "}"),
+        lines(
+            "class b {", //
+            "  constructor(a) {",
+            "    this.a = a;",
+            "  }",
+            "}",
+            "class c {",
+            "  constructor(a) {",
+            "    this.a = a;",
+            "  }",
+            "}",
+            "window.Foo = b;",
+            "window.Bar = c",
+            "window.foobar = function(a, d) {",
+            // Property ambiguation renames both ".foo" and ".bar" to ".a".
+            "  return a.a + d.a;",
+            "}"));
+  }
 }

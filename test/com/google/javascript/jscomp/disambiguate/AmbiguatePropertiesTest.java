@@ -56,9 +56,11 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
+    replaceTypesWithColors();
     enableNormalize();
     enableClosurePass();
     enableGatherExternProperties();
+    disableCompareJsDoc(); // removeTypes also deletes JSDocInfo
   }
 
   @Override
