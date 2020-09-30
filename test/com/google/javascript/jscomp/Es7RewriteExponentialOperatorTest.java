@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.Es7RewriteExponentialOperator.TRANSPILE_EXPONENT_USING_BIGINT;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,5 +58,47 @@ public final class Es7RewriteExponentialOperatorTest extends CompilerTestCase {
   @Test
   public void testExponentialOperatorInIfCondition() {
     test(srcs("if (2 ** 3 > 0) { }"), expected("if (Math.pow(2, 3) > 0) { }"));
+  }
+
+  /** @see <a href="https://github.com/google/closure-compiler/issues/3684">Issue 3684</a> */
+  @Test
+  public void testExponentialOperatorWithBigIntCall() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2020);
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    // Avoid transpiling to Math.pow() when BigInt is involved.
+    testError(srcs("let a = BigInt(2) ** BigInt(3);"), TRANSPILE_EXPONENT_USING_BIGINT);
+  }
+
+  /** @see <a href="https://github.com/google/closure-compiler/issues/3684">Issue 3684</a> */
+  @Test
+  public void testAssignExponentialOperatorWithBigIntCall() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2020);
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    // Avoid transpiling to Math.pow() when BigInt is involved.
+    testError(srcs("let a = 3n; a **= BigInt(2);"), TRANSPILE_EXPONENT_USING_BIGINT);
+  }
+
+  /** @see <a href="https://github.com/google/closure-compiler/issues/3684">Issue 3684</a> */
+  @Test
+  public void testExponentialOperatorWithBigIntCall_noWarningWithoutTypeChecking() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2020);
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    disableTypeCheck();
+    disableTypeInfoValidation();
+    // Ideally, we would like to avoid transpiling to Math.pow() when BigInt is involved. However,
+    // when type information is missing, the transpile succeeds and generates this runtime-erroneous
+    // code for <ES2016.
+    test(
+        srcs("let a = BigInt(2) ** BigInt(3);"),
+        expected("let a = Math.pow(BigInt(2), BigInt(3));"));
+  }
+
+  /** @see <a href="https://github.com/google/closure-compiler/issues/3684">Issue 3684</a> */
+  @Test
+  public void testExponentialOperatorWithBigIntLiteral() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2020);
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    // Avoid transpiling to Math.pow() when BigInt is involved.
+    testError(srcs("let a = 2n ** 3n;"), TRANSPILE_EXPONENT_USING_BIGINT);
   }
 }

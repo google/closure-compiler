@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -29,6 +31,11 @@ public final class Es7RewriteExponentialOperator
 
   private static final FeatureSet transpiledFeatures =
       FeatureSet.BARE_MINIMUM.with(Feature.EXPONENT_OP);
+
+  static final DiagnosticType TRANSPILE_EXPONENT_USING_BIGINT =
+      DiagnosticType.error(
+          "JSC_TRANSPILE_EXPONENT_USING_BIGINT",
+          "Cannot transpile `**` operator applied to BigInt operands.");
 
   private final AbstractCompiler compiler;
   private final Node mathPowCall; // This node should only ever be cloned, not directly inserted.
@@ -80,10 +87,14 @@ public final class Es7RewriteExponentialOperator
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case EXPONENT:
-        visitExponentiationOperator(n);
+        if (checkOperatorType(n)) {
+          visitExponentiationOperator(n);
+        }
         break;
       case ASSIGN_EXPONENT:
-        visitExponentiationAssignmentOperator(n);
+        if (checkOperatorType(n)) {
+          visitExponentiationAssignmentOperator(n);
+        }
         break;
       default:
         break;
@@ -123,5 +134,17 @@ public final class Es7RewriteExponentialOperator
                     IR.string("pow").setJSType(stringType))
                 .setJSType(mathPowType))
         .setJSType(numberType);
+  }
+
+  // Report an error if the `**` getting transpiled to `Math.pow()`is of BIGINT type
+  private boolean checkOperatorType(Node operator) {
+    checkArgument(operator.isExponent() || operator.isAssignExponent(), operator);
+    if (compiler.hasTypeCheckingRun()) {
+      if (operator.getJSType().isOnlyBigInt()) {
+        compiler.report(JSError.make(operator, TRANSPILE_EXPONENT_USING_BIGINT));
+        return false;
+      }
+    }
+    return true;
   }
 }

@@ -3355,6 +3355,14 @@ public class Node implements Serializable {
     return this.token == Token.EMPTY;
   }
 
+  public final boolean isExponent() {
+    return this.token == Token.EXPONENT;
+  }
+
+  public final boolean isAssignExponent() {
+    return this.token == Token.ASSIGN_EXPONENT;
+  }
+
   public final boolean isExport() {
     return this.token == Token.EXPORT;
   }
