@@ -80,6 +80,14 @@ public final class CompilerOptionsTest {
     // with 'ECMASCRIPT'.
     assertThat(LanguageMode.fromString("  es3  ")).isEqualTo(LanguageMode.ECMASCRIPT3);
     assertThat(LanguageMode.fromString("junk")).isNull();
+
+    assertThat(LanguageMode.fromString("ECMASCRIPT_2020")).isEqualTo(LanguageMode.ECMASCRIPT_2020);
+    // Whitespace should be trimmed, characters converted to uppercase and leading 'ES' replaced
+    // with 'ECMASCRIPT'.
+    assertThat(LanguageMode.fromString("  es_2020  ")).isEqualTo(LanguageMode.ECMASCRIPT_2020);
+    assertThat(LanguageMode.fromString("  es2020  "))
+        .isNull(); // generates invalid "ECMASCRIPT2020"
+    assertThat(LanguageMode.fromString("junk")).isNull();
   }
 
   @Test
