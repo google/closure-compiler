@@ -729,6 +729,14 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass("afterModuleMotion"));
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     // Some optimizations belong outside the loop because running them more
     // than once would either have no benefit or be incorrect.
     if (options.customPasses != null) {
@@ -770,14 +778,6 @@ public final class DefaultPassConfig extends PassConfig {
     // happens before the latter.
     if (options.extractPrototypeMemberDeclarations != ExtractPrototypeMemberDeclarationsMode.OFF) {
       passes.add(extractPrototypeMemberDeclarations);
-    }
-
-    if (options.checkTypes || options.inferTypes) {
-      passes.add(typesToColors);
-    }
-
-    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
-      passes.add(removeTypes);
     }
 
     if (options.shouldAmbiguateProperties()
