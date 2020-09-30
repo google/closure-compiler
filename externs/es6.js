@@ -1220,7 +1220,7 @@ DataView.prototype.setFloat64 = function(
 
 /**
  * @param {number} byteOffset
- * @param {number} value
+ * @param {bigint} value
  * @param {boolean=} littleEndian
  * @throws {Error}
  * @return {undefined}
@@ -1229,7 +1229,7 @@ DataView.prototype.setBigInt64 = function(byteOffset, value, littleEndian) {};
 
 /**
  * @param {number} byteOffset
- * @param {number} value
+ * @param {bigint} value
  * @param {boolean=} littleEndian
  * @throws {Error}
  * @return {undefined}
