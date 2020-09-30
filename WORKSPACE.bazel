@@ -1,7 +1,6 @@
 workspace(name = "com_google_javascript_jscomp")
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 git_repository(
     name = "google_bazel_common",
@@ -68,114 +67,6 @@ git_repository(
 load("@protobuf_java_rules//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
 rules_java_dependencies()
 rules_java_toolchains()
-
-## Load J2CL repo ##
-
-http_archive(
-    name = "com_google_j2cl",
-    strip_prefix = "j2cl-dc37ec4ce78e58258001cdef1af6387bf232f82e",
-    url = "https://github.com/google/j2cl/archive/dc37ec4ce78e58258001cdef1af6387bf232f82e.zip",
-    sha256 = "9b43896bba24602d83a08a9a1d660fc990830a90bdae556eeed6dfe1bbfa569a",
-)
-
-load("@com_google_j2cl//build_defs:repository.bzl", "load_j2cl_repo_deps")
-
-load_j2cl_repo_deps()
-
-load("@com_google_j2cl//build_defs:rules.bzl", "setup_j2cl_workspace", "j2cl_maven_import_external")
-
-setup_j2cl_workspace()
-
-git_repository(
-    name = "protobuf_j2cl_rules",
-    commit = "abd9123e04713c9d8243c658970a438b4a4a0bf8",
-    remote = "git://github.com/google/j2cl-protobuf.git",
-)
-
-load("@protobuf_j2cl_rules//:repository.bzl", "load_j2cl_proto_repo_deps")
-load_j2cl_proto_repo_deps()
-
-
-## Load Elemental2 repo ##
-
-http_archive(
-    name = "com_google_jsinterop_generator",
-    url = "https://github.com/google/jsinterop-generator/archive/5a7ea33bcfcac3f640604b822277d7090d54d101.zip",
-    strip_prefix = "jsinterop-generator-5a7ea33bcfcac3f640604b822277d7090d54d101",
-    sha256 = "d9ec405cc6177ff230660a64a7b182c6ffab580d2512980adb32dfa9a73a9885",
-)
-
-http_archive(
-    name = "com_google_elemental2",
-    strip_prefix = "elemental2-12b55c5fb798603201320d03206aa926508c3278",
-    url = "https://github.com/google/elemental2/archive/12b55c5fb798603201320d03206aa926508c3278.zip",
-    sha256 = "e5de4402ea7a034118d34019284be84b7002cbf06ad70722ea8a1e43657e98f7",
-)
-
-
-load("@com_google_elemental2//build_defs:repository.bzl", "load_elemental2_repo_deps")
-
-load_elemental2_repo_deps()
-
-load("@com_google_elemental2//build_defs:workspace.bzl", "setup_elemental2_workspace")
-
-setup_elemental2_workspace()
-
-
-## Load Maven dependencies ##
-
-_MAVEN_CENTRAL_URLS = ["https://repo1.maven.org/maven2/"]
-
-j2cl_maven_import_external(
-    name = "org_checkerframework_checker_qual-j2cl",
-    annotation_only = True,
-    artifact = "org.checkerframework:checker-qual:2.5.3",
-    artifact_sha256= "7be622bd25208ccfbb9b634af8bd37aef54368403a1fdce84d908078330a189d",
-    server_urls = _MAVEN_CENTRAL_URLS,
-)
-
-j2cl_maven_import_external(
-    name = "com_google_errorprone_error_prone_annotations-j2cl",
-    annotation_only = True,
-    artifact = "com.google.errorprone:error_prone_annotations:2.4.0",
-    artifact_sha256= "5f2a0648230a662e8be049df308d583d7369f13af683e44ddf5829b6d741a228",
-    server_urls = _MAVEN_CENTRAL_URLS,
-)
-
-j2cl_maven_import_external(
-    name = "com_google_code_findbugs_jsr305-j2cl",
-    annotation_only = True,
-    artifact = "com.google.code.findbugs:jsr305:3.0.2",
-    server_urls = _MAVEN_CENTRAL_URLS,
-)
-
-j2cl_maven_import_external(
-    name = "com_google_j2objc_annotations-j2cl",
-    annotation_only = True,
-    artifact = "com.google.j2objc:j2objc-annotations:jar:1.3",
-    artifact_sha256= "21af30c92267bd6122c0e0b4d20cccb6641a37eaf956c6540ec471d584e64a7b",
-    server_urls = _MAVEN_CENTRAL_URLS,
-)
-
-j2cl_maven_import_external(
-    name = "com_google_guava-j2cl",
-    artifact = "com.google.guava:guava-gwt:29.0-jre",
-    artifact_sha256= "39e899acd9f9f09da2871eaaab0024cae2506da24457c9542955ed754f653292",
-    server_urls = _MAVEN_CENTRAL_URLS,
-    deps = [
-        "@com_google_elemental2//:elemental2-promise-j2cl",
-        "@com_google_errorprone_error_prone_annotations-j2cl",
-        "@com_google_j2cl//:jsinterop-annotations-j2cl",
-        "@com_google_j2objc_annotations-j2cl",
-        "@org_checkerframework_checker_qual-j2cl",
-    ],
-)
-
-j2cl_maven_import_external(
-    name = "com_google_re2j-j2cl",
-    artifact = "com.google.re2j:re2j:1.3",
-    server_urls = _MAVEN_CENTRAL_URLS,
-)
 
 # Jarjar is a Google tool (https://github.com/google/jarjar) for generating
 # shaded JARs (https://stackoverflow.com/questions/49810578). This repo contains
