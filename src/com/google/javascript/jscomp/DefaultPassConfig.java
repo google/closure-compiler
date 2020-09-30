@@ -2646,7 +2646,6 @@ public final class DefaultPassConfig extends PassConfig {
             compiler,
             options.renamePrefix,
             options.variableRenaming == VariableRenamingPolicy.LOCAL,
-            /* preserveFunctionExpressionNames= */ false,
             options.generatePseudoNames,
             options.preferStableNames,
             prevVariableMap,

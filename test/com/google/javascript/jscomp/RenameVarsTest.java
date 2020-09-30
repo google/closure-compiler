@@ -43,7 +43,6 @@ public final class RenameVarsTest extends CompilerTestCase {
   private RenameVars renameVars;
   private boolean withClosurePass = false;
   private boolean localRenamingOnly = false;
-  private boolean preserveFunctionExpressionNames = false;
   private boolean useGoogleCodingConvention = true;
   private boolean generatePseudoNames = false;
   private boolean preferStableNames = false;
@@ -73,7 +72,6 @@ public final class RenameVarsTest extends CompilerTestCase {
                   compiler,
                   prefix,
                   localRenamingOnly,
-                  preserveFunctionExpressionNames,
                   generatePseudoNames,
                   preferStableNames,
                   previouslyUsedMap,
@@ -87,7 +85,6 @@ public final class RenameVarsTest extends CompilerTestCase {
                   compiler,
                   prefix,
                   localRenamingOnly,
-                  preserveFunctionExpressionNames,
                   generatePseudoNames,
                   preferStableNames,
                   previouslyUsedMap,
@@ -116,7 +113,6 @@ public final class RenameVarsTest extends CompilerTestCase {
     withClosurePass = false;
     withNormalize = false;
     localRenamingOnly = false;
-    preserveFunctionExpressionNames = false;
     generatePseudoNames = false;
     preferStableNames = false;
     nameGenerator = null;
@@ -209,27 +205,6 @@ public final class RenameVarsTest extends CompilerTestCase {
          "var walk = function walk(a, b) {" +
          "  walk(a, b);" +
          "};");
-  }
-
-  @Test
-  public void testRecursiveFunctions2() {
-    preserveFunctionExpressionNames = true;
-
-    test("var walk = function walk(node, aFunction) {" +
-         "  walk(node, aFunction);" +
-         "};",
-         "var c = function walk(a, b) {" +
-         "  walk(a, b);" +
-         "};");
-
-    localRenamingOnly = true;
-
-    test("var walk = function walk(node, aFunction) {" +
-        "  walk(node, aFunction);" +
-        "};",
-        "var walk = function walk(a, b) {" +
-        "  walk(a, b);" +
-        "};");
   }
 
   @Test
@@ -1072,7 +1047,6 @@ public final class RenameVarsTest extends CompilerTestCase {
           new RenameVars(
               compiler,
               prefix,
-              false,
               false,
               false,
               false,

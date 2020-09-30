@@ -38,14 +38,12 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     if (nameGenerator != null) {
-      return new RenameVars(
-          compiler, prefix, true, false, false, false, null, null, null, nameGenerator);
+      return new RenameVars(compiler, prefix, true, false, false, null, null, null, nameGenerator);
     } else {
       return new RenameVars(
           compiler,
           prefix,
           true,
-          false,
           false,
           false,
           null,

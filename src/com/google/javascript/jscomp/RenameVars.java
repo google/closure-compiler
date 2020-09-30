@@ -123,12 +123,6 @@ final class RenameVars implements CompilerPass {
   /** Whether renaming should apply to local variables only. */
   private final boolean localRenamingOnly;
 
-  /**
-   * Whether function expression names should be preserved. Typically, for
-   * debugging purposes.
-   */
-  private final boolean preserveFunctionExpressionNames;
-
   private final boolean preferStableNames;
 
   /** Characters that shouldn't be used in variable names. */
@@ -149,7 +143,6 @@ final class RenameVars implements CompilerPass {
       AbstractCompiler compiler,
       String prefix,
       boolean localRenamingOnly,
-      boolean preserveFunctionExpressionNames,
       boolean generatePseudoNames,
       boolean preferStableNames,
       VariableMap prevUsedRenameMap,
@@ -159,7 +152,6 @@ final class RenameVars implements CompilerPass {
     this.compiler = compiler;
     this.prefix = nullToEmpty(prefix);
     this.localRenamingOnly = localRenamingOnly;
-    this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     if (generatePseudoNames) {
       this.pseudoNameMap = new HashMap<>();
     } else {
@@ -253,13 +245,6 @@ final class RenameVars implements CompilerPass {
 
       // Are we renaming global variables?
       if (!local && localRenamingOnly) {
-        reservedNames.add(name);
-        return;
-      }
-
-      // Are we renaming function expression names?
-      if (preserveFunctionExpressionNames && var != null
-          && NodeUtil.isFunctionExpression(var.getParentNode())) {
         reservedNames.add(name);
         return;
       }
