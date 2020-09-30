@@ -1646,27 +1646,29 @@ public final class CommandLineRunnerTest {
   }
 
   @Test
-  public void testVersionFlag() {
+  public void testVersionFlag_firstArg() throws Exception {
     args.add("--version");
-    CommandLineRunner runner =
-        createCommandLineRunner(new String[] {"function f() {}"});
-    assertThat(runner.shouldRunCompiler()).isFalse();
+    CommandLineRunner runner = createCommandLineRunner(new String[] {"function f() {}"});
+    assertThat(runner.shouldRunCompiler()).isTrue();
     assertThat(runner.hasErrors()).isFalse();
-    assertThat(
-        new String(outReader.toByteArray(), UTF_8)
-            .indexOf("Closure Compiler (http://github.com/google/closure-compiler)\n"
-                + "Version: ")).isEqualTo(0);
+
+    runner.doRun();
+
+    assertThat(new String(outReader.toByteArray(), UTF_8))
+        .isEqualTo(runner.getVersionText() + "\n");
   }
 
   @Test
-  public void testVersionFlag2() {
+  public void testVersionFlag_lastArg() throws Exception {
     lastArg = "--version";
-    CommandLineRunner runner =
-        createCommandLineRunner(new String[] {"function f() {}"});
-    assertThat(runner.shouldRunCompiler()).isFalse();
+    CommandLineRunner runner = createCommandLineRunner(new String[] {"function f() {}"});
+    assertThat(runner.shouldRunCompiler()).isTrue();
     assertThat(runner.hasErrors()).isFalse();
+
+    runner.doRun();
+
     assertThat(new String(outReader.toByteArray(), UTF_8))
-        .startsWith("Closure Compiler (http://github.com/google/closure-compiler)\nVersion: ");
+        .isEqualTo(runner.getVersionText() + "\n");
   }
 
   @Test

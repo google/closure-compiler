@@ -1584,6 +1584,13 @@ public class CommandLineRunner extends
     }
   }
 
+  protected final String getVersionText() {
+    return String.join(
+        "\n", //
+        "Closure Compiler (http://github.com/google/closure-compiler)",
+        "Version: " + ((String) inlineDefine_COMPILER_VERSION));
+  }
+
   private void initConfigFromFlags(String[] args, PrintStream out, PrintStream err) {
 
     errorStream = err;
@@ -1702,19 +1709,11 @@ public class CommandLineRunner extends
       Flags.printShortUsageAfterErrors(errorStream);
     } else if (flags.displayHelp || flags.helpMarkdown) {
       flags.printUsage(out);
-    } else if (flags.version) {
-      out.println(
-          "Closure Compiler (http://github.com/google/closure-compiler)\n"
-              + "Version: "
-              + Compiler.getReleaseVersion() // Inlined by Bazel
-              + "\n"
-              + "Built on: "
-              + Compiler.getReleaseDate()); // Inlined by Bazel
-      out.flush();
     } else {
       runCompiler = true;
 
       getCommandLineConfig()
+          .setPrintVersion(flags.version)
           .setPrintTree(flags.printTree)
           .setPrintAst(flags.printAst)
           .setPrintPassGraph(flags.printPassGraph)

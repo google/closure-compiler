@@ -85,7 +85,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -129,9 +128,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "JSC_INCONSISTENT_MODULE_DEFINITIONS",
       "Serialized module definitions are not consistent with the module definitions supplied in "
           + "the command line");
-
-  private static final String CONFIG_RESOURCE =
-      "com.google.javascript.jscomp.parsing.ParserConfig";
 
   CompilerOptions options = null;
 
@@ -3452,20 +3448,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     reportChangeToEnclosingScope(parent);
     return lastChild;
-  }
-
-  /** Returns the compiler version baked into the jar. */
-  @GwtIncompatible("java.util.ResourceBundle")
-  public static String getReleaseVersion() {
-    ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
-    return config.getString("compiler.version");
-  }
-
-  /** Returns the compiler date baked into the jar. */
-  @GwtIncompatible("java.util.ResourceBundle")
-  public static String getReleaseDate() {
-    ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
-    return config.getString("compiler.date");
   }
 
   @Override

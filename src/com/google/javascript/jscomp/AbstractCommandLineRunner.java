@@ -521,6 +521,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
+  /**
+   * Some text identifying this binary and its version.
+   *
+   * <p>At minimum, this is what will be printed when `--version` is passed.
+   */
+  protected abstract String getVersionText();
+
   @GwtIncompatible("Unnecessary")
   private static InputStream getExternsInput() {
     InputStream input = AbstractCommandLineRunner.class.getResourceAsStream("/externs.zip");
@@ -1145,6 +1152,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   @GwtIncompatible("Unnecessary")
   protected int doRun() throws IOException {
+    if (this.config.printVersion) {
+      this.defaultJsOutput.println(this.getVersionText());
+      this.defaultJsOutput.flush();
+      return 0;
+    }
+
     Compiler.setLoggingLevel(Level.parse(config.loggingLevel));
 
     compiler = createCompiler();
@@ -2234,6 +2247,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   @GwtIncompatible("Unnecessary")
   protected static class CommandLineConfig {
+
+    private boolean printVersion;
+
+    CommandLineConfig setPrintVersion(boolean x) {
+      this.printVersion = x;
+      return this;
+    }
+
     private boolean printTree = false;
 
     /** Prints out the parse tree and exits */

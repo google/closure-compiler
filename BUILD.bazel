@@ -157,9 +157,9 @@ genrule(
     cmd = "cd externs && find . -name '*.js' | zip ../$(OUTS) -@ &> /dev/null",
 )
 
-# It's easier to make a copy of this Java file than to update PraserConfig.properties
-# because the Java compiler can tell us during build if something is wrong. By
-# contrast, the ParserConfig lookup will fail at runtime.
+# It's easier to make a copy of this Java file because the Java compiler can
+# tell us during build if something is wrong. By contrast, a resource lookup
+# will fail at runtime.
 expand_template_with_defines(
     name = "CommandLineRunner_with_version",
     out = "withversion/CommandLineRunner.java",
@@ -167,8 +167,7 @@ expand_template_with_defines(
         "COMPILER_VERSION": "unspecified",
     },
     substitutions = {
-        "Compiler.getReleaseVersion()": '"{COMPILER_VERSION}"',
-        "Compiler.getReleaseDate()": '"unspecified"',
+        "inlineDefine_COMPILER_VERSION": '"{COMPILER_VERSION}"',
     },
     template = "src/com/google/javascript/jscomp/CommandLineRunner.java",
 )
