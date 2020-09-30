@@ -2902,6 +2902,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return flag.hashCode() + value.hashCode();
     }
 
+    @Override
+    public String toString() {
+      return this.flag.toString() + "=" + this.value;
+    }
+
     public T getFlag() {
       return flag;
     }
