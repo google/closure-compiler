@@ -2925,7 +2925,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     @Override
     public String toString() {
-      return this.flag.toString() + "=" + this.value;
+      return this.flag + "=" + this.value;
     }
 
     public T getFlag() {
