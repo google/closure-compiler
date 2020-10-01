@@ -27,9 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test which checks that replacer works correctly.
- */
+/** Test which checks that replacer works correctly. */
 @RunWith(JUnit4.class)
 public final class ReplaceMessagesTest extends CompilerTestCase {
 
@@ -40,8 +38,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ReplaceMessages(compiler,
-        new SimpleMessageBundle(), false, style, strictReplacement);
+    return new ReplaceMessages(
+        compiler, new SimpleMessageBundle(), false, style, strictReplacement);
   }
 
   @Override
@@ -61,9 +59,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testReplaceSimpleMessage() {
-    registerMessage(new JsMessage.Builder("MSG_A")
-        .appendStringPart("Hi\nthere")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
 
     test(
         "/** @desc d */\n var MSG_A = goog.getMsg('asdf');",
@@ -226,11 +222,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testNameReplacement() {
-    registerMessage(new JsMessage.Builder("MSG_B")
-        .appendStringPart("One ")
-        .appendPlaceholderReference("measly")
-        .appendStringPart(" ph")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .appendStringPart("One ")
+            .appendPlaceholderReference("measly")
+            .appendStringPart(" ph")
+            .build());
 
     test(
         "/** @desc d */\n var MSG_B=goog.getMsg('asdf {$measly}', {measly: x});",
@@ -239,9 +236,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testGetPropReplacement() {
-    registerMessage(new JsMessage.Builder("MSG_C")
-        .appendPlaceholderReference("amount")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_C").appendPlaceholderReference("amount").build());
 
     test(
         "/** @desc d */\n var MSG_C = goog.getMsg('${$amount}', {amount: a.b.amount});",
@@ -250,9 +245,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testFunctionCallReplacement() {
-    registerMessage(new JsMessage.Builder("MSG_D")
-        .appendPlaceholderReference("amount")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_D").appendPlaceholderReference("amount").build());
 
     test(
         "/** @desc d */\n var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});",
@@ -261,9 +254,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testMethodCallReplacement() {
-    registerMessage(new JsMessage.Builder("MSG_E")
-        .appendPlaceholderReference("amount")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_E").appendPlaceholderReference("amount").build());
 
     test(
         "/** @desc d */\n var MSG_E = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
@@ -275,17 +266,18 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(new JsMessage.Builder("MSG_M").build());
 
     test(
-       "/** @desc d */\n var MSG_M = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
-       "/** @desc d */\n var MSG_M=\"\"");
+        "/** @desc d */\n var MSG_M = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
+        "/** @desc d */\n var MSG_M=\"\"");
   }
 
   @Test
   public void testHookReplacement() {
-    registerMessage(new JsMessage.Builder("MSG_F")
-        .appendStringPart("#")
-        .appendPlaceholderReference("amount")
-        .appendStringPart(".")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_F")
+            .appendStringPart("#")
+            .appendPlaceholderReference("amount")
+            .appendStringPart(".")
+            .build());
 
     test(
         "/** @desc d */\n var MSG_F = goog.getMsg('${$amount}', {amount: (a ? b : c)});",
@@ -294,9 +286,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testAddReplacement() {
-    registerMessage(new JsMessage.Builder("MSG_G")
-        .appendPlaceholderReference("amount")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_G").appendPlaceholderReference("amount").build());
 
     test(
         "/** @desc d */\n var MSG_G = goog.getMsg('${$amount}', {amount: x + ''});",
@@ -305,13 +295,14 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testPlaceholderValueReferencedTwice() {
-    registerMessage(new JsMessage.Builder("MSG_H")
-        .appendPlaceholderReference("dick")
-        .appendStringPart(", ")
-        .appendPlaceholderReference("dick")
-        .appendStringPart(" and ")
-        .appendPlaceholderReference("jane")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_H")
+            .appendPlaceholderReference("dick")
+            .appendStringPart(", ")
+            .appendPlaceholderReference("dick")
+            .appendStringPart(" and ")
+            .appendPlaceholderReference("jane")
+            .build());
 
     test(
         "/** @desc d */\n var MSG_H = goog.getMsg('{$dick}{$jane}', {jane: x, dick: y});",
@@ -320,10 +311,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testPlaceholderNameInLowerCamelCase() {
-    registerMessage(new JsMessage.Builder("MSG_I")
-        .appendStringPart("Sum: $")
-        .appendPlaceholderReference("amtEarned")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_I")
+            .appendStringPart("Sum: $")
+            .appendPlaceholderReference("amtEarned")
+            .build());
 
     test(
         "/** @desc d */\n var MSG_I = goog.getMsg('${$amtEarned}', {amtEarned: x});",
@@ -332,11 +324,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testQualifiedMessageName() {
-    registerMessage(new JsMessage.Builder("MSG_J")
-        .appendStringPart("One ")
-        .appendPlaceholderReference("measly")
-        .appendStringPart(" ph")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_J")
+            .appendStringPart("One ")
+            .appendPlaceholderReference("measly")
+            .appendStringPart(" ph")
+            .build());
 
     test(
         "/** @desc d */\n a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});",
@@ -345,11 +338,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testPlaceholderInPlaceholderValue() {
-    registerMessage(new JsMessage.Builder("MSG_L")
-        .appendPlaceholderReference("a")
-        .appendStringPart(" has ")
-        .appendPlaceholderReference("b")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_L")
+            .appendPlaceholderReference("a")
+            .appendStringPart(" has ")
+            .appendPlaceholderReference("b")
+            .build());
 
     test(
         "/** @desc d */\n var MSG_L = goog.getMsg('{$a} has {$b}', {a: '{$b}', b: 1});",
@@ -359,9 +353,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   @Test
   public void testSimpleMessageReplacementMissing() {
     style = Style.LEGACY;
-    test(
-        "/** @desc d */\n var MSG_E = 'd*6a0@z>t';",
-        "/** @desc d */\n var MSG_E = 'd*6a0@z>t'");
+    test("/** @desc d */\n var MSG_E = 'd*6a0@z>t';", "/** @desc d */\n var MSG_E = 'd*6a0@z>t'");
   }
 
   @Test
@@ -376,31 +368,28 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     style = Style.LEGACY;
 
     strictReplacement = true;
-    testError("var MSG_E = 'Hello';",
-         ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
+    testError("var MSG_E = 'Hello';", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   @Test
   public void testStrictModeAndMessageReplacementAbsentInNonEmptyBundle() {
     style = Style.LEGACY;
 
-    registerMessage(new JsMessage.Builder("MSG_J")
-        .appendStringPart("One ")
-        .appendPlaceholderReference("measly")
-        .appendStringPart(" ph")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_J")
+            .appendStringPart("One ")
+            .appendPlaceholderReference("measly")
+            .appendStringPart(" ph")
+            .build());
 
     strictReplacement = true;
-    testError("var MSG_E = 'Hello';",
-        ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
-
+    testError("var MSG_E = 'Hello';", ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   @Test
   public void testFunctionReplacementMissing() {
     style = Style.LEGACY;
-    test("var MSG_F = function() {return 'asdf'};",
-         "var MSG_F = function() {return'asdf'}");
+    test("var MSG_F = function() {return 'asdf'};", "var MSG_F = function() {return'asdf'}");
   }
 
   @Test
@@ -414,26 +403,19 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   @Test
   public void testPlaceholderNameInLowerUnderscoreCase() {
     testError(
-        "var MSG_J = goog.getMsg('${$amt_earned}', {amt_earned: x});",
-        MESSAGE_TREE_MALFORMED);
+        "var MSG_J = goog.getMsg('${$amt_earned}', {amt_earned: x});", MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testBadPlaceholderReferenceInReplacement() {
-    registerMessage(new JsMessage.Builder("MSG_K")
-        .appendPlaceholderReference("amount")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_K").appendPlaceholderReference("amount").build());
 
-    testError(
-        "var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});",
-         MESSAGE_TREE_MALFORMED);
+    testError("var MSG_K = goog.getMsg('Hi {$jane}', {jane: x});", MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testEmptyObjLit() {
-    registerMessage(new JsMessage.Builder("MSG_E")
-        .appendPlaceholderReference("amount")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_E").appendPlaceholderReference("amount").build());
 
     testError(
         "/** @desc d */\nvar MSG_E = goog.getMsg('');",
@@ -445,31 +427,26 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testLegacyStyleNoPlaceholdersVarSyntax() {
-    registerMessage(new JsMessage.Builder("MSG_A")
-        .appendStringPart("Hi\nthere")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("Hi\nthere").build());
     style = Style.LEGACY;
-    test("var MSG_A = 'd*6a0@z>t';",
-         "var MSG_A='Hi\\nthere'");
+    test("var MSG_A = 'd*6a0@z>t';", "var MSG_A='Hi\\nthere'");
   }
 
   @Test
   public void testLegacyStyleNoPlaceholdersFunctionSyntax() {
-    registerMessage(new JsMessage.Builder("MSG_B")
-        .appendStringPart("Hi\nthere")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_B").appendStringPart("Hi\nthere").build());
     style = Style.LEGACY;
-    test("var MSG_B = function() {return 'asdf'};",
-         "var MSG_B=function(){return'Hi\\nthere'}");
+    test("var MSG_B = function() {return 'asdf'};", "var MSG_B=function(){return'Hi\\nthere'}");
   }
 
   @Test
   public void testLegacyStyleOnePlaceholder() {
-    registerMessage(new JsMessage.Builder("MSG_C")
-        .appendStringPart("One ")
-        .appendPlaceholderReference("measly")
-        .appendStringPart(" ph")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_C")
+            .appendStringPart("One ")
+            .appendPlaceholderReference("measly")
+            .appendStringPart(" ph")
+            .build());
     style = Style.LEGACY;
     test(
         "var MSG_C = function(measly) {return 'asdf' + measly};",
@@ -478,11 +455,12 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testLegacyStyleTwoPlaceholders() {
-    registerMessage(new JsMessage.Builder("MSG_D")
-        .appendPlaceholderReference("dick")
-        .appendStringPart(" and ")
-        .appendPlaceholderReference("jane")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_D")
+            .appendPlaceholderReference("dick")
+            .appendStringPart(" and ")
+            .appendPlaceholderReference("jane")
+            .build());
     style = Style.LEGACY;
     test(
         "var MSG_D = function(jane, dick) {return jane + dick};",
@@ -491,10 +469,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testLegacyStylePlaceholderNameInLowerCamelCase() {
-    registerMessage(new JsMessage.Builder("MSG_E")
-        .appendStringPart("Sum: $")
-        .appendPlaceholderReference("amtEarned")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_E")
+            .appendStringPart("Sum: $")
+            .appendPlaceholderReference("amtEarned")
+            .build());
     style = Style.LEGACY;
     test(
         "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
@@ -503,10 +482,11 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testLegacyStylePlaceholderNameInLowerUnderscoreCase() {
-    registerMessage(new JsMessage.Builder("MSG_F")
-        .appendStringPart("Sum: $")
-        .appendPlaceholderReference("amt_earned")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_F")
+            .appendStringPart("Sum: $")
+            .appendPlaceholderReference("amt_earned")
+            .build());
 
     // Placeholder named in lower-underscore case (discouraged nowadays)
     style = Style.LEGACY;
@@ -519,24 +499,26 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testLegacyStyleBadPlaceholderReferenceInReplacement() {
     style = Style.LEGACY;
 
-    registerMessage(new JsMessage.Builder("MSG_B")
-        .appendStringPart("Ola, ")
-        .appendPlaceholderReference("chimp")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .appendStringPart("Ola, ")
+            .appendPlaceholderReference("chimp")
+            .build());
 
-    testError("var MSG_B = function(chump) {return chump + 'x'};",
-         JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+    testError(
+        "var MSG_B = function(chump) {return chump + 'x'};",
+        JsMessageVisitor.MESSAGE_TREE_MALFORMED);
   }
 
   @Test
   public void testTranslatedPlaceHolderMissMatch() {
-    registerMessage(new JsMessage.Builder("MSG_A")
-        .appendPlaceholderReference("a")
-        .appendStringPart("!")
-        .build());
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendPlaceholderReference("a")
+            .appendStringPart("!")
+            .build());
 
-    testError("var MSG_A = goog.getMsg('{$a}');",
-         MESSAGE_TREE_MALFORMED);
+    testError("var MSG_A = goog.getMsg('{$a}');", MESSAGE_TREE_MALFORMED);
   }
 
   @Test
@@ -550,8 +532,8 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testBadFallbackSyntax2() {
-    testError("var x = goog.getMsgWithFallback('abc', 'bcd');",
-        JsMessageVisitor.BAD_FALLBACK_SYNTAX);
+    testError(
+        "var x = goog.getMsgWithFallback('abc', 'bcd');", JsMessageVisitor.BAD_FALLBACK_SYNTAX);
   }
 
   @Test
@@ -592,9 +574,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testUseFallback() {
-    registerMessage(new JsMessage.Builder("MSG_B")
-        .appendStringPart("translated")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_B").appendStringPart("translated").build());
     test(
         lines(
             "/** @desc d */",
@@ -629,9 +609,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testNoUseFallback() {
-    registerMessage(new JsMessage.Builder("MSG_A")
-        .appendStringPart("translated")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_A").appendStringPart("translated").build());
     test(
         lines(
             "/** @desc d */",
@@ -649,9 +627,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Test
   public void testNoUseFallback2() {
-    registerMessage(new JsMessage.Builder("MSG_C")
-        .appendStringPart("translated")
-        .build());
+    registerMessage(new JsMessage.Builder("MSG_C").appendStringPart("translated").build());
     test(
         lines(
             "/** @desc d */",
