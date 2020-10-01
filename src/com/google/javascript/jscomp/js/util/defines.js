@@ -61,3 +61,10 @@ $jscomp.ISOLATE_POLYFILLS = false;
  * @define {boolean}
  */
 $jscomp.FORCE_POLYFILL_PROMISE = false;
+
+/**
+ * Override the native Promise implementation if unhandledrejection event is not
+ * supported.
+ * @define {boolean}
+ */
+$jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION = false;

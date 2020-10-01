@@ -28,11 +28,17 @@ $jscomp.polyfill('Promise',
      * @suppress {reportUnknownTypes}
      */
     function(NativePromise) {
+  function shouldForcePolyfillPromise() {
+    return $jscomp.FORCE_POLYFILL_PROMISE || (
+      $jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION &&
+      typeof $jscomp.global['PromiseRejectionEvent'] === 'undefined');
+  }
+
   // TODO(bradfordcsmith): Do we need to add checks for standards conformance?
   //     e.g. The version of FireFox we currently use for testing has a Promise
   //     that fails to reject attempts to fulfill it with itself, but that
   //     isn't reasonably testable here.
-  if (NativePromise && !$jscomp.FORCE_POLYFILL_PROMISE) {
+  if (NativePromise && !shouldForcePolyfillPromise()) {
     return NativePromise;
   }
 
