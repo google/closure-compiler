@@ -55,10 +55,7 @@ jobs:
         # https://github.com/marketplace/actions/checkout
         uses: actions/checkout@v2
 
-      - name: Build
-        run: bazel build //:all
-
-      - name: Unit Tests
+      - name: Build and Test
         run: bazel test //:all
 
       - name: Unsymlink Bazel Artifacts
