@@ -3047,16 +3047,25 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case RSH:
       case ASSIGN_URSH:
       case URSH:
-        String opStr = NodeUtil.opToStr(n.getToken());
-        if (!leftType.matchesNumberContext()) {
-          report(left, BIT_OPERATION, opStr, leftType.toString());
+        if (operatorType.isNumber()) {
+          // TypeInference set the operator type to 'number', so we know bigint isn't involved.
+          // NOTE: >>> and >>>= aren't valid operations for bigint, so TypeInference ignores the
+          //     operand types for it and always sets the operator's type to 'number'. Thus,
+          //     if one of the operands is a bigint, we'll end up reporting that as an error here.
+          String opStr = NodeUtil.opToStr(n.getToken());
+          if (!leftType.matchesNumberContext()) {
+            report(left, BIT_OPERATION, opStr, leftType.toString());
+          } else {
+            this.validator.expectNumberStrict(n, leftType, "operator " + opStr);
+          }
+          if (!rightType.matchesNumberContext()) {
+            report(right, BIT_OPERATION, opStr, rightType.toString());
+          } else {
+            this.validator.expectNumberStrict(n, rightType, "operator " + opStr);
+          }
         } else {
-          this.validator.expectNumberStrict(n, leftType, "operator " + opStr);
-        }
-        if (!rightType.matchesNumberContext()) {
-          report(right, BIT_OPERATION, opStr, rightType.toString());
-        } else {
-          this.validator.expectNumberStrict(n, rightType, "operator " + opStr);
+          validator.expectBigIntOrNumber(left, leftType, "left operand");
+          validator.expectBigIntOrNumber(right, rightType, "right operand");
         }
         break;
 
@@ -3071,7 +3080,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case SUB:
       case EXPONENT:
         if (operatorType.isNumber()) {
-          // This condition is meant to catch any old cases (where bigint isn't involved)
+          // TypeInference set the operator type to 'number', so we know bigint isn't involved.
           validator.expectNumber(left, leftType, "left operand");
           validator.expectNumber(right, rightType, "right operand");
         } else {

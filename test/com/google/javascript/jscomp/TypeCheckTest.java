@@ -23757,13 +23757,25 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testBigIntLeftShift() {
+    testTypes("1n << 2n");
+    testTypes("let x = 1n; x <<= 2n");
+  }
+
+  @Test
+  public void testBigIntRightShift() {
+    testTypes("2n >> 1n");
+    testTypes("let x = 2n; x >>= 1n");
+  }
+
+  @Test
   public void testBigIntOperators_unsignedRightShift() {
     testTypes("const x = 1n; x >>> x;", "operator >>> cannot be applied to bigint and bigint");
   }
 
   @Test
   public void testBigIntOperators_assignUnsignedRightShift() {
-    testTypes("const x = 1n; x >>>= x;", "operator >>>= cannot be applied to bigint and bigint");
+    testTypes("let x = 1n; x >>>= x;", "operator >>>= cannot be applied to bigint and bigint");
   }
 
   @Test
