@@ -652,12 +652,20 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
 
   /**
    * Returns a new AstFactory that will add type information to the nodes it creates if and only if
-   * type type checking has already happened.
+   * type checking has already happened.
    */
   public AstFactory createAstFactory() {
     return hasTypeCheckingRun()
         ? AstFactory.createFactoryWithTypes(getTypeRegistry())
         : AstFactory.createFactoryWithoutTypes();
+  }
+
+  /**
+   * Returns a new AstFactory that will not add type information, regardless of whether type
+   * checking has already happened.
+   */
+  public AstFactory createAstFactoryWithoutTypes() {
+    return AstFactory.createFactoryWithoutTypes();
   }
 
   /**
