@@ -39,7 +39,7 @@ Element.prototype.getAnimations = function() {};
 
 /**
  * @constructor
- * @param {AnimationEffectReadOnly=} effect
+ * @param {?AnimationEffect=} effect
  * @param {AnimationTimeline=} timeline
  * @implements {EventTarget}
  */
@@ -82,7 +82,7 @@ Animation.prototype.reverse = function() {};
 /** @type {number} */
 Animation.prototype.currentTime;
 
-/** @type {AnimationEffectReadOnly} */
+/** @type {?AnimationEffect} */
 Animation.prototype.effect;
 
 /** @type {!Promise<void>} */
@@ -116,23 +116,25 @@ Animation.prototype.timeline;
 /**
  * @interface
  */
-var AnimationEffectReadOnly = function() {};
+var AnimationEffect = function() {};
 
 /**
  * @return {!ComputedTimingProperties}
  */
-AnimationEffectReadOnly.prototype.getComputedTiming = function() {};
+AnimationEffect.prototype.getComputedTiming = function() {};
+
+/** @param {AnimationEffectTimingProperties=} timing */
+AnimationEffect.prototype.updateTiming = function(timing) {};
 
 /** @type {!AnimationEffectTiming} */
-AnimationEffectReadOnly.prototype.timing;
-
+AnimationEffect.prototype.timing;
 
 /**
  * @constructor
  * @param {Element} target
  * @param {(!Array<!Object<string, *>>|!Object<string, !Array<*>>)} frames
  * @param {(number|AnimationEffectTimingProperties)=} options
- * @implements {AnimationEffectReadOnly}
+ * @implements {AnimationEffect}
  */
 var KeyframeEffectReadOnly = function(target, frames, options) {};
 
@@ -313,7 +315,7 @@ KeyframeEffectReadOnly.prototype.onsample;
 
 
 /**
- * @param {!AnimationEffectReadOnly} effect
+ * @param {!AnimationEffect} effect
  * @return {!Animation}
  */
 DocumentTimeline.prototype.play = function(effect) {};
@@ -325,10 +327,10 @@ DocumentTimeline.prototype.getAnimations = function() {};
 
 
 /**
- * @param {!Array<!AnimationEffectReadOnly>} children
+ * @param {!Array<!AnimationEffect>} children
  * @param {AnimationEffectTimingProperties=} timing
  * @constructor
- * @implements {AnimationEffectReadOnly}
+ * @implements {AnimationEffect}
  */
 var SequenceEffect = function(children, timing) {};
 
@@ -338,15 +340,15 @@ SequenceEffect.prototype.getComputedTiming = function() {};
 /** @override */
 SequenceEffect.prototype.timing;
 
-/** @type {!Array<!AnimationEffectReadOnly>} */
+/** @type {!Array<!AnimationEffect>} */
 SequenceEffect.prototype.children;
 
 
 /**
- * @param {!Array<!AnimationEffectReadOnly>} children
+ * @param {!Array<!AnimationEffect>} children
  * @param {AnimationEffectTimingProperties=} timing
  * @constructor
- * @implements {AnimationEffectReadOnly}
+ * @implements {AnimationEffect}
  */
 var GroupEffect = function(children, timing) {};
 
@@ -356,5 +358,5 @@ GroupEffect.prototype.getComputedTiming = function() {};
 /** @override */
 GroupEffect.prototype.timing;
 
-/** @type {!Array<!AnimationEffectReadOnly>} */
+/** @type {!Array<!AnimationEffect>} */
 GroupEffect.prototype.children;
