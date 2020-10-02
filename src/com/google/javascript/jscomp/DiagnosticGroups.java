@@ -482,10 +482,6 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
 
-  @Deprecated
-  public static final DiagnosticGroup MISSING_GETCSSNAME =
-      DiagnosticGroups.registerDeprecatedGroup("missingGetCssName");
-
   @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage",
