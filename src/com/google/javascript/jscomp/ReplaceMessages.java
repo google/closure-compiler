@@ -329,11 +329,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     Map<String, Boolean> options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
 
     // Build the replacement tree.
-    List<CharSequence> parts =
-        options.getOrDefault("unescapeHtmlEntities", false)
-            ? mergeStringParts(message.getParts())
-            : message.getParts();
-    Iterator<CharSequence> iterator = parts.iterator();
+    Iterator<CharSequence> iterator = mergeStringParts(message.getParts()).iterator();
     return iterator.hasNext()
         ? constructStringExprNode(iterator, objLitNode, options, callNode)
         : IR.string("");

@@ -85,7 +85,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     test(
         "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = goog.getMsg('asdf');",
-        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = 'Hello!' + ' Welcome!';");
+        "/**\n    @desc d\n    @alternateMessageId 1984\n*/\n var MSG_A = 'Hello! Welcome!';");
   }
 
   @Test
