@@ -20,11 +20,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -326,7 +329,11 @@ final class ReplaceMessages extends JsMessageVisitor {
     Map<String, Boolean> options = getOptions(objLitNode != null ? objLitNode.getNext() : null);
 
     // Build the replacement tree.
-    Iterator<CharSequence> iterator = message.parts().iterator();
+    List<CharSequence> parts =
+        options.getOrDefault("unescapeHtmlEntities", false)
+            ? mergeStringParts(message.getParts())
+            : message.getParts();
+    Iterator<CharSequence> iterator = parts.iterator();
     return iterator.hasNext()
         ? constructStringExprNode(iterator, objLitNode, options, callNode)
         : IR.string("");
@@ -430,6 +437,24 @@ final class ReplaceMessages extends JsMessageVisitor {
       }
     }
     return options;
+  }
+
+  /** Merges consecutive string parts in the list of message parts. */
+  private static List<CharSequence> mergeStringParts(List<CharSequence> parts) {
+    List<CharSequence> result = new ArrayList<>();
+    for (CharSequence part : parts) {
+      if (part instanceof JsMessage.PlaceholderReference) {
+        result.add(part);
+      } else {
+        CharSequence lastPart = result.isEmpty() ? null : Iterables.getLast(result);
+        if (lastPart == null || lastPart instanceof JsMessage.PlaceholderReference) {
+          result.add(part);
+        } else {
+          result.set(result.size() - 1, lastPart.toString() + part);
+        }
+      }
+    }
+    return result;
   }
 
   /**

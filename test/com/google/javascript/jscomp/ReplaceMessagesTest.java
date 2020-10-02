@@ -701,6 +701,60 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceUnescapeHtmlEntitiesMessageWithReplacement() {
+    registerMessage(
+        new JsMessage.Builder("MSG_A")
+            .appendStringPart("User")
+            .appendStringPart("&")
+            .appendStringPart("apos;s &")
+            .appendStringPart("lt;")
+            .appendStringPart(" email &a")
+            .appendStringPart("mp; address &gt")
+            .appendStringPart("; are &quot;correct")
+            .appendStringPart("&quot;")
+            .build());
+    test(
+        "/** @desc d */\n var MSG_A = goog.getMsg('A', {}, {unescapeHtmlEntities: true});",
+        "/** @desc d */\n var MSG_A = 'User\\'s < email & address > are \"correct\"';");
+
+    registerMessage(
+        new JsMessage.Builder("MSG_B")
+            .appendStringPart("User")
+            .appendStringPart("&apos;")
+            .appendStringPart("s ")
+            .appendStringPart("&lt;")
+            .appendStringPart(" email ")
+            .appendStringPart("&amp;")
+            .appendStringPart(" address ")
+            .appendStringPart("&gt;")
+            .appendStringPart(" are ")
+            .appendStringPart("&quot;")
+            .appendStringPart("correct")
+            .appendStringPart("&quot;")
+            .build());
+    test(
+        "/** @desc d */\n var MSG_B = goog.getMsg('B', {}, {unescapeHtmlEntities: true});",
+        "/** @desc d */\n var MSG_B = 'User\\'s < email & address > are \"correct\"';");
+
+    registerMessage(
+        new JsMessage.Builder("MSG_C")
+            .appendPlaceholderReference("br")
+            .appendStringPart("&")
+            .appendStringPart("amp;")
+            .appendPlaceholderReference("x")
+            .appendPlaceholderReference("y")
+            .appendStringPart("&ap")
+            .appendPlaceholderReference("z")
+            .appendStringPart("os;")
+            .build());
+    test(
+        "/** @desc d */\n"
+            + " var MSG_C = goog.getMsg('{$br}{$x}{$y}{$z}', {'br': '<br>', 'x': 'X', 'y': 'Y',"
+            + " 'z': 'Z'}, {unescapeHtmlEntities: true});",
+        "/** @desc d */\n var MSG_C = '<br>'+('&'+('X'+('Y'+('&ap'+('Z'+('os;'))))))");
+  }
+
+  @Test
   public void testReplaceHtmlMessageWithPlaceholder() {
     registerMessage(
         new JsMessage.Builder("MSG_A")
