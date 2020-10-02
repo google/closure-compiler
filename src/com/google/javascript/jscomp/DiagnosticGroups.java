@@ -473,16 +473,6 @@ public class DiagnosticGroups {
           CheckMissingRequires.MISSING_REQUIRE_TYPE,
           CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
-  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE_IN_PROVIDES_FILE =
-      DiagnosticGroups.registerGroup(
-          "stricterMissingRequireInProvidesFile", // undocumented
-          CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE);
-
-  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE =
-      DiagnosticGroups.registerGroup(
-          "stricterMissingRequireTypeInProvidesFile", // undocumented
-          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
-
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerGroup(
           "legacyGoogScopeRequire",
