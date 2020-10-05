@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
+import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -40,6 +41,9 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
 
   private final AbstractCompiler compiler;
 
+  // Allocated & cleaned up by process()
+  private LogFile decisionsLog;
+
   OptimizeReturns(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -57,45 +61,50 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
 
   @Override
   public void process(Node externs, Node root, ReferenceMap definitions) {
-    // Find all function nodes whose callers ignore the return values.
-    List<ArrayList<Node>> toOptimize = new ArrayList<>();
+    try (LogFile logFile = compiler.createOrReopenIndexedLog(this.getClass(), "decisions.log")) {
+      decisionsLog = logFile; // avoid passing the log file through a bunch of methods
+      // Find all function nodes whose callers ignore the return values.
+      List<ArrayList<Node>> toOptimize = new ArrayList<>();
 
-    // Find all the candidates before modifying the AST.
-    for (Entry<String, ArrayList<Node>> entry : definitions.getNameReferences()) {
-      String key = entry.getKey();
-      ArrayList<Node> refs = entry.getValue();
-      if (isCandidate(key, refs)) {
-        toOptimize.add(refs);
+      // Find all the candidates before modifying the AST.
+      for (Entry<String, ArrayList<Node>> entry : definitions.getNameReferences()) {
+        String key = entry.getKey();
+        ArrayList<Node> refs = entry.getValue();
+        if (isCandidate(key, refs)) {
+          decisionsLog.log("name %s\tremoving return value", key);
+          toOptimize.add(refs);
+        }
       }
-    }
 
-    for (Entry<String, ArrayList<Node>> entry : definitions.getPropReferences()) {
-      String key = entry.getKey();
-      ArrayList<Node> refs = entry.getValue();
-      if (isCandidate(key, refs)) {
-        toOptimize.add(refs);
+      for (Entry<String, ArrayList<Node>> entry : definitions.getPropReferences()) {
+        String key = entry.getKey();
+        ArrayList<Node> refs = entry.getValue();
+        if (isCandidate(key, refs)) {
+          decisionsLog.log("property %s\tremoving return value", key);
+          toOptimize.add(refs);
+        }
       }
-    }
 
-    // Now modify the AST
-    for (ArrayList<Node> refs : toOptimize) {
-      for (Node fn : ReferenceMap.getFunctionNodes(refs).values()) {
-        rewriteReturns(fn);
+      // Now modify the AST
+      for (ArrayList<Node> refs : toOptimize) {
+        for (Node fn : ReferenceMap.getFunctionNodes(refs).values()) {
+          rewriteReturns(fn);
+        }
       }
+    } finally {
+      decisionsLog = null;
     }
   }
 
   /**
-   * This reference set is a candidate for return-value-removal if:
-   *  - if the all call sites are known (not aliased, not exported)
-   *  - if all call sites do not use the return value
-   *  - if there is at least one known function definition
-   *  - if there is at least one use
-   * NOTE: unknown definitions are allowed, as only known
-   *    definitions will be removed.
+   * This reference set is a candidate for return-value-removal if: - if the all call sites are
+   * known (not aliased, not exported) - if all call sites do not use the return value - if there is
+   * at least one known function definition - if there is at least one use NOTE: unknown definitions
+   * are allowed, as only known definitions will be removed.
    */
   private boolean isCandidate(String name, List<Node> refs) {
     if (!OptimizeCalls.mayBeOptimizableName(compiler, name)) {
+      decisionsLog.log("%s\tnot an optimizable name", name);
       return false;
     }
 
@@ -108,6 +117,7 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
         if (NodeUtil.isExpressionResultUsed(callNode)) {
           // At least one call site uses the return value, this
           // is not a candidate.
+          decisionsLog.log("%s\treturn value used: %s", name, callNode.getLocation());
           return false;
         }
         seenUse = true;
@@ -120,12 +130,21 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
         // If this isn't an non-aliasing reference (typeof, instanceof, etc)
         // then there is nothing that can be done.
         if (!OptimizeCalls.isAllowedReference(n)) {
+          decisionsLog.log("%s\tdisallowed reference: %s", name, n.getLocation());
           return false;
         }
       }
     }
 
-    return seenUse && seenCandidateDefiniton;
+    if (!seenUse) {
+      decisionsLog.log("%s\tno usage seen", name);
+      return false;
+    }
+    if (!seenCandidateDefiniton) {
+      decisionsLog.log("%s\tno definition seen", name);
+      return false;
+    }
+    return true;
   }
 
   private boolean isCandidateDefinition(Node n) {
@@ -172,34 +191,32 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
   }
 
   /**
-   * For the supplied function node, rewrite all the return expressions so that:
-   *    return foo();
-   * becomes:
-   *    foo(); return;
-   * Useless return will be removed later by the peephole optimization passes.
+   * For the supplied function node, rewrite all the return expressions so that: return foo();
+   * becomes: foo(); return; Useless return will be removed later by the peephole optimization
+   * passes.
    */
   private void rewriteReturns(Node fnNode) {
     checkState(fnNode.isFunction());
     final Node body = fnNode.getLastChild();
     NodeUtil.visitPostOrder(
-      body,
-      new NodeUtil.Visitor() {
-        @Override
-        public void visit(Node n) {
-          if (n.isReturn() && n.hasOneChild()) {
-            Node result = n.getFirstChild();
-            boolean keepValue = !isRemovableValue(result);
-            result.detach();
-            if (keepValue) {
-              n.getParent().addChildBefore(IR.exprResult(result).srcref(result), n);
-            } else {
-              NodeUtil.markFunctionsDeleted(result, compiler);
+        body,
+        new NodeUtil.Visitor() {
+          @Override
+          public void visit(Node n) {
+            if (n.isReturn() && n.hasOneChild()) {
+              Node result = n.getFirstChild();
+              boolean keepValue = !isRemovableValue(result);
+              result.detach();
+              if (keepValue) {
+                n.getParent().addChildBefore(IR.exprResult(result).srcref(result), n);
+              } else {
+                NodeUtil.markFunctionsDeleted(result, compiler);
+              }
+              compiler.reportChangeToEnclosingScope(body);
             }
-            compiler.reportChangeToEnclosingScope(body);
           }
-        }
-      },
-      new NodeUtil.MatchShallowStatement());
+        },
+        new NodeUtil.MatchShallowStatement());
   }
 
   // Just remove objects that don't reference properties (object literals) or names (functions)
