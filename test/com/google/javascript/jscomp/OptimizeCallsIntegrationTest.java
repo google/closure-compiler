@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
@@ -23,10 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for {#link {@link OptimizeCalls}
- *
- */
+/** Unit tests for {#link {@link OptimizeCalls} */
 @RunWith(JUnit4.class)
 public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
 
@@ -132,12 +128,15 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testSimpleRemoval() {
     // unused parameter value
-    test("var foo = (p1)=>{}; foo(1); foo(2)",
-         "var foo = (  )=>{}; foo( ); foo( )");
-    test("let foo = (p1)=>{}; foo(1); foo(2)",
-         "let foo = (  )=>{}; foo( ); foo( )");
-    test("const foo = (p1)=>{}; foo(1); foo(2)",
-         "const foo = (  )=>{}; foo( ); foo( )");
+    test(
+        "var foo = (p1)=>{}; foo(1); foo(2)", //
+        "var foo = (  )=>{}; foo( ); foo( )");
+    test(
+        "let foo = (p1)=>{}; foo(1); foo(2)", //
+        "let foo = (  )=>{}; foo( ); foo( )");
+    test(
+        "const foo = (p1)=>{}; foo(1); foo(2)", //
+        "const foo = (  )=>{}; foo( ); foo( )");
   }
 
   @Test
@@ -146,8 +145,8 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         "function foo() {var x; return x = bar(1)} foo(); function bar(x) {}",
         "function foo() {bar();return} foo(); function bar() {1;}");
     test(
-        "function foo() {return} foo(); function bar() {1;}",
-        "function foo(){return}foo()");
+        "function foo() {return} foo(); function bar() {1;}", //
+        "function foo() {return} foo()");
   }
 
   @Test
@@ -161,14 +160,15 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             "f3(f1(f2()));"),
         lines(
             "function f1(){f2()}",
-            "function f2(){}",
+            "function f2(){}", //
             "function f3(){f1()}f3()"));
   }
 
   @Test
   public void testUnusedAssignOnFunctionWithUnusedParams() {
-    test("var foo = function(a){  }; function bar(){var x;x = foo} bar(); foo(1)",
-         "var foo = function( ){1;}; function bar(){             } bar(); foo()");
+    test(
+        "var foo = function(a){  }; function bar(){var x;x = foo} bar(); foo(1)",
+        "var foo = function( ){1;}; function bar(){             } bar(); foo()");
   }
 
   @Test
@@ -186,21 +186,20 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
         "var b=function( ){};b.apply(null, []);");
 
     test(
-        "var b=function(c){return};b(1);b(2)",
+        "var b=function(c){return};b(1);b(2)", //
         "var b=function(){return};b();b();");
     test(
-        "var b=function(c){return};b(1,2);b();",
+        "var b=function(c){return};b(1,2);b();", //
         "var b=function(){return};b();b();");
     test(
-        "var b=function(c){return};b(1,2);b(3,4)",
+        "var b=function(c){return};b(1,2);b(3,4)", //
         "var b=function(){return};b();b()");
 
     // Here there is a unknown reference to the function so we can't
     // change the signature.
     // TODO(johnlenz): replace unused parameter values, even
     // if we don't know all the uses.
-    testSame(
-        "var b=function(c,d){return d};b(1,2);b(3,4);b.f()");
+    testSame("var b=function(c,d){return d};b(1,2);b(3,4);b.f()");
 
     test(
         "var b=function(c){return};b(1,2);b(3,new use())",
@@ -316,17 +315,19 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testCallSiteInteraction_constructors2() {
     // For now, goog.inherits prevents call site optimizations
-    String code = lines(
-        "var Ctor1=function(a,b){return a};",
-        "var Ctor2=function(x,y){Ctor1.call(this,x,y)};",
-        "goog$inherits(Ctor2, Ctor1);",
-        "new Ctor2(1,2);new Ctor2(3,4)");
+    String code =
+        lines(
+            "var Ctor1=function(a,b){return a};",
+            "var Ctor2=function(x,y){Ctor1.call(this,x,y)};",
+            "goog$inherits(Ctor2, Ctor1);",
+            "new Ctor2(1,2);new Ctor2(3,4)");
 
-    String expected = lines(
-        "var Ctor1=function(a){return a};",
-        "var Ctor2=function(x,y){Ctor1.call(this,x,y)};",
-        "goog$inherits(Ctor2, Ctor1);",
-        "new Ctor2(1,2);new Ctor2(3,4)");
+    String expected =
+        lines(
+            "var Ctor1=function(a){return a};",
+            "var Ctor2=function(x,y){Ctor1.call(this,x,y)};",
+            "goog$inherits(Ctor2, Ctor1);",
+            "new Ctor2(1,2);new Ctor2(3,4)");
 
     test(code, expected);
   }
@@ -338,11 +339,11 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     // pointer to be null).
     test(
         lines(
-            "var a=function(x,y){};",
+            "var a=function(x,y){};", //
             "var b=function(z){};",
             "a(new b, b)"),
         lines(
-            "var a=function(){new b;b};",
+            "var a=function(){new b;b};", //
             "var b=function(){};",
             "a()"));
   }
@@ -355,8 +356,7 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             "var register = function(callback) {a[0] = callback};",
             "register(function(transformer) {});",
             "register(function(transformer) {});"),
-        lines(
-            "var register=function(){};register();register()"));
+        lines("var register=function(){};register();register()"));
   }
 
   @Test
@@ -364,10 +364,10 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     // Only the function definition can be modified, none of the call sites.
     test(
         lines(
-            "function JSCompiler_renameProperty(a) {};",
+            "function JSCompiler_renameProperty(a) {};", //
             "JSCompiler_renameProperty('a');"),
         lines(
-            "function JSCompiler_renameProperty() {};",
+            "function JSCompiler_renameProperty() {};", //
             "JSCompiler_renameProperty('a');"));
   }
 
@@ -375,7 +375,7 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   public void testFunctionArgRemovalFromCallSites() {
     // remove all function arguments
     test(
-        "var b=function(c,d){return};b(1,2);b(3,4)",
+        "var b=function(c,d){return};b(1,2);b(3,4)", //
         "var b=function(){return};b();b()");
 
     // remove no function arguments
@@ -396,7 +396,7 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testFunctionArgRemovalFromCallSitesSpread1() {
     test(
-        "function f(a,b,c,d){};f(...[1,2,3,4]);f(4,3,2,1)",
+        "function f(a,b,c,d){};f(...[1,2,3,4]);f(4,3,2,1)", //
         "function f(){};f();f()");
     test(
         "function f(a,b,c,d){};f(...[1,2,3,4], alert());f(4,3,2,1)",
@@ -418,7 +418,7 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testFunctionArgRemovalFromCallSitesSpread2() {
     test(
-        "function f(a,b,c,d){};f(...[alert()]);f(4,3,2,1)",
+        "function f(a,b,c,d){};f(...[alert()]);f(4,3,2,1)", //
         "function f(){};f(...[alert()]);f()");
     test(
         "function f(a,b,c,d){};f(...[alert()], alert());f(4,3,2,1)",
@@ -440,10 +440,10 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
   @Test
   public void testFunctionArgRemovalFromCallSitesSpread3() {
     test(
-        "function f(a,b,c,d){};f(...alert());f(4,3,2,1)",
+        "function f(a,b,c,d){};f(...alert());f(4,3,2,1)", //
         "function f(){};f(...alert());f()");
     test(
-        "function f(a,b,c,d){};f(...alert(), 1);f(4,3,2,1)",
+        "function f(a,b,c,d){};f(...alert(), 1);f(4,3,2,1)", //
         "function f(){};f(...alert());f()");
     test(
         "function f(a,b,c,d){use(c+d)};f(...alert());f(4,3,2,1)",
@@ -481,15 +481,13 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     test(
         "function f(c = 1, d = 2){};f(1,2,3);f(4,5,6)",
         "function f(            ){};f(     );f(     )");
-    testSame(
-        "function f(c = alert()){};f(undefined);f(4)");
+    testSame("function f(c = alert()){};f(undefined);f(4)");
     test(
-        "function f(c = alert()){};f();f()",
+        "function f(c = alert()){};f();f()", //
         "function f(){var c = alert();};f();f()");
     // TODO(johnlenz): handle this like the "no value" case above and
     // allow the default value to inlined into the body.
-    testSame(
-        "function f(c = alert()){};f(undefined);f(undefined)");
+    testSame("function f(c = alert()){};f(undefined);f(undefined)");
   }
 
   @Test
@@ -509,7 +507,6 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
     test(
         "function f(a, [b = alert()], [c = alert()], d){} f(1, 2, 3, 4); f(4, 5, 6, 7);",
         "function f(   [b = alert()], [c = alert()]   ){} f(   2, 3   ); f(   5, 6   );");
-
   }
 
   @Test
