@@ -53,10 +53,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       "JSC_DYNAMIC_EXTENDS_TYPE",
       "The class in an extends clause must be a qualified name.");
 
-  static final DiagnosticType CLASS_REASSIGNMENT = DiagnosticType.error(
-      "CLASS_REASSIGNMENT",
-      "Class names defined inside a function cannot be reassigned.");
-
   // This function is defined in js/es6/util/inherits.js
   static final String INHERITS = "$jscomp.inherits";
 
@@ -132,16 +128,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     }
   }
 
-  private void checkClassReassignment(Node clazz) {
-    Node name = NodeUtil.getNameNode(clazz);
-    Node enclosingFunction = NodeUtil.getEnclosingFunction(clazz);
-    if (enclosingFunction == null) {
-      return;
-    }
-    CheckClassAssignments checkAssigns = new CheckClassAssignments(name);
-    NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
-  }
-
   /**
    * Classes are processed in 3 phases:
    * <ol>
@@ -151,7 +137,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
    * </ol>
    */
   private void visitClass(final NodeTraversal t, final Node classNode, final Node parent) {
-    checkClassReassignment(classNode);
     // Collect Metadata
     ClassDeclarationMetadata metadata =
         ClassDeclarationMetadata.create(classNode, parent, astFactory);
@@ -472,25 +457,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
           .createGetProp(context, member.getString())
           .useSourceInfoFromForTree(methodName);
     }
-  }
-
-  private class CheckClassAssignments extends NodeTraversal.AbstractPostOrderCallback {
-    private final Node className;
-
-    public CheckClassAssignments(Node className) {
-      this.className = className;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!n.isAssign() || n.getFirstChild() == className) {
-        return;
-      }
-      if (className.matchesQualifiedName(n.getFirstChild())) {
-        compiler.report(JSError.make(n, CLASS_REASSIGNMENT));
-      }
-    }
-
   }
 
   private Node createPropertyDescriptor() {

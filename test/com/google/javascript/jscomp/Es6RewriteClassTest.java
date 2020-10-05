@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
@@ -1901,12 +1900,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
                 "  return ExternsClass.apply(this, arguments) || this;",
                 "};",
                 "$jscomp.inherits(CodeClass,ExternsClass)")));
-  }
-
-  @Test
-  public void testMockingInFunction() {
-    // Classes cannot be reassigned in function scope.
-    testError("function f() { class C {} C = function() {};}", CLASS_REASSIGNMENT);
   }
 
   // Make sure we don't crash on this code.
