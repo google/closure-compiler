@@ -16,7 +16,7 @@
 
 /**
  * @fileoverview Definitions for W3C's Trusted Types specification.
- * @see https://github.com/WICG/trusted-types
+ * @see https://w3c.github.io/webappsec-trusted-types/dist/spec/
  * @externs
  */
 
@@ -111,6 +111,28 @@ TrustedTypePolicyFactory.prototype.emptyHTML;
 
 /** @type {!TrustedScript} */
 TrustedTypePolicyFactory.prototype.emptyScript;
+
+/**
+ * @param {string} tagName
+ * @param {string} attribute
+ * @param {string=} elementNs
+ * @param {string=} attrNs
+ * @return {?string}
+ */
+TrustedTypePolicyFactory.prototype.getAttributeType = function(
+    tagName, attribute, elementNs, attrNs) {};
+
+/**
+ * @param {string} tagName
+ * @param {string} property
+ * @param {string=} elementNs
+ * @return {?string}
+ */
+TrustedTypePolicyFactory.prototype.getPropertyType = function(
+    tagName, property, elementNs) {};
+
+/** @type {?TrustedTypePolicy} */
+TrustedTypePolicyFactory.prototype.defaultPolicy;
 
 
 /** @type {!TrustedTypePolicyFactory} */
