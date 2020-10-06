@@ -482,15 +482,15 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     test(
         options,
         lines(
-            "var goog = {};",
+            "const goog = {};",
             "goog.forwardDeclare = function(/** string */ typeName) {};",
             "goog.forwardDeclare('fwd.declared.Type');",
             "",
             "/** @type {!fwd.declared.Type<string>} */",
-            "var x;",
+            "let x;",
             "",
             "/** @type {!fwd.declared.Type<string, number>} */",
-            "var y;"),
+            "let y;"),
         "var goog={};goog.forwardDeclare=function(typeName){};var x;var y");
   }
 

@@ -49,6 +49,7 @@ import com.google.javascript.jscomp.lint.CheckProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
+import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import java.util.HashMap;
 import java.util.Map;
@@ -615,6 +616,7 @@ public class DiagnosticGroups {
               CheckRequiresSorted.REQUIRES_NOT_SORTED,
               CheckUnusedLabels.UNUSED_LABEL,
               CheckUselessBlocks.USELESS_BLOCK,
+              CheckVar.VAR,
               ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE,
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
               ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,

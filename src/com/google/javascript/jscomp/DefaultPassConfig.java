@@ -60,6 +60,7 @@ import com.google.javascript.jscomp.lint.CheckProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
+import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -1880,7 +1881,8 @@ public final class DefaultPassConfig extends PassConfig {
                         .add(new CheckPrimitiveAsObject(compiler))
                         .add(new CheckPrototypeProperties(compiler))
                         .add(new CheckUnusedLabels(compiler))
-                        .add(new CheckUselessBlocks(compiler));
+                        .add(new CheckUselessBlocks(compiler))
+                        .add(new CheckVar(compiler));
                 return combineChecks(compiler, callbacks.build());
               })
           .setFeatureSetForChecks()

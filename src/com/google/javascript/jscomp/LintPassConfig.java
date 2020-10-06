@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.lint.CheckProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckRequiresSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
+import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import java.util.List;
 
@@ -98,7 +99,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                               compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
                           new CheckTypeImportCodeReferences(compiler),
                           new CheckUnusedLabels(compiler),
-                          new CheckUselessBlocks(compiler))))
+                          new CheckUselessBlocks(compiler),
+                          new CheckVar(compiler))))
           .setFeatureSet(FeatureSet.latest())
           .build();
 
