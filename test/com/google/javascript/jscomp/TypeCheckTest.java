@@ -10692,6 +10692,19 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testTypeofBigInt() {
+    testTypes(
+        lines(
+            "/**",
+            " * @param {bigint|number} i",
+            " * @return {boolean}",
+            " */",
+            "function foo(i) {",
+            "  return typeof i === 'bigint';",
+            "}"));
+  }
+
+  @Test
   public void testIssue700() {
     testTypes(
         "/**\n" +

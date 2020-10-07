@@ -1161,7 +1161,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         || s.equals("function")
         || s.equals("object")
         || s.equals("symbol")
-        || s.equals("unknown"))) {
+        || s.equals("unknown")
+        || s.equals("bigint"))) {
       validator.expectValidTypeofName(n, s);
     }
   }
