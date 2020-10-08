@@ -40,11 +40,12 @@ _SNAPSHOT = "1.0-SNAPSHOT"
 def _sonatype_artifact_bundle(ctx):
     version = ctx.var.get("COMPILER_VERSION", _SNAPSHOT)
     password = None
+    generate_signatures = True
 
     if version == _SNAPSHOT:
-        # SNAPSHOT versions don't need to be signed and can't be uploaded
-        # as a release, so there's no issue with a missing passphrase.
-        pass
+        # A SNAPSHOT version can't be uploaded as a release
+        # and thus doesn't need to be signed
+        generate_signatures = False
     elif not version.startswith("v") or not version[1:].isdigit():
         fail("--define=COMPILER_VERSION was malformed; got '{0}'".format(version))
     else:
@@ -86,8 +87,10 @@ def _sonatype_artifact_bundle(ctx):
         for suffix, file in jar_map.items()
         if file
     ]
-    signatures = [_gpg_signature(ctx, password, f) for f in srcs if password]
-    files_to_bundle = srcs + signatures
+    files_to_bundle = srcs
+    if generate_signatures:
+        signatures = [_gpg_signature(ctx, password, f) for f in srcs]
+        files_to_bundle += signatures
 
     # Set all bundle files to be at the top level of the JAR.
     bundle_file_args = []
