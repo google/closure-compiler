@@ -213,7 +213,7 @@ class OptimizeCalls implements CompilerPass {
     /**
      * Collects potential definition FUNCTIONs associated with a method definition site.
      *
-     * @see {@link #getFunctionNodes()}
+     * @see {@link #getFunctionNodes}
      */
     private static ImmutableList<Node> definitionFunctionNodesFor(Node definitionSite) {
       if (definitionSite.isGetterDef() || definitionSite.isSetterDef()) {
@@ -230,6 +230,14 @@ class OptimizeCalls implements CompilerPass {
 
       ImmutableList.Builder<Node> fns = ImmutableList.builder();
       switch (parent.getToken()) {
+        case CLASS:
+          if (definitionSite.isFirstChildOf(parent)) {
+            Node constructorFnDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(parent);
+            if (constructorFnDef != null) {
+              fns.add(constructorFnDef.getOnlyChild());
+            }
+          }
+          break;
         case FUNCTION:
           fns.add(parent);
           break;
@@ -272,6 +280,14 @@ class OptimizeCalls implements CompilerPass {
     private static void addValueFunctionNodes(ImmutableList.Builder<Node> fns, Node n) {
       // TODO(johnlenz): add member definitions
       switch (n.getToken()) {
+        case CLASS:
+          {
+            Node constructorFnDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
+            if (constructorFnDef != null) {
+              fns.add(constructorFnDef.getOnlyChild());
+            }
+          }
+          break;
         case FUNCTION:
           fns.add(n);
           break;
@@ -412,10 +428,6 @@ class OptimizeCalls implements CompilerPass {
     final ReferenceMap references;
     private Scope globalScope;
 
-    /**
-     * @param compiler
-     * @param references
-     */
     public ReferenceMapBuildingCallback(ReferenceMap references) {
       this.externProps = safeSet(compiler.getExternProperties());
       this.references = references;
@@ -425,7 +437,7 @@ class OptimizeCalls implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node unused) {
       switch (n.getToken()) {
         case NAME:
-          maybeAddNameReference(n);
+          maybeAddNameReference(n.getString(), n);
           break;
         case OPTCHAIN_GETPROP:
         case GETPROP:
@@ -442,6 +454,10 @@ class OptimizeCalls implements CompilerPass {
           }
           break;
 
+        case SUPER:
+          visitSuper(n);
+          break;
+
         case COMPUTED_PROP:
         case OPTCHAIN_GETELEM:
         case GETELEM:
@@ -456,8 +472,26 @@ class OptimizeCalls implements CompilerPass {
       }
     }
 
-    private void maybeAddNameReference(Node n) {
-      String name = n.getString();
+    private void visitSuper(Node superNode) {
+      // Determine whether this is a super() constructor call.
+      // If it is, identify the super class and record this as a reference to that.
+      Node parent = superNode.getParent();
+      if (parent.isCall() && superNode.isFirstChildOf(parent)) {
+        Node enclosingClass = checkNotNull(NodeUtil.getEnclosingClass(parent));
+        Node extendsNode = enclosingClass.getSecondChild();
+        checkState(!extendsNode.isEmpty(), "super call appears in class without extends clause");
+        if (extendsNode.isName()) {
+          maybeAddNameReference(extendsNode.getString(), superNode);
+        } else if (extendsNode.isGetProp()) {
+          // NOTE: Theoretically we could also include an optional chain getprop here, but
+          // A) it's a runtime error if the value ends up being undefined, so that's bad code
+          // B) the author is indicating uncertainty, so we should be cautious.
+          maybeAddPropReference(extendsNode.getSecondChild().getString(), superNode);
+        } // else we cannot tell what super() is referencing (e.g. `class extends getMixin() {`)
+      }
+    }
+
+    private void maybeAddNameReference(String name, Node n) {
       // TODO(b/129503101): Why are we limiting ourselves to global names?
       Var var = globalScope.getSlot(name);
       if (var != null && (considerExterns || !var.isExtern())) {
@@ -539,6 +573,28 @@ class OptimizeCalls implements CompilerPass {
           return false; // `a.foo()` or `a?.foo()` or `a?.[foo]()`
         }
         return true;
+      case CLASS:
+        if (n.isFirstChildOf(parent)) {
+          // class Name {
+          // this is a definition, not a read reference
+          return false;
+        } else {
+          // class SubClass extends Name {
+          checkState(n.isSecondChildOf(parent), parent);
+          // find the constructor
+          if (NodeUtil.getEs6ClassConstructorMemberFunctionDef(parent) == null) {
+            // The subclass has no explicit constructor, so `new SubClass()` implicitly calls
+            // `new Name(...arguments)`. This hidden call makes it harder to safely optimize the
+            // `Name` constructor, so we won't do it.
+            return false;
+          } else {
+            // We can still optimize the constructor of the class being extended as
+            // long as all child classes have explicit constructors, so we can see the
+            // `super()` calls in them and update them.
+            return true;
+          }
+        }
+        //
       default:
         if (NodeUtil.isNameDeclaration(parent) && !n.hasChildren()) {
           // allow "let x;"

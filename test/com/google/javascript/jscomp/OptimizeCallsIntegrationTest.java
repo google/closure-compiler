@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,6 +70,205 @@ public final class OptimizeCallsIntegrationTest extends CompilerTestCase {
             .process(externs, root);
       }
     };
+  }
+
+  @Test
+  public void testInlineWindow() {
+    test(
+        lines(
+            "function foo(window) {", //
+            "  alert(window);",
+            "}",
+            "foo(window);",
+            ""),
+        lines(
+            "function foo(      ) {", //
+            "  var window$jscomp$1 = window;",
+            "  alert(window$jscomp$1);",
+            "}",
+            "foo(      );",
+            ""));
+  }
+
+  @Test
+  public void testRemoveUnusedConstructorArgumentWithDefaultValues() {
+    test(
+        externs(new TestExternsBuilder().addConsole().build()),
+        srcs(
+            lines(
+                "class C {",
+                "  constructor(unusedValue = () => {}, value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "console.log(new C(() => {}, 25).getValue());")),
+        expected(
+            lines(
+                "class C {",
+                "  constructor(                                 ) {",
+                "    var value = 25;",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "console.log(new C(            ).getValue());")));
+
+    test(
+        externs(new TestExternsBuilder().addConsole().build()),
+        srcs(
+            lines(
+                "class C {",
+                "  constructor(unusedValue = () => {}, value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                // 2 calls to the constructor with different used values,
+                // so the second parameter cannot actually be removed.
+                "console.log(new C(() => {}, 15).getValue());",
+                "console.log(new C(() => {}, 25).getValue());")),
+        expected(
+            lines(
+                "class C {",
+                "  constructor(                        value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "console.log(new C(          15).getValue());",
+                "console.log(new C(          25).getValue());")));
+  }
+
+  @Test
+  public void testRemoveUnusedConstructorArgumentWithSubClassWithoutConstructor() {
+    test(
+        externs(new TestExternsBuilder().addConsole().build()),
+        srcs(
+            lines(
+                "class C {",
+                "  constructor(unusedValue = () => {}, value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "class SubC extends C {}", // no declared constructor
+                "console.log(new SubC(() => {}, 25).getValue());",
+                "console.log(new C(() => {}, 25).getValue());")),
+        expected(
+            lines(
+                "class C {",
+                // default value removed, but no arguments removed or inlined
+                // due to subclass.
+                "  constructor(unusedValue           , value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "class SubC extends C {}",
+                "console.log(new SubC(() => {}, 25).getValue());",
+                "console.log(new C(() => {}, 25).getValue());")));
+  }
+
+  @Test
+  public void testRemoveUnusedConstructorArgumentWithSubClassWithConstructor() {
+    test(
+        externs(new TestExternsBuilder().addConsole().build()),
+        srcs(
+            lines(
+                "class C {",
+                "  constructor(unusedValue = () => {}, value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "class SubC extends C {",
+                "  constructor(value) {",
+                "    super(0, value);", // calls super constructor
+                "  }",
+                "}",
+                "console.log(new SubC(25).getValue());",
+                "console.log(new C(() => {}, 25).getValue());")),
+        expected(
+            lines(
+                "class C {",
+                // First parameter removed because it was never used.
+                "  constructor(                        value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "class SubC extends C {",
+                // Parameter was inlined with the only value ever passed to it.
+                "  constructor(     ) {",
+                "    var value$jscomp$1 = 25;",
+                // first parameter to super() was removed to match its removal in the
+                // definition above.
+                "    super(   value$jscomp$1);",
+                "  }",
+                "}",
+                "console.log(new SubC(  ).getValue());",
+                // unused parameter removed.
+                "console.log(new C(          25).getValue());")));
+    // Same test as above, but with class expressions instead of declarations.
+    test(
+        externs(new TestExternsBuilder().addConsole().build()),
+        srcs(
+            lines(
+                "const C = class {", // class expression instead of declaration
+                "  constructor(unusedValue = () => {}, value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "const SubC = class extends C {", // class expression instead of declaration
+                "  constructor(value) {",
+                "    super(0, value);", // calls super constructor
+                "  }",
+                "}",
+                "console.log(new SubC(25).getValue());",
+                "console.log(new C(() => {}, 25).getValue());")),
+        expected(
+            lines(
+                "const C = class {",
+                // First parameter removed because it was never used.
+                "  constructor(                        value = 3) {",
+                "    this.value = value;",
+                "  }",
+                "  getValue() {",
+                "    return this.value;",
+                "  }",
+                "}",
+                "const SubC = class extends C {",
+                // Parameter was inlined with the only value ever passed to it.
+                "  constructor(     ) {",
+                "    var value$jscomp$1 = 25;",
+                // first parameter to super() was removed to match its removal in the
+                // definition above.
+                "    super(   value$jscomp$1);",
+                "  }",
+                "}",
+                "console.log(new SubC(  ).getValue());",
+                // unused parameter removed.
+                "console.log(new C(          25).getValue());")));
   }
 
   @Test

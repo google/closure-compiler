@@ -339,14 +339,14 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "new C([]);"),
         lines(
             "class C {",
-            "  constructor(elements) {",
-            "    this.elements = elements;",
+            "  constructor(        ) {",
+            "    this.elements =       [];",
             "    for (const element of this.elements) {",
             "      element.someProp = 1;",
             "    }",
             "  }",
             "}",
-            "new C([]);"));
+            "new C(  );"));
   }
 
   @Test

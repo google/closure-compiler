@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -83,7 +83,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       // Find all function nodes that are possible candidates for parameter removal.
       List<ArrayList<Node>> toOptimize = new ArrayList<>();
 
-      for (Entry<String, ArrayList<Node>> entry : refMap.getNameReferences()) {
+      for (Map.Entry<String, ArrayList<Node>> entry : refMap.getNameReferences()) {
         String key = entry.getKey();
         ArrayList<Node> refs = entry.getValue();
         if (isCandidateName(key, refs)) {
@@ -91,7 +91,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         }
       }
 
-      for (Entry<String, ArrayList<Node>> entry : refMap.getPropReferences()) {
+      for (Map.Entry<String, ArrayList<Node>> entry : refMap.getPropReferences()) {
         String key = entry.getKey();
         ArrayList<Node> refs = entry.getValue();
         if (isCandidateProperty(key, refs)) {
@@ -444,6 +444,10 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       functionExpr = n.getFirstChild();
     } else if (isClassMemberDefinition(n)) {
       functionExpr = n.getFirstChild();
+    } else if (parent.isClass() && n.isFirstChildOf(parent)) {
+      // allDefinitionsAreCandidateFunctions() understands classes and will check for
+      // candidacy correctly.
+      functionExpr = parent;
     } else {
       return false; // Couldn't find a function.
     }
@@ -457,6 +461,27 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
   private static boolean allDefinitionsAreCandidateFunctions(Node n) {
     switch (n.getToken()) {
+      case CLASS:
+        if (NodeUtil.isNamedClassExpression(n)) {
+          // name creates an alias, making it hard to be sure we've seen all calls
+          return false;
+        } else {
+          // `class NameNode {`
+          // find the constructor
+          Node constructorMemberFunctionDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
+          if (constructorMemberFunctionDef == null) {
+            // unable to find the constructor
+            // TODO(bradfordcsmith): Ideally we should find the parent class constructor.
+            return false;
+          } else {
+            Node functionNode = constructorMemberFunctionDef.getOnlyChild();
+            // "arguments" can refer to all parameters or their count.
+            return !NodeUtil.doesFunctionReferenceOwnArgumentsObject(functionNode)
+                // In `function f(a, b = a) { ... }` it's very difficult to determine if `a` is
+                // movable.
+                && !mayReferenceParamBeforeBody(functionNode);
+          }
+        }
       case FUNCTION:
         // Named function expression can refer to themselves,
         return !NodeUtil.isNamedFunctionExpression(n)

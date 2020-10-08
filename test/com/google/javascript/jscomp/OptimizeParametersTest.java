@@ -1277,19 +1277,91 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewriteUsedClassConstructor1() {
-    testSame(lines(
-        "class C { constructor(a) { use(a); } }",
-        "var c = new C();"));
+  public void testRewriteUsedClassConstructor1() {
+    test(
+        lines(
+            "class C {", //
+            "  constructor(a) {",
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C();"),
+        lines(
+            "class C {", //
+            "  constructor( ) {",
+            "    var a;", // moved from parameter list
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C();"));
   }
 
   @Test
-  public void testNoRewriteUsedClassConstructor2() {
+  public void testRewriteUsedES5Constructor1() {
+    test(
+        lines(
+            "/** @constructor */", //
+            "function C(a) {",
+            "  use(a);",
+            "}",
+            "var c = new C();"),
+        lines(
+            "/** @constructor */", //
+            "function C( ) {",
+            "  var a;", // moved from parameter list
+            "  use(a);",
+            "}",
+            "var c = new C();"));
+  }
+
+  @Test
+  public void testRewriteUsedClassConstructor2() {
     // `constructor` aliases the class constructor
-    testSame(lines(
-        "class C { constructor(a) { use(a); } }",
-        "var c = new C();",
-        "new c.constructor(1);"));
+    test(
+        lines(
+            "class C {", //
+            "  constructor(a) {",
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C();",
+            "new c.constructor(1);"),
+        lines(
+            "class C {", //
+            "  constructor( ) {",
+            "    var a;", // moved from parameter list
+            "    use(a);",
+            "  }",
+            "}",
+            "var c = new C();",
+            // TODO(bradfordcsmith): This call is now broken, since the parameter is ignored.
+            //     For now we consider the code size savings worth the risk of breaking this
+            //     coding pattern that we consider bad practice anyway.
+            "new c.constructor(1);"));
+  }
+
+  @Test
+  public void testRewriteUsedES5Constructor2() {
+    // `constructor` aliases the class constructor
+    test(
+        lines(
+            "/** @constructor */", //
+            " function C(a) {",
+            "  use(a);",
+            "}",
+            "var c = new C();",
+            "new c.constructor(1);"),
+        lines(
+            "/** @constructor */", //
+            " function C( ) {",
+            "  var a;", // moved from parameter list
+            "  use(a);",
+            "}",
+            "var c = new C();",
+            // TODO(bradfordcsmith): This call is now broken, since the parameter is ignored.
+            //     For now we consider the code size savings worth the risk of breaking this
+            //     coding pattern that we consider bad practice anyway.
+            "new c.constructor(1);"));
   }
 
   @Test
@@ -1302,12 +1374,37 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewriteUsedClassConstructor4() {
+  public void testRewriteUsedClassConstructor4() {
     // `new.target` aliases self and subtype constructors
-    testSame(lines(
-        "class C { constructor() { var x = new.target(1); } }",
-        "class D extends C { constructor(a) { super(); } }",
-        "var d = new D(); new C();"));
+    test(
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    var x = new new.target(1);",
+            "  }",
+            "}",
+            "class D extends C {",
+            "  constructor(a) {",
+            "    super();",
+            "  }",
+            "}",
+            "var d = new D(); new C();"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            // TODO(bradfordcsmith): This call is now broken, since the parameter is ignored.
+            //     For now we consider the code size savings worth the risk of breaking this
+            //     coding pattern that we consider bad practice anyway.
+            "    var x = new new.target(1);",
+            "  }",
+            "}",
+            "class D extends C {",
+            "  constructor( ) {",
+            "    var a;", // moved from parameter list
+            "    super();",
+            "  }",
+            "}",
+            "var d = new D(); new C();"));
   }
 
   @Test
@@ -1428,9 +1525,6 @@ public final class OptimizeParametersTest extends CompilerTestCase {
 
   @Test
   public void testSuperInvocation_preventsParamInlining_whenImplicit() {
-    // TODO(b/130054506): It would be better if we did inline in this case. However, right now it's
-    // sufficient that we don't inline at all, since it would be dangerous if we overlooked `super`
-    // calls.
     testSame(
         lines(
             "class Foo {",
@@ -1439,6 +1533,7 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "  }",
             "}",
             "",
+            // lack of explicit constructor prevents optimizing calls to both classes.
             "class Bar extends Foo { }",
             "",
             "new Foo(4);",
@@ -1446,11 +1541,8 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSuperInvocation_preventsParamInlining_whenExplicit() {
-    // TODO(b/130054506): It would be better if we did inline in this case. However, right now it's
-    // sufficient that we don't inline at all, since it would be dangerous if we overlooked `super`
-    // calls.
-    testSame(
+  public void testSuperInvocationCanBeInlined() {
+    test(
         lines(
             "class Foo {",
             "  constructor(x) {",
@@ -1459,6 +1551,44 @@ public final class OptimizeParametersTest extends CompilerTestCase {
             "}",
             "",
             "class Bar extends Foo {",
+            "  constructor() {",
+            "    super(4);",
+            "  }",
+            "}",
+            "",
+            "new Foo(4);",
+            "new Bar();"),
+        lines(
+            "class Foo {",
+            "  constructor( ) {",
+            "    var x = 4;", // moved from the parameter list
+            "    this.x = x;",
+            "  }",
+            "}",
+            "",
+            "class Bar extends Foo {",
+            "  constructor() {",
+            "    super( );",
+            "  }",
+            "}",
+            "",
+            "new Foo( );",
+            "new Bar();"));
+  }
+
+  @Test
+  public void testSuperInvocationCannotBeInlinedWhenExtendingExpression() {
+    testSame(
+        lines(
+            "class Foo {",
+            "  constructor(x) {",
+            "    this.x = x;",
+            "  }",
+            "}",
+            "",
+            // This bit of indirection prevents us from recognizing what
+            // is being extended, so `new Foo()` cannot be optimized.
+            "class Bar extends (() => Foo)() {",
             "  constructor() {",
             "    super(4);",
             "  }",

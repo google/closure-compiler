@@ -17,10 +17,14 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -172,6 +176,50 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         .comparingElementsUsing(KEY_EQUALITY)
         // Anonymous functions have the empty string as a name.
         .doesNotContain("");
+  }
+
+  @Test
+  public void testReferenceCollection_findsSuperCalls() {
+    considerExterns = true;
+
+    test(
+        srcs(
+            lines(
+                "class SuperClass {",
+                "  constructor() {}",
+                "}",
+                "class SubClass extends SuperClass {",
+                "  constructor() {",
+                // This call must be recorded as a call to SuperClass(), in order for
+                // parameter optimization to work correctly.
+                "    super();",
+                "  }",
+                "}",
+                "new SuperClass();",
+                "new SubClass();",
+                "")));
+
+    final ImmutableMap<String, ArrayList<Node>> nameToRefs =
+        ImmutableMap.copyOf(references.getNameReferences());
+    assertThat(nameToRefs.keySet()).containsExactly("SuperClass", "SubClass");
+
+    final ArrayList<Node> superClassRefNodes = nameToRefs.get("SuperClass");
+
+    // The references to `SuperClass` are
+    // 1. `class SuperClass {`
+    // 2. `class SubClass extends SuperClass {`
+    // 3. `super()` call inside of the `SubClass` constructor
+    // 4. `new SuperClass()`
+    assertThat(superClassRefNodes).hasSize(4);
+    // Specifically check for `super()`. The others are adequately covered by other test cases.
+    Optional<Node> optSuperNode = superClassRefNodes.stream().filter(Node::isSuper).findFirst();
+    assertWithMessage("no super reference found").that(optSuperNode.isPresent()).isTrue();
+
+    final ArrayList<Node> subClassRefNodes = nameToRefs.get("SubClass");
+    // the references to `SubClass` are
+    // 1. `class SubClass extends SuperClass {`
+    // 2. `new SubClass()`
+    assertThat(subClassRefNodes).hasSize(2);
   }
 
   private static final Correspondence<Map.Entry<String, Node>, String> KEY_EQUALITY =
