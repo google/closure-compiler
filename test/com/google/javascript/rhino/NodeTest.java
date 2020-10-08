@@ -41,6 +41,7 @@ package com.google.javascript.rhino;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
+import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
@@ -209,6 +210,39 @@ public class NodeTest {
     Node node2 = Node.newString(Token.NAME, "f");
     assertThat(node1.isEquivalentToTyped(node2)).isFalse();
     testErrorReporter.verifyHasEncounteredAllWarningsAndErrors();
+  }
+
+  @Test
+  public void testCheckTreeTypeAwareEqualsColorsSame() {
+    Node node1 = Node.newString(Token.NAME, "f");
+    node1.setColor(PrimitiveColor.NUMBER);
+    Node node2 = Node.newString(Token.NAME, "f");
+    node2.setColor(PrimitiveColor.NUMBER);
+    assertThat(node1.isEquivalentToTyped(node2)).isTrue();
+  }
+
+  @Test
+  public void testCheckTreeTypeAwareEqualsColorsSameNull() {
+    Node node1 = Node.newString(Token.NAME, "f");
+    Node node2 = Node.newString(Token.NAME, "f");
+    assertThat(node1.isEquivalentToTyped(node2)).isTrue();
+  }
+
+  @Test
+  public void testCheckTreeTypeAwareEqualsColorsDifferent() {
+    Node node1 = Node.newString(Token.NAME, "f");
+    node1.setColor(PrimitiveColor.NUMBER);
+    Node node2 = Node.newString(Token.NAME, "f");
+    node2.setColor(PrimitiveColor.STRING);
+    assertThat(node1.isEquivalentToTyped(node2)).isFalse();
+  }
+
+  @Test
+  public void testCheckTreeTypeAwareEqualsColorsDifferentNull() {
+    Node node1 = Node.newString(Token.NAME, "f");
+    node1.setColor(PrimitiveColor.NUMBER);
+    Node node2 = Node.newString(Token.NAME, "f");
+    assertThat(node1.isEquivalentToTyped(node2)).isFalse();
   }
 
   private void testMergeExtract(int lineno, int charno) {

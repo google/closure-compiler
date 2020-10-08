@@ -2034,7 +2034,9 @@ public class Node implements Serializable {
       return false;
     }
 
-    if (compareType && !Objects.equals(getJSType(), node.getJSType())) {
+    if (compareType
+        && (!Objects.equals(getJSType(), node.getJSType())
+            || !Objects.equals(getColor(), node.getColor()))) {
       return false;
     }
 
