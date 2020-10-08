@@ -25,6 +25,7 @@ import static java.lang.Math.min;
 
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -281,8 +282,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (useTypes
         && firstArg != null
         && (isStringLiteral
-            || (stringNode.getJSType() != null
-                && stringNode.getJSType().isStringValueType()))) {
+            || PrimitiveColor.STRING.equals(stringNode.getColor())
+            || (stringNode.getJSType() != null && stringNode.getJSType().isStringValueType()))) {
       if (subtree.hasXChildren(3)) {
         Double maybeStart = getSideEffectFreeNumberValue(firstArg);
         if (maybeStart != null) {
@@ -1130,7 +1131,12 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
   /** Check if a node contains an array type or function call that returns only an array. */
   private static boolean containsExactlyArray(Node n) {
-    if (n == null || n.getJSType() == null) {
+    if (n == null) {
+      return false;
+    }
+
+    if (n.getJSType() == null) {
+      // TODO(b/160343154): support this with colors or delete this optimization
       return false;
     }
     JSType nodeType = n.getJSType();

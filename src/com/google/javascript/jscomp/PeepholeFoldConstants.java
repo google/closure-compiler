@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeUtil.ValueType;
+import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -968,13 +969,25 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   }
 
   private boolean isNumeric(Node n) {
-    return NodeUtil.isNumericResult(n)
-        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isNumberValueType());
+    if (NodeUtil.isNumericResult(n)) {
+      return true;
+    }
+    if (shouldUseTypes) {
+      return PrimitiveColor.NUMBER.equals(n.getColor())
+          || (n.getJSType() != null && n.getJSType().isNumberValueType());
+    }
+    return false;
   }
 
   private boolean isBigInt(Node n) {
-    return NodeUtil.isBigIntResult(n)
-        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isBigIntValueType());
+    if (NodeUtil.isBigIntResult(n)) {
+      return true;
+    }
+    if (shouldUseTypes) {
+      return PrimitiveColor.BIGINT.equals(n.getColor())
+          || (n.getJSType() != null && n.getJSType().isBigIntValueType());
+    }
+    return false;
   }
 
   private Node maybeReplaceBinaryOpWithNumericResult(double result, double lval, double rval) {
@@ -1079,8 +1092,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private boolean isStringTyped(Node n) {
     // We could also accept !String, but it is unlikely to be very common.
-    return NodeUtil.isStringResult(n)
-        || (shouldUseTypes && n.getJSType() != null && n.getJSType().isStringValueType());
+    if (NodeUtil.isStringResult(n)) {
+      return true;
+    }
+    if (shouldUseTypes) {
+      return PrimitiveColor.STRING.equals(n.getColor())
+          || (n.getJSType() != null && n.getJSType().isStringValueType());
+    }
+    return false;
   }
 
   /**

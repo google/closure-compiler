@@ -32,6 +32,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.jscomp.parsing.ParsingUtil;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -1637,6 +1639,15 @@ public final class NodeUtil {
    */
   static boolean mayBeString(Node n, boolean useType) {
     if (useType) {
+      Color color = n.getColor();
+      if (PrimitiveColor.STRING.equals(color)) {
+        return true;
+      } else if (PrimitiveColor.NUMBER.equals(color)
+          || PrimitiveColor.BIGINT.equals(color)
+          || PrimitiveColor.BOOLEAN.equals(color)
+          || PrimitiveColor.NULL_OR_VOID.equals(color)) {
+        return false;
+      }
       JSType type = n.getJSType();
       if (type != null) {
         if (type.isStringValueType()) {

@@ -1008,8 +1008,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testStringAdd_identity_withJSTypes() {
+    enableTypeCheck();
+    foldStringTypes("x + ''", "x");
+    foldStringTypes("'' + x", "x");
+  }
+
+  @Test
   public void testStringAdd_identity() {
     enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
     foldStringTypes("x + ''", "x");
     foldStringTypes("'' + x", "x");
   }
@@ -1962,11 +1971,36 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Test
   public void testTypeBasedFoldConstant() {
     enableTypeCheck();
-    test("function f(/** number */ x) { x + 1 + 1 + x; }",
-         "function f(/** number */ x) { x + 2 + x; }");
+    test(
+        "function f(/** number */ x) { x + 1 + 1 + x; }",
+        "function f(/** number */ x) { x + 2 + x; }");
 
-    test("function f(/** boolean */ x) { x + 1 + 1 + x; }",
-         "function f(/** boolean */ x) { x + 2 + x; }");
+    test(
+        "function f(/** boolean */ x) { x + 1 + 1 + x; }",
+        "function f(/** boolean */ x) { x + 2 + x; }");
+
+    testSame("function f(/** null */ x) { var y = true > x; }");
+
+    testSame("function f(/** null */ x) { var y = null > x; }");
+
+    testSame("function f(/** string */ x) { x + 1 + 1 + x; }");
+
+    useTypes = false;
+    testSame("function f(/** number */ x) { x + 1 + 1 + x; }");
+  }
+
+  @Test
+  public void testColorBasedFoldConstant() {
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+    test(
+        "function f(/** number */ x) { x + 1 + 1 + x; }",
+        "function f(/** number */ x) { x + 2 + x; }");
+
+    test(
+        "function f(/** boolean */ x) { x + 1 + 1 + x; }",
+        "function f(/** boolean */ x) { x + 2 + x; }");
 
     testSame("function f(/** null */ x) { var y = true > x; }");
 
@@ -2120,7 +2154,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAlgebraicIdentities() {
+  public void testAlgebraicIdentities_usingJSTypes() {
     enableTypeCheck();
 
     foldNumericTypes("x+0", "x");
@@ -2150,8 +2184,65 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testBigIntAlgebraicIdentities_usingJSTypes() {
+    enableTypeCheck();
+
+    foldBigIntTypes("x+0n", "x");
+    foldBigIntTypes("0n+x", "x");
+    foldBigIntTypes("x+0n+0n+x+x+0n", "x+x+x");
+
+    foldBigIntTypes("x-0n", "x");
+    foldBigIntTypes("0n-x", "-x");
+    foldBigIntTypes("x-0n-0n-0n", "x");
+
+    foldBigIntTypes("x*1n", "x");
+    foldBigIntTypes("1n*x", "x");
+    foldBigIntTypes("x*1n*1n*x*x*1n", "x*x*x");
+
+    foldBigIntTypes("x/1n", "x");
+    foldBigIntTypes("x/0n", "x/0n");
+
+    test("for (var i = 0n; i < 5n; i++) var x = 0n + i * 1n", "for(var i=0n; i < 5n; i++) var x=i");
+
+    test("(doSomething(),0n)*1n", "(doSomething(),0n)");
+    test("1n*(doSomething(),0n)", "(doSomething(),0n)");
+    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
+    testSame("(0n,doSomething())*1n");
+    testSame("1n*(0n,doSomething())");
+  }
+
+  @Test
+  public void testAlgebraicIdentities() {
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+
+    foldNumericTypes("x+0", "x");
+    foldNumericTypes("0+x", "x");
+    foldNumericTypes("x+0+0+x+x+0", "x+x+x");
+
+    foldNumericTypes("x-0", "x");
+    foldNumericTypes("x-0-0-0", "x");
+    // 'x-0' is numeric even if x isn't
+    test("var x='a'; x-0-0", "var x='a';x-0");
+    foldNumericTypes("0-x", "-x");
+    test("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "for(var i=0; i < 5; i++) var x=i");
+
+    foldNumericTypes("x*1", "x");
+    foldNumericTypes("1*x", "x");
+    // can't optimize these without a non-NaN prover
+    testSame("x*0");
+    testSame("0*x");
+    testSame("0/x");
+
+    foldNumericTypes("x/1", "x");
+  }
+
+  @Test
   public void testBigIntAlgebraicIdentities() {
     enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
 
     foldBigIntTypes("x+0n", "x");
     foldBigIntTypes("0n+x", "x");
