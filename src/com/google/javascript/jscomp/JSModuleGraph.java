@@ -591,7 +591,7 @@ public final class JSModuleGraph implements Serializable {
     List<CompilerInput> orderedInputs = new ArrayList<>();
     Set<CompilerInput> reachedInputs = new HashSet<>();
 
-    for (JSModule module : entryPointInputsPerModule.keySet()) {
+    for (JSModule module : modules) {
       List<CompilerInput> transitiveClosure;
       // Prefer a depth first ordering of dependencies from entry points.
       // Always orders in a deterministic fashion regardless of the order of provided inputs
