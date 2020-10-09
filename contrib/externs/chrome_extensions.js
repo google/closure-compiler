@@ -253,6 +253,34 @@ chrome.accessibilityFeatures.virtualKeyboard;
 
 
 /** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.caretHighlight;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.cursorHighlight;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.cursorColor;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.dockedMagnifier;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.focusHighlight;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.selectToSpeak;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.switchAccess;
+
+
+/** @type {!ChromeSetting} */
 chrome.accessibilityFeatures.animationPolicy;
 
 
