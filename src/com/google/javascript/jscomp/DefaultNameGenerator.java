@@ -295,24 +295,27 @@ public final class DefaultNameGenerator implements NameGenerator {
   public String generateNextName() {
     String name;
     do {
-      name = prefix;
+      StringBuilder sb = new StringBuilder();
       int i = nameCount;
+      if (!prefix.isEmpty()) {
+        sb.append(prefix);
+      }
 
-      if (name.isEmpty()) {
+      if (sb.length() == 0) {
         int pos = i % firstChars.length;
-        name = String.valueOf(firstChars[pos].name);
+        sb.append(firstChars[pos].name);
         i /= firstChars.length;
       }
 
       while (i > 0) {
         i--;
         int pos = i % nonFirstChars.length;
-        name += nonFirstChars[pos].name;
+        sb.append(nonFirstChars[pos].name);
         i /= nonFirstChars.length;
       }
 
       nameCount++;
-
+      name = sb.toString();
       // Make sure it's not a JS keyword or reserved name.
     } while (TokenStream.isKeyword(name) || reservedNames.contains(name) || isBadName(name));
 
