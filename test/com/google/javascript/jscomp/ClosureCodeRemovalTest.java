@@ -83,13 +83,22 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRemoveAbstract_annotation() {
+  public void testRemoveAbstractAssignmentOfEmptyFunction() {
     test(
         lines(
             "function Foo() {};",
             "/** @abstract */",
             "Foo.prototype.doSomething = function() {};"),
         "function Foo() {};");
+  }
+
+  @Test
+  public void testDoNotRemoveAbstractAssignmentOfFunctionCall() {
+    testSame(
+        lines(
+            "function Foo() {};",
+            "/** @abstract */",
+            "Foo.prototype.doSomething = (function() { /* return something fancy */ })();"));
   }
 
   @Test

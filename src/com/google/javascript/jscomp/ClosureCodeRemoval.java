@@ -151,7 +151,8 @@ final class ClosureCodeRemoval implements CompilerPass {
               new RemovableAssignment(n.getFirstChild(), n, t));
         } else if (n.getJSDocInfo() != null
             && n.getJSDocInfo().isAbstract()
-            && !(n.getJSDocInfo().isConstructor() || valueNode.isClass())) {
+            && NodeUtil.isEmptyFunctionExpression(valueNode)
+            && !n.getJSDocInfo().isConstructor()) {
           // @abstract
           abstractMethodAssignmentNodes.add(
               new RemovableAssignment(n.getFirstChild(), n, t));
