@@ -16,7 +16,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -114,6 +118,18 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
   }
 
   private boolean canOnlyBeObject(Node n) {
+    Color color = n.getColor();
+    if (color != null) {
+      if (color.isUnion()) {
+        // ignore null/undefined
+        ImmutableList<Color> nonNullAlternates =
+            color.getAlternates().stream()
+                .filter(alt -> !PrimitiveColor.NULL_OR_VOID.equals(alt))
+                .collect(toImmutableList());
+        return nonNullAlternates.size() == 1 && nonNullAlternates.get(0).isObject();
+      }
+      return color.isObject();
+    }
     JSType type = n.getJSType();
     if (type == null) {
       return false;
@@ -143,7 +159,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
       return rewriteAsStrictEq(firstExpr, secondExpr);
     }
 
-    if (useTypes && (!canBeNumber(firstExpr) || !canBeNumber(secondExpr))) {
+    if (useTypes && (canOnlyBeObject(firstExpr) || canOnlyBeObject(secondExpr))) {
       // Since one side is not number, there is no risk of -0 vs 0 or NaN vs NaN comparision.
       return rewriteAsStrictEq(firstExpr, secondExpr);
     }
@@ -153,15 +169,6 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
 
   private static boolean isSafeNumber(Double d) {
     return d != null && d != 0 && !d.isNaN();
-  }
-
-  private static boolean canBeNumber(Node n) {
-    JSType type = n.getJSType();
-    if (type == null) {
-      return true;
-    }
-    type = type.restrictByNotNullOrUndefined();
-    return type.isUnknownType() || type.isEmptyType() || type.isAllType() || !type.isObjectType();
   }
 
   private enum NodeValue {
