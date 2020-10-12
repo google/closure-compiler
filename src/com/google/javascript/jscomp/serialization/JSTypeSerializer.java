@@ -309,19 +309,15 @@ final class JSTypeSerializer {
       case VOID_TYPE:
         return NativeType.NULL_OR_VOID_TYPE;
 
-      case FUNCTION_PROTOTYPE:
-        return NativeType.FUNCTION_PROTOTYPE;
-      case FUNCTION_TYPE:
-        return NativeType.FUNCTION_TYPE;
-      case FUNCTION_FUNCTION_TYPE:
-        return NativeType.FUNCTION_FUNCTION_TYPE;
-
+        // The optimizer doesn't distinguish between any of these types: they are all
+        // invalidating objects.
       case OBJECT_TYPE:
-        return NativeType.OBJECT_TYPE;
       case OBJECT_FUNCTION_TYPE:
-        return NativeType.OBJECT_FUNCTION_TYPE;
       case OBJECT_PROTOTYPE:
-        return NativeType.OBJECT_PROTOTYPE;
+      case FUNCTION_PROTOTYPE:
+      case FUNCTION_TYPE:
+      case FUNCTION_FUNCTION_TYPE:
+        return NativeType.TOP_OBJECT;
 
       case ALL_TYPE:
       case UNKNOWN_TYPE:
@@ -330,11 +326,6 @@ final class JSTypeSerializer {
       case NO_OBJECT_TYPE:
       case NO_RESOLVED_TYPE:
         return NativeType.UNKNOWN_TYPE;
-
-      case REGEXP_TYPE:
-        return NativeType.REGEXP_TYPE;
-      case REGEXP_FUNCTION_TYPE:
-        return NativeType.REGEXP_FUNCTION_TYPE;
 
       default:
         return null;

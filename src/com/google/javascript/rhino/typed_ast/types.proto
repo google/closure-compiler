@@ -75,15 +75,6 @@ enum NativeType {
   SYMBOL_TYPE = 6;
   BIGINT_TYPE = 7;
 
-  // Common object types
-  OBJECT_TYPE = 8;
-  OBJECT_FUNCTION_TYPE = 9;
-  OBJECT_PROTOTYPE = 10;
-
-  FUNCTION_TYPE = 11;
-  FUNCTION_FUNCTION_TYPE = 12;
-  FUNCTION_PROTOTYPE = 13;
-
-  REGEXP_TYPE = 14;
-  REGEXP_FUNCTION_TYPE = 15;
+  // Top object type (supertype of all objects and invalidating)
+  TOP_OBJECT = 8;
 }
