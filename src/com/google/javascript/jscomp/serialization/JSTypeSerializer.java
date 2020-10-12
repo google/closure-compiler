@@ -28,6 +28,8 @@ final class JSTypeSerializer {
   private final InvalidatingTypes invalidatingTypes;
   private final IdGenerator idGenerator;
 
+  private static final TypeDebugInfo EMPTY_DEBUG_INFO = TypeDebugInfo.newBuilder().build();
+
   private JSTypeSerializer(
       TypePoolCreator<JSType> typePoolCreator,
       ImmutableMap<JSType, TypePointer> nativeTypePointers,
@@ -101,7 +103,7 @@ final class JSTypeSerializer {
               type,
               () ->
                   com.google.javascript.jscomp.serialization.Type.newBuilder()
-                      .setObject(serializeObjectType(type.toObjectType()).build())
+                      .setObject(serializeObjectType(type.toObjectType()))
                       .build());
       addSupertypeEdges(type.toMaybeObjectType(), serialized);
       return serialized;
@@ -138,84 +140,97 @@ final class JSTypeSerializer {
         .build();
   }
 
-  private com.google.javascript.jscomp.serialization.ObjectType.Builder serializeObjectType(
-      ObjectType type) {
-    com.google.javascript.jscomp.serialization.ObjectType.Builder builder =
-        serializePrototypeObjectType(type);
+  private static TypeDebugInfo getDebugInfo(ObjectType type) {
+    TypeDebugInfo defaultDebugInfo = defaultDebugInfo(type);
     if (type.isInstanceType()) {
-      return serializeInstanceObjectType(type, builder);
+      return instanceDebugInfo(type, defaultDebugInfo);
     } else if (type.isEnumType()) {
-      return serializeEnumType(type.toMaybeEnumType(), builder);
+      return enumDebugInfo(type.toMaybeEnumType(), defaultDebugInfo);
     } else if (type.isFunctionType()) {
-      return serializeFunctionType(type.toMaybeFunctionType(), builder);
+      return functionDebugInfo(type.toMaybeFunctionType(), defaultDebugInfo);
     }
-    return builder;
+    return defaultDebugInfo;
   }
 
-  private com.google.javascript.jscomp.serialization.ObjectType.Builder
-      serializePrototypeObjectType(ObjectType type) {
-    com.google.javascript.jscomp.serialization.ObjectType.Builder objBuilder =
-        com.google.javascript.jscomp.serialization.ObjectType.newBuilder();
+  private static TypeDebugInfo defaultDebugInfo(ObjectType type) {
+    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder();
     Node ownerNode = type.getOwnerFunction() != null ? type.getOwnerFunction().getSource() : null;
     if (ownerNode != null) {
-      objBuilder.setFilename(ownerNode.getSourceFileName());
+      builder.setFilename(ownerNode.getSourceFileName());
     }
     String className = type.getReferenceName();
     if (className != null) {
-      objBuilder.setClassName(className);
+      builder.setClassName(className);
     }
+    return builder.build();
+  }
 
+  private com.google.javascript.jscomp.serialization.ObjectType serializeObjectType(
+      ObjectType type) {
+    TypeDebugInfo debugInfo = getDebugInfo(type);
+    return serializeObjectType(type, debugInfo);
+  }
+
+  private com.google.javascript.jscomp.serialization.ObjectType serializeObjectType(
+      ObjectType type, TypeDebugInfo debug) {
+    com.google.javascript.jscomp.serialization.ObjectType.Builder objBuilder =
+        com.google.javascript.jscomp.serialization.ObjectType.newBuilder();
+    if (type.isFunctionType()) {
+      FunctionType fnType = type.toMaybeFunctionType();
+      // Serialize prototypes and instance types for instantiable types. Even if these types never
+      // appear on the AST, optimizations need to know that at runtime these types may be present.
+      if (fnType.hasInstanceType() && fnType.getInstanceType() != null) {
+        objBuilder
+            .setPrototype(serializeType(fnType.getPrototype()))
+            .setInstanceType(serializeType(fnType.getInstanceType()));
+      }
+    }
+    if (!EMPTY_DEBUG_INFO.equals(debug)) {
+      objBuilder.setDebugInfo(debug);
+    }
     return objBuilder
         .setIsInvalidating(invalidatingTypes.isInvalidating(type))
         // NOTE: We need a better format than sequential integers in order to have an id that
         // can be consistent across compilation units. For now, using a sequential integers for each
         // type depends on the invariant that we serialize each distinct type exactly once and from
         // a single compilation unit.
-        .setUuid(Integer.toHexString(idGenerator.newId()));
+        .setUuid(Integer.toHexString(idGenerator.newId()))
+        .build();
   }
 
-  private static com.google.javascript.jscomp.serialization.ObjectType.Builder
-      serializeInstanceObjectType(
-          ObjectType type,
-          com.google.javascript.jscomp.serialization.ObjectType.Builder objBuilder) {
+  private static TypeDebugInfo instanceDebugInfo(ObjectType type, TypeDebugInfo defaultDebugInfo) {
     FunctionType constructor = type.getConstructor();
     String className = constructor.getReferenceName();
+    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder(defaultDebugInfo);
     if (className != null && !className.isEmpty()) {
-      objBuilder.setClassName(className + " instance");
+      builder.setClassName(className + " instance");
     }
-    if (objBuilder.getFilename().isEmpty() && constructor.getSource() != null) {
+    if (builder.getFilename().isEmpty() && constructor.getSource() != null) {
       String filename = constructor.getSource().getSourceFileName();
-      objBuilder.setFilename(filename);
+      builder.setFilename(filename);
     }
-    return objBuilder;
+    return builder.build();
   }
 
-  private static com.google.javascript.jscomp.serialization.ObjectType.Builder serializeEnumType(
-      EnumType type, com.google.javascript.jscomp.serialization.ObjectType.Builder objBuilder) {
+  private static TypeDebugInfo enumDebugInfo(EnumType type, TypeDebugInfo defaultDebugInfo) {
+    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder(defaultDebugInfo);
     if (type.getSource() != null) {
-      objBuilder.setFilename(type.getSource().getSourceFileName());
+      builder.setFilename(type.getSource().getSourceFileName());
     }
-    return objBuilder;
+    return builder.build();
   }
 
-  private com.google.javascript.jscomp.serialization.ObjectType.Builder serializeFunctionType(
-      FunctionType type, com.google.javascript.jscomp.serialization.ObjectType.Builder objBuilder) {
+  private static TypeDebugInfo functionDebugInfo(
+      FunctionType type, TypeDebugInfo defaultDebugInfo) {
     Node source = type.getSource();
+    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder(defaultDebugInfo);
     if (source != null) {
       String filename = source.getSourceFileName();
       if (filename != null) {
-        objBuilder.setFilename(filename);
+        builder.setFilename(filename);
       }
     }
-    // Serialize prototypes and instance types for instantiable types. Even if these types never
-    // appear on the AST, optimizations need to know that at runtime these types may be present.
-    if (type.hasInstanceType() && type.getInstanceType() != null) {
-      objBuilder
-          .setPrototype(serializeType(type.getPrototype()))
-          .setInstanceType(serializeType(type.getInstanceType()));
-    }
-
-    return objBuilder;
+    return builder.build();
   }
 
   /**

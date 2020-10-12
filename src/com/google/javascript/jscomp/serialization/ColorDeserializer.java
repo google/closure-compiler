@@ -147,6 +147,7 @@ public class ColorDeserializer {
           this.disambiguationEdges.get(offset).stream()
               .map(this::dereferenceTypePointer)
               .collect(toImmutableList());
+      TypeDebugInfo serializedDebugInfo = serialized.getDebugInfo();
       ObjectColor.Builder builder =
           ObjectColor.builder()
               .setId(serialized.getUuid())
@@ -154,8 +155,8 @@ public class ColorDeserializer {
               .setDisambiguationSupertypes(directSupertypes)
               .setDebugInfo(
                   DebugInfo.builder()
-                      .setFilename(serialized.getFilename())
-                      .setClassName(serialized.getClassName())
+                      .setFilename(serializedDebugInfo.getFilename())
+                      .setClassName(serializedDebugInfo.getClassName())
                       .build());
       if (serialized.hasPrototype()) {
         builder.setPrototype(dereferenceTypePointer(serialized.getPrototype()));
