@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -1121,27 +1120,31 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (functionName == null || !functionName.getString().equals("concat")) {
       return null;
     }
-    Node calleNode = callTarget.getFirstChild();
-    if (!containsExactlyArray(calleNode)) {
+    Node calleeNode = callTarget.getFirstChild();
+    if (!containsExactlyArray(calleeNode)) {
       return null;
     }
     Node firstArgumentNode = n.getSecondChild();
-    return new ConcatFunctionCall(n, calleNode, firstArgumentNode) {};
+    return new ConcatFunctionCall(n, calleeNode, firstArgumentNode) {};
   }
 
-  /** Check if a node contains an array type or function call that returns only an array. */
+  /** Check if a node is a known array. Checks for array literals and nested .concat calls */
   private static boolean containsExactlyArray(Node n) {
     if (n == null) {
       return false;
     }
 
-    if (n.getJSType() == null) {
-      // TODO(b/160343154): support this with colors or delete this optimization
+    if (n.isArrayLit()) {
+      return true;
+    }
+
+    // Check for "[].concat(1)"
+    if (!n.isCall()) {
       return false;
     }
-    JSType nodeType = n.getJSType();
-    return (nodeType.isArrayType()
-        || (nodeType.isTemplatizedType()
-            && nodeType.toMaybeTemplatizedType().getReferencedType().isArrayType()));
+    Node callee = n.getFirstChild();
+    return callee.isGetProp()
+        && callee.getSecondChild().getString().equals("concat")
+        && containsExactlyArray(callee.getFirstChild());
   }
 }
