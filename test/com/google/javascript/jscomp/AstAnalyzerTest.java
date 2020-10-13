@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.rhino.Token.ADD;
 import static com.google.javascript.rhino.Token.ARRAYLIT;
@@ -76,9 +77,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.Optional;
 import org.junit.Test;
@@ -787,6 +790,29 @@ public final class AstAnalyzerTest {
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isTrue();
+    }
+
+    @Test
+    public void testTypeBasedStringMethodCallSideEffects() {
+      ParseHelper helper = new ParseHelper();
+
+      Node xDotReplaceCall = helper.parseFirst(CALL, lines("x.replace(/xyz/g, '');"));
+      AstAnalyzer astAnalyzer = helper.getAstAnalyzer();
+      assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isTrue();
+
+      helper.compiler.setHasRegExpGlobalReferences(false);
+      assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isTrue();
+
+      Node xNode = xDotReplaceCall.getFirstFirstChild();
+      xNode.setJSType(helper.compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE));
+      assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isTrue();
+
+      helper.compiler.getOptions().setUseTypesForLocalOptimization(true);
+      assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
+
+      xNode.setJSType(null);
+      xNode.setColor(PrimitiveColor.STRING);
+      assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
     }
   }
 
