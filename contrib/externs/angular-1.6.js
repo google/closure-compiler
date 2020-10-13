@@ -2280,6 +2280,18 @@ angular.$parse_;
  */
 angular.$parse_.assign = function(scope, newValue) {};
 
+/**
+ * Whether the expression's top-level node is a JavaScript literal.
+ * @type {boolean}
+ */
+angular.$parse_.literal;
+
+/**
+ * Whether the expression is made entirely of JavaScript constant literals.
+ * @type {boolean}
+ */
+angular.$parse_.constant;
+
 /******************************************************************************
  * $qProvider
  *****************************************************************************/
