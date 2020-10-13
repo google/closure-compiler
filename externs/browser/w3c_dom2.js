@@ -2455,7 +2455,7 @@ HTMLTableRowElement.prototype.deleteCell = function(index) {};
 
 /**
  * @param {number} index
- * @return {HTMLElement}
+ * @return {!HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-68927016
  */
 HTMLTableRowElement.prototype.insertCell = function(index) {};
