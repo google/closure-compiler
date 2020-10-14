@@ -162,10 +162,8 @@ final class InlineProperties implements CompilerPass {
           && src.getLastChild().getString().equals("prototype")) {
         // This is a prototype assignment like:
         //    x.prototype.foo = 1;
-        JSType instanceType = maybeGetInstanceTypeFromPrototypeRef(src);
-        if (instanceType != null) {
-          return maybeStoreCandidateValue(instanceType, propName, value);
-        }
+        JSType srcType = getJSType(src);
+        return maybeStoreCandidateValue(srcType, propName, value);
       } else if (t.inGlobalHoistScope()) {
         // This is a static assignment like:
         //    x.foo = 1;
@@ -175,15 +173,6 @@ final class InlineProperties implements CompilerPass {
         }
       }
       return false;
-    }
-
-    private JSType maybeGetInstanceTypeFromPrototypeRef(Node src) {
-      JSType ownerType = getJSType(src.getFirstChild());
-      if (ownerType.isConstructor()) {
-        FunctionType functionType = ownerType.toMaybeFunctionType();
-        return functionType.getInstanceType();
-      }
-      return null;
     }
 
     private void invalidateProperty(String propName) {

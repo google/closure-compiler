@@ -486,6 +486,18 @@ public final class InlinePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testTypeMismatchForPrototypeNoPropInlining() {
+    testSame(
+        lines(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype.foo = 1;",
+            "function f(/** number */ x) {}",
+            "f(C.prototype);",
+            "new C().foo;"));
+  }
+
+  @Test
   public void testStructuralInterfacesNoPropInlining() {
     testSame(
         lines(
