@@ -734,13 +734,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           continue;
         }
         String relativeName = getModuleRootRelativeName(absoluteName, moduleRoots);
-        String relativeNonIjsName;
-        if (relativeName.endsWith(".starlark_aspect.i.js")) {
-          relativeNonIjsName =
-              relativeName.substring(0, relativeName.length() - ".starlark_aspect.i.js".length());
-        } else {
-          relativeNonIjsName = relativeName.substring(0, relativeName.length() - ".i.js".length());
-        }
+        String relativeNonIjsName =
+            relativeName.substring(0, relativeName.length() - ".i.js".length());
         if (relativeToAbsoluteName.containsKey(relativeNonIjsName)) {
           errors.add(
               JSError.make(
