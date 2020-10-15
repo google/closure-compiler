@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -1445,25 +1444,6 @@ public final class JSDocInfoBuilder {
 
   public void mergePropertyBitfieldFrom(JSDocInfo other) {
     currentInfo.mergePropertyBitfieldFrom(other);
-  }
-
-  /**
-   * Records a parameter that gets disposed.
-   *
-   * @return {@code true} if all the parameters was recorded and
-   *     {@code false} if a parameter with the same name was already defined
-   */
-  public boolean recordDisposesParameter(List<String> parameterNames) {
-    for (String parameterName : parameterNames) {
-      if ((currentInfo.hasParameter(parameterName) ||
-          parameterName.equals("*")) &&
-          currentInfo.setDisposedParameter(parameterName)) {
-        populated = true;
-      } else {
-        return false;
-      }
-    }
-    return true;
   }
 
   /**

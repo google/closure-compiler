@@ -53,7 +53,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -118,7 +117,6 @@ public class JSDocInfo implements Serializable {
     private LinkedHashMap<String, JSTypeExpression> parameters;
     private ArrayList<JSTypeExpression> thrownTypes;
     private LinkedHashMap<String, JSTypeExpression> templateTypeNames;
-    private Set<String> disposedParameters;
     private LinkedHashMap<String, Node> typeTransformations;
 
     // Other information
@@ -145,7 +143,6 @@ public class JSDocInfo implements Serializable {
           .add("parameters", parameters)
           .add("thrownTypes", thrownTypes)
           .add("templateTypeNames", templateTypeNames)
-          .add("disposedParameters", disposedParameters)
           .add("typeTransformations", typeTransformations)
           .add("description", description)
           .add("meaning", meaning)
@@ -173,8 +170,6 @@ public class JSDocInfo implements Serializable {
       other.thrownTypes = cloneTypeList(thrownTypes, cloneTypeNodes);
       other.templateTypeNames = templateTypeNames == null ? null
           : new LinkedHashMap<>(templateTypeNames);
-      other.disposedParameters = disposedParameters == null ? null
-          : new HashSet<>(disposedParameters);
       other.typeTransformations = typeTransformations == null ? null
           : new LinkedHashMap<>(typeTransformations);
       return other;
@@ -2003,33 +1998,6 @@ public class JSDocInfo implements Serializable {
   void setMixinFunction(boolean mixinFunction) {
     lazyInitInfo();
     info.setBit(Property.MIXIN_FUNCTION, mixinFunction);
-  }
-
-  /** Returns whether JSDoc is annotated with {@code @disposes} annotation. */
-  public boolean isDisposes() {
-    return (info == null) ? false : info.disposedParameters != null;
-  }
-
-  boolean setDisposedParameter(String parameterName) {
-    lazyInitInfo();
-    // Lazily initialize disposedParameters
-    if (info.disposedParameters == null) {
-      info.disposedParameters = new HashSet<>();
-    }
-
-    if (info.disposedParameters.contains(parameterName)) {
-      return false;
-    } else {
-      info.disposedParameters.add(parameterName);
-      return true;
-    }
-  }
-
-  /**
-   * Return whether the function disposes of specified parameter.
-   */
-  public boolean disposesOf(String parameterName) {
-    return isDisposes() && info.disposedParameters.contains(parameterName);
   }
 
   /**
