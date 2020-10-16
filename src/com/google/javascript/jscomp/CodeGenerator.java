@@ -1429,7 +1429,7 @@ public class CodeGenerator {
       if (nonJSDocComment != null && nonJSDocComment.isTrailing()) {
         String nonJSDocCommentString = node.getNonJSDocCommentString();
         if (!nonJSDocCommentString.isEmpty()) {
-          addNonJsDoc_trailing(node, nonJSDocComment);
+          addNonJsDoctrailing(nonJSDocComment);
         }
       }
     }
@@ -1933,15 +1933,9 @@ public class CodeGenerator {
     }
   }
 
-  private void addNonJsDoc_trailing(Node n, NonJSDocComment nonJSDocComment) {
+  private void addNonJsDoctrailing(NonJSDocComment nonJSDocComment) {
     String content = nonJSDocComment.getCommentString();
-    SourcePosition commentStartPosition = nonJSDocComment.getStartPosition();
-    int nodeLineNumber = n.getLineno() - 1; // source lines are 1-indexed
     if (nonJSDocComment.isEndingAsLineComment()) {
-      // Trailing line comments *must* be on the same line as the node. e.g. `let a; // some`
-      checkState(
-          commentStartPosition.line == nodeLineNumber,
-          "Trailing line comments *must* be on the same line as the node.");
       // Trailing line comments *must* end with a `\n`. E.g.. `let x; //comment\n`
       add(" " + content + "\n");
     } else {
