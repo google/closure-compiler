@@ -6384,7 +6384,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
         }
       } else {
         for (String importUseSource : dynamicImportUses) {
-          parseWarning(importUseSource, unsupportedFeatureMessage(Feature.DYNAMIC_IMPORT));
+          parseWarning(
+              importUseSource,
+              requiresLanguageModeMessage(LanguageMode.ECMASCRIPT_2020, Feature.DYNAMIC_IMPORT));
         }
       }
     }

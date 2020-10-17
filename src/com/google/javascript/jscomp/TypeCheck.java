@@ -944,6 +944,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case IMPORT_SPEC:
       case IMPORT_SPECS:
       case IMPORT_STAR:
+      case DYNAMIC_IMPORT:
       case EXPR_RESULT:
       case BLOCK:
       case ROOT:

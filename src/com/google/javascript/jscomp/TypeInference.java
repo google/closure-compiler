@@ -29,6 +29,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.PROMISE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
@@ -41,6 +42,7 @@ import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
+import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
 import com.google.javascript.jscomp.type.FlowScope;
@@ -868,6 +870,16 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         // These don't need to be typed here, since they only affect control flow.
         isTypeable = false;
         break;
+
+      case DYNAMIC_IMPORT: {
+        // TODO(ChadKillingsworth) if the module import is a string literal,
+        //   resolve the module if possible and set the type to the namespace export
+        JSType templateType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+        n.setJSType(
+            registry.createTemplatizedType(
+                registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), templateType));
+        break;
+      }
 
       case TRUE:
       case FALSE:

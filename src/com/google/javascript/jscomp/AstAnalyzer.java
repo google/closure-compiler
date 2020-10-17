@@ -261,6 +261,10 @@ public class AstAnalyzer {
         // Variable declarations are side-effects.
         return true;
 
+      // import() expressions have side effects
+      case DYNAMIC_IMPORT:
+        return true;
+
       case SUPER:
         // The super keyword is a noop on its own.
         return false;
@@ -520,6 +524,7 @@ public class AstAnalyzer {
       case FOR_IN: // assigns to a loop LHS
       case FOR_OF: // assigns to a loop LHS, runs an iterator
       case FOR_AWAIT_OF: // assigns to a loop LHS, runs an iterator, async operations.
+      case DYNAMIC_IMPORT:
         return true;
       case OPTCHAIN_CALL:
       case CALL:

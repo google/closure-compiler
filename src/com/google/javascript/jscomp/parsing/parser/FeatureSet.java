@@ -199,10 +199,8 @@ public final class FeatureSet implements Serializable {
     // https://github.com/tc39/proposal-optional-catch-binding
     OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES2019),
 
-    // Stage 3 proposals likely to be part of ES2020
-    DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
-
     // ES 2020 Stage 4
+    DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES2020),
     BIGINT("bigint", LangVersion.ES2020),
     IMPORT_META("import.meta", LangVersion.ES2020),
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),
