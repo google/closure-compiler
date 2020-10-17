@@ -504,7 +504,7 @@ public interface CodingConvention extends Serializable {
     abstract int getParamIndex(); // the index of the formal parameter that is actually asserted
 
     public enum AssertionKind {
-      TRUTHY, // an assertion that the parameter is 'truthy'
+      TRUTHY, // an assertion that the parameter is 'truthy' and returns the parameter
       MATCHES_RETURN_TYPE // an assertion that the parameter matches the inferred return kind
     }
 
