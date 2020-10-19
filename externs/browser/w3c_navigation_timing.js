@@ -194,6 +194,7 @@ function PerformanceEventTiming() {}
 /** @type {number} */ PerformanceEventTiming.prototype.processingStart;
 /** @type {number} */ PerformanceEventTiming.prototype.processingEnd;
 /** @type {boolean} */ PerformanceEventTiming.prototype.cancelable;
+/** @type {?Node} */ PerformanceEventTiming.prototype.target;
 
 /** @constructor */
 function Performance() {}
