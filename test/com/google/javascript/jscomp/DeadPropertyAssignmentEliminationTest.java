@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.DeadPropertyAssignmentElimination.ASSUME_CONSTRUCTORS_HAVENT_ESCAPED;
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -205,24 +203,6 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "  doSomething?.();",
             "  a.b.c = 30;",
             "}"));
-
-    if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED) {
-      test(
-          lines(
-              "/** @constructor */",
-              "var foo = function() {",
-              "  this.c = 20;",
-              "  doSomething();",
-              "  this.c = 30;",
-              "}"),
-          lines(
-              "/** @constructor */",
-              "var foo = function() {",
-              "  20;",
-              "  doSomething();",
-              "  this.c = 30;",
-              "}"));
-    }
 
     testSame(
         lines(
@@ -932,26 +912,6 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "    this.p = 234;",
             "  }",
             "}"));
-
-    if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED) {
-      test(
-          lines(
-              "class Foo {",
-              "  constructor() {",
-              "    this.p = 123;",
-              "    foo();",
-              "    this.p = 234;",
-              "  }",
-              "}"),
-          lines(
-              "class Foo {",
-              "  constructor() {",
-              "    123;",
-              "    foo();",
-              "    this.p = 234;",
-              "  }",
-              "}"));
-    }
   }
 
   @Test

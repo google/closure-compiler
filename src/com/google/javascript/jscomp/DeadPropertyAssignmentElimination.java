@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.alwaysTrue;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
@@ -59,11 +58,6 @@ import javax.annotation.Nullable;
 public class DeadPropertyAssignmentElimination implements CompilerPass {
 
   private final AbstractCompiler compiler;
-
-  // TODO(kevinoconnor): Try to give special treatment to constructor, else remove this field
-  // and cleanup dead code.
-  @VisibleForTesting
-  static final boolean ASSUME_CONSTRUCTORS_HAVENT_ESCAPED = false;
 
   DeadPropertyAssignmentElimination(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -105,7 +99,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
       }
 
       FindCandidateAssignmentTraversal traversal =
-          new FindCandidateAssignmentTraversal(skiplistedPropNames, NodeUtil.isConstructor(root));
+          new FindCandidateAssignmentTraversal(skiplistedPropNames);
       NodeTraversal.traverse(compiler, body, traversal);
 
       // Any candidate property assignment can have a write removed if that write is never read
@@ -238,14 +232,8 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     /** A set of properties names that are potentially unsafe to remove duplicate writes to. */
     private final Set<String> skiplistedPropNames;
 
-    /**
-     * Whether or not the function being analyzed is a constructor.
-     */
-    private final boolean isConstructor;
-
-    FindCandidateAssignmentTraversal(Set<String> skiplistedPropNames, boolean isConstructor) {
+    FindCandidateAssignmentTraversal(Set<String> skiplistedPropNames) {
       this.skiplistedPropNames = skiplistedPropNames;
-      this.isConstructor = isConstructor;
     }
 
     /**
@@ -299,15 +287,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
       // Assume that all properties may be read when control flow leaves the function
       if (NodeUtil.isInvocation(n) || n.isYield() || n.isAwait()) {
-        if (ASSUME_CONSTRUCTORS_HAVENT_ESCAPED
-            && isConstructor
-            && !NodeUtil.referencesEnclosingReceiver(n)
-            && NodeUtil.getEnclosingType(n, Token.TRY) == null) {
-          // this.x properties are okay.
-          markAllPropsReadExceptThisProps();
-        } else {
-          markAllPropsRead();
-        }
+        markAllPropsRead();
       }
 
       // Mark all properties as read when leaving a block since we haven't proven that the block
@@ -438,20 +418,8 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private void markAllPropsRead() {
-      markAllPropsReadHelper(false /* excludeThisProps*/);
-    }
-
-    private void markAllPropsReadExceptThisProps() {
-      markAllPropsReadHelper(true /* excludeThisProps */);
-    }
-
-    private void markAllPropsReadHelper(boolean excludeThisProps) {
       for (Property property : propertyMap.values()) {
         if (property.writes.isEmpty()) {
-          continue;
-        }
-
-        if (excludeThisProps && property.writes.getLast().isChildPropOf("this")) {
           continue;
         }
 
