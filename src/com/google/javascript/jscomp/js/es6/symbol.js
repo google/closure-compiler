@@ -82,13 +82,6 @@ $jscomp.polyfill('Symbol', function(orig) {
   return symbolPolyfill;
 }, 'es6', 'es3');
 
-/**
- * Initializes Symbol.iterator (if it's not already defined) and adds a
- * Symbol.iterator property to the Array prototype.
- */
-// TODO(rishipal): Remove this function
-$jscomp.initSymbolIterator = function() {};
-
 $jscomp.polyfill('Symbol.iterator', function(orig) {
   if (orig) return orig;  // no polyfill needed
 
@@ -126,12 +119,6 @@ $jscomp.polyfill('Symbol.iterator', function(orig) {
   }
   return symbolIterator;
 }, 'es6', 'es3');
-
-/**
- * Initializes Symbol.asyncIterator (if it's not already defined)
- */
-// TODO(rishipal): Remove this function
-$jscomp.initSymbolAsyncIterator = function() {};
 
 $jscomp.polyfill('Symbol.asyncIterator', function(orig) {
   if (orig) {
