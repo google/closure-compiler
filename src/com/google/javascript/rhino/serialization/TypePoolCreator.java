@@ -31,7 +31,7 @@ public class TypePoolCreator<T> {
   private List<SerializableType<T>> toSerialize = new ArrayList<>();
   private final Multimap<TypePointer, TypePointer> disambiguateEdges = LinkedHashMultimap.create();
   private State state = State.COLLECTING_TYPES;
-  private final boolean doExpensiveValidityChecks;
+  private final SerializationOptions serializationOptions;
 
   enum State {
     COLLECTING_TYPES,
@@ -39,25 +39,21 @@ public class TypePoolCreator<T> {
     FINISHED,
   }
 
-  private TypePoolCreator(boolean doExpensiveValidityChecks) {
-    this.doExpensiveValidityChecks = doExpensiveValidityChecks;
+  private TypePoolCreator(SerializationOptions serializationOptions) {
+    this.serializationOptions = serializationOptions;
   }
 
   /** Creates a new TypePoolCreator */
-  public static <T> TypePoolCreator<T> create() {
-    return new TypePoolCreator<>(false);
-  }
-
-  /** Creates a new TypePoolCreator that runs expensive validity checks. */
-  public static <T> TypePoolCreator<T> createWithExpensiveValidityChecks() {
-    TypePoolCreator<T> serializer = new TypePoolCreator<>(true);
+  public static <T> TypePoolCreator<T> create(SerializationOptions serializationOptions) {
+    TypePoolCreator<T> serializer = new TypePoolCreator<>(serializationOptions);
     serializer.checkValid();
     return serializer;
   }
 
   /** Checks that this instance is in a valid state. */
   private void checkValid() {
-    if (!doExpensiveValidityChecks) {
+    if (!SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS.equals(
+        serializationOptions)) {
       return;
     }
     final int totalTypeCount = seenSerializableTypes.size();
@@ -155,9 +151,15 @@ public class TypePoolCreator<T> {
       toSerialize.add(idType);
       checkValid();
     }
+
+    String descriptionForDebug = "";
+    if (!SerializationOptions.SKIP_DEBUG_INFO.equals(serializationOptions)) {
+      descriptionForDebug = t.toString();
+    }
+
     return TypePointer.newBuilder()
         .setPoolOffset(poolOffset)
-        .setDescriptionForDebug(t.toString())
+        .setDescriptionForDebug(descriptionForDebug)
         .build();
   }
 

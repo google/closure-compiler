@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -17,6 +33,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
+import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.javascript.rhino.serialization.TypePoolCreator;
 import java.util.Collection;
 
@@ -27,6 +44,7 @@ final class JSTypeSerializer {
   private final TypePointer unknownPointer;
   private final InvalidatingTypes invalidatingTypes;
   private final IdGenerator idGenerator;
+  private final SerializationOptions serializationMode;
 
   private static final TypeDebugInfo EMPTY_DEBUG_INFO = TypeDebugInfo.newBuilder().build();
 
@@ -35,18 +53,21 @@ final class JSTypeSerializer {
       ImmutableMap<JSType, TypePointer> nativeTypePointers,
       TypePointer unknownPointer,
       InvalidatingTypes invalidatingTypes,
-      IdGenerator idGenerator) {
+      IdGenerator idGenerator,
+      SerializationOptions serializationMode) {
     this.typePoolCreator = typePoolCreator;
     this.nativeTypePointers = nativeTypePointers;
     this.unknownPointer = unknownPointer;
     this.invalidatingTypes = invalidatingTypes;
     this.idGenerator = idGenerator;
+    this.serializationMode = serializationMode;
   }
 
   public static JSTypeSerializer create(
       TypePoolCreator<JSType> typePoolCreator,
       JSTypeRegistry registry,
-      InvalidatingTypes invalidatingTypes) {
+      InvalidatingTypes invalidatingTypes,
+      SerializationOptions serializationMode) {
     ImmutableMap<JSType, TypePointer> nativeTypePointers = buildNativeTypeMap(registry);
     IdGenerator idGenerator = new IdGenerator();
 
@@ -55,7 +76,8 @@ final class JSTypeSerializer {
         nativeTypePointers,
         nativeTypePointers.get(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
         invalidatingTypes,
-        idGenerator);
+        idGenerator,
+        serializationMode);
   }
 
   /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
@@ -167,7 +189,10 @@ final class JSTypeSerializer {
 
   private com.google.javascript.jscomp.serialization.ObjectType serializeObjectType(
       ObjectType type) {
-    TypeDebugInfo debugInfo = getDebugInfo(type);
+    TypeDebugInfo debugInfo =
+        SerializationOptions.SKIP_DEBUG_INFO.equals(serializationMode)
+            ? EMPTY_DEBUG_INFO
+            : getDebugInfo(type);
     return serializeObjectType(type, debugInfo);
   }
 

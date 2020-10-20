@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.IdentityHashMap;
 
 /**
@@ -61,7 +62,8 @@ public final class ConvertTypesToColors implements CompilerPass {
   public void process(Node externs, Node root) {
     // Step 1: Serialize types
     Node externsAndJsRoot = root.getParent();
-    SerializeTypesCallback serializeJstypes = SerializeTypesCallback.create(compiler);
+    SerializeTypesCallback serializeJstypes =
+        SerializeTypesCallback.create(compiler, SerializationOptions.INCLUDE_DEBUG_INFO);
     NodeTraversal.traverse(compiler, externsAndJsRoot, serializeJstypes);
 
     // Step 2: Remove types and add colors
