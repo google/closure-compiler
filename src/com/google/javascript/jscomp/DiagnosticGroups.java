@@ -394,12 +394,9 @@ public class DiagnosticGroups {
           TypeCheck.FUNCTION_MASKS_VARIABLE,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 
-  // In the conversion from ES5 to ES6, we remove the strict check that asserts functions
-  // must be declared at the top of a new scope or immediately within the declaration of another
-  // function
-  static final DiagnosticGroup ES5_STRICT_UNCOMMON =
-      DiagnosticGroups.registerGroup(
-          "es5StrictUncommon",
+  public static final DiagnosticGroup ES5_STRICT =
+      DiagnosticGroups.registerGroup( // undocumented
+          "es5Strict",
           RhinoErrorReporter.INVALID_OCTAL_LITERAL,
           RhinoErrorReporter.DUPLICATE_PARAM,
           StrictModeCheck.USE_OF_WITH,
@@ -408,19 +405,11 @@ public class DiagnosticGroups {
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
           StrictModeCheck.DELETE_VARIABLE,
-          StrictModeCheck.DUPLICATE_MEMBER);
-
-  static final DiagnosticGroup ES5_STRICT_REFLECTION =
-      DiagnosticGroups.registerGroup("es5StrictReflection",
+          StrictModeCheck.DUPLICATE_MEMBER,
           StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
           StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN,
           StrictModeCheck.FUNCTION_CALLER_FORBIDDEN,
           StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN);
-
-  public static final DiagnosticGroup ES5_STRICT =
-      DiagnosticGroups.registerGroup("es5Strict",
-          ES5_STRICT_UNCOMMON,
-          ES5_STRICT_REFLECTION);
 
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup(
