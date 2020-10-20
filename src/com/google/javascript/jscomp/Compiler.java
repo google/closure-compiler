@@ -458,12 +458,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
     }
 
-    if (options.expectStrictModeInput()) {
-      options.setWarningLevel(
-          DiagnosticGroups.ES5_STRICT,
-          CheckLevel.ERROR);
-    }
-
     // All passes must run the variable check. This synthesizes
     // variables later so that the compiler doesn't crash. It also
     // checks the externs file for validity. If you don't want to warn

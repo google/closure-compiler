@@ -2764,9 +2764,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testLanguageMode2() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
 
-    String[] code = new String[] {"var a  = 2; delete a;"};
+    String code = "var a  = 2; delete a;";
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     testSame(options, code);
@@ -2775,7 +2774,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    test(options, code, code, DiagnosticGroups.ES5_STRICT);
+    test(options, new String[] {code}, new String[] {"", code}, DiagnosticGroups.ES5_STRICT);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#598

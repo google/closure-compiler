@@ -1973,7 +1973,12 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkStrictMode =
       PassFactory.builder()
           .setName("checkStrictMode")
-          .setInternalFactory(StrictModeCheck::new)
+          .setInternalFactory(
+              (compiler) -> {
+                CheckLevel defaultLevel =
+                    options.expectStrictModeInput() ? CheckLevel.ERROR : CheckLevel.OFF;
+                return new StrictModeCheck(compiler, defaultLevel);
+              })
           .setFeatureSetForChecks()
           .build();
 
