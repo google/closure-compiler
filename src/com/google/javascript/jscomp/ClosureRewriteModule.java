@@ -1087,7 +1087,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void updateGoogModule(NodeTraversal t, Node call) {
-    checkState(currentScript.isModule, currentScript);
+    if (!currentScript.isModule) {
+      compiler.reportChangeToEnclosingScope(call);
+      Node undefined =
+          astFactory.createVoid(astFactory.createNumber(0)).useSourceInfoFromForTree(call);
+      call.replaceWith(undefined);
+      return;
+    }
 
     // If it's a goog.module() with a legacy namespace.
     if (currentScript.declareLegacyNamespace) {

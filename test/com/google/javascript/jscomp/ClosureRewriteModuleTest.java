@@ -2201,6 +2201,14 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMisplacedGoogModuleDoesntCrash() {
+    // The compiler emits a warning elsewhere for this code
+    test(
+        srcs("alert(goog.module('ns.a'));"), //
+        expected("alert(void 0);"));
+  }
+
+  @Test
   public void testImportInliningDoesntShadow() {
     testNoWarning(
         lines(
