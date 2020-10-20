@@ -34,7 +34,7 @@ $jscomp.polyfill('Promise',
 
   function globalPromiseIsNative() {
     return $jscomp.global['Promise'] &&
-        $jscomp.global['Promise'].toString().includes('[native code]');
+        $jscomp.global['Promise'].toString().indexOf('[native code]') !== -1;
   }
 
   function shouldForcePolyfillPromise() {
