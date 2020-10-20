@@ -247,19 +247,20 @@ final class PolymerPassStaticUtils {
       case "Boolean":
       case "String":
       case "Number":
-        typeNode = IR.string(Ascii.toLowerCase(typeString)).srcref(typeValue);
+        typeNode = IR.string(Ascii.toLowerCase(typeString));
         break;
       case "Array":
       case "Function":
       case "Object":
       case "Date":
-        typeNode = new Node(Token.BANG, IR.string(typeString)).srcrefTree(typeValue);
+        typeNode = new Node(Token.BANG, IR.string(typeString));
         break;
       default:
         compiler.report(JSError.make(property.value, PolymerPassErrors.POLYMER_INVALID_PROPERTY));
-        return null;
+        typeNode = new Node(Token.QMARK);
     }
 
+    typeNode.useSourceInfoFromForTree(typeValue);
     return new JSTypeExpression(typeNode, VIRTUAL_FILE);
   }
 
