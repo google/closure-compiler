@@ -408,7 +408,7 @@ public class DiagnosticGroups {
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
           StrictModeCheck.DELETE_VARIABLE,
-          StrictModeCheck.DUPLICATE_OBJECT_KEY);
+          StrictModeCheck.DUPLICATE_MEMBER);
 
   static final DiagnosticGroup ES5_STRICT_REFLECTION =
       DiagnosticGroups.registerGroup("es5StrictReflection",

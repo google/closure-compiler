@@ -20,7 +20,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Checks that the code obeys the static restrictions of strict mode:
@@ -77,13 +76,11 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_DELETE_VARIABLE",
       "variables, functions, and arguments cannot be deleted in strict mode");
 
-  static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.error(
-      "JSC_DUPLICATE_OBJECT_KEY",
-      "Object literal contains illegal duplicate key \"{0}\", disallowed in strict mode");
-
-  static final DiagnosticType DUPLICATE_CLASS_METHODS = DiagnosticType.error(
-      "JSC_DUPLICATE_CLASS_METHODS",
-      "Class contains duplicate method name \"{0}\"");
+  static final DiagnosticType DUPLICATE_MEMBER =
+      DiagnosticType.warning(
+          "JSC_DUPLICATE_MEMBER",
+          "Class or object literal contains duplicate member \"{0}\". In non-strict code, the last"
+              + " duplicate will overwrite the others.");
 
   private final AbstractCompiler compiler;
 
@@ -167,40 +164,33 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   /** Checks that object literal keys or class method names are valid. */
   private static void checkObjectLiteralOrClass(NodeTraversal t, Node n) {
-    Set<String> getters = new HashSet<>();
-    Set<String> setters = new HashSet<>();
-    Set<String> staticGetters = new HashSet<>();
-    Set<String> staticSetters = new HashSet<>();
-    for (Node key = n.getFirstChild();
-         key != null;
-         key = key.getNext()) {
-      if (key.isEmpty() || key.isComputedProp()) {
+    HashSet<String> getters = new HashSet<>();
+    HashSet<String> setters = new HashSet<>();
+    HashSet<String> staticGetters = new HashSet<>();
+    HashSet<String> staticSetters = new HashSet<>();
+
+    /**
+     * Iterate backwards because the last duplicate is the one that will be used in sloppy or ES6
+     * code. The earlier duplicates are the ones that should be removed.
+     */
+    for (Node key = n.getLastChild(); key != null; key = key.getPrevious()) {
+      if (key.isEmpty() || key.isComputedProp() || key.isSpread()) {
         continue;
       }
-      if (key.isSpread()) {
-        continue;
-      }
+
       String keyName = key.getString();
       if (!key.isSetterDef()) {
         // normal property and getter cases
-        Set<String> set = key.isStaticMember() ? staticGetters : getters;
+        HashSet<String> set = key.isStaticMember() ? staticGetters : getters;
         if (!set.add(keyName)) {
-          if (n.isClassMembers()) {
-            t.report(key, DUPLICATE_CLASS_METHODS, keyName);
-          } else {
-            t.report(key, DUPLICATE_OBJECT_KEY, keyName);
-          }
+          t.report(key, DUPLICATE_MEMBER, keyName);
         }
       }
       if (!key.isGetterDef()) {
         // normal property and setter cases
-        Set<String> set = key.isStaticMember() ? staticSetters : setters;
+        HashSet<String> set = key.isStaticMember() ? staticSetters : setters;
         if (!set.add(keyName)) {
-          if (n.isClassMembers()) {
-            t.report(key, DUPLICATE_CLASS_METHODS, keyName);
-          } else {
-            t.report(key, DUPLICATE_OBJECT_KEY, keyName);
-          }
+          t.report(key, DUPLICATE_MEMBER, keyName);
         }
       }
     }

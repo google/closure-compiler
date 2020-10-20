@@ -227,14 +227,10 @@ public final class StrictModeCheckTest extends CompilerTestCase {
     testSame("var o = {a: 1, b: 2, c: 3};");
     testSame("var x = { get a() {}, set a(p) {} };");
 
-    testError("var o = {a: 1, b: 2, a: 3};",
-        StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testError("var x = { get a() {}, get a() {} };",
-         StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testError("var x = { get a() {}, a: 1 };",
-         StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testError("var x = { set a(p) {}, a: 1 };",
-         StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testError("var o = {a: 1, b: 2, a: 3};", StrictModeCheck.DUPLICATE_MEMBER);
+    testError("var x = { get a() {}, get a() {} };", StrictModeCheck.DUPLICATE_MEMBER);
+    testError("var x = { get a() {}, a: 1 };", StrictModeCheck.DUPLICATE_MEMBER);
+    testError("var x = { set a(p) {}, a: 1 };", StrictModeCheck.DUPLICATE_MEMBER);
 
     testSame(
         lines(
@@ -247,9 +243,9 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
     disableTypeCheck();
 
-    testError("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testError("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
-    testError("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testError("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_MEMBER);
+    testError("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_MEMBER);
+    testError("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_MEMBER);
   }
 
   @Test
@@ -283,12 +279,8 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
     // Duplicate class methods test
     testError(
-        lines(
-            "class A {",
-            "  method1() {}",
-            "  method1() {}",
-            "}"),
-        StrictModeCheck.DUPLICATE_CLASS_METHODS);
+        lines("class A {", "  method1() {}", "  method1() {}", "}"),
+        StrictModeCheck.DUPLICATE_MEMBER);
 
     // Function declaration / call test.
     // The two following tests should have reported FUNCTION_CALLER_FORBIDDEN and
@@ -306,12 +298,9 @@ public final class StrictModeCheckTest extends CompilerTestCase {
             "}"));
 
     // Duplicate obj literal key in classes
-    testError(lines(
-        "class A {",
-        "  method() {",
-        "    var obj = {a : 1, a : 2}",
-        "  }",
-        "}"), StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testError(
+        lines("class A {", "  method() {", "    var obj = {a : 1, a : 2}", "  }", "}"),
+        StrictModeCheck.DUPLICATE_MEMBER);
 
     // Delete test. Class methods are configurable, thus deletable.
     testSame(lines(
@@ -420,7 +409,7 @@ public final class StrictModeCheckTest extends CompilerTestCase {
   public void testClassWithEmptyMembers() {
     disableTypeCheck();
 
-    testError("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_CLASS_METHODS);
+    testError("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_MEMBER);
   }
 
   /**
