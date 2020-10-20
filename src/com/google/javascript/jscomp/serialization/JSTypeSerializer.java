@@ -46,7 +46,7 @@ final class JSTypeSerializer {
   private final IdGenerator idGenerator;
   private final SerializationOptions serializationMode;
 
-  private static final TypeDebugInfo EMPTY_DEBUG_INFO = TypeDebugInfo.newBuilder().build();
+  private static final TypeDebugInfo EMPTY_DEBUG_INFO = TypeDebugInfo.getDefaultInstance();
 
   private JSTypeSerializer(
       TypePoolCreator<JSType> typePoolCreator,
