@@ -43,7 +43,14 @@ class GatherRawExports extends AbstractPostOrderCallback implements CompilerPass
   // two common cases "collapse properties and renaming on" or both off
   // but not the case where only property renaming is on.
   private static final String[] GLOBAL_THIS_NAMES = {
-    "window", "globalThis", "top", "self", "goog$global", "goog.global"
+    "window",
+    "globalThis",
+    "top",
+    "self",
+    "goog$global",
+    "goog.global",
+    "$jscomp.global",
+    "$jscomp$global"
   };
 
   private final Set<String> exportedVariables = new HashSet<>();
