@@ -2605,6 +2605,13 @@ public class Node implements Serializable {
     return this;
   }
 
+  /** Copies a nodes JSTYpe and Color (if present) */
+  public final Node copyTypeFrom(Node other) {
+    this.jstype = other.jstype;
+    this.setColor(other.getColor());
+    return this;
+  }
+
   /**
    * Get the {@link JSDocInfo} attached to this node.
    *

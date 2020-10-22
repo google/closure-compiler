@@ -314,12 +314,11 @@ class ExpressionDecomposer {
 
     // Replace the expression with a reference to the new name.
     Node expressionParent = expression.getParent();
-    expressionParent.replaceChild(
-        expression, withType(IR.name(resultName), expression.getJSType()));
+    expressionParent.replaceChild(expression, IR.name(resultName).copyTypeFrom(expression));
 
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
-    newExpressionRoot.getFirstChild().setJSType(expression.getJSType());
+    newExpressionRoot.getFirstChild().copyTypeFrom(expression);
     injectionPointParent.addChildBefore(newExpressionRoot, injectionPoint);
 
     compiler.reportChangeToEnclosingScope(injectionPointParent);
@@ -559,7 +558,7 @@ class ExpressionDecomposer {
       injectionPointParent.addChildAfter(ifNode, tempVarNode);
 
       // Replace the expression with the temporary name.
-      Node replacementValueNode = withType(IR.name(tempName), expr.getJSType());
+      Node replacementValueNode = IR.name(tempName).copyTypeFrom(expr);
       parent.replaceChild(expr, replacementValueNode);
     } else {
       // Only conditionals that are the direct child of an expression statement
@@ -587,8 +586,9 @@ class ExpressionDecomposer {
    */
   private static Node buildResultExpression(Node expr, boolean needResult, String tempName) {
     if (needResult) {
-      JSType type = expr.getJSType();
-      return withType(IR.assign(withType(IR.name(tempName), type), expr), type).srcrefTree(expr);
+      return IR.assign(IR.name(tempName).copyTypeFrom(expr), expr)
+          .copyTypeFrom(expr)
+          .srcrefTree(expr);
     } else {
       return expr;
     }
@@ -632,9 +632,9 @@ class ExpressionDecomposer {
 
     // The temp is known to be constant.
     String tempName = getTempConstantValueName();
-    Node replacementValueNode = IR.name(tempName).setJSType(expr.getJSType()).srcref(expr);
+    Node replacementValueNode = IR.name(tempName).copyTypeFrom(expr).srcref(expr);
 
-    Node tempNameValue;
+    final Node tempNameValue;
 
     // If it is ASSIGN_XXX, keep the assignment in place and extract the
     // original value of the LHS operand.
@@ -642,7 +642,8 @@ class ExpressionDecomposer {
       checkState(expr.isName() || NodeUtil.isNormalGet(expr), expr);
       // Transform "x += 2" into "x = temp + 2"
       Node opNode =
-          withType(new Node(NodeUtil.getOpFromAssignmentOp(parent)), parent.getJSType())
+          new Node(NodeUtil.getOpFromAssignmentOp(parent))
+              .copyTypeFrom(parent)
               .useSourceInfoIfMissingFrom(parent);
 
       Node rightOperand = parent.getLastChild();
@@ -691,7 +692,7 @@ class ExpressionDecomposer {
 
     // Re-add the expression in the declaration of the temporary name.
     Node tempVarNode = NodeUtil.newVarNode(tempName, tempNameValue);
-    tempVarNode.getFirstChild().setJSType(tempNameValue.getJSType());
+    tempVarNode.getFirstChild().copyTypeFrom(tempNameValue);
 
     insertBefore(injectionPoint, tempVarNode);
 
@@ -764,7 +765,7 @@ class ExpressionDecomposer {
                         functionNameNode.cloneNode(), withType(IR.string("call"), stringType)),
                     fnCallType),
                 thisNameNode.cloneNode())
-            .setJSType(call.getJSType())
+            .copyTypeFrom(call)
             .useSourceInfoIfMissingFromForTree(call);
 
     // Throw away the call name
