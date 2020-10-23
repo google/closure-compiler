@@ -191,13 +191,14 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   /**
    * Checks for breaking out of optional chain. (e.g. `(a?.b).c)` There is no reason to break out of
-   * optional chains and doing so may cause a TypeError is `a` is nullish. Using `a?.b.c` is safer
+   * optional chains and doing so may cause a TypeError if `a` is nullish. Using `a?.b.c` is safer
    * and will have the same effect when `a` is not nullish.
    */
   private static void checkSuspiciousBreakingOutOfOptionalChain(NodeTraversal t, Node n) {
-    if (n.isOptChainGetElem() || n.isOptChainGetProp() || n.isOptChainCall()) {
+    if (NodeUtil.isOptChainNode(n)) {
       Node parent = n.getParent();
-      if (parent.isGetProp() || parent.isGetElem() || parent.isCall()) {
+      if (n.isFirstChildOf(parent)
+          && (parent.isGetProp() || parent.isGetElem() || parent.isCall())) {
         t.report(n, SUSPICIOUS_BREAKING_OUT_OF_OPTIONAL_CHAIN);
       }
     }

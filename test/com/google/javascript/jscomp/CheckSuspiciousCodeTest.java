@@ -55,6 +55,9 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
 
     testSame("a.b?.()()");
     testWarning("(a.b?.())()", e);
+
+    testSame("a(b?.c);");
+    testSame("a[b?.c];");
   }
 
   @Test
