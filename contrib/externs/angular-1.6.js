@@ -2195,6 +2195,11 @@ angular.FormController.prototype.$error;
 angular.FormController.prototype.$invalid;
 
 /**
+ * @type {boolean}
+ */
+angular.FormController.prototype.$pending;
+
+/**
  * @type {string}
  */
 angular.FormController.prototype.$name;
