@@ -315,8 +315,6 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
 
   @Override
   public void process(Node externs, Node root) {
-    // Might need to synthesize constructors for ambient classes in .d.ts externs
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 

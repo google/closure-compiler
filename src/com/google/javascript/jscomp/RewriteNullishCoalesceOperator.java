@@ -40,7 +40,6 @@ public final class RewriteNullishCoalesceOperator
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, TRANSPILED_FEATURES, this);
     TranspilationPasses.processTranspile(compiler, root, TRANSPILED_FEATURES, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, TRANSPILED_FEATURES);
   }

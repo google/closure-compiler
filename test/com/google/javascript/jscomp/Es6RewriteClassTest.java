@@ -693,21 +693,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testExtendsInExterns() {
-    // Don't inject $jscomp.inherits() or apply() for externs
-    testExternChanges(
-        "class D {} class C extends D {}",
-        "",
-        lines(
-            "/** @constructor */",
-            "let D = function() {};",
-            "/** @constructor",
-            " * @extends {D}",
-            " */",
-            "let C = function() {};"));
-  }
-
-  @Test
   public void testExtendForwardDeclaredClass() {
     enableClosurePass();
     testWarning(
@@ -919,27 +904,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor @implements {D} */",
             "let C = function() {};",
             "C.prototype.f = function() {console.log('hi');};"));
-  }
-
-  @Test
-  public void testSuperCallInExterns() {
-    // Drop super() calls in externs.
-    testExternChanges(
-        lines(
-            "class D {}", //
-            "class C extends D {",
-            "  constructor() {",
-            "    super();",
-            "  }",
-            "}"),
-        "",
-        lines(
-            "/** @constructor */",
-            "let D = function() {};",
-            "/** @constructor",
-            " * @extends {D}",
-            " */",
-            "let C = function() {};"));
   }
 
   @Test
