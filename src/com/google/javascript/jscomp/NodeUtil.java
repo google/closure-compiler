@@ -2750,6 +2750,30 @@ public final class NodeUtil {
   }
 
   /**
+   * Whether this is an assignment to 'exports' that creates named exports.
+   *
+   * <ul>
+   *   <li>exports = {a, b}; // named export, returns true.
+   *   <li>exports = 0; // namespace export, returns false.
+   *   <li>exports = {a: 0, b}; // namespace export, returns false.
+   * </ul>
+   */
+  public static boolean isNamedExportsLiteral(Node objectLiteral) {
+    if (!objectLiteral.isObjectLit() || !objectLiteral.hasChildren()) {
+      return false;
+    }
+    for (Node key = objectLiteral.getFirstChild(); key != null; key = key.getNext()) {
+      if (!key.isStringKey() || key.isQuotedString()) {
+        return false;
+      }
+      if (!key.getFirstChild().isName()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Is this node a function declaration? A function declaration is a function that has a name that
    * is added to the current scope (i.e. a function that is not part of a expression; see {@link
    * #isFunctionExpression}).

@@ -853,7 +853,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     checkState(currentScript.defaultExportRhs == null);
     Node exportRhs = n.getNext();
-    if (isNamedExportsLiteral(exportRhs)) {
+    if (NodeUtil.isNamedExportsLiteral(exportRhs)) {
       Node insertionPoint = n.getGrandparent();
       for (Node key = exportRhs.getFirstChild(); key != null; key = key.getNext()) {
         String exportName = key.getString();
@@ -871,21 +871,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       }
       n.getGrandparent().detach();
     }
-  }
-
-  static boolean isNamedExportsLiteral(Node objLit) {
-    if (!objLit.isObjectLit() || !objLit.hasChildren()) {
-      return false;
-    }
-    for (Node key = objLit.getFirstChild(); key != null; key = key.getNext()) {
-      if (!key.isStringKey() || key.isQuotedString()) {
-        return false;
-      }
-      if (!key.getFirstChild().isName()) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private void recordModuleBody(Node moduleRoot) {
@@ -1065,7 +1050,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node exportRhs = n.getNext();
 
     // Exports object should have already been converted in ScriptPreprocess step.
-    checkState(!isNamedExportsLiteral(exportRhs),
+    checkState(
+        !NodeUtil.isNamedExportsLiteral(exportRhs),
         "Exports object should have been converted already");
 
     currentScript.defaultExportRhs = exportRhs;

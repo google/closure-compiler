@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.modules.ClosureRequireProcessor.Require;
 import com.google.javascript.jscomp.modules.ModuleMapCreator.ModuleProcessor;
@@ -350,7 +351,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
         // This may be a 'named exports' or may be a default export.
         // It is a 'named export' if and only if it is assigned an object literal w/ string keys,
         // whose values are all names.
-        if (isNamedExportsLiteral(rhs)) {
+        if (NodeUtil.isNamedExportsLiteral(rhs)) {
           initializeNamedExportsLiteral(rhs);
         } else {
           seenExportsAssignment = true;
@@ -429,29 +430,5 @@ final class ClosureModuleProcessor implements ModuleProcessor {
         requiresByLocalName.putIfAbsent(require.localName(), require);
       }
     }
-  }
-
-  /**
-   * Whether this is an assignment to 'exports' that creates named exports.
-   *
-   * <ul>
-   *   <li>exports = {a, b}; // named exports
-   *   <li>exports = 0; // namespace export
-   *   <li>exports = {a: 0, b}; // namespace export
-   * </ul>
-   */
-  private static boolean isNamedExportsLiteral(Node objLit) {
-    if (!objLit.isObjectLit() || !objLit.hasChildren()) {
-      return false;
-    }
-    for (Node key : objLit.children()) {
-      if (!key.isStringKey() || key.isQuotedString()) {
-        return false;
-      }
-      if (!key.getFirstChild().isName()) {
-        return false;
-      }
-    }
-    return true;
   }
 }

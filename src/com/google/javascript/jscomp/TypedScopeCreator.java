@@ -493,7 +493,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (lhs.matchesQualifiedName("exports")) {
         undeclaredNamesForClosure.add(lhs);
         // If this is full of named exports, add all the string key nodes.
-        if (ClosureRewriteModule.isNamedExportsLiteral(lhs.getNext())) {
+        if (NodeUtil.isNamedExportsLiteral(lhs.getNext())) {
           for (Node key : lhs.getNext().children()) {
             undeclaredNamesForClosure.add(key);
           }
