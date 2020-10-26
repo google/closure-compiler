@@ -42,6 +42,7 @@ import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
+import com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -1859,7 +1860,7 @@ public final class DefaultPassConfig extends PassConfig {
    * Runs the single-file linter passes
    *
    * <p>These is NOT the configuration for the standalone Linter binary. New linter passes must also
-   * be added to {@link LinterPassConfig} as well as this list.
+   * be added to {@link LintPassConfig} as well as this list.
    */
   private final PassFactory lintChecks =
       PassFactory.builderForHotSwap()
@@ -1869,6 +1870,7 @@ public final class DefaultPassConfig extends PassConfig {
                 ImmutableList.Builder<Callback> callbacks =
                     ImmutableList.<Callback>builder()
                         .add(new CheckConstantCaseNames(compiler))
+                        .add(new CheckDefaultExportOfGoogModule(compiler))
                         .add(new CheckEmptyStatements(compiler))
                         .add(new CheckEnums(compiler))
                         .add(new CheckEs6ModuleFileStructure(compiler))
