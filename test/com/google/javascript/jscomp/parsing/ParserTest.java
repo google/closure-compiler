@@ -6570,8 +6570,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   private static Node script(Node stmt) {
-    Node n = new Node(Token.SCRIPT, stmt);
-    return n;
+    return new Node(Token.SCRIPT, stmt);
   }
 
   private static Node expr(Node n) {

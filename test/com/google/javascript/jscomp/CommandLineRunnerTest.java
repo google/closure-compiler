@@ -3091,8 +3091,7 @@ public final class CommandLineRunnerTest {
     Node all = compiler.parseInputs();
     assertThat(compiler.getErrors()).isEmpty();
     checkNotNull(all);
-    Node n = all.getLastChild();
-    return n;
+    return all.getLastChild();
   }
 
   private void setFilename(int i, String filename) {

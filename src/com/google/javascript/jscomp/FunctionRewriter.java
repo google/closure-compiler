@@ -523,8 +523,7 @@ class FunctionRewriter implements CompilerPass {
         Node rhs = assign.getLastChild();
         if (rhs.isName() &&
             rhs.getString().equals(paramNode.getString())) {
-          Node propertyName = lhs.getLastChild();
-          return propertyName;
+          return lhs.getLastChild();
         }
       }
       return null;

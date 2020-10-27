@@ -444,8 +444,7 @@ public final class SimpleFormat {
               || arg instanceof Long
               || arg instanceof Short
               || arg instanceof Byte) {
-            String result = arg.toString();
-            return result;
+            return arg.toString();
           }
       }
     }

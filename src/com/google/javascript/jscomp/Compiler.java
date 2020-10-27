@@ -2688,17 +2688,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   protected Config createConfig(Config.LanguageMode mode, Config.StrictMode strictMode) {
-    Config config =
-        ParserRunner.createConfig(
-            mode,
-            options.isParseJsDocDocumentation(),
-            options.canContinueAfterErrors()
-                ? Config.RunMode.KEEP_GOING
-                : Config.RunMode.STOP_AFTER_ERROR,
-            options.extraAnnotationNames,
-            options.parseInlineSourceMaps,
-            strictMode);
-    return config;
+    return ParserRunner.createConfig(
+        mode,
+        options.isParseJsDocDocumentation(),
+        options.canContinueAfterErrors()
+            ? Config.RunMode.KEEP_GOING
+            : Config.RunMode.STOP_AFTER_ERROR,
+        options.extraAnnotationNames,
+        options.parseInlineSourceMaps,
+        strictMode);
   }
 
   // ------------------------------------------------------------------------

@@ -499,8 +499,7 @@ public final class JSModuleGraph implements Serializable {
 
   /** Returns the transitive dependencies of the module. */
   private Set<JSModule> getTransitiveDeps(JSModule m) {
-    Set<JSModule> deps = dependencyMap.computeIfAbsent(m, JSModule::getAllDependencies);
-    return deps;
+    return dependencyMap.computeIfAbsent(m, JSModule::getAllDependencies);
   }
 
   /**

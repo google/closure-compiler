@@ -111,8 +111,7 @@ class InlineFunctions implements CompilerPass {
   }
 
   FunctionState getOrCreateFunctionState(String fnName) {
-    FunctionState functionState = fns.computeIfAbsent(fnName, (String k) -> new FunctionState());
-    return functionState;
+    return fns.computeIfAbsent(fnName, (String k) -> new FunctionState());
   }
 
   @Override

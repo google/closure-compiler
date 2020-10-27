@@ -306,7 +306,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     if (classModifier != null) {
       maybeDetach(classModifier.getParent());
     }
-    ClassDefinition def = new ClassDefinition(
+    return new ClassDefinition(
         targetName,
         classInfo,
         maybeDetach(superClass),
@@ -314,7 +314,6 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         objectLitToList(maybeDetach(statics)),
         objectLitToList(description),
         maybeDetach(classModifier));
-    return def;
   }
 
   private static Node maybeDetach(Node node) {

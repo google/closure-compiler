@@ -4628,14 +4628,12 @@ public final class NodeUtilTest {
 
   private static Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
-    Node nameNode = getNameNode(ast, name);
-    return nameNode;
+    return getNameNode(ast, name);
   }
 
   private static Node getStringKeyNodeFrom(String code, String name) {
     Node ast = parse(code);
-    Node stringKeyNode = getStringNode(ast, name, Token.STRING_KEY);
-    return stringKeyNode;
+    return getStringNode(ast, name, Token.STRING_KEY);
   }
 
   private static boolean executedOnceTestCase(String code) {

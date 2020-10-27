@@ -258,11 +258,8 @@ public final class JsDocInfoParser {
             .setStrictMode(Config.StrictMode.SLOPPY)
             .setClosurePrimitiveNames(ImmutableSet.of("testPrimitive"))
             .build();
-    JsDocInfoParser parser =
-        new JsDocInfoParser(
-            new JsDocTokenStream(toParse), toParse, 0, null, config, ErrorReporter.NULL_INSTANCE);
-
-    return parser;
+    return new JsDocInfoParser(
+        new JsDocTokenStream(toParse), toParse, 0, null, config, ErrorReporter.NULL_INSTANCE);
   }
 
   /**

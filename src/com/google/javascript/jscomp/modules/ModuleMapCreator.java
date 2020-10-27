@@ -143,10 +143,8 @@ public class ModuleMapCreator implements HotSwapCompilerPass {
 
     @Nullable
     private UnresolvedModule resolveForClosure(String namespace) {
-      UnresolvedModule module =
-          unresolvedModulesByClosureNamespace.computeIfAbsent(
-              namespace, this::getFallbackForMissingClosureModule);
-      return module;
+      return unresolvedModulesByClosureNamespace.computeIfAbsent(
+          namespace, this::getFallbackForMissingClosureModule);
     }
 
     @Nullable

@@ -2083,12 +2083,10 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       // but the expected type does, back fill it.
       if (currentType.getTypeOfThis().isUnknownType()
           && !expectedType.getTypeOfThis().isUnknownType()) {
-        FunctionType replacement =
-            FunctionType.builder(registry)
-                .copyFromOtherFunction(currentType)
-                .withTypeOfThis(expectedType.getTypeOfThis())
-                .buildAndResolve();
-        return replacement;
+        return FunctionType.builder(registry)
+            .copyFromOtherFunction(currentType)
+            .withTypeOfThis(expectedType.getTypeOfThis())
+            .buildAndResolve();
       }
     } else {
       // For now, we just make sure the current type has enough

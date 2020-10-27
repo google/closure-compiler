@@ -88,8 +88,7 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    return options;
+    return super.getOptions();
   }
 
   @Override

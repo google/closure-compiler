@@ -143,8 +143,7 @@ public final class SymbolTable {
 
   /** Get the symbols in their natural ordering. Always returns a mutable list. */
   public List<Symbol> getAllSymbolsSorted() {
-    List<Symbol> sortedSymbols = getNaturalSymbolOrdering().sortedCopy(symbols.values());
-    return sortedSymbols;
+    return getNaturalSymbolOrdering().sortedCopy(symbols.values());
   }
 
   /**
@@ -1341,8 +1340,7 @@ public final class SymbolTable {
     }
 
     public Reference defineReferenceAt(Node n) {
-      Reference result = references.computeIfAbsent(n, (Node k) -> new Reference(this, k));
-      return result;
+      return references.computeIfAbsent(n, (Node k) -> new Reference(this, k));
     }
 
     /** Sets the declaration node. May only be called once. */
