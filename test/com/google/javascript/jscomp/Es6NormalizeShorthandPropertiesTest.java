@@ -76,6 +76,27 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
             }));
   }
 
+  @Test
+  public void testNormalizationInExterns() {
+    String externWithShorthandProperty = "const x = 5; const y = {x};";
+    String pinningSource = "const t = y.x;";
+
+    // Verify the extern is preserved and looks reasonable. Note that there's no *structural* AST
+    // difference here for the validator to notice.
+    testExternChanges(externWithShorthandProperty, pinningSource, "const x = 5; const y = {x: x};");
+
+    // Verify the shorthand property flag is removed.
+    test(
+        externs(externWithShorthandProperty),
+        srcs(pinningSource),
+        postcondition(
+            (compiler) -> {
+              NodeUtil.visitPreOrder(
+                  compiler.getExternsRoot(),
+                  Es6NormalizeShorthandPropertiesTest::assertNotShorthandProperty);
+            }));
+  }
+
   private static void assertNotShorthandProperty(Node node) {
     assertWithMessage("Detected shorthand property node <%s>.", node)
         .that(node.isShorthandProperty())

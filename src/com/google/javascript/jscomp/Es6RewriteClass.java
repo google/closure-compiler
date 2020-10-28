@@ -78,6 +78,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
   @Override
   public void process(Node externs, Node root) {
+    TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
     // Super constructor calls are done all at once as a separate step largely for historical
     // reasons. It used to be an entirely separate pass, but that has been fixed so we no longer
@@ -85,6 +86,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     // TODO(bradfordcsmith): It would probably be more readable and efficient to merge the super
     //     constructor rewriting logic into this class.
     convertSuperConstructorCalls.setGlobalNamespace(new GlobalNamespace(compiler, externs, root));
+    TranspilationPasses.processTranspile(compiler, externs, features, convertSuperConstructorCalls);
     TranspilationPasses.processTranspile(compiler, root, features, convertSuperConstructorCalls);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
   }
@@ -229,14 +231,16 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
                     .srcrefTree(metadata.getSuperClassNameNode()),
                 metadata.getSuperClassNameNode().getSourceFileName()));
       }
-      Node inheritsCall =
-          IR.exprResult(
-                  astFactory.createCall(
-                      astFactory.createQName(t.getScope(), "$jscomp.inherits"),
-                      metadata.getFullClassNameNode().cloneTree(),
-                      metadata.getSuperClassNameNode().cloneTree()))
-              .useSourceInfoIfMissingFromForTree(metadata.getSuperClassNameNode());
-      enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
+      if (!classNode.isFromExterns()) {
+        Node inheritsCall =
+            IR.exprResult(
+                    astFactory.createCall(
+                        astFactory.createQName(t.getScope(), "$jscomp.inherits"),
+                        metadata.getFullClassNameNode().cloneTree(),
+                        metadata.getSuperClassNameNode().cloneTree()))
+                .useSourceInfoIfMissingFromForTree(metadata.getSuperClassNameNode());
+        enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
+      }
     }
 
     addTypeDeclarations(t.getScope(), metadata, enclosingStatement);

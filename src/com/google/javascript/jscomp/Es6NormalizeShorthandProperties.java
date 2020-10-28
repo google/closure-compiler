@@ -37,6 +37,7 @@ public final class Es6NormalizeShorthandProperties extends AbstractPostOrderCall
 
   @Override
   public void process(Node externs, Node root) {
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }

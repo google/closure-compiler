@@ -479,6 +479,18 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             " return ns.D.apply(this, arguments) || this;",
             "};",
             "$jscomp.inherits(C, ns.D);"));
+
+    // Don't inject $jscomp.inherits() or apply() for externs
+    testExternChanges(
+        "class D {} class C extends D {}",
+        "",
+        lines(
+            "/** @constructor */",
+            "var D = function() {};",
+            "/** @constructor",
+            " * @extends {D}",
+            " */",
+            "var C = function() {};"));
   }
 
   @Test
@@ -644,6 +656,21 @@ public final class Es6TranspilationIntegrationTest extends CompilerTestCase {
             "/** @constructor @implements{D} */",
             "var C = function() {};",
             "C.prototype.f = function() {console.log('hi');};"));
+  }
+
+  @Test
+  public void testSuperCallInExterns() {
+    // Drop super() calls in externs.
+    testExternChanges(
+        lines("class D {}", "class C extends D {", "  constructor() {", "    super();", "  }", "}"),
+        "",
+        lines(
+            "/** @constructor */",
+            "var D = function() {};",
+            "/** @constructor",
+            " * @extends {D}",
+            " */",
+            "var C = function() {};"));
   }
 
   @Test

@@ -60,6 +60,8 @@ public final class Es6RewriteClassExtendsExpressions extends NodeTraversal.Abstr
 
   @Override
   public void process(Node externs, Node root) {
+    // TODO(bradfordcsmith): Do we really need to run this on externs?
+    TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
   }
 

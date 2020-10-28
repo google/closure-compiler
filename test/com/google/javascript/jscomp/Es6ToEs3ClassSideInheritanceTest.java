@@ -33,6 +33,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
+    allowExternsChanges();
   }
 
   @Override

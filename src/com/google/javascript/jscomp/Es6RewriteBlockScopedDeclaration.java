@@ -104,6 +104,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     shouldAddTypesOnNewAstNodes = getShouldAddTypesOnNewAstNodes();
     NodeTraversal.traverse(compiler, root, new CollectUndeclaredNames());
     NodeTraversal.traverse(compiler, root, this);
+    // Needed for let / const declarations in .d.ts externs.
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     NodeTraversal.traverse(compiler, root, new Es6RenameReferences(renameTable));
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverse(compiler, root, transformer);
