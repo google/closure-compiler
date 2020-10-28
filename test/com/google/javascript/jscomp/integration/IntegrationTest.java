@@ -2334,7 +2334,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
-    // An external function that returns a local object that the
+    // An external function that returns a local object such that the
     // method "go" that only modifies the object.
     String code = "widgetToken().go();";
 
@@ -2342,7 +2342,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setComputeFunctionSideEffects(true);
 
-    test(options, code, "widgetToken()");
+    // Can't currently infer that go() is ineffectual
+    testSame(options, code);
   }
 
   @Test

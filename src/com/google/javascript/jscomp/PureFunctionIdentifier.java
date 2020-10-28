@@ -40,9 +40,6 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -583,17 +580,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       JSDocInfo info = NodeUtil.getBestJSDocInfo(externFunction);
       // Handle externs.
-      JSType typei = externFunction.getJSType();
-      FunctionType functionType = typei == null ? null : typei.toMaybeFunctionType();
-      if (functionType == null) {
-        // Assume extern functions return tainted values when we have no type info to say otherwise.
-        summary.setEscapedReturn();
-      } else {
-        JSType retType = functionType.getReturnType();
-        if (!isLocalValueType(retType, compiler)) {
-          summary.setEscapedReturn();
-        }
-      }
+      summary.setEscapedReturn();
 
       if (info == null) {
         // We don't know anything about this function so we assume it has side effects.
@@ -612,23 +599,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           summary.setMutatesGlobalState();
         }
       }
-    }
-
-    /**
-     * Return whether {@code type} is guaranteed to be a that of a "local value".
-     *
-     * <p>For the purposes of purity analysis we really only care whether a return value is
-     * immutable and identity-less; such values can't contribute to side-effects. Therefore, this
-     * method is implemented to check if {@code type} is that of a primitive, since primitives
-     * exhibit both relevant behaviours.
-     */
-    private boolean isLocalValueType(JSType type, AbstractCompiler compiler) {
-      checkNotNull(type);
-      JSType nativeObj = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
-      JSType subtype = type.getGreatestSubtype(nativeObj);
-      // If the type includes anything related to a object type, don't assume
-      // anything about the locality of the value.
-      return subtype.isEmptyType();
     }
   }
 
