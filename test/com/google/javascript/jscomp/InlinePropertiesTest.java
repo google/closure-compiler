@@ -710,4 +710,26 @@ public final class InlinePropertiesTest extends CompilerTestCase {
             "new C(), 3;",
             "const {foo} = new C();"));
   }
+
+  @Test
+  public void testNoInlineOnRecordType() {
+    testSame(
+        lines(
+            "/** @record */",
+            "class C {}", //
+            "C.bar = 2;",
+            "C.foo = 1;",
+            "var z = C.foo;"));
+  }
+
+  @Test
+  public void testNoInlineOnInterfaceType() {
+    testSame(
+        lines(
+            "/** @interface */",
+            "class C {}", //
+            "C.bar = 2;",
+            "C.foo = 1;",
+            "var z = C.foo;"));
+  }
 }
