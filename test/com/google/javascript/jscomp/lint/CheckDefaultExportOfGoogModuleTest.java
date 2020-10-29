@@ -45,7 +45,16 @@ public final class CheckDefaultExportOfGoogModuleTest extends CompilerTestCase {
   @Test
   public void testWarnsOnDefaultExportInGoogModule() {
     // goog.module default export
-    testWarning("goog.module('a'); class Foo {}; exports = Foo;", DEFAULT_EXPORT_GOOG_MODULE);
+    test(
+        srcs("goog.module('a'); class Foo {}; exports = Foo;"),
+        warning(DEFAULT_EXPORT_GOOG_MODULE)
+            .withMessageContaining("Please use named exports instead (`exports = {Foo}`)"));
+
+    test(
+        srcs("goog.module('a'); exports = class Foo {};"),
+        warning(DEFAULT_EXPORT_GOOG_MODULE)
+            .withMessageContaining("Please use named exports instead (`exports = {MyVariable}`)."));
+
     testNoWarning("goog.module('a'); class Foo {}; exports = {Foo};");
     testNoWarning("goog.module('a'); class Foo {}; exports.default = Foo;");
 
