@@ -11,12 +11,21 @@ message TypePool {
   repeated Type type = 1;
   // edges used for Closure Compiler property disambiguation/ambiguation
   repeated SubtypingEdge disambiguation_edges = 2;
+  // Human-readable representation of where this TypePool comes from.
+  string source_name = 3;
 }
 
+// References a serialized type. Typically, any reference to a type that needs
+// to be serialized should use a TypePointer instead of a Type directly to avoid
+// the overhead of serializing a type.
 message TypePointer {
   // required
   oneof type {
+    // Points to a user-defined type in a known type pool.
     int32 pool_offset = 1;
+    // TODO(lharker): consider putting this field into Type and serializing
+    // actual Type messages for the native types, to remove the need for this
+    // oneof.
     NativeType native_type = 2;
   }
   // for debugging only -- may not be present
@@ -77,4 +86,10 @@ enum NativeType {
 
   // Top object type (supertype of all objects and invalidating)
   TOP_OBJECT = 8;
+}
+
+// Used for testing only and possibly only temporary. Wraps type pools from
+// different compliations into a single message.
+message TypePoolList {
+  repeated TypePool type_pool = 1;
 }
