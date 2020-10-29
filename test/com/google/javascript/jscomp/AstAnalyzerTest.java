@@ -741,7 +741,8 @@ public final class AstAnalyzerTest {
       flags.clearAllFlags();
       newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      // Cannot determine this evaluates to a local value (even though it does in practice).
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
@@ -752,7 +753,7 @@ public final class AstAnalyzerTest {
       flags.setMutatesThis();
       newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
@@ -761,7 +762,6 @@ public final class AstAnalyzerTest {
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
       flags.setMutatesThis();
-      flags.setReturnsTainted();
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
@@ -772,14 +772,13 @@ public final class AstAnalyzerTest {
       flags.clearAllFlags();
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
-      flags.setReturnsTainted();
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
-      // The new modifies global state, no side-effect call, non-local result
+      // The new modifies global state, no side-effect call
       // This call could be removed, but not the new.
       flags.clearAllFlags();
       flags.setMutatesGlobalState();
@@ -787,7 +786,8 @@ public final class AstAnalyzerTest {
       flags.clearAllFlags();
       newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      // This does evaluate to a local value but NodeUtil does not know that
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isTrue();
     }

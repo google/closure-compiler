@@ -515,10 +515,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               }
             }
           }
-
-          if (calleeSummary.escapedReturn()) {
-            flags.setReturnsTainted();
-          }
         }
       }
 
@@ -532,12 +528,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       // Handle special cases (Math, RegExp)
       if (isCallOrTaggedTemplateLit(callNode)) {
         if (!astAnalyzer.functionCallHasSideEffects(callNode)) {
-          flags.clearSideEffectFlags();
+          flags.clearAllFlags();
         }
       } else if (callNode.isNew()) {
         // Handle known cases now (Object, Date, RegExp, etc)
         if (!astAnalyzer.constructorCallHasSideEffects(callNode)) {
-          flags.clearSideEffectFlags();
+          flags.clearAllFlags();
         }
       }
 
@@ -580,8 +576,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       JSDocInfo info = NodeUtil.getBestJSDocInfo(externFunction);
       // Handle externs.
-      summary.setEscapedReturn();
-
       if (info == null) {
         // We don't know anything about this function so we assume it has side effects.
         summary.setMutatesGlobalState();
@@ -659,7 +653,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         checkState(this.catchDepthStack.removeLast() == 0);
       }
 
-      if (!compiler.getAstAnalyzer().nodeTypeMayHaveSideEffects(node) && !node.isReturn()) {
+      if (!compiler.getAstAnalyzer().nodeTypeMayHaveSideEffects(node)) {
         return;
       }
 
@@ -798,12 +792,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
         case THROW:
           this.recordThrowsBasedOnContext(encloserSummary);
-          break;
-
-        case RETURN:
-          if (node.hasChildren() && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
-            encloserSummary.setEscapedReturn();
-          }
           break;
 
         case YIELD:
@@ -1263,8 +1251,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     private static final int MUTATES_GLOBAL_STATE = 1 << 1;
     private static final int MUTATES_THIS = 1 << 2;
     private static final int MUTATES_ARGUMENTS = 1 << 3;
-    // Function metatdata
-    private static final int ESCAPED_RETURN = 1 << 4;
 
     // The name shared by the set of functions that defined this summary.
     private final String name;
@@ -1304,16 +1290,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       return setMask(MUTATES_THIS);
     }
 
-    /** Returns whether the function returns something that may be affected by global state. */
-    boolean escapedReturn() {
-      return getMask(ESCAPED_RETURN);
-    }
-
-    /** Marks the function as having non-local return result. */
-    AmbiguatedFunctionSummary setEscapedReturn() {
-      return setMask(ESCAPED_RETURN);
-    }
-
     /** Returns true if function has an explicit "throw". */
     boolean functionThrows() {
       return getMask(THROWS);
@@ -1345,8 +1321,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     AmbiguatedFunctionSummary setAllFlags() {
-      return setMask(
-          THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE | ESCAPED_RETURN);
+      return setMask(THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE);
     }
 
     @Override
@@ -1373,10 +1348,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       if (mutatesArguments()) {
         status.add("args");
-      }
-
-      if (escapedReturn()) {
-        status.add("return");
       }
 
       if (functionThrows()) {

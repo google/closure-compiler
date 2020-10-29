@@ -1164,12 +1164,6 @@ public final class NodeUtil {
     }
   }
 
-  /** @return Whether the call has a local result. */
-  static boolean callHasLocalResult(Node n) {
-    checkState(n.isCall() || n.isOptChainCall() || n.isTaggedTemplateLit(), n);
-    return n.isLocalResultCall();
-  }
-
   /** @return Whether the new has a local result. */
   static boolean newHasLocalResult(Node n) {
     checkState(n.isNew(), n);
@@ -4789,9 +4783,10 @@ public final class NodeUtil {
         return false;
       case CALL:
       case OPTCHAIN_CALL:
-        return callHasLocalResult(value) || isToStringMethodCall(value);
+        return isToStringMethodCall(value);
       case TAGGED_TEMPLATELIT:
-        return callHasLocalResult(value);
+        // No information about local values for tagged template literals
+        return false;
       case NEW:
         return newHasLocalResult(value);
       case DELPROP:

@@ -1511,7 +1511,7 @@ public final class NodeUtilTest {
       flags.clearAllFlags();
       n.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(n)).isTrue();
+      assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
     }
 
     @Test
@@ -1525,7 +1525,7 @@ public final class NodeUtilTest {
       flags.clearAllFlags();
       n.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(n)).isTrue();
+      assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
     }
 
     @Test
@@ -1548,7 +1548,6 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isTrue();
 
       flags.clearAllFlags();
-      flags.setReturnsTainted();
       newExpr.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isTrue();

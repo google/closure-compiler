@@ -248,9 +248,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         if (!compiler.getAstAnalyzer().functionCallHasSideEffects(n)) {
           noSideEffectCalls.add(n.getFirstChild());
         }
-        if (NodeUtil.callHasLocalResult(n)) {
-          localResultCalls.add(n.getFirstChild());
-        }
       }
     }
   }
@@ -757,94 +754,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
             "}",
             "f('')");
     assertPureCallsMarked(source, ImmutableList.of("x.replace", "f"));
-  }
-
-  @Test
-  public void testResultLocalitySimple() {
-    String prefix = "var g; function f(){";
-    String suffix = "} f()";
-    final List<String> fReturnsUnescaped = ImmutableList.of("f");
-    final List<String> fReturnsEscaped = ImmutableList.of();
-
-    // no return
-    assertUnescapedReturnCallsMarked(prefix + "" + suffix, fReturnsUnescaped);
-    // simple return expressions
-    assertUnescapedReturnCallsMarked(prefix + "return 1" + suffix, fReturnsUnescaped);
-    assertUnescapedReturnCallsMarked(prefix + "return 1 + 2" + suffix, fReturnsUnescaped);
-
-    // global result
-    assertUnescapedReturnCallsMarked(prefix + "return g" + suffix, fReturnsEscaped);
-
-    // multiple returns
-    assertUnescapedReturnCallsMarked(prefix + "return 1; return 2" + suffix, fReturnsUnescaped);
-    assertUnescapedReturnCallsMarked(prefix + "return 1; return g" + suffix, fReturnsEscaped);
-
-    // local var, not yet. Note we do not handle locals properly here.
-    assertUnescapedReturnCallsMarked(prefix + "var a = 1; return a" + suffix, fReturnsEscaped);
-
-    // mutate local var, not yet. Note we do not handle locals properly here.
-    assertUnescapedReturnCallsMarked(
-        prefix + "var a = 1; a = 2; return a" + suffix, fReturnsEscaped);
-    assertUnescapedReturnCallsMarked(
-        prefix + "var a = 1; a = 2; return a + 1" + suffix, fReturnsUnescaped);
-
-    // read from obj literal
-    assertUnescapedReturnCallsMarked(prefix + "return {foo : 1}.foo" + suffix, fReturnsEscaped);
-    assertUnescapedReturnCallsMarked(
-        prefix + "var a = {foo : 1}; return a.foo" + suffix, fReturnsEscaped);
-
-    // read from extern
-    assertUnescapedReturnCallsMarked(prefix + "return externObj" + suffix, ImmutableList.of());
-    assertUnescapedReturnCallsMarked(
-        "function inner(x) { x.foo = 3; }" /* to suppress missing property */
-            + prefix
-            + "return externObj.foo"
-            + suffix,
-        ImmutableList.of());
-  }
-
-  @Test
-  public void testReturnLocalityTaintObjectLiteralWithGlobal() {
-    // return empty object literal.  This is completely local
-    String source = lines(
-        "function f() { return {} }",
-        "f();"
-    );
-    assertUnescapedReturnCallsMarked(source, ImmutableList.of("f"));
-    // return obj literal with global property is still local.
-    source = lines(
-        "var global = new Object();",
-        "function f() { return {'asdf': global} }",
-        "f();");
-    assertUnescapedReturnCallsMarked(source, ImmutableList.of("f"));
-  }
-
-  @Test
-  public void testReturnLocalityTaintArrayLiteralWithGlobal() {
-    String source =
-        lines(
-            "function f() { return []; }",
-            "f();",
-            "function g() { return [1, {}]; }",
-            "g();");
-    assertUnescapedReturnCallsMarked(source, ImmutableList.of("f", "g"));
-    // return array literal with global value is still a local value.
-    source =
-        lines(
-            "var global = new Object();",
-            "function f() { return [2 ,global]; }",
-            "f();");
-    assertUnescapedReturnCallsMarked(source, ImmutableList.of("f"));
-  }
-
-  @Test
-  public void testReturnLocalityMultipleDefinitionsSameName() {
-    String source = lines(
-            "var global = new Object();",
-            "A.func = function() {return global}", // return global (taintsReturn)
-            "B.func = function() {return 1; }", // returns local
-            "C.func();");
-    assertUnescapedReturnCallsMarked(source, ImmutableList.of());
   }
 
   @Test
@@ -2227,8 +2136,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     Node lastRoot = getLastCompiler().getRoot().getLastChild();
     Node call = findQualifiedNameNode("f", lastRoot).getParent();
     assertThat(call.isNoSideEffectsCall()).isFalse();
-    assertThat(call.getSideEffectFlags())
-        .isEqualTo(new Node.SideEffectFlags().setReturnsTainted().valueOf());
+    assertThat(call.getSideEffectFlags()).isEqualTo(Node.SideEffectFlags.ALL_SIDE_EFFECTS);
   }
 
   @Test

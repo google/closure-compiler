@@ -2449,12 +2449,9 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setComputeFunctionSideEffects(true);
 
-    String optimized =
-        ""
-        + "function InternalWidget(){return [];}"
-        + "Array.prototype.internalGo = function (){this.x = 2};";
-
-    test(options, code, optimized);
+    // Removing `InternalWidget().internalGo()` would be safe because InternalWidget returns
+    // a local value, but the optimizations don't track that information.
+    testSame(options, code);
   }
 
   @Test
