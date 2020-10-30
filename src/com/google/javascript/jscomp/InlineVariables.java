@@ -372,10 +372,15 @@ class InlineVariables implements CompilerPass {
     private void inlineValue(Scope scope, Node toRemove, Node toInsert) {
       compiler.reportChangeToEnclosingScope(toRemove);
 
+      // Help type-based optimizations by propagating more specific types from type assertions
       JSType typeBeforeCast = toRemove.getJSTypeBeforeCast();
       if (typeBeforeCast != null) {
         toInsert.setJSTypeBeforeCast(typeBeforeCast);
         toInsert.setJSType(toRemove.getJSType());
+      }
+      if (toRemove.getColor() != null && toRemove.isColorFromTypeCast()) {
+        toInsert.setColor(toRemove.getColor());
+        toInsert.setColorFromTypeCast();
       }
       toRemove.replaceWith(toInsert);
       NodeUtil.markFunctionsDeleted(toRemove, compiler);

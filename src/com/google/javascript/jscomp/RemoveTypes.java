@@ -42,6 +42,7 @@ final class RemoveTypes implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       n.setJSType(null);
       n.setJSTypeBeforeCast(null);
+
       n.setTypedefTypeProp(null);
       n.setDeclaredTypeExpression(null);
       JSDocInfo jsdoc = n.getJSDocInfo();

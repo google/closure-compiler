@@ -55,6 +55,11 @@ public final class ConvertTypesToColors implements CompilerPass {
       if (oldType != null && typePointersByJstype.containsKey(oldType)) {
         n.setColor(deserializer.pointerToColor(typePointersByJstype.get(oldType)));
       }
+      if (n.getJSTypeBeforeCast() != null) {
+        // used by FunctionInjector and InlineVariables when inlining as a hint that a node has a
+        // more specific color
+        n.setColorFromTypeCast();
+      }
     }
   }
 

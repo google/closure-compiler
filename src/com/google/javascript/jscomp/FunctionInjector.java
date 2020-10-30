@@ -415,6 +415,13 @@ class FunctionInjector {
       newExpression.setJSTypeBeforeCast(typeBeforeCast);
       newExpression.setJSType(callNode.getJSType());
     }
+    // If the new expression has no color or the UNKNOWN color, attach the color the call node. It
+    // may be more accurate if the call node was in a cast (we don't track information about casts,
+    // though)
+    if (callNode.getColor() != null && callNode.isColorFromTypeCast()) {
+      newExpression.setColor(callNode.getColor());
+      newExpression.setColorFromTypeCast();
+    }
     callParentNode.replaceChild(callNode, newExpression);
     NodeUtil.markFunctionsDeleted(callNode, compiler);
     return newExpression;
