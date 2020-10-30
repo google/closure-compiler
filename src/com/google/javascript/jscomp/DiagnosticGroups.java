@@ -466,9 +466,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerGroup(
-          "legacyGoogScopeRequire",
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckExtraRequires.EXTRA_REQUIRE_WARNING);
+          "legacyGoogScopeRequire", CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE);
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
