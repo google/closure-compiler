@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -32,8 +33,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Extracts ES6 classes defined in function calls to local constants.
@@ -62,14 +61,12 @@ public final class Es6ExtractClasses
 
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
-    Set<String> consts = new HashSet<>();
     this.expressionDecomposer =
         new ExpressionDecomposer(
             compiler,
             compiler.getUniqueNameIdSupplier(),
-            consts,
-            Scope.createGlobalScope(new Node(Token.SCRIPT)),
-            /* allowMethodCallDecomposing = */ true);
+            ImmutableSet.of(),
+            Scope.createGlobalScope(new Node(Token.SCRIPT)));
   }
 
   @Override

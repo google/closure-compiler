@@ -50,10 +50,9 @@ class FunctionInjector {
 
   private final AbstractCompiler compiler;
   private final boolean allowDecomposition;
-  private Set<String> knownConstants = new HashSet<>();
+  private ImmutableSet<String> knownConstantFunctions = ImmutableSet.of();
   private final boolean assumeStrictThis;
   private final boolean assumeMinimumCapture;
-  private final boolean allowMethodCallDecomposing;
   private final Supplier<String> safeNameIdSupplier;
   private final Supplier<String> throwawayNameSupplier =
       new Supplier<String>() {
@@ -77,11 +76,7 @@ class FunctionInjector {
     this.assumeStrictThis = builder.assumeStrictThis;
     this.assumeMinimumCapture = builder.assumeMinimumCapture;
     this.allowDecomposition = builder.allowDecomposition;
-    this.allowMethodCallDecomposing = builder.allowMethodCallDecomposing;
     this.functionArgumentInjector = checkNotNull(builder.functionArgumentInjector);
-    checkState(
-        !this.allowMethodCallDecomposing || this.allowDecomposition,
-        "Cannot allow method call decomposition when decomposition in general is not allowed.");
   }
 
   static class Builder {
@@ -91,7 +86,6 @@ class FunctionInjector {
     private boolean assumeStrictThis = true;
     private boolean assumeMinimumCapture = true;
     private boolean allowDecomposition = true;
-    private boolean allowMethodCallDecomposing = true;
     private FunctionArgumentInjector functionArgumentInjector = null;
 
     Builder(AbstractCompiler compiler) {
@@ -115,17 +109,6 @@ class FunctionInjector {
      */
     Builder allowDecomposition(boolean allowDecomposition) {
       this.allowDecomposition = allowDecomposition;
-      return this;
-    }
-
-    /**
-     * Allow decomposition of method calls.
-     *
-     * <p>Default is {@code true}. May be disabled independently of decomposition in general. It's
-     * invalid to enable this when allowDecomposition is disabled.
-     */
-    Builder allowMethodCallDecomposing(boolean allowMethodCallDecomposing) {
-      this.allowMethodCallDecomposing = allowMethodCallDecomposing;
       return this;
     }
 
@@ -584,8 +567,7 @@ class FunctionInjector {
   }
 
   private ExpressionDecomposer getDecomposer(Scope scope) {
-    return new ExpressionDecomposer(
-        compiler, safeNameIdSupplier, knownConstants, scope, allowMethodCallDecomposing);
+    return new ExpressionDecomposer(compiler, safeNameIdSupplier, knownConstantFunctions, scope);
   }
 
   /**
@@ -1118,14 +1100,11 @@ class FunctionInjector {
     }
   }
 
-  /**
-   * Store the names of known constants to be used when classifying call-sites
-   * in expressions.
-   */
-  public void setKnownConstants(Set<String> knownConstants) {
+  /** Store the names of known constants to be used when classifying call-sites in expressions. */
+  public void setKnownConstantFunctions(ImmutableSet<String> knownConstantFunctions) {
     // This is only expected to be set once. The same set should be used
     // when evaluating call-sites and inlining calls.
-    checkState(this.knownConstants.isEmpty());
-    this.knownConstants = knownConstants;
+    checkState(this.knownConstantFunctions.isEmpty());
+    this.knownConstantFunctions = knownConstantFunctions;
   }
 }
