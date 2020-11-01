@@ -32,6 +32,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -1258,6 +1259,14 @@ public class CompilerOptions implements Serializable {
   ResolutionMode moduleResolutionMode;
 
   /**
+   * Factory for creating the {@link com.google.javascript.jscomp.deps.ModuleResolver} to use for
+   * resolving imports.
+   *
+   * <p>If not explicitly set, the value is inferred from the specified {@link ResolutionMode}.
+   */
+  private ModuleResolverFactory moduleResolverFactory;
+
+  /**
    * Map of prefix replacements for use when moduleResolutionMode is {@link
    * ResolutionMode#BROWSER_WITH_TRANSFORMED_PREFIXES}.
    */
@@ -1294,6 +1303,7 @@ public class CompilerOptions implements Serializable {
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    moduleResolverFactory = null;
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
     pathEscaper = ModuleLoader.PathEscaper.ESCAPE;
     rewriteModulesBeforeTypechecking = true;
@@ -2832,6 +2842,15 @@ public class CompilerOptions implements Serializable {
 
   public void setModuleResolutionMode(ResolutionMode moduleResolutionMode) {
     this.moduleResolutionMode = moduleResolutionMode;
+  }
+
+  @Nullable
+  public ModuleResolverFactory getModuleResolverFactory() {
+    return moduleResolverFactory;
+  }
+
+  public void setModuleResolverFactory(ModuleResolverFactory moduleResolverFactory) {
+    this.moduleResolverFactory = moduleResolverFactory;
   }
 
   public ImmutableMap<String, String> getBrowserResolverPrefixReplacements() {
