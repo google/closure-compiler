@@ -23,7 +23,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -48,12 +47,14 @@ import org.junit.runners.JUnit4;
 // Note: functions "foo" and "goo" are external functions in the helper.
 @RunWith(JUnit4.class)
 public final class ExpressionDecomposerTest {
+  private boolean allowMethodCallDecomposing;
   private final Set<String> knownConstants = new HashSet<>();
   // Whether we should run type checking and test the type information in the output expression
   private boolean shouldTestTypes;
 
   @Before
   public void setUp() {
+    allowMethodCallDecomposing = false;
     knownConstants.clear();
     shouldTestTypes = true;
   }
@@ -143,6 +144,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void optionalChainingAllowMethodCallDecomposable() {
+    allowMethodCallDecomposing = true;
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "x?.y(foo())", exprMatchesStr("foo()"));
   }
@@ -225,21 +227,43 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void testCannotExpose_expression4() {
+  public void testCannotExpose_expression4a() {
     // 'this' must be preserved in call.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "if (goo.a(1, foo()));", exprMatchesStr("foo()"));
+  }
+
+  @Test
+  public void testCanExposeExpression4b() {
+    allowMethodCallDecomposing = true;
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "if (goo.a(1, foo()));", exprMatchesStr("foo()"));
   }
 
   @Test
-  public void testCannotExpose_expression5() {
+  public void testCannotExpose_expression5a() {
     // 'this' must be preserved in call.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "if (goo['a'](foo()));", exprMatchesStr("foo()"));
+  }
+
+  @Test
+  public void testCanExposeExpression5b() {
+    allowMethodCallDecomposing = true;
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "if (goo['a'](foo()));", exprMatchesStr("foo()"));
   }
 
   @Test
-  public void testCannotExpose_expression6() {
+  public void testCannotExpose_expression6a() {
+    // 'this' must be preserved in call.
+    helperCanExposeExpression(
+        DecompositionType.UNDECOMPOSABLE, "z:if (goo.a(1, foo()));", exprMatchesStr("foo()"));
+  }
+
+  @Test
+  public void testCanExposeExpression6b() {
+    allowMethodCallDecomposing = true;
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "z:if (goo.a(1, foo()));", exprMatchesStr("foo()"));
   }
@@ -450,6 +474,7 @@ public final class ExpressionDecomposerTest {
     helperCanExposeExpression(
         DecompositionType.MOVABLE, "const result = `${foo()}`;", exprMatchesStr("foo()"));
 
+    allowMethodCallDecomposing = true;
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE,
         "const obj = {f(x) {}}; obj.f(`${foo()}`);",
@@ -777,6 +802,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionOptionalGetElemWithCall() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x.y?.[z](foo())",
         exprMatchesStr("foo()"),
@@ -795,6 +821,8 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionOptionalGetElemWithCallTwiceRewriteCall() {
+    allowMethodCallDecomposing = true;
+
     helperExposeExpression(
         "a = x.y?.[z](foo())",
         exprMatchesStr("foo()"),
@@ -813,6 +841,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionGetElemWithOptionalCall() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x.y[z]?.(foo(), d)",
         exprMatchesStr("foo()"),
@@ -831,6 +860,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionOptionalGetPropWithCall() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x.y?.z(foo(1))",
         exprMatchesStr("foo(1)"),
@@ -849,6 +879,8 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionOptionalGetPropWithCallTwiceRewriteCall() {
+    allowMethodCallDecomposing = true;
+
     helperExposeExpression(
         "a = x.y?.z(foo(1))",
         exprMatchesStr("foo(1)"),
@@ -867,6 +899,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionGetPropWithOptionalCall() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x.y.z?.(foo())",
         exprMatchesStr("foo()"),
@@ -884,6 +917,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionNewOptChainAfterRewriteCall() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x?.y(foo())?.z.q",
         exprMatchesStr("foo()"),
@@ -906,6 +940,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionNewOptChainAfter() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x?.y[foo()]?.z.q",
         exprMatchesStr("foo()"),
@@ -925,6 +960,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionNotImmediatelyFollowedByNewChain() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x?.y[foo()].z.q?.b.c",
         exprMatchesStr("foo()"),
@@ -944,6 +980,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionBreakingOutOfOptionalChain() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = (x?.y[foo()]).z.q",
         exprMatchesStr("foo()"),
@@ -962,6 +999,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionCallBreakingOutOfOptionalChain() {
+    allowMethodCallDecomposing = true;
     shouldTestTypes = false;
     // Performing a non-optional call on an optional chain is not good coding, because you could
     // end up trying to call `undefined` as a function, but it is allowed and must be supported.
@@ -987,6 +1025,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionFreeCallBreakingOutOfOptionalChain() {
+    allowMethodCallDecomposing = true;
     // Performing a non-optional call on an optional chain is not good coding, because you could
     // end up trying to call `undefined` as a function, but it is allowed and must be supported.
     helperExposeExpression(
@@ -1002,6 +1041,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionCallAtEndOfOptionalChain() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x?.y.z(foo())",
         exprMatchesStr("foo()"),
@@ -1021,6 +1061,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeExpressionAfterTwoOptionalChains() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = x?.y.z?.q(foo());",
         exprMatchesStr("foo()"),
@@ -1046,6 +1087,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposeAnOptionalChain() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "a = foo(arg1, opt?.chain())",
         exprMatchesStr("opt?.chain()"),
@@ -1060,6 +1102,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void exposePartOfAnOptionalChain() {
+    allowMethodCallDecomposing = true;
     helperCanExposeExpression(
         DecompositionType.MOVABLE,
         // The non-optional part is fine to move.
@@ -1268,6 +1311,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression17() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "x.foo(y())",
         exprMatchesStr("y()"),
@@ -1279,6 +1323,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeExpression18() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         lines("const {a, b, c} = condition ?", "  y() :", "  {a: 0, b: 0, c: 1};"),
         exprMatchesStr("y()"),
@@ -1383,6 +1428,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeYieldExpression2() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "function *f() { return x.y(yield 1); }",
         exprMatchesStr("yield 1"),
@@ -1396,6 +1442,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeYieldExpression3() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "function *f() { return g.call(yield 1); }",
         exprMatchesStr("yield 1"),
@@ -1409,6 +1456,7 @@ public final class ExpressionDecomposerTest {
 
   @Test
   public void testExposeYieldExpression4() {
+    allowMethodCallDecomposing = true;
     helperExposeExpression(
         "function *f() { return g.apply([yield 1, yield 2]); }",
         exprMatchesStr("yield 1"),
@@ -1727,42 +1775,14 @@ public final class ExpressionDecomposerTest {
             "}}"));
   }
 
-  @Test
-  public void testCannotDecomposeSuperMethodCall() {
-    helperCanExposeExpression(
-        DecompositionType.UNDECOMPOSABLE,
-        "class A extends B { fn() { super.method(foo()) } }",
-        exprMatchesStr("foo()"));
-    helperCanExposeExpression(
-        DecompositionType.UNDECOMPOSABLE,
-        "class A extends B { fn() { super['method'](foo()) } }",
-        exprMatchesStr("foo()"));
-  }
-
-  @Test
-  public void canMovePastFnDotCall() {
-    knownConstants.add("fn");
-    helperCanExposeExpression(
-        DecompositionType.MOVABLE, "fn.call(foo());", exprMatchesStr("foo()"));
-    helperCanExposeExpression(
-        DecompositionType.DECOMPOSABLE, "unknownIfFn.call(foo());", exprMatchesStr("foo()"));
-    helperMoveExpression(
-        "fn.call(foo());",
-        exprMatchesStr("foo()"),
-        "var result$jscomp$0 = foo(); fn.call(result$jscomp$0);");
-  }
-
   private void helperCanExposeExpression(
       DecompositionType expectedResult,
       String code,
       Function<AbstractCompiler, Function<Node, Node>> nodeFinderFn) {
     Compiler compiler = getCompiler();
-    ExpressionDecomposer decomposer =
-        new ExpressionDecomposer(
-            compiler,
-            compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+    ExpressionDecomposer decomposer = new ExpressionDecomposer(
+        compiler, compiler.getUniqueNameIdSupplier(),
+        knownConstants, newScope(), allowMethodCallDecomposing);
     Node tree = parse(compiler, code);
     assertThat(tree).isNotNull();
 
@@ -1837,8 +1857,9 @@ public final class ExpressionDecomposerTest {
         new ExpressionDecomposer(
             compiler,
             compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
 
@@ -1869,8 +1890,9 @@ public final class ExpressionDecomposerTest {
         new ExpressionDecomposer(
             compiler,
             compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
 
@@ -1912,8 +1934,9 @@ public final class ExpressionDecomposerTest {
         new ExpressionDecomposer(
             compiler,
             compiler.getUniqueNameIdSupplier(),
-            ImmutableSet.copyOf(knownConstants),
-            newScope());
+            knownConstants,
+            newScope(),
+            allowMethodCallDecomposing);
     decomposer.setTempNamePrefix("temp");
     decomposer.setResultNamePrefix("result");
 

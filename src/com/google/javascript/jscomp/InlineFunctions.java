@@ -105,6 +105,7 @@ class InlineFunctions implements CompilerPass {
             .safeNameIdSupplier(safeNameIdSupplier)
             .assumeStrictThis(assumeStrictThis)
             .assumeMinimumCapture(assumeMinimumCapture)
+            .allowMethodCallDecomposing(false)
             .functionArgumentInjector(this.functionArgumentInjector)
             .build();
   }
@@ -135,8 +136,8 @@ class InlineFunctions implements CompilerPass {
     // This pass already assumes these are constants, so this is safe for anyone
     // using function inlining.
     //
-    ImmutableSet<String> fnNames = ImmutableSet.copyOf(fns.keySet());
-    injector.setKnownConstantFunctions(fnNames);
+    Set<String> fnNames = new HashSet<>(fns.keySet());
+    injector.setKnownConstants(fnNames);
 
     trimCandidatesUsingOnCost();
     if (fns.isEmpty()) {

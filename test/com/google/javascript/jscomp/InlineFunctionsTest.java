@@ -3931,52 +3931,15 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void methodCallIsDecomposed() {
-    test(
+  public void methodCallCannotBeDecomposed() {
+    testSame(
         lines(
             "function foo(x) {", //
             "  qux();", // Something with a side-effect.
             "  return x;",
             "}",
             "",
-            "bar.method(foo(arg));"),
-        lines(
-            "var JSCompiler_temp_const$jscomp$1 = bar;",
-            "var JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const$jscomp$1.method;",
-            "var JSCompiler_inline_result$jscomp$2;",
-            "{",
-            "  var x$jscomp$inline_3 = arg;",
-            "  qux();",
-            "  JSCompiler_inline_result$jscomp$2 = x$jscomp$inline_3;",
-            " }",
-            "JSCompiler_temp_const$jscomp$0.call(JSCompiler_temp_const$jscomp$1,",
-            " JSCompiler_inline_result$jscomp$2);"));
-  }
-
-  @Test
-  public void methodCallWithNestedCallIsInlined() {
-    this.assumeStrictThis = true;
-    test(
-        lines(
-            "function foo(x) {", //
-            "  qux();", // Something with a side-effect.
-            "  return x;",
-            "}",
-            "",
-            "function bar(x) {",
-            "  return x;",
-            "}",
-            "bar.call(null, foo(arg));"),
-        lines(
-            "var JSCompiler_inline_result$jscomp$0;",
-            "{",
-            "  var x$jscomp$inline_1 = arg;",
-            "  qux();",
-            "  JSCompiler_inline_result$jscomp$0 = x$jscomp$inline_1;",
-            "}",
-            "{",
-            "  JSCompiler_inline_result$jscomp$0;",
-            "}"));
+            "bar.method(foo(arg));"));
   }
 
   @Test
