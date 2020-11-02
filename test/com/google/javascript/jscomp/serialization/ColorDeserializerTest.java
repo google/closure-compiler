@@ -80,7 +80,8 @@ public class ColorDeserializerTest {
                         ObjectType.newBuilder()
                             .setUuid("Foo")
                             .setPrototype(poolPointer(0))
-                            .setInstanceType(poolPointer(1))))
+                            .setInstanceType(poolPointer(1))
+                            .setMarkedConstructor(true)))
             .build();
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
 
@@ -90,6 +91,7 @@ public class ColorDeserializerTest {
                 .setId("Foo")
                 .setInstanceColor(createObjectColorBuilder().setId("Foo instance").build())
                 .setPrototype(createObjectColorBuilder().setId("Foo.prototype").build())
+                .setConstructor(true)
                 .build());
   }
 

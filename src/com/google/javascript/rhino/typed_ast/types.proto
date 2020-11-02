@@ -42,12 +42,20 @@ message UnionType {
 }
 
 message ObjectType {
+  // TODO(lharker): consider storing the bool fields as a bitmask
+
   // If true, type-based property optimizations will back off optimizations on
   // properties related to this type.
   bool is_invalidating = 2;
-  TypePointer instance_type = 3;
-  TypePointer prototype = 4;
-  string uuid = 5;
+  string uuid = 3;
+
+  // Additional metadata relevant to classes and interfaces
+  TypePointer instance_type = 5;
+  // If this is a constructor, its .prototype field (not the implicit prototype)
+  TypePointer prototype = 6;
+  // Whether this was declared as either a class constructor or Closure ES5-
+  // style constructor.
+  bool marked_constructor = 7;
 
   // Optional, doesn't contribute to type equality
   TypeDebugInfo debug_info = 15;

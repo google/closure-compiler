@@ -68,6 +68,8 @@ public abstract class ObjectColor implements Color {
   @Override
   public abstract boolean isInvalidating();
 
+  public abstract boolean isConstructor();
+
   /** Builder for ObjectColors */
   @AutoValue.Builder
   public abstract static class Builder {
@@ -80,6 +82,8 @@ public abstract class ObjectColor implements Color {
     public abstract Builder setPrototype(Color prototype);
 
     public abstract Builder setInstanceColor(Color instanceColor);
+
+    public abstract Builder setConstructor(boolean isConstructor);
 
     public abstract Builder setDebugInfo(DebugInfo debugInfo);
 
@@ -96,6 +100,7 @@ public abstract class ObjectColor implements Color {
     return new AutoValue_ObjectColor.Builder()
         .setDebugInfo(DebugInfo.EMPTY)
         .setInvalidating(false)
-        .setDisambiguationSupertypes(ImmutableList.of());
+        .setDisambiguationSupertypes(ImmutableList.of())
+        .setConstructor(false);
   }
 }

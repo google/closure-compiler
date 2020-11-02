@@ -208,6 +208,9 @@ final class JSTypeSerializer {
         objBuilder
             .setPrototype(serializeType(fnType.getPrototype()))
             .setInstanceType(serializeType(fnType.getInstanceType()));
+        if (fnType.isConstructor()) {
+          objBuilder.setMarkedConstructor(true);
+        }
       }
     }
     if (!EMPTY_DEBUG_INFO.equals(debug)) {

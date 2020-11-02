@@ -148,6 +148,7 @@ public class ColorDeserializer {
     if (serialized.hasInstanceType()) {
       builder.setInstanceColor(this.pointerToColor(serialized.getInstanceType()));
     }
+    builder.setConstructor(serialized.getMarkedConstructor());
     return builder.build();
   }
 
