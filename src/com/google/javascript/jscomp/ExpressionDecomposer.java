@@ -797,12 +797,10 @@ class ExpressionDecomposer {
 
   /** Create a constant unique temp name. */
   private String getTempConstantValueName() {
-    String name =
-        tempNamePrefix
-            + "_const"
-            + ContextualRenamer.UNIQUE_ID_SEPARATOR
-            + safeNameIdSupplier.get();
-    return name;
+    return tempNamePrefix
+        + "_const"
+        + ContextualRenamer.UNIQUE_ID_SEPARATOR
+        + safeNameIdSupplier.get();
   }
 
   private boolean isTempConstantValueName(Node name) {
