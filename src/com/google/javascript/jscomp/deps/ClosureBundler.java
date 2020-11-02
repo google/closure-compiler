@@ -174,19 +174,6 @@ public final class ClosureBundler {
     if (transpiler == Transpiler.NULL) {
       mode.appendTraditional(es6ModuleTranspiler.runtime(), out, null);
     }
-    mode.appendTraditional("var CLOSURE_EVAL_PREFILTER = function(s) { return s; };", out, null);
-    mode.appendTraditional("(function(){", out, null);
-    mode.appendTraditional(
-        "if (typeof trustedTypes !== 'undefined' && trustedTypes.createPolicy) {", out, null);
-    mode.appendTraditional(
-        "  var policy = trustedTypes.createPolicy('goog#devserver',{ createScript: function(s){"
-            + " return s; }});",
-        out,
-        null);
-    mode.appendTraditional(
-        "  CLOSURE_EVAL_PREFILTER = policy.createScript.bind(policy);", out, null);
-    mode.appendTraditional("}", out, null);
-    mode.appendTraditional("})();", out, null);
   }
 
   /**
@@ -220,10 +207,10 @@ public final class ClosureBundler {
     EVAL {
       @Override
       void appendTraditional(String s, Appendable out, String sourceUrl) throws IOException {
-        out.append("eval(this.CLOSURE_EVAL_PREFILTER(\"");
+        out.append("eval(\"");
         EscapeMode.ESCAPED.append(s, out);
         appendSourceUrl(out, EscapeMode.ESCAPED, sourceUrl);
-        out.append("\"));\n");
+        out.append("\");\n");
       }
 
       @Override
