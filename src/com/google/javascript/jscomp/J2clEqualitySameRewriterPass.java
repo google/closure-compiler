@@ -16,11 +16,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.javascript.jscomp.colors.UnionColor;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -122,11 +120,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     if (color != null) {
       if (color.isUnion()) {
         // ignore null/undefined
-        ImmutableList<Color> nonNullAlternates =
-            color.getAlternates().stream()
-                .filter(alt -> !PrimitiveColor.NULL_OR_VOID.equals(alt))
-                .collect(toImmutableList());
-        return nonNullAlternates.size() == 1 && nonNullAlternates.get(0).isObject();
+        return ((UnionColor) color).removeNullAndUndefined().isObject();
       }
       return color.isObject();
     }

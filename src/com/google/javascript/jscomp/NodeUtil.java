@@ -33,6 +33,7 @@ import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ObjectColor;
 import com.google.javascript.jscomp.colors.PrimitiveColor;
 import com.google.javascript.jscomp.parsing.ParsingUtil;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -5472,9 +5473,11 @@ public final class NodeUtil {
 
     JSType type = fnNode.getJSType();
     JSDocInfo jsDocInfo = getBestJSDocInfo(fnNode);
+    Color color = fnNode.getColor();
 
     return (type != null && type.isConstructor())
         || (jsDocInfo != null && jsDocInfo.isConstructor())
+        || (color != null && color.isObject() && ((ObjectColor) color).isConstructor())
         || isEs6Constructor(fnNode);
   }
 

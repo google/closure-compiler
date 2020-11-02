@@ -716,6 +716,14 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(flowSensitiveInlineVariables);
     }
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     passes.addAll(getMainOptimizationLoop());
     passes.add(createEmptyPass(PassNames.AFTER_MAIN_OPTIMIZATIONS));
 
@@ -730,14 +738,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(createEmptyPass("afterModuleMotion"));
-
-    if (options.checkTypes || options.inferTypes) {
-      passes.add(typesToColors);
-    }
-
-    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
-      passes.add(removeTypes);
-    }
 
     // Some optimizations belong outside the loop because running them more
     // than once would either have no benefit or be incorrect.

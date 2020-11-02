@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.colors;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableCollection;
@@ -76,5 +77,15 @@ public abstract class UnionColor implements Color {
       }
     }
     return false;
+  }
+
+  public Color removeNullAndUndefined() {
+    ImmutableSet<Color> nonNullElements =
+        this.getAlternates().stream()
+            .filter(color -> !PrimitiveColor.NULL_OR_VOID.equals(color))
+            .collect(toImmutableSet());
+    return nonNullElements.size() > 1
+        ? UnionColor.create(nonNullElements)
+        : nonNullElements.iterator().next();
   }
 }

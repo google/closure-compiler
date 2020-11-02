@@ -89,6 +89,8 @@ public final class InlinePropertiesTest extends CompilerTestCase {
     enableClosurePass();
     enableGatherExternProperties();
     this.runSmartNameRemoval = false;
+    replaceTypesWithColors();
+    disableCompareJsDoc();
   }
 
   @Test
