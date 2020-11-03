@@ -63,7 +63,7 @@ UADataValues.prototype.uaFullVersion;
  */
 function NavigatorUAData() {}
 
-/** @type {!Array<string>} */
+/** @type {!Array<!NavigatorUABrandVersion>} */
 NavigatorUAData.prototype.brands;
 
 /** @type {boolean} */
