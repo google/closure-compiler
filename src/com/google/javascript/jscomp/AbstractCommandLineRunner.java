@@ -2156,8 +2156,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @GwtIncompatible("Unnecessary")
   void printManifestTo(JSModule module, Appendable out) throws IOException {
     for (CompilerInput input : module.getInputs()) {
-      String rootRelativePath = rootRelativePathsMap.get(input.getName());
-      String displayName = rootRelativePath != null ? rootRelativePath : input.getName();
+      String name = input.getName();
+
+      // Ignore fill files created by the compiler to facilitate cross-module code motion.
+      if (Compiler.isFillFileName(name)) {
+        continue;
+      }
+
+      String rootRelativePath = rootRelativePathsMap.get(name);
+      String displayName = rootRelativePath != null ? rootRelativePath : name;
       out.append(displayName);
       out.append("\n");
     }
