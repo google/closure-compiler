@@ -681,6 +681,14 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(replaceStrings);
     }
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     // TODO(user): This forces a first crack at crossChunkCodeMotion
     // before devirtualization. Once certain functions are devirtualized,
     // it confuses crossChunkCodeMotion ability to recognized that

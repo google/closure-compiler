@@ -83,6 +83,17 @@ final class RemoveTypes implements CompilerPass {
       if (!jsdoc.getThrownTypes().isEmpty()) {
         builder.recordThrowType(createUnknown());
       }
+
+      // Used by DevirtualizeMethods and CollapseProperties
+      if (jsdoc.isConstructor()) {
+        builder.recordConstructor();
+      }
+      if (jsdoc.isInterface()) {
+        builder.recordInterface();
+      }
+      if (jsdoc.usesImplicitMatch()) {
+        builder.recordImplicitMatch();
+      }
       return builder.build();
     }
 
