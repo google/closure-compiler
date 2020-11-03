@@ -163,7 +163,7 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     Node numberNode = astFactory.createNumber(0);
-    JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder infoBuilder = JSDocInfo.builder();
     infoBuilder.recordType(new JSTypeExpression(new Node(Token.QMARK), "test.js"));
     JSDocInfo info = infoBuilder.build();
     Node castNode = astFactory.createCastToUnknown(numberNode, info);

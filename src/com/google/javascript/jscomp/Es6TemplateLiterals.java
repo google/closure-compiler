@@ -145,7 +145,7 @@ class Es6TemplateLiterals {
               siteObject.cloneTree(),
               raw);
     }
-    JSDocInfoBuilder jsDocInfoBuilder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder jsDocInfoBuilder = JSDocInfo.builder();
     jsDocInfoBuilder.recordNoInline();
     JSDocInfo info = jsDocInfoBuilder.build();
 

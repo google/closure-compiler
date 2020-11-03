@@ -913,7 +913,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       Node initModule = IR.var(IR.name(moduleName), IR.objectlit());
       initModule.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
       initModule.getFirstChild().makeNonIndexable();
-      JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+      JSDocInfoBuilder builder = JSDocInfo.builder().parseDocumentation();
       builder.recordConstancy();
       initModule.setJSDocInfo(builder.build());
       if (directAssignments == 0 || (!exports.isEmpty() && !moduleExports.isEmpty())) {
@@ -922,7 +922,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         defaultProp.addChildToFront(IR.objectlit());
         initModule.getFirstFirstChild().addChildToFront(defaultProp);
         if (exports.isEmpty() || moduleExports.isEmpty()) {
-          builder = new JSDocInfoBuilder(true);
+          builder = JSDocInfo.builder().parseDocumentation();
           builder.recordConstancy();
           defaultProp.setJSDocInfo(builder.build());
         }
@@ -1514,7 +1514,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         Node parent = root.getParent();
         Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));
         if (exportIsConst) {
-          JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+          JSDocInfoBuilder info = JSDocInfo.builder();
           info.recordConstancy();
           exportName.getFirstChild().setJSDocInfo(info.build());
         }

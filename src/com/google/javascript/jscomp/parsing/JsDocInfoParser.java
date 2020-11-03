@@ -175,7 +175,10 @@ public final class JsDocInfoParser {
     this.stream = stream;
 
     boolean parseDocumentation = config.jsDocParsingMode().shouldParseDescriptions();
-    this.jsdocBuilder = new JSDocInfoBuilder(parseDocumentation);
+    this.jsdocBuilder = JSDocInfo.builder();
+    if (parseDocumentation) {
+      this.jsdocBuilder.parseDocumentation();
+    }
     if (comment != null) {
       this.jsdocBuilder.recordOriginalCommentString(comment);
       this.jsdocBuilder.recordOriginalCommentPosition(commentPosition);

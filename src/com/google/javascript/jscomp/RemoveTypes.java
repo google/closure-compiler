@@ -61,7 +61,7 @@ final class RemoveTypes implements CompilerPass {
      */
     @Nullable
     private static JSDocInfo convertJSDocInfo(JSDocInfo jsdoc) {
-      JSDocInfoBuilder builder = new JSDocInfoBuilder(/* parseDocumentation= */ false);
+      JSDocInfoBuilder builder = JSDocInfo.builder();
       if (jsdoc.getLicense() != null) {
         builder.addLicense(jsdoc.getLicense());
       }

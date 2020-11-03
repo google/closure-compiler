@@ -551,16 +551,21 @@ public class JSDocInfo implements Serializable {
   private static final int TYPEFIELD_ENUM    = 0x60000000; // 0110...
   private static final int TYPEFIELD_TYPEDEF = 0x80000000; // 1000...
 
-  /**
-   * Creates a {@link JSDocInfo} object. This object should be created using
-   * a {@link JSDocInfoBuilder}.
-   */
-  JSDocInfo(boolean includeDocumentation) {
-    this.includeDocumentation = includeDocumentation;
+  /** Create a new JSDocInfoBuilder object. */
+  public static JSDocInfoBuilder builder() {
+    return new JSDocInfoBuilder();
   }
 
-  // Visible for testing.
+  /**
+   * Creates a {@link JSDocInfo} object. This object should be created using a {@link
+   * JSDocInfoBuilder}.
+   */
   JSDocInfo() {}
+
+  /** Sets the option to include documentation. */
+  void setIncludeDocumentation(boolean includeDocumentation) {
+    this.includeDocumentation = includeDocumentation;
+  }
 
   @SuppressWarnings("MissingOverride")  // Adding @Override breaks the GWT compilation.
   public JSDocInfo clone() {

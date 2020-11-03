@@ -381,7 +381,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
     builder.propertyKey(memberName);
 
-    JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder jsDoc = JSDocInfo.builder();
     jsDoc.recordNoCollapse();
     builder.jsDocInfo(jsDoc.build());
     membersToDeclare.put(memberName, builder.build());

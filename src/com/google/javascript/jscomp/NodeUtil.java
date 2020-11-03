@@ -5323,7 +5323,7 @@ public final class NodeUtil {
   }
 
   static JSDocInfo createConstantJsDoc() {
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder builder = JSDocInfo.builder();
     builder.recordConstancy();
     return builder.build();
   }

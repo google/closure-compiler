@@ -334,11 +334,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     private JSDocInfo buildEmptyJSDoc() {
       // TODO(johnlenz): share the JSDocInfo here rather than building
       // a new one each time.
-      return new JSDocInfoBuilder(false).build(true);
+      return JSDocInfo.builder().build(true);
     }
 
     private JSDocInfo buildNamespaceJSDoc() {
-      JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+      JSDocInfoBuilder builder = JSDocInfo.builder();
       builder.recordConstancy();
       builder.recordSuppressions(ImmutableSet.of("const", "duplicate"));
       return builder.build();

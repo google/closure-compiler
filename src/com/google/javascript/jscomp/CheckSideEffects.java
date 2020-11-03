@@ -193,7 +193,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     Node name = IR.name(PROTECTOR_FN);
     name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     Node var = IR.var(name);
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder builder = JSDocInfo.builder();
     var.setJSDocInfo(builder.build());
     CompilerInput input = compiler.getSynthesizedExternsInput();
     Node root = input.getAstRoot(compiler);

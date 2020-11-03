@@ -231,7 +231,7 @@ final class PolymerClassRewriter {
     Node objLit = checkNotNull(cls.descriptor);
 
     // Add {@code @lends} to the object literal.
-    JSDocInfoBuilder objLitDoc = new JSDocInfoBuilder(true);
+    JSDocInfoBuilder objLitDoc = JSDocInfo.builder().parseDocumentation();
     JSTypeExpression jsTypeExpression =
         new JSTypeExpression(
             IR.string(cls.target.getQualifiedName() + ".prototype").srcref(exprRoot),
@@ -948,7 +948,7 @@ final class PolymerClassRewriter {
         JSDocInfoBuilder info = getJSDocInfoBuilderForBehavior(behavior, behaviorProp);
 
         if (behaviorProp.name.isGetterDef()) {
-          info = new JSDocInfoBuilder(true);
+          info = JSDocInfo.builder().parseDocumentation();
           if (behaviorProp.info != null && behaviorProp.info.getReturnType() != null) {
             info.recordType(behaviorProp.info.getReturnType());
           }
@@ -992,7 +992,7 @@ final class PolymerClassRewriter {
     Node exprResNode =
         IR.exprResult(IR.assign(NodeUtil.newQName(compiler, qualifiedPath + setterName), fnNode));
 
-    JSDocInfoBuilder info = new JSDocInfoBuilder(true);
+    JSDocInfoBuilder info = JSDocInfo.builder().parseDocumentation();
     // This is overriding a generated function which was added to the interface in
     // {@code createExportsAndExterns}.
     info.recordOverride();
@@ -1050,7 +1050,7 @@ final class PolymerClassRewriter {
     compiler.reportChangeToChangeScope(fnNode);
     Node varNode = IR.var(NodeUtil.newQName(compiler, interfaceName), fnNode);
 
-    JSDocInfoBuilder info = new JSDocInfoBuilder(true);
+    JSDocInfoBuilder info = JSDocInfo.builder().parseDocumentation();
     info.recordInterface();
     varNode.setJSDocInfo(info.build());
     block.addChildToBack(varNode);
@@ -1108,7 +1108,7 @@ final class PolymerClassRewriter {
       Node setterExprNode =
           IR.exprResult(NodeUtil.newQName(compiler, interfaceBasePath + setterName));
 
-      JSDocInfoBuilder setterInfo = new JSDocInfoBuilder(true);
+      JSDocInfoBuilder setterInfo = JSDocInfo.builder().parseDocumentation();
       JSTypeExpression propType = PolymerPassStaticUtils.getTypeFromProperty(prop, compiler);
       JSTypeExpression unknown =
           new JSTypeExpression(new Node(Token.QMARK), propType.getSourceName());
@@ -1145,10 +1145,7 @@ final class PolymerClassRewriter {
     Node getprop =
         NodeUtil.newQName(
             compiler, cls.target.getQualifiedName() + ".prototype." + method.name.getString());
-    JSDocInfoBuilder info =
-        new JSDocInfoBuilder(
-            /** parseDocumentation */
-            true);
+    JSDocInfoBuilder info = JSDocInfo.builder().parseDocumentation();
     if (method.info != null) {
       // We need to preserve visibility, but other JSDoc doesn't matter (and can cause
       // re-declaration errors).
@@ -1270,7 +1267,7 @@ final class PolymerClassRewriter {
     // Reflect property calls require an instance of a type. Since we don't have one,
     // just cast an object literal to be that type. While not generally safe, it is
     // safe for property reflection.
-    JSDocInfoBuilder classTypeDoc = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder classTypeDoc = JSDocInfo.builder();
     JSTypeExpression classType =
         new JSTypeExpression(
             new Node(Token.BANG, IR.string(className.getQualifiedName()))

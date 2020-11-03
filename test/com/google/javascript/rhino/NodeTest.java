@@ -610,7 +610,7 @@ public class NodeTest {
   @Test
   public void testJSDocInfoClone() {
     Node original = IR.var(IR.name("varName"));
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder builder = JSDocInfo.builder();
     builder.recordType(new JSTypeExpression(IR.name("TypeName"), "blah"));
     JSDocInfo info = builder.build();
     original.getFirstChild().setJSDocInfo(info);

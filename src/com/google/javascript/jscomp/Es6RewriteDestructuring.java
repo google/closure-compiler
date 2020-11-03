@@ -395,7 +395,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
             .useSourceInfoIfMissingFromForTree(objectPattern);
     // TODO(tbreisacher): Remove the "if" and add this JSDoc unconditionally.
     if (parent.isConst()) {
-      JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+      JSDocInfoBuilder jsDoc = JSDocInfo.builder();
       jsDoc.recordConstancy();
       tempDecl.setJSDocInfo(jsDoc.build());
     }

@@ -62,7 +62,7 @@ public final class JSDocInfoBuilder {
   private boolean populated;
 
   // whether to include the documentation itself when parsing the JsDoc
-  private final boolean parseDocumentation;
+  private boolean parseDocumentation;
 
   // the current marker, if any.
   private JSDocInfo.Marker currentMarker;
@@ -70,8 +70,9 @@ public final class JSDocInfoBuilder {
   // the set of unique license texts
   private final Set<String> licenseTexts;
 
-  public JSDocInfoBuilder(boolean parseDocumentation) {
-    this(new JSDocInfo(parseDocumentation), parseDocumentation, false);
+  /** This constructor should not be called directly. Use JSDocInfo.builder() instead. */
+  JSDocInfoBuilder() {
+    this(new JSDocInfo(), false, false);
   }
 
   private JSDocInfoBuilder(
@@ -92,7 +93,7 @@ public final class JSDocInfoBuilder {
 
   public static JSDocInfoBuilder maybeCopyFrom(@Nullable JSDocInfo info) {
     if (info == null) {
-      return new JSDocInfoBuilder(true);
+      return new JSDocInfoBuilder().parseDocumentation();
     }
     return copyFrom(info);
   }
@@ -106,7 +107,8 @@ public final class JSDocInfoBuilder {
   public static JSDocInfoBuilder maybeCopyFromWithNewType(
       JSDocInfo info, JSTypeExpression typeExpression) {
     if (info == null) {
-      JSDocInfo temp = new JSDocInfo(true);
+      JSDocInfo temp = new JSDocInfo();
+      temp.setIncludeDocumentation(true);
       return copyFromWithNewType(temp, typeExpression);
     }
     return copyFromWithNewType(info, typeExpression);
@@ -127,7 +129,8 @@ public final class JSDocInfoBuilder {
   public static JSDocInfoBuilder maybeCopyFromAndReplaceNames(
       JSDocInfo info, Set<String> moduleLocalNamesToReplace) {
     if (info == null) {
-      info = new JSDocInfo(true);
+      info = new JSDocInfo();
+      info.setIncludeDocumentation(true);
     }
     return copyFromAndReplaceNames(info, moduleLocalNamesToReplace);
   }
@@ -135,6 +138,17 @@ public final class JSDocInfoBuilder {
   private static JSDocInfoBuilder copyFromAndReplaceNames(JSDocInfo info, Set<String> oldNames) {
     JSDocInfo newTypeInfo = info.cloneAndReplaceTypeNames(oldNames);
     return new JSDocInfoBuilder(newTypeInfo, info.isDocumentationIncluded(), true);
+  }
+
+  /**
+   * Configures the builder to parse documentation. This should be called immediately after
+   * instantiating the builder if documentation should be included, since it enables various
+   * operations to do work that would otherwise be no-ops.
+   */
+  public JSDocInfoBuilder parseDocumentation() {
+    parseDocumentation = true;
+    currentInfo.setIncludeDocumentation(true);
+    return this;
   }
 
   /**
@@ -230,7 +244,10 @@ public final class JSDocInfoBuilder {
   public JSDocInfo buildAndReset() {
     JSDocInfo info = build(false);
     if (currentInfo == null) {
-      currentInfo = new JSDocInfo(parseDocumentation);
+      currentInfo = new JSDocInfo();
+      if (parseDocumentation) {
+        currentInfo.setIncludeDocumentation(true);
+      }
       populated = false;
     }
     return info;
