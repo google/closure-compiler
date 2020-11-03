@@ -83,14 +83,6 @@ public final class Es6ToEs3Util {
         iterable);
   }
 
-  /** Adds the type t to Node n, and returns n. Does nothing if t is null. */
-  static Node withType(Node n, JSType t) {
-    if (t != null) {
-      n.setJSType(t);
-    }
-    return n;
-  }
-
   /**
    * Returns the JSType as specified by the typeName.
    * Returns null if shouldCreate is false.

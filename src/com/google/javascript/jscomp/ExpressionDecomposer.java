@@ -19,7 +19,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -760,10 +759,8 @@ class ExpressionDecomposer {
 
     Node newCall =
         IR.call(
-                withType(
-                    IR.getprop(
-                        functionNameNode.cloneNode(), withType(IR.string("call"), stringType)),
-                    fnCallType),
+                IR.getprop(functionNameNode.cloneNode(), IR.string("call").setJSType(stringType))
+                    .setJSType(fnCallType),
                 thisNameNode.cloneNode())
             .copyTypeFrom(call)
             .useSourceInfoIfMissingFromForTree(call);
