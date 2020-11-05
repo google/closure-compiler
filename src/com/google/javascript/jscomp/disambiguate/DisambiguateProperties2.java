@@ -24,7 +24,9 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -32,6 +34,7 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -49,7 +52,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final ImmutableMap<String, CheckLevel> invalidationReportingLevelByProp;
-
+  private final ImmutableSet<TypeMismatch> mismatches;
   private final JSTypeRegistry registry;
   private final InvalidatingTypes invalidations;
 
@@ -58,12 +61,16 @@ public final class DisambiguateProperties2 implements CompilerPass {
       ImmutableMap<String, CheckLevel> invalidationReportingLevelByProp) {
     this.compiler = compiler;
     this.invalidationReportingLevelByProp = invalidationReportingLevelByProp;
-
     this.registry = this.compiler.getTypeRegistry();
+
+    this.mismatches =
+        ImmutableSet.<TypeMismatch>builder()
+            .addAll(compiler.getTypeMismatches())
+            .addAll(compiler.getImplicitInterfaceUses())
+            .build();
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry)
-            .addAllTypeMismatches(compiler.getTypeMismatches())
-            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
+            .addAllTypeMismatches(this.mismatches)
             .allowEnums()
             .allowScalars()
             .build();
@@ -118,6 +125,13 @@ public final class DisambiguateProperties2 implements CompilerPass {
                         naturalOrder(),
                         Map.Entry::getKey,
                         (e) -> ImmutableSortedSet.copyOf(e.getValue()))));
+
+    this.logForDiagnostics(
+        "mismatches",
+        () ->
+            this.mismatches.stream()
+                .map((m) -> new TypeMismatchJson(m, flattener))
+                .collect(toImmutableSortedSet(naturalOrder())));
   }
 
   private void logForDiagnostics(String name, Supplier<Object> data) {
@@ -151,12 +165,10 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
     @Override
     public int compareTo(PropertyReferenceJson x) {
-      int location = this.location.compareTo(x.location);
-      if (location != 0) {
-        return location;
-      }
-
-      return this.receiver - x.receiver;
+      return ComparisonChain.start()
+          .compare(this.receiver, x.receiver)
+          .compare(this.location, x.location)
+          .result();
     }
   }
 
@@ -199,6 +211,27 @@ public final class DisambiguateProperties2 implements CompilerPass {
     public int compareTo(TypeEdgeJson x) {
       checkArgument(this.dest != x.dest);
       return this.dest - x.dest;
+    }
+  }
+
+  private static final class TypeMismatchJson implements Comparable<TypeMismatchJson> {
+    final int found;
+    final int required;
+    final String location;
+
+    TypeMismatchJson(TypeMismatch x, TypeFlattener flattener) {
+      this.found = flattener.flatten(x.getFound()).getId();
+      this.required = flattener.flatten(x.getRequired()).getId();
+      this.location = x.getLocation().getLocation();
+    }
+
+    @Override
+    public int compareTo(TypeMismatchJson x) {
+      return ComparisonChain.start()
+          .compare(this.found, x.found)
+          .compare(this.required, x.required)
+          .compare(this.location, x.location)
+          .result();
     }
   }
 }

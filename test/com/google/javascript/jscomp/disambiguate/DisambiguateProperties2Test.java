@@ -883,7 +883,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   private static void assertValidJson(String src) {
-    assertThat(src.length()).isGreaterThan(10); // Make sure there's at least some data.
+    assertThat(src).isNotEmpty();
 
     Class<?> clazz = (src.charAt(0) == '{') ? LinkedHashMap.class : ArrayList.class;
     new Gson().fromJson(src, clazz); // Throws if invalid

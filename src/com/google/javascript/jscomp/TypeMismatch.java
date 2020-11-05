@@ -44,7 +44,7 @@ public abstract class TypeMismatch implements Serializable {
   public abstract JSType getRequired();
 
   /** The location of the assignment. */
-  abstract Node getLocation();
+  public abstract Node getLocation();
 
   private static TypeMismatch create(JSType found, JSType required, Node location) {
     return new AutoValue_TypeMismatch(found, required, location);
