@@ -2805,7 +2805,7 @@ Window.prototype.location;
 Window.prototype.name;
 
 /**
- * @type {Navigator}
+ * @type {!Navigator}
  * @see https://developer.mozilla.org/en/DOM/window.navigator
  */
 Window.prototype.navigator;
