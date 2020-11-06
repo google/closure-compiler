@@ -78,5 +78,7 @@ public final class ConvertTypesToColors implements CompilerPass {
         compiler,
         externsAndJsRoot,
         new ColorAst(deserializer, serializeJstypes.getTypePointersByJstype()));
+
+    compiler.setColorRegistry(deserializer.getRegistry());
   }
 }

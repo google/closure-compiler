@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.MustBeClosed;
 import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.modules.ModuleMap;
@@ -158,6 +159,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   public abstract JSTypeRegistry getTypeRegistry();
 
   public abstract void clearJSTypeRegistry();
+
+  /** Gets a central registry of colors from deserialized JS types. */
+  public abstract ColorRegistry getColorRegistry();
+
+  /** Sets the color registry */
+  public abstract void setColorRegistry(ColorRegistry registry);
 
   abstract void forwardDeclareType(String typeName);
 

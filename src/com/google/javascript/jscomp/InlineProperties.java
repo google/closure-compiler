@@ -20,9 +20,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.ObjectColor;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
-import com.google.javascript.jscomp.colors.UnionColor;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
@@ -42,6 +41,7 @@ import java.util.Map;
 final class InlineProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final ColorRegistry colorRegistry;
 
   private static class PropertyInfo {
     PropertyInfo(Color color, Node value) {
@@ -59,6 +59,7 @@ final class InlineProperties implements CompilerPass {
 
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.colorRegistry = compiler.getColorRegistry();
     invalidateExternProperties();
   }
 
@@ -74,7 +75,7 @@ final class InlineProperties implements CompilerPass {
     Color color = n.getColor();
 
     if (color == null) {
-      return PrimitiveColor.UNKNOWN;
+      return colorRegistry.get(NativeColorId.UNKNOWN);
     } else {
       return color;
     }
@@ -159,9 +160,7 @@ final class InlineProperties implements CompilerPass {
         // This is a static assignment like:
         //    x.foo = 1;
         Color targetType = getColor(src);
-        if (targetType != null
-            && targetType.isObject()
-            && ((ObjectColor) targetType).isConstructor()) {
+        if (targetType != null && targetType.isConstructor()) {
           return maybeStoreCandidateValue(targetType, propName, value);
         }
       }
@@ -232,13 +231,13 @@ final class InlineProperties implements CompilerPass {
       if (dest.isInvalidating()) {
         return false;
       }
-      if (!dest.isObject() || !src.isObject()) {
+      if (dest.isUnion() || src.isUnion()) {
         return false;
       }
-      return hasInSupertypesList((ObjectColor) dest, (ObjectColor) src);
+      return hasInSupertypesList(dest, src);
     }
 
-    private boolean hasInSupertypesList(ObjectColor subCtor, ObjectColor superCtor) {
+    private boolean hasInSupertypesList(Color subCtor, Color superCtor) {
       if (subCtor == null || superCtor == null) {
         return false;
       }
@@ -247,8 +246,7 @@ final class InlineProperties implements CompilerPass {
       }
 
       for (Color immediateSupertype : subCtor.getDisambiguationSupertypes()) {
-        if (immediateSupertype.isObject()
-            && hasInSupertypesList((ObjectColor) immediateSupertype, superCtor)) {
+        if (!immediateSupertype.isUnion() && hasInSupertypesList(immediateSupertype, superCtor)) {
           return true;
         }
 
@@ -258,9 +256,6 @@ final class InlineProperties implements CompilerPass {
   }
 
   private static Color removeNullAndUndefinedIfUnion(Color original) {
-    if (!original.isUnion()) {
-      return original;
-    }
-    return ((UnionColor) original).removeNullAndUndefined();
+    return original.isUnion() ? original.subtractNullOrVoid() : original;
   }
 }

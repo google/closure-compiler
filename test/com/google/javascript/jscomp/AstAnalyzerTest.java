@@ -75,9 +75,11 @@ import static com.google.javascript.rhino.Token.YIELD;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -164,6 +166,7 @@ public final class AstAnalyzerTest {
               ImmutableMap.of(
                   "getter", PropertyAccessKind.GETTER_ONLY, //
                   "setter", PropertyAccessKind.SETTER_ONLY)));
+      compiler.setColorRegistry(ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of()));
     }
 
     private Node parseInternal(String js) {
@@ -811,7 +814,7 @@ public final class AstAnalyzerTest {
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
 
       xNode.setJSType(null);
-      xNode.setColor(PrimitiveColor.STRING);
+      xNode.setColor(helper.compiler.getColorRegistry().get(NativeColorId.STRING));
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
     }
   }

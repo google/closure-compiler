@@ -22,8 +22,8 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.ObjectColor;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
@@ -72,13 +72,14 @@ final class ColorGraphBuilder {
 
   ColorGraphBuilder(
       ColorGraphNodeFactory nodeFactory,
-      LowestCommonAncestorFinder.Factory<ColorGraphNode, Object> lcaFinderFactory) {
+      LowestCommonAncestorFinder.Factory<ColorGraphNode, Object> lcaFinderFactory,
+      ColorRegistry colorRegistry) {
     this.nodeFactory = nodeFactory;
     this.lcaFinder = lcaFinderFactory.create(this.colorHoldsInstanceGraph);
 
     this.topNode =
         this.colorHoldsInstanceGraph.createNode(
-            this.nodeFactory.createNode(PrimitiveColor.UNKNOWN));
+            this.nodeFactory.createNode(colorRegistry.get(NativeColorId.UNKNOWN)));
   }
 
   public void add(ColorGraphNode flat) {
@@ -122,7 +123,7 @@ final class ColorGraphBuilder {
      */
     checkState(!unionNode.getOutEdges().isEmpty());
     ImmutableSet<ColorGraphNode> graphNodes =
-        flatUnion.getColor().getAlternates().stream()
+        flatUnion.getColor().union().stream()
             .map(this.nodeFactory::createNode)
             .collect(toImmutableSet());
     for (ColorGraphNode lca : this.lcaFinder.findAll(graphNodes)) {
@@ -145,40 +146,36 @@ final class ColorGraphBuilder {
     flatNode = this.colorHoldsInstanceGraph.createNode(node);
 
     if (node.getColor().isUnion()) {
-      for (Color alt : node.getColor().getAlternates()) {
+      for (Color alt : node.getColor().union()) {
         this.connectSourceToDest(flatNode, EdgeReason.ALGEBRAIC, this.addInternal(alt));
       }
       return flatNode;
     }
 
     Color color = node.getColor();
-    if (color instanceof ObjectColor) {
-      ObjectColor object = (ObjectColor) color;
-      if (object.getDisambiguationSupertypes().isEmpty()) {
-        this.connectSourceToDest(topNode, EdgeReason.ALGEBRAIC, flatNode);
-      } else {
-        for (Color supertype : object.getDisambiguationSupertypes()) {
-          this.connectSourceToDest(this.addInternal(supertype), EdgeReason.CAN_HOLD, flatNode);
-        }
+    if (color.getDisambiguationSupertypes().isEmpty()) {
+      this.connectSourceToDest(topNode, EdgeReason.ALGEBRAIC, flatNode);
+    } else {
+      for (Color supertype : color.getDisambiguationSupertypes()) {
+        this.connectSourceToDest(this.addInternal(supertype), EdgeReason.CAN_HOLD, flatNode);
       }
-
-      /**
-       * Add all instance and prototype colors when visiting a constructor. We won't necessarily see
-       * all possible instance colors that exist at runtime during an AST traversal.
-       *
-       * <p>For example, a subclass constructor may never be explicitly initialized but instead
-       * passed to some function expecting `function(new:Parent)`. See {@link
-       * AmbiguatePropertiesTest#testImplementsAndExtends_respectsUndeclaredProperties()}
-       */
-      if (object.getPrototype() != null) {
-        this.addInternal(object.getPrototype());
-      }
-      if (object.getInstanceColor() != null) {
-        this.addInternal(object.getInstanceColor());
-      }
-      return flatNode;
     }
-    throw new AssertionError("Unexpected Color " + node);
+
+    /**
+     * Add all instance and prototype colors when visiting a constructor. We won't necessarily see
+     * all possible instance colors that exist at runtime during an AST traversal.
+     *
+     * <p>For example, a subclass constructor may never be explicitly initialized but instead passed
+     * to some function expecting `function(new:Parent)`. See {@link
+     * AmbiguatePropertiesTest#testImplementsAndExtends_respectsUndeclaredProperties()}
+     */
+    for (Color prototype : color.getPrototype()) {
+      this.addInternal(prototype);
+    }
+    for (Color instanceColor : color.getInstanceColor()) {
+      this.addInternal(instanceColor);
+    }
+    return flatNode;
   }
 
   private void connectSourceToDest(

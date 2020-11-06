@@ -41,7 +41,9 @@ package com.google.javascript.rhino;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.testing.TestErrorReporter;
@@ -214,10 +216,12 @@ public class NodeTest {
 
   @Test
   public void testCheckTreeTypeAwareEqualsColorsSame() {
+    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
+
     Node node1 = Node.newString(Token.NAME, "f");
-    node1.setColor(PrimitiveColor.NUMBER);
+    node1.setColor(colorRegistry.get(NativeColorId.NUMBER));
     Node node2 = Node.newString(Token.NAME, "f");
-    node2.setColor(PrimitiveColor.NUMBER);
+    node2.setColor(colorRegistry.get(NativeColorId.NUMBER));
     assertThat(node1.isEquivalentToTyped(node2)).isTrue();
   }
 
@@ -230,17 +234,19 @@ public class NodeTest {
 
   @Test
   public void testCheckTreeTypeAwareEqualsColorsDifferent() {
+    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
     Node node1 = Node.newString(Token.NAME, "f");
-    node1.setColor(PrimitiveColor.NUMBER);
+    node1.setColor(colorRegistry.get(NativeColorId.NUMBER));
     Node node2 = Node.newString(Token.NAME, "f");
-    node2.setColor(PrimitiveColor.STRING);
+    node2.setColor(colorRegistry.get(NativeColorId.STRING));
     assertThat(node1.isEquivalentToTyped(node2)).isFalse();
   }
 
   @Test
   public void testCheckTreeTypeAwareEqualsColorsDifferentNull() {
+    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
     Node node1 = Node.newString(Token.NAME, "f");
-    node1.setColor(PrimitiveColor.NUMBER);
+    node1.setColor(colorRegistry.get(NativeColorId.NUMBER));
     Node node2 = Node.newString(Token.NAME, "f");
     assertThat(node1.isEquivalentToTyped(node2)).isFalse();
   }

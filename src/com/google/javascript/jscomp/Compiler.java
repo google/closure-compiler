@@ -36,6 +36,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
 import com.google.javascript.jscomp.deps.JsFileRegexParser;
@@ -221,6 +222,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
   private JSTypeRegistry typeRegistry;
+  private ColorRegistry colorRegistry;
   private volatile Config parserConfig = null;
   private volatile Config externsParserConfig = null;
 
@@ -1458,6 +1460,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       typeRegistry = new JSTypeRegistry(oldErrorReporter, forwardDeclaredTypes);
     }
     return typeRegistry;
+  }
+
+  @Override
+  public ColorRegistry getColorRegistry() {
+    return checkNotNull(colorRegistry, "Color registry has not been initialized yet");
+  }
+
+  @Override
+  public void setColorRegistry(ColorRegistry colorRegistry) {
+    this.colorRegistry = colorRegistry;
   }
 
   @Override

@@ -25,10 +25,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
-import com.google.javascript.jscomp.colors.ObjectColor;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
-import com.google.javascript.jscomp.colors.UnionColor;
+import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.SingletonColorFields;
 import com.google.javascript.jscomp.serialization.TypePointer.TypeCase;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,14 +41,27 @@ import java.util.Set;
  * <p>Future work will be necessary to let this class convert multiple type-pools coming from
  * different libraries. For now it only handles a single type-pool.
  */
-public class ColorDeserializer {
+public final class ColorDeserializer {
   private final ArrayList<Color> typeColors; // filled in as we go. initially all null
   // to avoid infinite recursion on types in cycles
   private final Set<Type> currentlyDeserializing = new LinkedHashSet<>();
   // keys are indices into the type pool and values are pointers to its supertypes
   private final Multimap<Integer, TypePointer> disambiguationEdges;
   private final TypePool typePool;
-  private final Color topObjectColor;
+  private final ColorRegistry colorRegistry;
+  // While this set is currently hardcoded, we expect  to
+  // add more native colors like Number in the future that are only invalidated if there are type
+  // mismatches
+  // in the source. This set will need to be constructed at deserialization time.
+  private static final ImmutableSet<NativeColorId> INVALIDATING_NATIVES =
+      ImmutableSet.of(
+          NativeColorId.BOOLEAN,
+          NativeColorId.BIGINT,
+          NativeColorId.NUMBER,
+          NativeColorId.STRING,
+          NativeColorId.SYMBOL,
+          NativeColorId.TOP_OBJECT,
+          NativeColorId.UNKNOWN);
 
   /** Error emitted when the deserializer sees a serialized type it cannot support deserialize */
   public static final class InvalidSerializedFormatException extends RuntimeException {
@@ -57,14 +70,19 @@ public class ColorDeserializer {
     }
   }
 
-  private ColorDeserializer(TypePool typePool, Multimap<Integer, TypePointer> disambiguationEdges) {
-    this.topObjectColor =
-        ObjectColor.builder().setInvalidating(true).setId("_nativeObject_").build();
-
+  private ColorDeserializer(
+      TypePool typePool,
+      Multimap<Integer, TypePointer> disambiguationEdges,
+      ColorRegistry colorRegistry) {
     this.typePool = typePool;
     this.typeColors = new ArrayList<>();
     this.disambiguationEdges = disambiguationEdges;
     typeColors.addAll(Collections.nCopies(typePool.getTypeCount(), null));
+    this.colorRegistry = colorRegistry;
+  }
+
+  public ColorRegistry getRegistry() {
+    return this.colorRegistry;
   }
 
   public static ColorDeserializer buildFromTypePool(TypePool typePool) {
@@ -79,7 +97,8 @@ public class ColorDeserializer {
       }
       disambiguationEdges.put(subtype.getPoolOffset(), supertype);
     }
-    return new ColorDeserializer(typePool, disambiguationEdges);
+    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(INVALIDATING_NATIVES);
+    return new ColorDeserializer(typePool, disambiguationEdges, colorRegistry);
   }
 
   /**
@@ -132,8 +151,8 @@ public class ColorDeserializer {
             .map(this::pointerToColor)
             .collect(toImmutableList());
     TypeDebugInfo serializedDebugInfo = serialized.getDebugInfo();
-    ObjectColor.Builder builder =
-        ObjectColor.builder()
+    SingletonColorFields.Builder builder =
+        SingletonColorFields.builder()
             .setId(serialized.getUuid())
             .setInvalidating(serialized.getIsInvalidating())
             .setDisambiguationSupertypes(directSupertypes)
@@ -149,7 +168,7 @@ public class ColorDeserializer {
       builder.setInstanceColor(this.pointerToColor(serialized.getInstanceType()));
     }
     builder.setConstructor(serialized.getMarkedConstructor());
-    return builder.build();
+    return Color.createSingleton(builder.build());
   }
 
   private Color createUnionColor(UnionType serialized) {
@@ -164,29 +183,29 @@ public class ColorDeserializer {
     if (allAlternates.size() == 1) {
       return Iterables.getOnlyElement(allAlternates);
     } else {
-      return UnionColor.create(allAlternates);
+      return Color.createUnion(allAlternates);
     }
   }
 
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch") // needed for J2CL protos
-  private Color nativeTypeToColor(NativeType nativeType) {
+  private NativeColorId nativeTypeToColor(NativeType nativeType) {
     switch (nativeType) {
-      case NUMBER_TYPE:
-        return PrimitiveColor.NUMBER;
-      case NULL_OR_VOID_TYPE:
-        return PrimitiveColor.NULL_OR_VOID;
-      case STRING_TYPE:
-        return PrimitiveColor.STRING;
-      case SYMBOL_TYPE:
-        return PrimitiveColor.SYMBOL;
-      case BIGINT_TYPE:
-        return PrimitiveColor.BIGINT;
-      case UNKNOWN_TYPE:
-        return PrimitiveColor.UNKNOWN;
-      case BOOLEAN_TYPE:
-        return PrimitiveColor.BOOLEAN;
       case TOP_OBJECT:
-        return topObjectColor;
+        return NativeColorId.TOP_OBJECT;
+      case NUMBER_TYPE:
+        return NativeColorId.NUMBER;
+      case NULL_OR_VOID_TYPE:
+        return NativeColorId.NULL_OR_VOID;
+      case STRING_TYPE:
+        return NativeColorId.STRING;
+      case SYMBOL_TYPE:
+        return NativeColorId.SYMBOL;
+      case BIGINT_TYPE:
+        return NativeColorId.BIGINT;
+      case UNKNOWN_TYPE:
+        return NativeColorId.UNKNOWN;
+      case BOOLEAN_TYPE:
+        return NativeColorId.BOOLEAN;
       default:
         // Switch cannot be exhaustive because Java protos add an additional "UNRECOGNIZED" field
         // while J2CL protos do not.
@@ -197,7 +216,7 @@ public class ColorDeserializer {
   public Color pointerToColor(TypePointer typePointer) {
     switch (typePointer.getTypeCase()) {
       case NATIVE_TYPE:
-        return nativeTypeToColor(typePointer.getNativeType());
+        return this.colorRegistry.get(nativeTypeToColor(typePointer.getNativeType()));
       case POOL_OFFSET:
         int poolOffset = typePointer.getPoolOffset();
         if (poolOffset < 0 || poolOffset >= this.typeColors.size()) {

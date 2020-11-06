@@ -18,59 +18,48 @@ package com.google.javascript.jscomp.colors;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
 import javax.annotation.Nullable;
 
 /**
- * A user-defined object type. For now each type is defined by a unique class name and file source.
+ * Fields present on a color representing a primitive or object. Note that some may be null except
+ * for on certain colors like functions
+ *
+ * <p>Only the {@link Builder} for this class is public. This is intentional. All getters should be
+ * exposed via accessors on {@link Color} instead of on this class directly, as we want to make the
+ * API of union and singleton colors almost identical.
  */
 @AutoValue
 @Immutable
-public abstract class ObjectColor implements Color {
+public abstract class SingletonColorFields {
 
-  @Override
-  public boolean isPrimitive() {
-    return false;
-  }
+  abstract String getId();
 
-  @Override
-  public boolean isUnion() {
-    return false;
-  }
-
-  @Override
-  public boolean isObject() {
-    return true;
-  }
-
-  @Override
-  public ImmutableCollection<Color> getAlternates() {
-    throw new UnsupportedOperationException();
-  }
-
-  public abstract String getId();
-
-  public abstract DebugInfo getDebugInfo();
+  abstract DebugInfo getDebugInfo();
 
   // given `function Foo() {}` or `class Foo {}`, color of Foo.prototype. null otherwise.
   @Nullable
-  public abstract Color getPrototype();
+  abstract Color getPrototype();
 
   @Nullable
-  public abstract Color getInstanceColor();
+  abstract Color getInstanceColor();
 
   // List of other colors directly above this in the subtyping graph for the purposes of property
   // (dis)ambiguation.
-  public abstract ImmutableList<Color> getDisambiguationSupertypes();
+  abstract ImmutableList<Color> getDisambiguationSupertypes();
 
-  @Override
-  public abstract boolean isInvalidating();
+  abstract boolean isInvalidating();
 
-  public abstract boolean isConstructor();
+  abstract boolean isConstructor();
 
-  /** Builder for ObjectColors */
+  @Nullable
+  abstract NativeColorId getNativeColorId();
+
+  /**
+   * Builder for a singleton color. Should be passed to {@link
+   * Color#createSingleton(SingletonColorFields)} after building and before using
+   */
   @AutoValue.Builder
   public abstract static class Builder {
     public abstract Builder setId(String value);
@@ -87,17 +76,19 @@ public abstract class ObjectColor implements Color {
 
     public abstract Builder setDebugInfo(DebugInfo debugInfo);
 
+    public abstract Builder setNativeColorId(NativeColorId id);
+
     @VisibleForTesting
     public Builder setDebugName(String name) {
       setDebugInfo(DebugInfo.builder().setClassName(name).build());
       return this;
     }
 
-    public abstract ObjectColor build();
+    public abstract SingletonColorFields build();
   }
 
   public static Builder builder() {
-    return new AutoValue_ObjectColor.Builder()
+    return new AutoValue_SingletonColorFields.Builder()
         .setDebugInfo(DebugInfo.EMPTY)
         .setInvalidating(false)
         .setDisambiguationSupertypes(ImmutableList.of())
