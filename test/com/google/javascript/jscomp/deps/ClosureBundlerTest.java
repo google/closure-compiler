@@ -107,7 +107,8 @@ public final class ClosureBundlerTest {
     new ClosureBundler()
         .useEval(true)
         .appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertThat(sb.toString()).isEqualTo("eval(\"\\x22a string\\x22\");\n");
+    assertThat(sb.toString())
+        .isEqualTo("eval(this.CLOSURE_EVAL_PREFILTER(\"\\x22a string\\x22\"));\n");
   }
 
   @Test
@@ -118,7 +119,10 @@ public final class ClosureBundlerTest {
         .withSourceUrl("URL")
         .appendTo(sb, TRADITIONAL, "\"a string\"");
     assertThat(sb.toString())
-        .isEqualTo("eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");\n");
+        .isEqualTo(
+            "eval(this.CLOSURE_EVAL_PREFILTER(\"\\x22a string\\x22\\n"
+                + "//# sourceURL\\x3dURL\\n"
+                + "\"));\n");
   }
 
   @Test
