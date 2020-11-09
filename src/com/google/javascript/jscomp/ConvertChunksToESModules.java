@@ -21,8 +21,10 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,6 +48,10 @@ final class ConvertChunksToESModules implements CompilerPass {
   private final Map<JSModule, Set<String>> crossChunkExports = new HashMap<>();
   private final Map<JSModule, Map<JSModule, Set<String>>> crossChunkImports = new HashMap<>();
 
+  static final DiagnosticType ASSIGNMENT_TO_IMPORT = DiagnosticType.error(
+      "JSC_IMPORT_ASSIGN",
+      "Imported symbol \"{0}\" in chunk \"{1}\" cannot be assigned");
+
   /**
    * Constructor for the ConvertChunksToESModules compiler pass.
    *
@@ -60,6 +66,17 @@ final class ConvertChunksToESModules implements CompilerPass {
     // Find global names that are used in more than one chunk. Those that
     // are have to have import and export statements added.
     NodeTraversal.traverse(compiler, root, new FindCrossChunkReferences());
+
+    // Force every output chunk to parse as an ES Module. If a chunk has no imports and
+    // no exports, add an empty export list to generate an empty export statement:
+    // example: export {};
+    for (JSModule chunk : compiler.getModuleGraph().getAllModules()) {
+      if (!crossChunkExports.containsKey(chunk) &&
+          !crossChunkImports.containsKey(chunk) &&
+          chunk.getInputs().size() > 0) {
+        crossChunkExports.put(chunk, new HashSet<>());
+      }
+    }
 
     // Add export statements to chunks
     for (Map.Entry<JSModule, Set<String>> jsModuleExports : crossChunkExports.entrySet()) {
@@ -124,8 +141,8 @@ final class ConvertChunksToESModules implements CompilerPass {
         }
         Node importStatement = new Node(Token.IMPORT);
         String importPath =
-            Compiler.resolveSibling(
-                jsModuleImports.getKey().getName(),
+            this.resolveSibling(
+                jsModuleImports.getKey().getName() + ".js",
                 jsModuleImportsFromChunk.getKey().getName() + ".js");
         if (!importPath.startsWith(".") && !importPath.startsWith("/")) {
           importPath = "./" + importPath;
@@ -165,6 +182,14 @@ final class ConvertChunksToESModules implements CompilerPass {
         // chunk. If they are different, the variable is used across modules.
         JSModule module = input.getModule();
         if (module != t.getModule()) {
+          if (NodeUtil.isLhsOfAssign(n)) {
+            t.report(
+                n,
+                ASSIGNMENT_TO_IMPORT,
+                n.getString(),
+                t.getModule().getName());
+          }
+
           // Mark the chunk where the name is declared as needing an export for this name
           Set<String> namesToExport = crossChunkExports.get(module);
           if (namesToExport == null) {
@@ -188,5 +213,27 @@ final class ConvertChunksToESModules implements CompilerPass {
         }
       }
     }
+  }
+
+  private String resolveSibling(String fromPath, String toPath) {
+    // output chunks are likely to be in the same folder. Specialize for that case.
+    List<String> fromPathParts = new ArrayList<>(Arrays.asList(fromPath.split("/")));
+    List<String> toPathParts = new ArrayList<>(Arrays.asList(toPath.split("/")));
+    if (fromPathParts.size() == toPathParts.size() &&
+        !(fromPathParts.get(0).equals(".") || fromPathParts.get(0).equals("..")) &&
+        !(toPathParts.get(0).equals(".") || toPathParts.get(0).equals(".."))) {
+      boolean equalFolderPaths = true;
+      for (int i = 0; i < fromPathParts.size() - 1; i++) {
+        if (!fromPathParts.get(i).equals(toPathParts.get(i))) {
+          equalFolderPaths = false;
+          break;
+        }
+      }
+      if (equalFolderPaths) {
+        return "./" + toPathParts.get(toPathParts.size() - 1);
+      }
+    }
+
+    return Compiler.resolveSibling(fromPath, toPath);
   }
 }

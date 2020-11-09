@@ -1197,6 +1197,14 @@ public abstract class CompilerTestCase {
 
   /**
    * Verifies that the compiler generates the given warning for the given input.
+   */
+  protected void testError(JSModule[] srcs, DiagnosticType error, String description) {
+    assertThat(error).isNotNull();
+    test(srcs(srcs), error(error).withMessage(description));
+  }
+
+  /**
+   * Verifies that the compiler generates the given warning for the given input.
    *
    * @param js Input
    * @param warning Expected warning
