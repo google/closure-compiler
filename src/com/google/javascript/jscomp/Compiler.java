@@ -3754,7 +3754,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * @param fromPath - must be a file (not directory)
    * @param toPath - must be a file (not directory)
    */
-  private static String resolveSibling(String fromPath, String toPath) {
+  public static String resolveSibling(String fromPath, String toPath) {
     // If the destination is an absolute path, nothing to do.
     if (toPath.startsWith("/")) {
       return toPath;

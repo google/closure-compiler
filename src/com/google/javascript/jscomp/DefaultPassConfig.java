@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -864,7 +865,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(stripSideEffectProtection);
     }
 
-    if (options.renamePrefixNamespace != null) {
+    if (options.renamePrefixNamespace != null &&
+        options.chunkOutputType == ChunkOutputType.GLOBAL_NAMESPACE) {
       if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(
           options.renamePrefixNamespace).matches()) {
         throw new IllegalArgumentException(
@@ -881,6 +883,10 @@ public final class DefaultPassConfig extends PassConfig {
     // Raise to ES6, if allowed
     if (options.getOutputFeatureSet().contains(ES6)) {
       passes.add(optimizeToEs6);
+    }
+    // must run after ast validity check as modules may not be allowed in the output feature set
+    if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
+      passes.add(convertChunksToESModules);
     }
 
     assertValidOrderForOptimizations(passes);
@@ -2185,6 +2191,14 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
+  /** Puts global symbols into a single object. */
+  private final PassFactory convertChunksToESModules =
+      PassFactory.builder()
+          .setName("convertChunksToESModules")
+          .setInternalFactory((compiler) -> new ConvertChunksToESModules(compiler))
+          .setFeatureSetForOptimizations()
+          .build();
+
   /** Collapses names in the global scope. */
   private final PassFactory collapseProperties =
       PassFactory.builder()
@@ -2469,7 +2483,9 @@ public final class DefaultPassConfig extends PassConfig {
                 Pattern pattern;
                 switch (options.extractPrototypeMemberDeclarations) {
                   case USE_GLOBAL_TEMP:
-                    pattern = Pattern.USE_GLOBAL_TEMP;
+                    pattern = options.chunkOutputType == ChunkOutputType.ES_MODULES ?
+                        Pattern.USE_PER_CHUNK_TEMP :
+                        Pattern.USE_GLOBAL_TEMP;
                     break;
                   case USE_IIFE:
                     pattern = Pattern.USE_IIFE;

@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.CommandLineConfig.ErrorFormatOption;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -882,6 +883,13 @@ public class CommandLineRunner extends
                 + "tandem with --instrument_code=PRODUCTION")
     private String productionInstrumentationArrayName = "";
 
+    @Option(name = "--chunk_output_type",
+        usage =
+            "Indicates what format the compiler should use for output chunks. Options are:\n"
+                + "1. GLOBAL_NAMESPACE (default)\n"
+                + "2. ES_MODULES")
+    private ChunkOutputType chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
+
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
     @Argument
@@ -989,7 +997,11 @@ public class CommandLineRunner extends
                     "rewrite_polyfills"))
             .putAll(
                 "Code Splitting",
-                ImmutableList.of("chunk", "chunk_output_path_prefix", "chunk_wrapper"))
+                ImmutableList.of(
+                    "chunk",
+                    "chunk_output_path_prefix",
+                    "chunk_output_type",
+                    "chunk_wrapper"))
             .putAll(
                 "Reports",
                 ImmutableList.of(
@@ -1974,6 +1986,14 @@ public class CommandLineRunner extends
     }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
     options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
+
+
+    if (flags.chunkOutputType == ChunkOutputType.ES_MODULES &&
+        flags.renamePrefixNamespace != null) {
+      throw new FlagUsageException("Expected --rename_prefix_namespace not to be specified when"
+          + "--chunk_output_type is set to ES_MODULES.");
+    }
+    options.chunkOutputType = flags.chunkOutputType;
 
     return options;
   }

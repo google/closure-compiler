@@ -1277,6 +1277,8 @@ public class CompilerOptions implements Serializable {
     this.printConfig = printConfig;
   }
 
+  ChunkOutputType chunkOutputType;
+
   /**
    * Initializes compiler options. All options are disabled by default.
    *
@@ -1412,6 +1414,7 @@ public class CompilerOptions implements Serializable {
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.FULL;
     externExports = false;
+    chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
@@ -3099,6 +3102,11 @@ public class CompilerOptions implements Serializable {
           return null;
       }
     }
+  }
+
+  public enum ChunkOutputType {
+    GLOBAL_NAMESPACE,
+    ES_MODULES;
   }
 
   /**
