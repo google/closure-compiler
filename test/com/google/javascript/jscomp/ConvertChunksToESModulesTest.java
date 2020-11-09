@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,15 +39,31 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   @Test
   public void testVarDeclarations_acrossModules() {
     test(
-        createModules("var a = 1;", "a"),
-        createModules("var a = 1; export {a}", "import {a} from './m0.js'; a"));
+        JSChunkGraphBuilder.forStar()
+          .addChunk("var a = 1;")
+          .addChunk( "a")
+          .build(),
+        JSChunkGraphBuilder.forStar()
+          .addChunk("var a = 1; export {a}")
+          .addChunk("import {a} from './m0.js'; a")
+          .build());
     test(
-        createModules("var a = 1, b = 2, c = 3;", "a;c;"),
-        createModules(
-            "var a = 1, b = 2, c = 3; export {a, c};", "import {a, c} from './m0.js'; a; c;"));
+        JSChunkGraphBuilder.forStar()
+          .addChunk("var a = 1, b = 2, c = 3;")
+          .addChunk("a;c;")
+          .build(),
+        JSChunkGraphBuilder.forStar()
+          .addChunk("var a = 1, b = 2, c = 3; export {a, c};")
+          .addChunk("import {a, c} from './m0.js'; a; c;")
+          .build());
     test(
-        createModules("var a = 1, b = 2, c = 3;", "b;c;"),
-        createModules(
-            "var a = 1, b = 2, c = 3; export {b,c};", "import {b, c} from './m0.js'; b;c;"));
+        JSChunkGraphBuilder.forStar()
+          .addChunk("var a = 1, b = 2, c = 3;")
+          .addChunk("b;c;")
+          .build(),
+        JSChunkGraphBuilder.forStar()
+          .addChunk("var a = 1, b = 2, c = 3; export {b,c};")
+          .addChunk("import {b, c} from './m0.js'; b;c;")
+          .build());
   }
 }
