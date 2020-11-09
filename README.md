@@ -128,6 +128,12 @@ re-order the inputs automatically.
 
 ## How to Contribute
 
+### Contributor code of conduct
+
+However you choose to contribute, please abide by our
+[code of conduct](https://github.com/closure-compiler/code_of_conduct.md)
+to keep our community a healty and welcoming place.
+
 ### Reporting a bug
 
 1.  First make sure that it is really a bug and not simply the way that Closure
