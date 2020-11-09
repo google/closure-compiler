@@ -2,6 +2,8 @@
 
 [![Build Status](https://github.com/google/closure-compiler/workflows/Compiler%20CI/badge.svg)](https://github.com/google/closure-compiler/actions)
 [![Open Source Helpers](https://www.codetriage.com/google/closure-compiler/badges/users.svg)](https://www.codetriage.com/google/closure-compiler)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/google/closure-compiler/code_of_conduct.md)
+
 
 The [Closure Compiler](https://developers.google.com/closure/compiler/) is a
 tool for making JavaScript download and run faster. It is a true compiler for
