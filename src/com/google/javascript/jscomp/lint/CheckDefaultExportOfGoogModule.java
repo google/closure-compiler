@@ -42,7 +42,9 @@ public final class CheckDefaultExportOfGoogModule
       DiagnosticType.disabled(
           "JSC_DEFAULT_EXPORT_GOOG_MODULE",
           "Default exports of goog.modules "
-              + "do not translate easily to ES module semantics. {0}");
+              + "do not translate easily to ES module semantics. Please use named exports instead"
+              + " (`exports = '{'{0}'}';`) and change the import sites to use destructuring"
+              + " (`const '{'{0}'}' = goog.require(''...'');`).");
 
   private final AbstractCompiler compiler;
 
@@ -77,16 +79,10 @@ public final class CheckDefaultExportOfGoogModule
       if (rhs.isName()) {
         // e.g `exports = Foo;`
         String exportedName = rhs.getString();
-        t.report(
-            n,
-            DEFAULT_EXPORT_GOOG_MODULE,
-            "Please use named exports instead (`exports = {" + exportedName + "}`).");
+        t.report(n, DEFAULT_EXPORT_GOOG_MODULE, exportedName);
       } else {
         // e.g. `exports = class Foo {}`
-        t.report(
-            n,
-            DEFAULT_EXPORT_GOOG_MODULE,
-            "Please use named exports instead (`exports = {MyVariable}`).");
+        t.report(n, DEFAULT_EXPORT_GOOG_MODULE, "MyVariable");
       }
     }
   }
