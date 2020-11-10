@@ -285,11 +285,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(extraRequires);
     }
 
-    if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
-        || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)) {
-      checks.add(missingAndExtraRequires);
-    }
-
     if (options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE)) {
       checks.add(checkMissingRequires);
     }
@@ -1188,14 +1183,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("checkExtraRequires")
           .setFeatureSetForChecks()
           .setInternalFactory(CheckExtraRequires::new)
-          .build();
-
-  /** Checks that all constructed classes are goog.require()d. */
-  private final PassFactory missingAndExtraRequires =
-      PassFactory.builderForHotSwap()
-          .setName("checkMissingAndExtraRequires")
-          .setFeatureSetForChecks()
-          .setInternalFactory(CheckMissingAndExtraRequires::new)
           .build();
 
   private final PassFactory checkMissingRequires =

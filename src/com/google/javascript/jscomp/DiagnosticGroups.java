@@ -424,8 +424,7 @@ public class DiagnosticGroups {
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "missingRequire", CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING);
+      DiagnosticGroups.registerDeprecatedGroup("missingRequire");
 
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
@@ -450,11 +449,7 @@ public class DiagnosticGroups {
           DiagnosticGroup.forType(ModuleLoader.LOAD_WARNING));
 
   public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "strictMissingRequire",
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING,
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING);
+      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
 
   public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
       DiagnosticGroups.registerGroup(
@@ -465,8 +460,7 @@ public class DiagnosticGroups {
           CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
   public static final DiagnosticGroup STRICT_REQUIRES =
-      DiagnosticGroups.registerGroup(
-          "legacyGoogScopeRequire", CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE);
+      DiagnosticGroups.registerDeprecatedGroup("legacyGoogScopeRequire");
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
