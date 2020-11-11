@@ -2397,12 +2397,15 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     FunctionType fnType = type.toMaybeFunctionType();
     if (fnType != null && fnType.hasInstanceType()) {
-      FunctionType ctorType = fnType.getInstanceType().getConstructor();
-      if (ctorType != null && ctorType.isAbstract()) {
-        report(n, INSTANTIATE_ABSTRACT_CLASS);
+      ObjectType objType = fnType.getInstanceType();
+      if (objType != null) {
+        FunctionType ctorType = objType.getConstructor();
+        if (ctorType != null && ctorType.isAbstract()) {
+          report(n, INSTANTIATE_ABSTRACT_CLASS);
+        }
       }
       visitArgumentList(n, fnType);
-      ensureTyped(n, fnType.getInstanceType());
+      ensureTyped(n, (objType != null) ? objType : getNativeType(UNKNOWN_TYPE));
     } else {
       ensureTyped(n);
     }
