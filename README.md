@@ -38,6 +38,14 @@ Note: The Closure Compiler requires [Java 8 or higher](https://www.java.com/).
 
 ### Using [Bazel](https://bazel.build/)
 
+Building using bazel requires `git` (to download dependencies).
+
+On Linux, all other required tools should be available in a standard
+distribution.
+
+On Windows, building closure-compiler additionally requires MSYS2, and a zip
+command-line executable (compatible with the one in linux).
+
 1.  Install
     [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
 
