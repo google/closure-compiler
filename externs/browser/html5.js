@@ -942,6 +942,12 @@ ImageBitmap.prototype.width;
 ImageBitmap.prototype.height;
 
 /**
+ * @typedef {!CanvasImageSource | !Blob | !ImageData}
+ * @see https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#imagebitmapsource
+ */
+var ImageBitmapSource;
+
+/**
  * @typedef {{
  *   imageOrientation: (string|undefined),
  *   premultiplyAlpha: (string|undefined),
@@ -955,15 +961,15 @@ ImageBitmap.prototype.height;
 var ImageBitmapOptions;
 
 /**
- * @param {(!HTMLCanvasElement|!Blob|!HTMLVideoElement|!HTMLImageElement|!ImageBitmap|!CanvasRenderingContext2D|!ImageData)}
- *     image
+ * @param {!ImageBitmapSource} image
  * @param {(number|!ImageBitmapOptions)=} sxOrOptions
  * @param {number=} sy
  * @param {number=} sw
  * @param {number=} sh
  * @param {!ImageBitmapOptions=} options
  * @return {!Promise<!ImageBitmap>}
- * @see * https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-createimagebitmap
+ * @see https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-createimagebitmap
+ * @see https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope-mixin
  */
 function createImageBitmap(image, sxOrOptions, sy, sw, sh, options) {}
 
