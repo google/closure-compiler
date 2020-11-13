@@ -20,11 +20,11 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,6 +51,10 @@ final class ConvertChunksToESModules implements CompilerPass {
   static final DiagnosticType ASSIGNMENT_TO_IMPORT = DiagnosticType.error(
       "JSC_IMPORT_ASSIGN",
       "Imported symbol \"{0}\" in chunk \"{1}\" cannot be assigned");
+
+  static final DiagnosticType UNABLE_TO_COMPUTE_RELATIVE_PATH = DiagnosticType.error(
+      "JSC_UNABLE_TO_COMPUTE_RELATIVE_PATH",
+      "Unable to compute relative import path from \"{0}\" to \"{1}\"");
 
   /**
    * Constructor for the ConvertChunksToESModules compiler pass.
@@ -140,12 +144,19 @@ final class ConvertChunksToESModules implements CompilerPass {
           importSpecs.addChildToBack(importSpec);
         }
         Node importStatement = new Node(Token.IMPORT);
-        String importPath =
-            this.resolveSibling(
-                jsModuleImports.getKey().getName() + ".js",
-                jsModuleImportsFromChunk.getKey().getName() + ".js");
-        if (!importPath.startsWith(".") && !importPath.startsWith("/")) {
-          importPath = "./" + importPath;
+        String importPath = jsModuleImportsFromChunk.getKey().getName();
+        try {
+          importPath =
+              this.relativePath(
+                  jsModuleImports.getKey().getName(),
+                  jsModuleImportsFromChunk.getKey().getName());
+        } catch (IllegalArgumentException e) {
+          compiler.report(
+              JSError.make(
+                  astRoot,
+                  UNABLE_TO_COMPUTE_RELATIVE_PATH,
+                  jsModuleImports.getKey().getName(),
+                  jsModuleImportsFromChunk.getKey().getName()));
         }
         importStatement.addChildToFront(IR.string(importPath));
         importStatement.addChildToFront(importSpecs);
@@ -215,25 +226,29 @@ final class ConvertChunksToESModules implements CompilerPass {
     }
   }
 
-  private String resolveSibling(String fromPath, String toPath) {
-    // output chunks are likely to be in the same folder. Specialize for that case.
-    List<String> fromPathParts = new ArrayList<>(Arrays.asList(fromPath.split("/")));
-    List<String> toPathParts = new ArrayList<>(Arrays.asList(toPath.split("/")));
-    if (fromPathParts.size() == toPathParts.size() &&
-        !(fromPathParts.get(0).equals(".") || fromPathParts.get(0).equals("..")) &&
-        !(toPathParts.get(0).equals(".") || toPathParts.get(0).equals(".."))) {
-      boolean equalFolderPaths = true;
-      for (int i = 0; i < fromPathParts.size() - 1; i++) {
-        if (!fromPathParts.get(i).equals(toPathParts.get(i))) {
-          equalFolderPaths = false;
-          break;
-        }
-      }
-      if (equalFolderPaths) {
-        return "./" + toPathParts.get(toPathParts.size() - 1);
-      }
+  /**
+   * Calculate the relative path between two URI paths. To remain compliant with
+   * ES Module loading restrictions, paths must always begin with a "./", "../" or "/"
+   * or they are otherwise treated as a bare module specifier.
+   *
+   * TODO(ChadKillingsworth): This method likely has use cases beyond this class
+   * and should be moved.
+   */
+  private String relativePath(String fromUriPath, String toUriPath) {
+    Path fromPath = Paths.get(fromUriPath);
+    Path toPath = Paths.get(toUriPath);
+    Path fromFolder = fromPath.getParent();
+
+    // if the from URIs are simple names without paths, they are in the same folder
+    // example: m0.js
+    if (fromFolder == null) {
+      return "./" + toUriPath;
     }
 
-    return Compiler.resolveSibling(fromPath, toPath);
+    String calculatedPath = fromFolder.relativize(toPath).toString();
+    if (calculatedPath.startsWith(".") || calculatedPath.startsWith("/")) {
+      return calculatedPath;
+    }
+    return "./" + calculatedPath;
   }
 }
