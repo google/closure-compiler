@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -88,25 +89,59 @@ final class ConvertChunksToESModules implements CompilerPass {
       }
     }
 
-    // Add export statements to chunks
-    for (Map.Entry<JSModule, Set<String>> jsModuleExports : crossChunkExports.entrySet()) {
-      CompilerInput lastInput =
-          jsModuleExports.getKey().getInput(jsModuleExports.getKey().getInputCount() - 1);
-      Node astRoot = lastInput.getAstRoot(compiler);
-      Node moduleBody =
-          astRoot.getFirstChild() != null && astRoot.getFirstChild().isModuleBody()
-              ? astRoot.getFirstChild()
-              : null;
-      if (moduleBody == null) {
-        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(astRoot);
-        scriptFeatures = scriptFeatures.union(FeatureSet.ES6_MODULES);
-        astRoot.putProp(Node.FEATURE_SET, scriptFeatures);
-        moduleBody = new Node(Token.MODULE_BODY);
-        moduleBody.useSourceInfoFrom(astRoot);
-        moduleBody.addChildrenToFront(astRoot.removeChildren());
-        astRoot.addChildToFront(moduleBody);
+    ConvertChunkSourcesToModules();
+    AddExportStatements();
+    AddImportStatements();
+  }
+
+  /**
+   * Move all code in a chunk into the first input and mark it as an ESModule.
+   * At this point in the compilation, all input files should be scripts.
+   */
+  private void ConvertChunkSourcesToModules() {
+    for (JSModule chunk : compiler.getModuleGraph().getAllModules()) {
+      if (chunk.getInputs().size() == 0) {
+        continue;
       }
 
+      CompilerInput firstInput = null;
+      for (CompilerInput input : chunk.getInputs()) {
+        Node astRoot = input.getAstRoot(compiler);
+        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(astRoot);
+        checkState(!scriptFeatures.contains(FeatureSet.ES6_MODULES));
+        if (firstInput == null) {
+          firstInput = input;
+          scriptFeatures = scriptFeatures.union(FeatureSet.ES6_MODULES);
+          astRoot.putProp(Node.FEATURE_SET, scriptFeatures);
+          Node moduleBody = new Node(Token.MODULE_BODY);
+          moduleBody.useSourceInfoFrom(astRoot);
+          moduleBody.addChildrenToFront(astRoot.removeChildren());
+          astRoot.addChildToFront(moduleBody);
+          compiler.reportChangeToEnclosingScope(moduleBody);
+        } else {
+          Node firstInputAstRoot = firstInput.getAstRoot(compiler);
+          FeatureSet firstInputScriptFeatures = NodeUtil.getFeatureSetOfScript(firstInputAstRoot);
+          FeatureSet combinedFeatureSet =
+              firstInputScriptFeatures.union(NodeUtil.getFeatureSetOfScript(astRoot));
+          astRoot.putProp(Node.FEATURE_SET, combinedFeatureSet);
+          Node moduleBody = firstInputAstRoot.getFirstChild();
+          checkState(moduleBody != null && moduleBody.isModuleBody());
+          moduleBody.addChildrenToBack(astRoot.removeChildren());
+          compiler.reportChangeToEnclosingScope(firstInputAstRoot);
+          compiler.reportChangeToChangeScope(astRoot);
+        }
+      }
+    }
+  }
+
+  /**
+   * Add export statements to chunks
+   */
+  private void AddExportStatements() {
+    for (Map.Entry<JSModule, Set<String>> jsModuleExports : crossChunkExports.entrySet()) {
+      CompilerInput firstInput = jsModuleExports.getKey().getInput(0);
+      Node moduleBody = firstInput.getAstRoot(compiler).getFirstChild();
+      checkState(moduleBody != null && moduleBody.isModuleBody());
       Node exportSpecs = new Node(Token.EXPORT_SPECS);
       for (String name : jsModuleExports.getValue()) {
         Node exportSpec = new Node(Token.EXPORT_SPEC);
@@ -115,30 +150,22 @@ final class ConvertChunksToESModules implements CompilerPass {
         exportSpec.putIntProp(Node.IS_SHORTHAND_PROPERTY, 1);
         exportSpecs.addChildToBack(exportSpec);
       }
-      Node export = IR.export(exportSpecs).useSourceInfoFromForTree(astRoot);
+      Node export = IR.export(exportSpecs).useSourceInfoFromForTree(moduleBody);
       moduleBody.addChildToBack(export);
-      compiler.reportChangeToChangeScope(astRoot);
+      compiler.reportChangeToEnclosingScope(moduleBody);
     }
+  }
 
-    // Add import statements to chunks
+  /**
+   * Add import statements to chunks
+   */
+  private void AddImportStatements() {
     for (Map.Entry<JSModule, Map<JSModule, Set<String>>> jsModuleImports :
         crossChunkImports.entrySet()) {
       ArrayList<Node> importStatements = new ArrayList<>();
       CompilerInput firstInput = jsModuleImports.getKey().getInput(0);
-      Node astRoot = firstInput.getAstRoot(compiler);
-      Node moduleBody =
-          astRoot.getFirstChild() != null && astRoot.getFirstChild().isModuleBody()
-              ? astRoot.getFirstChild()
-              : null;
-      if (moduleBody == null) {
-        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(astRoot);
-        scriptFeatures = scriptFeatures.union(FeatureSet.ES6_MODULES);
-        astRoot.putProp(Node.FEATURE_SET, scriptFeatures);
-        moduleBody = new Node(Token.MODULE_BODY);
-        moduleBody.useSourceInfoFrom(astRoot);
-        moduleBody.addChildrenToFront(astRoot.removeChildren());
-        astRoot.addChildToFront(moduleBody);
-      }
+      Node moduleBody = firstInput.getAstRoot(compiler).getFirstChild();
+      checkState(moduleBody != null && moduleBody.isModuleBody());
       for (Map.Entry<JSModule, Set<String>> jsModuleImportsFromChunk :
           jsModuleImports.getValue().entrySet()) {
         Node importSpecs = new Node(Token.IMPORT_SPECS);
@@ -159,7 +186,7 @@ final class ConvertChunksToESModules implements CompilerPass {
         } catch (IllegalArgumentException e) {
           compiler.report(
               JSError.make(
-                  astRoot,
+                  moduleBody,
                   UNABLE_TO_COMPUTE_RELATIVE_PATH,
                   jsModuleImports.getKey().getName(),
                   jsModuleImportsFromChunk.getKey().getName()));
@@ -167,13 +194,13 @@ final class ConvertChunksToESModules implements CompilerPass {
         importStatement.addChildToFront(IR.string(importPath));
         importStatement.addChildToFront(importSpecs);
         importStatement.addChildToFront(IR.empty());
-        importStatement.useSourceInfoFromForTree(astRoot);
+        importStatement.useSourceInfoFromForTree(moduleBody);
         importStatements.add(0, importStatement);
       }
       for (Node importStatement : importStatements) {
         moduleBody.addChildToFront(importStatement);
       }
-      compiler.reportChangeToChangeScope(astRoot);
+      compiler.reportChangeToEnclosingScope(moduleBody);
     }
   }
 

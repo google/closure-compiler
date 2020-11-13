@@ -70,6 +70,25 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMultipleInputsPerChunk() {
+    JSModule[] original = JSChunkGraphBuilder.forStar()
+        .addChunk("var a = 1;")
+        .addChunk( "a")
+        .build();
+
+    original[0].add(SourceFile.fromCode("m0-1", "console.log(a)"));
+
+    JSModule[] expected = JSChunkGraphBuilder.forStar()
+        .addChunk("var a = 1; console.log(a); export {a}")
+        .addChunk("import {a} from './m0'; a")
+        .build();
+
+    expected[0].add(SourceFile.fromCode("m0-1", ""));
+
+    test(original, expected);
+  }
+
+  @Test
   public void testImportPathReferenceAbsolute() {
     JSModule[] original = JSChunkGraphBuilder.forStar()
         .addChunk("var a = 1;")
