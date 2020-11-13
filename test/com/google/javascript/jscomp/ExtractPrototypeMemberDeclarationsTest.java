@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
-import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -282,46 +281,6 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "bar();;"
             + "foo.prototype.a7 = 7;"
             + "bar();");
-  }
-
-  @Test
-  public void testNotEnoughPrototypeToExtractInChunk() {
-    pattern = Pattern.USE_PER_CHUNK_TEMP;
-    for (int i = 0; i < 7; i++) {
-      JSModule[] modules = JSChunkGraphBuilder.forStar()
-          .addChunk(generatePrototypeDeclarations("x", i))
-          .addChunk(generatePrototypeDeclarations("y", i))
-          .build();
-      testSame(modules);
-    }
-  }
-
-  @Test
-  public void testExtractingSingleClassPrototypeInChunk() {
-    pattern = Pattern.USE_PER_CHUNK_TEMP;
-    JSModule[] modules = JSChunkGraphBuilder.forStar()
-        .addChunk(generatePrototypeDeclarations("x", 7))
-        .addChunk(generatePrototypeDeclarations("y", 7))
-        .build();
-
-    StringBuilder builderX = new StringBuilder();
-    StringBuilder builderY = new StringBuilder();
-    String X_TMP = TMP + "0";
-    String Y_TMP = TMP + "1";
-    builderX.append("var " + X_TMP + ";" + X_TMP + " = x.prototype;");
-    builderY.append("var " + Y_TMP + ";" + Y_TMP + " = y.prototype;");
-    for (int i = 0; i < 7; i++) {
-      char member = (char) ('a' + i);
-      builderX.append(X_TMP + "." + member + " = " + member + ";");
-      builderY.append(Y_TMP + "." + member + " = " + member + ";");
-    }
-
-    JSModule[] expectedModules = JSChunkGraphBuilder.forStar()
-        .addChunk(builderX.toString())
-        .addChunk(builderY.toString())
-        .build();
-
-    test(modules, expectedModules);
   }
 
   private String loadPrototype(String qName) {

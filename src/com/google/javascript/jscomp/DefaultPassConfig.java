@@ -2483,9 +2483,7 @@ public final class DefaultPassConfig extends PassConfig {
                 Pattern pattern;
                 switch (options.extractPrototypeMemberDeclarations) {
                   case USE_GLOBAL_TEMP:
-                    pattern = options.chunkOutputType == ChunkOutputType.ES_MODULES ?
-                        Pattern.USE_PER_CHUNK_TEMP :
-                        Pattern.USE_GLOBAL_TEMP;
+                    pattern = Pattern.USE_GLOBAL_TEMP;
                     break;
                   case USE_IIFE:
                     pattern = Pattern.USE_IIFE;
