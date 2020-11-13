@@ -32,16 +32,22 @@ import java.util.Set;
  * Finds all references to global symbols in a different output chunk and add ES Module imports and
  * exports for them.
  *
- * <p>Given the name of the global object is NS
+ * chunk1.js
+ * <pre>var a = 1; function b() { return a }</pre>
  *
- * <pre> var a = 1; function b() { return a }</pre>
+ * chunk2.js
+ * <pre>console.log(a);</pre>
  *
  * becomes
  *
- * <pre> var a = 1; var b = function b() { return a }; export {a};</pre>
+ * chunk1.js
+ * <pre>var a = 1; var b = function b() { return a }; export {a};</pre>
+ *
+ * chunk2.js
+ * <pre>import {a} from './chunk1.js'; console.log(a);</pre>
  *
  * This allows splitting code into es modules that depend on each other's symbols, without using
- * polluting JavaScript's global scope.
+ * a global namespace or polluting the global scope.
  */
 final class ConvertChunksToESModules implements CompilerPass {
   private final AbstractCompiler compiler;
