@@ -6372,7 +6372,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
             "import('foo')",
             "import('foo').then(function(a) { return a; })",
             "var moduleNamespace = import('foo')",
-            "Promise.all([import('foo')]).then(function(a) { return a; })");
+            "Promise.all([import('foo')]).then(function(a) { return a; })",
+            "function foo() { foo(); import('foo'); } foo();");
     expectFeatures(Feature.DYNAMIC_IMPORT);
 
     for (LanguageMode m : LanguageMode.values()) {

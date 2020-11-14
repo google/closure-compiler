@@ -4754,6 +4754,7 @@ public final class NodeUtil {
             && evaluatesToLocalValue(value.getLastChild());
       case THIS:
       case SUPER:
+      case DYNAMIC_IMPORT:
         return false;
       case NAME:
         return isImmutableValue(value);

@@ -879,6 +879,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           }
           break;
 
+        case DYNAMIC_IMPORT:
+          // Modules may be imported for side-effecfts only. This is frequently
+          // a pattern used to load polyfills.
+          encloserSummary.setMutatesGlobalState();
+          break;
+
         default:
           if (NodeUtil.isCompoundAssignmentOp(node)) {
             // e.g.

@@ -1112,6 +1112,8 @@ public class Parser {
       case TILDE:
       case BANG:
         return true;
+      case IMPORT:
+        return peekType(1) == TokenType.OPEN_PAREN;
       default:
         return false;
     }
