@@ -2191,7 +2191,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForOptimizations()
           .build();
 
-  /** Puts global symbols into a single object. */
+  /** Converts cross chunk references into ES Module import and export statements. */
   private final PassFactory convertChunksToESModules =
       PassFactory.builder()
           .setName("convertChunksToESModules")
