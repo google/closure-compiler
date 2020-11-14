@@ -162,6 +162,7 @@ public final class DefaultPassConfig extends PassConfig {
           // nothing
           break;
       }
+      TranspilationPasses.addEs2020RewriteDynamicImportPass(passes);
     }
 
     passes.add(checkSuper);

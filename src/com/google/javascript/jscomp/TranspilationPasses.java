@@ -57,6 +57,14 @@ public class TranspilationPasses {
             .build());
   }
 
+  /** Rewrites ES6 modules import paths to be browser compliant */
+  private static final PassFactory es2020RewriteDynamicImport =
+      PassFactory.builder()
+          .setName("es2020RewriteDynamicImport")
+          .setInternalFactory(Es2020RewriteDynamicImport::new)
+          .setFeatureSet(FeatureSet.latest())
+          .build();
+
   public static void addTranspilationRuntimeLibraries(
       List<PassFactory> passes, CompilerOptions options) {
     // Inject runtime libraries needed for the transpilation we will have to do. Should run before
@@ -70,6 +78,10 @@ public class TranspilationPasses {
 
   public static void addEs6RewriteImportPathPass(List<PassFactory> passes) {
     passes.add(es6RelativizeImportPaths);
+  }
+
+  public static void addEs2020RewriteDynamicImportPass(List<PassFactory> passes) {
+    passes.add(es2020RewriteDynamicImport);
   }
 
   /** Adds transpilation passes that should run after all checks are done. */
