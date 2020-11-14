@@ -156,20 +156,27 @@ final class ConvertChunksToESModules implements CompilerPass {
     }
   }
 
+  private static String GetChunkName(JSModule chunk) {
+    return chunk.getName() + ".js";
+  }
+
   /**
    * Add import statements to chunks
    */
   private void AddImportStatements() {
-    for (Map.Entry<JSModule, Map<JSModule, Set<String>>> jsModuleImports :
+    for (Map.Entry<JSModule, Map<JSModule, Set<String>>> chunkImportsEntry :
         crossChunkImports.entrySet()) {
       ArrayList<Node> importStatements = new ArrayList<>();
-      CompilerInput firstInput = jsModuleImports.getKey().getInput(0);
+      JSModule importingChunk = chunkImportsEntry.getKey();
+      CompilerInput firstInput = importingChunk.getInput(0);
       Node moduleBody = firstInput.getAstRoot(compiler).getFirstChild();
       checkState(moduleBody != null && moduleBody.isModuleBody());
-      for (Map.Entry<JSModule, Set<String>> jsModuleImportsFromChunk :
-          jsModuleImports.getValue().entrySet()) {
+
+      // For each distinct chunk where a referenced symbol is defined, create an import statement
+      // referencing the names.
+      for (Map.Entry<JSModule, Set<String>> importsByChunk : chunkImportsEntry.getValue().entrySet()) {
         Node importSpecs = new Node(Token.IMPORT_SPECS);
-        for (String name : jsModuleImportsFromChunk.getValue()) {
+        for (String name : importsByChunk.getValue()) {
           Node importSpec = new Node(Token.IMPORT_SPEC);
           importSpec.addChildToFront(IR.name(name));
           importSpec.addChildToFront(IR.name(name));
@@ -177,19 +184,20 @@ final class ConvertChunksToESModules implements CompilerPass {
           importSpecs.addChildToBack(importSpec);
         }
         Node importStatement = new Node(Token.IMPORT);
-        String importPath = jsModuleImportsFromChunk.getKey().getName();
+        JSModule exportingChunk = importsByChunk.getKey();
+        String importPath = GetChunkName(exportingChunk);
         try {
           importPath =
               this.relativePath(
-                  jsModuleImports.getKey().getName(),
-                  jsModuleImportsFromChunk.getKey().getName());
+                  GetChunkName(importingChunk),
+                  GetChunkName(exportingChunk));
         } catch (IllegalArgumentException e) {
           compiler.report(
               JSError.make(
                   moduleBody,
                   UNABLE_TO_COMPUTE_RELATIVE_PATH,
-                  jsModuleImports.getKey().getName(),
-                  jsModuleImportsFromChunk.getKey().getName()));
+                  GetChunkName(importingChunk),
+                  GetChunkName(exportingChunk)));
         }
         importStatement.addChildToFront(IR.string(importPath));
         importStatement.addChildToFront(importSpecs);
@@ -224,34 +232,36 @@ final class ConvertChunksToESModules implements CompilerPass {
         }
         // Compare the chunk where the variable is declared to the current
         // chunk. If they are different, the variable is used across modules.
-        JSModule module = input.getModule();
-        if (module != t.getModule()) {
+        JSModule definingChunk = input.getModule();
+        JSModule referencingChunk = t.getModule();
+        if (definingChunk != referencingChunk) {
           if (NodeUtil.isLhsOfAssign(n)) {
             t.report(
                 n,
                 ASSIGNMENT_TO_IMPORT,
                 n.getString(),
-                t.getModule().getName());
+                GetChunkName(referencingChunk));
           }
 
           // Mark the chunk where the name is declared as needing an export for this name
-          Set<String> namesToExport = crossChunkExports.get(module);
+          Set<String> namesToExport = crossChunkExports.get(definingChunk);
           if (namesToExport == null) {
             namesToExport = new HashSet<>();
-            crossChunkExports.put(module, namesToExport);
+            crossChunkExports.put(definingChunk, namesToExport);
           }
           namesToExport.add(name);
 
           // Add an import for this name to this module from the source module
-          Map<JSModule, Set<String>> namesToImportByModule = crossChunkImports.get(t.getModule());
+          Map<JSModule, Set<String>> namesToImportByModule =
+              crossChunkImports.get(referencingChunk);
           if (namesToImportByModule == null) {
             namesToImportByModule = new HashMap<>();
-            crossChunkImports.put(t.getModule(), namesToImportByModule);
+            crossChunkImports.put(referencingChunk, namesToImportByModule);
           }
-          Set<String> importsForModule = namesToImportByModule.get(module);
+          Set<String> importsForModule = namesToImportByModule.get(definingChunk);
           if (importsForModule == null) {
             importsForModule = new HashSet<>();
-            namesToImportByModule.put(module, importsForModule);
+            namesToImportByModule.put(definingChunk, importsForModule);
           }
           importsForModule.add(name);
         }

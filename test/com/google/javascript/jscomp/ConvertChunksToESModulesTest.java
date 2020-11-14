@@ -47,7 +47,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
           .build(),
         JSChunkGraphBuilder.forStar()
           .addChunk("var a = 1; export {a}")
-          .addChunk("import {a} from './m0'; a")
+          .addChunk("import {a} from './m0.js'; a")
           .build());
     test(
         JSChunkGraphBuilder.forStar()
@@ -56,7 +56,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
           .build(),
         JSChunkGraphBuilder.forStar()
           .addChunk("var a = 1, b = 2, c = 3; export {a, c};")
-          .addChunk("import {a, c} from './m0'; a; c;")
+          .addChunk("import {a, c} from './m0.js'; a; c;")
           .build());
     test(
         JSChunkGraphBuilder.forStar()
@@ -65,7 +65,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
           .build(),
         JSChunkGraphBuilder.forStar()
           .addChunk("var a = 1, b = 2, c = 3; export {b,c};")
-          .addChunk("import {b, c} from './m0'; b;c;")
+          .addChunk("import {b, c} from './m0.js'; b;c;")
           .build());
   }
 
@@ -80,7 +80,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
     JSModule[] expected = JSChunkGraphBuilder.forStar()
         .addChunk("var a = 1; console.log(a); export {a}")
-        .addChunk("import {a} from './m0'; a")
+        .addChunk("import {a} from './m0.js'; a")
         .build();
 
     expected[0].add(SourceFile.fromCode("m0-1", ""));
@@ -94,15 +94,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("/js/m0.js");
-    original[1].setName("/js/m1.js");
+    original[0].setName("/js/m0");
+    original[1].setName("/js/m1");
 
     JSModule[] expected = JSChunkGraphBuilder.forStar()
         .addChunk("var a = 1; export {a}")
         .addChunk("import {a} from './m0.js'; a")
         .build();
-    expected[0].setName("/js/m0.js");
-    expected[1].setName("/js/m1.js");
+    expected[0].setName("/js/m0");
+    expected[1].setName("/js/m1");
 
     test(original, expected);
   }
@@ -113,8 +113,8 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("other/m0.js");
-    original[1].setName("/js/m1.js");
+    original[0].setName("other/m0");
+    original[1].setName("/js/m1");
 
     testError(
         original,
@@ -128,8 +128,8 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("/other/m0.js");
-    original[1].setName("js/m1.js");
+    original[0].setName("/other/m0");
+    original[1].setName("js/m1");
 
     testError(
         original,
@@ -143,15 +143,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("js/m0.js");
-    original[1].setName("js/m1.js");
+    original[0].setName("js/m0");
+    original[1].setName("js/m1");
 
     JSModule[] expected = JSChunkGraphBuilder.forStar()
         .addChunk("var a = 1; export {a}")
         .addChunk("import {a} from './m0.js'; a")
         .build();
-    expected[0].setName("js/m0.js");
-    expected[1].setName("js/m1.js");
+    expected[0].setName("js/m0");
+    expected[1].setName("js/m1");
 
     test(original, expected);
   }
@@ -162,15 +162,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("js/m0.js");
-    original[1].setName("m1.js");
+    original[0].setName("js/m0");
+    original[1].setName("m1");
 
     JSModule[] expected = JSChunkGraphBuilder.forStar()
         .addChunk("var a = 1; export {a}")
         .addChunk("import {a} from './js/m0.js'; a")
         .build();
-    expected[0].setName("js/m0.js");
-    expected[1].setName("m1.js");
+    expected[0].setName("js/m0");
+    expected[1].setName("m1");
 
     test(original, expected);
   }
@@ -181,15 +181,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("m0.js");
-    original[1].setName("js/m1.js");
+    original[0].setName("m0");
+    original[1].setName("js/m1");
 
     JSModule[] expected = JSChunkGraphBuilder.forStar()
         .addChunk("var a = 1; export {a}")
         .addChunk("import {a} from '../m0.js'; a")
         .build();
-    expected[0].setName("m0.js");
-    expected[1].setName("js/m1.js");
+    expected[0].setName("m0");
+    expected[1].setName("js/m1");
 
     test(original, expected);
   }
@@ -200,15 +200,15 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("js/other/path/one/m0.js");
-    original[1].setName("external/path/m1.js");
+    original[0].setName("js/other/path/one/m0");
+    original[1].setName("external/path/m1");
 
     JSModule[] expected = JSChunkGraphBuilder.forStar()
         .addChunk("var a = 1; export {a}")
         .addChunk("import {a} from '../../js/other/path/one/m0.js'; a")
         .build();
-    expected[0].setName("js/other/path/one/m0.js");
-    expected[1].setName("external/path/m1.js");
+    expected[0].setName("js/other/path/one/m0");
+    expected[1].setName("external/path/m1");
 
     test(original, expected);
   }
@@ -219,8 +219,8 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
         .addChunk("var a = 1;")
         .addChunk( "a")
         .build();
-    original[0].setName("js/m0.js");
-    original[1].setName("../node_modules/m1.js");
+    original[0].setName("js/m0");
+    original[1].setName("../node_modules/m1");
 
     testError(
         original,
@@ -249,6 +249,6 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
             .addChunk("a = 2;")
             .build(),
         ASSIGNMENT_TO_IMPORT,
-        "Imported symbol \"a\" in chunk \"m1\" cannot be assigned");
+        "Imported symbol \"a\" in chunk \"m1.js\" cannot be assigned");
   }
 }
