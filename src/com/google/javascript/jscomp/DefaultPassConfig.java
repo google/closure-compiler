@@ -64,6 +64,7 @@ import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -162,7 +163,6 @@ public final class DefaultPassConfig extends PassConfig {
           // nothing
           break;
       }
-      TranspilationPasses.addEs2020RewriteDynamicImportPass(passes);
     }
 
     passes.add(checkSuper);
@@ -260,6 +260,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.processCommonJSModules) {
       checks.add(rewriteCommonJsModules);
+    }
+
+    if (options.getLanguageIn().toFeatureSet().contains(Feature.DYNAMIC_IMPORT)) {
+      // Temporary location until this pass does more than warn about usage
+      checks.add(es2020RewriteDynamicImport);
     }
 
     // Note: ChromePass can rewrite invalid @type annotations into valid ones, so should run before
@@ -2957,5 +2962,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("MERGE_SYNTHETIC_SCRIPT")
           .setFeatureSet(FeatureSet.all())
           .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
+          .build();
+
+  /** Rewrites ES6 modules import paths to be browser compliant */
+  private static final PassFactory es2020RewriteDynamicImport =
+      PassFactory.builder()
+          .setName("es2020RewriteDynamicImport")
+          .setInternalFactory(Es2020RewriteDynamicImport::new)
+          .setFeatureSet(FeatureSet.latest())
           .build();
 }
