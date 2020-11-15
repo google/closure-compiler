@@ -2969,6 +2969,6 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("es2020RewriteDynamicImport")
           .setInternalFactory(Es2020RewriteDynamicImport::new)
-          .setFeatureSet(FeatureSet.latest())
+          .setFeatureSet(FeatureSet.all())
           .build();
 }
