@@ -651,6 +651,14 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     if (options.computeFunctionSideEffects) {
       passes.add(markPureFunctions);
     }
@@ -674,14 +682,6 @@ public final class DefaultPassConfig extends PassConfig {
     // expressions.
     if (!options.replaceStringsFunctionDescriptions.isEmpty()) {
       passes.add(replaceStrings);
-    }
-
-    if (options.checkTypes || options.inferTypes) {
-      passes.add(typesToColors);
-    }
-
-    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
-      passes.add(removeTypes);
     }
 
     // TODO(user): This forces a first crack at crossChunkCodeMotion
