@@ -91,9 +91,6 @@ final class RemoveTypes implements CompilerPass {
       if (jsdoc.isInterface()) {
         builder.recordInterface();
       }
-      if (jsdoc.usesImplicitMatch()) {
-        builder.recordImplicitMatch();
-      }
       return builder.build();
     }
 

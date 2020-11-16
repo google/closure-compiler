@@ -224,7 +224,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     JSDocInfo jsdoc = var.getJSDocInfo();
     if (jsdoc == null) {
       return false;
-    } else if (jsdoc.isConstructorOrInterface() || jsdoc.usesImplicitMatch()) {
+    } else if (jsdoc.isConstructorOrInterface()) {
       return true; // Case: `@constructor`, `@interface`, `@record`.
     }
 
