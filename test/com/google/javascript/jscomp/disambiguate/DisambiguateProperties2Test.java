@@ -112,7 +112,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
             lines(
                 "/** @interface */", //
                 "class IFoo {",
-                "  JSC$2_x() { }",
+                "  JSC$3_x() { }",
                 "}",
                 "",
                 "/**",
@@ -120,11 +120,11 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 " * @extends {IFoo}",
                 " */",
                 "class IFoo2 {",
-                "  JSC$2_x() { }",
+                "  JSC$3_x() { }",
                 "}",
                 "",
                 "class Other {",
-                "  JSC$3_x() { }",
+                "  JSC$5_x() { }",
                 "}")));
   }
 
@@ -157,7 +157,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "}",
                 "",
                 "class Other {",
-                "  JSC$3_y() { }",
+                "  JSC$5_y() { }",
                 "}")));
   }
 
@@ -214,16 +214,16 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
             lines(
                 "/** @interface */",
                 "class IFoo {",
-                "  JSC$2_a() { }",
+                "  JSC$3_a() { }",
                 "}",
                 "",
                 "/** @implements {IFoo} */",
                 "class Foo {",
-                "  JSC$2_a() { }",
+                "  JSC$3_a() { }",
                 "}",
                 "",
                 "class Other {",
-                "  JSC$3_a() { }",
+                "  JSC$5_a() { }",
                 "}")));
   }
 
@@ -261,14 +261,14 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
             lines(
                 "/** @interface */",
                 "class IFoo0 {",
-                "  JSC$3_b() { }",
+                "  JSC$5_b() { }",
                 "  JSC$1_c() { }",
                 "}",
                 "",
                 "/** @interface */",
                 "class IFoo1 {",
-                "  JSC$3_b() { }",
-                "  JSC$2_d() { }",
+                "  JSC$5_b() { }",
+                "  JSC$3_d() { }",
                 "}",
                 "",
                 "/**",
@@ -276,13 +276,13 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 " * @implements {IFoo1}",
                 " */",
                 "class Foo {",
-                "  JSC$3_b() { }",
+                "  JSC$5_b() { }",
                 "}",
                 "",
                 "class Other {",
-                "  JSC$4_b() { }",
-                "  JSC$4_c() { }",
-                "  JSC$4_d() { }",
+                "  JSC$7_b() { }",
+                "  JSC$7_c() { }",
+                "  JSC$7_d() { }",
                 "}")));
   }
 
@@ -323,7 +323,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "}",
                 "",
                 "class Other {",
-                "  JSC$3_f() { }",
+                "  JSC$9_f() { }",
                 "}")));
   }
 
@@ -353,22 +353,22 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
         expected(
             lines(
                 "class Foo0 {",
-                "  JSC$5_a() { }",
+                "  JSC$7_a() { }",
                 "  JSC$1_b() { }",
                 "}",
                 "",
                 "class Foo1 {",
-                "  JSC$5_a() { }",
-                "  JSC$2_b() { }",
+                "  JSC$7_a() { }",
+                "  JSC$3_b() { }",
                 "}",
                 "",
                 "function mix(/** (!Foo0|!Foo1) */ x) {",
-                "  x.JSC$5_a();",
+                "  x.JSC$7_a();",
                 "}",
                 "",
                 "class Other {",
-                "  JSC$6_a() { }",
-                "  JSC$6_b() { }",
+                "  JSC$8_a() { }",
+                "  JSC$8_b() { }",
                 "}")));
   }
 
@@ -430,7 +430,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "c.JSC$1_h();",
                 "",
                 "class Other {",
-                "  JSC$3_h() { }",
+                "  JSC$4_h() { }",
                 "}")));
   }
 
@@ -467,7 +467,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "Bar.ONE.JSC$1_p",
                 "",
                 "class Other {",
-                "  JSC$4_p() { }",
+                "  JSC$5_p() { }",
                 "}")));
   }
 
@@ -498,7 +498,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "}",
                 "",
                 "class Other {",
-                "  JSC$3_g() { }",
+                "  JSC$4_g() { }",
                 "}")));
   }
 
@@ -520,8 +520,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void bug_propertiesAreDisambiguated_betweenAncestorTypes_ifCommonChildHasNoPropUse() {
-    // TODO(b/147945025): "t" should conflate between `IFoo` and `Foo`.
+  public void propertiesAreDisambiguated_betweenAncestorTypes_ifCommonChildHasNoPropUse() {
     test(
         srcs(
             lines(
@@ -535,23 +534,24 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "/** @implements {IFoo} */",
                 "class SubFoo extends Foo { }",
                 "",
-                // This instantiation isn't necessary to trigger the bug, but clarifies the risk.
-                "const /** !IFoo */ x = new SubFoo();",
-                "x.t();")),
+                "class Other {",
+                "  t() { }",
+                "}")),
         expected(
             lines(
                 "/** @interface */",
                 "class IFoo {",
-                "  JSC$1_t() { }",
+                "  JSC$3_t() { }",
                 "}",
                 "class Foo {",
-                "  JSC$2_t() { }",
+                "  JSC$3_t() { }",
                 "}",
                 "/** @implements {IFoo} */",
                 "class SubFoo extends Foo { }",
                 "",
-                "const /** !IFoo */ x = new SubFoo();",
-                "x.JSC$1_t();")));
+                "class Other {",
+                "  JSC$6_t() { }",
+                "}")));
   }
 
   @Test
@@ -584,7 +584,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                   "}",
                   "class Foo1 {",
                   "  k() { }",
-                  "  JSC$2_t() { }",
+                  "  JSC$3_t() { }",
                   "}",
                   "",
                   "function mix(/** " + annotation + " */ x) {",
@@ -711,12 +711,12 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
             lines(
                 "class Foo extends ExternFoo {",
                 "  v() { }",
-                "  JSC$2_p() { }",
+                "  JSC$3_p() { }",
                 "}",
                 "",
                 "class Other {",
-                "  JSC$3_v() { }",
-                "  JSC$3_p() { }",
+                "  JSC$5_v() { }",
+                "  JSC$5_p() { }",
                 "}")));
   }
 
@@ -755,11 +755,11 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "}",
                 "class Foo1 extends Foo0 {",
                 "  w() { }",
-                "  JSC$2_y() { }",
+                "  JSC$3_y() { }",
                 "}",
                 "class Foo2 {",
                 "  w() { }",
-                "  JSC$3_z() { }",
+                "  JSC$5_z() { }",
                 "}",
                 "",
                 "function mix(/** (!Foo1|!Foo2) */ x) {",
@@ -767,9 +767,9 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "}",
                 "",
                 "class Other {",
-                "  JSC$7_x() { }",
-                "  JSC$7_y() { }",
-                "  JSC$7_z() { }",
+                "  JSC$10_x() { }",
+                "  JSC$10_y() { }",
+                "  JSC$10_z() { }",
                 "}")));
   }
 

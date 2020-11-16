@@ -50,6 +50,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -452,6 +453,30 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     // Externs type clusters are checked during teardown.
   }
 
+  @Test
+  public void propertylessConstructorsAreRecordedInTypeFlattener() {
+    Consumer<JSError> errorCb =
+        (e) -> {
+          assertWithMessage(e.getDescription()).fail();
+        };
+    StubTypeFlattener flattener = new StubTypeFlattener(ImmutableMap.of());
+    FindPropertyReferences finder = new FindPropertyReferences(flattener, errorCb, (s) -> false);
+
+    this.propIndex =
+        this.collectProperties(
+            finder,
+            "",
+            lines(
+                "class Foo {}",
+                "/** @constructor */ function Bar() {}",
+                "/** @interface */ function Quz() {}",
+                "/** @record */ function Baz() {}",
+                "function other() {}"));
+
+    assertThat(flattener.flattened)
+        .containsExactly("(typeof Foo)", "(typeof Bar)", "(typeof Quz)", "(typeof Baz)");
+  }
+
   private MultimapSubject assertThatUsesOf(String name) {
     PropertyClustering prop = this.propIndex.get(name);
     ArrayListMultimap<FlatType, Token> actual =
@@ -499,6 +524,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     private final FlatType fallbackType = FindPropertyReferencesTest.this.createFlatType();
 
     private final ImmutableMap<String, FlatType> stubs;
+    private final LinkedHashSet<String> flattened = new LinkedHashSet<>();
 
     StubTypeFlattener(ImmutableMap<String, FlatType> stubs) {
       super(FindPropertyReferencesTest.this.registry, null);
@@ -507,6 +533,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
     @Override
     public FlatType flatten(JSType type) {
+      flattened.add(type.toString());
       return stubs.getOrDefault(type.toString(), this.fallbackType);
     }
 
