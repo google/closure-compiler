@@ -2706,7 +2706,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           FunctionType delegateProxy =
               typeRegistry.createConstructorType(
                   delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX /* name */,
-                  null /* source */,
+                  delegateBaseCtor.getSource() /* source */,
                   null /* parameters */,
                   null /* returnType */,
                   null /* templateKeys */,

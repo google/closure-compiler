@@ -25,6 +25,7 @@ import static java.util.Comparator.naturalOrder;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,6 +44,7 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Assembles the various parts of the diambiguator to execute them as a compiler pass. */
@@ -96,7 +98,8 @@ public final class DisambiguateProperties2 implements CompilerPass {
             /* mutationCb= */ this.compiler::reportChangeToEnclosingScope);
 
     NodeTraversal.traverse(this.compiler, externs.getParent(), findRefs);
-    Map<String, PropertyClustering> propIndex = findRefs.getPropertyIndex();
+    LinkedHashMap<String, PropertyClustering> propIndex = findRefs.getPropertyIndex();
+    invalidateWellKnownProperties(propIndex);
     this.logForDiagnostics(
         "prop_refs",
         () ->
@@ -134,6 +137,20 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .collect(toImmutableSortedSet(naturalOrder())));
   }
 
+  private static void invalidateWellKnownProperties(
+      LinkedHashMap<String, PropertyClustering> propIndex) {
+    /**
+     * Expand this list as needed; it wasn't created exhaustively.
+     *
+     * <p>Good candidates are: props accessed by builtin functions, props accessed by syntax sugar,
+     * props used in strange ways by the language spec, etc.
+     */
+    ImmutableList<String> names = ImmutableList.of("prototype", "constructor", "then");
+    for (String name : names) {
+      propIndex.computeIfAbsent(name, PropertyClustering::new).invalidate();
+    }
+  }
+
   private void logForDiagnostics(String name, Supplier<Object> data) {
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), name + ".log")) {
       log.log(() -> GSON.toJson(data.get()));
@@ -146,10 +163,14 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
     PropertyReferenceIndexJson(PropertyClustering prop) {
       this.name = prop.getName();
-      this.refs =
-          prop.getUseSites().entrySet().stream()
-              .map((e) -> new PropertyReferenceJson(e.getKey(), e.getValue()))
-              .collect(toImmutableSortedSet(naturalOrder()));
+      if (prop.isInvalidated()) {
+        this.refs = ImmutableSortedSet.of();
+      } else {
+        this.refs =
+            prop.getUseSites().entrySet().stream()
+                .map((e) -> new PropertyReferenceJson(e.getKey(), e.getValue()))
+                .collect(toImmutableSortedSet(naturalOrder()));
+      }
     }
   }
 
