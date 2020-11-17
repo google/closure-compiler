@@ -145,6 +145,29 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
   }
 
   @Test
+  public void optChainGetProp_isFound() {
+    // Given
+    FlatType flatFoo = this.createFlatType();
+
+    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null, null);
+
+    // When
+    this.propIndex =
+        this.collectProperties(
+            finder,
+            "",
+            lines(
+                "class Foo { }", //
+                "",
+                "new Foo()?.a;"));
+
+    // Then
+    assertThat(this.propIndex.keySet()).containsExactly("a");
+
+    this.assertThatUsesOf("a").containsExactly(flatFoo, STRING);
+  }
+
+  @Test
   public void objectLitProp_isFound() {
     // Given
     FlatType flatFoo = this.createFlatType();

@@ -82,6 +82,7 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case GETPROP:
+      case OPTCHAIN_GETPROP:
         this.registerPropertyUse(n.getLastChild(), n.getFirstChild().getJSType());
         break;
       case OBJECTLIT:
