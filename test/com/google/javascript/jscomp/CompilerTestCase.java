@@ -1127,8 +1127,8 @@ public abstract class CompilerTestCase {
   /**
    * Verifies that the compiler pass's JS output matches the expected output.
    *
-   * @param js Input
-   * @param expected Expected JS output
+   * @param srcs Input chunks
+   * @param expected Expected chunks
    */
   protected void test(JSModule[] srcs, JSModule[] expected) {
     test(srcs(srcs), expected(expected));
