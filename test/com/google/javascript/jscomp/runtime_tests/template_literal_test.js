@@ -144,14 +144,11 @@ function testUnicode() {
   r`☃`;
 }
 
-// TODO(yitingwang) uncomment this test after the next compiler release
-// Apparently, for tests in this file the currently released compiler is used,
-// so right now this test produces a parsing error.
-// function testInvalidEscapeInTaggedTemplateLit() {
-//  function r(strings, ...values) {
-//    assertArrayEquals([undefined], strings);
-//    assertArrayEquals(['\\u{hello}'], strings.raw);
-//  }
-//
-//  r`\u{hello}`;
-//}
+function testInvalidEscapeInTaggedTemplateLit() {
+ function r(strings, ...values) {
+   assertArrayEquals([undefined], strings);
+   assertArrayEquals(['\\u{hello}'], strings.raw);
+ }
+
+ r`\u{hello}`;
+}
