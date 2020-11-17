@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.Es2020RewriteDynamicImport.DYNAMIC_IMPORT_EXPERIMENTAL;
+import static com.google.javascript.jscomp.RewriteDynamicImport.DYNAMIC_IMPORT_TRANSPILATION;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
@@ -25,7 +25,7 @@ import org.junit.runners.JUnit4;
 
 /** Test Dynamic Import usage issues warning */
 @RunWith(JUnit4.class)
-public final class Es2020RewriteDynamicImportTest extends CompilerTestCase {
+public final class RewriteDynamicImportTest extends CompilerTestCase {
 
   @Override
   @Before
@@ -33,7 +33,7 @@ public final class Es2020RewriteDynamicImportTest extends CompilerTestCase {
     super.setUp();
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2020);
-    setLanguageOut(LanguageMode.ECMASCRIPT_2020);
+    setLanguageOut(LanguageMode.ECMASCRIPT_2015);
 
     enableTypeInfoValidation();
     enableTypeCheck();
@@ -41,11 +41,11 @@ public final class Es2020RewriteDynamicImportTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new Es2020RewriteDynamicImport(compiler);
+    return new RewriteDynamicImport(compiler);
   }
 
   @Test
-  public void testDynamicImportWarning() {
-    testSame("import('./foo.js')", DYNAMIC_IMPORT_EXPERIMENTAL);
+  public void testDynamicImportError() {
+    testError("import('./foo.js')", DYNAMIC_IMPORT_TRANSPILATION);
   }
 }

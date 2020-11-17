@@ -262,11 +262,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(rewriteCommonJsModules);
     }
 
-    if (options.getLanguageIn().toFeatureSet().contains(Feature.DYNAMIC_IMPORT)) {
-      // Temporary location until this pass does more than warn about usage
-      checks.add(es2020RewriteDynamicImport);
-    }
-
     // Note: ChromePass can rewrite invalid @type annotations into valid ones, so should run before
     // JsDoc checks.
     if (options.isChromePassEnabled()) {
@@ -2964,11 +2959,4 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
           .build();
 
-  /** Rewrites ES6 modules import paths to be browser compliant */
-  private static final PassFactory es2020RewriteDynamicImport =
-      PassFactory.builder()
-          .setName("es2020RewriteDynamicImport")
-          .setInternalFactory(Es2020RewriteDynamicImport::new)
-          .setFeatureSet(FeatureSet.all())
-          .build();
 }

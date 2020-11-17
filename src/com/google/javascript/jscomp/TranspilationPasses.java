@@ -85,6 +85,10 @@ public class TranspilationPasses {
           createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
     }
 
+    if (options.needsTranspilationOf(Feature.DYNAMIC_IMPORT)) {
+      passes.add(rewriteDynamicImport);
+    }
+
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.add(rewriteOptionalChainingOperator);
     }
@@ -404,6 +408,14 @@ public class TranspilationPasses {
           .setFeatureSet(ES2020)
           .build();
 
+  /** Rewrites ES6 modules import paths to be browser compliant */
+  private static final PassFactory rewriteDynamicImport =
+      PassFactory.builder()
+          .setName("rewriteDynamicImport")
+          .setInternalFactory(RewriteDynamicImport::new)
+          .setFeatureSet(ES2020)
+          .build();
+
   /**
    * @param script The SCRIPT node representing a JS file
    * @return If the file has any features which are part of ES6 or higher but not part of ES5.
@@ -492,6 +504,8 @@ public class TranspilationPasses {
           compiler.getFeatureSet().without(transpiledFeature, moreTranspiledFeatures));
     }
   }
+
+
 
   /**
    * Returns a pass that just removes features from the AST FeatureSet.
