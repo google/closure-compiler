@@ -17,12 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.serialization.JsdocSerializer;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-import javax.annotation.Nullable;
 
 /**
  * Pass to remove from the AST types and type-based information and to delete all JSDoc fields not
@@ -47,57 +44,8 @@ final class RemoveTypes implements CompilerPass {
       n.setDeclaredTypeExpression(null);
       JSDocInfo jsdoc = n.getJSDocInfo();
       if (jsdoc != null) {
-        n.setJSDocInfo(convertJSDocInfo(jsdoc));
+        n.setJSDocInfo(JsdocSerializer.convertJSDocInfoForOptimizations(jsdoc));
       }
-    }
-
-    /**
-     * Returns a clone of the input JSDocInfo, modulo fields not needed for optimizations
-     *
-     * <p>This mimics the eventual serialization / deserialization of a subset of JSDoc fields and
-     * ensures optimizations can't accidentally depend on fields that we don't plan to serialize.
-     *
-     * @return a new JSDocInfo object or null if no serializable fields are found
-     */
-    @Nullable
-    private static JSDocInfo convertJSDocInfo(JSDocInfo jsdoc) {
-      JSDocInfoBuilder builder = JSDocInfo.builder();
-      if (jsdoc.getLicense() != null) {
-        builder.addLicense(jsdoc.getLicense());
-      }
-
-      if (jsdoc.isNoInline()) {
-        builder.recordNoInline();
-      }
-      if (jsdoc.isDefine()) {
-        builder.recordDefineType(createUnknown());
-      }
-
-      // Used by PureFunctionIdentifier
-      if (jsdoc.isNoSideEffects()) {
-        builder.recordNoSideEffects();
-      }
-      if (jsdoc.hasModifies()) {
-        builder.recordModifies(jsdoc.getModifies());
-      }
-      if (!jsdoc.getThrownTypes().isEmpty()) {
-        builder.recordThrowType(createUnknown());
-      }
-
-      // Used by DevirtualizeMethods and CollapseProperties
-      if (jsdoc.isConstructor()) {
-        builder.recordConstructor();
-      }
-      if (jsdoc.isInterface()) {
-        builder.recordInterface();
-      }
-      return builder.build();
-    }
-
-    // Optimizations shouldn't care about the contents of JSTypeExpressions but some JSDoc APIs
-    // expect their presense, so just create a dummy '?' type.
-    private static JSTypeExpression createUnknown() {
-      return new JSTypeExpression(new Node(Token.QMARK), "<synthetic serialized type>");
     }
   }
 

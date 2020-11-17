@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package jscomp;
+
+option java_package = "com.google.javascript.jscomp.serialization";
+option java_multiple_files = true;
+
+message OptimizationJsdoc {
+  repeated JsdocTag kind = 1;
+  string license_text = 2;
+}
+
+enum JsdocTag {
+  JSDOC_UNSPECIFIED = 0;
+
+  JSDOC_NO_INLINE = 1;
+  JSDOC_DEFINE = 2;
+
+  // Side effects flags
+  JSDOC_MODIFIES_THIS = 3;
+  JSDOC_MODIFIES_ARGUMENTS = 4;
+  JSDOC_THROWS = 6;
+  JSDOC_NO_SIDE_EFFECTS = 7;
+
+  // Used by DevirtualizeMethods and CollapseProperties
+  JSDOC_CONSTRUCTOR = 8;
+  JSDOC_INTERFACE = 9;
+}
