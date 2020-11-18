@@ -215,6 +215,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
           break;
         case DYNAMIC_IMPORT:
           visitDynamicImport(t, n);
+          break;
         default:
           break;
       }
