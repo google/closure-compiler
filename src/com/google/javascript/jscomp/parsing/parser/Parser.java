@@ -1111,9 +1111,8 @@ public class Parser {
       case MINUS:
       case TILDE:
       case BANG:
-        return true;
       case IMPORT:
-        return peekType(1) == TokenType.OPEN_PAREN;
+        return true;
       default:
         return false;
     }

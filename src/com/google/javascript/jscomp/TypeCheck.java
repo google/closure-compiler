@@ -944,7 +944,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case IMPORT_SPEC:
       case IMPORT_SPECS:
       case IMPORT_STAR:
-      case DYNAMIC_IMPORT:
       case EXPR_RESULT:
       case BLOCK:
       case ROOT:
@@ -962,6 +961,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case OBJECT_REST:
       case DESTRUCTURING_LHS:
         typeable = false;
+        break;
+
+      case DYNAMIC_IMPORT:
+        visitDynamicImport(t, n);
         break;
 
       case ARRAY_PATTERN:
@@ -3144,6 +3147,25 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           parentObjectType,
           () -> moduleName.getOwner().join(),
           moduleName.getComponent());
+    }
+  }
+
+  /** Validates that a dynamic import statement has a single child of type string */
+  private void visitDynamicImport(NodeTraversal t, Node dynamicImport) {
+    JSType type = dynamicImport.getJSType();
+    validator.expectValidDynamicImportType(dynamicImport, type);
+
+    Node importSpecifier = dynamicImport.getFirstChild();
+    JSType importSpecifierType = importSpecifier.getJSType();
+    if (importSpecifierType == null) {
+      ensureTyped(importSpecifier, STRING_TYPE);
+    } else {
+      validator.expectNotNullOrUndefined(
+          t,
+          importSpecifier,
+          importSpecifierType,
+          "dynamic import specifier",
+          getNativeType(STRING_TYPE));
     }
   }
 

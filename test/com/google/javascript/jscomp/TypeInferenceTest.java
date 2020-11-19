@@ -3751,6 +3751,17 @@ public final class TypeInferenceTest {
     assertTypeOfExpression("BAR").isNumber();
   }
 
+  @Test
+  public void testDynamicImport() {
+    inScript("const foo = import('foo');");
+
+    JSType promiseOfUnknownType =
+        registry.createTemplatizedType(
+            registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
+            registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    assertType(getType("foo")).isSubtypeOf(promiseOfUnknownType);
+  }
+
   private static void testForAllBigInt(JSType type) {
     assertThat(TypeInference.getBigIntPresence(type)).isEqualTo(BigIntPresence.ALL_BIGINT);
   }

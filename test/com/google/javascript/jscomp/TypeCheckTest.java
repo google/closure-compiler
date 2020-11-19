@@ -25925,6 +25925,15 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (typeof globalNs.Ctor)"));
   }
 
+  @Test
+  public void testDynamicImportSpecifier() {
+    testTypes(
+        "var foo = undefined; import(foo);",
+        "dynamic import specifier\n"
+            + "found   : undefined\n"
+            + "required: string");
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(js,
         description == null ? null : ImmutableList.of(description));

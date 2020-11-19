@@ -6391,6 +6391,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
         }
       }
     }
+
+    mode = LanguageMode.ECMASCRIPT_2020;
+    strictMode = STRICT;
+    parseError("function foo() { import bar from './someModule'; }",
+        "'(' expected");
   }
 
   @Test

@@ -871,15 +871,9 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
         isTypeable = false;
         break;
 
-      case DYNAMIC_IMPORT: {
-        // TODO(ChadKillingsworth) if the module import is a string literal,
-        //   resolve the module if possible and set the type to the namespace export
-        JSType templateType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-        n.setJSType(
-            registry.createTemplatizedType(
-                registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), templateType));
+      case DYNAMIC_IMPORT:
+        traverseDynamicImport(n ,scope);
         break;
-      }
 
       case TRUE:
       case FALSE:
@@ -2608,6 +2602,17 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     await.setJSType(Promises.getResolvedType(registry, exprType));
 
     return scope;
+  }
+
+  private FlowScope traverseDynamicImport(Node dynamicImport, FlowScope scope) {
+    // TODO(ChadKillingsworth) if the module import is a string literal,
+    //   resolve the module if possible and set the type to the namespace export
+    JSType templateType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    dynamicImport.setJSType(
+        registry.createTemplatizedType(
+            registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), templateType));
+
+    return traverseChildren(dynamicImport, scope);
   }
 
   private static BooleanLiteralSet joinBooleanOutcomes(
