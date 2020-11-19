@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -66,31 +65,31 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
     }
   }
 
-  private void checkNamingAndAssignmentUsage(NodeTraversal t, Node n) {
-    for (Node child : n.children()) {
+  private void checkNamingAndAssignmentUsage(NodeTraversal t, Node objLit) {
+    for (Node child : objLit.children()) {
       checkName(t, child);
     }
   }
 
-  private void checkName(NodeTraversal t, Node node) {
-    if (node.isComputedProp()) {
-      t.report(node, COMPUTED_PROP_NAME_IN_ENUM);
+  private void checkName(NodeTraversal t, Node prop) {
+    if (prop.isComputedProp()) {
+      t.report(prop, COMPUTED_PROP_NAME_IN_ENUM);
       return;
     }
 
-    if (node.isStringKey() && node.isShorthandProperty()) {
-      t.report(node, SHORTHAND_ASSIGNMENT_IN_ENUM);
+    if (prop.isStringKey() && prop.isShorthandProperty()) {
+      t.report(prop, SHORTHAND_ASSIGNMENT_IN_ENUM);
     }
 
-    if (!compiler.getCodingConvention().isValidEnumKey(node.getString())) {
-      t.report(node, ENUM_PROP_NOT_CONSTANT);
+    if (!compiler.getCodingConvention().isValidEnumKey(prop.getString())) {
+      t.report(prop, ENUM_PROP_NOT_CONSTANT);
     }
   }
 
-  private void checkDuplicateEnumValues(NodeTraversal t, Node n) {
+  private static void checkDuplicateEnumValues(NodeTraversal t, Node enumNode) {
     Set<String> values = new HashSet<>();
-    for (Node child : n.children()) {
-      Node valueNode = child.getLastChild();
+    for (Node prop : enumNode.children()) {
+      Node valueNode = prop.getLastChild();
       String value;
       if (valueNode == null) {
         return;

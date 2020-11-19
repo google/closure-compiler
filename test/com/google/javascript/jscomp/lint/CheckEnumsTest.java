@@ -67,8 +67,12 @@ public final class CheckEnumsTest extends CompilerTestCase {
     testSame("/** @enum {string} */ var Enum = {A: 'foo', B: 'bar'};");
     testWarning("/** @enum {number} */ var Enum = {A: 1, B: 1};",
         DUPLICATE_ENUM_VALUE);
+    testNoWarning("/** @enum {number} */ var Enum = {A: 1+1, B: 1+1};"); // uncaught dup values
+
     testWarning("/** @enum {string} */ var Enum = {A: 'foo', B: 'foo'};",
         DUPLICATE_ENUM_VALUE);
+    testNoWarning(
+        "/** @enum {number} */ var Enum = {A: 'a'+'b', B: 'a'+'b'};"); // uncaught dup values
 
     testWarning("/** @enum {number} */ var Enum = {A};",
         SHORTHAND_ASSIGNMENT_IN_ENUM);
