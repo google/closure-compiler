@@ -44,7 +44,8 @@ public final class CheckDefaultExportOfGoogModule
           "Default exports of goog.modules "
               + "do not translate easily to ES module semantics. Please use named exports instead"
               + " (`exports = '{'{0}'}';`) and change the import sites to use destructuring"
-              + " (`const '{'{0}'}' = goog.require(''...'');`).");
+              + " (`const '{'{0}'}' = goog.require(''...'');`)."
+          );
 
   private final AbstractCompiler compiler;
 
