@@ -121,7 +121,9 @@ class FunctionRewriter implements CompilerPass {
     Node parent = n.getParent();
     return NodeUtil.isFunctionExpression(n)
         && !NodeUtil.isGetOrSetKey(parent)
-        && !parent.isMemberFunctionDef();
+        && !parent.isMemberFunctionDef()
+        && !n.isAsyncFunction()
+        && !n.isGeneratorFunction();
   }
 
   /**
