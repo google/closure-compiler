@@ -36,13 +36,17 @@ public final class SyntheticAst implements SourceAst {
   private Node root;
 
   @VisibleForTesting
-  public static SyntheticAst emptyWithFileName(String sourceName) {
-    return new SyntheticAst(sourceName);
+  public static SyntheticAst emptyWithFileName(String sourceName, SourceKind kind) {
+    return new SyntheticAst(sourceName, kind);
   }
 
   SyntheticAst(String sourceName) {
+    this(sourceName, SourceKind.STRONG);
+  }
+
+  SyntheticAst(String sourceName, SourceKind kind) {
     this.inputId = new InputId(sourceName);
-    this.sourceFile = new SourceFile(sourceName, SourceKind.STRONG);
+    this.sourceFile = new SourceFile(sourceName, kind);
     clearAst();
   }
 
