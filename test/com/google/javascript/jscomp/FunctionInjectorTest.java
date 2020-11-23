@@ -31,9 +31,7 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -51,13 +49,11 @@ public final class FunctionInjectorTest {
   private boolean assumeStrictThis = false;
   private final boolean assumeMinimumCapture = false;
   private boolean allowDecomposition;
-  private boolean allowMethodCallDecomposition;
 
   @Before
   public void setUp() throws Exception {
     assumeStrictThis = false;
     allowDecomposition = false;
-    allowMethodCallDecomposition = false;
   }
 
   @Test
@@ -559,19 +555,6 @@ public final class FunctionInjectorTest {
     helperCanInlineReferenceToFunction(
         CanInlineResult.AFTER_PREPARATION,
         "function foo(a){return true;}; function x() { if (foo(1)) throw 'test'; }",
-        "foo",
-        INLINE_BLOCK);
-  }
-
-  @Test
-  public void cannotInlineReferenceToFunctionInMethodCall() {
-    // Call within a method call that must be decomposed in order to inline.
-    // Ensure that inlining will not happen if method call decomposition is disabled.
-    allowDecomposition = true;
-    allowMethodCallDecomposition = false;
-    helperCanInlineReferenceToFunction(
-        CanInlineResult.NO,
-        "function foo(a){return true;}; function x() { if (obj.method(foo(1))) throw 'test'; }",
         "foo",
         INLINE_BLOCK);
   }
@@ -1872,7 +1855,6 @@ public final class FunctionInjectorTest {
     final FunctionInjector injector =
         new FunctionInjector.Builder(compiler)
             .allowDecomposition(allowDecomposition)
-            .allowMethodCallDecomposing(allowMethodCallDecomposition)
             .assumeStrictThis(assumeStrictThis)
             .assumeMinimumCapture(assumeMinimumCapture)
             .functionArgumentInjector(functionArgumentInjector)
@@ -1936,7 +1918,6 @@ public final class FunctionInjectorTest {
     final FunctionInjector injector =
         new FunctionInjector.Builder(compiler)
             .allowDecomposition(allowDecomposition)
-            .allowMethodCallDecomposing(allowMethodCallDecomposition)
             .assumeStrictThis(assumeStrictThis)
             .assumeMinimumCapture(assumeMinimumCapture)
             .functionArgumentInjector(functionArgumentInjector)
@@ -1987,8 +1968,6 @@ public final class FunctionInjectorTest {
                   .that(CanInlineResult.AFTER_PREPARATION)
                   .isSameInstanceAs(canInline);
 
-              Set<String> knownConstants = new HashSet<>();
-              injector.setKnownConstants(knownConstants);
               injector.maybePrepareCall(ref);
 
               assertWithMessage("canInlineReferenceToFunction should be CAN_INLINE")
@@ -2026,7 +2005,6 @@ public final class FunctionInjectorTest {
     final FunctionInjector injector =
         new FunctionInjector.Builder(compiler)
             .allowDecomposition(allowDecomposition)
-            .allowMethodCallDecomposing(allowMethodCallDecomposition)
             .assumeStrictThis(assumeStrictThis)
             .assumeMinimumCapture(assumeMinimumCapture)
             .build();

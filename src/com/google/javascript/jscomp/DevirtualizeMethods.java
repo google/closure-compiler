@@ -454,7 +454,11 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     Node newVarNode = IR.var(newNameNode).useSourceInfoIfMissingFrom(nameSource);
     statement.getParent().addChildBefore(newVarNode, statement);
 
-    // Attatch the function to the new variable.
+    // Copy the JSDocInfo, if any, from the original declaration
+    JSDocInfo originalJSDoc = NodeUtil.getBestJSDocInfo(definitionSite);
+    newVarNode.setJSDocInfo(originalJSDoc);
+
+    // Attach the function to the new variable.
     function.detach();
     newNameNode.addChildToFront(function);
 

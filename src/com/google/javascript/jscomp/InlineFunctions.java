@@ -105,7 +105,6 @@ class InlineFunctions implements CompilerPass {
             .safeNameIdSupplier(safeNameIdSupplier)
             .assumeStrictThis(assumeStrictThis)
             .assumeMinimumCapture(assumeMinimumCapture)
-            .allowMethodCallDecomposing(false)
             .functionArgumentInjector(this.functionArgumentInjector)
             .build();
   }
@@ -136,8 +135,8 @@ class InlineFunctions implements CompilerPass {
     // This pass already assumes these are constants, so this is safe for anyone
     // using function inlining.
     //
-    Set<String> fnNames = new HashSet<>(fns.keySet());
-    injector.setKnownConstants(fnNames);
+    ImmutableSet<String> fnNames = ImmutableSet.copyOf(fns.keySet());
+    injector.setKnownConstantFunctions(ImmutableSet.copyOf(fnNames));
 
     trimCandidatesUsingOnCost();
     if (fns.isEmpty()) {
@@ -328,7 +327,6 @@ class InlineFunctions implements CompilerPass {
             functionState.disallowInlining();
           }
         }
-
       }
 
       if (fnNode.getGrandparent().isVar()) {
@@ -504,14 +502,14 @@ class InlineFunctions implements CompilerPass {
       maybeAddReference(t, functionState, callNode, t.getModule());
     }
 
-    void maybeAddReference(NodeTraversal t, FunctionState functionState,
-        Node callNode, JSModule module) {
+    void maybeAddReference(
+        NodeTraversal t, FunctionState functionState, Node callNode, JSModule module) {
       if (!functionState.canInline()) {
         return;
       }
 
-      InliningMode mode = functionState.canInlineDirectly()
-          ? InliningMode.DIRECT : InliningMode.BLOCK;
+      InliningMode mode =
+          functionState.canInlineDirectly() ? InliningMode.DIRECT : InliningMode.BLOCK;
       boolean referenceAdded = maybeAddReferenceUsingMode(t, functionState, callNode, module, mode);
       if (!referenceAdded && mode == InliningMode.DIRECT) {
         // This reference can not be directly inlined, see if
@@ -528,8 +526,11 @@ class InlineFunctions implements CompilerPass {
     }
 
     private boolean maybeAddReferenceUsingMode(
-        NodeTraversal t, FunctionState functionState, Node callNode,
-        JSModule module, InliningMode mode) {
+        NodeTraversal t,
+        FunctionState functionState,
+        Node callNode,
+        JSModule module,
+        InliningMode mode) {
 
       // If many functions are inlined into the same function F in the same
       // inlining round, then the size of F may exceed the max size.
@@ -714,17 +715,18 @@ class InlineFunctions implements CompilerPass {
 
   /**
    * @return Whether the function has any parameters that would stop the compiler from inlining.
-   * Currently this includes object patterns, array patterns, and default values.
+   *     Currently this includes object patterns, array patterns, and default values.
    */
   private static boolean hasNonInlinableParam(Node node) {
     checkNotNull(node);
 
-    Predicate<Node> pred = new Predicate<Node>() {
-        @Override
-        public boolean apply(Node input) {
-          return input.isDefaultValue() || input.isDestructuringPattern();
-        }
-      };
+    Predicate<Node> pred =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node input) {
+            return input.isDefaultValue() || input.isDestructuringPattern();
+          }
+        };
 
     return NodeUtil.has(node, pred, alwaysTrue());
   }

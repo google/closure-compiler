@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
+import javax.annotation.Nullable;
 
 /**
  * Rewrites a single optional chain as one or more nested hook expressions.
@@ -51,6 +52,8 @@ class OptionalChainRewriter {
   final AbstractCompiler compiler;
   final AstFactory astFactory;
   final TmpVarNameCreator tmpVarNameCreator;
+  // If a scope is provided, newly created variables will be declared in that scope
+  @Nullable final Scope scope;
   final Node chainParent;
   final Node wholeChain;
   final Node enclosingStatement;
@@ -66,6 +69,7 @@ class OptionalChainRewriter {
     final AbstractCompiler compiler;
     final AstFactory astFactory;
     TmpVarNameCreator tmpVarNameCreator;
+    Scope scope;
 
     private Builder(AbstractCompiler compiler) {
       this.compiler = checkNotNull(compiler);
@@ -74,6 +78,12 @@ class OptionalChainRewriter {
 
     Builder setTmpVarNameCreator(TmpVarNameCreator tmpVarNameCreator) {
       this.tmpVarNameCreator = checkNotNull(tmpVarNameCreator);
+      return this;
+    }
+
+    /** Optionally sets a scope in which the rewriter will declare all temporary variables */
+    Builder setScope(Scope scope) {
+      this.scope = checkNotNull(scope);
       return this;
     }
 
@@ -93,6 +103,7 @@ class OptionalChainRewriter {
     this.compiler = builder.compiler;
     this.astFactory = builder.astFactory;
     this.tmpVarNameCreator = checkNotNull(builder.tmpVarNameCreator);
+    this.scope = builder.scope;
     this.wholeChain = wholeChain;
     this.chainParent = checkNotNull(wholeChain.getParent(), wholeChain);
     this.enclosingStatement = NodeUtil.getEnclosingStatement(wholeChain);
@@ -263,11 +274,11 @@ class OptionalChainRewriter {
     String tempVarName = tmpVarNameCreator.createTmpVarName();
     Node declarationStatement =
         astFactory.createSingleLetNameDeclaration(tempVarName).srcrefTree(valueNode);
+    declarationStatement.getFirstChild().setInferredConstantVar(true);
     enclosingStatement.getParent().addChildBefore(declarationStatement, enclosingStatement);
+    if (scope != null) {
+      scope.declare(tempVarName, declarationStatement.getFirstChild(), /* input= */ null);
+    }
     return tempVarName;
   }
-
-
-
-
 }

@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -30,7 +31,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayDeque;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -63,32 +63,29 @@ class ExpressionDecomposer {
   private final AstAnalyzer astAnalyzer;
   private final AstFactory astFactory;
   private final Supplier<String> safeNameIdSupplier;
-  private final Set<String> knownConstants;
+  private final ImmutableSet<String> knownConstantFunctions;
   private final Scope scope;
   private final JSType unknownType;
   private final JSType stringType;
 
   /**
-   * TODO(b/124253050): Fix InlineFunctions so this code will always allow method call decomposing.
+   * @param constFunctionNames set of names known to be constant functions. Used by InlineFunctions
+   *     to prevent this pass from breaking bookkeeping for functions it's inlining.
    */
-  private final boolean allowMethodCallDecomposing;
-
   ExpressionDecomposer(
       AbstractCompiler compiler,
       Supplier<String> safeNameIdSupplier,
-      Set<String> constNames,
-      Scope scope,
-      boolean allowMethodCallDecomposing) {
+      ImmutableSet<String> constFunctionNames,
+      Scope scope) {
     checkNotNull(compiler);
     checkNotNull(safeNameIdSupplier);
-    checkNotNull(constNames);
+    checkNotNull(constFunctionNames);
     this.compiler = compiler;
     this.astAnalyzer = compiler.getAstAnalyzer();
     this.astFactory = compiler.createAstFactory();
     this.safeNameIdSupplier = safeNameIdSupplier;
-    this.knownConstants = constNames;
+    this.knownConstantFunctions = constFunctionNames;
     this.scope = scope;
-    this.allowMethodCallDecomposing = allowMethodCallDecomposing;
     this.unknownType = compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
     this.stringType = compiler.getTypeRegistry().getNativeType(JSTypeNative.STRING_TYPE);
   }
@@ -222,11 +219,10 @@ class ExpressionDecomposer {
         // already be safe.
         if (isExpressionTreeUnsafe(callee, state.sideEffects)
             && lastExposedSubexpression != callee.getFirstChild()) {
-          checkState(allowMethodCallDecomposing, "Object method calls cannot be decomposed.");
           // Either there were preexisting side-effects, or this node has side-effects.
           state.sideEffects = true;
           // Rewrite the call so "this" is preserved and continue walking up from there.
-          expressionParent = rewriteCallExpression(expressionParent, state);
+          rewriteCallExpression(expressionParent, state);
         }
       } else {
         decomposeSubExpressions(expressionParent.getFirstChild(), expressionToExpose, state);
@@ -258,7 +254,8 @@ class ExpressionDecomposer {
   private void rewriteAllContainingOptionalChains(Node subExpression) {
     final OptionalChainRewriter.Builder optChainRewriterBuilder =
         OptionalChainRewriter.builder(compiler)
-            .setTmpVarNameCreator(this::getTempConstantValueName);
+            .setTmpVarNameCreator(this::getTempConstantValueName)
+            .setScope(this.scope);
     // Rewriting the chains changes the shape of the AST in a way that would interfere
     // with the simple traversal from child to parent done here, so we'll traverse
     // them all first, then rewrite them.
@@ -596,7 +593,7 @@ class ExpressionDecomposer {
   private boolean isConstantNameNode(Node n) {
     // Non-constant names values may have been changed.
     return n.isName()
-        && (NodeUtil.isConstantVar(n, scope) || knownConstants.contains(n.getString()));
+        && (NodeUtil.isConstantVar(n, scope) || knownConstantFunctions.contains(n.getString()));
   }
 
   /**
@@ -692,6 +689,9 @@ class ExpressionDecomposer {
     // Re-add the expression in the declaration of the temporary name.
     Node tempVarNode = NodeUtil.newVarNode(tempName, tempNameValue);
     tempVarNode.getFirstChild().copyTypeFrom(tempNameValue);
+    tempVarNode.getFirstChild().setInferredConstantVar(true);
+    Scope containingHoistScope = scope.getClosestHoistScope();
+    containingHoistScope.declare(tempName, tempVarNode.getFirstChild(), /* input= */ null);
 
     insertBefore(injectionPoint, tempVarNode);
 
@@ -717,7 +717,7 @@ class ExpressionDecomposer {
    *
    * @return The replacement node.
    */
-  private Node rewriteCallExpression(Node call, DecompositionState state) {
+  private void rewriteCallExpression(Node call, DecompositionState state) {
     checkArgument(call.isCall(), call);
     Node first = call.getFirstChild();
     checkArgument(NodeUtil.isNormalGet(first), first);
@@ -757,24 +757,15 @@ class ExpressionDecomposer {
     //   original-parameter2
     //   ...
 
-    Node newCall =
-        IR.call(
-                IR.getprop(functionNameNode.cloneNode(), IR.string("call").setJSType(stringType))
-                    .setJSType(fnCallType),
-                thisNameNode.cloneNode())
-            .copyTypeFrom(call)
-            .useSourceInfoIfMissingFromForTree(call);
-
-    // Throw away the call name
+    // Reuse the existing CALL node instead of creating a new one to avoid breaking InlineFunction's
+    // bookkeeping. See b/124253050.
     call.removeFirstChild();
-    if (call.hasChildren()) {
-      // Add the call parameters to the new call.
-      newCall.addChildrenToBack(call.removeChildren());
-    }
-
-    call.replaceWith(newCall);
-
-    return newCall;
+    call.addChildToFront(thisNameNode.cloneNode());
+    call.addChildToFront(
+        IR.getprop(functionNameNode.cloneNode(), IR.string("call").setJSType(stringType))
+            .setJSType(fnCallType)
+            .useSourceInfoIfMissingFromForTree(call));
+    call.removeProp(Node.FREE_CALL);
   }
 
   private String tempNamePrefix = "JSCompiler_temp";
@@ -804,13 +795,10 @@ class ExpressionDecomposer {
 
   /** Create a constant unique temp name. */
   private String getTempConstantValueName() {
-    String name =
-        tempNamePrefix
-            + "_const"
-            + ContextualRenamer.UNIQUE_ID_SEPARATOR
-            + safeNameIdSupplier.get();
-    this.knownConstants.add(name);
-    return name;
+    return tempNamePrefix
+        + "_const"
+        + ContextualRenamer.UNIQUE_ID_SEPARATOR
+        + safeNameIdSupplier.get();
   }
 
   private boolean isTempConstantValueName(Node name) {
@@ -1046,13 +1034,17 @@ class ExpressionDecomposer {
 
           Node first = parent.getFirstChild();
           if (requiresDecomposition && parent.isCall() && NodeUtil.isNormalGet(first)) {
-            if (allowMethodCallDecomposing) {
-              return DecompositionType.DECOMPOSABLE;
-            } else {
-              // TODO(b/124253050): Fix InlineFunctions so this code will always allow method call
-              // decomposing.
-              return DecompositionType.UNDECOMPOSABLE;
-            }
+            Node receiverOfGet = first.getFirstChild();
+            // Cannot decompose super.method(foo()). This pass will try to store `super` in a
+            // temporary variable which is invalid syntax
+            //   var temp1= super; // doesn't parse
+            //   var temp2 = temp1.method;
+            //   temp2.call(temp1, foo());
+            // A future improvement would be to instead avoid creating a temp for super and allow
+            // decomposing.
+            return receiverOfGet.isSuper()
+                ? DecompositionType.UNDECOMPOSABLE
+                : DecompositionType.DECOMPOSABLE;
           }
         }
       }
@@ -1170,16 +1162,19 @@ class ExpressionDecomposer {
 
       // Assume that "tmp1.call(...)" is safe (where tmp1 is a const temp variable created by
       // ExpressionDecomposer) otherwise we end up trying to decompose the same tree
-      // an infinite number of times.
+      // an infinite number of times. Also assume that "fn.call" is safe when "fn" is a known
+      // constant function, as decomposing it may mess up InlineFunction's bookkeeping if it is
+      // attempting to inline "fn".
       Node parent = tree.getParent();
       if (NodeUtil.isObjectCallMethod(parent, "call")
           && tree.isFirstChildOf(parent)
-          && isTempConstantValueName(tree.getFirstChild())) {
+          && (isTempConstantValueName(tree.getFirstChild())
+              || knownConstantFunctions.contains(tree.getFirstChild().getQualifiedName()))) {
         return false;
       }
 
       // This is a superset of "NodeUtil.mayHaveSideEffects".
-      return NodeUtil.canBeSideEffected(tree, this.knownConstants, scope);
+      return NodeUtil.canBeSideEffected(tree, this.knownConstantFunctions, scope);
     } else {
       // The function called doesn't have side-effects but check to see if there
       // are side-effects that that may affect it.

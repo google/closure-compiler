@@ -114,7 +114,7 @@ public class J2clPass implements CompilerPass {
               .assumeStrictThis(true)
               .assumeMinimumCapture(true)
               .build();
-      this.injector.setKnownConstants(fnNamesToInline);
+      this.injector.setKnownConstantFunctions(ImmutableSet.copyOf(fnNamesToInline));
     }
 
     private void run() {
