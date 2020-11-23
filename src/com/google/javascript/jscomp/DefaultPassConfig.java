@@ -2957,5 +2957,4 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSet(FeatureSet.all())
           .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
           .build();
-
 }

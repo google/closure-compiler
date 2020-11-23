@@ -505,8 +505,6 @@ public class TranspilationPasses {
     }
   }
 
-
-
   /**
    * Returns a pass that just removes features from the AST FeatureSet.
    *
