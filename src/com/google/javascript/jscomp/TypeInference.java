@@ -44,6 +44,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
+import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -2607,10 +2608,11 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     JSType templateType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
 
     // If the module specifier is a string, attempt to resolve the module
-    if (dynamicImport.getFirstChild().isString()) {
+    ModuleMap moduleMap = compiler.getModuleMap();
+    if (dynamicImport.getFirstChild().isString() && moduleMap != null) {
       ModulePath targetPath =
           compiler.getModuleLoader().resolve(dynamicImport.getFirstChild().getString());
-      Module targetModule = compiler.getModuleMap().getModule(targetPath);
+      Module targetModule = moduleMap.getModule(targetPath);
       if (targetModule != null) {
         // TypedScopeCreator ensures that the MODULE_BODY type is the export namespace type
         Node scriptNode = targetModule.metadata().rootNode();
