@@ -681,6 +681,6 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
 
     ModuleMetadata m = metadataMap().getModulesByPath().get("script.js");
     assertThat(m.isNonProvideScript()).isTrue();
-    assertThat(m.es6ImportSpecifiers()).containsExactly("*");
+    assertThat(m.es6ImportSpecifiers()).containsExactly("./imported.js");
   }
 }

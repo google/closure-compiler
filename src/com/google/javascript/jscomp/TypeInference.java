@@ -41,6 +41,7 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.modules.Binding;
 import com.google.javascript.jscomp.modules.Export;
@@ -2605,9 +2606,23 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   private FlowScope traverseDynamicImport(Node dynamicImport, FlowScope scope) {
-    // TODO(ChadKillingsworth) if the module import is a string literal,
-    //   resolve the module if possible and set the type to the namespace export
     JSType templateType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+
+    // If the module specifier is a string, attempt to resolve the module
+    if (dynamicImport.getFirstChild().isString()) {
+      ModulePath targetPath =
+          compiler.getModuleLoader().resolve(dynamicImport.getFirstChild().getString());
+      Module targetModule = compiler.getModuleMap().getModule(targetPath);
+      if (targetModule != null) {
+        // TypedScopeCreator ensures that the MODULE_BODY type is the export namespace type
+        Node scriptNode = targetModule.metadata().rootNode();
+        JSType exportNamespaceType = scriptNode != null ? scriptNode.getOnlyChild().getJSType() : null;
+        if (exportNamespaceType != null) {
+          templateType = exportNamespaceType;
+        }
+      }
+    }
+
     dynamicImport.setJSType(
         registry.createTemplatizedType(
             registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), templateType));

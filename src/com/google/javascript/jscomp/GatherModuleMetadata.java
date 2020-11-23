@@ -237,10 +237,12 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     }
 
     private void visitDynamicImport(NodeTraversal t, Node dynamicImport) {
-      currentModule
-          .metadataBuilder
-          .es6ImportSpecifiersBuilder()
-          .add("*");
+      if (dynamicImport.getFirstChild().isString()) {
+        currentModule
+            .metadataBuilder
+            .es6ImportSpecifiersBuilder()
+            .add(dynamicImport.getFirstChild().getString());
+      }
     }
 
     private void enterModule(Node n, @Nullable ModulePath path) {
