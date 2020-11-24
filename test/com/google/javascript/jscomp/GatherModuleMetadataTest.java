@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_NAMESPACE_OR_MODULE_ID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
@@ -128,6 +129,19 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     assertThat(m.isGoogModule()).isTrue();
     assertThat(m.isNonLegacyGoogModule()).isTrue();
     assertThat(m.isLegacyGoogModule()).isFalse();
+  }
+
+  @Test
+  public void testModuleIdValidation() {
+    test(srcs("goog.module('');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    test(srcs("goog.module(' ');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    test(srcs("goog.module('a..b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    test(srcs("goog.module('a. .b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+    test(srcs("goog.module('a.-.b');"), error(INVALID_NAMESPACE_OR_MODULE_ID));
+
+    testSame(srcs("goog.module('a');"));
+    testSame(srcs("goog.module('0');"));
+    testSame(srcs("goog.module('$');"));
   }
 
   @Test

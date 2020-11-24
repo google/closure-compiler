@@ -87,12 +87,10 @@ import javax.annotation.Nullable;
  */
 final class ClosureRewriteModule implements HotSwapCompilerPass {
 
-  // TODO(johnlenz): handle non-namespace module identifiers aka 'foo/bar'
-
-  static final DiagnosticType INVALID_MODULE_NAMESPACE =
+  static final DiagnosticType INVALID_MODULE_ID_ARG =
       DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_MODULE_NAMESPACE",
-          "goog.module parameter must be string literals");
+          "JSC_GOOG_MODULE_INVALID_MODULE_ID_ARG",
+          "goog.module parameter must be a string literal");
 
   static final DiagnosticType INVALID_PROVIDE_NAMESPACE =
       DiagnosticType.error(
@@ -884,7 +882,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private void recordGoogModule(NodeTraversal t, Node call) {
     Node namespaceIdNode = call.getLastChild();
     if (!namespaceIdNode.isString()) {
-      t.report(namespaceIdNode, INVALID_MODULE_NAMESPACE);
+      t.report(namespaceIdNode, INVALID_MODULE_ID_ARG);
       return;
     }
     String namespaceId = namespaceIdNode.getString();
