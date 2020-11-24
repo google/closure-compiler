@@ -117,6 +117,10 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .sorted(comparingInt((x) -> x.id))
                 .collect(toImmutableList()));
 
+    // must invaldiate after logging all prop_refs: invalidating a property deletes its list of
+    // use sites to save space, but the logging should include use sites
+    invalidateBasedOnType(flattener);
+
     FixedPointGraphTraversal.newTraversal(propagator).computeFixedPoint(graph);
     propIndex.values().forEach(renamer::renameUses);
     this.logForDiagnostics(
@@ -148,6 +152,17 @@ public final class DisambiguateProperties2 implements CompilerPass {
     ImmutableList<String> names = ImmutableList.of("prototype", "constructor", "then");
     for (String name : names) {
       propIndex.computeIfAbsent(name, PropertyClustering::new).invalidate();
+    }
+  }
+
+  private static void invalidateBasedOnType(TypeFlattener flattener) {
+    for (FlatType type : flattener.getAllKnownTypes()) {
+      if (!type.isInvalidating()) {
+        continue;
+      }
+      for (PropertyClustering prop : type.getAssociatedProps()) {
+        prop.invalidate();
+      }
     }
   }
 

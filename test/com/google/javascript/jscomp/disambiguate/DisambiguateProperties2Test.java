@@ -812,6 +812,58 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
         error(PropertyRenamingDiagnostics.INVALIDATION));
   }
 
+  @Test
+  public void invalidatingSubtype_doesNotInvalidatePropertyOnlyReferencedOnSupertype() {
+    // TODO(b/135045845): track mismatches through subtypes/supertypes
+    test(
+        srcs(
+            lines(
+                "class FooParent {",
+                "  parent() {}",
+                "}",
+                "",
+                "class FooChild extends FooParent {",
+                "  child() {}",
+                "}",
+                "",
+                "class BarParent {",
+                "  parent() {}",
+                "}",
+                "",
+                "class BarChild extends BarParent {",
+                "  child() {}",
+                "}",
+                "",
+                "/** ",
+                " * @suppress {checkTypes} intentional type error",
+                " * @type {!FooChild}",
+                " */",
+                "const fooChild = '';")),
+        expected(
+            lines(
+                "class FooParent {",
+                "  JSC$1_parent() {}",
+                "}",
+                "",
+                "class FooChild extends FooParent {",
+                "  child() {}",
+                "}",
+                "",
+                "class BarParent {",
+                "  JSC$5_parent() {}",
+                "}",
+                "",
+                "class BarChild extends BarParent {",
+                "  child() {}",
+                "}",
+                "",
+                "/** ",
+                " * @suppress {checkTypes} intentional type error",
+                " * @type {!FooChild}",
+                " */",
+                "const fooChild = '';")));
+  }
+
   private static final class SilenceNoiseGuard extends WarningsGuard {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
         ImmutableSet.of(

@@ -27,13 +27,6 @@ final class ClusterPropagator implements FixedPointGraphTraversal.EdgeCallback<F
   public boolean traverseEdge(FlatType src, Object unused, FlatType dest) {
     int startDestPropCount = dest.getAssociatedProps().size();
 
-    /**
-     * We make sure to check invalidation on the source first to preempt property propagation.
-     * There's no point in porpagating any properties in that case. Clearing them eagerly saves time
-     * and memory.
-     */
-    invalidatePropertiesIfInvalidating(src);
-
     for (PropertyClustering prop : src.getAssociatedProps()) {
       if (prop.isInvalidated()) {
         continue;
@@ -43,16 +36,7 @@ final class ClusterPropagator implements FixedPointGraphTraversal.EdgeCallback<F
       prop.getClusters().union(src, dest);
     }
 
-    invalidatePropertiesIfInvalidating(dest);
-
     // Were any properties added to dest?
     return startDestPropCount < dest.getAssociatedProps().size();
-  }
-
-  private static void invalidatePropertiesIfInvalidating(FlatType flat) {
-    if (flat.isInvalidating()) {
-      flat.getAssociatedProps().forEach(PropertyClustering::invalidate);
-      flat.getAssociatedProps().clear();
-    }
   }
 }
