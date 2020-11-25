@@ -579,6 +579,8 @@ public class DiagnosticGroups {
               CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
               CheckEnums.DUPLICATE_ENUM_VALUE,
               CheckEnums.ENUM_PROP_NOT_CONSTANT,
+              CheckEnums.ENUM_TYPE_NOT_STRING_OR_NUMBER,
+              CheckEnums.NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM,
               CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM,
               CheckEs6ModuleFileStructure.MUST_COME_BEFORE,
               CheckEs6Modules.DUPLICATE_IMPORT,
