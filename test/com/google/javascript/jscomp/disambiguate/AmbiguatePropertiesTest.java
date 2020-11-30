@@ -1284,8 +1284,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnum() {
-    // TODO(sdh): Consider removing this test if we decide that enum objects are
-    // okay to ambiguate (in which case, this would rename to Foo.a).
     testSame(
         lines(
             "/** @enum {string} */ var Foo = {X: 'y'};",

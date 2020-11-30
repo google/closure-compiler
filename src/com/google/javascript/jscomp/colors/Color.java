@@ -74,7 +74,17 @@ public abstract class Color {
       case SINGLETON:
         return singleton().isInvalidating();
       case UNION:
-        return union().stream().anyMatch(color -> color.singleton().isInvalidating());
+        return union().stream().anyMatch(Color::isInvalidating);
+    }
+    throw new AssertionError();
+  }
+
+  public final boolean propertiesKeepOriginalName() {
+    switch (kind()) {
+      case SINGLETON:
+        return singleton().getPropertiesKeepOriginalName();
+      case UNION:
+        return union().stream().anyMatch(Color::propertiesKeepOriginalName);
     }
     throw new AssertionError();
   }

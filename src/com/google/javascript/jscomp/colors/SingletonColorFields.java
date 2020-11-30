@@ -51,6 +51,8 @@ public abstract class SingletonColorFields {
 
   abstract boolean isInvalidating();
 
+  abstract boolean getPropertiesKeepOriginalName();
+
   abstract boolean isConstructor();
 
   @Nullable
@@ -65,6 +67,8 @@ public abstract class SingletonColorFields {
     public abstract Builder setId(String value);
 
     public abstract Builder setInvalidating(boolean value);
+
+    public abstract Builder setPropertiesKeepOriginalName(boolean value);
 
     public abstract Builder setDisambiguationSupertypes(ImmutableList<Color> supertypes);
 
@@ -91,6 +95,7 @@ public abstract class SingletonColorFields {
     return new AutoValue_SingletonColorFields.Builder()
         .setDebugInfo(DebugInfo.EMPTY)
         .setInvalidating(false)
+        .setPropertiesKeepOriginalName(false)
         .setDisambiguationSupertypes(ImmutableList.of())
         .setConstructor(false);
   }

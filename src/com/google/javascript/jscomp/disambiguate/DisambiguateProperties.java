@@ -382,7 +382,6 @@ public class DisambiguateProperties implements CompilerPass {
             .writeInvalidationsInto(this.invalidationMap)
             .addAllTypeMismatches(compiler.getTypeMismatches())
             .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
-            .allowEnums()
             .allowScalars()
             .build();
   }

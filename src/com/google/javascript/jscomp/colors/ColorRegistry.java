@@ -55,6 +55,7 @@ public final class ColorRegistry {
             .setId("__nativeColor__" + nativeColorId.name())
             .setDebugInfo(DebugInfo.builder().setClassName(nativeColorId.name()).build())
             .setInvalidating(invalidatingNativeColors.contains(nativeColorId))
+            .setPropertiesKeepOriginalName(false)
             .build();
     nativeColors.put(nativeColorId, Color.createSingleton(fields));
   }

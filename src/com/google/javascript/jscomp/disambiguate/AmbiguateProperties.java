@@ -619,7 +619,7 @@ public class AmbiguateProperties implements CompilerPass {
 
       ++numOccurrences;
 
-      if (color.isInvalidating()) {
+      if (color.isInvalidating() || color.propertiesKeepOriginalName()) {
         skipAmbiguating = true;
         return;
       }

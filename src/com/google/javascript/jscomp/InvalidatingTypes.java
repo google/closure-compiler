@@ -37,14 +37,11 @@ import javax.annotation.Nullable;
  */
 public final class InvalidatingTypes {
   private final ImmutableSet<JSType> types;
-  /** Whether to allow disambiguating enum properties */
-  private final boolean allowEnums;
   /** Whether to allow types like 'str'.toString() */
   private final boolean allowScalars;
 
   private InvalidatingTypes(Builder builder, ImmutableSet<JSType> types) {
     this.types = types;
-    this.allowEnums = builder.allowEnums;
     this.allowScalars = builder.allowScalars;
   }
 
@@ -79,7 +76,6 @@ public final class InvalidatingTypes {
         // Don't disambiguate properties on object types that are structurally compared or that
         // don't come from a literal class or function definition
         || isAmbiguousOrStructuralType(objType)
-        || (!allowEnums && objType.isEnumType())
         || (!allowScalars && objType.isBoxableScalar());
   }
 
@@ -118,7 +114,6 @@ public final class InvalidatingTypes {
 
     @Nullable private Multimap<JSType, Node> invalidationMap;
     private final LinkedHashSet<TypeMismatch> mismatches = new LinkedHashSet<>();
-    private boolean allowEnums = false;
     private boolean allowScalars = false;
 
     // TODO(b/160615581): Investigate making this always false, instead of always true.
@@ -154,15 +149,6 @@ public final class InvalidatingTypes {
 
     public Builder writeInvalidationsInto(@Nullable Multimap<JSType, Node> invalidationMap) {
       this.invalidationMap = invalidationMap;
-      return this;
-    }
-
-    // TODO(sdh): Investigate whether this can be consolidated between all three passes.
-    // In particular, mutation testing suggests allowEnums=true should work everywhere.
-    // We should revisit what breaks when we disallow scalars everywhere.
-    public Builder allowEnums() {
-      // Ambiguate and Inline do not allow enums
-      this.allowEnums = true;
       return this;
     }
 

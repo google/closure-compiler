@@ -218,6 +218,10 @@ final class JSTypeSerializer {
     }
     return objBuilder
         .setIsInvalidating(invalidatingTypes.isInvalidating(type))
+        // To support legacy code, property disambiguation never renames properties of enums
+        // (e.g. 'A' in '/** @enum */ const E = {A: 0}`) or boxable scalars (String, Number). In
+        // theory this would be safe to remove if we clean up code depending on the lack of renaming
+        .setPropertiesKeepOriginalName(type.isEnumType() || type.isBoxableScalar())
         // NOTE: We need a better format than sequential integers in order to have an id that
         // can be consistent across compilation units. For now, using a sequential integers for each
         // type depends on the invariant that we serialize each distinct type exactly once and from

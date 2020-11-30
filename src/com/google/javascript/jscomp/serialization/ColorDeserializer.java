@@ -55,11 +55,6 @@ public final class ColorDeserializer {
   // in the source. This set will need to be constructed at deserialization time.
   private static final ImmutableSet<NativeColorId> INVALIDATING_NATIVES =
       ImmutableSet.of(
-          NativeColorId.BOOLEAN,
-          NativeColorId.BIGINT,
-          NativeColorId.NUMBER,
-          NativeColorId.STRING,
-          NativeColorId.SYMBOL,
           NativeColorId.TOP_OBJECT,
           NativeColorId.UNKNOWN);
 
@@ -155,6 +150,7 @@ public final class ColorDeserializer {
         SingletonColorFields.builder()
             .setId(serialized.getUuid())
             .setInvalidating(serialized.getIsInvalidating())
+            .setPropertiesKeepOriginalName(serialized.getPropertiesKeepOriginalName())
             .setDisambiguationSupertypes(directSupertypes)
             .setDebugInfo(
                 DebugInfo.builder()
