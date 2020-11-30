@@ -2045,4 +2045,46 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "}"));
   }
+
+  @Test
+  public void testPropertyOnScalarPreventsAmbiguation() {
+    test(
+        lines(
+            "/** @return {string} */",
+            "String.prototype.customMethod = function() { return ''; };",
+            "'FOOBAR'.customMethod();",
+            "class Bar {",
+            "  bar() {}",
+            "}",
+            "new Bar().bar();"),
+        lines(
+            "/** @return {string} */",
+            "String.prototype.b = function() { return ''; };",
+            "'FOOBAR'.b();",
+            "class Bar {",
+            "  a() {}",
+            "}",
+            "new Bar().a();"));
+  }
+
+  @Test
+  public void testAmbiguateMethodAddedToStringPrototype() {
+    test(
+        lines(
+            "/** @return {string} */",
+            "String.prototype.customMethod = function() { return ''; };",
+            "new String('FOOBAR').customMethod();",
+            "class Bar {",
+            "  bar() {}",
+            "}",
+            "new Bar().bar();"),
+        lines(
+            "/** @return {string} */",
+            "String.prototype.a = function() { return ''; };",
+            "new String('FOOBAR').a();",
+            "class Bar {",
+            "  a() {}",
+            "}",
+            "new Bar().a();"));
+  }
 }
