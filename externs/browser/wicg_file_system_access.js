@@ -122,8 +122,9 @@ FileSystemRemoveOptions.prototype.recursive;
 /**
  * @interface
  * @extends {FileSystemHandle}
- * @extends {AsyncIterable<string, !FileSystemHandle>}
+ * @extends {AsyncIterable<!Array<string|!FileSystemHandle>>}
  * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle
+ * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
  */
 var FileSystemDirectoryHandle = function() {};
 
@@ -153,6 +154,24 @@ FileSystemDirectoryHandle.prototype.removeEntry = function(name, opt_options) {}
  * @return {!Promise<?Array<string>>}
  */
 FileSystemDirectoryHandle.prototype.resolve = function(possibleDescendant) {};
+
+/**
+ * @return {!AsyncIterable<!Array<string|!FileSystemHandle>>}
+ * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
+ */
+FileSystemDirectoryHandle.prototype.entries = function() {};
+
+/**
+ * @return {!AsyncIterable<!FileSystemHandle>}
+ * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
+ */
+FileSystemDirectoryHandle.prototype.values = function() {};
+
+/**
+ * @return {!AsyncIterable<string>}
+ * @see https://wicg.github.io/file-system-access/#api-filesystemdirectoryhandle-asynciterable
+ */
+FileSystemDirectoryHandle.prototype.keys = function() {};
 
 
 /**
