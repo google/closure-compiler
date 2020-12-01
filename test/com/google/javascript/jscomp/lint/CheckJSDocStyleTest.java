@@ -449,10 +449,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         "function f(x, y) {}"));
 
     testSame(lines(
-        "/** @override */",
-        "Foo.bar = function(x, y) {}"));
-
-    testSame(lines(
         "/**",
         " * @param {string=} x",
         " */",
@@ -1101,8 +1097,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @param {number} x */ function f(x) { return; }");
     testSame("/** @param {number} x\n * @return {number} */ function f(x) { return x; }");
     testSame("/** @param {number} x */ function /** number */ f(x) { return x; }");
-    testSame("/** @inheritDoc */ function f(x) { return x; }");
-    testSame("/** @override */ function f(x) { return x; }");
   }
 
   @Test
@@ -1117,8 +1111,65 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @param {number} x */ f = function(x) { function bar() { return x; } }");
     testSame("/** @param {number} x */ f = function(x) { return; }");
     testSame("/** @param {number} x\n * @return {number} */ f = function(x) { return x; }");
-    testSame("/** @inheritDoc */ f = function(x) { return x; }");
-    testSame("/** @override */ f = function(x) { return x; }");
+  }
+
+  @Test
+  public void testMissingParamOrReturn_warnOnOverrideMethodsAndFields() {
+    testWarning(
+        lines(
+            "/** ",
+            " * @override ",
+            " * @param {string} x ",
+            " */",
+            " Foo.Bar = function(x) { return x; }"), // function assigned to a field
+        MISSING_RETURN_JSDOC);
+    testWarning(
+        lines(
+            "/** ",
+            " * @override ",
+            " * @param {string} x ",
+            " */",
+            " function f(x) { return x; }"),
+        MISSING_RETURN_JSDOC);
+    testWarning(
+        lines(
+            "/**",
+            " * @override",
+            " * @return {string}",
+            " */",
+            " Foo.Bar = function(x) { return x; }"),
+        MISSING_PARAMETER_JSDOC);
+    testWarning(
+        lines(
+            "/** ", " * @override ", " * @param {string} x ", " */", "Foo.bar = function(x, y) {}"),
+        WRONG_NUMBER_OF_PARAMS);
+
+    // also test `@inheritDoc` annotations
+    testWarning(
+        lines(
+            "/** ",
+            " * @inheritDoc ",
+            " * @return {string} x ",
+            " */",
+            "function f(x) { return x; }"),
+        MISSING_PARAMETER_JSDOC);
+    testWarning(
+        lines(
+            "/** ",
+            " * @inheritDoc ",
+            " * @return {string} x ",
+            " */",
+            "Foo.Bar = function(x) { return x; }"), // assigned to a field
+        MISSING_PARAMETER_JSDOC);
+
+    // inline param type
+    testNoWarning(
+        lines(
+            "/** ",
+            " * @override",
+            " * @return {string}",
+            " */",
+            "var f = function(/** string */ x) { return x; }"));
   }
 
   @Test
@@ -1129,8 +1180,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testSame("/** @param {number} x */ var f = function(x) { return; }");
     testSame("/** @param {number} x\n * @return {number} */ var f = function(x) { return x; }");
     testSame("/** @const {function(number): number} */ var f = function(x) { return x; }");
-    testSame("/** @inheritDoc */ var f = function(x) { return x; }");
-    testSame("/** @override */ var f = function(x) { return x; }");
   }
 
   @Test
