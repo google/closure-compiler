@@ -840,6 +840,9 @@ BaseRenderingContext2D.prototype.shadowOffsetY;
 /** @type {boolean} */
 BaseRenderingContext2D.prototype.imageSmoothingEnabled;
 
+/** @type {string} */
+BaseRenderingContext2D.prototype.imageSmoothingQuality;
+
 /**
  * @type {string|!CanvasGradient|!CanvasPattern}
  * @see https://html.spec.whatwg.org/multipage/scripting.html#fill-and-stroke-styles:dom-context-2d-strokestyle
