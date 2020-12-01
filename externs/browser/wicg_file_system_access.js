@@ -31,10 +31,10 @@ var FileSystemHandleKind;
  */
 var FileSystemHandle = function() {};
 
-/** @type {!FileSystemHandleKind} @const */
+/** @const {!FileSystemHandleKind} */
 FileSystemHandle.prototype.kind;
 
-/** @type {string} @const */
+/** @const {string} */
 FileSystemHandle.prototype.name;
 
 /**
