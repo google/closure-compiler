@@ -1423,22 +1423,22 @@ ImageCapture.prototype.track;
 function RTCTrackEvent(type, eventInitDict) {}
 
 /**
- * @const {?RTCRtpReceiver}
+ * @const {!RTCRtpReceiver}
  */
 RTCTrackEvent.prototype.receiver;
 
 /**
- * @const {?MediaStreamTrack}
+ * @const {!MediaStreamTrack}
  */
 RTCTrackEvent.prototype.track;
 
 /**
- * @const {?Array<!MediaStream>}
+ * @const {!Array<!MediaStream>}
  */
 RTCTrackEvent.prototype.streams;
 
 /**
- * @const {?RTCRtpTransceiver}
+ * @const {!RTCRtpTransceiver}
  */
 RTCTrackEvent.prototype.transceiver;
 
@@ -2619,7 +2619,7 @@ RTCPeerConnection.prototype.createAnswer =
     function(successCallbackOrConstraints, errorCallback, constraints) {};
 
 /**
- * @param {!RTCSessionDescription} description
+ * @param {!RTCSessionDescription=} description
  * @param {!RTCVoidCallback=} successCallback
  * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @return {!Promise<!RTCSessionDescription>}
