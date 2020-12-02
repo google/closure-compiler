@@ -112,12 +112,12 @@ public final class FixedPointGraphTraversal<N, E> {
    * @param entrySet The nodes to begin traversing from.
    */
   public void computeFixedPoint(DiGraph<N, E> graph, Set<N> entrySet) {
-    int cycleCount = 0;
+    long cycleCount = 0;
     long nodeCount = min(graph.getNodeCount(), MAX_NODE_COUNT_FOR_ITERATION_LIMIT);
 
     // Choose a bail-out heuristically in case the computation
     // doesn't converge.
-    long maxIterations = max(nodeCount * nodeCount * nodeCount, 100);
+    long maxIterations = max(nodeCount * nodeCount * nodeCount, 100L);
 
     // Use a LinkedHashSet, so that the traversal is deterministic.
     LinkedHashSet<DiGraphNode<N, E>> workSet = new LinkedHashSet<>();
