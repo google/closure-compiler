@@ -174,7 +174,7 @@ public abstract class Color {
     if (alternates.size() == 1) {
       return Iterables.getOnlyElement(alternates);
     }
-    // Flatten other UnionColors
+    // Flatten nested unions
     ImmutableSet.Builder<Color> flatAlternates = ImmutableSet.builder();
     for (Color alternate : alternates) {
       switch (alternate.kind()) {
