@@ -893,7 +893,7 @@ public class DisambiguateProperties implements CompilerPass {
    * considered for renaming.
    */
   private boolean isTypeToSkip(JSType type) {
-    return type.isEnumType() || type.isBoxableScalar();
+    return type.isEnumType();
   }
 
   /**

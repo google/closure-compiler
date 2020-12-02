@@ -256,10 +256,8 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
     prop.getUseSites().put(site, flatOwner);
 
     // Track the cluster of types whose properties must keep their original name after
-    // disambiguation. An "enum type" is the type of an enum object like "{STOP: 0, GO: 1}" and
-    // a "boxable scalar" is a type like string or number that corresponds to an object String or
-    // Number.
-    if (site.isFromExterns() || owner.isEnumType() || owner.isBoxableScalar()) {
+    // disambiguation. Note: an "enum type" is the type of an enum object like "{STOP: 0, GO: 1}".
+    if (site.isFromExterns() || (owner != null && owner.isEnumType())) {
       prop.registerOriginalNameType(flatOwner);
     }
   }

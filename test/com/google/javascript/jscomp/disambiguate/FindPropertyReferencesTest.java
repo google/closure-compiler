@@ -479,13 +479,12 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
   }
 
   @Test
-  public void enumsAndBoxableScalars_areClusteredWithExterns() {
+  public void enumsAreClusteredWithExterns() {
     // Given
     FlatType flatFoo = FlatType.createForTesting(-1);
     FlatType flatBar = FlatType.createForTesting(-2);
-    FlatType flatString = FlatType.createForTesting(-3);
-    FlatType flatQux = FlatType.createForTesting(-4);
-    this.expectedOriginalNameTypes = ImmutableSet.of(flatFoo, flatBar, flatString);
+    FlatType flatQux = FlatType.createForTesting(-3);
+    this.expectedOriginalNameTypes = ImmutableSet.of(flatFoo, flatBar);
 
     FindPropertyReferences finder =
         this.createFinder(
@@ -493,7 +492,6 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
                 .put("Foo", flatFoo)
                 .put("enum{Bar}", flatBar)
                 .put("Qux", flatQux)
-                .put("string", flatString)
                 .build(),
             null,
             null);
@@ -506,8 +504,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
                 "class Foo {}", //
                 "new Foo().a;"),
             lines(
-                "'x'.a;", //
-                "class Qux { }",
+                "class Qux { }", //
                 "/** @enum */",
                 "const Bar = {",
                 "  a: 0",
@@ -517,7 +514,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
     // Then
     this.assertThatUsesOf("a")
-        .containsExactly(flatFoo, STRING, flatString, STRING, flatBar, STRING_KEY, flatQux, STRING);
+        .containsExactly(flatFoo, STRING, flatBar, STRING_KEY, flatQux, STRING);
 
     // "Original name" type clusters are checked during teardown.
   }
