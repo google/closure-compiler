@@ -101,19 +101,18 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
 
     /** Flatten and collect the types of all NAMEs that start with "test". */
     this.processor =
-        (externs, main) -> {
-          NodeTraversal.traverse(
-              this.compiler,
-              main,
-              new AbstractPostOrderCallback() {
-                @Override
-                public void visit(NodeTraversal t, Node n, Node unused) {
-                  if (n.isName() && n.getString().startsWith("test")) {
-                    testTypes.put(n.getString(), flattener.flatten(n.getJSType()));
+        (externs, main) ->
+            NodeTraversal.traverse(
+                this.compiler,
+                main,
+                new AbstractPostOrderCallback() {
+                  @Override
+                  public void visit(NodeTraversal t, Node n, Node unused) {
+                    if (n.isName() && n.getString().startsWith("test")) {
+                      testTypes.put(n.getString(), flattener.flatten(n.getJSType()));
+                    }
                   }
-                }
-              });
-        };
+                });
     this.testSame(srcs(src));
     this.processor = null;
 

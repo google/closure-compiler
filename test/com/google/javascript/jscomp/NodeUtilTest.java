@@ -4385,25 +4385,23 @@ public final class NodeUtilTest {
 
       ImmutableList.Builder<Object[]> cases = ImmutableList.builder();
       templateToDefinesOwnReceiver.forEach(
-          (outerTemplate, outerReceiver) -> {
-            templateToDefinesOwnReceiver.forEach(
-                (innerTemplate, innerReceiver) -> {
-                  exprToUsesReceiver.forEach(
-                      (expr, usesReceiver) -> {
-                        String caseSrc =
-                            SimpleFormat.format(
-                                outerTemplate, SimpleFormat.format(innerTemplate, expr));
-                        cases.add(
-                            new Object[] {
-                              caseSrc,
-                              // refToEnclosing
-                              !outerReceiver && !innerReceiver && usesReceiver,
-                              // refToOuterFnOwn
-                              outerReceiver && !innerReceiver && usesReceiver,
-                            });
-                      });
-                });
-          });
+          (outerTemplate, outerReceiver) ->
+              templateToDefinesOwnReceiver.forEach(
+                  (innerTemplate, innerReceiver) ->
+                      exprToUsesReceiver.forEach(
+                          (expr, usesReceiver) -> {
+                            String caseSrc =
+                                SimpleFormat.format(
+                                    outerTemplate, SimpleFormat.format(innerTemplate, expr));
+                            cases.add(
+                                new Object[] {
+                                  caseSrc,
+                                  // refToEnclosing
+                                  !outerReceiver && !innerReceiver && usesReceiver,
+                                  // refToOuterFnOwn
+                                  outerReceiver && !innerReceiver && usesReceiver,
+                                });
+                          })));
 
       /**
        * Add a few cases using `super` to check it behaves the same.

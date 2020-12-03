@@ -966,16 +966,8 @@ class PeepholeMinimizeConditions
    */
   private static boolean isPropertyAssignmentInExpression(Node n) {
     Predicate<Node> isPropertyAssignmentInExpressionPredicate =
-        new Predicate<Node>() {
-      @Override
-      public boolean apply(Node input) {
-        return (input.isGetProp()
-            && input.getParent().isAssign());
-      }
-    };
-
-    return NodeUtil.has(n, isPropertyAssignmentInExpressionPredicate,
-        NodeUtil.MATCH_NOT_FUNCTION);
+        (Node input) -> (input.isGetProp() && input.getParent().isAssign());
+    return NodeUtil.has(n, isPropertyAssignmentInExpressionPredicate, NodeUtil.MATCH_NOT_FUNCTION);
   }
 
   /**

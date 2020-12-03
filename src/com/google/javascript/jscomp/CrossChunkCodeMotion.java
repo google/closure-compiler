@@ -563,11 +563,9 @@ class CrossChunkCodeMotion implements CompilerPass {
     }
 
     private void moveStatementsToModule(JSModule preferredModule) {
-      Node destParent = moduleInsertionPointMap.get(preferredModule);
-      if (destParent == null) {
-        destParent = compiler.getNodeForCodeInsertion(preferredModule);
-        moduleInsertionPointMap.put(preferredModule, destParent);
-      }
+      Node destParent =
+          moduleInsertionPointMap.computeIfAbsent(
+              preferredModule, compiler::getNodeForCodeInsertion);
       Deque<TopLevelStatement> statementsLastFirst = getStatementsLastFirst();
       for (TopLevelStatement statement : statementsLastFirst) {
         Node statementNode = statement.getStatementNode();

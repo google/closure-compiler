@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
@@ -28,7 +30,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A helper class to prebuild DependencyInfo from a list of {@link CompilerInput}. Dependency info
@@ -64,21 +65,14 @@ class PrebuildDependencyInfo {
             numParallelThreads,
             numParallelThreads,
             Integer.MAX_VALUE,
-            TimeUnit.SECONDS,
+            SECONDS,
             new LinkedBlockingQueue<Runnable>(),
             threadFactory);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(poolExecutor);
     List<ListenableFuture<?>> futureList = new ArrayList<>(Iterables.size(allInputs));
     // TODO(moz): Support canceling all parsing on the first halting error
     for (final CompilerInput input : allInputs) {
-      futureList.add(
-          executorService.submit(
-              new Runnable() {
-                @Override
-                public void run() {
-                  input.getDependencyInfo();
-                }
-              }));
+      futureList.add(executorService.submit(input::getDependencyInfo));
     }
 
     poolExecutor.shutdown();

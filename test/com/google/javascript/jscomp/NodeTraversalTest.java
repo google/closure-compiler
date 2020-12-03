@@ -737,9 +737,7 @@ public final class NodeTraversalTest {
 
     final AtomicInteger counter = new AtomicInteger(0);
     AbstractPostOrderCallbackInterface countingCallback =
-        (NodeTraversal t, Node n, Node parent) -> {
-          counter.incrementAndGet();
-        };
+        (NodeTraversal t, Node n, Node parent) -> counter.incrementAndGet();
 
     NodeTraversal.traversePostOrder(compiler, tree, countingCallback);
     assertThat(counter.get()).isEqualTo(3);

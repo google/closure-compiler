@@ -521,10 +521,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
   @Test
   public void propertylessConstructorsAreRecordedInTypeFlattener() {
-    Consumer<JSError> errorCb =
-        (e) -> {
-          assertWithMessage(e.getDescription()).fail();
-        };
+    Consumer<JSError> errorCb = (e) -> assertWithMessage(e.getDescription()).fail();
     StubTypeFlattener flattener = new StubTypeFlattener(ImmutableMap.of());
     FindPropertyReferences finder = new FindPropertyReferences(flattener, errorCb, (s) -> false);
 
@@ -560,10 +557,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
       @Nullable Consumer<JSError> errorCb,
       @Nullable IsPropertyDefiner isPropertyDefiner) {
     if (errorCb == null) {
-      errorCb =
-          (e) -> {
-            assertWithMessage(e.getDescription()).fail();
-          };
+      errorCb = (e) -> assertWithMessage(e.getDescription()).fail();
     }
     if (isPropertyDefiner == null) {
       isPropertyDefiner = (s) -> false;

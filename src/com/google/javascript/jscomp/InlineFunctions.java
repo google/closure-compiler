@@ -720,13 +720,7 @@ class InlineFunctions implements CompilerPass {
   private static boolean hasNonInlinableParam(Node node) {
     checkNotNull(node);
 
-    Predicate<Node> pred =
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node input) {
-            return input.isDefaultValue() || input.isDestructuringPattern();
-          }
-        };
+    Predicate<Node> pred = (Node input) -> input.isDefaultValue() || input.isDestructuringPattern();
 
     return NodeUtil.has(node, pred, alwaysTrue());
   }

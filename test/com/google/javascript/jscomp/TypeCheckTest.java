@@ -25664,21 +25664,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // TODO(b/112964849): This case should not throw anything.
     assertThrows(
         StackOverflowError.class,
-        () -> {
-          testTypes(
-              lines(
-                  "/** @typedef {Foo|string} */",
-                  "var Bar;",
-                  "/** @typedef {Bar|number} */",
-                  "var Foo;",
-                  "var /** Foo */ foo;",
-                  "var /** null */ x = foo;",
-                  ""),
-              lines(
-                  "initializing variable", //
-                  "found   : (number|string)",
-                  "required: null"));
-        });
+        () ->
+            testTypes(
+                lines(
+                    "/** @typedef {Foo|string} */",
+                    "var Bar;",
+                    "/** @typedef {Bar|number} */",
+                    "var Foo;",
+                    "var /** Foo */ foo;",
+                    "var /** null */ x = foo;",
+                    ""),
+                lines(
+                    "initializing variable", //
+                    "found   : (number|string)",
+                    "required: null")));
   }
 
   @Test

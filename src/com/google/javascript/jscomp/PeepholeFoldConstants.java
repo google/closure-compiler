@@ -592,7 +592,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       // (TRUE || x) => TRUE (also, (3 || x) => 3)
       // (FALSE && x) => FALSE
-      if ((lval && type == Token.OR) || (!lval && type == Token.AND)) {
+      if (lval ? type == Token.OR : type == Token.AND) {
         result = left;
         dropped = right;
       } else if (!mayHaveSideEffects(left)) {
@@ -1488,7 +1488,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (objectType.getString().equals("String")) {
       Node value = objectType.getNext();
-      String stringValue = null;
+      String stringValue;
       if (value == null) {
         stringValue = "";
       } else {

@@ -175,13 +175,14 @@ public final class CheckConformance implements Callback, CompilerPass {
                 requirement,
                 "extending rule may not specify 'value' if base rule does not allow it");
           }
-          existing.addAllWhitelist(requirement.getWhitelistList());
-          existing.addAllWhitelistRegexp(requirement.getWhitelistRegexpList());
-          existing.addAllOnlyApplyTo(requirement.getOnlyApplyToList());
-          existing.addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList());
-          existing.addAllWhitelistEntry(requirement.getWhitelistEntryList());
-          existing.addAllValue(requirement.getValueList());
-          existing.addAllConfigFile(requirement.getConfigFileList());
+          existing
+              .addAllWhitelist(requirement.getWhitelistList())
+              .addAllWhitelistRegexp(requirement.getWhitelistRegexpList())
+              .addAllOnlyApplyTo(requirement.getOnlyApplyToList())
+              .addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList())
+              .addAllWhitelistEntry(requirement.getWhitelistEntryList())
+              .addAllValue(requirement.getValueList())
+              .addAllConfigFile(requirement.getConfigFileList());
         }
       }
     }
@@ -196,20 +197,16 @@ public final class CheckConformance implements Callback, CompilerPass {
 
   private static void removeDuplicates(Requirement.Builder requirement) {
     final Set<String> list1 = ImmutableSet.copyOf(requirement.getWhitelistList());
-    requirement.clearWhitelist();
-    requirement.addAllWhitelist(list1);
+    requirement.clearWhitelist().addAllWhitelist(list1);
 
     final Set<String> list2 = ImmutableSet.copyOf(requirement.getWhitelistRegexpList());
-    requirement.clearWhitelistRegexp();
-    requirement.addAllWhitelistRegexp(list2);
+    requirement.clearWhitelistRegexp().addAllWhitelistRegexp(list2);
 
     final Set<String> list3 = ImmutableSet.copyOf(requirement.getOnlyApplyToList());
-    requirement.clearOnlyApplyTo();
-    requirement.addAllOnlyApplyTo(list3);
+    requirement.clearOnlyApplyTo().addAllOnlyApplyTo(list3);
 
     final Set<String> list4 = ImmutableSet.copyOf(requirement.getOnlyApplyToRegexpList());
-    requirement.clearOnlyApplyToRegexp();
-    requirement.addAllOnlyApplyToRegexp(list4);
+    requirement.clearOnlyApplyToRegexp().addAllOnlyApplyToRegexp(list4);
   }
 
   private static Rule initRule(

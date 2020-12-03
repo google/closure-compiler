@@ -260,11 +260,7 @@ public final class GlobalNamespaceTest {
     Name nameA = namespace.getOwnSlot("A");
     Ref refA = nameA.getFirstRef();
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          nameA.updateRefNode(refA, refA.getNode());
-        });
+    assertThrows(IllegalArgumentException.class, () -> nameA.updateRefNode(refA, refA.getNode()));
   }
 
   @Test
@@ -302,22 +298,10 @@ public final class GlobalNamespaceTest {
     assertThat(refA.getNode()).isNull();
     assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
     // cannot get refs for null
-    assertThrows(
-        NullPointerException.class,
-        () -> {
-          nameA.getRefsForNode(null);
-        });
+    assertThrows(NullPointerException.class, () -> nameA.getRefsForNode(null));
     // cannot update the node again once it's been set to null
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          nameA.updateRefNode(refA, null);
-        });
-    assertThrows(
-        IllegalStateException.class,
-        () -> {
-          nameA.updateRefNode(refA, oldNode);
-        });
+    assertThrows(IllegalArgumentException.class, () -> nameA.updateRefNode(refA, null));
+    assertThrows(IllegalStateException.class, () -> nameA.updateRefNode(refA, oldNode));
   }
 
   @Test
@@ -335,10 +319,7 @@ public final class GlobalNamespaceTest {
     Node useNode = useRef.getNode();
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          nameA.updateRefNode(declarationRef, useNode);
-        });
+        IllegalArgumentException.class, () -> nameA.updateRefNode(declarationRef, useNode));
   }
 
   @Test

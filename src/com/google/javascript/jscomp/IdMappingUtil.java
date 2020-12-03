@@ -21,9 +21,8 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
-
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,7 +86,7 @@ public final class IdMappingUtil {
    */
   public static Map<String, BiMap<String, String>> parseSerializedIdMappings(String idMappings) {
     if (Strings.isNullOrEmpty(idMappings)) {
-      return Collections.emptyMap();
+      return ImmutableMap.of();
     }
 
     Map<String, BiMap<String, String>> resultMap = new HashMap<>();
@@ -114,7 +113,7 @@ public final class IdMappingUtil {
         int split = line.indexOf(':');
         if (split != -1) {
           String name = line.substring(0, split);
-          String location = line.substring(split + 1, line.length());
+          String location = line.substring(split + 1);
           currentSectionMap.put(name, location);
         } else {
           throw new IllegalArgumentException(

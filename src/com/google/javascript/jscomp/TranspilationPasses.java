@@ -285,11 +285,10 @@ public class TranspilationPasses {
     return PassFactory.builderForHotSwap()
         .setName("Es6RewriteDestructuring")
         .setInternalFactory(
-            (compiler) -> {
-              return new Es6RewriteDestructuring.Builder(compiler)
-                  .setDestructuringRewriteMode(rewriteMode)
-                  .build();
-            })
+            (compiler) ->
+                new Es6RewriteDestructuring.Builder(compiler)
+                    .setDestructuringRewriteMode(rewriteMode)
+                    .build())
         .setFeatureSet(ES2018)
         .build();
   }
@@ -504,21 +503,20 @@ public class TranspilationPasses {
     return PassFactory.builderForHotSwap()
         .setName(passName)
         .setInternalFactory(
-            (compiler) -> {
-              return new HotSwapCompilerPass() {
-                @Override
-                public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-                  maybeMarkFeaturesAsTranspiledAway(
-                      compiler, featureToRemove, moreFeaturesToRemove);
-                }
+            (compiler) ->
+                new HotSwapCompilerPass() {
+                  @Override
+                  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+                    maybeMarkFeaturesAsTranspiledAway(
+                        compiler, featureToRemove, moreFeaturesToRemove);
+                  }
 
-                @Override
-                public void process(Node externs, Node root) {
-                  maybeMarkFeaturesAsTranspiledAway(
-                      compiler, featureToRemove, moreFeaturesToRemove);
-                }
-              };
-            })
+                  @Override
+                  public void process(Node externs, Node root) {
+                    maybeMarkFeaturesAsTranspiledAway(
+                        compiler, featureToRemove, moreFeaturesToRemove);
+                  }
+                })
         .setFeatureSet(FeatureSet.ES_NEXT_IN)
         .build();
   }

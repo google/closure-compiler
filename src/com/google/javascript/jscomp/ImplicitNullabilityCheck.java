@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Lists.transform;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -122,15 +121,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     if (info == null) {
       return ImmutableList.of();
     }
-    final List<Node> thrownTypes =
-        transform(
-            info.getThrownTypes(),
-            new Function<JSTypeExpression, Node>() {
-              @Override
-              public Node apply(JSTypeExpression expr) {
-                return expr.getRoot();
-              }
-            });
+    final List<Node> thrownTypes = transform(info.getThrownTypes(), JSTypeExpression::getRoot);
 
     final ImmutableList.Builder<Result> builder = ImmutableList.builder();
     for (Node typeRoot : info.getTypeNodes()) {

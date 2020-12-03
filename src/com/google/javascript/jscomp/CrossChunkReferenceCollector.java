@@ -307,11 +307,8 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
 
   private void addReferenceToCollection(Var v, Reference reference) {
     // Create collection if none already
-    ReferenceCollection referenceInfo = referenceMap.get(v);
-    if (referenceInfo == null) {
-      referenceInfo = new ReferenceCollection();
-      referenceMap.put(v, referenceInfo);
-    }
+    ReferenceCollection referenceInfo =
+        referenceMap.computeIfAbsent(v, (Var k) -> new ReferenceCollection());
 
     // Add this particular reference
     referenceInfo.add(reference);

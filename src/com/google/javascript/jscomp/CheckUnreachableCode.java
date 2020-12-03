@@ -81,26 +81,22 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
   public void exitScope(NodeTraversal t) {}
 
   private static final Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> REACHABLE =
-      new Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>>() {
-
-        @Override
-        public boolean apply(EdgeTuple<Node, Branch> input) {
-          Branch branch = input.edge;
-          if (!branch.isConditional()) {
-            return true;
-          }
-          Node predecessor = input.sourceNode;
-          Node condition = NodeUtil.getConditionExpression(predecessor);
-
-          // TODO(user): Handle more complicated expression like true == true,
-          // etc....
-          if (condition != null) {
-            TernaryValue val = NodeUtil.getBooleanValue(condition);
-            if (val != TernaryValue.UNKNOWN) {
-              return val.toBoolean(true) == (branch == Branch.ON_TRUE);
-            }
-          }
+      (EdgeTuple<Node, Branch> input) -> {
+        Branch branch = input.edge;
+        if (!branch.isConditional()) {
           return true;
         }
+        Node predecessor = input.sourceNode;
+        Node condition = NodeUtil.getConditionExpression(predecessor);
+
+        // TODO(user): Handle more complicated expression like true == true,
+        // etc....
+        if (condition != null) {
+          TernaryValue val = NodeUtil.getBooleanValue(condition);
+          if (val != TernaryValue.UNKNOWN) {
+            return val.toBoolean(true) == (branch == Branch.ON_TRUE);
+          }
+        }
+        return true;
       };
 }

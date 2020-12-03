@@ -69,11 +69,10 @@ public final class Es6NormalizeShorthandPropertiesTest extends CompilerTestCase 
         srcs("const x = 5; const y = {x};"),
         expected("const x = 5; const y = {x: x};"),
         postcondition(
-            (compiler) -> {
-              NodeUtil.visitPreOrder(
-                  compiler.getRoot(),
-                  Es6NormalizeShorthandPropertiesTest::assertNotShorthandProperty);
-            }));
+            (compiler) ->
+                NodeUtil.visitPreOrder(
+                    compiler.getRoot(),
+                    Es6NormalizeShorthandPropertiesTest::assertNotShorthandProperty)));
   }
 
   private static void assertNotShorthandProperty(Node node) {

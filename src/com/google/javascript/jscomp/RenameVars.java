@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.util.Comparator.comparingInt;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -285,11 +286,7 @@ final class RenameVars implements CompilerPass {
 
     // Increment count of an assignment
     void incCount(String name) {
-      Assignment s = assignments.get(name);
-      if (s == null) {
-        s = new Assignment(name);
-        assignments.put(name, s);
-      }
+      Assignment s = assignments.computeIfAbsent(name, Assignment::new);
       s.count++;
     }
   }
@@ -311,17 +308,9 @@ final class RenameVars implements CompilerPass {
     }
   };
 
-  /**
-   * Sorts Assignment objects by the order the variable name first appears in
-   * the source.
-   */
+  /** Sorts Assignment objects by the order the variable name first appears in the source. */
   private static final Comparator<Assignment> ORDER_OF_OCCURRENCE_COMPARATOR =
-      new Comparator<Assignment>() {
-        @Override
-        public int compare(Assignment a1, Assignment a2) {
-          return a1.orderOfOccurrence - a2.orderOfOccurrence;
-        }
-      };
+      comparingInt((Assignment arg) -> arg.orderOfOccurrence);
 
   @Override
   public void process(Node externs, Node root) {

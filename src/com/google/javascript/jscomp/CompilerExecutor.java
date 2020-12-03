@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.throwIfUnchecked;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.annotations.GwtIncompatible;
 import java.util.concurrent.Callable;
@@ -26,7 +27,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** Run the compiler in a separate thread with a larger stack */
@@ -91,31 +91,29 @@ class CompilerExecutor {
     // If the compiler thread is available, use it.
     if (useThreads && compilerThread == null) {
       try {
-        Callable<T> bootCompilerThread = new Callable<T>() {
-          @Override
-          public T call() {
-            try {
-              compilerThread = Thread.currentThread();
-              if (dumpTraceReport) {
-                Tracer.initCurrentThreadTrace();
+        Callable<T> bootCompilerThread =
+            () -> {
+              try {
+                compilerThread = Thread.currentThread();
+                if (dumpTraceReport) {
+                  Tracer.initCurrentThreadTrace();
+                }
+                return callable.call();
+              } catch (Throwable e) {
+                exception[0] = e;
+              } finally {
+                compilerThread = null;
+                if (dumpTraceReport) {
+                  Tracer.logCurrentThreadTrace();
+                }
+                Tracer.clearCurrentThreadTrace();
               }
-              return callable.call();
-            } catch (Throwable e) {
-              exception[0] = e;
-            } finally {
-              compilerThread = null;
-              if (dumpTraceReport) {
-                Tracer.logCurrentThreadTrace();
-              }
-              Tracer.clearCurrentThreadTrace();
-            }
-            return null;
-          }
-        };
+              return null;
+            };
 
         Future<T> future = executor.submit(bootCompilerThread);
         if (timeout > 0) {
-          result = future.get(timeout, TimeUnit.SECONDS);
+          result = future.get(timeout, SECONDS);
         } else {
           result = future.get();
         }

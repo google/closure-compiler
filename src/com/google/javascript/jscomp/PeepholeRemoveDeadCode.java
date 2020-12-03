@@ -34,37 +34,6 @@ import javax.annotation.Nullable;
  */
 class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
-  private static final Predicate<Node> IS_UNNAMED_BREAK_PREDICATE = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node node) {
-      return node.isBreak() && !node.hasChildren();
-    }
-  };
-
-  private static final Predicate<Node> IS_UNNAMED_CONTINUE_PREDICATE = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node node) {
-      return node.isContinue() && !node.hasChildren();
-    }
-  };
-
-  private static final Predicate<Node> CAN_CONTAIN_BREAK_PREDICATE = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node node) {
-      return !IR.mayBeExpression(node) // Functions are not visited
-          && !NodeUtil.isLoopStructure(node)
-          && !node.isSwitch();
-    }
-  };
-
-  private static final Predicate<Node> CAN_CONTAIN_CONTINUE_PREDICATE = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node node) {
-      return !IR.mayBeExpression(node) // Functions are not visited
-          && !NodeUtil.isLoopStructure(node);
-    }
-  };
-
   // TODO(dcc): Some (all) of these can probably be better achieved
   // using the control flow graph (like CheckUnreachableCode).
   // There is an existing CFG pass (UnreachableCodeElimination) that
@@ -1287,8 +1256,23 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
    * Returns whether a node has any unhandled breaks or continue.
    */
   static boolean hasUnnamedBreakOrContinue(Node n) {
-    return NodeUtil.has(n, IS_UNNAMED_BREAK_PREDICATE, CAN_CONTAIN_BREAK_PREDICATE)
-        || NodeUtil.has(n, IS_UNNAMED_CONTINUE_PREDICATE, CAN_CONTAIN_CONTINUE_PREDICATE);
+    return NodeUtil.has(
+            n,
+            // Check for unlabeled breaks
+            (Node node) -> node.isBreak() && !node.hasChildren(),
+            // ...inside contexts that can contain breaks.
+            (Node node) ->
+                !IR.mayBeExpression(node) // Functions are not visited
+                    && !NodeUtil.isLoopStructure(node)
+                    && !node.isSwitch())
+        || NodeUtil.has(
+            n,
+            // Check for unlabeled continues
+            (Node node) -> node.isContinue() && !node.hasChildren(),
+            // ...inside contexts that can contain continues.
+            (Node node) ->
+                !IR.mayBeExpression(node) // Functions are not visited
+                    && !NodeUtil.isLoopStructure(node));
   }
 
   /**

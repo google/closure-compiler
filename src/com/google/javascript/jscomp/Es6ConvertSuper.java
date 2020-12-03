@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -126,18 +125,15 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node enclosingMemberDef =
         NodeUtil.getEnclosingNode(
             exprRoot,
-            new Predicate<Node>() {
-              @Override
-              public boolean apply(Node n) {
-                switch (n.getToken()) {
-                  case MEMBER_FUNCTION_DEF:
-                  case GETTER_DEF:
-                  case SETTER_DEF:
-                  case COMPUTED_PROP:
-                    return true;
-                  default:
-                    return false;
-                }
+            (Node n) -> {
+              switch (n.getToken()) {
+                case MEMBER_FUNCTION_DEF:
+                case GETTER_DEF:
+                case SETTER_DEF:
+                case COMPUTED_PROP:
+                  return true;
+                default:
+                  return false;
               }
             });
 

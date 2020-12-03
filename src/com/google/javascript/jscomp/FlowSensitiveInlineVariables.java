@@ -585,30 +585,22 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       // Inlining print(a.b.c) is not safe - consider if j were an alias to a.b.
       if (NodeUtil.has(
           def.getLastChild(),
-          new Predicate<Node>() {
-            @Override
-            public boolean apply(Node input) {
-              switch (input.getToken()) {
-                case GETELEM:
-                case GETPROP:
-                case ARRAYLIT:
-                case OBJECTLIT:
-                case REGEXP:
-                case NEW:
-                  return true; // unsafe to inline.
-                default:
-                  break;
-              }
-              return false;
+          (Node input) -> {
+            switch (input.getToken()) {
+              case GETELEM:
+              case GETPROP:
+              case ARRAYLIT:
+              case OBJECTLIT:
+              case REGEXP:
+              case NEW:
+                return true; // unsafe to inline.
+              default:
+                break;
             }
+            return false;
           },
-          new Predicate<Node>() {
-            @Override
-            public boolean apply(Node input) {
-              // Recurse if the node is not a function.
-              return !input.isFunction();
-            }
-          })) {
+          // Recurse if the node is not a function.
+          (Node input) -> !input.isFunction())) {
         return false;
       }
 
@@ -623,17 +615,14 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       // return b;   // "a" is not declared in this scope so we can't inline this to "return a;"
       if (NodeUtil.has(
           def.getLastChild(),
-          new Predicate<Node>() {
-            @Override
-            public boolean apply(Node input) {
-              if (input.isName()) {
-                String name = input.getString();
-                if (!name.isEmpty() && !usageScope.hasSlot(name)) {
-                  return true; // unsafe to inline.
-                }
+          (Node input) -> {
+            if (input.isName()) {
+              String name = input.getString();
+              if (!name.isEmpty() && !usageScope.hasSlot(name)) {
+                return true; // unsafe to inline.
               }
-              return false;
             }
+            return false;
           },
           Predicates.alwaysTrue())) {
         return false;

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Comparator.naturalOrder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -152,7 +153,7 @@ class RuntimeTypeCheck implements CompilerPass {
       for (ObjectType interfaceType : funType.getAllImplementedInterfaces()) {
         markerNames.add("implements__" + interfaceType.getReferenceName());
       }
-      markerNames.sort(Comparator.naturalOrder()); // Sort to ensure deterministic output.
+      markerNames.sort(naturalOrder()); // Sort to ensure deterministic output.
       if (className != null) {
         // We can't generate markers for anonymous classes, but there's also no way to specify them
         // as a parameter type, so there will never be any checks for them either.

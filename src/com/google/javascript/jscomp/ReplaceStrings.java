@@ -154,15 +154,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     }
   }
 
-  static final Predicate<Result> USED_RESULTS =
-      new Predicate<Result>() {
-        @Override
-        public boolean apply(Result result) {
-          // The list of locations may be empty if the map
-          // was pre-populated from a previous map.
-          return result.didReplacement;
-        }
-      };
+  static final Predicate<Result> USED_RESULTS = (Result result) -> result.didReplacement;
 
   // Get the list of all replacements performed.
   List<Result> getResult() {

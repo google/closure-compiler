@@ -43,40 +43,28 @@ class CheckMissingReturn implements ScopedCallback {
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
 
-  private static final Predicate<Node> IS_RETURN = new Predicate<Node>() {
-    @Override
-    public boolean apply(Node input) {
-      // Check for null because the control flow graph's implicit return node is
-      // represented by null, so this value might be input.
-      return input != null && input.isReturn();
-    }
-  };
-
   /* Skips all exception edges and impossible edges. */
   private static final Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>
       GOES_THROUGH_TRUE_CONDITION_PREDICATE =
-          new Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>() {
-            @Override
-            public boolean apply(DiGraphEdge<Node, ControlFlowGraph.Branch> input) {
-              // First skill all exceptions.
-              Branch branch = input.getValue();
-              if (branch == Branch.ON_EX) {
-                return false;
-              } else if (branch.isConditional()) {
-                Node condition = NodeUtil.getConditionExpression(input.getSource().getValue());
-                // TODO(user): We CAN make this bit smarter just looking at
-                // constants. We DO have a full blown ReverseAbstractInterupter and
-                // type system that can evaluate some impressions' boolean value but
-                // for now we will keep this pass lightweight.
-                if (condition != null) {
-                  TernaryValue val = NodeUtil.getBooleanValue(condition);
-                  if (val != TernaryValue.UNKNOWN) {
-                    return val.toBoolean(true) == (Branch.ON_TRUE == branch);
-                  }
+          (DiGraphEdge<Node, ControlFlowGraph.Branch> input) -> {
+            // First skill all exceptions.
+            Branch branch = input.getValue();
+            if (branch == Branch.ON_EX) {
+              return false;
+            } else if (branch.isConditional()) {
+              Node condition = NodeUtil.getConditionExpression(input.getSource().getValue());
+              // TODO(user): We CAN make this bit smarter just looking at
+              // constants. We DO have a full blown ReverseAbstractInterupter and
+              // type system that can evaluate some impressions' boolean value but
+              // for now we will keep this pass lightweight.
+              if (condition != null) {
+                TernaryValue val = NodeUtil.getBooleanValue(condition);
+                if (val != TernaryValue.UNKNOWN) {
+                  return val.toBoolean(true) == (Branch.ON_TRUE == branch);
                 }
               }
-              return true;
             }
+            return true;
           };
 
   CheckMissingReturn(AbstractCompiler compiler) {
@@ -117,7 +105,8 @@ class CheckMissingReturn implements ScopedCallback {
             t.getControlFlowGraph(),
             t.getControlFlowGraph().getEntry(),
             t.getControlFlowGraph().getImplicitReturn(),
-            IS_RETURN, GOES_THROUGH_TRUE_CONDITION_PREDICATE);
+            (Node input) -> input != null && input.isReturn(),
+            GOES_THROUGH_TRUE_CONDITION_PREDICATE);
 
     if (!test.allPathsSatisfyPredicate()) {
       compiler.report(
