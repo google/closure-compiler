@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.javascript.jscomp.serialization.NativeType.NUMBER_OBJECT_TYPE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,14 +50,6 @@ public final class ColorDeserializer {
   private final Multimap<Integer, TypePointer> disambiguationEdges;
   private final TypePool typePool;
   private final ColorRegistry colorRegistry;
-  // While this set is currently hardcoded, we expect  to
-  // add more native colors like Number in the future that are only invalidated if there are type
-  // mismatches
-  // in the source. This set will need to be constructed at deserialization time.
-  private static final ImmutableSet<NativeColorId> INVALIDATING_NATIVES =
-      ImmutableSet.of(
-          NativeColorId.TOP_OBJECT,
-          NativeColorId.UNKNOWN);
 
   /** Error emitted when the deserializer sees a serialized type it cannot support deserialize */
   public static final class InvalidSerializedFormatException extends RuntimeException {
@@ -92,7 +85,12 @@ public final class ColorDeserializer {
       }
       disambiguationEdges.put(subtype.getPoolOffset(), supertype);
     }
-    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(INVALIDATING_NATIVES);
+
+    ColorRegistry colorRegistry =
+        ColorRegistry.createWithInvalidatingNatives(
+            typePool.getInvalidatingNativeList().stream()
+                .map(ColorDeserializer::nativeTypeToColor)
+                .collect(toImmutableSet()));
     return new ColorDeserializer(typePool, disambiguationEdges, colorRegistry);
   }
 
@@ -184,24 +182,38 @@ public final class ColorDeserializer {
   }
 
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch") // needed for J2CL protos
-  private NativeColorId nativeTypeToColor(NativeType nativeType) {
+  private static NativeColorId nativeTypeToColor(NativeType nativeType) {
     switch (nativeType) {
       case TOP_OBJECT:
         return NativeColorId.TOP_OBJECT;
-      case NUMBER_TYPE:
-        return NativeColorId.NUMBER;
+      case UNKNOWN_TYPE:
+        return NativeColorId.UNKNOWN;
+        // Primitives
+
+      case BIGINT_TYPE:
+        return NativeColorId.BIGINT;
+      case BOOLEAN_TYPE:
+        return NativeColorId.BOOLEAN;
       case NULL_OR_VOID_TYPE:
         return NativeColorId.NULL_OR_VOID;
+      case NUMBER_TYPE:
+        return NativeColorId.NUMBER;
       case STRING_TYPE:
         return NativeColorId.STRING;
       case SYMBOL_TYPE:
         return NativeColorId.SYMBOL;
-      case BIGINT_TYPE:
-        return NativeColorId.BIGINT;
-      case UNKNOWN_TYPE:
-        return NativeColorId.UNKNOWN;
-      case BOOLEAN_TYPE:
-        return NativeColorId.BOOLEAN;
+        // Boxed primitives
+
+      case BIGINT_OBJECT_TYPE:
+        return NativeColorId.BIGINT_OBJECT;
+      case BOOLEAN_OBJECT_TYPE:
+        return NativeColorId.BOOLEAN_OBJECT;
+      case NUMBER_OBJECT_TYPE:
+        return NativeColorId.NUMBER_OBJECT;
+      case STRING_OBJECT_TYPE:
+        return NativeColorId.STRING_OBJECT;
+      case SYMBOL_OBJECT_TYPE:
+        return NativeColorId.SYMBOL_OBJECT;
       default:
         // Switch cannot be exhaustive because Java protos add an additional "UNRECOGNIZED" field
         // while J2CL protos do not.

@@ -33,14 +33,9 @@ public final class ColorRegistry {
       ImmutableSet<NativeColorId> invalidatingNativeColors) {
     ImmutableMap.Builder<NativeColorId, Color> nativeColors = ImmutableMap.builder();
 
-    addNativeColor(nativeColors, NativeColorId.BIGINT, invalidatingNativeColors);
-    addNativeColor(nativeColors, NativeColorId.BOOLEAN, invalidatingNativeColors);
-    addNativeColor(nativeColors, NativeColorId.NUMBER, invalidatingNativeColors);
-    addNativeColor(nativeColors, NativeColorId.NULL_OR_VOID, invalidatingNativeColors);
-    addNativeColor(nativeColors, NativeColorId.STRING, invalidatingNativeColors);
-    addNativeColor(nativeColors, NativeColorId.SYMBOL, invalidatingNativeColors);
-    addNativeColor(nativeColors, NativeColorId.UNKNOWN, invalidatingNativeColors);
-    addNativeColor(nativeColors, NativeColorId.TOP_OBJECT, invalidatingNativeColors);
+    for (NativeColorId nativeColorId : NativeColorId.values()) {
+      addNativeColor(nativeColors, nativeColorId, invalidatingNativeColors);
+    }
 
     return new ColorRegistry(nativeColors.build());
   }
@@ -55,7 +50,6 @@ public final class ColorRegistry {
             .setId("__nativeColor__" + nativeColorId.name())
             .setDebugInfo(DebugInfo.builder().setClassName(nativeColorId.name()).build())
             .setInvalidating(invalidatingNativeColors.contains(nativeColorId))
-            .setPropertiesKeepOriginalName(false)
             .build();
     nativeColors.put(nativeColorId, Color.createSingleton(fields));
   }

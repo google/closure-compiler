@@ -33,16 +33,32 @@ import org.junit.runners.JUnit4;
 public class ColorDeserializerTest {
 
   @Test
-  public void deserializesPrimitiveTypesFromEmptyTypePool() {
+  public void deserializesNativeTypesFromEmptyTypePool() {
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.NUMBER_TYPE)))
         .isNative(NativeColorId.NUMBER);
+    assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.NUMBER_TYPE)))
+        .isNotInvalidating();
     assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.STRING_TYPE)))
         .isNative(NativeColorId.STRING);
     assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.UNKNOWN_TYPE)))
         .isNative(NativeColorId.UNKNOWN);
+  }
+
+  @Test
+  public void deserializesNativeTypesFromInvalidatingDefinitionsInTypePool() {
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(
+            TypePool.newBuilder()
+                .addInvalidatingNative(NativeType.NUMBER_TYPE)
+                .addInvalidatingNative(NativeType.NUMBER_OBJECT_TYPE)
+                .build());
+
+    assertThat(deserializer.getRegistry().get(NativeColorId.NUMBER)).isInvalidating();
+    assertThat(deserializer.getRegistry().get(NativeColorId.NUMBER_OBJECT)).isInvalidating();
+    assertThat(deserializer.getRegistry().get(NativeColorId.STRING)).isNotInvalidating();
   }
 
   @Test
@@ -51,7 +67,9 @@ public class ColorDeserializerTest {
         ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
 
     Color object = deserializer.pointerToColor(nativeTypePointer(NativeType.TOP_OBJECT));
-    assertThat(object).isInvalidating();
+    // while in practice the top object is always invalidating, we currently rely on the user-
+    // defined type pool to tell us it is invalidating instead of hardcoding this information.
+    assertThat(object).isNotInvalidating();
     assertThat(object.getDisambiguationSupertypes()).isEmpty();
     assertThat(object.getInstanceColor()).isEmpty();
     assertThat(object.getPrototype()).isEmpty();

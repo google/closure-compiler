@@ -151,7 +151,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract void setTypeCheckingHasRun(boolean hasRun);
 
   /** Gets the type-checking pass that ran most recently. */
-  abstract boolean hasTypeCheckingRun();
+  public abstract boolean hasTypeCheckingRun();
 
   /**
    * Gets a central registry of type information from the compiled JS.

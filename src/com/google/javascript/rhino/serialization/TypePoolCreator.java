@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.serialization.NativeType;
 import com.google.javascript.jscomp.serialization.SubtypingEdge;
 import com.google.javascript.jscomp.serialization.Type;
 import com.google.javascript.jscomp.serialization.TypePointer;
@@ -13,8 +14,10 @@ import com.google.javascript.jscomp.serialization.TypePointer.TypeCase;
 import com.google.javascript.jscomp.serialization.TypePool;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -30,6 +33,7 @@ public class TypePoolCreator<T> {
   private Map<SerializableType<T>, Integer> seenSerializableTypes = new HashMap<>();
   private List<SerializableType<T>> toSerialize = new ArrayList<>();
   private final Multimap<TypePointer, TypePointer> disambiguateEdges = LinkedHashMultimap.create();
+  private final Set<NativeType> invalidatingNatives = new LinkedHashSet<>();
   private State state = State.COLLECTING_TYPES;
   private final SerializationOptions serializationOptions;
 
@@ -121,7 +125,7 @@ public class TypePoolCreator<T> {
             SubtypingEdge.newBuilder().setSubtype(subtype).setSupertype(supertype));
       }
     }
-    TypePool pool = builder.build();
+    TypePool pool = builder.addAllInvalidatingNative(this.invalidatingNatives).build();
     state = State.FINISHED;
     checkValid();
     seenSerializableTypes = ImmutableMap.copyOf(seenSerializableTypes);
@@ -172,5 +176,9 @@ public class TypePoolCreator<T> {
         && supertype.getTypeCase().equals(TypeCase.POOL_OFFSET)) {
       this.disambiguateEdges.put(subtype, supertype);
     }
+  }
+
+  public void registerInvalidatingNative(NativeType invalidatingType) {
+    this.invalidatingNatives.add(invalidatingType);
   }
 }

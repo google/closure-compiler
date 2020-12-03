@@ -24,13 +24,21 @@ import com.google.errorprone.annotations.Immutable;
 @Immutable
 public enum NativeColorId {
 
+  // Boxed primitive types
+  BIGINT_OBJECT(/* isPrimitive= */ false),
+  BOOLEAN_OBJECT(/* isPrimitive= */ false),
+  NUMBER_OBJECT(/* isPrimitive= */ false),
+  STRING_OBJECT(/* isPrimitive= */ false),
+  SYMBOL_OBJECT(/* isPrimitive= */ false),
+
   // JS primitive types
+  BIGINT(/* isPrimitive= */ true),
+  BOOLEAN(/* isPrimitive= */ true),
   NUMBER(/* isPrimitive= */ true),
   STRING(/* isPrimitive= */ true),
   SYMBOL(/* isPrimitive= */ true),
   NULL_OR_VOID(/* isPrimitive= */ true),
-  BIGINT(/* isPrimitive= */ true),
-  BOOLEAN(/* isPrimitive= */ true),
+
   // Equivalent to Closure '*'/'?' and TS unknown/any
   UNKNOWN(/* isPrimitive= */ false),
   // The supertype of all objects but not primitives. Separate from UNKNOWN because some

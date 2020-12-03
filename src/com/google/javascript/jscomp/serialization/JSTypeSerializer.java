@@ -71,6 +71,7 @@ final class JSTypeSerializer {
     ImmutableMap<JSType, TypePointer> nativeTypePointers = buildNativeTypeMap(registry);
     IdGenerator idGenerator = new IdGenerator();
 
+    collectInvalidatingNatives(registry, invalidatingTypes, typePoolCreator);
     return new JSTypeSerializer(
         typePoolCreator,
         nativeTypePointers,
@@ -78,6 +79,29 @@ final class JSTypeSerializer {
         invalidatingTypes,
         idGenerator,
         serializationMode);
+  }
+
+  /**
+   * Adds all invalidating native types to the type pool.
+   *
+   * <p>Native types are not explicitly serialized, since the only bit of information that differs
+   * between compilation units is their "invalidatingness".
+   */
+  private static void collectInvalidatingNatives(
+      JSTypeRegistry registry,
+      InvalidatingTypes invalidatingTypes,
+      TypePoolCreator<JSType> typePoolCreator) {
+    for (JSTypeNative jsTypeNative : JSTypeNative.values()) {
+      // First check if this type is also native in the colors
+      NativeType correspondingType = translateNativeType(jsTypeNative);
+      if (correspondingType == null) {
+        continue;
+      }
+      // Then check if it is invalidating
+      if (invalidatingTypes.isInvalidating(registry.getNativeType(jsTypeNative))) {
+        typePoolCreator.registerInvalidatingNative(correspondingType);
+      }
+    }
   }
 
   /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
@@ -219,8 +243,8 @@ final class JSTypeSerializer {
     return objBuilder
         .setIsInvalidating(invalidatingTypes.isInvalidating(type))
         // To support legacy code, property disambiguation never renames properties of enums
-        // (e.g. 'A' in '/** @enum */ const E = {A: 0}`). In theory this would be safe to remove if
-        // we clean up code depending on the lack of renaming
+        // (e.g. 'A' in '/** @enum */ const E = {A: 0}`). In
+        // theory this would be safe to remove if we clean up code depending on the lack of renaming
         .setPropertiesKeepOriginalName(type.isEnumType())
         // NOTE: We need a better format than sequential integers in order to have an id that
         // can be consistent across compilation units. For now, using a sequential integers for each
@@ -322,20 +346,19 @@ final class JSTypeSerializer {
    */
   private static NativeType translateNativeType(JSTypeNative nativeType) {
     switch (nativeType) {
-      case STRING_TYPE:
-        return NativeType.STRING_TYPE;
-
       case BOOLEAN_TYPE:
         return NativeType.BOOLEAN_TYPE;
+      case BIGINT_TYPE:
+        return NativeType.BIGINT_TYPE;
 
       case NUMBER_TYPE:
         return NativeType.NUMBER_TYPE;
+      case STRING_TYPE:
+        return NativeType.STRING_TYPE;
 
       case SYMBOL_TYPE:
         return NativeType.SYMBOL_TYPE;
 
-      case BIGINT_TYPE:
-        return NativeType.BIGINT_TYPE;
 
       case NULL_TYPE:
       case VOID_TYPE:
@@ -358,6 +381,17 @@ final class JSTypeSerializer {
       case NO_OBJECT_TYPE:
       case NO_RESOLVED_TYPE:
         return NativeType.UNKNOWN_TYPE;
+
+      case BOOLEAN_OBJECT_TYPE:
+        return NativeType.BOOLEAN_OBJECT_TYPE;
+      case BIGINT_OBJECT_TYPE:
+        return NativeType.BIGINT_OBJECT_TYPE;
+      case NUMBER_OBJECT_TYPE:
+        return NativeType.NUMBER_OBJECT_TYPE;
+      case STRING_OBJECT_TYPE:
+        return NativeType.STRING_OBJECT_TYPE;
+      case SYMBOL_OBJECT_TYPE:
+        return NativeType.SYMBOL_OBJECT_TYPE;
 
       default:
         return null;

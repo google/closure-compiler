@@ -13,6 +13,10 @@ message TypePool {
   repeated SubtypingEdge disambiguation_edges = 2;
   // Human-readable representation of where this TypePool comes from.
   string source_name = 3;
+  // List of native types that are invalidating. Needed because native types may
+  // be not inherently invalidating, but invalidating because they were involved
+  // in a type mismatch in a given program.
+  repeated NativeType invalidating_native = 4;
 }
 
 // References a serialized type. Typically, any reference to a type that needs
@@ -99,6 +103,13 @@ enum NativeType {
 
   // Top object type (supertype of all objects and invalidating)
   TOP_OBJECT = 8;
+
+  // Boxed scalars
+  BOOLEAN_OBJECT_TYPE = 9;
+  STRING_OBJECT_TYPE = 10;
+  NUMBER_OBJECT_TYPE = 11;
+  SYMBOL_OBJECT_TYPE = 12;
+  BIGINT_OBJECT_TYPE = 13;
 }
 
 // Used for testing only and possibly only temporary. Wraps type pools from

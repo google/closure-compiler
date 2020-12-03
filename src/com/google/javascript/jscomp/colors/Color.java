@@ -53,6 +53,9 @@ public abstract class Color {
   /**
    * Whether this corresponds to a single JavaScript primitive like number or symbol or to a union
    * of such primitives
+   *
+   * <p>Note that the boxed versions of primitives (String, Number, etc.) are /not/ considered
+   * "primitive" by this method.
    */
   public final boolean isPrimitive() {
     switch (kind()) {

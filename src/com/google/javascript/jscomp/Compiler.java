@@ -1483,7 +1483,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  boolean hasTypeCheckingRun() {
+  public boolean hasTypeCheckingRun() {
     return this.typeCheckingHasRun;
   }
 
