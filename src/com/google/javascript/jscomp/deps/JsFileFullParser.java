@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,7 +49,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.Nullable;
 
 /**
  * A parser that extracts dependency information from a .js file, including goog.require,
@@ -134,9 +135,13 @@ public class JsFileFullParser {
     private static final int ANNOTATION_VALUE_GROUP = 2;
   }
 
+  private JsFileFullParser() {
+    // no instantiation
+  }
+
   /** Parses a JavaScript file for dependencies and annotations. */
-  public static FileInfo parse(String code, String filename, @Nullable Reporter reporter) {
-    ErrorReporter errorReporter = new DelegatingReporter(reporter);
+  public static FileInfo parse(String code, String filename, Reporter reporter) {
+    DelegatingReporter errorReporter = new DelegatingReporter(reporter);
     Compiler compiler =
         new Compiler(
             new BasicErrorManager() {
@@ -193,6 +198,9 @@ public class JsFileFullParser {
             compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER);
     gatherModuleMetadata.process(new Node(Token.ROOT), parsed.ast);
     compiler.generateReport();
+    if (compiler.getModuleMetadataMap().getModulesByPath().size() != 1) {
+      return info; // Avoid potential crashes due to assumptions of the code below being violated.
+    }
     ModuleMetadata module =
         Iterables.getOnlyElement(
             compiler.getModuleMetadataMap().getModulesByPath().values());
@@ -219,6 +227,13 @@ public class JsFileFullParser {
         break;
     }
     info.goog = module.usesClosure();
+    recordModuleMetadata(info, module);
+    return info;
+  }
+
+  private static void recordModuleMetadata(FileInfo info, ModuleMetadata module) {
+    info.importedModules.addAll(module.es6ImportSpecifiers().elementSet());
+
     // If something doesn't have an external dependency on Closure, then it does not have any
     // externally required files or symbols to provide. This is needed for bundles that contain
     // base.js as well as other files. These bundles should look like they do not require or provide
@@ -229,8 +244,10 @@ public class JsFileFullParser {
       info.typeRequires.addAll(module.weaklyRequiredGoogNamespaces());
       info.testonly = module.isTestOnly();
     }
-    info.importedModules.addAll(module.es6ImportSpecifiers().elementSet());
-    return info;
+    // Traverse any nested modules (goog.loadModule calls).
+    for (ModuleMetadata nested : module.nestedModules()) {
+      recordModuleMetadata(info, nested);
+    }
   }
 
   /** Mutates {@code info} with information from the given {@code comment}. */
@@ -308,7 +325,7 @@ public class JsFileFullParser {
     final Reporter delegate;
 
     DelegatingReporter(Reporter delegate) {
-      this.delegate = delegate != null ? delegate : NULL_REPORTER;
+      this.delegate = checkNotNull(delegate);
     }
 
     @Override
@@ -321,10 +338,4 @@ public class JsFileFullParser {
       delegate.report(true, message, sourceName, line, lineOffset);
     }
   }
-
-  private static final Reporter NULL_REPORTER = new Reporter() {
-    @Override
-    public void report(
-        boolean fatal, String message, String sourceName, int line, int lineOffset) {}
-  };
 }

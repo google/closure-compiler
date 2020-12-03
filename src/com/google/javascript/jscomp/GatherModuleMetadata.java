@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
 
@@ -73,6 +72,9 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
       DiagnosticType.error(
           "JSC_INVALID_SET_TEST_ONLY",
           "Optional, single argument to goog.setTestOnly must be a string.");
+
+  static final DiagnosticType INVALID_NESTED_LOAD_MODULE =
+      DiagnosticType.error("JSC_INVALID_NESTED_LOAD_MODULE", "goog.loadModule cannot be nested.");
 
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), IR.string("provide"));
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), IR.string("module"));
@@ -206,7 +208,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case SCRIPT:
-          enterModule(n, t.getInput().getPath());
+          enterModule(t, n, t.getInput().getPath());
           break;
         case IMPORT:
         case EXPORT:
@@ -215,7 +217,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
         case CALL:
           if (n.isCall() && n.getFirstChild().matchesQualifiedName("goog.loadModule")) {
             loadModuleCall = n;
-            enterModule(n, null);
+            enterModule(t, n, null);
           }
           break;
         case MODULE_BODY:
@@ -241,10 +243,12 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
       }
     }
 
-    private void enterModule(Node n, @Nullable ModulePath path) {
+    private void enterModule(NodeTraversal t, Node n, @Nullable ModulePath path) {
       ModuleMetadataBuilder newModule = new ModuleMetadataBuilder(n, path);
       if (currentModule != null) {
-        checkState(parentModule == null, "Expected modules to be nested at most 2 deep.");
+        if (parentModule != null) {
+          t.report(n, INVALID_NESTED_LOAD_MODULE);
+        }
         parentModule = currentModule;
       }
       currentModule = newModule;
