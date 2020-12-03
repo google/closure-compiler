@@ -73,7 +73,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry)
             .addAllTypeMismatches(this.mismatches)
-            .allowScalars()
             .build();
   }
 

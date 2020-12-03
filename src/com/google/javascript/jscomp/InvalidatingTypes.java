@@ -37,12 +37,9 @@ import javax.annotation.Nullable;
  */
 public final class InvalidatingTypes {
   private final ImmutableSet<JSType> types;
-  /** Whether to allow types like 'str'.toString() */
-  private final boolean allowScalars;
 
-  private InvalidatingTypes(Builder builder, ImmutableSet<JSType> types) {
+  private InvalidatingTypes(ImmutableSet<JSType> types) {
     this.types = types;
-    this.allowScalars = builder.allowScalars;
   }
 
   public boolean isInvalidating(JSType type) {
@@ -66,8 +63,10 @@ public final class InvalidatingTypes {
     ObjectType objType = type.toMaybeObjectType();
 
     if (objType == null) {
-      return !allowScalars;
+      // TODO(b/174534994): why can't scalars be invalidating?
+      return false;
     }
+
     if (objType.isTemplatizedType()) {
       objType = objType.toMaybeTemplatizedType().getReferencedType();
     }
@@ -75,8 +74,7 @@ public final class InvalidatingTypes {
     return types.contains(objType)
         // Don't disambiguate properties on object types that are structurally compared or that
         // don't come from a literal class or function definition
-        || isAmbiguousOrStructuralType(objType)
-        || (!allowScalars && objType.isBoxableScalar());
+        || isAmbiguousOrStructuralType(objType);
   }
 
   // Returns true if any of the following hold:
@@ -114,7 +112,6 @@ public final class InvalidatingTypes {
 
     @Nullable private Multimap<JSType, Node> invalidationMap;
     private final LinkedHashSet<TypeMismatch> mismatches = new LinkedHashSet<>();
-    private boolean allowScalars = false;
 
     // TODO(b/160615581): Investigate making this always false, instead of always true.
     private final boolean alsoInvalidateRelatedTypes = true;
@@ -144,17 +141,11 @@ public final class InvalidatingTypes {
 
       ImmutableSet<JSType> types = this.types.build();
       this.types = null;
-      return new InvalidatingTypes(this, types);
+      return new InvalidatingTypes(types);
     }
 
     public Builder writeInvalidationsInto(@Nullable Multimap<JSType, Node> invalidationMap) {
       this.invalidationMap = invalidationMap;
-      return this;
-    }
-
-    public Builder allowScalars() {
-      // Ambiguate and Inline do not allow scalars.
-      this.allowScalars = true;
       return this;
     }
 
