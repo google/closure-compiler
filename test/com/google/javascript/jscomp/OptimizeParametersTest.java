@@ -1297,6 +1297,41 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstructorEscapesThroughThis() {
+    // Demonstrate b/174875103
+    test(
+        lines(
+            "class C {", //
+            "  constructor(a) {",
+            "    use(a);",
+            "  }",
+            "  static create() { return new this(2); };",
+            "}",
+            "class D extends C {", //
+            "  constructor(b) { super(1); }",
+            "",
+            "}",
+            "var c = new C(1);",
+            "var d = new D(1)",
+            "var e = D.create();"),
+        lines(
+            "class C {", //
+            "  constructor() {",
+            "    var a = 1;", // <-- bad optimization
+            "    use(a);",
+            "  }",
+            "  static create() { return new this(2); };", // <-- also a call here
+            "}",
+            "class D extends C {", //
+            "  constructor(b) { super(); }",
+            "",
+            "}",
+            "var c = new C();",
+            "var d = new D(1)",
+            "var e = D.create();"));
+  }
+
+  @Test
   public void testRewriteUsedES5Constructor1() {
     test(
         lines(
