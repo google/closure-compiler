@@ -180,8 +180,6 @@ public class Node implements Serializable {
     // Indicates that a SCRIPT node is a goog.module. Remains set after the goog.module is
     // desugared.
     GOOG_MODULE,
-    // Node is a goog.require() as desugared by goog.module()
-    GOOG_MODULE_REQUIRE,
     // Attaches a FeatureSet to SCRIPT nodes.
     FEATURE_SET,
     // Indicates a namespace that was provided at some point in the past.
