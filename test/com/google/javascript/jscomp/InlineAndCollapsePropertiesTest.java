@@ -65,6 +65,25 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testGitHubIssue3733() {
+    testSame(
+        srcs(
+            lines(
+                "const X = {Y: 1};",
+                "",
+                "function fn(a) {",
+                "  if (a) {",
+                // Before issue #3733 was fixed GlobalNamespace failed to see this reference
+                // as creating an alias for X due to a switch statement that failed to check
+                // for the RETURN node type, so X.Y was incorrectly collapsed.
+                "    return a ? X : {};",
+                "  }",
+                "}",
+                "",
+                "console.log(fn(true).Y);")));
+  }
+
+  @Test
   public void testCollapse() {
     test(
         "var a = {}; a.b = {}; var c = a.b;", //
