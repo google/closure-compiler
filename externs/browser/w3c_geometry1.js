@@ -227,8 +227,6 @@ DOMRectInit.prototype.height;
  * @param {number=} z
  * @param {number=} w
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-dompointreadonly
- * TODO(larsrc): Remove duplicate definitions, then remove these
- * @suppress {duplicate}
  */
 function DOMPointReadOnly(x, y, z, w) {}
 
@@ -236,35 +234,30 @@ function DOMPointReadOnly(x, y, z, w) {}
  * @param {!DOMPointInit} other
  * @return {!DOMPointReadOnly}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-frompoint
- * @suppress {duplicate}
  */
 DOMPointReadOnly.prototype.fromPoint = function(other) {};
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-x
- * @suppress {duplicate}
  */
 DOMPointReadOnly.prototype.x;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-y
- * @suppress {duplicate}
  */
 DOMPointReadOnly.prototype.y;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-z
- * @suppress {duplicate}
  */
 DOMPointReadOnly.prototype.z;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointreadonly-w
- * @suppress {duplicate}
  */
 DOMPointReadOnly.prototype.w;
 
@@ -276,69 +269,631 @@ DOMPointReadOnly.prototype.w;
  * @param {number=} z
  * @param {number=} w
  * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-dompoint
- * @suppress {duplicate}
  */
 function DOMPoint(x, y, z, w) {}
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-x
- * @suppress {duplicate}
  */
 DOMPoint.prototype.x;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-y
- * @suppress {duplicate}
  */
 DOMPoint.prototype.y;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-z
- * @suppress {duplicate}
  */
 DOMPoint.prototype.z;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompoint-w
- * @suppress {duplicate}
  */
 DOMPoint.prototype.w;
 
 /**
  * @record
  * @see https://www.w3.org/TR/geometry-1/#dictdef-dompointinit
- * @suppress {duplicate}
  */
 function DOMPointInit() {}
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-x
- * @suppress {duplicate}
  */
 DOMPointInit.prototype.x;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-y
- * @suppress {duplicate}
  */
 DOMPointInit.prototype.y;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-z
- * @suppress {duplicate}
  */
 DOMPointInit.prototype.z;
 
 /**
  * @type {number}
  * @see https://www.w3.org/TR/geometry-1/#dom-dompointinit-w
- * @suppress {duplicate}
  */
 DOMPointInit.prototype.w;
+
+/**
+ * @constructor
+ * @implements {DOMMatrixInit}
+ * @param {string|Array<number>} init
+ * @see https://www.w3.org/TR/geometry-1/#dommatrixreadonly
+ */
+function DOMMatrixReadOnly(init) {}
+
+/**
+ * @param {!DOMMatrixInit} other
+ * @return {!DOMMatrixReadOnly}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-frommatrix
+ */
+DOMMatrixReadOnly.fromMatrix = function(other) {};
+
+/**
+ * @param {!Float32Array} array32
+ * @return {!DOMMatrixReadOnly}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-fromfloat32array
+ */
+DOMMatrixReadOnly.fromFloat32Array = function(array32) {};
+
+/**
+ * @param {!Float64Array} array64
+ * @return {!DOMMatrixReadOnly}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-fromfloat64array
+ */
+DOMMatrixReadOnly.fromFloat64Array = function(array64) {};
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-a
+ */
+DOMMatrixReadOnly.prototype.a;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-b
+ */
+DOMMatrixReadOnly.prototype.b;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-c
+ */
+DOMMatrixReadOnly.prototype.c;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-d
+ */
+DOMMatrixReadOnly.prototype.d;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-e
+ */
+DOMMatrixReadOnly.prototype.e;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-f
+ */
+DOMMatrixReadOnly.prototype.f;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m11
+ */
+DOMMatrixReadOnly.prototype.m11;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m12
+ */
+DOMMatrixReadOnly.prototype.m12;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m13
+ */
+DOMMatrixReadOnly.prototype.m13;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m14
+ */
+DOMMatrixReadOnly.prototype.m14;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m21
+ */
+DOMMatrixReadOnly.prototype.m21;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m22
+ */
+DOMMatrixReadOnly.prototype.m22;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m23
+ */
+DOMMatrixReadOnly.prototype.m23;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m24
+ */
+DOMMatrixReadOnly.prototype.m24;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m31
+ */
+DOMMatrixReadOnly.prototype.m31;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m32
+ */
+DOMMatrixReadOnly.prototype.m32;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m33
+ */
+DOMMatrixReadOnly.prototype.m33;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m34
+ */
+DOMMatrixReadOnly.prototype.m34;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m41
+ */
+DOMMatrixReadOnly.prototype.m41;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m42
+ */
+DOMMatrixReadOnly.prototype.m42;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m43
+ */
+DOMMatrixReadOnly.prototype.m43;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-m44
+ */
+DOMMatrixReadOnly.prototype.m44;
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-is2d
+ */
+DOMMatrixReadOnly.prototype.is2D;
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-isidentity
+ */
+DOMMatrixReadOnly.prototype.isIdentity;
+
+/**
+ * @param {number=} tx
+ * @param {number=} ty
+ * @param {number=} tz
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-translate
+ */
+DOMMatrixReadOnly.prototype.translate = function(tx, ty, tz) {};
+
+/**
+ * @param {number=} scaleX
+ * @param {number=} scaleY
+ * @param {number=} scaleZ
+ * @param {number=} originX
+ * @param {number=} originY
+ * @param {number=} originZ
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-scale
+ */
+DOMMatrixReadOnly.prototype.scale = function(
+    scaleX, scaleY, scaleZ, originX, originY, originZ) {};
+
+/**
+ * @param {number=} scaleX
+ * @param {number=} scaleY
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-scalenonuniform
+ */
+DOMMatrixReadOnly.prototype.scaleNonUniform = function(scaleX, scaleY) {};
+
+/**
+ * @param {number=} scale
+ * @param {number=} originX
+ * @param {number=} originY
+ * @param {number=} originZ
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-scale3d
+ */
+DOMMatrixReadOnly.prototype.scale3d = function(
+    scale, originX, originY, originZ) {};
+
+/**
+ * @param {number=} rotX
+ * @param {number=} rotY
+ * @param {number=} rotZ
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-rotate
+ */
+DOMMatrixReadOnly.prototype.rotate = function(rotX, rotY, rotZ) {};
+
+/**
+ * @param {number=} x
+ * @param {number=} y
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-rotatefromvector
+ */
+DOMMatrixReadOnly.prototype.rotateFromVector = function(x, y) {};
+
+/**
+ * @param {number=} x
+ * @param {number=} y
+ * @param {number=} z
+ * @param {number=} angle
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-rotateaxisangle
+ */
+DOMMatrixReadOnly.prototype.rotateAxisAngle = function(x, y, z, angle) {};
+
+/**
+ * @param {number=} sx
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-skewx
+ */
+DOMMatrixReadOnly.prototype.skewX = function(sx) {};
+
+/**
+ * @param {number=} sy
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-skewy
+ */
+DOMMatrixReadOnly.prototype.skewY = function(sy) {};
+
+/**
+ * @param {!DOMMatrixInit} other
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-multiply
+ */
+DOMMatrixReadOnly.prototype.multiply = function(other) {};
+
+/**
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-flipx
+ */
+DOMMatrixReadOnly.prototype.flipX = function() {};
+
+/**
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-flipy
+ */
+DOMMatrixReadOnly.prototype.flipY = function() {};
+
+/**
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-inverse
+ */
+DOMMatrixReadOnly.prototype.inverse = function() {};
+
+/**
+ * @param {!DOMPointInit} point
+ * @return {!DOMPoint}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-transformpoint
+ */
+DOMMatrixReadOnly.prototype.transformPoint = function(point) {};
+
+/**
+ * @return {!Float32Array}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-tofloat32array
+ */
+DOMMatrixReadOnly.prototype.toFloat32Array = function() {};
+
+/**
+ * @return {!Float64Array}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixreadonly-tofloat64array
+ */
+DOMMatrixReadOnly.prototype.toFloat64Array = function() {};
+
+/**
+ * @constructor
+ * @extends {DOMMatrixReadOnly}
+ * @param {string|Array<number>} init
+ * @see https://www.w3.org/TR/geometry-1/#dommatrix
+ */
+function DOMMatrix(init) {}
+
+/**
+ * @param {!DOMMatrixInit} other
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-frommatrix
+ */
+DOMMatrix.fromMatrix = function(other) {};
+
+/**
+ * @param {!Float32Array} array32
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-fromfloat32array
+ */
+DOMMatrix.fromFloat32Array = function(array32) {};
+
+/**
+ * @param {!Float64Array} array64
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-fromfloat64array
+ */
+DOMMatrix.fromFloat64Array = function(array64) {};
+
+/**
+ * @param {!DOMMatrixInit} other
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-multiply
+ */
+DOMMatrix.prototype.multiplySelf = function(other) {};
+
+/**
+ * @param {!DOMMatrixInit} other
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-premultiply
+ */
+DOMMatrix.prototype.preMultiplySelf = function(other) {};
+
+/**
+ * @param {number=} tx
+ * @param {number=} ty
+ * @param {number=} tz
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-translate
+ */
+DOMMatrix.prototype.translateSelf = function(tx, ty, tz) {};
+
+/**
+ * @param {number=} scaleX
+ * @param {number=} scaleY
+ * @param {number=} scaleZ
+ * @param {number=} originX
+ * @param {number=} originY
+ * @param {number=} originZ
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-scale
+ */
+DOMMatrix.prototype.scaleSelf = function(
+    scaleX, scaleY, scaleZ, originX, originY, originZ) {};
+
+/**
+ * @param {number=} scale
+ * @param {number=} originX
+ * @param {number=} originY
+ * @param {number=} originZ
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-scale3d
+ */
+DOMMatrix.prototype.scale3dSelf = function(scale, originX, originY, originZ) {};
+
+/**
+ * @param {number=} rotX
+ * @param {number=} rotY
+ * @param {number=} rotZ
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-rotate
+ */
+DOMMatrix.prototype.rotateSelf = function(rotX, rotY, rotZ) {};
+
+/**
+ * @param {number=} x
+ * @param {number=} y
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-rotatefromvector
+ */
+DOMMatrix.prototype.rotateFromVectorSelf = function(x, y) {};
+
+/**
+ * @param {number=} x
+ * @param {number=} y
+ * @param {number=} z
+ * @param {number=} angle
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-rotateaxisangle
+ */
+DOMMatrix.prototype.rotateAxisAngleSelf = function(x, y, z, angle) {};
+
+/**
+ * @param {number=} sx
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-skewx
+ */
+DOMMatrix.prototype.skewXSelf = function(sx) {};
+
+/**
+ * @param {number=} sy
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-skewy
+ */
+DOMMatrix.prototype.skewYSelf = function(sy) {};
+
+/**
+ * @return {!DOMMatrix}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix-inverse
+ */
+DOMMatrix.prototype.inverseSelf = function() {};
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/geometry-1/#dictdef-dommatrix2dinit
+ */
+function DOMMatrix2DInit() {}
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-a
+ */
+DOMMatrix2DInit.prototype.a;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-b
+ */
+DOMMatrix2DInit.prototype.b;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-c
+ */
+DOMMatrix2DInit.prototype.c;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-d
+ */
+DOMMatrix2DInit.prototype.d;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-e
+ */
+DOMMatrix2DInit.prototype.e;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-f
+ */
+DOMMatrix2DInit.prototype.f;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-m11
+ */
+DOMMatrix2DInit.prototype.m11;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-m12
+ */
+DOMMatrix2DInit.prototype.m12;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-m21
+ */
+DOMMatrix2DInit.prototype.m21;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-m22
+ */
+DOMMatrix2DInit.prototype.m22;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-m41
+ */
+DOMMatrix2DInit.prototype.m41;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrix2dinit-m42
+ */
+DOMMatrix2DInit.prototype.m42;
+
+/**
+ * @record
+ * @extends {DOMMatrix2DInit}
+ * @see https://www.w3.org/TR/geometry-1/#dictdef-dommatrix
+ */
+function DOMMatrixInit() {}
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m13
+ */
+DOMMatrixInit.prototype.m13;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m14
+ */
+DOMMatrixInit.prototype.m14;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m23
+ */
+DOMMatrixInit.prototype.m23;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m24
+ */
+DOMMatrixInit.prototype.m24;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m31
+ */
+DOMMatrixInit.prototype.m31;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m32
+ */
+DOMMatrixInit.prototype.m32;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m33
+ */
+DOMMatrixInit.prototype.m33;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m34
+ */
+DOMMatrixInit.prototype.m34;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m43
+ */
+DOMMatrixInit.prototype.m43;
+
+/**
+ * @type {number}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-m44
+ */
+DOMMatrixInit.prototype.m44;
+
+/**
+ * @type {boolean}
+ * @see https://www.w3.org/TR/geometry-1/#dom-dommatrixinit-is2d
+ */
+DOMMatrixInit.prototype.is2D;
