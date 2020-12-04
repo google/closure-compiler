@@ -55,21 +55,28 @@ public final class ColorGraphNodeFactoryTest {
   }
 
   @Test
-  public void primitiveTypes_flattenToTop() {
-    // In the future, it might be feasible to instead autobox these primitives to their
-    // corresponding object types.
+  public void primitiveTypes_flattenToBoxedType() {
     ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
+    ColorGraphNode flatString = factory.createNode(colorRegistry.get(NativeColorId.STRING));
+    ColorGraphNode flatStringObject =
+        factory.createNode(colorRegistry.get(NativeColorId.STRING_OBJECT));
     ColorGraphNode flatTop = factory.createNode(colorRegistry.get(NativeColorId.UNKNOWN));
 
-    assertThat(factory.createNode(colorRegistry.get(NativeColorId.STRING)))
-        .isSameInstanceAs(flatTop);
+    assertThat(flatString).isNotEqualTo(flatTop);
+    assertThat(flatString).isSameInstanceAs(flatStringObject);
+
     assertThat(
             factory.createNode(
                 Color.createUnion(
                     ImmutableSet.of(
                         colorRegistry.get(NativeColorId.STRING),
                         colorRegistry.get(NativeColorId.NUMBER)))))
-        .isSameInstanceAs(flatTop);
+        .isSameInstanceAs(
+            factory.createNode(
+                Color.createUnion(
+                    ImmutableSet.of(
+                        colorRegistry.get(NativeColorId.STRING_OBJECT),
+                        colorRegistry.get(NativeColorId.NUMBER_OBJECT)))));
   }
 
   @Test

@@ -2047,7 +2047,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPropertyOnScalarPreventsAmbiguation() {
+  public void testAmbiguateMethodAddedToStringPrototype_accessedOffScalar() {
     test(
         lines(
             "/** @return {string} */",
@@ -2059,8 +2059,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "new Bar().bar();"),
         lines(
             "/** @return {string} */",
-            "String.prototype.b = function() { return ''; };",
-            "'FOOBAR'.b();",
+            "String.prototype.a = function() { return ''; };",
+            "'FOOBAR'.a();",
             "class Bar {",
             "  a() {}",
             "}",

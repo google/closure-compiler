@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.colors;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.errorprone.annotations.Immutable;
 
 /**
@@ -25,34 +27,41 @@ import com.google.errorprone.annotations.Immutable;
 public enum NativeColorId {
 
   // Boxed primitive types
-  BIGINT_OBJECT(/* isPrimitive= */ false),
-  BOOLEAN_OBJECT(/* isPrimitive= */ false),
-  NUMBER_OBJECT(/* isPrimitive= */ false),
-  STRING_OBJECT(/* isPrimitive= */ false),
-  SYMBOL_OBJECT(/* isPrimitive= */ false),
+  BIGINT_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
+  BOOLEAN_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
+  NUMBER_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
+  STRING_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
+  SYMBOL_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
 
   // JS primitive types
-  BIGINT(/* isPrimitive= */ true),
-  BOOLEAN(/* isPrimitive= */ true),
-  NUMBER(/* isPrimitive= */ true),
-  STRING(/* isPrimitive= */ true),
-  SYMBOL(/* isPrimitive= */ true),
-  NULL_OR_VOID(/* isPrimitive= */ true),
+  BIGINT(/* isPrimitive= */ true, BIGINT_OBJECT),
+  BOOLEAN(/* isPrimitive= */ true, BOOLEAN_OBJECT),
+  NUMBER(/* isPrimitive= */ true, NUMBER_OBJECT),
+  STRING(/* isPrimitive= */ true, STRING_OBJECT),
+  SYMBOL(/* isPrimitive= */ true, SYMBOL_OBJECT),
+  NULL_OR_VOID(/* isPrimitive= */ true, /* boxed= */ null),
 
   // Equivalent to Closure '*'/'?' and TS unknown/any
-  UNKNOWN(/* isPrimitive= */ false),
+  UNKNOWN(/* isPrimitive= */ false, /* boxed= */ null),
   // The supertype of all objects but not primitives. Separate from UNKNOWN because some
   // optimizations back off on any non-object primitives + unknown but operate on the top object +
   // all other objects.
-  TOP_OBJECT(/* isPrimitive= */ false);
+  TOP_OBJECT(/* isPrimitive= */ false, /* boxed= */ null);
 
   private final boolean isPrimitive;
+  private final NativeColorId boxed;
 
-  NativeColorId(boolean isPrimitive) {
+  NativeColorId(boolean isPrimitive, NativeColorId boxed) {
     this.isPrimitive = isPrimitive;
+    this.boxed = boxed;
   }
 
   final boolean isPrimitive() {
     return this.isPrimitive;
+  }
+
+  public final NativeColorId box() {
+    checkState(this.boxed != null, "box() can only be called on primitives besides null/undefined");
+    return this.boxed;
   }
 }

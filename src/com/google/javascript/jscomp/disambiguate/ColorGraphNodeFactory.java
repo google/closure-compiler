@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp.disambiguate;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.NativeColorId;
@@ -28,12 +31,12 @@ import javax.annotation.Nullable;
 final class ColorGraphNodeFactory {
 
   private final LinkedHashMap<Color, ColorGraphNode> typeIndex;
-  private final Color unknownColor;
+  private final ColorRegistry registry;
 
   private ColorGraphNodeFactory(
-      LinkedHashMap<Color, ColorGraphNode> initialTypeIndex, Color unknownColor) {
+      LinkedHashMap<Color, ColorGraphNode> initialTypeIndex, ColorRegistry registry) {
     this.typeIndex = initialTypeIndex;
-    this.unknownColor = unknownColor;
+    this.registry = registry;
   }
 
   static ColorGraphNodeFactory createFactory(ColorRegistry colorRegistry) {
@@ -41,7 +44,7 @@ final class ColorGraphNodeFactory {
     Color unknownColor = colorRegistry.get(NativeColorId.UNKNOWN);
     ColorGraphNode unknownColorNode = ColorGraphNode.create(unknownColor, 0);
     typeIndex.put(unknownColor, unknownColorNode);
-    return new ColorGraphNodeFactory(typeIndex, unknownColor);
+    return new ColorGraphNodeFactory(typeIndex, colorRegistry);
   }
 
   /**
@@ -67,15 +70,34 @@ final class ColorGraphNodeFactory {
   // Merges different colors with the same ambiguation-behavior into one
   private Color simplifyColor(@Nullable Color type) {
     if (type == null) {
-      return this.unknownColor;
+      return this.registry.get(NativeColorId.UNKNOWN);
     }
 
-    if (type.isPrimitive()) {
-      return this.unknownColor;
-    } else if (type.isUnion()) {
-      return type.subtractNullOrVoid();
+    if (type.isUnion()) {
+      // First remove null/void, then recursively simplify any primitive components
+      type = type.subtractNullOrVoid();
+      return type.isUnion()
+          ? Color.createUnion(
+              type.union().stream().map(this::simplifyColor).collect(toImmutableSet()))
+          : simplifyColor(type);
+    } else if (type.isPrimitive()) {
+      return flattenSingletonPrimitive(type);
     } else {
       return type;
     }
+  }
+
+  private Color flattenSingletonPrimitive(Color type) {
+    ImmutableSet<NativeColorId> natives = type.getNativeColorIds();
+    checkState(
+        natives.size() == 1,
+        "Expected primitive %s to correspond to a single native color, found %s",
+        type,
+        natives);
+    NativeColorId nativeColorId = Iterables.getOnlyElement(natives);
+    if (NativeColorId.NULL_OR_VOID.equals(nativeColorId)) {
+      return this.registry.get(NativeColorId.UNKNOWN);
+    }
+    return this.registry.get(nativeColorId.box());
   }
 }
