@@ -3034,6 +3034,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("f(...args)");
     assertPrintSame("f(...arrayOfArrays[0])");
     assertPrintSame("f(...[1,2,3])");
+    assertPrintSame("f(...([1],[2]))");
   }
 
   @Test
