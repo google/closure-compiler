@@ -3778,10 +3778,11 @@ public final class TypeInferenceTest {
 
   @Test
   public void testDynamicImport2() {
-    withModules(ImmutableList.<String>builder()
-        .add("export default 1; export /** @return {string} */ function Bar() { return 'bar'; };")
-        .add("const foo = import('./testcode0');")
-        .build());
+    withModules(ImmutableList.of(
+        "export default 1; export /** @return {string} */ function Bar() { return 'bar'; };",
+        // modules are named of the format `testcode#` based off their index.
+        // testcode0 refers the first module.
+        "const foo = import('./testcode0');"));
 
     assertType(getType("foo"))
         .toStringIsEqualTo("Promise<{\n"

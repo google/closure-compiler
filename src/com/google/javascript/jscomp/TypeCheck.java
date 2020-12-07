@@ -29,6 +29,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.PROMISE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE;
@@ -3152,8 +3153,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   /** Validates that a dynamic import statement has a single child of type string */
   private void visitDynamicImport(NodeTraversal t, Node dynamicImport) {
-    JSType type = dynamicImport.getJSType();
-    validator.expectValidDynamicImportType(dynamicImport, type);
+    ensureTyped(dynamicImport, getNativeType(PROMISE_TYPE));
 
     Node importSpecifier = dynamicImport.getFirstChild();
     JSType importSpecifierType = importSpecifier.getJSType();

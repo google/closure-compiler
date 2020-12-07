@@ -37,6 +37,7 @@ import static com.google.javascript.rhino.Token.DEC;
 import static com.google.javascript.rhino.Token.DEFAULT_VALUE;
 import static com.google.javascript.rhino.Token.DELPROP;
 import static com.google.javascript.rhino.Token.DESTRUCTURING_LHS;
+import static com.google.javascript.rhino.Token.DYNAMIC_IMPORT;
 import static com.google.javascript.rhino.Token.FOR_AWAIT_OF;
 import static com.google.javascript.rhino.Token.FOR_IN;
 import static com.google.javascript.rhino.Token.FOR_OF;
@@ -320,7 +321,10 @@ public final class AstAnalyzerTest {
           // Default values delegates to children.
           kase().js("({x = 0} = y);").token(DEFAULT_VALUE).expect(false),
           kase().js("([x = 0] = y);").token(DEFAULT_VALUE).expect(false),
-          kase().js("function f(x = 0) { };").token(DEFAULT_VALUE).expect(false));
+          kase().js("function f(x = 0) { };").token(DEFAULT_VALUE).expect(false),
+
+          // Dynamic import can mutate global state
+          kase().js("import('./module.js')").token(DYNAMIC_IMPORT).expect(true));
     }
 
     @Test
@@ -622,7 +626,10 @@ public final class AstAnalyzerTest {
           kase().expect(true).js("''.match(a)").globalRegExp(true),
           kase().expect(true).js("''.match(a)").globalRegExp(false),
           kase().expect(true).js("'a'.replace(/a/, function (s) {alert(s)})").globalRegExp(false),
-          kase().expect(false).js("'a'.replace(/a/, 'x')").globalRegExp(false));
+          kase().expect(false).js("'a'.replace(/a/, 'x')").globalRegExp(false),
+
+          // Dynamic import changes global state
+          kase().expect(true).token(DYNAMIC_IMPORT).js("import('./module.js')"));
     }
   }
 
@@ -709,7 +716,10 @@ public final class AstAnalyzerTest {
           kase().js("const {normal} = y;").token(STRING_KEY).expect(false),
           kase().js("y.getter = 0;").token(GETPROP).expect(true),
           kase().js("y.setter = 0;").token(GETPROP).expect(true),
-          kase().js("y.normal = 0;").token(GETPROP).expect(false));
+          kase().js("y.normal = 0;").token(GETPROP).expect(false),
+
+          // Dynamic import causes side effects
+          kase().js("import('./module.js')").token(DYNAMIC_IMPORT).expect(true));
     }
 
     @Test

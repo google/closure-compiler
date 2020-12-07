@@ -1490,6 +1490,9 @@ public final class NodeUtilTest {
               NodeUtil.evaluatesToLocalValue(
                   parseFirst(Token.NEW_TARGET, "function f() { new.target; }")))
           .isFalse();
+
+      // Dynamic import
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("import('./foo.js')"))).isFalse();
     }
 
     @Test

@@ -214,7 +214,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
           currentModule.hasModuleBody = true;
           break;
         case DYNAMIC_IMPORT:
-          visitDynamicImport(t, n);
+          visitDynamicImport(n);
           break;
         default:
           break;
@@ -236,7 +236,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
       }
     }
 
-    private void visitDynamicImport(NodeTraversal t, Node dynamicImport) {
+    private void visitDynamicImport(Node dynamicImport) {
       if (dynamicImport.getFirstChild().isString()) {
         currentModule
             .metadataBuilder

@@ -122,11 +122,6 @@ class TypeValidator implements Serializable {
           "JSC_INVALID_ASYNC_RETURN_TYPE",
           "The return type of an async function must be a supertype of Promise\n" + "found: {0}");
 
-  static final DiagnosticType INVALID_DYNAMIC_IMPORT_TYPE =
-      DiagnosticType.warning(
-          "JSC_INVALID_DYNAMIC_IMPORT_TYPE",
-          "A dynamic import expression must be a supertype of Promise\n" + "found: {0}");
-
   static final DiagnosticType INVALID_OPERAND_TYPE =
       DiagnosticType.disabled("JSC_INVALID_OPERAND_TYPE", "{0}");
 
@@ -348,21 +343,6 @@ class TypeValidator implements Serializable {
     if (!getNativeType(ASYNC_GENERATOR_TYPE).isSubtypeOf(type)) {
       mismatch(n, msg, type, ASYNC_GENERATOR_TYPE);
     }
-  }
-
-  /**
-   * Expect the type to be a supertype of `Promise`.
-   *
-   * <p>`Promise` is the <em>lower</em> bound of the declared return type, since that's what async
-   * functions always return; the user can't return an instance of a more specific type.
-   */
-  void expectValidDynamicImportType(Node n, JSType type) {
-    if (promiseOfUnknownType.isSubtypeOf(type)) {
-      return;
-    }
-
-    JSError err = JSError.make(n, INVALID_DYNAMIC_IMPORT_TYPE, type.toString());
-    registerMismatchAndReport(type, promiseOfUnknownType, err);
   }
 
   /**
