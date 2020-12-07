@@ -132,6 +132,21 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
+  public void testSplitVar_forLoopCrash() {
+    // Verify b/174247914
+    test(
+        lines(
+            "for (let j;;);", //
+            "var i;",
+            "for(var i=0;;);"),
+        lines(
+            "for (let j;;);", //
+            "var i;",
+            "i = 0;",
+            "for(;;);"));
+  }
+
+  @Test
   public void testSplitLet() {
     testSame("let a");
     test("let a, b", "let a; let b");

@@ -621,7 +621,7 @@ class Normalize implements CompilerPass {
               Node init = c.getFirstChild();
 
               if (init.isLet() || init.isConst() || init.isClass() || init.isFunction()) {
-                return;
+                continue;
               }
 
               Node empty = IR.empty();
