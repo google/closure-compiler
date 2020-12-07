@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.deps.JsFileFullParser.FileInfo;
@@ -70,7 +71,7 @@ public final class JsFileFullParserTest {
 
   @Test
   public void testModuleType_esModule_import() {
-    FileInfo info = parse("import * from './bar';");
+    FileInfo info = parse("import * as x from './bar';");
     assertThat(info.moduleType).isEqualTo(FileInfo.ModuleType.ES_MODULE);
   }
 
@@ -87,7 +88,83 @@ public final class JsFileFullParserTest {
     assertThat(info.typeRequires).containsExactly("weaklyRequiredSymbol");
   }
 
+  @Test
+  public void testGoogLoadModule() {
+    FileInfo info =
+        parse(
+            "goog.loadModule((exports) => {",
+            "  goog.module('inner');",
+            "  const i = goog.require('inner_require');",
+            "  exports = {inner: 1};",
+            "  return exports;",
+            "});",
+            "goog.loadModule((exports) => {",
+            "  goog.module('inner2');",
+            "  const i = goog.require('inner');", // intentional self-edge
+            "  exports = {inner2: 1};",
+            "  return exports;",
+            "});");
+
+    assertThat(info.provides).containsExactly("inner", "inner2");
+    assertThat(info.requires).containsExactly("inner", "inner_require");
+  }
+
+  @Test
+  public void testGoogLoadModule_inModule() {
+    FileInfo info =
+        parse(
+            "goog.module('outer');",
+            "const i = goog.require('outer_require');",
+            "goog.loadModule((exports) => {",
+            "  goog.module('inner');",
+            "  const i = goog.require('inner_require');",
+            "  const i2 = goog.require('outer');", // intentional self-edge
+            "  exports = {inner: 1};",
+            "  return exports;",
+            "});",
+            "goog.loadModule((exports) => {",
+            "  goog.module('inner2');",
+            "  const i = goog.require('inner');", // intentional self-edge
+            "  exports = {inner2: 1};",
+            "  return exports;",
+            "});",
+            "exports = {outer: 1};");
+
+    assertThat(info.provides).containsExactly("outer", "inner", "inner2");
+    assertThat(info.requires).containsExactly("inner", "inner_require", "outer", "outer_require");
+  }
+
+  @Test
+  public void testGoogLoadModule_doubleNested() {
+    // NB: we cannot use assertThrows: the bazel CI setup doe not have JUnit 5.
+    try {
+      parse(
+          "goog.module('outer');",
+          "const i = goog.require('outer_require');",
+          "goog.loadModule((exports) => {",
+          "  goog.module('inner');",
+          "  goog.loadModule((exports) => {",
+          "    goog.module('inner.inner');",
+          "    exports = {inner2: 1};",
+          "    return exports;",
+          "  });",
+          "  const i = goog.require('inner_require');",
+          "  const i2 = goog.require('outer');", // intentional self-edge
+          "  exports = {inner: 1};",
+          "  return exports;",
+          "});",
+          "exports = {outer: 1};");
+      throw new RuntimeException("expected an AssertionError");
+    } catch (AssertionError e) {
+      assertThat(e).hasMessageThat().contains("goog.loadModule cannot be nested");
+    }
+  }
+
   private static FileInfo parse(String... lines) {
-    return JsFileFullParser.parse(Joiner.on('\n').join(lines), "file.js", null);
+    return JsFileFullParser.parse(
+        Joiner.on('\n').join(lines),
+        "file.js",
+        (boolean fatal, String message, String sourceName, int line, int lineOffset) ->
+            fail(String.format("%s:%d:%d: %s", sourceName, line, lineOffset, message)));
   }
 }

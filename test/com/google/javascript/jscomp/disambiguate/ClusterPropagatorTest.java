@@ -89,34 +89,6 @@ public final class ClusterPropagatorTest {
     assertThat(this.dest.getAssociatedProps()).isEmpty();
   }
 
-  @Test
-  public void propagation_appliesInvalidation_toSrc() {
-    // Given
-    associate(this.prop, this.src);
-    this.src.setInvalidating();
-
-    // When
-    this.propagateFromSrcToDest();
-
-    // Then
-    assertThat(this.result).isFalse();
-    assertThat(this.prop.isInvalidated()).isTrue();
-  }
-
-  @Test
-  public void propagation_appliesInvalidation_toDest_afterCopying() {
-    // Given
-    associate(this.prop, this.src);
-    this.dest.setInvalidating();
-
-    // When
-    this.propagateFromSrcToDest();
-
-    // Then
-    assertThat(this.result).isFalse();
-    assertThat(this.prop.isInvalidated()).isTrue();
-  }
-
   @After
   public void verifyPropertyFlow() {
     ImmutableSet<PropertyClustering> validSrcProps =

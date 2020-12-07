@@ -533,6 +533,12 @@ HTMLLinkElement.prototype.type;
 HTMLLinkElement.prototype.sheet;
 
 /**
+ * @type {!DOMTokenList}
+ * @see https://github.com/WICG/webpackage/blob/master/explainers/subresource-loading.md
+ */
+HTMLLinkElement.prototype.resources;
+
+/**
  * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-79243169
@@ -2805,7 +2811,7 @@ Window.prototype.location;
 Window.prototype.name;
 
 /**
- * @type {Navigator}
+ * @type {!Navigator}
  * @see https://developer.mozilla.org/en/DOM/window.navigator
  */
 Window.prototype.navigator;
@@ -2967,4 +2973,3 @@ Element.prototype.innerHTML;
  * @see https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
  */
 Element.prototype.outerHTML;
-

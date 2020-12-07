@@ -1960,7 +1960,7 @@ public final class ConformanceRules {
             continue;
           }
           return violation;
-        } else if (Iterables.any(attrs.children(), child -> child.isComputedProp())) {
+        } else if (Iterables.any(attrs.children(), Node::isComputedProp)) {
           // We don't know if the computed property matches 'src' or not
           return reportLooseTypeViolations
               ? ConformanceResult.POSSIBLE_VIOLATION

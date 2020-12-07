@@ -1032,7 +1032,8 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   /**
-   * Gets the type of instance of this function.
+   * Gets the type of instance of this function. May return null if the `this` type can not be
+   * converted to "ObjectType" (see JSType#toObjectType).
    *
    * @throws IllegalStateException if this function is not a constructor (see {@link
    *     #isConstructor()}).

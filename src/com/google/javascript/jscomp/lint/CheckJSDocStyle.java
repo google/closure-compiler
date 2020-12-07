@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ExportTestFunctions;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
@@ -55,7 +56,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
               + " instead?");
 
   public static final DiagnosticType MISSING_PARAMETER_JSDOC =
-      DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
+      DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.{0}");
 
   public static final DiagnosticType MIXED_PARAM_JSDOC_STYLES =
       DiagnosticType.disabled("JSC_MIXED_PARAM_JSDOC_STYLES",
@@ -64,7 +65,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   public static final DiagnosticType MISSING_RETURN_JSDOC =
       DiagnosticType.disabled(
           "JSC_MISSING_RETURN_JSDOC",
-          "Function with non-trivial return must have JSDoc indicating the return type.");
+          "Function with non-trivial return must have JSDoc indicating the return type.{0}");
 
   public static final DiagnosticType MUST_BE_PRIVATE =
       DiagnosticType.disabled(
@@ -234,7 +235,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         checkParams(t, function, jsDoc);
       }
       checkNoTypeOnGettersAndSetters(t, function, jsDoc);
-      checkReturn(t, function, jsDoc);
+      checkReturn(function, jsDoc);
     }
   }
 
@@ -308,10 +309,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   }
 
   private void checkParams(NodeTraversal t, Node function, JSDocInfo jsDoc) {
-    if (jsDoc != null && jsDoc.isOverride()) {
-      return;
-    }
-
     if (jsDoc != null && jsDoc.getType() != null) {
       // Sometimes functions are declared with @type {function(Foo, Bar)} instead of
       //   @param {Foo} foo
@@ -329,7 +326,17 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     } else {
       Node paramList = NodeUtil.getFunctionParameters(function);
       if (!paramList.hasXChildren(paramsFromJsDoc.size())) {
-        t.report(paramList, WRONG_NUMBER_OF_PARAMS);
+        compiler.report(
+            JSError.make(
+                paramList,
+                WRONG_NUMBER_OF_PARAMS,
+                jsDoc.isOverride()
+                    ?
+                    // moe:begin_strip
+                    " Please see go/tsjs-problematic-patterns for why @overrides require explicit"
+                        + " @param types."
+                    // moe:end_strip_and_replace ""
+                    : ""));
         return;
       }
 
@@ -429,12 +436,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     return false;
   }
 
-  private void checkReturn(NodeTraversal t, Node function, JSDocInfo jsDoc) {
-    if (jsDoc != null
-        && (jsDoc.hasType()
-            || jsDoc.isConstructor()
-            || jsDoc.hasReturnType()
-            || jsDoc.isOverride())) {
+  private void checkReturn(Node function, JSDocInfo jsDoc) {
+    if (jsDoc != null && (jsDoc.hasType() || jsDoc.isConstructor() || jsDoc.hasReturnType())) {
       return;
     }
 
@@ -450,7 +453,17 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     FindNonTrivialReturn finder = new FindNonTrivialReturn();
     NodeTraversal.traverse(compiler, function.getLastChild(), finder);
     if (finder.found) {
-      t.report(function, MISSING_RETURN_JSDOC);
+      compiler.report(
+          JSError.make(
+              function,
+              MISSING_RETURN_JSDOC,
+              jsDoc != null && jsDoc.isOverride()
+                  ?
+                  // moe:begin_strip
+                  " Please see go/tsjs-problematic-patterns for why @overrides require explicit"
+                      + " @return types.."
+                  // moe:end_strip_and_replace ""
+                  : ""));
     }
   }
 

@@ -137,6 +137,28 @@ HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
  * */
 HTMLCanvasElement.prototype.transferControlToOffscreen = function() {};
 
+
+/**
+ * @interface
+ * @extends {MediaStreamTrack}
+ * @see https://w3c.github.io/mediacapture-fromelement/#the-canvascapturemediastreamtrack
+ */
+function CanvasCaptureMediaStreamTrack() {}
+
+/**
+ * The canvas element that this media stream captures.
+ * @type {!HTMLCanvasElement}
+ */
+CanvasCaptureMediaStreamTrack.prototype.canvas;
+
+/**
+ * Allows applications to manually request that a frame from the canvas be
+ * captured and rendered into the track.
+ * @return {undefined}
+ */
+CanvasCaptureMediaStreamTrack.prototype.requestFrame = function() {};
+
+
 /**
  * @see https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface
  * @implements {EventTarget}
@@ -942,6 +964,19 @@ ImageBitmap.prototype.width;
 ImageBitmap.prototype.height;
 
 /**
+ * Releases ImageBitmap's underlying bitmap data.
+ * @return {undefined}
+ * @see https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#images-2
+ */
+ImageBitmap.prototype.close = function() {};
+
+/**
+ * @typedef {!CanvasImageSource | !Blob | !ImageData}
+ * @see https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#imagebitmapsource
+ */
+var ImageBitmapSource;
+
+/**
  * @typedef {{
  *   imageOrientation: (string|undefined),
  *   premultiplyAlpha: (string|undefined),
@@ -955,15 +990,15 @@ ImageBitmap.prototype.height;
 var ImageBitmapOptions;
 
 /**
- * @param {(!HTMLCanvasElement|!Blob|!HTMLVideoElement|!HTMLImageElement|!ImageBitmap|!CanvasRenderingContext2D|!ImageData)}
- *     image
+ * @param {!ImageBitmapSource} image
  * @param {(number|!ImageBitmapOptions)=} sxOrOptions
  * @param {number=} sy
  * @param {number=} sw
  * @param {number=} sh
  * @param {!ImageBitmapOptions=} options
  * @return {!Promise<!ImageBitmap>}
- * @see * https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-createimagebitmap
+ * @see https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-createimagebitmap
+ * @see https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope-mixin
  */
 function createImageBitmap(image, sxOrOptions, sy, sw, sh, options) {}
 
@@ -1501,12 +1536,14 @@ WorkerOptions.prototype.type;
 /**
  * @see http://dev.w3.org/html5/workers/
  * @param {string} scriptURL The URL of the script to run in the SharedWorker.
- * @param {string=} opt_name A name that can later be used to obtain a
- *     reference to the same SharedWorker.
+ * @param {(string|!WorkerOptions)=} options A name that can
+ *     later be used to obtain a reference to the same SharedWorker or a
+ *     WorkerOptions object which can be be used to specify how scriptURL is
+ *     fetched through the credentials option.
  * @constructor
  * @implements {EventTarget}
  */
-function SharedWorker(scriptURL, opt_name) {}
+function SharedWorker(scriptURL, options) {}
 
 /** @override */
 SharedWorker.prototype.addEventListener = function(
@@ -2254,6 +2291,20 @@ HTMLMediaElement.prototype.sinkId;
 HTMLMediaElement.prototype.setSinkId = function(sinkId) {};
 
 
+/**
+ * Produces a real-time capture of the media that is rendered to the media
+ * element.
+ * @return {!MediaStream}
+ * @see https://w3c.github.io/mediacapture-fromelement/#html-media-element-media-capture-extensions
+ */
+HTMLMediaElement.prototype.captureStream = function() {};
+
+/**
+ * The Firefox flavor of captureStream.
+ * @return {!MediaStream}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/captureStream#Browser_compatibility
+ */
+HTMLMediaElement.prototype.mozCaptureStream = function() {};
 
 /**
  * @constructor

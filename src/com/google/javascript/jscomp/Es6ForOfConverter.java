@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
-import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -63,7 +62,6 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
@@ -145,7 +143,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
 
       call.setJSType(iteratorType);
     }
-    Node init = IR.var(withType(iterName.cloneTree(), iterName.getJSType()), call);
+    Node init = IR.var(iterName.cloneTree().setJSType(iterName.getJSType()), call);
     Node initIterResult = iterResult.cloneTree();
     initIterResult.addChildToFront(getNext.cloneTree());
     init.addChildToBack(initIterResult);
@@ -157,7 +155,7 @@ public final class Es6ForOfConverter extends NodeTraversal.AbstractPostOrderCall
     if (!NodeUtil.isNameDeclaration(variable)) {
       declarationOrAssign =
           astFactory.createAssign(
-              withType(variable.cloneTree().setJSDocInfo(null), typeParam),
+              variable.cloneTree().setJSDocInfo(null).setJSType(typeParam),
               astFactory.createGetProp(iterResult.cloneTree(), "value"));
       declarationOrAssign.setJSDocInfo(varJSDocInfo);
       declarationOrAssign = IR.exprResult(declarationOrAssign);

@@ -16,14 +16,16 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
-import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.QualifiedName;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -54,6 +56,13 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   private final boolean addTypes;
   private final JSType stringType;
 
+  // We want to insert the call to `var tagFnFirstArg = $jscomp.createTemplateTagFirstArg...` just
+  // before this node. For the first script, this node is right after the runtime injected function
+  // definition as injecting to the top of the script causes runtime errors
+  // https://github.com/google/closure-compiler/issues/3589. For the subsequent script(s), the call
+  // is injected to the top of that script.
+  private Node templateLitInsertionPoint = null;
+
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 
   public LateEs6ToEs3Converter(AbstractCompiler compiler) {
@@ -68,7 +77,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
     TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
   }
@@ -82,6 +90,10 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      case SCRIPT:
+        // For all scripts, initialize the injection point to be top of the script
+        templateLitInsertionPoint = n.getFirstChild();
+        break;
       case GETTER_DEF:
       case SETTER_DEF:
         if (FeatureSet.ES3.contains(compiler.getOptions().getOutputFeatureSet())) {
@@ -104,6 +116,20 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      case ASSIGN:
+        // Find whether this script contains the `$jscomp.createTemplateTagFirstArgWithRaw =
+        // function(..) {..}` node. If yes, update the templateLitInsertionPoint.
+        Node lhs = n.getFirstChild();
+        Node rhs = n.getSecondChild();
+        if (lhs.isGetProp() && rhs.isFunction() && lhs.getFirstChild().isName()) {
+          QualifiedName qName = QualifiedName.of("$jscomp.createTemplateTagFirstArgWithRaw");
+          if (qName.matches(lhs)) {
+            checkNotNull(n.getParent(), n);
+            checkState(n.getParent().isExprResult(), n);
+            templateLitInsertionPoint = n.getParent().getNext();
+          }
+        }
+        break;
       case OBJECTLIT:
         visitObject(n);
         break;
@@ -113,7 +139,8 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
         }
         break;
       case TAGGED_TEMPLATELIT:
-        templateLiteralConverter.visitTaggedTemplateLiteral(t, n, addTypes);
+        templateLiteralConverter.visitTaggedTemplateLiteral(
+            t, n, addTypes, templateLitInsertionPoint);
         break;
       case TEMPLATELIT:
         if (!parent.isTaggedTemplateLit()) {
@@ -224,8 +251,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     result.useSourceInfoIfMissingFromForTree(obj);
     obj.replaceWith(result);
 
-    JSType simpleObjectType = null;
-    Node var = IR.var(astFactory.createName(objName, objectType), withType(obj, simpleObjectType));
+    Node var = IR.var(astFactory.createName(objName, objectType), obj);
     var.useSourceInfoIfMissingFromForTree(statement);
     statement.getParent().addChildBefore(var, statement);
     compiler.reportChangeToEnclosingScope(var);

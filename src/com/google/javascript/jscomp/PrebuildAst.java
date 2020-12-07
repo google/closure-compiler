@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -27,7 +29,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A helper class to prebuild ASTs from a list of {@link CompilerInput}. Inputs are parsed into ASTs
@@ -53,23 +54,19 @@ class PrebuildAst {
           return t;
         }
     };
-    ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(
-        numParallelThreads,
-        numParallelThreads,
-        Integer.MAX_VALUE,
-        TimeUnit.SECONDS,
-        new LinkedBlockingQueue<Runnable>(),
-        threadFactory);
+    ThreadPoolExecutor poolExecutor =
+        new ThreadPoolExecutor(
+            numParallelThreads,
+            numParallelThreads,
+            Integer.MAX_VALUE,
+            SECONDS,
+            new LinkedBlockingQueue<Runnable>(),
+            threadFactory);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(poolExecutor);
     List<ListenableFuture<?>> futureList = new ArrayList<>(Iterables.size(allInputs));
     // TODO(moz): Support canceling all parsing on the first halting error
     for (final CompilerInput input : allInputs) {
-      futureList.add(executorService.submit(new Runnable() {
-        @Override
-        public void run() {
-          input.getAstRoot(compiler);
-        }
-      }));
+      futureList.add(executorService.submit(() -> input.getAstRoot(compiler)));
     }
 
     poolExecutor.shutdown();

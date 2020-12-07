@@ -160,6 +160,8 @@ public class Node implements Serializable {
     // The type of an expression before the cast. This will be present only if the expression is
     // casted.
     TYPE_BEFORE_CAST,
+    // Indicates that this epxression was casted but we don't necessarily know to which type
+    COLOR_FROM_CAST,
     // The node is an optional parameter or property in ES6 Typed syntax.
     OPT_ES6_TYPED,
     // Generic type list in ES6 typed syntax.
@@ -178,8 +180,6 @@ public class Node implements Serializable {
     // Indicates that a SCRIPT node is a goog.module. Remains set after the goog.module is
     // desugared.
     GOOG_MODULE,
-    // Node is a goog.require() as desugared by goog.module()
-    GOOG_MODULE_REQUIRE,
     // Attaches a FeatureSet to SCRIPT nodes.
     FEATURE_SET,
     // Indicates a namespace that was provided at some point in the past.
@@ -1257,6 +1257,22 @@ public class Node implements Serializable {
   @Nullable
   public final JSType getJSTypeBeforeCast() {
     return (JSType) getProp(Prop.TYPE_BEFORE_CAST);
+  }
+
+  /**
+   * Indicate that this node's color comes from a type assertion. Only set when colors are present;
+   * when JSTypes are on the AST we instead preserve the actual JSType before the type assertion.
+   */
+  public final void setColorFromTypeCast() {
+    checkState(getColor() != null, "Only use on nodes with colors present");
+    putBooleanProp(Prop.COLOR_FROM_CAST, true);
+  }
+
+  /**
+   * Indicates that this node's color comes from a type assertion. Only set when colors are present.
+   */
+  public final boolean isColorFromTypeCast() {
+    return getBooleanProp(Prop.COLOR_FROM_CAST);
   }
 
   // Gets all the property types, in sorted order.
@@ -2605,6 +2621,13 @@ public class Node implements Serializable {
     return this;
   }
 
+  /** Copies a nodes JSTYpe and Color (if present) */
+  public final Node copyTypeFrom(Node other) {
+    this.jstype = other.jstype;
+    this.setColor(other.getColor());
+    return this;
+  }
+
   /**
    * Get the {@link JSDocInfo} attached to this node.
    *
@@ -2934,7 +2957,6 @@ public class Node implements Serializable {
    *   <li>Is the receiver (`this`) mutated? ({@code MUTATES_THIS})
    *   <li>Are any arguments mutated? ({@code MUTATES_ARGUMENTS})
    *   <li>Does the call throw an error? ({@code THROWS})
-   *   <li>Is the return an escaped (mutable by other code) value? ({@code ESCAPED_RETURN})
    * </ol>
    *
    * @author johnlenz@google.com (John Lenz)
@@ -2944,18 +2966,14 @@ public class Node implements Serializable {
     public static final int MUTATES_THIS = 2;
     public static final int MUTATES_ARGUMENTS = 4;
     public static final int THROWS = 8;
-    public static final int ESCAPED_RETURN = 16;
 
-    private static final int USED_BITS_MASK = (1 << 5) - 1;
-
-    // TODO(nickreid): Delete one of these values. They should be symmetric with respect to
-    // inversion. We need better noenclature to describe ESCAPED_RETURN.
-    public static final int NO_SIDE_EFFECTS = ESCAPED_RETURN;
+    private static final int USED_BITS_MASK = (1 << 4) - 1;
+    private static final int NO_SIDE_EFFECTS = 0;
     public static final int ALL_SIDE_EFFECTS =
-        MUTATES_GLOBAL_STATE | MUTATES_THIS | MUTATES_ARGUMENTS | THROWS | ESCAPED_RETURN;
+        MUTATES_GLOBAL_STATE | MUTATES_THIS | MUTATES_ARGUMENTS | THROWS;
 
-    // A bitfield indicating the flag statuses. All bits set to 1 means "global state changes and
-    // unknown locality of result".
+    // A bitfield indicating the flag statuses. All used bits set to 1 means "global state changes".
+    // A value of 0 means "no side effects"
     private int value = ALL_SIDE_EFFECTS;
 
     public SideEffectFlags() {
@@ -2975,18 +2993,10 @@ public class Node implements Serializable {
       return this;
     }
 
-    /** No side-effects occur and the returned results are local. */
+    /** No side-effects occur */
     public SideEffectFlags clearAllFlags() {
-      value = NO_SIDE_EFFECTS & ~ESCAPED_RETURN;
+      value = NO_SIDE_EFFECTS;
       return this;
-    }
-
-    /**
-     * Preserve the return result flag, but clear the others:
-     *   no global state change, no throws, no this change, no arguments change
-     */
-    public void clearSideEffectFlags() {
-      value &= ESCAPED_RETURN;
     }
 
     public SideEffectFlags setMutatesGlobalState() {
@@ -3010,11 +3020,6 @@ public class Node implements Serializable {
       return this;
     }
 
-    public SideEffectFlags setReturnsTainted() {
-      value |= ESCAPED_RETURN;
-      return this;
-    }
-
     @Override
     @DoNotCall // For debugging only.
     public String toString() {
@@ -3032,40 +3037,26 @@ public class Node implements Serializable {
       if ((value & MUTATES_ARGUMENTS) != 0) {
         builder.append("args ");
       }
-      if ((value & ESCAPED_RETURN) != 0) {
-        builder.append("return ");
-      }
 
       return builder.toString();
     }
   }
 
-  /**
-   * @return Whether the only side-effect is "modifies this"
-   */
+  /** Returns whether the only side-effect is "modifies this" or there are no side effects. */
   public final boolean isOnlyModifiesThisCall() {
-    int consideredFlags = getSideEffectFlags();
-    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
-
     // TODO(nickreid): Delete this; check if MUTATES_THIS is actually set. This was left in to
     // maintain existing behaviour but it makes the name of this method misleading.
-    consideredFlags &= ~SideEffectFlags.MUTATES_THIS;
-
-    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
+    int sideEffectsBesidesMutatesThis = getSideEffectFlags() & ~SideEffectFlags.MUTATES_THIS;
+    return sideEffectsBesidesMutatesThis == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
-  /**
-   * @return Whether the only side-effect is "modifies arguments"
-   */
+  /** Returns whether the only side-effect is "modifies arguments" or there are no side effects. */
   public final boolean isOnlyModifiesArgumentsCall() {
-    int consideredFlags = getSideEffectFlags();
-    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
-
     // TODO(nickreid): Delete this; check if MUTATES_ARGUMENTS is actually set. This was left in to
     // maintain existing behaviour but it makes the name of this method misleading.
-    consideredFlags &= ~SideEffectFlags.MUTATES_ARGUMENTS;
-
-    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
+    int sideEffectsBesidesMutatesArguments =
+        getSideEffectFlags() & ~SideEffectFlags.MUTATES_ARGUMENTS;
+    return sideEffectsBesidesMutatesArguments == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /**
@@ -3073,19 +3064,7 @@ public class Node implements Serializable {
    * has no side effects.
    */
   public final boolean isNoSideEffectsCall() {
-    int consideredFlags = getSideEffectFlags();
-    consideredFlags |= SideEffectFlags.NO_SIDE_EFFECTS; // Set non-side-effect bits to 1.
-
-    return consideredFlags == SideEffectFlags.NO_SIDE_EFFECTS;
-  }
-
-  /**
-   * Returns true if this node is a function or constructor call that
-   * returns a primitive or a local object (an object that has no other
-   * references).
-   */
-  public final boolean isLocalResultCall() {
-    return !allBitsSet(getSideEffectFlags(), SideEffectFlags.ESCAPED_RETURN);
+    return getSideEffectFlags() == SideEffectFlags.NO_SIDE_EFFECTS;
   }
 
   /** Returns true if this is a new/call that may mutate its arguments. */

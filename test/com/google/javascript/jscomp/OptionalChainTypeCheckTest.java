@@ -82,12 +82,10 @@ public class OptionalChainTypeCheckTest {
     String objType = testCase.forObjType().get();
     String expr = testCase.withExpr();
     String expectType = testCase.assignedTo().get();
-    String js =
-        lines(
-            "/** @type {(" + objType + ")} */ var a;",
-            "/** @type {(" + expectType + ")} */ var x;",
-            "x = " + expr + ";");
-    return js;
+    return lines(
+        "/** @type {(" + objType + ")} */ var a;",
+        "/** @type {(" + expectType + ")} */ var x;",
+        "x = " + expr + ";");
   }
 
   @RunWith(Parameterized.class)

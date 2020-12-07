@@ -49,7 +49,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
           "Error(?)",
           "goog.debug.Trace.startTracer(*)",
           "goog.debug.Logger.getLogger(?)",
-          "goog.debug.Logger.prototype.info(?)",
           "goog.log.getLogger(?)",
           "goog.log.info(,?)",
           "goog.log.multiString(,?,?,)",
@@ -393,108 +392,11 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLoggerOnObject1() {
-    testDebugStrings(
-        "var x = {};"
-            + "x.logger_ = goog.debug.Logger.getLogger('foo');"
-            + "x.logger_.info('Some message');",
-        "var x$logger_ = goog.debug.Logger.getLogger('a');" + "x$logger_.info('b');",
-        new String[] {
-          "a", "foo",
-          "b", "Some message"
-        });
-  }
-
-  // Non-matching "info" property.
-  @Test
-  public void testLoggerOnObject2() {
-    test(
-        "var x = {};" + "x.info = function(a) {};" + "x.info('Some message');",
-        "var x$info = function(a) {};" + "x$info('Some message');");
-  }
-
-  // Non-matching "info" prototype property.
-  @Test
-  public void testLoggerOnObject3a() {
-    testSame(
-        "/** @constructor */\n"
-            + "var x = function() {};\n"
-            + "x.prototype.info = function(a) {};"
-            + "(new x).info('Some message');");
-  }
-
-  // Non-matching "info" prototype property.
-  @Test
-  public void testLoggerOnObject3b() {
-    testSame(
-        "/** @constructor */\n"
-            + "var x = function() {};\n"
-            + "x.prototype.info = function(a) {};"
-            + "var y = (new x); this.info('Some message');");
-  }
-
-  // Non-matching "info" property on "NoObject" type.
-  @Test
-  public void testLoggerOnObject4() {
-    testSame("(new x).info('Some message');");
-  }
-
-  // Non-matching "info" property on "UnknownObject" type.
-  @Test
-  public void testLoggerOnObject5() {
-    testSame("my$Thing.logger_.info('Some message');");
-  }
-
-  @Test
   public void testLoggerOnVar() {
     testDebugStrings(
         "var logger = goog.debug.Logger.getLogger('foo');" + "logger.info('Some message');",
-        "var logger = goog.debug.Logger.getLogger('a');" + "logger.info('b');",
-        new String[] {
-          "a", "foo",
-          "b", "Some message"
-        });
-  }
-
-  @Test
-  public void testLoggerOnThis() {
-    testDebugStrings(
-        "function f() {"
-            + "  this.logger_ = goog.debug.Logger.getLogger('foo');"
-            + "  this.logger_.info('Some message');"
-            + "}",
-        "function f() {"
-            + "  this.logger_ = goog.debug.Logger.getLogger('a');"
-            + "  this.logger_.info('b');"
-            + "}",
-        new String[] {
-          "a", "foo",
-          "b", "Some message"
-        });
-  }
-
-  @Test
-  public void testLoggerOnThis2() {
-    testDebugStrings(
-        lines(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {!goog.debug.Logger} */",
-            "  this.logger_;",
-            "}",
-            "Foo.prototype.f = function() {",
-            "  this.logger_.info('Some message');",
-            "};"),
-        lines(
-            "/** @constructor */",
-            "function Foo() {",
-            "  /** @type {!goog.debug.Logger} */",
-            "  this.logger_;",
-            "}",
-            "Foo.prototype.f = function() {",
-            "  this.logger_.info('a');",
-            "};"),
-        new String[] {"a", "Some message"});
+        "var logger = goog.debug.Logger.getLogger('a');" + "logger.info('Some message');",
+        new String[] {"a", "foo"});
   }
 
   @Test
@@ -615,74 +517,15 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testWarningForTaggedTemplates_prototypeMethod() {
-    testWarning(
-        lines(
-            "var x = {};",
-            "x.logger_ = goog.debug.Logger.getLogger('foo');",
-            "x.logger_.info`Some message`;"),
-        ReplaceStrings.STRING_REPLACEMENT_TAGGED_TEMPLATE);
-  }
-
-  @Test
-  public void testWithDisambiguateProperties() {
-    runDisambiguateProperties = true;
+  public void testWarnsIfPassingPrototypeMethod() {
+    // ReplaceStrings supported this configuration until November 2020, so make sure users don't
+    // pass it thinking it is still supported.
+    allowSourcelessWarnings();
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(defaultFunctionsToInspect);
     builder.add("A.prototype.f(?)");
-    builder.add("C.prototype.f(?)");
     functionsToInspect = builder.build();
-
-    testDebugStrings(
-        lines(
-            "/** @constructor */",
-            "function A() {}",
-            "/** @param {string} p",
-            "  * @return {string} */",
-            "A.prototype.f = function(p) {return 'a' + p;};",
-            "/** @constructor */",
-            "function B() {}",
-            "/** @param {string} p",
-            "  * @return {string} */",
-            "B.prototype.f = function(p) {return p + 'b';};",
-            "/** @constructor */",
-            "function C() {}",
-            "/** @param {string} p",
-            "  * @return {string} */",
-            "C.prototype.f = function(p) {return 'c' + p + 'c';};",
-            "/** @type {A|B} */",
-            "var ab = 1 ? new B : new A;",
-            "/** @type {string} */",
-            "var n = ab.f('not replaced');",
-            "(new A).f('replaced with a');",
-            "(new C).f('replaced with b');"),
-        lines(
-            "/** @constructor */",
-            "function A() {}",
-            "/** @param {string} p",
-            "  * @return {string} */",
-            "A.prototype.A_prototype$f = function(p) { return'a'+p; };",
-            "/** @constructor */",
-            "function B() {}",
-            "/** @param {string} p",
-            "  * @return {string} */",
-            "B.prototype.A_prototype$f = function(p) { return p+'b'; };",
-            "/** @constructor */",
-            "function C() {}",
-            "/** @param {string} p",
-            "  * @return {string} */",
-            "C.prototype.C_prototype$f = function(p) { return'c'+p+'c'; };",
-            "/** @type {A|B} */",
-            "var ab = 1 ? new B : new A;",
-            "/** @type {string} */",
-            "var n = ab.A_prototype$f('not replaced');",
-            "(new A).A_prototype$f('a');",
-            "(new C).C_prototype$f('b');"),
-        new String[] {
-          "a", "replaced with a",
-          "b", "replaced with b"
-        });
+    testError("", ReplaceStrings.BAD_REPLACEMENT_CONFIGURATION);
   }
 
   @Test

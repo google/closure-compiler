@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.List;
@@ -121,7 +122,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
     for (Node keyNode : behaviorValue.children()) {
       if (keyNode.getFirstChild().isFunction()) {
         keyNode.removeProp(Node.JSDOC_INFO_PROP);
-        JSDocInfoBuilder suppressDoc = new JSDocInfoBuilder(true);
+        JSDocInfoBuilder suppressDoc = JSDocInfo.builder().parseDocumentation();
         suppressDoc.addSuppression("checkTypes");
         suppressDoc.addSuppression("globalThis");
         suppressDoc.addSuppression("visibility");

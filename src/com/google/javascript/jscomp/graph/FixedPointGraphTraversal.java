@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -96,18 +97,27 @@ public final class FixedPointGraphTraversal<N, E> {
     computeFixedPoint(graph, entrySet);
   }
 
+  // We cube the number of nodes to estimate the largest number of iterations we should allow before
+  // deciding that we aren't reaching a fixed point.
+  // We have to make sure that we don't hit integer overflow when calculating this value.
+  // We also don't want to wait longer than a full minute for any fixed point calculation.
+  // We'll be generous and assume each iteration takes only a nanosecond.
+  // That's 60*10^9 iterations, so we must cap the node count we use for calculation at the
+  // cube root of that number.
+  private static final long MAX_NODE_COUNT_FOR_ITERATION_LIMIT = (long) Math.floor(Math.cbrt(60e9));
+
   /**
    * Compute a fixed point for the given graph, entering from the given nodes.
    * @param graph The graph to traverse.
    * @param entrySet The nodes to begin traversing from.
    */
   public void computeFixedPoint(DiGraph<N, E> graph, Set<N> entrySet) {
-    int cycleCount = 0;
-    long nodeCount = graph.getNodeCount();
+    long cycleCount = 0;
+    long nodeCount = min(graph.getNodeCount(), MAX_NODE_COUNT_FOR_ITERATION_LIMIT);
 
     // Choose a bail-out heuristically in case the computation
     // doesn't converge.
-    long maxIterations = max(nodeCount * nodeCount * nodeCount, 100);
+    long maxIterations = max(nodeCount * nodeCount * nodeCount, 100L);
 
     // Use a LinkedHashSet, so that the traversal is deterministic.
     LinkedHashSet<DiGraphNode<N, E>> workSet = new LinkedHashSet<>();

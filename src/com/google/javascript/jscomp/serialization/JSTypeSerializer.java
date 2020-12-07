@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 The Closure Compiler Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -17,6 +33,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
+import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.javascript.rhino.serialization.TypePoolCreator;
 import java.util.Collection;
 
@@ -27,35 +44,64 @@ final class JSTypeSerializer {
   private final TypePointer unknownPointer;
   private final InvalidatingTypes invalidatingTypes;
   private final IdGenerator idGenerator;
+  private final SerializationOptions serializationMode;
 
-  private static final TypeDebugInfo EMPTY_DEBUG_INFO = TypeDebugInfo.newBuilder().build();
+  private static final TypeDebugInfo EMPTY_DEBUG_INFO = TypeDebugInfo.getDefaultInstance();
 
   private JSTypeSerializer(
       TypePoolCreator<JSType> typePoolCreator,
       ImmutableMap<JSType, TypePointer> nativeTypePointers,
       TypePointer unknownPointer,
       InvalidatingTypes invalidatingTypes,
-      IdGenerator idGenerator) {
+      IdGenerator idGenerator,
+      SerializationOptions serializationMode) {
     this.typePoolCreator = typePoolCreator;
     this.nativeTypePointers = nativeTypePointers;
     this.unknownPointer = unknownPointer;
     this.invalidatingTypes = invalidatingTypes;
     this.idGenerator = idGenerator;
+    this.serializationMode = serializationMode;
   }
 
   public static JSTypeSerializer create(
       TypePoolCreator<JSType> typePoolCreator,
       JSTypeRegistry registry,
-      InvalidatingTypes invalidatingTypes) {
+      InvalidatingTypes invalidatingTypes,
+      SerializationOptions serializationMode) {
     ImmutableMap<JSType, TypePointer> nativeTypePointers = buildNativeTypeMap(registry);
     IdGenerator idGenerator = new IdGenerator();
 
+    collectInvalidatingNatives(registry, invalidatingTypes, typePoolCreator);
     return new JSTypeSerializer(
         typePoolCreator,
         nativeTypePointers,
         nativeTypePointers.get(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
         invalidatingTypes,
-        idGenerator);
+        idGenerator,
+        serializationMode);
+  }
+
+  /**
+   * Adds all invalidating native types to the type pool.
+   *
+   * <p>Native types are not explicitly serialized, since the only bit of information that differs
+   * between compilation units is their "invalidatingness".
+   */
+  private static void collectInvalidatingNatives(
+      JSTypeRegistry registry,
+      InvalidatingTypes invalidatingTypes,
+      TypePoolCreator<JSType> typePoolCreator) {
+    for (JSTypeNative jsTypeNative : JSTypeNative.values()) {
+      // First check if this type is also native in the colors
+      NativeType correspondingType = translateNativeType(jsTypeNative);
+      if (correspondingType == null) {
+        continue;
+      }
+      // Then check if it is invalidating
+      if (invalidatingTypes.isInvalidating(registry.getNativeType(jsTypeNative))) {
+        typePoolCreator.registerInvalidatingNative(correspondingType);
+      }
+    }
   }
 
   /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
@@ -167,7 +213,10 @@ final class JSTypeSerializer {
 
   private com.google.javascript.jscomp.serialization.ObjectType serializeObjectType(
       ObjectType type) {
-    TypeDebugInfo debugInfo = getDebugInfo(type);
+    TypeDebugInfo debugInfo =
+        SerializationOptions.SKIP_DEBUG_INFO.equals(serializationMode)
+            ? EMPTY_DEBUG_INFO
+            : getDebugInfo(type);
     return serializeObjectType(type, debugInfo);
   }
 
@@ -183,6 +232,9 @@ final class JSTypeSerializer {
         objBuilder
             .setPrototype(serializeType(fnType.getPrototype()))
             .setInstanceType(serializeType(fnType.getInstanceType()));
+        if (fnType.isConstructor()) {
+          objBuilder.setMarkedConstructor(true);
+        }
       }
     }
     if (!EMPTY_DEBUG_INFO.equals(debug)) {
@@ -190,6 +242,10 @@ final class JSTypeSerializer {
     }
     return objBuilder
         .setIsInvalidating(invalidatingTypes.isInvalidating(type))
+        // To support legacy code, property disambiguation never renames properties of enums
+        // (e.g. 'A' in '/** @enum */ const E = {A: 0}`). In
+        // theory this would be safe to remove if we clean up code depending on the lack of renaming
+        .setPropertiesKeepOriginalName(type.isEnumType())
         // NOTE: We need a better format than sequential integers in order to have an id that
         // can be consistent across compilation units. For now, using a sequential integers for each
         // type depends on the invariant that we serialize each distinct type exactly once and from
@@ -290,20 +346,19 @@ final class JSTypeSerializer {
    */
   private static NativeType translateNativeType(JSTypeNative nativeType) {
     switch (nativeType) {
-      case STRING_TYPE:
-        return NativeType.STRING_TYPE;
-
       case BOOLEAN_TYPE:
         return NativeType.BOOLEAN_TYPE;
+      case BIGINT_TYPE:
+        return NativeType.BIGINT_TYPE;
 
       case NUMBER_TYPE:
         return NativeType.NUMBER_TYPE;
+      case STRING_TYPE:
+        return NativeType.STRING_TYPE;
 
       case SYMBOL_TYPE:
         return NativeType.SYMBOL_TYPE;
 
-      case BIGINT_TYPE:
-        return NativeType.BIGINT_TYPE;
 
       case NULL_TYPE:
       case VOID_TYPE:
@@ -326,6 +381,17 @@ final class JSTypeSerializer {
       case NO_OBJECT_TYPE:
       case NO_RESOLVED_TYPE:
         return NativeType.UNKNOWN_TYPE;
+
+      case BOOLEAN_OBJECT_TYPE:
+        return NativeType.BOOLEAN_OBJECT_TYPE;
+      case BIGINT_OBJECT_TYPE:
+        return NativeType.BIGINT_OBJECT_TYPE;
+      case NUMBER_OBJECT_TYPE:
+        return NativeType.NUMBER_OBJECT_TYPE;
+      case STRING_OBJECT_TYPE:
+        return NativeType.STRING_OBJECT_TYPE;
+      case SYMBOL_OBJECT_TYPE:
+        return NativeType.SYMBOL_OBJECT_TYPE;
 
       default:
         return null;

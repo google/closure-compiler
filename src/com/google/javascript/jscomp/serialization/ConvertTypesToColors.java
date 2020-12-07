@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.IdentityHashMap;
 
 /**
@@ -54,6 +55,11 @@ public final class ConvertTypesToColors implements CompilerPass {
       if (oldType != null && typePointersByJstype.containsKey(oldType)) {
         n.setColor(deserializer.pointerToColor(typePointersByJstype.get(oldType)));
       }
+      if (n.getJSTypeBeforeCast() != null) {
+        // used by FunctionInjector and InlineVariables when inlining as a hint that a node has a
+        // more specific color
+        n.setColorFromTypeCast();
+      }
     }
   }
 
@@ -61,7 +67,8 @@ public final class ConvertTypesToColors implements CompilerPass {
   public void process(Node externs, Node root) {
     // Step 1: Serialize types
     Node externsAndJsRoot = root.getParent();
-    SerializeTypesCallback serializeJstypes = SerializeTypesCallback.create(compiler);
+    SerializeTypesCallback serializeJstypes =
+        SerializeTypesCallback.create(compiler, SerializationOptions.INCLUDE_DEBUG_INFO);
     NodeTraversal.traverse(compiler, externsAndJsRoot, serializeJstypes);
 
     // Step 2: Remove types and add colors
@@ -71,5 +78,7 @@ public final class ConvertTypesToColors implements CompilerPass {
         compiler,
         externsAndJsRoot,
         new ColorAst(deserializer, serializeJstypes.getTypePointersByJstype()));
+
+    compiler.setColorRegistry(deserializer.getRegistry());
   }
 }

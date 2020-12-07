@@ -11,12 +11,25 @@ message TypePool {
   repeated Type type = 1;
   // edges used for Closure Compiler property disambiguation/ambiguation
   repeated SubtypingEdge disambiguation_edges = 2;
+  // Human-readable representation of where this TypePool comes from.
+  string source_name = 3;
+  // List of native types that are invalidating. Needed because native types may
+  // be not inherently invalidating, but invalidating because they were involved
+  // in a type mismatch in a given program.
+  repeated NativeType invalidating_native = 4;
 }
 
+// References a serialized type. Typically, any reference to a type that needs
+// to be serialized should use a TypePointer instead of a Type directly to avoid
+// the overhead of serializing a type.
 message TypePointer {
   // required
   oneof type {
+    // Points to a user-defined type in a known type pool.
     int32 pool_offset = 1;
+    // TODO(lharker): consider putting this field into Type and serializing
+    // actual Type messages for the native types, to remove the need for this
+    // oneof.
     NativeType native_type = 2;
   }
   // for debugging only -- may not be present
@@ -33,12 +46,25 @@ message UnionType {
 }
 
 message ObjectType {
+  // TODO(lharker): consider storing the bool fields as a bitmask
+
   // If true, type-based property optimizations will back off optimizations on
   // properties related to this type.
   bool is_invalidating = 2;
-  TypePointer instance_type = 3;
-  TypePointer prototype = 4;
-  string uuid = 5;
+  string uuid = 3;
+  // If true, type-based property optimizations will treat this type as if it
+  // were an extern and never rename its properties. Unlike "is_invalidating"
+  // types, optimizations may still rename other references to properties
+  // appearing on this type and will not completely back off optimizations.
+  bool properties_keep_original_name = 4;
+
+  // Additional metadata relevant to classes and interfaces
+  TypePointer instance_type = 5;
+  // If this is a constructor, its .prototype field (not the implicit prototype)
+  TypePointer prototype = 6;
+  // Whether this was declared as either a class constructor or Closure ES5-
+  // style constructor.
+  bool marked_constructor = 7;
 
   // Optional, doesn't contribute to type equality
   TypeDebugInfo debug_info = 15;
@@ -77,4 +103,17 @@ enum NativeType {
 
   // Top object type (supertype of all objects and invalidating)
   TOP_OBJECT = 8;
+
+  // Boxed scalars
+  BOOLEAN_OBJECT_TYPE = 9;
+  STRING_OBJECT_TYPE = 10;
+  NUMBER_OBJECT_TYPE = 11;
+  SYMBOL_OBJECT_TYPE = 12;
+  BIGINT_OBJECT_TYPE = 13;
+}
+
+// Used for testing only and possibly only temporary. Wraps type pools from
+// different compliations into a single message.
+message TypePoolList {
+  repeated TypePool type_pool = 1;
 }

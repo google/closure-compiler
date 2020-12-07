@@ -22,10 +22,11 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.ObjectColor;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
-import com.google.javascript.jscomp.colors.UnionColor;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
+import com.google.javascript.jscomp.colors.SingletonColorFields;
 import com.google.javascript.jscomp.testing.JSCompCorrespondences;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,40 +34,63 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class ColorGraphNodeFactoryTest {
 
-  @Test
-  public void topLikeTypes_flattenToTop() {
-    // Given
-    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
-    ColorGraphNode flatTop = factory.createNode(PrimitiveColor.UNKNOWN);
+  private ColorRegistry colorRegistry;
 
-    // When & Then
-    assertThat(factory.createNode((Color) null)).isSameInstanceAs(flatTop);
-    assertThat(factory.createNode(PrimitiveColor.NULL_OR_VOID)).isSameInstanceAs(flatTop);
+  @Before
+  public void initRegistry() {
+    this.colorRegistry =
+        ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of(NativeColorId.UNKNOWN));
   }
 
   @Test
-  public void primitiveTypes_flattenToTop() {
-    // In the future, it might be feasible to instead autobox these primitives to their
-    // corresponding object types.
-    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
-    ColorGraphNode flatTop = factory.createNode(PrimitiveColor.UNKNOWN);
+  public void topLikeTypes_flattenToTop() {
+    // Given
+    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
+    ColorGraphNode flatTop = factory.createNode(colorRegistry.get(NativeColorId.UNKNOWN));
 
-    assertThat(factory.createNode(PrimitiveColor.STRING)).isSameInstanceAs(flatTop);
+    // When & Then
+    assertThat(factory.createNode((Color) null)).isSameInstanceAs(flatTop);
+    assertThat(factory.createNode(colorRegistry.get(NativeColorId.NULL_OR_VOID)))
+        .isSameInstanceAs(flatTop);
+  }
+
+  @Test
+  public void primitiveTypes_flattenToBoxedType() {
+    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
+    ColorGraphNode flatString = factory.createNode(colorRegistry.get(NativeColorId.STRING));
+    ColorGraphNode flatStringObject =
+        factory.createNode(colorRegistry.get(NativeColorId.STRING_OBJECT));
+    ColorGraphNode flatTop = factory.createNode(colorRegistry.get(NativeColorId.UNKNOWN));
+
+    assertThat(flatString).isNotEqualTo(flatTop);
+    assertThat(flatString).isSameInstanceAs(flatStringObject);
+
     assertThat(
             factory.createNode(
-                UnionColor.create(ImmutableSet.of(PrimitiveColor.STRING, PrimitiveColor.NUMBER))))
-        .isSameInstanceAs(flatTop);
+                Color.createUnion(
+                    ImmutableSet.of(
+                        colorRegistry.get(NativeColorId.STRING),
+                        colorRegistry.get(NativeColorId.NUMBER)))))
+        .isSameInstanceAs(
+            factory.createNode(
+                Color.createUnion(
+                    ImmutableSet.of(
+                        colorRegistry.get(NativeColorId.STRING_OBJECT),
+                        colorRegistry.get(NativeColorId.NUMBER_OBJECT)))));
   }
 
   @Test
   public void unionTypes_whenFlattened_dropNullAndUndefined() {
     // Given
-    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
+    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
     Color nullOrVoidOrNumberType =
-        UnionColor.create(ImmutableSet.of(PrimitiveColor.NULL_OR_VOID, PrimitiveColor.NUMBER));
+        Color.createUnion(
+            ImmutableSet.of(
+                colorRegistry.get(NativeColorId.NULL_OR_VOID),
+                colorRegistry.get(NativeColorId.NUMBER)));
 
-    ColorGraphNode flatNumber = factory.createNode(PrimitiveColor.NUMBER);
+    ColorGraphNode flatNumber = factory.createNode(colorRegistry.get(NativeColorId.NUMBER));
 
     // Given
     ColorGraphNode flatNullOrVoidOrNumber = factory.createNode(nullOrVoidOrNumberType);
@@ -78,9 +102,9 @@ public final class ColorGraphNodeFactoryTest {
   @Test
   public void colorGraphNodes_areCached() {
     // Given
-    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
+    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
-    Color fooType = ObjectColor.builder().setId("Foo").build();
+    Color fooType = Color.createSingleton(SingletonColorFields.builder().setId("Foo").build());
     ColorGraphNode flatFoo = factory.createNode(fooType);
 
     // When
@@ -93,13 +117,13 @@ public final class ColorGraphNodeFactoryTest {
   @Test
   public void colorGraphNodes_areTracked() {
     // Given
-    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
+    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
-            PrimitiveColor.NUMBER,
-            ObjectColor.builder().setId("Foo").build(),
-            ObjectColor.builder().setId("Bar").build());
+            colorRegistry.get(NativeColorId.NUMBER),
+            Color.createSingleton(SingletonColorFields.builder().setId("Foo").build()),
+            Color.createSingleton(SingletonColorFields.builder().setId("Bar").build()));
 
     // When
     ImmutableSet<ColorGraphNode> flatSamples =
@@ -114,13 +138,13 @@ public final class ColorGraphNodeFactoryTest {
   public void colorGraphNodeIds_areUnique() {
     // Given
 
-    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
+    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
-            PrimitiveColor.NUMBER,
-            ObjectColor.builder().setId("Foo").build(),
-            ObjectColor.builder().setId("Bar").build());
+            colorRegistry.get(NativeColorId.NUMBER),
+            Color.createSingleton(SingletonColorFields.builder().setId("Foo").build()),
+            Color.createSingleton(SingletonColorFields.builder().setId("Bar").build()));
 
     // When
     ImmutableSet<ColorGraphNode> flatSamples =
@@ -149,13 +173,13 @@ public final class ColorGraphNodeFactoryTest {
 
   private ImmutableSet<ColorGraphNode> createSampleColorGraphNodesForDeterminismTest() {
 
-    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory();
+    ColorGraphNodeFactory factory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
     ImmutableSet<Color> sampleTypes =
         ImmutableSet.of(
-            PrimitiveColor.NUMBER,
-            ObjectColor.builder().setId("Foo").build(),
-            ObjectColor.builder().setId("Bar").build());
+            colorRegistry.get(NativeColorId.NUMBER),
+            Color.createSingleton(SingletonColorFields.builder().setId("Foo").build()),
+            Color.createSingleton(SingletonColorFields.builder().setId("Bar").build()));
 
     return sampleTypes.stream().map(factory::createNode).collect(toImmutableSet());
   }

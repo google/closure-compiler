@@ -143,14 +143,12 @@ public class LinkedDirectedGraph<N, E> extends DiGraph<N, E> implements Graphviz
 
   @Override
   public LinkedDiGraphNode<N, E> createNode(N nodeValue) {
-    LinkedDiGraphNode<N, E> node =
-        nodes.computeIfAbsent(
-            nodeValue,
-            (N k) ->
-                useNodeAnnotations
-                    ? new AnnotatedLinkedDiGraphNode<N, E>(k)
-                    : new LinkedDiGraphNode<N, E>(k));
-    return node;
+    return nodes.computeIfAbsent(
+        nodeValue,
+        (N k) ->
+            useNodeAnnotations
+                ? new AnnotatedLinkedDiGraphNode<N, E>(k)
+                : new LinkedDiGraphNode<N, E>(k));
   }
 
   @Override

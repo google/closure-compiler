@@ -3362,8 +3362,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /** Tests assigning JsDoc on a prototype property. */
   @Test
   public void testJSDocOnPrototypeProperty() {
-    subclassCtor.setPropertyJSDocInfo("prototype",
-        new JSDocInfoBuilder(false).build());
+    subclassCtor.setPropertyJSDocInfo("prototype", JSDocInfo.builder().build());
     assertThat(subclassCtor.getOwnPropertyJSDocInfo("prototype")).isNull();
   }
 
@@ -6178,7 +6177,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testGetAndSetJSDocInfoWithNamedType() {
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder builder = JSDocInfo.builder();
     builder.recordDeprecated();
     JSDocInfo info = builder.build();
 
@@ -6195,11 +6194,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(null, registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(null, sup);
 
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder builder = JSDocInfo.builder();
     builder.recordDeprecated();
     JSDocInfo deprecated = builder.build();
 
-    builder = new JSDocInfoBuilder(false);
+    builder = JSDocInfo.builder();
     builder.recordVisibility(Visibility.PRIVATE);
     JSDocInfo privateInfo = builder.build();
 
@@ -6219,7 +6218,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testGetAndSetJSDocInfoWithNoType() {
-    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder builder = JSDocInfo.builder();
     builder.recordDeprecated();
     JSDocInfo deprecated = builder.build();
 

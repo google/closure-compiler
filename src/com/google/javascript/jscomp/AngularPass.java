@@ -138,7 +138,7 @@ class AngularPass extends AbstractPostOrderCallback
       statement.useSourceInfoFromForTree(entry.getNode());
       statement.setOriginalName(name);
       // Set the visibility of the newly created property.
-      JSDocInfoBuilder newPropertyDoc = new JSDocInfoBuilder(false);
+      JSDocInfoBuilder newPropertyDoc = JSDocInfo.builder();
       newPropertyDoc.recordVisibility(Visibility.PUBLIC);
       statement.getFirstChild().setJSDocInfo(newPropertyDoc.build());
 

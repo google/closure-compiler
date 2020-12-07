@@ -17,10 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.ClosureCheckModule.DECLARE_LEGACY_NAMESPACE_IN_NON_MODULE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_REQUIRE_NAMESPACE;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleType;
+import com.google.javascript.jscomp.parsing.parser.Identifiers;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
@@ -41,6 +42,12 @@ import javax.annotation.Nullable;
 public final class GatherModuleMetadata implements HotSwapCompilerPass {
   static final DiagnosticType MIXED_MODULE_TYPE =
       DiagnosticType.error("JSC_MIXED_MODULE_TYPE", "A file cannot be both {0} and {1}.");
+
+  static final DiagnosticType INVALID_NAMESPACE_OR_MODULE_ID =
+      DiagnosticType.error(
+          "JSC_INVALID_NAMESPACE_OR_MODULE_ID",
+          "Namespace and module ID must be a dot-separated sequence of legal property"
+              + " identifiers. Found ''{0}''");
 
   static final DiagnosticType INVALID_DECLARE_MODULE_ID_CALL =
       DiagnosticType.error(
@@ -65,6 +72,9 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
       DiagnosticType.error(
           "JSC_INVALID_SET_TEST_ONLY",
           "Optional, single argument to goog.setTestOnly must be a string.");
+
+  static final DiagnosticType INVALID_NESTED_LOAD_MODULE =
+      DiagnosticType.error("JSC_INVALID_NESTED_LOAD_MODULE", "goog.loadModule cannot be nested.");
 
   private static final Node GOOG_PROVIDE = IR.getprop(IR.name("goog"), IR.string("provide"));
   private static final Node GOOG_MODULE = IR.getprop(IR.name("goog"), IR.string("module"));
@@ -198,7 +208,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case SCRIPT:
-          enterModule(n, t.getInput().getPath());
+          enterModule(t, n, t.getInput().getPath());
           break;
         case IMPORT:
         case EXPORT:
@@ -207,7 +217,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
         case CALL:
           if (n.isCall() && n.getFirstChild().matchesQualifiedName("goog.loadModule")) {
             loadModuleCall = n;
-            enterModule(n, null);
+            enterModule(t, n, null);
           }
           break;
         case MODULE_BODY:
@@ -245,10 +255,12 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
       }
     }
 
-    private void enterModule(Node n, @Nullable ModulePath path) {
+    private void enterModule(NodeTraversal t, Node n, @Nullable ModulePath path) {
       ModuleMetadataBuilder newModule = new ModuleMetadataBuilder(n, path);
       if (currentModule != null) {
-        checkState(parentModule == null, "Expected modules to be nested at most 2 deep.");
+        if (parentModule != null) {
+          t.report(n, INVALID_NESTED_LOAD_MODULE);
+        }
         parentModule = currentModule;
       }
       currentModule = newModule;
@@ -377,7 +389,7 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
           String namespace = n.getLastChild().getString();
           addNamespace(currentModule, namespace, t, n);
         } else {
-          t.report(n, ClosureRewriteModule.INVALID_MODULE_NAMESPACE);
+          t.report(n, ClosureRewriteModule.INVALID_MODULE_ID_ARG);
         }
       } else if (getprop.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
         currentModule.recordDeclareLegacyNamespace(n);
@@ -426,6 +438,10 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
      */
     private void addNamespace(
         ModuleMetadataBuilder module, String namespace, NodeTraversal t, Node n) {
+      if (!isValidNamespaceOrModuleId(namespace)) {
+        compiler.report(JSError.make(n, INVALID_NAMESPACE_OR_MODULE_ID, namespace));
+      }
+
       ModuleType existingType = null;
       String existingFileSource = null;
       if (module.googNamespaces.contains(namespace)) {
@@ -486,4 +502,20 @@ public final class GatherModuleMetadata implements HotSwapCompilerPass {
     NodeTraversal.traverse(compiler, scriptRoot, new Finder());
     compiler.setModuleMetadataMap(new ModuleMetadataMap(modulesByPath, modulesByGoogNamespace));
   }
+
+  private static boolean isValidNamespaceOrModuleId(String id) {
+    for (String segment : DOT_SPLITTER.split(id)) {
+      if (segment.isEmpty()) {
+        return false;
+      }
+      for (int i = 0; i < segment.length(); i++) {
+        if (!Identifiers.isIdentifierPart(segment.charAt(i))) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private static final Splitter DOT_SPLITTER = Splitter.on('.');
 }

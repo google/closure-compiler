@@ -64,10 +64,8 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    CompilerPass peepholePass =
-        new PeepholeOptimizationsPass(
-            compiler, getName(), new PeepholeFoldConstants(late, useTypes));
-    return peepholePass;
+    return new PeepholeOptimizationsPass(
+        compiler, getName(), new PeepholeFoldConstants(late, useTypes));
   }
 
   @Override

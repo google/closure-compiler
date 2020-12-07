@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
+import com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -82,6 +83,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                       compiler,
                       ImmutableList.of(
                           new CheckConstantCaseNames(compiler),
+                          new CheckDefaultExportOfGoogModule(compiler),
                           new CheckDuplicateCase(compiler),
                           new CheckEmptyStatements(compiler),
                           new CheckEnums(compiler),

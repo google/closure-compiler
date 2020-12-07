@@ -1122,69 +1122,6 @@ public final class Es6ConvertSuperTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSynthesizingConstructorOfBaseClassInExtern() {
-    testExternChanges(
-        "class A { }",
-        "new A();", // Source to pin externs.
-        "class A { constructor() { } }");
-    // TODO(bradfordcsmith): Test addition of types in externs.
-    // Currently testExternChanges() doesn't set things up correctly for getting the last compiler
-    // and looking up type information in the registry to work.
-  }
-
-  @Test
-  public void testSynthesizingConstructorOfDerivedClassInExtern() {
-    testExternChanges(
-        lines(
-            "class A {", // Force wrapping.
-            "  constructor() { }",
-            "}",
-            "",
-            "class B extends A { }"),
-        "new B();", // Source to pin externs.
-        lines(
-            "class A {",
-            "  constructor() { }",
-            "}",
-            "",
-            "class B extends A {",
-            "  constructor() { }",
-            "}"));
-    // TODO(bradfordcsmith): Test addition of types in externs.
-    // Currently testExternChanges() doesn't set things up correctly for getting the last compiler
-    // and looking up type information in the registry to work.
-  }
-
-  @Test
-  public void testStrippingSuperCallFromConstructorOfDerivedClassInExtern() {
-    testExternChanges(
-        lines(
-            "const namespace = {};",
-            "",
-            "namespace.A = class {",
-            "  constructor() { }",
-            "}",
-            "",
-            "class B extends namespace.A {",
-            "  constructor() { super(); }",
-            "}"),
-        "new B();", // Source to pin externs.
-        lines(
-            "const namespace = {};",
-            "",
-            "namespace.A = class {",
-            "  constructor() { }",
-            "}",
-            "",
-            "class B extends namespace.A {",
-            "  constructor() { }",
-            "}"));
-    // TODO(bradfordcsmith): Test addition of types in externs.
-    // Currently testExternChanges() doesn't set things up correctly for getting the last compiler
-    // and looking up type information in the registry to work.
-  }
-
-  @Test
   public void testSynthesizingConstructorOfBaseInterface() {
     test(
         externs(""),

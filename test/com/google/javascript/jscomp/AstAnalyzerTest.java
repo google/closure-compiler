@@ -76,9 +76,11 @@ import static com.google.javascript.rhino.Token.YIELD;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -165,6 +167,7 @@ public final class AstAnalyzerTest {
               ImmutableMap.of(
                   "getter", PropertyAccessKind.GETTER_ONLY, //
                   "setter", PropertyAccessKind.SETTER_ONLY)));
+      compiler.setColorRegistry(ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of()));
     }
 
     private Node parseInternal(String js) {
@@ -751,7 +754,8 @@ public final class AstAnalyzerTest {
       flags.clearAllFlags();
       newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      // Cannot determine this evaluates to a local value (even though it does in practice).
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
@@ -762,7 +766,7 @@ public final class AstAnalyzerTest {
       flags.setMutatesThis();
       newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
@@ -771,7 +775,6 @@ public final class AstAnalyzerTest {
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
       flags.setMutatesThis();
-      flags.setReturnsTainted();
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
@@ -782,14 +785,13 @@ public final class AstAnalyzerTest {
       flags.clearAllFlags();
       newExpr.setSideEffectFlags(flags);
       flags.clearAllFlags();
-      flags.setReturnsTainted();
       newXDotMethodCall.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isFalse();
 
-      // The new modifies global state, no side-effect call, non-local result
+      // The new modifies global state, no side-effect call
       // This call could be removed, but not the new.
       flags.clearAllFlags();
       flags.setMutatesGlobalState();
@@ -797,7 +799,8 @@ public final class AstAnalyzerTest {
       flags.clearAllFlags();
       newXDotMethodCall.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isTrue();
+      // This does evaluate to a local value but NodeUtil does not know that
+      assertThat(NodeUtil.evaluatesToLocalValue(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.functionCallHasSideEffects(newXDotMethodCall)).isFalse();
       assertThat(astAnalyzer.mayHaveSideEffects(newXDotMethodCall)).isTrue();
     }
@@ -821,7 +824,7 @@ public final class AstAnalyzerTest {
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
 
       xNode.setJSType(null);
-      xNode.setColor(PrimitiveColor.STRING);
+      xNode.setColor(helper.compiler.getColorRegistry().get(NativeColorId.STRING));
       assertThat(astAnalyzer.functionCallHasSideEffects(xDotReplaceCall)).isFalse();
     }
   }

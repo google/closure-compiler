@@ -3534,9 +3534,12 @@ chrome.pageAction.hide = function(tabId) {};
 /**
  * @param {Object} details An object which has 'tabId' and either
  *     'imageData' or 'path'.
+ * @param {(function(): void)=} callback The callback function. If an error
+ * occurs setting the icon, chrome.runtime.lastError will be set to the error
+ * message.
  * @return {undefined}
  */
-chrome.pageAction.setIcon = function(details) {};
+chrome.pageAction.setIcon = function(details, callback) {};
 
 
 /**
@@ -3555,9 +3558,12 @@ chrome.pageAction.setTitle = function(details) {};
 
 /**
  * @param {number} tabId Tab Id.
+ * @param {(function(): void)=} callback The callback function. If an error
+ * occurs showing the pageAction, chrome.runtime.lastError will be set to the
+ * error message.
  * @return {undefined}
  */
-chrome.pageAction.show = function(tabId) {};
+chrome.pageAction.show = function(tabId, callback) {};
 
 
 /** @type {!ChromeEvent} */

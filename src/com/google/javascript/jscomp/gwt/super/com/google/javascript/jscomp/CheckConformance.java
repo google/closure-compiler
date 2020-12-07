@@ -21,6 +21,18 @@ import com.google.javascript.rhino.Node;
 
 /** GWT compatible no-op replacement of {@code CheckConformance} */
 public final class CheckConformance implements CompilerPass {
+
+  static final DiagnosticType CONFORMANCE_ERROR = DiagnosticType.error("JSC_CONFORMANCE_ERROR", "");
+
+  static final DiagnosticType CONFORMANCE_VIOLATION =
+      DiagnosticType.warning("JSC_CONFORMANCE_VIOLATION", "");
+
+  static final DiagnosticType CONFORMANCE_POSSIBLE_VIOLATION =
+      DiagnosticType.warning("JSC_CONFORMANCE_POSSIBLE_VIOLATION", "");
+
+  static final DiagnosticType INVALID_REQUIREMENT_SPEC =
+      DiagnosticType.error("JSC_INVALID_REQUIREMENT_SPEC", "");
+
   CheckConformance(
       AbstractCompiler compiler,
       ImmutableList<ConformanceConfig> configs) {

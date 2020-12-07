@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.disambiguate;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -33,9 +32,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.ObjectColor;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
-import com.google.javascript.jscomp.colors.UnionColor;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -97,6 +95,8 @@ public class AmbiguateProperties implements CompilerPass {
   /** Names to which properties shouldn't be renamed, to avoid name conflicts */
   private final Set<String> quotedNames = new HashSet<>();
 
+  private final ColorRegistry colorRegistry;
+
   /** Map from original property name to new name. Only used by tests. */
   private Map<String, String> renamingMap = null;
 
@@ -126,6 +126,7 @@ public class AmbiguateProperties implements CompilerPass {
 
     this.externedNames =
         ImmutableSet.<String>builder().add("prototype").addAll(externProperties).build();
+    this.colorRegistry = compiler.getColorRegistry();
   }
 
   static AmbiguateProperties makePassForTesting(
@@ -147,14 +148,15 @@ public class AmbiguateProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    this.graphNodeFactory = ColorGraphNodeFactory.createFactory();
+    this.graphNodeFactory = ColorGraphNodeFactory.createFactory(this.colorRegistry);
 
     // Find all property references and record the types on which they occur.
     // Populate stringNodesToRename, propertyMap, quotedNames.
     NodeTraversal.traverse(compiler, root, new ProcessPropertiesAndConstructors());
 
     ColorGraphBuilder graphBuilder =
-        new ColorGraphBuilder(graphNodeFactory, LowestCommonAncestorFinder::new);
+        new ColorGraphBuilder(
+            graphNodeFactory, LowestCommonAncestorFinder::new, this.colorRegistry);
     graphBuilder.addAll(graphNodeFactory.getAllKnownTypes());
     DiGraph<ColorGraphNode, Object> colorGraph = graphBuilder.build();
     for (ColorGraphNode node : graphNodeFactory.getAllKnownTypes()) {
@@ -523,11 +525,12 @@ public class AmbiguateProperties implements CompilerPass {
       graphNodeFactory.createNode(classConstructorType);
       // In theory all CLASS colors should be a function with a known prototype, but in
       // practice typecasts mean that this is not always the case.
+
+      ImmutableSet<Color> possiblePrototypes = classConstructorType.getPrototype();
       Color classPrototype =
-          (classConstructorType.isObject()
-                  && ((ObjectColor) classConstructorType).getPrototype() != null)
-              ? ((ObjectColor) classConstructorType).getPrototype()
-              : PrimitiveColor.UNKNOWN;
+          possiblePrototypes.isEmpty()
+              ? colorRegistry.get(NativeColorId.UNKNOWN)
+              : Color.createUnion(possiblePrototypes);
       for (Node member : NodeUtil.getClassMembers(classNode).children()) {
         if (member.isQuotedString()) {
           // ignore get 'foo'() {} and prevent property name collisions
@@ -586,7 +589,7 @@ public class AmbiguateProperties implements CompilerPass {
     Color type = n.getColor();
     if (type == null) {
       // TODO(bradfordcsmith): This branch indicates a compiler bug. It should throw an exception.
-      return PrimitiveColor.UNKNOWN;
+      return colorRegistry.get(NativeColorId.UNKNOWN);
     } else {
       return type;
     }
@@ -616,18 +619,7 @@ public class AmbiguateProperties implements CompilerPass {
 
       ++numOccurrences;
 
-      if (color.isUnion()) {
-        // Remove null/undefined from unions instead of invalidating the union.
-        ImmutableSet<Color> nonNullColors =
-            color.getAlternates().stream()
-                .filter(alt -> !PrimitiveColor.NULL_OR_VOID.equals(alt))
-                .collect(toImmutableSet());
-        color =
-            nonNullColors.size() == 1
-                ? nonNullColors.iterator().next()
-                : UnionColor.create(nonNullColors);
-      }
-      if (color.isInvalidating()) {
+      if (color.isInvalidating() || color.propertiesKeepOriginalName()) {
         skipAmbiguating = true;
         return;
       }

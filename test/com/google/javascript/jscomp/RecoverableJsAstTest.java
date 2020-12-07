@@ -174,8 +174,7 @@ public class RecoverableJsAstTest {
     Node root = compiler.getRoot();
     assertThat(root).isNotNull();
     Node externsRoot = root.getFirstChild();
-    Node mainRoot = externsRoot.getNext();
-    return mainRoot;
+    return externsRoot.getNext();
   }
 
   private static final Correspondence<JSError, String> DESCRIPTION_EQUALITY =

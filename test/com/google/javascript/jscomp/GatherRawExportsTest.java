@@ -174,6 +174,26 @@ public final class GatherRawExportsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testExportOnPolyfillGlobal1() {
+    assertExported("$jscomp.global['a']", "a");
+  }
+
+  @Test
+  public void testExportOnPolyfillGlobal2() {
+    assertExported("$jscomp.global.a", "a");
+  }
+
+  @Test
+  public void testExportOnPolyfillGlobal1Collapsed() {
+    assertExported("$jscomp$global['a']", "a");
+  }
+
+  @Test
+  public void testExportOnPolyfillGlobal2Collapsed() {
+    assertExported("$jscomp$global.a", "a");
+  }
+
+  @Test
   public void testExportOnSelf1() {
     assertExported("self['a']", "a");
   }

@@ -30,8 +30,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Traverses the AST, collecting connections between {@link JSType}s, property access, and their
+ * Traverses the AST, collecting connections between {@link JSType}s, property accesses, and their
  * accociated {@link Node}s.
+ *
+ * <p>Also collects declarations of constructors even if no property accesses are visible.
  *
  * <p>This callback is intended for both source and externs.
  */
@@ -80,6 +82,7 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case GETPROP:
+      case OPTCHAIN_GETPROP:
         this.registerPropertyUse(n.getLastChild(), n.getFirstChild().getJSType());
         break;
       case OBJECTLIT:
@@ -93,6 +96,9 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
         break;
       case OBJECT_PATTERN:
         this.handleObjectPattern(n);
+        break;
+      case FUNCTION:
+        this.handleFunction(n);
         break;
       default:
         break;
@@ -133,6 +139,20 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
     this.traverseObjectlitLike(
         NodeUtil.getClassMembers(classNode),
         (m) -> m.isStaticMember() ? classType : classPrototypeType);
+    flattener.flatten(classType);
+  }
+
+  private void handleFunction(Node fnNode) {
+    // Ensure the flattener knows about the class constructor and instance. Even if we don't see any
+    // direct property references off either type, it's possible that a property is referenced
+    // via a superclass or implemented interface.
+    // e.g. `const /** !FooInterface */ x = new Foo(); x.method();`
+    JSType fnType = fnNode.getJSType();
+    if (fnType != null
+        && fnType.toMaybeFunctionType() != null
+        && fnType.toMaybeFunctionType().hasInstanceType()) {
+      flattener.flatten(fnType);
+    }
   }
 
   private void handleObjectPattern(Node pattern) {
@@ -235,9 +255,10 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
     // Record the site to rename once clusters are found. If it's an extern, we won't rename anyway.
     prop.getUseSites().put(site, flatOwner);
 
-    // Track the externs cluster accordingly.
-    if (site.isFromExterns()) {
-      prop.registerExternType(flatOwner);
+    // Track the cluster of types whose properties must keep their original name after
+    // disambiguation. Note: an "enum type" is the type of an enum object like "{STOP: 0, GO: 1}".
+    if (site.isFromExterns() || (owner != null && owner.isEnumType())) {
+      prop.registerOriginalNameType(flatOwner);
     }
   }
 }

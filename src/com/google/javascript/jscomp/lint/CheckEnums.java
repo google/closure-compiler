@@ -22,13 +22,19 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Check for duplicate values in enums.
+ * Checks the following:
+ *
+ * <ol>
+ *   <li>Whether there are duplicate values in enums.
+ *   <li>Whether enum type (and its initializer values) are string/number or not.
+ *   <li>Whether string enum values are statically initialized or not.
+ * </ol>
  */
 public final class CheckEnums extends AbstractPostOrderCallback implements CompilerPass {
   public static final DiagnosticType DUPLICATE_ENUM_VALUE = DiagnosticType.disabled(
@@ -43,6 +49,19 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
   public static final DiagnosticType ENUM_PROP_NOT_CONSTANT = DiagnosticType.disabled(
       "JSC_ENUM_PROP_NOT_CONSTANT",
       "enum key {0} must be in ALL_CAPS.");
+
+  public static final DiagnosticType ENUM_TYPE_NOT_STRING_OR_NUMBER =
+      DiagnosticType.disabled(
+          "JSC_ENUM_VALUE_NOT_STRING_OR_NUMBER",
+          "enum type must be either string or number."
+          );
+
+  public static final DiagnosticType NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM =
+      DiagnosticType.disabled(
+          "JSC_NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM",
+          "enum string values must be statically initialized."
+
+          );
 
   private final AbstractCompiler compiler;
 
@@ -62,35 +81,64 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
         checkNamingAndAssignmentUsage(t, n);
         checkDuplicateEnumValues(t, n);
+        checkEnumTypeAndInitializerValues(t, n, jsdoc);
       }
     }
   }
 
-  private void checkNamingAndAssignmentUsage(NodeTraversal t, Node n) {
-    for (Node child : n.children()) {
+  private static void checkEnumTypeAndInitializerValues(
+      NodeTraversal t, Node n, JSDocInfo jsDocInfo) {
+    JSTypeExpression enumTypeExpr = jsDocInfo.getEnumParameterType();
+
+    Node enumType = enumTypeExpr.getRoot();
+    boolean isStringEnum = enumType.isString() && enumType.getString().equals("string");
+    boolean isNumberEnum = enumType.isString() && enumType.getString().equals("number");
+    if (!isStringEnum && !isNumberEnum) {
+      // warn on `@enum {?}`, `@enum {boolean}`, `@enum {Some|Another}`, `@enum {SomeName}` etc`
+      t.report(n, ENUM_TYPE_NOT_STRING_OR_NUMBER);
+    }
+    if (isStringEnum) {
+      checkStringEnumInitializerValues(t, n);
+    }
+  }
+
+  // Reports a warning if the string enum value is not statically initialized
+  private static void checkStringEnumInitializerValues(NodeTraversal t, Node enumNode) {
+    for (Node prop : enumNode.children()) {
+      // valueNode is guaranteed to exist by this time, as shorthand `{A}`s are converted to `{A:A}`
+      Node valueNode = prop.getLastChild();
+      if (!valueNode.isString() && !(valueNode.isTemplateLit() && valueNode.hasOneChild())) {
+        // neither string nor substitution-free template literal
+        t.report(valueNode, NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM);
+      }
+    }
+  }
+
+  private void checkNamingAndAssignmentUsage(NodeTraversal t, Node objLit) {
+    for (Node child : objLit.children()) {
       checkName(t, child);
     }
   }
 
-  private void checkName(NodeTraversal t, Node node) {
-    if (node.isComputedProp()) {
-      t.report(node, COMPUTED_PROP_NAME_IN_ENUM);
+  private void checkName(NodeTraversal t, Node prop) {
+    if (prop.isComputedProp()) {
+      t.report(prop, COMPUTED_PROP_NAME_IN_ENUM);
       return;
     }
 
-    if (node.isStringKey() && node.isShorthandProperty()) {
-      t.report(node, SHORTHAND_ASSIGNMENT_IN_ENUM);
+    if (prop.isStringKey() && prop.isShorthandProperty()) {
+      t.report(prop, SHORTHAND_ASSIGNMENT_IN_ENUM);
     }
 
-    if (!compiler.getCodingConvention().isValidEnumKey(node.getString())) {
-      t.report(node, ENUM_PROP_NOT_CONSTANT);
+    if (!compiler.getCodingConvention().isValidEnumKey(prop.getString())) {
+      t.report(prop, ENUM_PROP_NOT_CONSTANT);
     }
   }
 
-  private void checkDuplicateEnumValues(NodeTraversal t, Node n) {
+  private static void checkDuplicateEnumValues(NodeTraversal t, Node enumNode) {
     Set<String> values = new HashSet<>();
-    for (Node child : n.children()) {
-      Node valueNode = child.getLastChild();
+    for (Node prop : enumNode.children()) {
+      Node valueNode = prop.getLastChild();
       String value;
       if (valueNode == null) {
         return;

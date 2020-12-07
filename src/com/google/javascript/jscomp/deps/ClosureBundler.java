@@ -174,6 +174,24 @@ public final class ClosureBundler {
     if (transpiler == Transpiler.NULL) {
       mode.appendTraditional(es6ModuleTranspiler.runtime(), out, null);
     }
+    mode.appendTraditional("this.CLOSURE_EVAL_PREFILTER = function(s) { return s; };", out, null);
+    mode.appendTraditional("(function(thisValue){", out, null);
+    // Check for Chrome <87 which does not eval properly in workers.
+    mode.appendTraditional(
+        "var isChrome87 = false; try {isChrome87 =  eval(trustedTypes.emptyScript) !=="
+            + " trustedTypes.emptyScript } catch (e) {} if (typeof trustedTypes !=="
+            + " 'undefined' && trustedTypes.createPolicy &&isChrome87 ) {",
+        out,
+        null);
+    mode.appendTraditional(
+        "  var policy = trustedTypes.createPolicy('goog#devserver',{ createScript: function(s){"
+            + " return s; }});",
+        out,
+        null);
+    mode.appendTraditional(
+        "  thisValue.CLOSURE_EVAL_PREFILTER = policy.createScript.bind(policy);", out, null);
+    mode.appendTraditional("}", out, null);
+    mode.appendTraditional("})(this);", out, null);
   }
 
   /**
@@ -207,10 +225,10 @@ public final class ClosureBundler {
     EVAL {
       @Override
       void appendTraditional(String s, Appendable out, String sourceUrl) throws IOException {
-        out.append("eval(\"");
+        out.append("eval(this.CLOSURE_EVAL_PREFILTER(\"");
         EscapeMode.ESCAPED.append(s, out);
         appendSourceUrl(out, EscapeMode.ESCAPED, sourceUrl);
-        out.append("\");\n");
+        out.append("\"));\n");
       }
 
       @Override

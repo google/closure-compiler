@@ -209,6 +209,18 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReplaceEmptyFunction4() {
+    String source = "var foo = async function() {}";
+    checkCompilesToSame(source, 10);
+  }
+
+  @Test
+  public void testReplaceEmptyFunction5() {
+    String source = "var foo = function *() {}";
+    checkCompilesToSame(source, 10);
+  }
+
+  @Test
   public void testReplaceIdentityFunction1() {
     String source = "a.prototype.foo = function(a) {return a}";
     checkCompilesToSame(source, 2);

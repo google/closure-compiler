@@ -44,7 +44,7 @@ public final class JSDocInfoPrinterTest {
 
   @Before
   public void setUp() {
-    builder = new JSDocInfoBuilder(true);
+    builder = JSDocInfo.builder().parseDocumentation();
     jsDocInfoPrinter = new JSDocInfoPrinter(/* useOriginalName= */ false, /* printDesc= */ true);
   }
 

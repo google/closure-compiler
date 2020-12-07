@@ -476,7 +476,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testDescriptionContainsAtSignCode() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     info.setOriginalCommentString("Blah blah {@code blah blah} blah blah.");
 
     assertThat(info.isAtSignCodePresent()).isTrue();
@@ -484,7 +485,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testDescriptionDoesNotContainAtSignCode() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     info.setOriginalCommentString("Blah blah `blah blah` blah blah.");
 
     assertThat(info.isAtSignCodePresent()).isFalse();
@@ -665,32 +667,37 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetFileOverviewWithDocumentationOn() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     info.documentFileOverview("hi bob");
     assertThat(info.getFileOverview()).isEqualTo("hi bob");
   }
 
   @Test
   public void testSetSuppressions() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     info.addSuppressions(ImmutableSet.of("sam", "bob"));
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("bob", "sam"));
   }
 
   @Test
   public void testSetModifies() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     info.setModifies(ImmutableSet.of("this"));
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this"));
 
-    info = new JSDocInfo(true);
+    info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     info.setModifies(ImmutableSet.of("arguments"));
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("arguments"));
   }
 
   @Test
   public void testAddSingleTemplateTypeName() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     ImmutableList<String> typeNames = ImmutableList.of("T");
     assertThat(info.declareTemplateTypeName("T")).isTrue();
     assertThat(info.getTemplateTypeNames()).isEqualTo(typeNames);
@@ -698,7 +705,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testAddMultipleTemplateTypeName() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     ImmutableList<String> typeNames = ImmutableList.of("T", "R");
     info.declareTemplateTypeName("T");
     info.declareTemplateTypeName("R");
@@ -707,14 +715,16 @@ public class JSDocInfoTest {
 
   @Test
   public void testFailToAddTemplateTypeName() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     info.declareTemplateTypeName("T");
     assertThat(info.declareTemplateTypeName("T")).isFalse();
   }
 
   @Test
   public void testGetThrowsDescription() {
-    JSDocInfo info = new JSDocInfo(true);
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
 
     // Set a description so that info is initialized.
     info.setDescription("Lorem");

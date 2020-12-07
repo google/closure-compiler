@@ -19,12 +19,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorRegistry;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,13 +41,15 @@ import java.util.Map;
 final class InlineProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
+  private final ColorRegistry colorRegistry;
 
   private static class PropertyInfo {
-    PropertyInfo(JSType type, Node value) {
-      this.type = type;
+    PropertyInfo(Color color, Node value) {
+      this.color = color;
       this.value = value;
     }
-    final JSType type;
+
+    final Color color;
     final Node value;
   }
 
@@ -56,19 +57,9 @@ final class InlineProperties implements CompilerPass {
 
   private final Map<String, PropertyInfo> props = new HashMap<>();
 
-  private final InvalidatingTypes invalidatingTypes;
-
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.invalidatingTypes =
-        new InvalidatingTypes.Builder(compiler.getTypeRegistry())
-            // NOTE: Mismatches are less important to this pass than to (dis)ambiguate properties.
-            // This pass doesn't remove values (it only inlines them when the type is known), so
-            // it isn't necessary to invalidate due to implicit interface uses, but we do so anyway
-            // for consistency with the other type-based optimizations.
-            .addAllTypeMismatches(compiler.getTypeMismatches())
-            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
-            .build();
+    this.colorRegistry = compiler.getColorRegistry();
     invalidateExternProperties();
   }
 
@@ -80,12 +71,13 @@ final class InlineProperties implements CompilerPass {
   }
 
   /** This method gets the JSType from the Node argument and verifies that it is present. */
-  private JSType getJSType(Node n) {
-    JSType type = n.getJSType();
-    if (type == null) {
-      return compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
+  private Color getColor(Node n) {
+    Color color = n.getColor();
+
+    if (color == null) {
+      return colorRegistry.get(NativeColorId.UNKNOWN);
     } else {
-      return type;
+      return color;
     }
   }
 
@@ -154,7 +146,7 @@ final class InlineProperties implements CompilerPass {
         //    this.foo = 1;
         if (inConstructor(t)) {
           // This may be a valid assignment.
-          return maybeStoreCandidateValue(getJSType(src), propName, value);
+          return maybeStoreCandidateValue(getColor(src), propName, value);
         }
         return false;
       } else if (t.inGlobalHoistScope()
@@ -162,12 +154,12 @@ final class InlineProperties implements CompilerPass {
           && src.getLastChild().getString().equals("prototype")) {
         // This is a prototype assignment like:
         //    x.prototype.foo = 1;
-        JSType srcType = getJSType(src);
-        return maybeStoreCandidateValue(srcType, propName, value);
+        Color instanceType = getColor(src);
+        return maybeStoreCandidateValue(instanceType, propName, value);
       } else if (t.inGlobalHoistScope()) {
         // This is a static assignment like:
         //    x.foo = 1;
-        JSType targetType = getJSType(src);
+        Color targetType = getColor(src);
         if (targetType != null && targetType.isConstructor()) {
           return maybeStoreCandidateValue(targetType, propName, value);
         }
@@ -184,13 +176,13 @@ final class InlineProperties implements CompilerPass {
      * and is not already present in the map. If the property was already present, it is
      * invalidated. Returns true if the property was successfully added.
      */
-    private boolean maybeStoreCandidateValue(JSType type, String propName, Node value) {
+    private boolean maybeStoreCandidateValue(Color color, String propName, Node value) {
       checkNotNull(value);
       if (!props.containsKey(propName)
-          && !invalidatingTypes.isInvalidating(type)
+          && !color.isInvalidating()
           && NodeUtil.isImmutableValue(value)
           && NodeUtil.isExecutedExactlyOnce(value)) {
-        props.put(propName, new PropertyInfo(type, value));
+        props.put(propName, new PropertyInfo(color, value));
         return true;
       }
       return false;
@@ -222,9 +214,7 @@ final class InlineProperties implements CompilerPass {
         Node target = n.getFirstChild();
         String propName = n.getLastChild().getString();
         PropertyInfo info = props.get(propName);
-        if (info != null
-            && info != INVALIDATED
-            && isMatchingType(target, info.type)) {
+        if (info != null && info != INVALIDATED && isMatchingType(target, info.color)) {
           Node replacement = info.value.cloneTree();
           if (compiler.getAstAnalyzer().mayHaveSideEffects(n.getFirstChild())) {
             replacement = IR.comma(n.removeFirstChild(), replacement).srcref(n);
@@ -235,34 +225,37 @@ final class InlineProperties implements CompilerPass {
       }
     }
 
-    private boolean isMatchingType(Node n, JSType src) {
-      src = src.restrictByNotNullOrUndefined();
-      JSType dest = getJSType(n).restrictByNotNullOrUndefined();
-      if (invalidatingTypes.isInvalidating(dest)) {
+    private boolean isMatchingType(Node n, Color src) {
+      src = removeNullAndUndefinedIfUnion(src);
+      Color dest = removeNullAndUndefinedIfUnion(getColor(n));
+      if (dest.isInvalidating()) {
         return false;
       }
-      if (dest.isConstructor() || src.isConstructor()) {
-        // instead of using .isSubtypeOf for functions, check the prototype chain, since the
-        // FunctionType subtyping semantics is not what we want.
-        // This case is for ES6 class-side inheritance
-        return hasInPrototypeChain(dest.toMaybeFunctionType(), src.toMaybeFunctionType());
+      if (dest.isUnion() || src.isUnion()) {
+        return false;
       }
-      return dest.isSubtypeOf(src);
+      return hasInSupertypesList(dest, src);
     }
 
-    @SuppressWarnings("ReferenceEquality")
-    private boolean hasInPrototypeChain(FunctionType subCtor, FunctionType superCtor) {
+    private boolean hasInSupertypesList(Color subCtor, Color superCtor) {
       if (subCtor == null || superCtor == null) {
         return false;
       }
-      ObjectType proto = subCtor;
-      while (proto != null) {
-        if (proto == superCtor) {
+      if (subCtor.equals(superCtor)) {
+        return true;
+      }
+
+      for (Color immediateSupertype : subCtor.getDisambiguationSupertypes()) {
+        if (!immediateSupertype.isUnion() && hasInSupertypesList(immediateSupertype, superCtor)) {
           return true;
         }
-        proto = proto.getImplicitPrototype();
+
       }
       return false;
     }
+  }
+
+  private static Color removeNullAndUndefinedIfUnion(Color original) {
+    return original.isUnion() ? original.subtractNullOrVoid() : original;
   }
 }

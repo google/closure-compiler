@@ -2201,6 +2201,14 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMisplacedGoogModuleDoesntCrash() {
+    // The compiler emits a warning elsewhere for this code
+    test(
+        srcs("alert(goog.module('ns.a'));"), //
+        expected("alert(void 0);"));
+  }
+
+  @Test
   public void testImportInliningDoesntShadow() {
     testNoWarning(
         lines(
@@ -3242,5 +3250,29 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void testEs6Module() {
     testSame("export var x;");
     testSame("import {x} from '/y';");
+  }
+
+  @Test
+  public void testDuplicateExportOfName() {
+    ignoreWarnings(DiagnosticGroups.DUPLICATE_VARS);
+    // ClosureCheckModule reports an error on this code, but that error is suppressed in some cases
+    // so ClosureRewriteModule can't crash.
+    test(
+        lines("goog.module('Foo');", "class Foo {}", "exports = Foo;", "exports = Foo;"),
+        lines(
+            "class module$exports$Foo {",
+            "}",
+            "module$contents$Foo_Foo;",
+            "/** @const */ var module$exports$Foo = module$contents$Foo_Foo;"));
+  }
+
+  @Test
+  public void testDuplicateExportOfExpressionUsesLatter() {
+    ignoreWarnings(DiagnosticGroups.DUPLICATE_VARS);
+    // ClosureCheckModule reports an error on this code, but that error is suppressed in some cases
+    // so ClosureRewriteModule can't crash.
+    test(
+        lines("goog.module('Foo');", "exports = 0;", "exports = 1;"),
+        lines("0;", "/** @const */ var module$exports$Foo = 1;"));
   }
 }

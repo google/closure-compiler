@@ -87,12 +87,10 @@ import javax.annotation.Nullable;
  */
 final class ClosureRewriteModule implements HotSwapCompilerPass {
 
-  // TODO(johnlenz): handle non-namespace module identifiers aka 'foo/bar'
-
-  static final DiagnosticType INVALID_MODULE_NAMESPACE =
+  static final DiagnosticType INVALID_MODULE_ID_ARG =
       DiagnosticType.error(
-          "JSC_GOOG_MODULE_INVALID_MODULE_NAMESPACE",
-          "goog.module parameter must be string literals");
+          "JSC_GOOG_MODULE_INVALID_MODULE_ID_ARG",
+          "goog.module parameter must be a string literal");
 
   static final DiagnosticType INVALID_PROVIDE_NAMESPACE =
       DiagnosticType.error(
@@ -267,8 +265,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return !name.equals("require") && !name.equals("forwardDeclare") && !name.equals("getMsg");
     }
 
+    @Nullable
     String getLocalName() {
-      return nameDecl.getName();
+      return nameDecl != null ? nameDecl.getName() : null;
     }
   }
 
@@ -296,7 +295,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
      */
     boolean willCreateExportsObject;
     boolean hasCreatedExportObject;
-    Node defaultExportRhs;
+    ExportDefinition defaultExport;
     String defaultExportLocalName;
     Set<String> namedExports = new HashSet<>();
     Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
@@ -851,9 +850,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return;
     }
 
-    checkState(currentScript.defaultExportRhs == null);
+    checkState(currentScript.defaultExport == null);
     Node exportRhs = n.getNext();
-    if (isNamedExportsLiteral(exportRhs)) {
+    if (NodeUtil.isNamedExportsLiteral(exportRhs)) {
       Node insertionPoint = n.getGrandparent();
       for (Node key = exportRhs.getFirstChild(); key != null; key = key.getNext()) {
         String exportName = key.getString();
@@ -873,21 +872,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  static boolean isNamedExportsLiteral(Node objLit) {
-    if (!objLit.isObjectLit() || !objLit.hasChildren()) {
-      return false;
-    }
-    for (Node key = objLit.getFirstChild(); key != null; key = key.getNext()) {
-      if (!key.isStringKey() || key.isQuotedString()) {
-        return false;
-      }
-      if (!key.getFirstChild().isName()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   private void recordModuleBody(Node moduleRoot) {
     pushScript(new ScriptDescription());
 
@@ -898,7 +882,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private void recordGoogModule(NodeTraversal t, Node call) {
     Node namespaceIdNode = call.getLastChild();
     if (!namespaceIdNode.isString()) {
-      t.report(namespaceIdNode, INVALID_MODULE_NAMESPACE);
+      t.report(namespaceIdNode, INVALID_MODULE_ID_ARG);
       return;
     }
     String namespaceId = namespaceIdNode.getString();
@@ -1061,16 +1045,26 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return;
     }
 
-    checkState(currentScript.defaultExportRhs == null, currentScript.defaultExportRhs);
+    // ClosureCheckModule reports an error for duplicate 'exports = ' assignments, but that error
+    // may be suppressed. If so then use the final assignment as the canonical one.
+    if (currentScript.defaultExport != null) {
+      ExportDefinition previousExport = currentScript.defaultExport;
+      String localName = previousExport.getLocalName();
+      if (localName != null && currentScript.namesToInlineByAlias.containsKey(localName)) {
+        currentScript.namesToInlineByAlias.remove(localName);
+      }
+      currentScript.defaultExportLocalName = null;
+    }
     Node exportRhs = n.getNext();
 
     // Exports object should have already been converted in ScriptPreprocess step.
-    checkState(!isNamedExportsLiteral(exportRhs),
+    checkState(
+        !NodeUtil.isNamedExportsLiteral(exportRhs),
         "Exports object should have been converted already");
 
-    currentScript.defaultExportRhs = exportRhs;
     currentScript.willCreateExportsObject = true;
     ExportDefinition defaultExport = ExportDefinition.newDefaultExport(t, exportRhs);
+    currentScript.defaultExport = defaultExport;
     if (!currentScript.declareLegacyNamespace
         && defaultExport.hasInlinableName(currentScript.exportsToInline.keySet())) {
       String localName = defaultExport.getLocalName();
@@ -1087,7 +1081,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void updateGoogModule(NodeTraversal t, Node call) {
-    checkState(currentScript.isModule, currentScript);
+    if (!currentScript.isModule) {
+      compiler.reportChangeToEnclosingScope(call);
+      Node undefined =
+          astFactory.createVoid(astFactory.createNumber(0)).useSourceInfoFromForTree(call);
+      call.replaceWith(undefined);
+      return;
+    }
 
     // If it's a goog.module() with a legacy namespace.
     if (currentScript.declareLegacyNamespace) {
@@ -1232,7 +1232,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       // Don't know enough to give a good warning here.
       return;
     }
-    if (importedModule.defaultExportRhs != null) {
+    if (importedModule.defaultExport != null) {
       t.report(importNode, ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT);
       return;
     }
@@ -1286,7 +1286,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       Node exportRhs = getpropNode.getNext();
       ExportDefinition namedExport = ExportDefinition.newNamedExport(t, exportName, exportRhs);
       if (!currentScript.declareLegacyNamespace
-          && currentScript.defaultExportRhs == null
+          && currentScript.defaultExport == null
           && namedExport.hasInlinableName(currentScript.exportsToInline.keySet())) {
         recordExportToInline(namedExport);
         parent.getParent().detach();
@@ -1455,6 +1455,14 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node assignNode = n.getParent();
+    Node rhs = assignNode.getLastChild();
+    if (rhs != currentScript.defaultExport.rhs) {
+      // This script has duplicate 'exports = ' assignments. Preserve the rhs as an expression but
+      // don't declare it as a global variable.
+      assignNode.replaceWith(rhs.detach());
+      return;
+    }
+
     if (!currentScript.declareLegacyNamespace && currentScript.defaultExportLocalName != null) {
       assignNode.getParent().detach();
 
@@ -1465,7 +1473,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     // Rewrite "exports = ..." as "var module$exports$foo$Bar = ..."
-    Node rhs = assignNode.getLastChild();
     Node jsdocNode;
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname =

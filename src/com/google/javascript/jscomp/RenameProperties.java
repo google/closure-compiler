@@ -93,23 +93,16 @@ class RenameProperties implements CompilerPass {
   private final NameGenerator nameGenerator;
 
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
-    new Comparator<Property>() {
-      @Override
-      public int compare(Property p1, Property p2) {
+      (Property p1, Property p2) -> {
 
-        /**
-         * First a frequently used names would always be picked first.
-         */
+        /** First a frequently used names would always be picked first. */
         if (p1.numOccurrences != p2.numOccurrences) {
           return p2.numOccurrences - p1.numOccurrences;
         }
 
-        /**
-         * Finally, for determinism, we compare them based on the old name.
-         */
+        /** Finally, for determinism, we compare them based on the old name. */
         return p1.oldName.compareTo(p2.oldName);
-       }
-    };
+      };
 
   static final DiagnosticType BAD_CALL = DiagnosticType.error(
       "JSC_BAD_RENAME_PROPERTY_FUNCTION_NAME_CALL",

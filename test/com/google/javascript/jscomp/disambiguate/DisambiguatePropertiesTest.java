@@ -1367,7 +1367,27 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testStringFunction() {
+  public void testStringFunctionOnScalar() {
+    // Extern functions are not renamed, but user functions on a native
+    // prototype object are.
+    String js =
+        lines(
+            "/** @constructor */ function Foo() {};",
+            "Foo.prototype.foo = function() {};",
+            "String.prototype.foo = function() {};",
+            "var a = 'str'.foo();");
+    String output =
+        lines(
+            "/** @constructor */ function Foo() {};",
+            "Foo.prototype.Foo_prototype$foo = function() {};",
+            "String.prototype.String_prototype$foo = function() {};",
+            "var a = 'str'.String_prototype$foo();");
+
+    testSets(js, output, "{foo=[[Foo.prototype], [String.prototype]]}");
+  }
+
+  @Test
+  public void testStringFunctionOnObject() {
     // Extern functions are not renamed, but user functions on a native
     // prototype object are.
     String js = ""

@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeUtil.ValueType;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -592,7 +592,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       // (TRUE || x) => TRUE (also, (3 || x) => 3)
       // (FALSE && x) => FALSE
-      if ((lval && type == Token.OR) || (!lval && type == Token.AND)) {
+      if (lval ? type == Token.OR : type == Token.AND) {
         result = left;
         dropped = right;
       } else if (!mayHaveSideEffects(left)) {
@@ -973,7 +973,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return PrimitiveColor.NUMBER.equals(n.getColor())
+      return (n.getColor() != null && n.getColor().is(NativeColorId.NUMBER))
           || (n.getJSType() != null && n.getJSType().isNumberValueType());
     }
     return false;
@@ -984,7 +984,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return PrimitiveColor.BIGINT.equals(n.getColor())
+      return (n.getColor() != null && n.getColor().is(NativeColorId.BIGINT))
           || (n.getJSType() != null && n.getJSType().isBigIntValueType());
     }
     return false;
@@ -1096,7 +1096,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return PrimitiveColor.STRING.equals(n.getColor())
+      return (n.getColor() != null && n.getColor().is(NativeColorId.STRING))
           || (n.getJSType() != null && n.getJSType().isStringValueType());
     }
     return false;
@@ -1488,7 +1488,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (objectType.getString().equals("String")) {
       Node value = objectType.getNext();
-      String stringValue = null;
+      String stringValue;
       if (value == null) {
         stringValue = "";
       } else {

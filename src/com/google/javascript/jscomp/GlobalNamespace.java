@@ -1024,7 +1024,12 @@ class GlobalNamespace
             }
             break;
           case DESTRUCTURING_LHS:
-            // e.g. `const {a, b} = condition ? qname1 : qname2;`
+          case RETURN:
+          case THROW:
+            // e.g.
+            // `const {a, b} = condition ? qname1 : qname2;`
+            // `return condition ? qname1 : qname2;`
+            // `throw condition ? qname1 : qname2;
             return Ref.Type.ALIASING_GET;
           case ASSIGN:
             if (!anc.getFirstChild().matchesQualifiedName(name)) {

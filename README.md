@@ -2,6 +2,8 @@
 
 [![Build Status](https://github.com/google/closure-compiler/workflows/Compiler%20CI/badge.svg)](https://github.com/google/closure-compiler/actions)
 [![Open Source Helpers](https://www.codetriage.com/google/closure-compiler/badges/users.svg)](https://www.codetriage.com/google/closure-compiler)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/google/closure-compiler/blob/master/code_of_conduct.md)
+
 
 The [Closure Compiler](https://developers.google.com/closure/compiler/) is a
 tool for making JavaScript download and run faster. It is a true compiler for
@@ -35,6 +37,14 @@ pitfalls.
 Note: The Closure Compiler requires [Java 8 or higher](https://www.java.com/).
 
 ### Using [Bazel](https://bazel.build/)
+
+Building using bazel requires `git` (to download dependencies).
+
+On Linux, all other required tools should be available in a standard
+distribution.
+
+On Windows, building closure-compiler additionally requires MSYS2, and a zip
+command-line executable (compatible with the one in linux).
 
 1.  Install
     [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
@@ -127,6 +137,12 @@ functions for enforcing dependencies between scripts, and Closure Compiler will
 re-order the inputs automatically.
 
 ## How to Contribute
+
+### Contributor code of conduct
+
+However you choose to contribute, please abide by our
+[code of conduct](https://github.com/closure-compiler/code_of_conduct.md)
+to keep our community a healty and welcoming place.
 
 ### Reporting a bug
 

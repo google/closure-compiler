@@ -121,7 +121,9 @@ class FunctionRewriter implements CompilerPass {
     Node parent = n.getParent();
     return NodeUtil.isFunctionExpression(n)
         && !NodeUtil.isGetOrSetKey(parent)
-        && !parent.isMemberFunctionDef();
+        && !parent.isMemberFunctionDef()
+        && !n.isAsyncFunction()
+        && !n.isGeneratorFunction();
   }
 
   /**
@@ -523,8 +525,7 @@ class FunctionRewriter implements CompilerPass {
         Node rhs = assign.getLastChild();
         if (rhs.isName() &&
             rhs.getString().equals(paramNode.getString())) {
-          Node propertyName = lhs.getLastChild();
-          return propertyName;
+          return lhs.getLastChild();
         }
       }
       return null;

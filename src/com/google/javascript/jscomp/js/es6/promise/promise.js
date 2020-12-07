@@ -28,10 +28,20 @@ $jscomp.polyfill('Promise',
      * @suppress {reportUnknownTypes}
      */
     function(NativePromise) {
+  function platformSupportsPromiseRejectionEvents() {
+    return typeof $jscomp.global['PromiseRejectionEvent'] !== 'undefined';
+  }
+
+  function globalPromiseIsNative() {
+    return $jscomp.global['Promise'] &&
+        $jscomp.global['Promise'].toString().indexOf('[native code]') !== -1;
+  }
+
   function shouldForcePolyfillPromise() {
-    return $jscomp.FORCE_POLYFILL_PROMISE || (
+    // Only force polyfill if the global promise is native.
+    return ($jscomp.FORCE_POLYFILL_PROMISE ||
       $jscomp.FORCE_POLYFILL_PROMISE_WHEN_NO_UNHANDLED_REJECTION &&
-      typeof $jscomp.global['PromiseRejectionEvent'] === 'undefined');
+      !platformSupportsPromiseRejectionEvents()) && globalPromiseIsNative();
   }
 
   // TODO(bradfordcsmith): Do we need to add checks for standards conformance?

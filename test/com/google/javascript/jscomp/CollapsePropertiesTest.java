@@ -3764,24 +3764,23 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // TODO(b/122665204): Make this case pass rather than crash.
     assertThrows(
         Exception.class,
-        () -> {
-          test(
-              lines(
-                  "var foo = { ",
-                  "  bar: 1, ",
-                  "  myFunc() {",
-                  "    return super.bar;",
-                  "  }",
-                  "};",
-                  "foo.myFunc();"),
-              lines(
-                  "var foo$bar = 1;",
-                  "var foo$myFunc = function() {",
-                  "  return super.bar", // Unclear what goes here.
-                  "};",
-                  "foo$myFunc();"),
-              warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE));
-        });
+        () ->
+            test(
+                lines(
+                    "var foo = { ",
+                    "  bar: 1, ",
+                    "  myFunc() {",
+                    "    return super.bar;",
+                    "  }",
+                    "};",
+                    "foo.myFunc();"),
+                lines(
+                    "var foo$bar = 1;",
+                    "var foo$myFunc = function() {",
+                    "  return super.bar", // Unclear what goes here.
+                    "};",
+                    "foo$myFunc();"),
+                warning(CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE)));
 
     // check references in param lists
     test(

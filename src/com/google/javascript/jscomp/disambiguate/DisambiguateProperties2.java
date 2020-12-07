@@ -24,7 +24,10 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -32,6 +35,7 @@ import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -40,6 +44,7 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Assembles the various parts of the diambiguator to execute them as a compiler pass. */
@@ -49,7 +54,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final ImmutableMap<String, CheckLevel> invalidationReportingLevelByProp;
-
+  private final ImmutableSet<TypeMismatch> mismatches;
   private final JSTypeRegistry registry;
   private final InvalidatingTypes invalidations;
 
@@ -58,14 +63,16 @@ public final class DisambiguateProperties2 implements CompilerPass {
       ImmutableMap<String, CheckLevel> invalidationReportingLevelByProp) {
     this.compiler = compiler;
     this.invalidationReportingLevelByProp = invalidationReportingLevelByProp;
-
     this.registry = this.compiler.getTypeRegistry();
+
+    this.mismatches =
+        ImmutableSet.<TypeMismatch>builder()
+            .addAll(compiler.getTypeMismatches())
+            .addAll(compiler.getImplicitInterfaceUses())
+            .build();
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry)
-            .addAllTypeMismatches(compiler.getTypeMismatches())
-            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
-            .allowEnums()
-            .allowScalars()
+            .addAllTypeMismatches(this.mismatches)
             .build();
   }
 
@@ -89,7 +96,8 @@ public final class DisambiguateProperties2 implements CompilerPass {
             /* mutationCb= */ this.compiler::reportChangeToEnclosingScope);
 
     NodeTraversal.traverse(this.compiler, externs.getParent(), findRefs);
-    Map<String, PropertyClustering> propIndex = findRefs.getPropertyIndex();
+    LinkedHashMap<String, PropertyClustering> propIndex = findRefs.getPropertyIndex();
+    invalidateWellKnownProperties(propIndex);
     this.logForDiagnostics(
         "prop_refs",
         () ->
@@ -107,6 +115,10 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .sorted(comparingInt((x) -> x.id))
                 .collect(toImmutableList()));
 
+    // must invaldiate after logging all prop_refs: invalidating a property deletes its list of
+    // use sites to save space, but the logging should include use sites
+    invalidateBasedOnType(flattener);
+
     FixedPointGraphTraversal.newTraversal(propagator).computeFixedPoint(graph);
     propIndex.values().forEach(renamer::renameUses);
     this.logForDiagnostics(
@@ -118,6 +130,38 @@ public final class DisambiguateProperties2 implements CompilerPass {
                         naturalOrder(),
                         Map.Entry::getKey,
                         (e) -> ImmutableSortedSet.copyOf(e.getValue()))));
+
+    this.logForDiagnostics(
+        "mismatches",
+        () ->
+            this.mismatches.stream()
+                .map((m) -> new TypeMismatchJson(m, flattener))
+                .collect(toImmutableSortedSet(naturalOrder())));
+  }
+
+  private static void invalidateWellKnownProperties(
+      LinkedHashMap<String, PropertyClustering> propIndex) {
+    /**
+     * Expand this list as needed; it wasn't created exhaustively.
+     *
+     * <p>Good candidates are: props accessed by builtin functions, props accessed by syntax sugar,
+     * props used in strange ways by the language spec, etc.
+     */
+    ImmutableList<String> names = ImmutableList.of("prototype", "constructor", "then");
+    for (String name : names) {
+      propIndex.computeIfAbsent(name, PropertyClustering::new).invalidate();
+    }
+  }
+
+  private static void invalidateBasedOnType(TypeFlattener flattener) {
+    for (FlatType type : flattener.getAllKnownTypes()) {
+      if (!type.isInvalidating()) {
+        continue;
+      }
+      for (PropertyClustering prop : type.getAssociatedProps()) {
+        prop.invalidate();
+      }
+    }
   }
 
   private void logForDiagnostics(String name, Supplier<Object> data) {
@@ -132,10 +176,14 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
     PropertyReferenceIndexJson(PropertyClustering prop) {
       this.name = prop.getName();
-      this.refs =
-          prop.getUseSites().entrySet().stream()
-              .map((e) -> new PropertyReferenceJson(e.getKey(), e.getValue()))
-              .collect(toImmutableSortedSet(naturalOrder()));
+      if (prop.isInvalidated()) {
+        this.refs = ImmutableSortedSet.of();
+      } else {
+        this.refs =
+            prop.getUseSites().entrySet().stream()
+                .map((e) -> new PropertyReferenceJson(e.getKey(), e.getValue()))
+                .collect(toImmutableSortedSet(naturalOrder()));
+      }
     }
   }
 
@@ -151,12 +199,10 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
     @Override
     public int compareTo(PropertyReferenceJson x) {
-      int location = this.location.compareTo(x.location);
-      if (location != 0) {
-        return location;
-      }
-
-      return this.receiver - x.receiver;
+      return ComparisonChain.start()
+          .compare(this.receiver, x.receiver)
+          .compare(this.location, x.location)
+          .result();
     }
   }
 
@@ -199,6 +245,27 @@ public final class DisambiguateProperties2 implements CompilerPass {
     public int compareTo(TypeEdgeJson x) {
       checkArgument(this.dest != x.dest);
       return this.dest - x.dest;
+    }
+  }
+
+  private static final class TypeMismatchJson implements Comparable<TypeMismatchJson> {
+    final int found;
+    final int required;
+    final String location;
+
+    TypeMismatchJson(TypeMismatch x, TypeFlattener flattener) {
+      this.found = flattener.flatten(x.getFound()).getId();
+      this.required = flattener.flatten(x.getRequired()).getId();
+      this.location = x.getLocation().getLocation();
+    }
+
+    @Override
+    public int compareTo(TypeMismatchJson x) {
+      return ComparisonChain.start()
+          .compare(this.found, x.found)
+          .compare(this.required, x.required)
+          .compare(this.location, x.location)
+          .result();
     }
   }
 }

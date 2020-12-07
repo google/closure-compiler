@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -811,8 +813,7 @@ final class Tracer {
         }
 
         if (stat.extraInfo != null && t.extraTracingValues != null) {
-          int overlapLength =
-              Math.min(stat.extraInfo.length, t.extraTracingValues.length);
+          int overlapLength = min(stat.extraInfo.length, t.extraTracingValues.length);
           for (int i = 0; i < overlapLength; i++) {
             stat.extraInfo[i] += t.extraTracingValues[i];
             AtomicTracerStatMap map =
@@ -922,16 +923,16 @@ final class Tracer {
       for (Event e : events) {
         if (etime != -1) {
           long time = e.eventTime() - etime;
-          maxTime = Math.max(maxTime, time);
+          maxTime = max(maxTime, time);
         }
         if (!e.isStart) {
           long time = e.tracer.stopTimeMs - e.tracer.startTimeMs;
-          maxTime = Math.max(maxTime, time);
+          maxTime = max(maxTime, time);
         }
         etime = e.eventTime();
       }
       // Minimum is 3 to preserve an indent even when max is small.
-      return Math.max(3, numDigits(maxTime));
+      return max(3, numDigits(maxTime));
     }
   }
 

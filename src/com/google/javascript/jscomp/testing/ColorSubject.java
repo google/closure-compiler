@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertAbout;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.javascript.jscomp.colors.Color;
-import com.google.javascript.jscomp.colors.ObjectColor;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import javax.annotation.Nullable;
 
 /** Subject for {@link Color} */
@@ -49,16 +49,16 @@ public final class ColorSubject extends Subject {
 
   // Custom assertions
 
-  public void isPrimitive() {
-    check("isPrimitive").that(actualNonNull().isPrimitive()).isTrue();
+  public void isNative(NativeColorId nativeColorId) {
+    check("is").that(actualNonNull().is(nativeColorId)).isTrue();
   }
 
   public void isUnion() {
-    check("isUnion").that(actualNonNull().isUnion()).isTrue();
+    check("isUnion()").that(actualNonNull().isUnion()).isTrue();
   }
 
-  public void isObject() {
-    check("isObject").that(actualNonNull().isObject()).isTrue();
+  public void isPrimitive() {
+    check("isPrimitive()").that(actualNonNull().isPrimitive()).isTrue();
   }
 
   public void isInvalidating() {
@@ -69,18 +69,21 @@ public final class ColorSubject extends Subject {
     check("isInvalidating").that(actualNonNull().isInvalidating()).isFalse();
   }
 
+  public void propertiesKeepOriginalName() {
+    check("propertiesKeepOriginalName").that(actualNonNull().propertiesKeepOriginalName()).isTrue();
+  }
+
   public void hasAlternates(Color... alternates) {
     isUnion();
     check("getAlternates().containsExactly()")
-        .that(actualNonNull().getAlternates())
+        .that(actualNonNull().union())
         // cast to Object[] to suppress warning about varargs vs. non-varargs call confusion
         .containsExactly((Object[]) alternates);
   }
 
   public void hasDisambiguationSupertypes(Color... alternates) {
-    isObject();
     check("getDirectSupertypes().containsExactly()")
-        .that(((ObjectColor) actualNonNull()).getDisambiguationSupertypes())
+        .that(actualNonNull().getDisambiguationSupertypes())
         // cast to Object[] to suppress warning about varargs vs. non-varargs call confusion
         .containsExactly((Object[]) alternates);
   }

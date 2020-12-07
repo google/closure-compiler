@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Comparator.comparingInt;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -72,12 +73,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   private LiveVariablesAnalysis liveness;
 
   private final Comparator<Var> coloringTieBreaker =
-      new Comparator<Var>() {
-        @Override
-        public int compare(Var v1, Var v2) {
-          return liveness.getVarIndex(v1.getName()) - liveness.getVarIndex(v2.getName());
-        }
-      };
+      comparingInt((Var arg) -> liveness.getVarIndex(arg.getName()));
 
   /**
    * @param usePseudoNames For debug purposes, when merging variable foo and bar

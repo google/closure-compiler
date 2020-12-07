@@ -85,12 +85,12 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   }
 
   protected CssRenamingMap getPartialMap() {
-    CssRenamingMap map = new CssRenamingMap.ByPart() {
-      @Override public String get(String value) {
+    return new CssRenamingMap.ByPart() {
+      @Override
+      public String get(String value) {
         return replacementMap.get(value);
       }
     };
-    return map;
   }
 
   protected CssRenamingMap getFullMap() {

@@ -306,7 +306,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     if (classModifier != null) {
       maybeDetach(classModifier.getParent());
     }
-    ClassDefinition def = new ClassDefinition(
+    return new ClassDefinition(
         targetName,
         classInfo,
         maybeDetach(superClass),
@@ -314,7 +314,6 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         objectLitToList(maybeDetach(statics)),
         objectLitToList(description),
         maybeDetach(classModifier));
-    return def;
   }
 
   private static Node maybeDetach(Node node) {
@@ -580,12 +579,14 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       ClassDefinition cls, Node associatedNode, boolean includeConstructorExport) {
     // avoid null checks
     JSDocInfo classInfo =
-        (cls.classInfo != null) ? cls.classInfo : new JSDocInfoBuilder(true).build(true);
+        (cls.classInfo != null)
+            ? cls.classInfo
+            : JSDocInfo.builder().parseDocumentation().build(true);
 
     JSDocInfo ctorInfo =
         (cls.constructor.info != null)
             ? cls.constructor.info
-            : new JSDocInfoBuilder(true).build(true);
+            : JSDocInfo.builder().parseDocumentation().build(true);
 
     Node superNode = cls.superClass;
 
@@ -593,7 +594,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     JSDocInfoBuilder mergedInfo =
         cls.constructor.info != null
             ? JSDocInfoBuilder.copyFrom(ctorInfo)
-            : new JSDocInfoBuilder(true);
+            : JSDocInfo.builder().parseDocumentation();
     // Optionally, remove @export from the cloned constructor info.
     // TODO(b/138324343): remove this case (or, even better, just delete goog.defineClass support).
     if (!includeConstructorExport && ctorInfo.isExport()) {

@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
+import com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -394,12 +395,9 @@ public class DiagnosticGroups {
           TypeCheck.FUNCTION_MASKS_VARIABLE,
           VariableReferenceCheck.REDECLARED_VARIABLE);
 
-  // In the conversion from ES5 to ES6, we remove the strict check that asserts functions
-  // must be declared at the top of a new scope or immediately within the declaration of another
-  // function
-  static final DiagnosticGroup ES5_STRICT_UNCOMMON =
-      DiagnosticGroups.registerGroup(
-          "es5StrictUncommon",
+  public static final DiagnosticGroup ES5_STRICT =
+      DiagnosticGroups.registerGroup( // undocumented
+          "es5Strict",
           RhinoErrorReporter.INVALID_OCTAL_LITERAL,
           RhinoErrorReporter.DUPLICATE_PARAM,
           StrictModeCheck.USE_OF_WITH,
@@ -408,19 +406,11 @@ public class DiagnosticGroups {
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
           StrictModeCheck.DELETE_VARIABLE,
-          StrictModeCheck.DUPLICATE_OBJECT_KEY);
-
-  static final DiagnosticGroup ES5_STRICT_REFLECTION =
-      DiagnosticGroups.registerGroup("es5StrictReflection",
+          StrictModeCheck.DUPLICATE_MEMBER,
           StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN,
           StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN,
           StrictModeCheck.FUNCTION_CALLER_FORBIDDEN,
           StrictModeCheck.FUNCTION_ARGUMENTS_PROP_FORBIDDEN);
-
-  public static final DiagnosticGroup ES5_STRICT =
-      DiagnosticGroups.registerGroup("es5Strict",
-          ES5_STRICT_UNCOMMON,
-          ES5_STRICT_REFLECTION);
 
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup(
@@ -434,8 +424,7 @@ public class DiagnosticGroups {
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "missingRequire", CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING);
+      DiagnosticGroups.registerDeprecatedGroup("missingRequire");
 
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
@@ -460,11 +449,7 @@ public class DiagnosticGroups {
           DiagnosticGroup.forType(ModuleLoader.LOAD_WARNING));
 
   public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "strictMissingRequire",
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING,
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING);
+      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
 
   public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
       DiagnosticGroups.registerGroup(
@@ -475,10 +460,7 @@ public class DiagnosticGroups {
           CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
   public static final DiagnosticGroup STRICT_REQUIRES =
-      DiagnosticGroups.registerGroup(
-          "legacyGoogScopeRequire",
-          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckExtraRequires.EXTRA_REQUIRE_WARNING);
+      DiagnosticGroups.registerDeprecatedGroup("legacyGoogScopeRequire");
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire", CheckExtraRequires.EXTRA_REQUIRE_WARNING);
@@ -592,10 +574,13 @@ public class DiagnosticGroups {
               CheckClosureImports.LET_CLOSURE_IMPORT,
               CheckConstantCaseNames.REASSIGNED_CONSTANT_CASE_NAME,
               CheckConstantCaseNames.MISSING_CONST_PROPERTY,
+              CheckDefaultExportOfGoogModule.DEFAULT_EXPORT_GOOG_MODULE,
               CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
               CheckEnums.COMPUTED_PROP_NAME_IN_ENUM,
               CheckEnums.DUPLICATE_ENUM_VALUE,
               CheckEnums.ENUM_PROP_NOT_CONSTANT,
+              CheckEnums.ENUM_TYPE_NOT_STRING_OR_NUMBER,
+              CheckEnums.NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM,
               CheckEnums.SHORTHAND_ASSIGNMENT_IN_ENUM,
               CheckEs6ModuleFileStructure.MUST_COME_BEFORE,
               CheckEs6Modules.DUPLICATE_IMPORT,

@@ -1514,7 +1514,7 @@ public final class NodeUtilTest {
       flags.clearAllFlags();
       n.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(n)).isTrue();
+      assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
     }
 
     @Test
@@ -1528,7 +1528,7 @@ public final class NodeUtilTest {
       flags.clearAllFlags();
       n.setSideEffectFlags(flags);
 
-      assertThat(NodeUtil.evaluatesToLocalValue(n)).isTrue();
+      assertThat(NodeUtil.evaluatesToLocalValue(n)).isFalse();
     }
 
     @Test
@@ -1551,7 +1551,6 @@ public final class NodeUtilTest {
       assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isTrue();
 
       flags.clearAllFlags();
-      flags.setReturnsTainted();
       newExpr.setSideEffectFlags(flags);
 
       assertThat(NodeUtil.evaluatesToLocalValue(newExpr)).isTrue();
@@ -4389,25 +4388,23 @@ public final class NodeUtilTest {
 
       ImmutableList.Builder<Object[]> cases = ImmutableList.builder();
       templateToDefinesOwnReceiver.forEach(
-          (outerTemplate, outerReceiver) -> {
-            templateToDefinesOwnReceiver.forEach(
-                (innerTemplate, innerReceiver) -> {
-                  exprToUsesReceiver.forEach(
-                      (expr, usesReceiver) -> {
-                        String caseSrc =
-                            SimpleFormat.format(
-                                outerTemplate, SimpleFormat.format(innerTemplate, expr));
-                        cases.add(
-                            new Object[] {
-                              caseSrc,
-                              // refToEnclosing
-                              !outerReceiver && !innerReceiver && usesReceiver,
-                              // refToOuterFnOwn
-                              outerReceiver && !innerReceiver && usesReceiver,
-                            });
-                      });
-                });
-          });
+          (outerTemplate, outerReceiver) ->
+              templateToDefinesOwnReceiver.forEach(
+                  (innerTemplate, innerReceiver) ->
+                      exprToUsesReceiver.forEach(
+                          (expr, usesReceiver) -> {
+                            String caseSrc =
+                                SimpleFormat.format(
+                                    outerTemplate, SimpleFormat.format(innerTemplate, expr));
+                            cases.add(
+                                new Object[] {
+                                  caseSrc,
+                                  // refToEnclosing
+                                  !outerReceiver && !innerReceiver && usesReceiver,
+                                  // refToOuterFnOwn
+                                  outerReceiver && !innerReceiver && usesReceiver,
+                                });
+                          })));
 
       /**
        * Add a few cases using `super` to check it behaves the same.
@@ -4631,14 +4628,12 @@ public final class NodeUtilTest {
 
   private static Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
-    Node nameNode = getNameNode(ast, name);
-    return nameNode;
+    return getNameNode(ast, name);
   }
 
   private static Node getStringKeyNodeFrom(String code, String name) {
     Node ast = parse(code);
-    Node stringKeyNode = getStringNode(ast, name, Token.STRING_KEY);
-    return stringKeyNode;
+    return getStringNode(ast, name, Token.STRING_KEY);
   }
 
   private static boolean executedOnceTestCase(String code) {

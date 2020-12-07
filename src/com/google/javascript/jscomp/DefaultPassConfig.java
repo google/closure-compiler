@@ -42,6 +42,7 @@ import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass;
 import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
+import com.google.javascript.jscomp.lint.CheckDefaultExportOfGoogModule;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
@@ -282,11 +283,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
       checks.add(extraRequires);
-    }
-
-    if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
-        || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)) {
-      checks.add(missingAndExtraRequires);
     }
 
     if (options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE)) {
@@ -655,6 +651,14 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     if (options.computeFunctionSideEffects) {
       passes.add(markPureFunctions);
     }
@@ -715,6 +719,14 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(flowSensitiveInlineVariables);
     }
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     passes.addAll(getMainOptimizationLoop());
     passes.add(createEmptyPass(PassNames.AFTER_MAIN_OPTIMIZATIONS));
 
@@ -729,14 +741,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(createEmptyPass("afterModuleMotion"));
-
-    if (options.checkTypes || options.inferTypes) {
-      passes.add(typesToColors);
-    }
-
-    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
-      passes.add(removeTypes);
-    }
 
     // Some optimizations belong outside the loop because running them more
     // than once would either have no benefit or be incorrect.
@@ -1179,14 +1183,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("checkExtraRequires")
           .setFeatureSetForChecks()
           .setInternalFactory(CheckExtraRequires::new)
-          .build();
-
-  /** Checks that all constructed classes are goog.require()d. */
-  private final PassFactory missingAndExtraRequires =
-      PassFactory.builderForHotSwap()
-          .setName("checkMissingAndExtraRequires")
-          .setFeatureSetForChecks()
-          .setInternalFactory(CheckMissingAndExtraRequires::new)
           .build();
 
   private final PassFactory checkMissingRequires =
@@ -1859,7 +1855,7 @@ public final class DefaultPassConfig extends PassConfig {
    * Runs the single-file linter passes
    *
    * <p>These is NOT the configuration for the standalone Linter binary. New linter passes must also
-   * be added to {@link LinterPassConfig} as well as this list.
+   * be added to {@link LintPassConfig} as well as this list.
    */
   private final PassFactory lintChecks =
       PassFactory.builderForHotSwap()
@@ -1869,6 +1865,7 @@ public final class DefaultPassConfig extends PassConfig {
                 ImmutableList.Builder<Callback> callbacks =
                     ImmutableList.<Callback>builder()
                         .add(new CheckConstantCaseNames(compiler))
+                        .add(new CheckDefaultExportOfGoogModule(compiler))
                         .add(new CheckEmptyStatements(compiler))
                         .add(new CheckEnums(compiler))
                         .add(new CheckEs6ModuleFileStructure(compiler))
@@ -1973,7 +1970,12 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkStrictMode =
       PassFactory.builder()
           .setName("checkStrictMode")
-          .setInternalFactory(StrictModeCheck::new)
+          .setInternalFactory(
+              (compiler) -> {
+                CheckLevel defaultLevel =
+                    options.expectStrictModeInput() ? CheckLevel.ERROR : CheckLevel.OFF;
+                return new StrictModeCheck(compiler, defaultLevel);
+              })
           .setFeatureSetForChecks()
           .build();
 

@@ -50,6 +50,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -68,7 +69,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
   private final JSTypeRegistry registry = this.compiler.getTypeRegistry();
 
   private CompilerPass processor;
-  private ImmutableSet<FlatType> expectedExternTypes = ImmutableSet.of();
+  private ImmutableSet<FlatType> expectedOriginalNameTypes = ImmutableSet.of();
 
   private Map<String, PropertyClustering> propIndex;
 
@@ -109,14 +110,16 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
   }
 
   @After
-  public void verifyProps_trackExternsCorrectly() {
+  public void verifyProps_trackOriginalNamedTypesCorrectly() {
     for (PropertyClustering prop : this.propIndex.values()) {
-      FlatType externRep = prop.getExternsClusterRep();
-      Set<FlatType> externCluster =
-          (externRep == null) ? ImmutableSet.of() : prop.getClusters().findAll(externRep);
-      assertThat(externCluster)
+      FlatType originalNameRep = prop.getOriginalNameClusterRep();
+      Set<FlatType> originalNameCluster =
+          (originalNameRep == null)
+              ? ImmutableSet.of()
+              : prop.getClusters().findAll(originalNameRep);
+      assertThat(originalNameCluster)
           .containsExactlyElementsIn(
-              Sets.intersection(prop.getClusters().elements(), this.expectedExternTypes));
+              Sets.intersection(prop.getClusters().elements(), this.expectedOriginalNameTypes));
     }
   }
 
@@ -136,6 +139,29 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
                 "class Foo { }", //
                 "",
                 "new Foo().a;"));
+
+    // Then
+    assertThat(this.propIndex.keySet()).containsExactly("a");
+
+    this.assertThatUsesOf("a").containsExactly(flatFoo, STRING);
+  }
+
+  @Test
+  public void optChainGetProp_isFound() {
+    // Given
+    FlatType flatFoo = this.createFlatType();
+
+    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null, null);
+
+    // When
+    this.propIndex =
+        this.collectProperties(
+            finder,
+            "",
+            lines(
+                "class Foo { }", //
+                "",
+                "new Foo()?.a;"));
 
     // Then
     assertThat(this.propIndex.keySet()).containsExactly("a");
@@ -421,7 +447,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     FlatType flatBar = this.createFlatType();
     FlatType flatTum = this.createFlatType();
     FlatType flatQux = this.createFlatType();
-    this.expectedExternTypes = ImmutableSet.of(flatFoo, flatBar, flatTum);
+    this.expectedOriginalNameTypes = ImmutableSet.of(flatFoo, flatBar, flatTum);
 
     FindPropertyReferences finder =
         this.createFinder(
@@ -449,7 +475,69 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     // Then
     this.assertThatUsesOf("a").containsExactly(flatFoo, STRING, flatBar, STRING, flatQux, STRING);
 
-    // Externs type clusters are checked during teardown.
+    // "Original name" type clusters are checked during teardown.
+  }
+
+  @Test
+  public void enumsAreClusteredWithExterns() {
+    // Given
+    FlatType flatFoo = FlatType.createForTesting(-1);
+    FlatType flatBar = FlatType.createForTesting(-2);
+    FlatType flatQux = FlatType.createForTesting(-3);
+    this.expectedOriginalNameTypes = ImmutableSet.of(flatFoo, flatBar);
+
+    FindPropertyReferences finder =
+        this.createFinder(
+            ImmutableMap.<String, FlatType>builder()
+                .put("Foo", flatFoo)
+                .put("enum{Bar}", flatBar)
+                .put("Qux", flatQux)
+                .build(),
+            null,
+            null);
+
+    // When
+    this.propIndex =
+        this.collectProperties(
+            finder,
+            lines(
+                "class Foo {}", //
+                "new Foo().a;"),
+            lines(
+                "class Qux { }", //
+                "/** @enum */",
+                "const Bar = {",
+                "  a: 0",
+                "};",
+                "",
+                "new Qux().a;"));
+
+    // Then
+    this.assertThatUsesOf("a")
+        .containsExactly(flatFoo, STRING, flatBar, STRING_KEY, flatQux, STRING);
+
+    // "Original name" type clusters are checked during teardown.
+  }
+
+  @Test
+  public void propertylessConstructorsAreRecordedInTypeFlattener() {
+    Consumer<JSError> errorCb = (e) -> assertWithMessage(e.getDescription()).fail();
+    StubTypeFlattener flattener = new StubTypeFlattener(ImmutableMap.of());
+    FindPropertyReferences finder = new FindPropertyReferences(flattener, errorCb, (s) -> false);
+
+    this.propIndex =
+        this.collectProperties(
+            finder,
+            "",
+            lines(
+                "class Foo {}",
+                "/** @constructor */ function Bar() {}",
+                "/** @interface */ function Quz() {}",
+                "/** @record */ function Baz() {}",
+                "function other() {}"));
+
+    assertThat(flattener.flattened)
+        .containsExactly("(typeof Foo)", "(typeof Bar)", "(typeof Quz)", "(typeof Baz)");
   }
 
   private MultimapSubject assertThatUsesOf(String name) {
@@ -469,10 +557,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
       @Nullable Consumer<JSError> errorCb,
       @Nullable IsPropertyDefiner isPropertyDefiner) {
     if (errorCb == null) {
-      errorCb =
-          (e) -> {
-            assertWithMessage(e.getDescription()).fail();
-          };
+      errorCb = (e) -> assertWithMessage(e.getDescription()).fail();
     }
     if (isPropertyDefiner == null) {
       isPropertyDefiner = (s) -> false;
@@ -499,6 +584,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     private final FlatType fallbackType = FindPropertyReferencesTest.this.createFlatType();
 
     private final ImmutableMap<String, FlatType> stubs;
+    private final LinkedHashSet<String> flattened = new LinkedHashSet<>();
 
     StubTypeFlattener(ImmutableMap<String, FlatType> stubs) {
       super(FindPropertyReferencesTest.this.registry, null);
@@ -507,6 +593,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
     @Override
     public FlatType flatten(JSType type) {
+      flattened.add(type.toString());
       return stubs.getOrDefault(type.toString(), this.fallbackType);
     }
 

@@ -75,7 +75,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
         Node nameNode = IR.name(name);
         newNode = IR.assign(getprop, nameNode);
 
-        builder = new JSDocInfoBuilder(false);
+        builder = JSDocInfo.builder();
         if (oldJSDocInfo.isConstructor()) {
           builder.recordConstructor();
         }

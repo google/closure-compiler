@@ -25,7 +25,7 @@ import static java.lang.Math.min;
 
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.colors.PrimitiveColor;
+import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -281,7 +281,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (useTypes
         && firstArg != null
         && (isStringLiteral
-            || PrimitiveColor.STRING.equals(stringNode.getColor())
+            || (stringNode.getColor() != null && stringNode.getColor().is(NativeColorId.STRING))
             || (stringNode.getJSType() != null && stringNode.getJSType().isStringValueType()))) {
       if (subtree.hasXChildren(3)) {
         Double maybeStart = getSideEffectFreeNumberValue(firstArg);

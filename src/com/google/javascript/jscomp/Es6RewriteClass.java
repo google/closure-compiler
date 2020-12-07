@@ -78,6 +78,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
   @Override
   public void process(Node externs, Node root) {
+    // TODO(b/171853310): This tranpilation should be turned off in externs
     TranspilationPasses.processTranspile(compiler, externs, features, this);
     TranspilationPasses.processTranspile(compiler, root, features, this);
     // Super constructor calls are done all at once as a separate step largely for historical
@@ -86,7 +87,6 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     // TODO(bradfordcsmith): It would probably be more readable and efficient to merge the super
     //     constructor rewriting logic into this class.
     convertSuperConstructorCalls.setGlobalNamespace(new GlobalNamespace(compiler, externs, root));
-    TranspilationPasses.processTranspile(compiler, externs, features, convertSuperConstructorCalls);
     TranspilationPasses.processTranspile(compiler, root, features, convertSuperConstructorCalls);
     TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, features);
   }
@@ -381,7 +381,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
     builder.propertyKey(memberName);
 
-    JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder jsDoc = JSDocInfo.builder();
     jsDoc.recordNoCollapse();
     builder.jsDocInfo(jsDoc.build());
     membersToDeclare.put(memberName, builder.build());

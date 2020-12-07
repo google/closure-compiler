@@ -1284,8 +1284,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnum() {
-    // TODO(sdh): Consider removing this test if we decide that enum objects are
-    // okay to ambiguate (in which case, this would rename to Foo.a).
     testSame(
         lines(
             "/** @enum {string} */ var Foo = {X: 'y'};",
@@ -2046,5 +2044,47 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "    this.a = 0;",
             "  }",
             "}"));
+  }
+
+  @Test
+  public void testAmbiguateMethodAddedToStringPrototype_accessedOffScalar() {
+    test(
+        lines(
+            "/** @return {string} */",
+            "String.prototype.customMethod = function() { return ''; };",
+            "'FOOBAR'.customMethod();",
+            "class Bar {",
+            "  bar() {}",
+            "}",
+            "new Bar().bar();"),
+        lines(
+            "/** @return {string} */",
+            "String.prototype.a = function() { return ''; };",
+            "'FOOBAR'.a();",
+            "class Bar {",
+            "  a() {}",
+            "}",
+            "new Bar().a();"));
+  }
+
+  @Test
+  public void testAmbiguateMethodAddedToStringPrototype() {
+    test(
+        lines(
+            "/** @return {string} */",
+            "String.prototype.customMethod = function() { return ''; };",
+            "new String('FOOBAR').customMethod();",
+            "class Bar {",
+            "  bar() {}",
+            "}",
+            "new Bar().bar();"),
+        lines(
+            "/** @return {string} */",
+            "String.prototype.a = function() { return ''; };",
+            "new String('FOOBAR').a();",
+            "class Bar {",
+            "  a() {}",
+            "}",
+            "new Bar().a();"));
   }
 }

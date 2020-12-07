@@ -36,6 +36,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
 import com.google.javascript.jscomp.deps.JsFileRegexParser;
@@ -221,6 +222,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
   private JSTypeRegistry typeRegistry;
+  private ColorRegistry colorRegistry;
   private volatile Config parserConfig = null;
   private volatile Config externsParserConfig = null;
 
@@ -456,12 +458,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     if (!options.checkTypes) {
       options.setWarningLevel(DiagnosticGroups.BOUNDED_GENERICS, CheckLevel.OFF);
-    }
-
-    if (options.expectStrictModeInput()) {
-      options.setWarningLevel(
-          DiagnosticGroups.ES5_STRICT,
-          CheckLevel.ERROR);
     }
 
     // All passes must run the variable check. This synthesizes
@@ -1467,6 +1463,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  public ColorRegistry getColorRegistry() {
+    return checkNotNull(colorRegistry, "Color registry has not been initialized yet");
+  }
+
+  @Override
+  public void setColorRegistry(ColorRegistry colorRegistry) {
+    this.colorRegistry = colorRegistry;
+  }
+
+  @Override
   public void forwardDeclareType(String typeName) {
     forwardDeclaredTypes.add(typeName);
   }
@@ -1477,7 +1483,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  boolean hasTypeCheckingRun() {
+  public boolean hasTypeCheckingRun() {
     return this.typeCheckingHasRun;
   }
 
@@ -2694,17 +2700,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   protected Config createConfig(Config.LanguageMode mode, Config.StrictMode strictMode) {
-    Config config =
-        ParserRunner.createConfig(
-            mode,
-            options.isParseJsDocDocumentation(),
-            options.canContinueAfterErrors()
-                ? Config.RunMode.KEEP_GOING
-                : Config.RunMode.STOP_AFTER_ERROR,
-            options.extraAnnotationNames,
-            options.parseInlineSourceMaps,
-            strictMode);
-    return config;
+    return ParserRunner.createConfig(
+        mode,
+        options.isParseJsDocDocumentation(),
+        options.canContinueAfterErrors()
+            ? Config.RunMode.KEEP_GOING
+            : Config.RunMode.STOP_AFTER_ERROR,
+        options.extraAnnotationNames,
+        options.parseInlineSourceMaps,
+        strictMode);
   }
 
   // ------------------------------------------------------------------------

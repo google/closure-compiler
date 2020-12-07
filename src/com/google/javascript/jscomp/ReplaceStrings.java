@@ -21,27 +21,24 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.HashMultimap;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
- * Replaces JavaScript strings in the list of supplied methods with shortened forms. Useful for
+ * Replaces JavaScript strings in the list of supplied functions with shortened forms. Useful for
  * replacing debug message such as: throw new Error("Something bad happened"); with generated codes
  * like: throw new Error("a"); This makes the compiled JavaScript smaller and prevents us from
  * leaking details about the source code.
@@ -51,7 +48,8 @@ import java.util.Set;
 class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
 
   static final DiagnosticType BAD_REPLACEMENT_CONFIGURATION =
-      DiagnosticType.warning("JSC_BAD_REPLACEMENT_CONFIGURATION", "Bad replacement configuration.");
+      DiagnosticType.error(
+          "JSC_BAD_REPLACEMENT_CONFIGURATION", "Bad replacement configuration \"{0}\": {1}");
 
   static final DiagnosticType STRING_REPLACEMENT_TAGGED_TEMPLATE =
       DiagnosticType.warning(
@@ -65,16 +63,15 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
   private static final String REPLACE_ALL_MARKER = "*";
 
   private final AbstractCompiler compiler;
-  private final JSTypeRegistry registry;
 
   //
   private final Map<String, Config> functions = new HashMap<>();
-  private final Multimap<String, String> methods = HashMultimap.create();
   private final DefaultNameGenerator nameGenerator;
   private final Map<String, Result> results = new LinkedHashMap<>();
 
   /** Describes a function to look for a which parameters to replace. */
   private static class Config {
+
     // TODO(johnlenz): Support name "groups" so that unrelated strings can
     // reuse strings.  For example, event-id can reuse the names used for logger
     // classes.
@@ -133,7 +130,6 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     this.compiler = compiler;
     this.placeholderToken =
         placeholderToken.isEmpty() ? DEFAULT_PLACEHOLDER_TOKEN : placeholderToken;
-    this.registry = compiler.getTypeRegistry();
 
     Iterable<String> reservedNames = skiplisted;
     if (previousMappings != null) {
@@ -158,15 +154,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     }
   }
 
-  static final Predicate<Result> USED_RESULTS =
-      new Predicate<Result>() {
-        @Override
-        public boolean apply(Result result) {
-          // The list of locations may be empty if the map
-          // was pre-populated from a previous map.
-          return result.didReplacement;
-        }
-      };
+  static final Predicate<Result> USED_RESULTS = (Result result) -> result.didReplacement;
 
   // Get the list of all replacements performed.
   List<Result> getResult() {
@@ -180,8 +168,7 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
       map.put(result.replacement, result.original);
     }
 
-    VariableMap stringMap = new VariableMap(map.build());
-    return stringMap;
+    return new VariableMap(map.build());
   }
 
   @Override
@@ -205,32 +192,6 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
           if (config != null) {
             doSubstitutions(t, config, n);
             return;
-          }
-        }
-
-        // Look for calls to class methods.
-        if (NodeUtil.isNormalGet(calledFn)) {
-          Node rhs = calledFn.getLastChild();
-          if (rhs.isName() || rhs.isString()) {
-            String methodName = rhs.getString();
-            String originalMethodName = rhs.getParent().getOriginalName();
-            Collection<String> classes;
-            if (originalMethodName != null) {
-              classes = methods.get(originalMethodName);
-            } else {
-              classes = methods.get(methodName);
-            }
-            if (classes != null) {
-              Node lhs = calledFn.getFirstChild();
-              if (lhs.getJSType() != null) {
-                JSType type = lhs.getJSType().restrictByNotNullOrUndefined();
-                Config config = findMatchingClass(type, classes);
-                if (config != null) {
-                  doSubstitutions(t, config, n);
-                  return;
-                }
-              }
-            }
           }
         }
         break;
@@ -258,22 +219,6 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
       }
     }
     return config;
-  }
-
-  /**
-   * @return The Config object for the class match the specified type or null if no match was found.
-   */
-  private Config findMatchingClass(JSType callClassType, Collection<String> declarationNames) {
-    if (!callClassType.isEmptyType() && !callClassType.isUnknownType()) {
-      for (String declarationName : declarationNames) {
-        String className = getClassFromDeclarationName(declarationName);
-        JSType methodClassType = registry.getGlobalType(className);
-        if (methodClassType != null && callClassType.isSubtypeOf(methodClassType)) {
-          return functions.get(declarationName);
-        }
-      }
-    }
-    return null;
   }
 
   /** Replace the parameters specified in the config, if possible. */
@@ -435,46 +380,24 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     }
   }
 
-  /** From a provide name extract the method name. */
-  private static String getMethodFromDeclarationName(String fullDeclarationName) {
-    String[] parts = fullDeclarationName.split("\\.prototype\\.");
-    checkState(parts.length == 1 || parts.length == 2);
-    if (parts.length == 2) {
-      return parts[1];
-    }
-    return null;
-  }
-
-  /** From a provide name extract the class name. */
-  private static String getClassFromDeclarationName(String fullDeclarationName) {
-    String[] parts = fullDeclarationName.split("\\.prototype\\.");
-    checkState(parts.length == 1 || parts.length == 2);
-    if (parts.length == 2) {
-      return parts[0];
-    }
-    return null;
-  }
-
-  /**
-   * Build the data structures need by this pass from the provided list of functions and methods.
-   */
+  /** Build the data structures need by this pass from the provided list of functions. */
   private void parseConfiguration(List<String> functionsToInspect) {
     for (String function : functionsToInspect) {
       Config config = parseConfiguration(function);
-      functions.put(config.name, config);
-
-      String method = getMethodFromDeclarationName(config.name);
-      if (method != null) {
-        methods.put(method, config.name);
+      if (config != null) {
+        functions.put(config.name, config);
       }
     }
   }
 
   /**
-   * Convert the provide string into a Config. The string can be a static function: foo(,,?)
-   * foo.bar(?) or a class method: foo.prototype.bar(?) And is allowed to either replace all
+   * Convert the provide string into a Config. The string can be a variable or static function:
+   * foo(,,?) foo.bar(?) (but not a prototype method) and is allowed to either replace all
    * parameters using "*" or one parameter "?". "," is used as a placeholder for ignored parameters.
+   *
+   * @return null if this is an invalid function, otherwise the Config
    */
+  @Nullable
   private Config parseConfiguration(String function) {
     // Looks like this function_name(,$,)
     int first = function.indexOf('(');
@@ -484,16 +407,25 @@ class ReplaceStrings extends AbstractPostOrderCallback implements CompilerPass {
     // TODO(johnlenz): Make parsing precondition checks JSErrors reports.
     checkState(first != -1 && last != -1);
 
+    if (function.contains(".prototype.")) {
+      compiler.report(
+          JSError.make(
+              BAD_REPLACEMENT_CONFIGURATION,
+              function,
+              "Cannot replace strings passed to prototype methods."));
+      return null;
+    }
+
     String name = function.substring(0, first);
     String params = function.substring(first + 1, last);
 
     int paramCount = 0;
     List<Integer> replacementParameters = new ArrayList<>();
-    String[] parts = params.split(",");
+    List<String> parts = Splitter.on(',').splitToList(params);
     for (String param : parts) {
       paramCount++;
       if (param.equals(REPLACE_ALL_MARKER)) {
-        checkState(paramCount == 1 && parts.length == 1);
+        checkState(paramCount == 1 && parts.size() == 1);
         replacementParameters.add(Config.REPLACE_ALL_VALUE);
       } else if (param.equals(REPLACE_ONE_MARKER)) {
         // TODO(johnlenz): Support multiple.

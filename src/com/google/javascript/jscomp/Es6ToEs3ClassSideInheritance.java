@@ -36,8 +36,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rewrites static inheritance to explicitly copy inherited properties from superclass to
- * subclass so that the typechecker knows the subclass has those properties.
+ * Rewrites static inheritance to explicitly copy inherited properties from superclass to subclass
+ * so that the optimizer knows the subclass has those properties.
  *
  * <p>For example, the main transpilation passes will convert this ES6 code:
  *
@@ -76,15 +76,15 @@ import java.util.Set;
  *
  * <pre>
  *   var Foo = function() {};
- *   Foo.prop; // stub declaration so that the type checker knows about prop
+ *   Foo.prop; // stub declaration so that the optimizer knows about prop
  *   Object.defineProperties(Foo, {prop:{get:function() { return 1; }}});
  *
  *   var Bar = function() {};
  *   $jscomp.inherits(Bar, Foo);
  * </pre>
  *
- * The stub declaration of Foo.prop needs to be duplicated for Bar so that the type checker knows
- * that Bar also has this property.  (ES5 clases don't have class-side inheritance).
+ * The stub declaration of Foo.prop needs to be duplicated for Bar so that the optimizer knows that
+ * Bar also has this property. (ES5 classes don't have class-side inheritance).
  *
  * <pre>
  *   var Bar = function() {};
@@ -92,16 +92,18 @@ import java.util.Set;
  *   $jscomp.inherits(Bar, Foo);
  * </pre>
  *
- * <p>In order to gather the type checker declarations, this pass gathers all GETPROPs on
- * a class.  In order to determine which of these are the stub declarations it filters them based
- * on names discovered in Object.defineProperties.  Unfortunately, we cannot simply gather the
- * defined properties because they don't have the type information (JSDoc).  The type information
- * is stored on the stub declarations so we must gather both to transpile correctly.
- * <p>
- * TODO(tdeegan): In the future the type information for getter/setter properties could be stored
- * in the defineProperties functions.  It would reduce the complexity of this pass significantly.
+ * <p>In order to gather the stub declarations, this pass gathers all GETPROPs on a class. In order
+ * to determine which of these are the stub declarations it filters them based on names discovered
+ * in Object.defineProperties. Unfortunately, we cannot simply gather the defined properties because
+ * they don't have the JSDoc, which may include optimization-relevant annotations like @nocollapse.
+ *
+ * <p>TODO(tdeegan): In the future the JSDoc for getter/setter properties could be stored in the
+ * defineProperties functions. It would reduce the complexity of this pass significantly.
+ *
+ * <p>NOTE: currently this pass only exists to prevent property collapsing from breaking some simple
+ * class-side inheritance cases when transpiling.
  */
-public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
+public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
 
   static final DiagnosticType DUPLICATE_CLASS =
       DiagnosticType.error("DUPLICATE_CLASS", "Multiple classes cannot share the same name: {0}");
@@ -142,14 +144,6 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     processInherits(findStaticMembers);
   }
 
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    FindStaticMembers findStaticMembers = new FindStaticMembers();
-    TranspilationPasses.processTranspile(
-        compiler, scriptRoot, transpiledFeatures, findStaticMembers);
-    processInherits(findStaticMembers);
-  }
-
   private void processInherits(FindStaticMembers findStaticMembers) {
     for (Node inheritsCall : findStaticMembers.inheritsCalls) {
       Node superclassNameNode = inheritsCall.getLastChild();
@@ -172,10 +166,9 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
   /**
    * When static get/set properties are transpiled, in addition to the Object.defineProperties, they
-   * are declared with stub GETPROP declarations so that the type checker understands that these
-   * properties exist on the class.
-   * When subclassing, we also need to declare these properties on the subclass so that the type
-   * checker knows they exist.
+   * are declared with stub GETPROP declarations so that the optimizer understands that these
+   * properties exist on the class. When subclassing, we also need to declare these properties on
+   * the subclass so that the optimizer knows they exist.
    */
   private void copyDeclarations(
       JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
@@ -232,14 +225,6 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       Node sourceInfoNode = function;
       if (function.isFunction()) {
         sourceInfoNode = function.getFirstChild();
-        Node params = NodeUtil.getFunctionParameters(function);
-        checkState(params.isParamList(), params);
-        for (Node param : params.children()) {
-          if (param.getJSDocInfo() != null) {
-            String name = param.getString();
-            info.recordParameter(name, param.getJSDocInfo().getType());
-          }
-        }
       }
 
       Node subclassNameNode = inheritsCall.getSecondChild();
@@ -248,7 +233,6 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
           IR.assign(
               IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName)),
               IR.getprop(superclassNameNode.cloneTree(), IR.string(memberName)));
-      info.addSuppression("visibility");
       assign.setJSDocInfo(info.build());
       Node exprResult = IR.exprResult(assign);
       exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);

@@ -258,8 +258,10 @@ class IRFactory {
     // The template node properties are applied to all nodes in this transform.
     this.templateNode = createTemplateNode();
 
-    this.fileLevelJsDocBuilder =
-        new JSDocInfoBuilder(config.jsDocParsingMode().shouldParseDescriptions());
+    this.fileLevelJsDocBuilder = JSDocInfo.builder();
+    if (config.jsDocParsingMode().shouldParseDescriptions()) {
+      this.fileLevelJsDocBuilder.parseDocumentation();
+    }
 
     // Sometimes this will be null in tests.
     this.sourceName = sourceFile == null ? null : sourceFile.getName();

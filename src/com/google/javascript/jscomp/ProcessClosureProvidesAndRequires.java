@@ -956,7 +956,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   }
 
   private JSDocInfo createUnknownTypeJsDocInfo(Node sourceNode) {
-    JSDocInfoBuilder castToUnknownBuilder = new JSDocInfoBuilder(true);
+    JSDocInfoBuilder castToUnknownBuilder = JSDocInfo.builder().parseDocumentation();
     castToUnknownBuilder.recordType(
         new JSTypeExpression(
             new Node(Token.QMARK).srcref(sourceNode), "<ProcessClosurePrimitives.java>"));

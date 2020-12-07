@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
@@ -124,7 +125,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       return;
     }
 
-    JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
+    JSDocInfoBuilder jsdoc = JSDocInfo.builder();
     jsdoc.recordFileOverview("Suppresses undefined var goog error");
     jsdoc.addSuppression("undefinedVars");
     n.setJSDocInfo(jsdoc.build());

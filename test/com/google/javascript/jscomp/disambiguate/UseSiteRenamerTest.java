@@ -157,9 +157,9 @@ public final class UseSiteRenamerTest {
     this.prop.getUseSites().put(externName3, externType3);
     this.prop.getUseSites().put(srcName, srcType);
 
-    this.prop.registerExternType(externType1);
-    this.prop.registerExternType(externType2);
-    this.prop.registerExternType(externType3);
+    this.prop.registerOriginalNameType(externType1);
+    this.prop.registerOriginalNameType(externType2);
+    this.prop.registerOriginalNameType(externType3);
 
     this.prop.getClusters().add(srcType);
 

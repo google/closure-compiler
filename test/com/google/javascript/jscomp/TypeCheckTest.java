@@ -25664,21 +25664,20 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // TODO(b/112964849): This case should not throw anything.
     assertThrows(
         StackOverflowError.class,
-        () -> {
-          testTypes(
-              lines(
-                  "/** @typedef {Foo|string} */",
-                  "var Bar;",
-                  "/** @typedef {Bar|number} */",
-                  "var Foo;",
-                  "var /** Foo */ foo;",
-                  "var /** null */ x = foo;",
-                  ""),
-              lines(
-                  "initializing variable", //
-                  "found   : (number|string)",
-                  "required: null"));
-        });
+        () ->
+            testTypes(
+                lines(
+                    "/** @typedef {Foo|string} */",
+                    "var Bar;",
+                    "/** @typedef {Bar|number} */",
+                    "var Foo;",
+                    "var /** Foo */ foo;",
+                    "var /** null */ x = foo;",
+                    ""),
+                lines(
+                    "initializing variable", //
+                    "found   : (number|string)",
+                    "required: null")));
   }
 
   @Test
@@ -25860,6 +25859,29 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "var /** !Foo */ foo = new Foo();",
             "if (foo.bar !== null) use(foo);"),
         "Property bar never defined on Foo");
+  }
+
+  @Test
+  public void testGenericConstructorCrash() {
+    testTypes(
+        lines(
+            "/** @template T */",
+            "class Base {",
+            " /**",
+            "  * @param {(function(function(new: T, ...?)): T)=} instantiate",
+            "  * @return {!Array<T>}",
+            "  */",
+            " delegates(instantiate = undefined) {",
+            "   return [instantiate];",
+            " };",
+            "}",
+            "class Bar {}",
+            "class Foo {}",
+            "",
+            "/** @type {Base<Foo|Bar>} */",
+            "const c = new Base();",
+            "",
+            "c.delegates(ctor => new ctor(42));"));
   }
 
   @Test

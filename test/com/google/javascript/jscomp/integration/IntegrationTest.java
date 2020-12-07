@@ -2334,7 +2334,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
 
-    // An external function that returns a local object that the
+    // An external function that returns a local object such that the
     // method "go" that only modifies the object.
     String code = "widgetToken().go();";
 
@@ -2342,7 +2342,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setComputeFunctionSideEffects(true);
 
-    test(options, code, "widgetToken()");
+    // Can't currently infer that go() is ineffectual
+    testSame(options, code);
   }
 
   @Test
@@ -2448,12 +2449,9 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setComputeFunctionSideEffects(true);
 
-    String optimized =
-        ""
-        + "function InternalWidget(){return [];}"
-        + "Array.prototype.internalGo = function (){this.x = 2};";
-
-    test(options, code, optimized);
+    // Removing `InternalWidget().internalGo()` would be safe because InternalWidget returns
+    // a local value, but the optimizations don't track that information.
+    testSame(options, code);
   }
 
   @Test
@@ -2764,9 +2762,8 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Test
   public void testLanguageMode2() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
 
-    String[] code = new String[] {"var a  = 2; delete a;"};
+    String code = "var a  = 2; delete a;";
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     testSame(options, code);
@@ -2775,7 +2772,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    test(options, code, code, DiagnosticGroups.ES5_STRICT);
+    test(options, new String[] {code}, new String[] {"", code}, DiagnosticGroups.ES5_STRICT);
   }
 
   // http://blickly.github.io/closure-compiler-issues/#598

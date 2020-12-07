@@ -38,7 +38,7 @@ final class PropertyClustering {
 
   @Nullable private StandardUnionFind<FlatType> clusters = new StandardUnionFind<>();
 
-  @Nullable private FlatType externsClusterElem;
+  @Nullable private FlatType originalNameClusterRep;
 
   PropertyClustering(String name) {
     this.name = checkNotNull(name);
@@ -64,19 +64,34 @@ final class PropertyClustering {
   }
 
   /**
-   * The current representative of the cluster of types that includes extern types.
+   * The current representative of the cluster of types whose properties must keep their original
+   * name
    *
    * <p>The following refers to all computations with respect to a single property name. Since
-   * extern properties cannot be renamed, all other types in a cluster with an extern type cannot
-   * rename their property either. In theory, there could be many such clusters containing an extern
-   * type; however, in practice we conflate them into one. This is eqivalent because all of those
-   * clusters would end up using the same, unchanged, property name. This representation also
-   * simplifies tracking the clusters containing extern types.
+   * extern and enum properties cannot be renamed, all other types in a cluster with an extern type
+   * or enum cannot rename their property either. In theory, there could be many such clusters
+   * containing an extern or enum; however, in practice we conflate them into one. This is
+   * equivalent because all of those clusters would end up using the same, unchanged, property name.
+   * This representation also simplifies tracking of such clusters..
+   *
+   * <p>In practice the types in this cluster include
+   *
+   * <ul>
+   *   <li>externs, whose properties cannot be renamed without breaking references to external code
+   *   <li>enums, e.g. for const Actions = {STOP: 0, GO: 1}; the disambiguator will not rename STOP
+   *       or GO
+   *   <li>boxable scalars, like string and number
+   * </ul>
+   *
+   * <p>Note that enum properties could probably be safely renamed, but this would require cleaning
+   * up code depending on the legacy no-renaming behavior.
    */
   @Nullable
-  FlatType getExternsClusterRep() {
+  FlatType getOriginalNameClusterRep() {
     checkState(!this.isInvalidated());
-    return (this.externsClusterElem == null) ? null : this.clusters.find(this.externsClusterElem);
+    return (this.originalNameClusterRep == null)
+        ? null
+        : this.clusters.find(this.originalNameClusterRep);
   }
 
   boolean isInvalidated() {
@@ -85,16 +100,21 @@ final class PropertyClustering {
 
   void invalidate() {
     this.clusters = null;
-    this.externsClusterElem = null;
+    this.originalNameClusterRep = null;
     this.useSites = null;
   }
 
-  void registerExternType(FlatType extern) {
+  /**
+   * Indicate that all property references off this {@link FlatType} must keep their original name.
+   *
+   * <p>See {@link #getOriginalNameClusterRep()} for more details.
+   */
+  void registerOriginalNameType(FlatType type) {
     checkState(!this.isInvalidated());
-    if (this.externsClusterElem == null) {
-      this.externsClusterElem = extern;
+    if (this.originalNameClusterRep == null) {
+      this.originalNameClusterRep = type;
     }
-    this.clusters.union(this.externsClusterElem, extern);
+    this.clusters.union(this.originalNameClusterRep, type);
   }
 
   @Override

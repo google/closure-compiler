@@ -33,7 +33,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    allowExternsChanges();
   }
 
   @Override
@@ -64,7 +63,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "",
-            "/** @suppress {visibility} */",
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
@@ -94,7 +92,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass,Example);",
             "",
-            "/** @return {string} @suppress {visibility} */",
+            "/** @return {string} */",
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
@@ -124,11 +122,10 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {A} */",
             "A.C = function() {};",
             "$jscomp.inherits(A.C, A);",
-            "/** @constructor @extends {A} @suppress {visibility} */",
+            "/** @constructor @extends {A} */",
             "A.C.C = A.C;",
-            "/** @constructor @suppress {visibility} */",
+            "/** @constructor */",
             "A.C.B = A.B;",
-            "/** @suppress {visibility} */",
             "A.C.a = A.a;",
             "/** @constructor */",
             "A.D = function() {};",
@@ -191,7 +188,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "",
-            "/** @type {number} @suppress {visibility} */",
+            "/** @type {number} */",
             "Subclass.staticField = Example.staticField;"));
   }
 
@@ -308,7 +305,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {A} */",
             "function B() {}",
             "$jscomp.inherits(B, A);",
-            "/** @suppress {visibility} */",
             "B.property = A.property;"));
   }
 
@@ -466,7 +462,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
                 "  ExternsClass.apply(this,arguments)",
                 "};",
                 "$jscomp.inherits(CodeClass,ExternsClass);",
-                "/** @suppress {visibility} */",
                 "CodeClass.m = ExternsClass.m;")));
   }
 
@@ -491,7 +486,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {aliasFoo} */",
             "function Bar() {}",
             "$jscomp.inherits(Bar, aliasFoo);",
-            "/** @suppress {visibility} */",
             "Bar.prop = aliasFoo.prop;"));
 
     test(
@@ -513,7 +507,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {aliasFoo} */",
             "function Bar() {}",
             "$jscomp.inherits(Bar, aliasFoo);",
-            "/** @suppress {visibility} */",
             "Bar.prop = aliasFoo.prop;"));
 
     test(
@@ -535,7 +528,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Foo} */",
             "function Bar() {}",
             "$jscomp.inherits(Bar, Foo);",
-            "/** @suppress {visibility} */",
             "Bar.prop = Foo.prop;"));
   }
 
@@ -602,10 +594,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @struct @extends {A} */",
             "var B = function(var_args) { A.apply(this,arguments); };",
             "$jscomp.inherits(B, A);",
-            "/**",
-            " * @param {number} x",
-            " * @suppress {visibility}",
-            " */",
             "B.foo = A.foo;"));
   }
 
@@ -640,7 +628,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {example.Foo} */",
             "function Bar() {}",
             "$jscomp.inherits(Bar, example.Foo);",
-            "/** @suppress {visibility} */",
             "Bar.prop = example.Foo.prop"));
 
     testSame(

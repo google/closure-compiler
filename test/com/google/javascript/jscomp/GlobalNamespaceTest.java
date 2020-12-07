@@ -260,11 +260,7 @@ public final class GlobalNamespaceTest {
     Name nameA = namespace.getOwnSlot("A");
     Ref refA = nameA.getFirstRef();
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          nameA.updateRefNode(refA, refA.getNode());
-        });
+    assertThrows(IllegalArgumentException.class, () -> nameA.updateRefNode(refA, refA.getNode()));
   }
 
   @Test
@@ -302,22 +298,10 @@ public final class GlobalNamespaceTest {
     assertThat(refA.getNode()).isNull();
     assertThat(nameA.getRefsForNode(oldNode)).isEmpty();
     // cannot get refs for null
-    assertThrows(
-        NullPointerException.class,
-        () -> {
-          nameA.getRefsForNode(null);
-        });
+    assertThrows(NullPointerException.class, () -> nameA.getRefsForNode(null));
     // cannot update the node again once it's been set to null
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          nameA.updateRefNode(refA, null);
-        });
-    assertThrows(
-        IllegalStateException.class,
-        () -> {
-          nameA.updateRefNode(refA, oldNode);
-        });
+    assertThrows(IllegalArgumentException.class, () -> nameA.updateRefNode(refA, null));
+    assertThrows(IllegalStateException.class, () -> nameA.updateRefNode(refA, oldNode));
   }
 
   @Test
@@ -335,10 +319,7 @@ public final class GlobalNamespaceTest {
     Node useNode = useRef.getNode();
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          nameA.updateRefNode(declarationRef, useNode);
-        });
+        IllegalArgumentException.class, () -> nameA.updateRefNode(declarationRef, useNode));
   }
 
   @Test
@@ -869,6 +850,56 @@ public final class GlobalNamespaceTest {
 
     // We should not convert foo.prop -> foo$prop because use(foo) might read foo.prop
     assertThat(fooProp.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testGitHubIssue3733() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const X = {Y: 1};",
+                "",
+                "function fn(a) {",
+                "  if (a) {",
+                // Before issue #3733 was fixed GlobalNamespace failed to see this reference
+                // as creating an alias for X due to a switch statement that failed to check
+                // for the RETURN node type, so X.Y was incorrectly collapsed.
+                "    return a ? X : {};",
+                "  }",
+                "}",
+                "",
+                "console.log(fn(true).Y);"));
+
+    Name nameX = namespace.getSlot("X");
+    assertThat(nameX.canCollapseUnannotatedChildNames()).isFalse();
+
+    Name propY = namespace.getSlot("X.Y");
+    assertThat(propY.canCollapse()).isFalse();
+  }
+
+  @Test
+  public void testThrowPreventsCollapsingChildNames() {
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const X = {Y: 1};",
+                "",
+                "function fn(a) {",
+                // This is specifically testing a bugfix closely related to GitHub issue
+                // #3733. A quirk of the implementation hides the bug when the throw isn't
+                // inside an if statement or the thrown value isn't a conditional expression.
+                "  if (a) {",
+                "    throw a ? X : {};",
+                "  }",
+                "}",
+                "",
+                "console.log(fn(true).Y);"));
+
+    Name nameX = namespace.getSlot("X");
+    assertThat(nameX.canCollapseUnannotatedChildNames()).isFalse();
+
+    Name propY = namespace.getSlot("X.Y");
+    assertThat(propY.canCollapse()).isFalse();
   }
 
   @Test

@@ -493,7 +493,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       if (lhs.matchesQualifiedName("exports")) {
         undeclaredNamesForClosure.add(lhs);
         // If this is full of named exports, add all the string key nodes.
-        if (ClosureRewriteModule.isNamedExportsLiteral(lhs.getNext())) {
+        if (NodeUtil.isNamedExportsLiteral(lhs.getNext())) {
           for (Node key : lhs.getNext().children()) {
             undeclaredNamesForClosure.add(key);
           }
@@ -2706,7 +2706,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           FunctionType delegateProxy =
               typeRegistry.createConstructorType(
                   delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX /* name */,
-                  null /* source */,
+                  delegateBaseCtor.getSource() /* source */,
                   null /* parameters */,
                   null /* returnType */,
                   null /* templateKeys */,

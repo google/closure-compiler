@@ -104,7 +104,7 @@ final class UseSiteRenamer {
   }
 
   private static String createClusterName(PropertyClustering prop, FlatType rep) {
-    if (Objects.equals(prop.getExternsClusterRep(), rep)) {
+    if (Objects.equals(prop.getOriginalNameClusterRep(), rep)) {
       return prop.getName();
     }
 

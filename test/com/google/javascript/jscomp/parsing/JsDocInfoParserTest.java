@@ -2040,7 +2040,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParsePreserve() {
-    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
+    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@preserve Foo\nBar\n\nBaz*/";
     parse(comment);
     JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
@@ -2049,7 +2049,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseLicense() {
-    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
+    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@license Foo\nBar\n\nBaz*/";
     parse(comment);
     JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
@@ -2058,7 +2058,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseLicenseAscii() {
-    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
+    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@license Foo\n *   Bar\n\n  Baz*/";
     parse(comment);
     JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
@@ -2067,7 +2067,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseLicenseWithAnnotation() {
-    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
+    this.fileLevelJsDocBuilder = JSDocInfo.builder();
     String comment = "@license Foo \n * @author Charlie Brown */";
     parse(comment);
     JSDocInfo info = this.fileLevelJsDocBuilder.build(true);

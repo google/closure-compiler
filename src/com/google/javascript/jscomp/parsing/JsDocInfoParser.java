@@ -175,7 +175,10 @@ public final class JsDocInfoParser {
     this.stream = stream;
 
     boolean parseDocumentation = config.jsDocParsingMode().shouldParseDescriptions();
-    this.jsdocBuilder = new JSDocInfoBuilder(parseDocumentation);
+    this.jsdocBuilder = JSDocInfo.builder();
+    if (parseDocumentation) {
+      this.jsdocBuilder.parseDocumentation();
+    }
     if (comment != null) {
       this.jsdocBuilder.recordOriginalCommentString(comment);
       this.jsdocBuilder.recordOriginalCommentPosition(commentPosition);
@@ -258,11 +261,8 @@ public final class JsDocInfoParser {
             .setStrictMode(Config.StrictMode.SLOPPY)
             .setClosurePrimitiveNames(ImmutableSet.of("testPrimitive"))
             .build();
-    JsDocInfoParser parser =
-        new JsDocInfoParser(
-            new JsDocTokenStream(toParse), toParse, 0, null, config, ErrorReporter.NULL_INSTANCE);
-
-    return parser;
+    return new JsDocInfoParser(
+        new JsDocTokenStream(toParse), toParse, 0, null, config, ErrorReporter.NULL_INSTANCE);
   }
 
   /**
