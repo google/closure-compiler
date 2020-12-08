@@ -1535,7 +1535,8 @@ WorkerOptions.prototype.type;
 
 /**
  * @see http://dev.w3.org/html5/workers/
- * @param {string} scriptURL The URL of the script to run in the SharedWorker.
+ * @param {!TrustedScriptURL|string} scriptURL The URL of the script to run in
+ *     the SharedWorker.
  * @param {(string|!WorkerOptions)=} options A name that can
  *     later be used to obtain a reference to the same SharedWorker or a
  *     WorkerOptions object which can be be used to specify how scriptURL is
