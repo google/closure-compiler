@@ -1277,6 +1277,17 @@ public class CompilerOptions implements Serializable {
     this.printConfig = printConfig;
   }
 
+  private boolean allowDynamicImport = false;
+
+  /** Whether to enable support for dynamic import expressions */
+  public void setAllowDynamicImport(boolean value) {
+    this.allowDynamicImport = value;
+  }
+
+  boolean shouldAllowDynamicImport() {
+    return this.allowDynamicImport;
+  }
+
   /**
    * Initializes compiler options. All options are disabled by default.
    *

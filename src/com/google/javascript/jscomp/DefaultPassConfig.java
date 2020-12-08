@@ -65,6 +65,7 @@ import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -246,6 +247,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(gatherGettersAndSetters);
+
+    if (options.getLanguageIn().toFeatureSet().contains(Feature.DYNAMIC_IMPORT) &&
+        !options.shouldAllowDynamicImport()) {
+      checks.add(forbidDynamicImportUsage);
+    }
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
@@ -2958,5 +2964,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("MERGE_SYNTHETIC_SCRIPT")
           .setFeatureSet(FeatureSet.all())
           .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
+          .build();
+
+  /** Rewrites ES6 modules import paths to be browser compliant */
+  private static final PassFactory forbidDynamicImportUsage =
+      PassFactory.builder()
+          .setName("FORBID_DYNAMIC_IMPORT")
+          .setFeatureSet(FeatureSet.all())
+          .setInternalFactory(ForbidDynamicImportUsage::new)
           .build();
 }

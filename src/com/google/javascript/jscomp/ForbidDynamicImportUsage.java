@@ -15,30 +15,26 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /**
  * Warns at any usage of Dynamic Import expressions that they are unable to be transpiled.
  */
-public class RewriteDynamicImport implements CompilerPass, NodeTraversal.Callback {
+public class ForbidDynamicImportUsage implements CompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
-  private static final FeatureSet transpiledFeatures = FeatureSet.BARE_MINIMUM.with(Feature.DYNAMIC_IMPORT);
 
-  static final DiagnosticType DYNAMIC_IMPORT_TRANSPILATION =
+  static final DiagnosticType DYNAMIC_IMPORT_USAGE =
       DiagnosticType.error(
-          "JSC_DYNAMIC_IMPORT_TRANSPILATION",
+          "JSC_DYNAMIC_IMPORT_USAGE",
           "Dynamic import expressions cannot be transpiled.");
 
-  public RewriteDynamicImport(AbstractCompiler compiler) {
+  public ForbidDynamicImportUsage(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
-    TranspilationPasses.maybeMarkFeaturesAsTranspiledAway(compiler, transpiledFeatures);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -50,7 +46,7 @@ public class RewriteDynamicImport implements CompilerPass, NodeTraversal.Callbac
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case DYNAMIC_IMPORT:
-        t.report(n, DYNAMIC_IMPORT_TRANSPILATION);
+        t.report(n, DYNAMIC_IMPORT_USAGE);
         break;
       default:
         break;

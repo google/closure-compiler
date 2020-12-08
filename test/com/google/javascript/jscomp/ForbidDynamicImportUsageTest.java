@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.RewriteDynamicImport.DYNAMIC_IMPORT_TRANSPILATION;
+import static com.google.javascript.jscomp.ForbidDynamicImportUsage.DYNAMIC_IMPORT_USAGE;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
@@ -25,7 +25,7 @@ import org.junit.runners.JUnit4;
 
 /** Test Dynamic Import usage issues warning */
 @RunWith(JUnit4.class)
-public final class RewriteDynamicImportTest extends CompilerTestCase {
+public final class ForbidDynamicImportUsageTest extends CompilerTestCase {
 
   @Override
   @Before
@@ -41,11 +41,11 @@ public final class RewriteDynamicImportTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RewriteDynamicImport(compiler);
+    return new ForbidDynamicImportUsage(compiler);
   }
 
   @Test
   public void testDynamicImportError() {
-    testError("import('./foo.js')", DYNAMIC_IMPORT_TRANSPILATION);
+    testError("import('./foo.js')", DYNAMIC_IMPORT_USAGE);
   }
 }

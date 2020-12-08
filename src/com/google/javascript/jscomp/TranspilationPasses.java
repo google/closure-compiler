@@ -85,10 +85,6 @@ public class TranspilationPasses {
           createFeatureRemovalPass("markNumericSeparatorsRemoved", Feature.NUMERIC_SEPARATOR));
     }
 
-    if (options.needsTranspilationOf(Feature.DYNAMIC_IMPORT)) {
-      passes.add(rewriteDynamicImport);
-    }
-
     if (options.needsTranspilationOf(Feature.OPTIONAL_CHAINING)) {
       passes.add(rewriteOptionalChainingOperator);
     }
@@ -404,14 +400,6 @@ public class TranspilationPasses {
       PassFactory.builderForHotSwap()
           .setName("rewriteNullishCoalesceOperator")
           .setInternalFactory(RewriteNullishCoalesceOperator::new)
-          .setFeatureSet(ES2020)
-          .build();
-
-  /** Rewrites ES6 modules import paths to be browser compliant */
-  private static final PassFactory rewriteDynamicImport =
-      PassFactory.builder()
-          .setName("rewriteDynamicImport")
-          .setInternalFactory(RewriteDynamicImport::new)
           .setFeatureSet(ES2020)
           .build();
 
