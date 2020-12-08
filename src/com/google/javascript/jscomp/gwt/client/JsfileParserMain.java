@@ -30,17 +30,6 @@ import jsinterop.base.JsPropertyMap;
  * information.
  */
 public class JsfileParserMain {
-  /**
-   * Exports the {@link #gjd} method via JSNI.
-   *
-   * <p>This will be placed on {@code module.exports.gjd} or the global {@code jscomp.gjd}.
-   */
-  public static native void exportGjd() /*-{
-    var fn = $entry(@com.google.javascript.jscomp.gwt.client.JsfileParserMain::gjd(*));
-    if (typeof module !== 'undefined' && module.exports) {
-      module.exports.gjd = fn;
-    }
-  }-*/;
 
   /**
    * Method exported to JS to parse a file for dependencies and annotations.
