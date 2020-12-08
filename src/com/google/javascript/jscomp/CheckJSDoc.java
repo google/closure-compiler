@@ -444,18 +444,16 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
    * which are not eligible for property collapsing.
    */
   private void validateNoCollapse(Node n, JSDocInfo info) {
+    if (info == null || !info.isNoCollapse()) {
+      return;
+    }
     if (n.isFromExterns()) {
-      if (info != null && info.isNoCollapse()) {
-        // @nocollapse has no effect in externs
-        reportMisplaced(n, "nocollapse", "This JSDoc has no effect in externs.");
-      }
+      // @nocollapse has no effect in externs
+      reportMisplaced(n, "nocollapse", "This JSDoc has no effect in externs.");
       return;
     }
-    if (!NodeUtil.isPrototypePropertyDeclaration(n.getParent())) {
-      return;
-    }
-    JSDocInfo jsdoc = n.getJSDocInfo();
-    if (jsdoc != null && jsdoc.isNoCollapse()) {
+    if (NodeUtil.isPrototypePropertyDeclaration(n.getParent())
+        || (n.getParent().isClassMembers() && !n.isStaticMember())) {
       reportMisplaced(n, "nocollapse", "This JSDoc has no effect on prototype properties.");
     }
   }

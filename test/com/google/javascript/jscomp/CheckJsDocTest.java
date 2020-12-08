@@ -697,15 +697,57 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   @Test
+  public void testAllowedNoCollapseAnnotationOnEsClassMember() {
+    testSame(
+        lines(
+            "class Foo {", //
+            "  /** @nocollapse */ static bar() {}",
+            "  /** @nocollapse */ static get bar() {}",
+            "}"));
+  }
+
+  @Test
+  public void testAllowedNoCollapseAnnotation_onEsClassStaticPropAssignment() {
+    testSame(
+        lines(
+            "class Foo {}", //
+            "/** @nocollapse */ Foo.foo = true"));
+  }
+
+  @Test
   public void testAllowedNocollapseAnnotation_withES6Modules() {
     testSame("export var foo = {}; /** @nocollapse */ foo.bar = true;");
   }
 
   @Test
-  public void testMisplacedNocollapseAnnotation() {
+  public void testMisplacedNocollapseAnnotationOnPrototypeMethod() {
     testWarning(
-        "/** @constructor */ function foo() {};"
-            + "/** @nocollapse */ foo.prototype.bar = function() {};",
+        lines(
+            "/** @constructor */",
+            "function Foo() {};",
+            "/** @nocollapse */",
+            "Foo.prototype.bar = function() {};"),
+        MISPLACED_ANNOTATION);
+
+    testWarning(
+        lines(
+            "class Foo {}", //
+            "/** @nocollapse */",
+            "Foo.prototype.bar = function() {};"),
+        MISPLACED_ANNOTATION);
+
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  /** @nocollapse */ bar() {}",
+            "}"),
+        MISPLACED_ANNOTATION);
+
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  /** @nocollapse */ get bar() {}",
+            "}"),
         MISPLACED_ANNOTATION);
   }
 
