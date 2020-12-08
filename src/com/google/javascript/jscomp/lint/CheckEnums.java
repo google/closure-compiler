@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -60,8 +62,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
       DiagnosticType.disabled(
           "JSC_NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM",
           "enum string values must be statically initialized."
-
-          );
+              + " Consider using a const object without @enum.");
 
   private final AbstractCompiler compiler;
 
@@ -88,6 +89,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
 
   private static void checkEnumTypeAndInitializerValues(
       NodeTraversal t, Node n, JSDocInfo jsDocInfo) {
+    checkArgument(n.isObjectLit(), n);
     JSTypeExpression enumTypeExpr = jsDocInfo.getEnumParameterType();
 
     Node enumType = enumTypeExpr.getRoot();
@@ -104,11 +106,12 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
 
   // Reports a warning if the string enum value is not statically initialized
   private static void checkStringEnumInitializerValues(NodeTraversal t, Node enumNode) {
+    checkArgument(enumNode.isObjectLit(), enumNode);
     for (Node prop : enumNode.children()) {
       // valueNode is guaranteed to exist by this time, as shorthand `{A}`s are converted to `{A:A}`
       Node valueNode = prop.getLastChild();
       if (!valueNode.isString() && !(valueNode.isTemplateLit() && valueNode.hasOneChild())) {
-        // neither string nor substitution-free template literal
+        // neither string nor substitution-free template literal; report finding.
         t.report(valueNode, NON_STATIC_INITIALIZER_STRING_VALUE_IN_ENUM);
       }
     }
