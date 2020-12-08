@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 The Closure Compiler Authors.
+ * Copyright 2020 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -89,16 +90,39 @@ final class ConvertChunksToESModules implements CompilerPass {
       }
     }
 
-    ConvertChunkSourcesToModules();
-    AddExportStatements();
-    AddImportStatements();
+    convertChunkSourcesToModules();
+    addExportStatements();
+    addImportStatements();
+    compiler.setFeatureSet(compiler.getFeatureSet().with(Feature.MODULES));
   }
 
   /**
    * Move all code in a chunk into the first input and mark it as an ESModule.
    * At this point in the compilation, all input files should be scripts.
+   *
+   * Original AST:
+   * [ROOT] top JS sources root
+   *     [SCRIPT] // 1st chunk's 1st input
+   *         statements from 1st chunk's 1st script
+   *     [SCRIPT] // 1st chunk's 2nd input
+   *         statements from 1st chunk's 2nd script
+   *     ...
+   *     [SCRIPT] // 1st chunk's nth input
+   *     [SCRIPT] // 2nd chunk's 1st input
+   *     ...
+   *
+   * After this method
+   * [ROOT] top JS sources root
+   *     [SCRIPT] // 1st chunk's 1st input script
+   *         [MODULE_BODY] // new module body to contain the 1st chunk
+   *             // statements from all scripts in the first chunk
+   *             // All script nodes from the other inputs of the chunk are now empty
+   *     [SCRIPT] // 2nd chunk's 1st input script
+   *         [MODULE_BODY] // new module body to contain the 2nd chunk
+   *             // statements from all scripts in the first chunk
+   *             // All script nodes from the other inputs of the chunk are now empty
    */
-  private void ConvertChunkSourcesToModules() {
+  private void convertChunkSourcesToModules() {
     for (JSModule chunk : compiler.getModuleGraph().getAllModules()) {
       if (chunk.getInputs().size() == 0) {
         continue;
@@ -106,38 +130,42 @@ final class ConvertChunksToESModules implements CompilerPass {
 
       CompilerInput firstInput = null;
       for (CompilerInput input : chunk.getInputs()) {
-        Node astRoot = input.getAstRoot(compiler);
-        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(astRoot);
+        Node inputScript = input.getAstRoot(compiler);
+        FeatureSet scriptFeatures = NodeUtil.getFeatureSetOfScript(inputScript);
         checkState(!scriptFeatures.contains(FeatureSet.ES6_MODULES));
         if (firstInput == null) {
           firstInput = input;
           scriptFeatures = scriptFeatures.union(FeatureSet.ES6_MODULES);
-          astRoot.putProp(Node.FEATURE_SET, scriptFeatures);
+          inputScript.putProp(Node.FEATURE_SET, scriptFeatures);
           Node moduleBody = new Node(Token.MODULE_BODY);
-          moduleBody.useSourceInfoFrom(astRoot);
-          moduleBody.addChildrenToFront(astRoot.removeChildren());
-          astRoot.addChildToFront(moduleBody);
+          moduleBody.useSourceInfoFrom(inputScript);
+          moduleBody.addChildrenToFront(inputScript.removeChildren());
+          inputScript.addChildToFront(moduleBody);
           compiler.reportChangeToEnclosingScope(moduleBody);
         } else {
           Node firstInputAstRoot = firstInput.getAstRoot(compiler);
           FeatureSet firstInputScriptFeatures = NodeUtil.getFeatureSetOfScript(firstInputAstRoot);
           FeatureSet combinedFeatureSet =
-              firstInputScriptFeatures.union(NodeUtil.getFeatureSetOfScript(astRoot));
-          astRoot.putProp(Node.FEATURE_SET, combinedFeatureSet);
+              firstInputScriptFeatures.union(NodeUtil.getFeatureSetOfScript(inputScript));
+          inputScript.putProp(Node.FEATURE_SET, combinedFeatureSet);
           Node moduleBody = firstInputAstRoot.getFirstChild();
           checkState(moduleBody != null && moduleBody.isModuleBody());
-          moduleBody.addChildrenToBack(astRoot.removeChildren());
+          moduleBody.addChildrenToBack(inputScript.removeChildren());
           compiler.reportChangeToEnclosingScope(firstInputAstRoot);
-          compiler.reportChangeToChangeScope(astRoot);
+          compiler.reportChangeToChangeScope(inputScript);
         }
       }
     }
   }
 
   /**
-   * Add export statements to chunks
+   * Add an export statement to all chunks. Any name in a chunk which is referenced in another
+   * chunk is added to the export. If a chunk has no names exported, an empty export statement
+   * is added to ensure the chunk is parsed as a module.
+   *
+   * <pre>export {name1, name2, ..., nameN};</pre>
    */
-  private void AddExportStatements() {
+  private void addExportStatements() {
     for (Map.Entry<JSModule, Set<String>> jsModuleExports : crossChunkExports.entrySet()) {
       CompilerInput firstInput = jsModuleExports.getKey().getInput(0);
       Node moduleBody = firstInput.getAstRoot(compiler).getFirstChild();
@@ -156,14 +184,18 @@ final class ConvertChunksToESModules implements CompilerPass {
     }
   }
 
-  private static String GetChunkName(JSModule chunk) {
+  private static String getChunkFileName(JSModule chunk) {
     return chunk.getName() + ".js";
   }
 
   /**
-   * Add import statements to chunks
+   * Add import statements to chunks. One import statement is added for each chunk where a
+   * referenced name is defined.
+   *
+   * <pre>import {name1, name2, ..., nameN} from './other-chunk1.js';
+   * import {name3, name4, ..., nameN} from './other-chunk2.js';</pre>
    */
-  private void AddImportStatements() {
+  private void addImportStatements() {
     for (Map.Entry<JSModule, Map<JSModule, Set<String>>> chunkImportsEntry :
         crossChunkImports.entrySet()) {
       ArrayList<Node> importStatements = new ArrayList<>();
@@ -180,24 +212,24 @@ final class ConvertChunksToESModules implements CompilerPass {
           Node importSpec = new Node(Token.IMPORT_SPEC);
           importSpec.addChildToFront(IR.name(name));
           importSpec.addChildToFront(IR.name(name));
-          importSpec.putIntProp(Node.IS_SHORTHAND_PROPERTY, 1);
+          importSpec.setShorthandProperty(true);
           importSpecs.addChildToBack(importSpec);
         }
         Node importStatement = new Node(Token.IMPORT);
         JSModule exportingChunk = importsByChunk.getKey();
-        String importPath = GetChunkName(exportingChunk);
+        String importPath = getChunkFileName(exportingChunk);
         try {
           importPath =
               this.relativePath(
-                  GetChunkName(importingChunk),
-                  GetChunkName(exportingChunk));
+                  getChunkFileName(importingChunk),
+                  getChunkFileName(exportingChunk));
         } catch (IllegalArgumentException e) {
           compiler.report(
               JSError.make(
                   moduleBody,
                   UNABLE_TO_COMPUTE_RELATIVE_PATH,
-                  GetChunkName(importingChunk),
-                  GetChunkName(exportingChunk)));
+                  getChunkFileName(importingChunk),
+                  getChunkFileName(exportingChunk)));
         }
         importStatement.addChildToFront(IR.string(importPath));
         importStatement.addChildToFront(importSpecs);
@@ -218,29 +250,28 @@ final class ConvertChunksToESModules implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         String name = n.getString();
+        // Function expressions without names have a NAME node containing an empty string.
         if ("".equals(name)) {
           return;
         }
         Scope s = t.getScope();
         Var v = s.getVar(name);
+        // No Var will be found for variables declared in extern files.
         if (v == null || !v.isGlobal()) {
           return;
         }
         CompilerInput input = v.getInput();
-        if (input == null) {
-          return;
-        }
         // Compare the chunk where the variable is declared to the current
         // chunk. If they are different, the variable is used across modules.
         JSModule definingChunk = input.getModule();
         JSModule referencingChunk = t.getModule();
         if (definingChunk != referencingChunk) {
-          if (NodeUtil.isLhsOfAssign(n)) {
+          if (NodeUtil.isLValue(n)) {
             t.report(
                 n,
                 ASSIGNMENT_TO_IMPORT,
                 n.getString(),
-                GetChunkName(referencingChunk));
+                getChunkFileName(referencingChunk));
           }
 
           // Mark the chunk where the name is declared as needing an export for this name

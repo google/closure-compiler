@@ -874,6 +874,8 @@ public final class DefaultPassConfig extends PassConfig {
             + options.renamePrefixNamespace);
       }
       passes.add(rescopeGlobalSymbols);
+    } else if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
+      passes.add(convertChunksToESModules);
     }
 
     // Safety checks
@@ -883,10 +885,6 @@ public final class DefaultPassConfig extends PassConfig {
     // Raise to ES6, if allowed
     if (options.getOutputFeatureSet().contains(ES6)) {
       passes.add(optimizeToEs6);
-    }
-    // must run after ast validity check as modules may not be allowed in the output feature set
-    if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
-      passes.add(convertChunksToESModules);
     }
 
     assertValidOrderForOptimizations(passes);

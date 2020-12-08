@@ -3104,9 +3104,14 @@ public class CompilerOptions implements Serializable {
     }
   }
 
+  /**
+   * Indicate whether output js files should be scripts where cross chunk references use
+   * global namespaces or ES modules where cross chunk references utilize import and export
+   * statements.
+   */
   public enum ChunkOutputType {
     GLOBAL_NAMESPACE,
-    ES_MODULES;
+    ES_MODULES
   }
 
   /**

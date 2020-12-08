@@ -1805,17 +1805,17 @@ public class CommandLineRunner extends
       }
     }
 
+    LanguageMode languageOutMode = options.getLanguageIn();
     if (flags.languageOut.isEmpty()) {
-      options.setLanguageOut(options.getLanguageIn());
+      options.setLanguageOut(languageOutMode);
     } else {
-      CompilerOptions.LanguageMode languageMode =
-          CompilerOptions.LanguageMode.fromString(flags.languageOut);
-      if (languageMode == LanguageMode.UNSUPPORTED) {
+      languageOutMode = LanguageMode.fromString(flags.languageOut);
+      if (languageOutMode == LanguageMode.UNSUPPORTED) {
         throw new FlagUsageException(
             "Cannot specify the unsupported set of features for language_out.");
       }
-      if (languageMode != null) {
-        options.setLanguageOut(languageMode);
+      if (languageOutMode != null) {
+        options.setLanguageOut(languageOutMode);
       } else {
         throw new FlagUsageException("Unknown language `" + flags.languageOut + "' specified.");
       }
@@ -1988,10 +1988,16 @@ public class CommandLineRunner extends
     options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
 
 
-    if (flags.chunkOutputType == ChunkOutputType.ES_MODULES &&
-        flags.renamePrefixNamespace != null) {
-      throw new FlagUsageException("Expected --rename_prefix_namespace not to be specified when"
-          + "--chunk_output_type is set to ES_MODULES.");
+    if (flags.chunkOutputType == ChunkOutputType.ES_MODULES) {
+      if (flags.renamePrefixNamespace != null) {
+        throw new FlagUsageException("Expected --rename_prefix_namespace not to be specified when"
+            + "--chunk_output_type is set to ES_MODULES.");
+      }
+
+      if (!languageOutMode.toFeatureSet().contains(Feature.MODULES)) {
+        throw new FlagUsageException("--language_out must include module support when "
+            + "--chunk_output_type is set to ES_MODULES.");
+      }
     }
     options.chunkOutputType = flags.chunkOutputType;
 
