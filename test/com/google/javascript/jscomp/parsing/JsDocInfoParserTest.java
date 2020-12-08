@@ -534,12 +534,18 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseTemplatizedUnknown1() {
-    parse("@ type {?<?>} */", "illegal use of unknown JSDoc tag \"\"; ignoring it");
+    parse(
+        "@ type {?<?>} */",
+        "illegal use of unknown JSDoc tag \"\"; ignoring it. Place another character before the"
+            + " @ to stop JSCompiler from parsing it as an annotation.");
   }
 
   @Test
   public void testParseTemplatizedUnknown2() {
-    parse("@ type {{b: ?<?>}} */", "illegal use of unknown JSDoc tag \"\"; ignoring it");
+    parse(
+        "@ type {{b: ?<?>}} */",
+        "illegal use of unknown JSDoc tag \"\"; ignoring it. Place another character before the"
+            + " @ to stop JSCompiler from parsing it as an annotation.");
   }
 
   @Test
@@ -5026,10 +5032,19 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testAllowlistedNewAnnotations() {
-    parse("@foobar */",
-        "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");
+    parse(
+        "@foobar */",
+        "illegal use of unknown JSDoc tag \"foobar\"; ignoring it. Place another character before"
+            + " the @ to stop JSCompiler from parsing it as an annotation.");
     extraAnnotations.add("foobar");
     parse("@foobar */");
+  }
+
+  @Test
+  public void testEscapingIllegalAnnotations() {
+    // no error when illegal @annotation is preceded by a character.
+    parse("_@foobar */");
+    parse("\\@foobar */");
   }
 
   @Test
@@ -5050,7 +5065,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     // Try to allowlist an annotation that is not a valid JS identifier.
     // It should not work.
     extraAnnotations.add("123");
-    parse("@123 */", "illegal use of unknown JSDoc tag \"\"; ignoring it");
+    parse(
+        "@123 */",
+        "illegal use of unknown JSDoc tag \"\"; ignoring it. Place another character before the"
+            + " @ to stop JSCompiler from parsing it as an annotation.");
   }
 
   @Test

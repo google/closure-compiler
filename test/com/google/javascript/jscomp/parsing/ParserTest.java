@@ -2258,10 +2258,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testIncorrectJSDocDoesNotAlterJSParsing9() {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parseWarning("/** @someillegaltag */" +
-              "C.prototype.say=function(nums) {alert(nums.join(','));};",
-              "illegal use of unknown JSDoc tag \"someillegaltag\";"
-              + " ignoring it"));
+        parseWarning(
+            "/** @someillegaltag */" + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            "illegal use of unknown JSDoc tag \"someillegaltag\"; ignoring it. Place another"
+                + " character before the @ to stop JSCompiler from parsing it as an annotation."));
   }
 
   @Test
