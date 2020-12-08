@@ -26,6 +26,7 @@ const array = goog.require('goog.array');
 const testSuite = goog.require('goog.testing.testSuite');
 
 testSuite({
+  /** @suppress {undefinedVars} $jscomp */
   setUp() {
     $jscomp.clearModules();
   },
