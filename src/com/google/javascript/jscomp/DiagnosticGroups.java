@@ -261,10 +261,10 @@ public class DiagnosticGroups {
           ProcessDefines.UNKNOWN_DEFINE_WARNING);
 
   public static final DiagnosticGroup TWEAKS =
-      DiagnosticGroups.registerGroup("tweakValidation",
+      DiagnosticGroups.registerGroup(
+          "tweakValidation",
           ProcessTweaks.INVALID_TWEAK_DEFAULT_VALUE_WARNING,
-          ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING,
-          ProcessTweaks.UNKNOWN_TWEAK_WARNING);
+          ProcessTweaks.TWEAK_WRONG_GETTER_TYPE_WARNING);
 
   public static final DiagnosticGroup MISSING_OVERRIDE =
       DiagnosticGroups.registerGroup(

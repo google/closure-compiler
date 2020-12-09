@@ -928,8 +928,7 @@ public final class CompilerTest {
   static void assertCreateDefinesThrowsException(List<String> defines) {
     try {
       CompilerOptions options = new CompilerOptions();
-      AbstractCommandLineRunner.createDefineOrTweakReplacements(defines,
-          options, false);
+      AbstractCommandLineRunner.createDefineReplacements(defines, options);
     } catch (RuntimeException e) {
       return;
     }
@@ -940,8 +939,7 @@ public final class CompilerTest {
   static void assertDefineOverrides(Map<String, Node> expected,
       List<String> defines) {
     CompilerOptions options = new CompilerOptions();
-    AbstractCommandLineRunner.createDefineOrTweakReplacements(defines, options,
-        false);
+    AbstractCommandLineRunner.createDefineReplacements(defines, options);
     Map<String, Node> actual = options.getDefineReplacements();
 
     // equality of nodes compares by reference, so instead,

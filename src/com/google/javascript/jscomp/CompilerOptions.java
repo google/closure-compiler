@@ -809,9 +809,6 @@ public class CompilerOptions implements Serializable {
   /** What kind of processing to do for goog.tweak functions. */
   private TweakProcessing tweakProcessing;
 
-  /** Replacements for tweaks. Will be Boolean, Numbers, or Strings */
-  private Map<String, Object> tweakReplacements;
-
   /** Move top-level function declarations to the top */
   public boolean rewriteGlobalDeclarationsForTryCatchWrapping;
 
@@ -1384,7 +1381,6 @@ public class CompilerOptions implements Serializable {
     customPasses = null;
     defineReplacements = new HashMap<>();
     tweakProcessing = TweakProcessing.OFF;
-    tweakReplacements = new HashMap<>();
     rewriteGlobalDeclarationsForTryCatchWrapping = false;
     checksOnly = false;
     outputJs = OutputJs.NORMAL;
@@ -1441,13 +1437,6 @@ public class CompilerOptions implements Serializable {
     return getReplacementsHelper(defineReplacements);
   }
 
-  /**
-   * Returns the map of tweak replacements.
-   */
-  public Map<String, Node> getTweakReplacements() {
-    return getReplacementsHelper(tweakReplacements);
-  }
-
   /** Creates a map of String->Node from a map of String->Number/String/Boolean. */
   private static ImmutableMap<String, Node> getReplacementsHelper(Map<String, Object> source) {
     ImmutableMap.Builder<String, Node> map = ImmutableMap.builder();
@@ -1498,38 +1487,6 @@ public class CompilerOptions implements Serializable {
    */
   public void setDefineToDoubleLiteral(String defineName, double value) {
     defineReplacements.put(defineName, value);
-  }
-
-  /**
-   * Sets the value of the tweak in JS
-   * to a boolean literal.
-   */
-  public void setTweakToBooleanLiteral(String tweakId, boolean value) {
-    tweakReplacements.put(tweakId, value);
-  }
-
-  /**
-   * Sets the value of the tweak in JS to a
-   * String literal.
-   */
-  public void setTweakToStringLiteral(String tweakId, String value) {
-    tweakReplacements.put(tweakId, value);
-  }
-
-  /**
-   * Sets the value of the tweak in JS to a
-   * number literal.
-   */
-  public void setTweakToNumberLiteral(String tweakId, int value) {
-    tweakReplacements.put(tweakId, value);
-  }
-
-  /**
-   * Sets the value of the tweak in JS to a
-   * number literal.
-   */
-  public void setTweakToDoubleLiteral(String tweakId, double value) {
-    tweakReplacements.put(tweakId, value);
   }
 
   /**
@@ -2495,10 +2452,6 @@ public class CompilerOptions implements Serializable {
     this.defineReplacements = defineReplacements;
   }
 
-  public void setTweakReplacements(Map<String, Object> tweakReplacements) {
-    this.tweakReplacements = tweakReplacements;
-  }
-
   @Deprecated
   public void setMoveFunctionDeclarations(boolean moveFunctionDeclarations) {
     setRewriteGlobalDeclarationsForTryCatchWrapping(moveFunctionDeclarations);
@@ -3060,7 +3013,6 @@ public class CompilerOptions implements Serializable {
         .add("transformAMDToCJSModules", transformAMDToCJSModules)
         .add("trustedStrings", trustedStrings)
         .add("tweakProcessing", getTweakProcessing())
-        .add("tweakReplacements", getTweakReplacements())
         .add("emitUseStrict", emitUseStrict)
         .add("useTypesForLocalOptimization", useTypesForLocalOptimization)
         .add("variableRenaming", variableRenaming)

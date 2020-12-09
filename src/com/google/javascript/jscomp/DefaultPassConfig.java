@@ -1988,10 +1988,7 @@ public final class DefaultPassConfig extends PassConfig {
                   new CompilerPass() {
                     @Override
                     public void process(Node externs, Node jsRoot) {
-                      new ProcessTweaks(
-                              compiler,
-                              options.getTweakProcessing().shouldStrip(),
-                              options.getTweakReplacements())
+                      new ProcessTweaks(compiler, options.getTweakProcessing().shouldStrip())
                           .process(externs, jsRoot);
                     }
                   })

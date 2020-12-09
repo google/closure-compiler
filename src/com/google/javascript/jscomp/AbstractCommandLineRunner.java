@@ -375,10 +375,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       options.setBrowserFeaturesetYear(config.browserFeaturesetYear);
     }
 
-    createDefineOrTweakReplacements(define, options, false);
+    createDefineReplacements(define, options);
 
     options.setTweakProcessing(config.tweakProcessing);
-    createDefineOrTweakReplacements(config.tweak, options, true);
 
     // TODO(tjgq): Unconditionally set the options.
     if (config.dependencyOptions != null) {
@@ -1951,8 +1950,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    *     single quotes.
    */
   @VisibleForTesting
-  public static void createDefineOrTweakReplacements(
-      List<String> definitions, CompilerOptions options, boolean tweaks) {
+  public static void createDefineReplacements(List<String> definitions, CompilerOptions options) {
     // Parse the definitions
     for (String override : definitions) {
       String[] assignment = override.split("=", 2);
@@ -1964,11 +1962,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         boolean isTrue = defValue.equals("true");
         boolean isFalse = defValue.equals("false");
         if (isTrue || isFalse) {
-          if (tweaks) {
-            options.setTweakToBooleanLiteral(defName, isTrue);
-          } else {
-            options.setDefineToBooleanLiteral(defName, isTrue);
-          }
+          options.setDefineToBooleanLiteral(defName, isTrue);
           continue;
         } else if (defValue.length() > 1
             && ((defValue.charAt(0) == '\'' &&
@@ -1980,41 +1974,25 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           String maybeStringVal =
               defValue.substring(1, defValue.length() - 1);
           if (maybeStringVal.indexOf(defValue.charAt(0)) == -1) {
-            if (tweaks) {
-              options.setTweakToStringLiteral(defName, maybeStringVal);
-            } else {
-              options.setDefineToStringLiteral(defName, maybeStringVal);
-            }
+            options.setDefineToStringLiteral(defName, maybeStringVal);
             continue;
           }
         } else {
           try {
             double value = Double.parseDouble(defValue);
-            if (tweaks) {
-              options.setTweakToDoubleLiteral(defName, value);
-            } else {
-              options.setDefineToDoubleLiteral(defName, value);
-            }
+            options.setDefineToDoubleLiteral(defName, value);
             continue;
           } catch (NumberFormatException e) {
             // do nothing, it will be caught at the end
           }
 
           if (defValue.length() > 0) {
-            if (tweaks) {
-              options.setTweakToStringLiteral(defName, defValue);
-            } else {
-              options.setDefineToStringLiteral(defName, defValue);
-            }
+            options.setDefineToStringLiteral(defName, defValue);
             continue;
           }
         }
       }
 
-      if (tweaks) {
-        throw new RuntimeException(
-            "--tweak flag syntax invalid: " + override);
-      }
       throw new RuntimeException(
           "--define flag syntax invalid: " + override);
     }
@@ -2637,21 +2615,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     /** Indicates target browser's year */
     public CommandLineConfig setBrowserFeaturesetYear(Integer browserFeaturesetYear) {
       this.browserFeaturesetYear = browserFeaturesetYear;
-      return this;
-    }
-
-    private final List<String> tweak = new ArrayList<>();
-
-    /**
-     * Override the default value of a registered tweak. The format is
-     * {@code <name>[=<val>]}, where {@code <name>} is the ID of a
-     * tweak and {@code <val>} is a boolean, number, or a
-     * single-quoted string that contains no single quotes. If
-     * {@code [=<val>]} is omitted, then true is assumed.
-     */
-    public CommandLineConfig setTweak(List<String> tweak) {
-      this.tweak.clear();
-      this.tweak.addAll(tweak);
       return this;
     }
 
