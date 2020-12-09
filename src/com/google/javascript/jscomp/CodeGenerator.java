@@ -436,7 +436,7 @@ public class CodeGenerator {
       case ITER_SPREAD:
       case OBJECT_SPREAD:
         add("...");
-        add(node.getFirstChild());
+        addExpr(first, NodeUtil.precedence(type), Context.OTHER);
         break;
 
       case EXPORT:
