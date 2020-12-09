@@ -16,15 +16,16 @@
 
 package com.google.javascript.rhino;
 
-import com.google.javascript.jscomp.resources.GwtProperties;
+import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.resources.ResourceLoader;
 
 class ErrorFormat {
 
-  private static final GwtProperties BUNDLE =
-      GwtProperties.loadFromResource("rhino/Messages.properties");
+  private static final ImmutableMap<String, String> MESSAGES =
+      ResourceLoader.loadPropertiesMap("rhino/Messages.properties");
 
   static String format(String key, Object... args) {
-    return justFormat(BUNDLE.getProperty(key), args);
+    return justFormat(MESSAGES.get(key), args);
   }
 
   private static String justFormat(String s, Object... args) {

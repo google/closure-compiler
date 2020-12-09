@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.resources;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import com.google.javascript.jscomp.ConformanceConfig;
 import java.io.IOException;
@@ -42,6 +43,11 @@ public final class ResourceLoader {
     }
   }
 
+  public static ImmutableMap<String, String> loadPropertiesMap(
+      Class<?> clazz, String resourceName) {
+    return PropertiesParser.parse(loadTextResource(clazz, resourceName));
+  }
+
   /** Load the global ConformanceConfig */
   public static ConformanceConfig loadGlobalConformance(Class<?> clazz) {
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
@@ -59,7 +65,5 @@ public final class ResourceLoader {
     return clazz.getResource(path) != null;
   }
 
-  public static String[] resourceList(Class<?> clazz) {
-    throw new UnsupportedOperationException("resourceList only available in GWT code");
-  }
+  private ResourceLoader() {}
 }

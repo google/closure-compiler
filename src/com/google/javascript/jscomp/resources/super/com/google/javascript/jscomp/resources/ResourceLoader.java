@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp.resources;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ConformanceConfig;
-import elemental2.core.JsObject;
 import jsinterop.annotations.JsType;
 import jsinterop.base.JsPropertyMap;
 
@@ -37,6 +37,10 @@ public final class ResourceLoader {
     throw new RuntimeException("Resource not found: " + path);
   }
 
+  public static ImmutableMap<String, String> loadPropertiesMap(String resourceName) {
+    return PropertiesParser.parse(loadTextResource(null, resourceName));
+  }
+
   public static ConformanceConfig loadGlobalConformance(Class<?> clazz) {
     return ConformanceConfig.newBuilder().build();
   }
@@ -46,9 +50,5 @@ public final class ResourceLoader {
     // GWT can't handle that - probably better to remove the class argument
     // and just require that paths be relative to c.g.javascript.jscomp.
     return Resources.resources().has(path);
-  }
-
-  public static String[] resourceList(Class<?> clazz) {
-    return elemental2.core.JsObject.keys((JsObject) Resources.resources()).asArray(new String[] {});
   }
 }

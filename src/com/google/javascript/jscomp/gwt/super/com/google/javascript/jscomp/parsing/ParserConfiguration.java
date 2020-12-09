@@ -15,14 +15,15 @@
  */
 package com.google.javascript.jscomp.parsing;
 
-import com.google.javascript.jscomp.resources.GwtProperties;
+import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.resources.ResourceLoader;
 
 final class ParserConfiguration {
-  private static final GwtProperties BUNDLE =
-      GwtProperties.loadFromResource("parsing/ParserConfig.properties");
+  private static final ImmutableMap<String, String> PROPERTIES =
+      ResourceLoader.loadPropertiesMap("parsing/ParserConfig.properties");
 
   public static String getString(String key) {
-    return BUNDLE.getProperty(key);
+    return PROPERTIES.get(key);
   }
 
   private ParserConfiguration() {}

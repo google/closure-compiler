@@ -17,31 +17,57 @@
 package com.google.javascript.jscomp.resources;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Collection;
-import java.util.Map;
 
 /**
- * GWT-compatible helper for dealing with Java .properties files. The format is probably not fully
- * parsed by this code, but is suitable for simple use-cases inside Closure.
+ * Parses a Java properties file in a a way that can be transpiled into JS.
+ *
+ * <p>The format is probably not fully parsed by this code, but is suitable for simple use-cases
+ * inside Closure.
  */
-public class GwtProperties {
-  private final Map<String, String> contents;
-
-  private GwtProperties(Map<String, String> contents) {
-    this.contents = contents;
-  }
-
+final class PropertiesParser {
   /**
-   * @param key Property key to retrieve.
-   * @return The string value of this key.
+   * Constructs a new {@link GwtProperties} from the given source string.
+   *
+   * @param source To load from.
+   * @return The {@link GwtProperties} object from the source.
    */
-  public String getProperty(String key) {
-    return contents.get(key);
-  }
+  static ImmutableMap<String, String> parse(String source) {
+    String[] lines = source.split("\r?\n");
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-  /** @return The collection of property names. */
-  public Collection<String> propertyNames() {
-    return contents.keySet();
+    for (int i = 0; i < lines.length; ++i) {
+      String line = lines[i];
+      if (line.isEmpty() || line.startsWith("#") || line.startsWith("!")) {
+        continue; // skip if empty or starts with # or !
+      }
+
+      int delimeterIndex = findDelimiter(line);
+      if (delimeterIndex == -1) {
+        continue;
+      }
+
+      String data = "";
+      // Remove whitespace on both sides of key.
+      String key = line.substring(0, delimeterIndex).trim();
+      // Remove whitespace only on left side of data value. Trailing white space is data.
+      line = trimLeft(line.substring(delimeterIndex + 1));
+      while (true) {
+        if (line.endsWith("\\")) {
+          data += line.substring(0, line.length() - 1);
+          if (i + 1 == lines.length) {
+            break;
+          }
+          line = trimLeft(lines[++i]);
+        } else {
+          data += line;
+          break;
+        }
+      }
+
+      builder.put(key, data);
+    }
+
+    return builder.build();
   }
 
   private static String trimLeft(String str) {
@@ -68,52 +94,5 @@ public class GwtProperties {
     return line.indexOf(' ');
   }
 
-  public static GwtProperties loadFromResource(String resourceName) {
-    return load(ResourceLoader.loadTextResource(null, resourceName));
-  }
-
-  /**
-   * Constructs a new {@link GwtProperties} from the given source string.
-   *
-   * @param source To load from.
-   * @return The {@link GwtProperties} object from the source.
-   */
-  public static GwtProperties load(String source) {
-    String[] lines = source.split("\r?\n");
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-
-    for (int i = 0; i < lines.length; ++i) {
-      String line = lines[i];
-      if (line.isEmpty() || line.startsWith("#") || line.startsWith("!")) {
-        continue; // skip if empty or starts with # or !
-      }
-
-      String data = "";
-
-      int delimeterIndex = findDelimiter(line);
-      if (delimeterIndex == -1) {
-        continue;
-      }
-      // Remove whitespace on both sides of key.
-      String key = line.substring(0, delimeterIndex).trim();
-      // Remove whitespace only on left side of data value. Trailing white space is data.
-      line = trimLeft(line.substring(delimeterIndex + 1));
-      while (true) {
-        if (line.endsWith("\\")) {
-          data += line.substring(0, line.length() - 1);
-          if (i + 1 == lines.length) {
-            break;
-          }
-          line = trimLeft(lines[++i]);
-        } else {
-          data += line;
-          break;
-        }
-        }
-      builder.put(key, data);
-      }
-
-    return new GwtProperties(builder.build());
-    }
-
-  }
+  private PropertiesParser() {}
+}
