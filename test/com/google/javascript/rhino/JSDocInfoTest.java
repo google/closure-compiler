@@ -40,6 +40,7 @@ package com.google.javascript.rhino;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.INHERITED;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PACKAGE;
 import static com.google.javascript.rhino.JSDocInfo.Visibility.PRIVATE;
@@ -90,9 +91,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetType() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordType(fromString("string"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setType(fromString("string"));
 
     assertThat(info.getBaseType()).isNull();
     assertThat(info.getDescription()).isNull();
@@ -100,7 +100,7 @@ public class JSDocInfoTest {
     assertThat(info.getParameterCount()).isEqualTo(0);
     assertThat(info.getReturnType()).isNull();
     assertType(resolve(info.getType())).isEqualTo(getNativeType(STRING_TYPE));
-    assertThat(info.getVisibility()).isEqualTo(INHERITED);
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isTrue();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -109,10 +109,9 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetTypeAndVisibility() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordType(fromString("string"));
-    builder.recordVisibility(PROTECTED);
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setType(fromString("string"));
+    info.setVisibility(PROTECTED);
 
     assertThat(info.getBaseType()).isNull();
     assertThat(info.getDescription()).isNull();
@@ -129,9 +128,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetReturnType() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordReturnType(fromString("string"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setReturnType(fromString("string"));
 
     assertThat(info.getBaseType()).isNull();
     assertThat(info.getDescription()).isNull();
@@ -139,7 +137,7 @@ public class JSDocInfoTest {
     assertThat(info.getParameterCount()).isEqualTo(0);
     assertType(resolve(info.getReturnType())).isEqualTo(getNativeType(STRING_TYPE));
     assertThat(info.getType()).isNull();
-    assertThat(info.getVisibility()).isEqualTo(INHERITED);
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -164,11 +162,11 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetReturnTypeAndBaseType() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordBaseType(
-        new JSTypeExpression(new Node(Token.BANG, Node.newString("Number")), ""));
-    builder.recordReturnType(fromString("string"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setBaseType(
+        new JSTypeExpression(
+            new Node(Token.BANG, Node.newString("Number")), ""));
+    info.setReturnType(fromString("string"));
 
     assertType(resolve(info.getBaseType()))
         .isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
@@ -177,7 +175,7 @@ public class JSDocInfoTest {
     assertThat(info.getParameterCount()).isEqualTo(0);
     assertType(resolve(info.getReturnType())).isEqualTo(getNativeType(STRING_TYPE));
     assertThat(info.getType()).isNull();
-    assertThat(info.getVisibility()).isEqualTo(INHERITED);
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -186,9 +184,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetEnumParameterType() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordEnumParameterType(fromString("string"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setEnumParameterType(fromString("string"));
 
     assertThat(info.getBaseType()).isNull();
     assertThat(info.getDescription()).isNull();
@@ -197,7 +194,7 @@ public class JSDocInfoTest {
     assertThat(info.getParameterCount()).isEqualTo(0);
     assertThat(info.getReturnType()).isNull();
     assertThat(info.getType()).isNull();
-    assertThat(info.getVisibility()).isEqualTo(INHERITED);
+    assertThat(info.getVisibility()).isNull();
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isFalse();
@@ -206,13 +203,29 @@ public class JSDocInfoTest {
 
   @Test
   public void testMultipleSetType() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordType(fromString("number"));
+    JSDocInfo info = new JSDocInfo();
+    info.setType(fromString("number"));
 
-    assertThat(builder.recordReturnType(fromString("boolean"))).isFalse();
-    assertThat(builder.recordEnumParameterType(fromString("string"))).isFalse();
-    assertThat(builder.recordTypedef(fromString("string"))).isFalse();
-    JSDocInfo info = builder.build();
+    try {
+      info.setReturnType(fromString("boolean"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
+
+    try {
+      info.setEnumParameterType(fromString("string"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
+
+    try {
+      info.declareTypedefType(fromString("string"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     assertType(resolve(info.getType())).isEqualTo(getNativeType(NUMBER_TYPE));
     assertThat(info.getReturnType()).isNull();
@@ -223,14 +236,30 @@ public class JSDocInfoTest {
 
   @Test
   public void testMultipleSetType2() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
+    JSDocInfo info = new JSDocInfo();
 
-    builder.recordReturnType(fromString("boolean"));
+    info.setReturnType(fromString("boolean"));
 
-    assertThat(builder.recordType(fromString("number"))).isFalse();
-    assertThat(builder.recordEnumParameterType(fromString("string"))).isFalse();
-    assertThat(builder.recordTypedef(fromString("string"))).isFalse();
-    JSDocInfo info = builder.build();
+    try {
+      info.setType(fromString("number"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
+
+    try {
+      info.setEnumParameterType(fromString("string"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
+
+    try {
+      info.declareTypedefType(fromString("string"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     assertType(resolve(info.getReturnType())).isEqualTo(getNativeType(BOOLEAN_TYPE));
     assertThat(info.getEnumParameterType()).isNull();
@@ -241,13 +270,29 @@ public class JSDocInfoTest {
 
   @Test
   public void testMultipleSetType3() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordEnumParameterType(fromString("boolean"));
+    JSDocInfo info = new JSDocInfo();
+    info.setEnumParameterType(fromString("boolean"));
 
-    assertThat(builder.recordType(fromString("number"))).isFalse();
-    assertThat(builder.recordReturnType(fromString("string"))).isFalse();
-    assertThat(builder.recordTypedef(fromString("string"))).isFalse();
-    JSDocInfo info = builder.build();
+    try {
+      info.setType(fromString("number"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
+
+    try {
+      info.setReturnType(fromString("string"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
+
+    try {
+      info.declareTypedefType(fromString("string"));
+      assertWithMessage("Expected exception").fail();
+    } catch (IllegalStateException e) {
+      // expected
+    }
 
     assertThat(info.getType()).isNull();
     assertThat(info.getTypedefType()).isNull();
@@ -258,9 +303,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetTypedefType() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordTypedef(fromString("boolean"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.declareTypedefType(fromString("boolean"));
 
     assertType(resolve(info.getTypedefType())).isEqualTo(getNativeType(BOOLEAN_TYPE));
     assertThat(info.hasTypedefType()).isTrue();
@@ -271,9 +315,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetConstant() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordConstancy();
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setConstant(true);
 
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isTrue();
@@ -284,9 +327,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetConstructor() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordConstructor();
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setConstructor(true);
 
     assertThat(info.isConstant()).isFalse();
     assertThat(info.isConstructor()).isTrue();
@@ -296,9 +338,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetDefine() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordDefineType(fromString("string"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setDefine(true);
 
     assertThat(info.isConstant()).isTrue();
     assertThat(info.isConstructor()).isFalse();
@@ -308,9 +349,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetHidden() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordHiddenness();
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setHidden(true);
 
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isFalse();
@@ -321,9 +361,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetOverride() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordOverride();
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setOverride(true);
 
     assertThat(info.isDeprecated()).isFalse();
     assertThat(info.isOverride()).isTrue();
@@ -331,75 +370,69 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetExport() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordExport();
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setExport(true);
 
     assertThat(info.isExport()).isTrue();
   }
 
   @Test
   public void testSetPolymerBehavior() {
-    assertThat(EMPTY.isPolymerBehavior()).isFalse();
+    JSDocInfo info = new JSDocInfo();
+    assertThat(info.isPolymerBehavior()).isFalse();
+    info.setPolymerBehavior(true);
 
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordPolymerBehavior();
-    JSDocInfo info = builder.build();
     assertThat(info.isPolymerBehavior()).isTrue();
   }
 
   @Test
   public void testSetPolymer() {
-    assertThat(EMPTY.isPolymer()).isFalse();
+    JSDocInfo info = new JSDocInfo();
+    assertThat(info.isPolymer()).isFalse();
+    info.setPolymer(true);
 
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordPolymer();
-    JSDocInfo info = builder.build();
     assertThat(info.isPolymer()).isTrue();
   }
 
   @Test
   public void testSetCustomElement() {
-    assertThat(EMPTY.isCustomElement()).isFalse();
+    JSDocInfo info = new JSDocInfo();
+    assertThat(info.isCustomElement()).isFalse();
+    info.setCustomElement(true);
 
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordCustomElement();
-    JSDocInfo info = builder.build();
     assertThat(info.isCustomElement()).isTrue();
-
   }
 
   @Test
   public void testSetMixinClass() {
-    assertThat(EMPTY.isMixinClass()).isFalse();
+    JSDocInfo info = new JSDocInfo();
+    assertThat(info.isMixinClass()).isFalse();
+    info.setMixinClass(true);
 
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordMixinClass();
-    JSDocInfo info = builder.build();
     assertThat(info.isMixinClass()).isTrue();
   }
 
   @Test
   public void testSetMixinFunction() {
-    assertThat(EMPTY.isMixinFunction()).isFalse();
+    JSDocInfo info = new JSDocInfo();
+    assertThat(info.isMixinFunction()).isFalse();
+    info.setMixinFunction(true);
 
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordMixinFunction();
-    JSDocInfo info = builder.build();
     assertThat(info.isMixinFunction()).isTrue();
   }
 
   @Test
   public void testSetNoAlias() {
-    assertThat(EMPTY.isDeprecated()).isFalse();
-    assertThat(EMPTY.isOverride()).isFalse();
+    JSDocInfo info = new JSDocInfo();
+
+    assertThat(info.isDeprecated()).isFalse();
+    assertThat(info.isOverride()).isFalse();
   }
 
   @Test
   public void testSetDeprecated() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordDeprecated();
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setDeprecated(true);
 
     assertThat(info.isOverride()).isFalse();
     assertThat(info.isDeprecated()).isTrue();
@@ -407,11 +440,10 @@ public class JSDocInfoTest {
 
   @Test
   public void testMultipleSetFlags1() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordConstancy();
-    builder.recordConstructor();
-    builder.recordHiddenness();
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setConstant(true);
+    info.setConstructor(true);
+    info.setHidden(true);
 
     assertThat(info.hasType()).isFalse();
     assertThat(info.isConstant()).isTrue();
@@ -419,46 +451,58 @@ public class JSDocInfoTest {
     assertThat(info.isDefine()).isFalse();
     assertThat(info.isHidden()).isTrue();
 
-    builder = info.toBuilder();
-    builder.recordMutable();
-    info = builder.build();
+    info.setHidden(false);
+
+    assertThat(info.isConstant()).isTrue();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isFalse();
+
+    info.setConstant(false);
+    info.setConstructor(false);
 
     assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isFalse();
     assertThat(info.isDefine()).isFalse();
-    assertThat(info.isHidden()).isTrue();
+    assertThat(info.isHidden()).isFalse();
+
+    info.setConstructor(true);
+
+    assertThat(info.isConstant()).isFalse();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isDefine()).isFalse();
+    assertThat(info.isHidden()).isFalse();
   }
 
   @Test
   public void testDescriptionContainsAtSignCode() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    builder.recordOriginalCommentString("Blah blah {@code blah blah} blah blah.");
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
+    info.setOriginalCommentString("Blah blah {@code blah blah} blah blah.");
 
     assertThat(info.isAtSignCodePresent()).isTrue();
   }
 
   @Test
   public void testDescriptionDoesNotContainAtSignCode() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    builder.recordOriginalCommentString("Blah blah `blah blah` blah blah.");
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
+    info.setOriginalCommentString("Blah blah `blah blah` blah blah.");
 
     assertThat(info.isAtSignCodePresent()).isFalse();
   }
 
   @Test
   public void testClone() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordDescription("The source info");
-    builder.recordConstancy();
-    builder.recordConstructor();
-    builder.recordHiddenness();
-    builder.recordBaseType(
-        new JSTypeExpression(new Node(Token.BANG, Node.newString("Number")), ""));
-    builder.recordReturnType(fromString("string"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setDescription("The source info");
+    info.setConstant(true);
+    info.setConstructor(true);
+    info.setHidden(true);
+    info.setBaseType(
+        new JSTypeExpression(
+            new Node(Token.BANG, Node.newString("Number")), ""));
+    info.setReturnType(fromString("string"));
 
     JSDocInfo cloned = info.clone();
 
@@ -470,37 +514,36 @@ public class JSDocInfoTest {
     assertThat(cloned.isConstructor()).isTrue();
     assertThat(cloned.isHidden()).isTrue();
 
-    // TODO - cannot change these things!
-    // cloned.recordDescription("The cloned info");
-    // cloned.setHidden(false);
-    // cloned.recordBaseType(fromString("string"));
+    cloned.setDescription("The cloned info");
+    cloned.setHidden(false);
+    cloned.setBaseType(fromString("string"));
 
-    // assertType(resolve(cloned.getBaseType())).isEqualTo(getNativeType(STRING_TYPE));
-    // assertThat(cloned.getDescription()).isEqualTo("The cloned info");
-    // assertThat(cloned.isHidden()).isFalse();
+    assertType(resolve(cloned.getBaseType())).isEqualTo(getNativeType(STRING_TYPE));
+    assertThat(cloned.getDescription()).isEqualTo("The cloned info");
+    assertThat(cloned.isHidden()).isFalse();
 
-    // // Original info should be unchanged.
-    // assertType(resolve(info.getBaseType()))
-    //     .isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
-    // assertThat(info.getDescription()).isEqualTo("The source info");
-    // assertType(resolve(info.getReturnType())).isEqualTo(getNativeType(STRING_TYPE));
-    // assertThat(info.isConstant()).isTrue();
-    // assertThat(info.isConstructor()).isTrue();
-    // assertThat(info.isHidden()).isTrue();
+    // Original info should be unchanged.
+    assertType(resolve(info.getBaseType()))
+        .isEqualTo(getNativeType(NUMBER_OBJECT_TYPE));
+    assertThat(info.getDescription()).isEqualTo("The source info");
+    assertType(resolve(info.getReturnType())).isEqualTo(getNativeType(STRING_TYPE));
+    assertThat(info.isConstant()).isTrue();
+    assertThat(info.isConstructor()).isTrue();
+    assertThat(info.isHidden()).isTrue();
   }
 
   @Test
   public void testCloneTypeExpressions1() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordDescription("The source info");
-    builder.recordConstancy();
-    builder.recordConstructor();
-    builder.recordHiddenness();
-    builder.recordBaseType(
-        new JSTypeExpression(new Node(Token.BANG, Node.newString("Number")), ""));
-    builder.recordReturnType(fromString("string"));
-    builder.recordParameter("a", fromString("string"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setDescription("The source info");
+    info.setConstant(true);
+    info.setConstructor(true);
+    info.setHidden(true);
+    info.setBaseType(
+        new JSTypeExpression(
+            new Node(Token.BANG, Node.newString("Number")), ""));
+    info.setReturnType(fromString("string"));
+    info.declareParam(fromString("string"), "a");
 
     JSDocInfo cloned = info.clone(true);
 
@@ -519,10 +562,8 @@ public class JSDocInfoTest {
 
   @Test
   public void testCloneTypeExpressions2() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordParameter("a", null);
-    JSDocInfo info = builder.build();
-
+    JSDocInfo info = new JSDocInfo();
+    info.declareParam(null, "a");
     JSDocInfo cloned = info.clone(true);
 
     assertThat(cloned.getParameterType("a")).isNull();
@@ -531,10 +572,9 @@ public class JSDocInfoTest {
   /** Test names in {@code @param} get replaced */
   @Test
   public void testJSDocInfoCloneAndReplaceNames_params() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
+    JSDocInfo info = new JSDocInfo();
     JSTypeExpression jsTypeExpression = createSampleTypeExpression();
-    builder.recordParameter("a", jsTypeExpression);
-    JSDocInfo info = builder.build();
+    info.declareParam(jsTypeExpression, "a");
 
     Set<String> mockedModuleLocals = new LinkedHashSet<>();
     mockedModuleLocals.add("Item");
@@ -560,10 +600,9 @@ public class JSDocInfoTest {
   //    string boolean  AnotherItem                 string   boolean  ?
   @Test
   public void testJSDocInfoCloneAndReplaceNames_Type() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
+    JSDocInfo info = new JSDocInfo();
     JSTypeExpression jsTypeExpression = createSampleTypeExpression();
-    builder.recordType(jsTypeExpression);
-    JSDocInfo info = builder.build();
+    info.setType(jsTypeExpression);
 
     Set<String> mockedModuleLocals = new LinkedHashSet<>();
     mockedModuleLocals.add("Item");
@@ -584,10 +623,9 @@ public class JSDocInfoTest {
   //    string boolean  AnotherItem               string   boolean  ?
   @Test
   public void testJSDocInfoCloneAndReplaceNames_Type_rootReplacement() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
+    JSDocInfo info = new JSDocInfo();
     JSTypeExpression jsTypeExpression = createSampleTypeExpression_rootReplacement();
-    builder.recordType(jsTypeExpression);
-    JSDocInfo info = builder.build();
+    info.setType(jsTypeExpression);
 
     Set<String> mockedModuleLocals = new LinkedHashSet<>();
     mockedModuleLocals.add("Item");
@@ -603,11 +641,10 @@ public class JSDocInfoTest {
 
   @Test
   public void testJSDocInfoCloneAndReplaceNames_Type_SingleNode() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
+    JSDocInfo info = new JSDocInfo();
     Node root = Node.newString("Item");
     JSTypeExpression jsTypeExpression = new JSTypeExpression(root, "");
-    builder.recordType(jsTypeExpression);
-    JSDocInfo info = builder.build();
+    info.setType(jsTypeExpression);
 
     Set<String> mockedModuleLocals = new LinkedHashSet<>();
     mockedModuleLocals.add("Item");
@@ -623,89 +660,79 @@ public class JSDocInfoTest {
 
   @Test
   public void testSetFileOverviewWithDocumentationOff() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordFileOverview("hi bob");
-    JSDocInfo info = builder.build(true);
+    JSDocInfo info = new JSDocInfo();
+    info.documentFileOverview("hi bob");
     assertThat(info.getFileOverview()).isNull();
   }
 
   @Test
   public void testSetFileOverviewWithDocumentationOn() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    builder.recordFileOverview("hi bob");
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
+    info.documentFileOverview("hi bob");
     assertThat(info.getFileOverview()).isEqualTo("hi bob");
   }
 
   @Test
   public void testSetSuppressions() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    builder.recordSuppressions(ImmutableSet.of("sam", "bob"));
-    builder.addSuppression("fred");
-    JSDocInfo info = builder.build();
-    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("bob", "sam", "fred"));
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
+    info.addSuppressions(ImmutableSet.of("sam", "bob"));
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("bob", "sam"));
   }
 
   @Test
   public void testSetModifies() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    builder.recordModifies(ImmutableSet.of("this"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
+    info.setModifies(ImmutableSet.of("this"));
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this"));
 
-    builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    builder.recordModifies(ImmutableSet.of("arguments"));
-    info = builder.build();
+    info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
+    info.setModifies(ImmutableSet.of("arguments"));
     assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("arguments"));
   }
 
   @Test
   public void testAddSingleTemplateTypeName() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    assertThat(builder.recordTemplateTypeName("T")).isTrue();
-    JSDocInfo info = builder.build();
-
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     ImmutableList<String> typeNames = ImmutableList.of("T");
+    assertThat(info.declareTemplateTypeName("T")).isTrue();
     assertThat(info.getTemplateTypeNames()).isEqualTo(typeNames);
   }
 
   @Test
   public void testAddMultipleTemplateTypeName() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
     ImmutableList<String> typeNames = ImmutableList.of("T", "R");
-    builder.recordTemplateTypeName("T");
-    builder.recordTemplateTypeName("R");
-    JSDocInfo info = builder.build();
+    info.declareTemplateTypeName("T");
+    info.declareTemplateTypeName("R");
     assertThat(info.getTemplateTypeNames()).isEqualTo(typeNames);
   }
 
   @Test
   public void testFailToAddTemplateTypeName() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
-    builder.recordTemplateTypeName("T");
-    assertThat(builder.recordTemplateTypeName("T")).isFalse();
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
+    info.declareTemplateTypeName("T");
+    assertThat(info.declareTemplateTypeName("T")).isFalse();
   }
 
   @Test
   public void testGetThrowsDescription() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.parseDocumentation();
+    JSDocInfo info = new JSDocInfo();
+    info.setIncludeDocumentation(true);
 
-    // Set a description so that builder is initialized.
-    builder.recordDescription("Lorem");
+    // Set a description so that info is initialized.
+    info.setDescription("Lorem");
 
     JSTypeExpression errorType = fromString("Error");
     JSTypeExpression otherType = fromString("Other");
-    builder.recordThrowDescription(errorType, "Because it does.");
-    builder.recordThrowDescription(otherType, "");
-    JSDocInfo info = builder.build();
+    info.documentThrows(errorType, "Because it does.");
+    info.documentThrows(otherType, "");
     assertThat(info.getThrowsDescriptionForType(errorType)).isEqualTo("Because it does.");
     assertThat(info.getThrowsDescriptionForType(otherType)).isEmpty();
     assertThat(info.getThrowsDescriptionForType(fromString("NeverSeen"))).isNull();
@@ -714,11 +741,10 @@ public class JSDocInfoTest {
   // https://github.com/google/closure-compiler/issues/2328
   @Test
   public void testGetTypeNodes_excludesNull() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
+    JSDocInfo info = new JSDocInfo();
 
-    // no way to add to implemented interfaces
-    assertThat(builder.recordImplementedInterface(null)).isFalse();
-    JSDocInfo info = builder.build(true);
+    // should be added to implemented interfaces
+    assertThat(info.addImplementedInterface(null)).isTrue();
 
     Collection<Node> nodes = info.getTypeNodes();
     assertThat(nodes).isEmpty();
@@ -727,13 +753,12 @@ public class JSDocInfoTest {
   @Test
   public void testGetTypeNodes_includesTemplateTypeBounds() {
     // Given
-    JSDocInfo.Builder builder = JSDocInfo.builder();
+    JSDocInfo info = new JSDocInfo();
 
     // When
-    builder.recordTemplateTypeName("A", null); // Uses `?` as the bounding expression by default.
-    builder.recordTemplateTypeName("B", fromString("Foo"));
-    builder.recordTemplateTypeName("C", fromString("Bar"));
-    JSDocInfo info = builder.build();
+    info.declareTemplateTypeName("A", null); // Uses `?` as the bounding expression by default.
+    info.declareTemplateTypeName("B", fromString("Foo"));
+    info.declareTemplateTypeName("C", fromString("Bar"));
 
     // Then
     Collection<Node> upperBoundRoots =
@@ -748,10 +773,9 @@ public class JSDocInfoTest {
 
   @Test
   public void testContainsDeclaration_implements() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordVisibility(INHERITED);
-    builder.recordImplementedInterface(fromString("MyInterface"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setVisibility(INHERITED);
+    info.addImplementedInterface(fromString("MyInterface"));
 
     assertThat(info.getImplementedInterfaceCount()).isEqualTo(1);
     assertThat(info.containsDeclaration()).isTrue();
@@ -759,10 +783,9 @@ public class JSDocInfoTest {
 
   @Test
   public void testContainsDeclaration_extends() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordVisibility(INHERITED);
-    builder.recordBaseType(fromString("MyBaseClass"));
-    JSDocInfo info = builder.build();
+    JSDocInfo info = new JSDocInfo();
+    info.setVisibility(INHERITED);
+    info.setBaseType(fromString("MyBaseClass"));
 
     assertThat(info.hasBaseType()).isTrue();
     assertThat(info.containsDeclaration()).isTrue();
@@ -770,15 +793,14 @@ public class JSDocInfoTest {
 
   @Test
   public void testClosurePrimitiveId_affectsEquality() {
-    JSDocInfo.Builder builder = JSDocInfo.builder();
-    builder.recordClosurePrimitiveId("asserts.fail");
-    JSDocInfo assertsFailJSDoc = builder.build();
+    JSDocInfo assertsFailJSDoc = new JSDocInfo();
+    assertsFailJSDoc.setClosurePrimitiveId("asserts.fail");
 
-    assertThat(JSDocInfo.areEquivalent(assertsFailJSDoc, EMPTY)).isFalse();
+    JSDocInfo otherInfo = new JSDocInfo();
+    assertThat(JSDocInfo.areEquivalent(assertsFailJSDoc, otherInfo)).isFalse();
 
-    builder = JSDocInfo.builder();
-    builder.recordClosurePrimitiveId("asserts.fail");
-    assertThat(JSDocInfo.areEquivalent(assertsFailJSDoc, builder.build())).isTrue();
+    otherInfo.setClosurePrimitiveId("asserts.fail");
+    assertThat(JSDocInfo.areEquivalent(assertsFailJSDoc, otherInfo)).isTrue();
   }
 
   /** Gets the type expression for a simple type name. */
@@ -827,6 +849,4 @@ public class JSDocInfoTest {
     root.addChildToBack(child3);
     return new JSTypeExpression(root, "");
   }
-
-  private static final JSDocInfo EMPTY = JSDocInfo.builder().build(true);
 }

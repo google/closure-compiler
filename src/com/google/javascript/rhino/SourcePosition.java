@@ -135,11 +135,4 @@ public abstract class SourcePosition<T> {
   public int getPositionOnEndLine() {
     return endCharno;
   }
-
-  boolean isSamePositionAs(SourcePosition<?> that) {
-    return this.startLineno == that.startLineno
-        && this.startCharno == that.startCharno
-        && this.endLineno == that.endLineno
-        && this.endCharno == that.endCharno;
-  }
 }

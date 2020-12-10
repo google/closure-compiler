@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.primitives.Booleans;
 import com.google.debugging.sourcemap.Base64;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -44,6 +45,12 @@ class ReplaceIdGenerators implements CompilerPass {
       DiagnosticType.error(
           "JSC_CONDITIONAL_ID_GENERATOR_CALL",
           "Id generator call must be unconditional");
+
+  static final DiagnosticType CONFLICTING_GENERATOR_TYPE =
+      DiagnosticType.error(
+          "JSC_CONFLICTING_ID_GENERATOR_TYPE",
+          "Id generator can only be one of " +
+          "consistent, inconsistent, mapped, stable, or xid.");
 
   static final DiagnosticType INVALID_GENERATOR_ID_MAPPING =
       DiagnosticType.error(
@@ -253,8 +260,21 @@ class ReplaceIdGenerators implements CompilerPass {
     @Override
     public void visit(NodeTraversal unused, Node n, Node parent) {
       JSDocInfo doc = n.getJSDocInfo();
-      if (doc == null || !doc.isAnyIdGenerator()) {
+      if (doc == null) {
         return;
+      }
+
+      int numGeneratorAnnotations =
+          Booleans.countTrue(
+              doc.isConsistentIdGenerator(),
+              doc.isIdGenerator(),
+              doc.isStableIdGenerator(),
+              doc.isXidGenerator(),
+              doc.isMappedIdGenerator());
+      if (numGeneratorAnnotations == 0) {
+        return;
+      } else if (numGeneratorAnnotations > 1) {
+        compiler.report(JSError.make(n, CONFLICTING_GENERATOR_TYPE));
       }
 
       String name = null;

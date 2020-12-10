@@ -607,25 +607,25 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   @Test
   public void testConflictingIdGenerator() {
-    setExpectParseWarningsThisTest();
-    testSame("/** @idGenerator \n @idGenerator {consistent} \n*/ var id = function() {}; ");
+    testError(
+        "/** @idGenerator \n @idGenerator {consistent} \n*/" + "var id = function() {}; ",
+        ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
-    testSame("/** @idGenerator {stable} \n @idGenerator \n*/ var id = function() {}; ");
+    testError(
+        "/** @idGenerator {stable} \n @idGenerator \n*/" + "var id = function() {}; ",
+        ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
-    testSame(
-        lines(
-            "/** @idGenerator {stable} \n @idGenerator {consistent} \n */",
-            "var id = function() {};"));
-  }
+    testError(
+        "/** @idGenerator {stable} \n "
+            + "@idGenerator {consistent} \n*/"
+            + "var id = function() {}; ",
+        ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
-  @Test
-  public void testConsistentIdGenUnderPseudoRenaming() {
     testWithPseudo(
         lines(
             "/** @idGenerator {consistent} */ var id = function() {};",
             "if (x) {foo.bar = id('foo_bar')}"),
-        lines( //
-            "/** @idGenerator {consistent} */ var id = function() {};", "if (x) {foo.bar = 'a'}"),
+        lines("/** @idGenerator {consistent} */ var id = function() {};", "if (x) {foo.bar = 'a'}"),
         lines(
             "/** @idGenerator {consistent} */ var id = function() {};",
             "if (x) {foo.bar = 'foo_bar$0'}"));
