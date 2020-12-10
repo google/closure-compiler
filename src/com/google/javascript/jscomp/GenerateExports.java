@@ -27,6 +27,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /** Generates goog.exportSymbol/goog.exportProperty for the @export annotation. */
 public class GenerateExports implements CompilerPass {
@@ -35,13 +36,19 @@ public class GenerateExports implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  private final String exportSymbolFunction;
+  @Nullable private final String exportSymbolFunction;
 
-  private final String exportPropertyFunction;
+  @Nullable private final String exportPropertyFunction;
 
   private final boolean allowNonGlobalExports;
 
   private final Set<String> exportedVariables = new HashSet<>();
+
+  static final DiagnosticType MISSING_EXPORT_CONVENTION =
+      DiagnosticType.error(
+          "JSC_MISSING_EXPORT_CONVENTION",
+          "@export cannot be used without defining a exportProperty and exportSymbol function in"
+              + " the coding convention");
 
   @VisibleForTesting
   public static final DiagnosticType MISSING_GOOG_FOR_EXPORT =
@@ -53,6 +60,10 @@ public class GenerateExports implements CompilerPass {
   /**
    * Creates a new generate exports compiler pass.
    *
+   * <p>The {@code exportSymbolFunction} and {@code exportPropertyFunction} are optional, but the
+   * compiler will report an error if they are not passed <i>and</i> this pass finds @export
+   * annotations. They are allowed to be optional if no code uses the @export annotation.
+   *
    * @param compiler JS compiler.
    * @param exportSymbolFunction function used for exporting symbols.
    * @param exportPropertyFunction function used for exporting property names.
@@ -60,11 +71,9 @@ public class GenerateExports implements CompilerPass {
   GenerateExports(
       AbstractCompiler compiler,
       boolean allowNonGlobalExports,
-      String exportSymbolFunction,
-      String exportPropertyFunction) {
+      @Nullable String exportSymbolFunction,
+      @Nullable String exportPropertyFunction) {
     checkNotNull(compiler);
-    checkNotNull(exportSymbolFunction);
-    checkNotNull(exportPropertyFunction);
 
     this.compiler = compiler;
     this.allowNonGlobalExports = allowNonGlobalExports;
@@ -85,21 +94,14 @@ public class GenerateExports implements CompilerPass {
     Map<Node, String> es6Exports = findExportableNodes.getEs6ClassExports();
     Set<String> localExports = findExportableNodes.getLocalExports();
 
-    if ((!exports.isEmpty() || !es6Exports.isEmpty()) && !includesExportMethods(root.getParent())) {
-      // Pick an arbitrary @export to report the warning on.
-      final Node errorLocation;
-      if (!exports.isEmpty()) {
-        errorLocation = exports.values().stream().findFirst().get();
-      } else {
-        errorLocation = es6Exports.keySet().stream().findFirst().get();
+    for (String export : localExports) {
+      addExtern(export);
+    }
+
+    if (!exports.isEmpty() || !es6Exports.isEmpty()) {
+      if (!validateExportMethodsIncluded(exports, es6Exports, root)) {
+        return;
       }
-      compiler.report(
-          JSError.make(
-              errorLocation,
-              MISSING_GOOG_FOR_EXPORT,
-              this.exportSymbolFunction,
-              this.exportPropertyFunction));
-      declareExportMethodsInExterns(errorLocation);
     }
 
     for (Map.Entry<Node, String> entry : es6Exports.entrySet()) {
@@ -111,10 +113,42 @@ public class GenerateExports implements CompilerPass {
       Node context = entry.getValue();
       addExportMethod(exports, export, context);
     }
+  }
 
-    for (String export : localExports) {
-      addExtern(export);
+  /**
+   * Validate that a) the user has configured methods to call to export symbols and b) those methods
+   * are included in this binary
+   *
+   * @return whether to continue trying to export methods
+   */
+  private boolean validateExportMethodsIncluded(
+      Map<String, Node> exports, Map<Node, String> es6Exports, Node root) {
+
+    // Pick an arbitrary @export to report the warning on.
+    final Node errorLocation;
+    if (!exports.isEmpty()) {
+      errorLocation = exports.values().stream().findFirst().get();
+    } else {
+      errorLocation = es6Exports.keySet().stream().findFirst().get();
     }
+
+    if (this.exportSymbolFunction == null || this.exportPropertyFunction == null) {
+      compiler.report(JSError.make(errorLocation, MISSING_EXPORT_CONVENTION));
+      // don't try to rewrite @export since there's nothing we can rewrite them to.
+      return false;
+    }
+
+    if (!includesExportMethods(root.getParent())) {
+      compiler.report(
+          JSError.make(
+              errorLocation,
+              MISSING_GOOG_FOR_EXPORT,
+              this.exportSymbolFunction,
+              this.exportPropertyFunction));
+      declareExportMethodsInExterns(errorLocation);
+      return true;
+    }
+    return true;
   }
 
   /**

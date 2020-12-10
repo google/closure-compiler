@@ -1225,8 +1225,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 CodingConvention convention = compiler.getCodingConvention();
-                if (convention.getExportSymbolFunction() != null
-                    && convention.getExportPropertyFunction() != null) {
                   final GenerateExports pass =
                       new GenerateExports(
                           compiler,
@@ -1240,9 +1238,7 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler.addExportedNames(pass.getExportedVariableNames());
                     }
                   };
-                } else {
-                  return new ErrorPass(compiler, GENERATE_EXPORTS_ERROR);
-                }
+
               })
           .setFeatureSetForChecks()
           .build();
