@@ -346,7 +346,7 @@ XMLHttpRequest.prototype.getAllResponseHeaders = function() {};
 
 /**
  * @param {string} header
- * @return {string}
+ * @return {?string}
  * @see https://xhr.spec.whatwg.org/#the-getresponseheader()-method
  */
 XMLHttpRequest.prototype.getResponseHeader = function(header) {};
