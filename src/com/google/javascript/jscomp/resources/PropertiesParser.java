@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.resources;
 
-import static java.lang.Math.min;
-
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -27,16 +25,12 @@ import com.google.common.collect.ImmutableMap;
  * inside Closure.
  */
 final class PropertiesParser {
-  /**
-   * Constructs a new {@link GwtProperties} from the given source string.
-   *
-   * @param source To load from.
-   * @return The {@link GwtProperties} object from the source.
-   */
+
+  @SuppressWarnings("StringSplitter") // Can't use Splitter.onPattern in J2CL.
   static ImmutableMap<String, String> parse(String source) {
-    String[] lines = source.split("\r?\n");
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
+    String[] lines = source.split("\r?\n");
     for (int i = 0; i < lines.length; ++i) {
       String line = lines[i];
       if (line.isEmpty() || line.startsWith("#") || line.startsWith("!")) {
@@ -82,16 +76,16 @@ final class PropertiesParser {
   }
 
   private static int findDelimiter(String line) {
-    if (line.contains(":") || line.contains("=")) {
-      if (line.indexOf(':') == -1) {
-        return line.indexOf('=');
+    for (int i = 0; i < line.length(); i++) {
+      switch (line.charAt(i)) {
+        case ':':
+        case '=':
+          return i;
+        default:
+          break;
       }
-      if (line.indexOf('=') == -1) {
-        return line.indexOf(':');
-      }
-      // Both delimeters exist!
-      return min(line.indexOf('='), line.indexOf(':'));
     }
+
     // If no : or =, delimiter is first whitespace.
     return line.indexOf(' ');
   }
