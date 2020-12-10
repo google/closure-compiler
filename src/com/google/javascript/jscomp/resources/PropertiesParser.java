@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.resources;
 
+import static java.lang.Math.min;
+
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -88,7 +90,7 @@ final class PropertiesParser {
         return line.indexOf(':');
       }
       // Both delimeters exist!
-      return Math.min(line.indexOf('='), line.indexOf(':'));
+      return min(line.indexOf('='), line.indexOf(':'));
     }
     // If no : or =, delimiter is first whitespace.
     return line.indexOf(' ');
