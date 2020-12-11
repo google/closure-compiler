@@ -2603,7 +2603,8 @@ HTMLVideoElement.prototype.webkitDroppedFrameCount;
  *    totalVideoFrames: number,
  *    droppedVideoFrames: number,
  *    corruptedVideoFrames: number,
- *    totalFrameDelay: number
+ *    totalFrameDelay: number,
+ *    displayCompositedVideoFrames: (number|undefined)
  * }}
  */
 var VideoPlaybackQuality;
