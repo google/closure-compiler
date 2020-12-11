@@ -148,43 +148,48 @@ $jscomp.polyfillUnisolated = function(target, polyfill, fromLang, toLang) {
  */
 $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
   var split = target.split('.');
-  var isNativeClass = split.length === 1;
+  var isSimpleName = split.length === 1;
   var root = split[0];
 
   // Look up the parent object. For classes this is just $jscomp.global.
   // For methods/properties this may be a polyfill (Promise) or may a native
   // object (Array.prototype).
-  var obj;
-  if (!isNativeClass && root in $jscomp.polyfills) {
+  var ownerObject;
+  if (!isSimpleName && root in $jscomp.polyfills) {
     // Handle Symbol.asyncIterator and Promise.prototype.finally
-    obj = $jscomp.polyfills;
+    ownerObject = $jscomp.polyfills;
   } else {
     // Handle Promise, Array.of, and String.prototype.startsWith
-    obj = $jscomp.global;
+    ownerObject = $jscomp.global;
   }
 
   for (var i = 0; i < split.length - 1; i++) {
     var key = split[i];
-    if (!(key in obj)) return;
-    obj = obj[key];
+    if (!(key in ownerObject)) return;
+    ownerObject = ownerObject[key];
   }
 
   var property = split[split.length - 1];
   // If Symbol is native and the target is in the ES6 spec, use the native imp.
   // We assume the method/class was not polyfilled since polyfills typically
   // back off in the presence of an existing implementation.
-  var nativeImpl =
-      $jscomp.IS_SYMBOL_NATIVE && fromLang === 'es6' ? obj[property] : null;
+  var nativeImpl = $jscomp.IS_SYMBOL_NATIVE && fromLang === 'es6' ?
+      ownerObject[property] :
+      null;
   var impl = polyfill(nativeImpl);
 
   if (impl == null) {
     return;
   }
 
-  if (isNativeClass) {
+  if (isSimpleName) {
     // Note: `impl` may be the actual native class instead of a
     // polyfill. Add it to $jscomp.polyfills anyway. The IsolatePolyfills pass
     // unconditionally replaces `Symbol` with `$jscomp.polyfills['Symbol']`.
+
+    // Use $jscomp.polyfills instead of ownerObject. For simple names like
+    // Promise and Symbol, ownerObject is the  global object, and we want to
+    // avoid adding new global variables.
     $jscomp.defineProperty(
         $jscomp.polyfills, property,
         {configurable: true, writable: true, value: impl});
@@ -192,12 +197,19 @@ $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
     // Skip installing an obfuscated property if we have found a native version
     // of the method we're polyfilling. $jscomp$lookupPolyfilledValue will fall
     // back to the native version anyway.
+
     $jscomp.propertyToPolyfillSymbol[property] = $jscomp.IS_SYMBOL_NATIVE ?
         // use bracket access to avoid injecting the Symbol polyfill
         $jscomp.global['Symbol'](property) :
         $jscomp.POLYFILL_PREFIX + property;
+
     property = $jscomp.propertyToPolyfillSymbol[property];
+
+    // Define the polyfilled method on its owner but under an obfuscated
+    // name to avoid collisions. The owner will be a native class like Promise
+    // or a native class's prototype like Array.prototype.
     $jscomp.defineProperty(
-        obj, property, {configurable: true, writable: true, value: impl});
+        ownerObject, property,
+        {configurable: true, writable: true, value: impl});
   }
 };
