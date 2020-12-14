@@ -24,8 +24,6 @@ import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,24 +48,6 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
       this.rootNode = rootNode;
     }
 
-    /** Returns the SubTree rooted at the first class definition found with the given name. */
-    private CodeSubTree findClassDefinition(String wantedClassName) {
-      Node classNode =
-          findFirstNode(
-              rootNode, (node) -> node.isClass() && wantedClassName.equals(NodeUtil.getName(node)));
-      return new CodeSubTree(classNode);
-    }
-
-    /** Returns the first class method definition found with the given name. */
-    private CodeSubTree findMethodDefinition(String wantedMethodName) {
-      Node methodDefinitionNode =
-          findFirstNode(
-              rootNode,
-              (node) -> node.isMemberFunctionDef() && wantedMethodName.equals(node.getString()));
-
-      return new CodeSubTree(methodDefinitionNode);
-    }
-
     /** Finds every instance of a given qualified name. */
     private ImmutableList<Node> findMatchingQNameReferences(final String wantedQName) {
       return findNodesAllowEmpty(rootNode, (node) -> node.matchesQualifiedName(wantedQName));
@@ -85,14 +65,6 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
                     && wantedMethodName.equals(node.getFirstChild().getString()));
 
     return new CodeSubTree(functionDefinitionNode);
-  }
-
-  /**
-   * Returns a CodeSubTree for the first definition of the given class name in the output from the
-   * last compile.
-   */
-  private CodeSubTree findClassDefinition(String wantedClassName) {
-    return new CodeSubTree(getLastCompiler().getJsRoot()).findClassDefinition(wantedClassName);
   }
 
   /** Return a list of all Nodes matching the given predicate starting at the given root. */
@@ -127,14 +99,6 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
   private static Node findFirstNode(Node rootNode, Predicate<Node> predicate) {
     ImmutableList<Node> allMatchingNodes = findNodesNonEmpty(rootNode, predicate);
     return allMatchingNodes.get(0);
-  }
-
-  private final JSType getGlobalJSType(String globalTypeName) {
-    return getLastCompiler().getTypeRegistry().getGlobalType(globalTypeName);
-  }
-
-  private final ObjectType getGlobalObjectType(String globalTypeName) {
-    return getGlobalJSType(globalTypeName).assertObjectType();
   }
 
   @Override
