@@ -197,11 +197,13 @@ $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
     // Skip installing an obfuscated property if we have found a native version
     // of the method we're polyfilling. $jscomp$lookupPolyfilledValue will fall
     // back to the native version anyway.
+    if ($jscomp.propertyToPolyfillSymbol[property] === undefined) {
+      $jscomp.propertyToPolyfillSymbol[property] = $jscomp.IS_SYMBOL_NATIVE ?
+          // use bracket access to avoid injecting the Symbol polyfill
+          $jscomp.global['Symbol'](property) :
+          $jscomp.POLYFILL_PREFIX + property;
+    }
 
-    $jscomp.propertyToPolyfillSymbol[property] = $jscomp.IS_SYMBOL_NATIVE ?
-        // use bracket access to avoid injecting the Symbol polyfill
-        $jscomp.global['Symbol'](property) :
-        $jscomp.POLYFILL_PREFIX + property;
 
     property = $jscomp.propertyToPolyfillSymbol[property];
 
