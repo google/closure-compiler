@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
+import static java.util.Arrays.stream;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -2209,7 +2210,7 @@ public abstract class CompilerTestCase {
   protected static Externs externs(SourceFile... externs) {
     // Copy SourceFile objects to prevent the externs bit from polluting tests.
     return new Externs(
-        Arrays.stream(externs)
+        stream(externs)
             .map(
                 f -> {
                   try {
