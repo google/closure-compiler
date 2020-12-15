@@ -74,7 +74,14 @@ class IsolatePolyfills implements CompilerPass {
     boolean hasPropertyCollapsingRun =
         compiler.getOptions().getPropertyCollapseLevel().equals(PropertyCollapseLevel.ALL);
     jscompPolyfillsObject =
-        hasPropertyCollapsingRun ? IR.name("$jscomp$polyfills") : createJSCompPolyfillsAccess();
+        hasPropertyCollapsingRun ? createCollapsedName() : createJSCompPolyfillsAccess();
+  }
+
+  /** Returns a name `$jscomp$polyfills` */
+  private static Node createCollapsedName() {
+    Node collapsedName = IR.name("$jscomp$polyfills");
+    collapsedName.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+    return collapsedName;
   }
 
   /** Returns a getprop `$jscomp.polyfills` */
