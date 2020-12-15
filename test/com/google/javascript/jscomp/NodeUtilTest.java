@@ -3830,11 +3830,17 @@ public final class NodeUtilTest {
     }
 
     @Test
-    public void testIsVarArgs() {
+    public void testDoesFunctionReferenceOwnArgumentsObject() {
       assertThat(
               NodeUtil.doesFunctionReferenceOwnArgumentsObject(
                   parseExpr("function() {return () => arguments}")))
           .isTrue();
+
+      assertThat(
+              NodeUtil.doesFunctionReferenceOwnArgumentsObject(
+                  parseExpr("function(a = arguments.length) {}")))
+          .isTrue();
+
       assertThat(NodeUtil.doesFunctionReferenceOwnArgumentsObject(parseExpr("() => arguments")))
           .isFalse();
     }

@@ -3004,7 +3004,8 @@ public final class NodeUtil {
     if (fn.isArrowFunction()) {
       return false;
     }
-    return referencesArgumentsHelper(fn.getLastChild());
+    return referencesArgumentsHelper(fn.getSecondChild())
+        || referencesArgumentsHelper(fn.getLastChild());
   }
 
   /**
