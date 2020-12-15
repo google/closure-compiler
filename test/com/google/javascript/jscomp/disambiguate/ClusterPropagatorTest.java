@@ -20,8 +20,6 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationKind;
-import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationReason;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,7 +79,7 @@ public final class ClusterPropagatorTest {
   public void propagation_doesNotMergeProperties_thatAreInvalidated() {
     // Given
     associate(this.prop, this.src);
-    this.prop.invalidate(new InvalidationReason(InvalidationKind.INVALIDATING_TYPE));
+    this.prop.invalidate(Invalidation.wellKnownProperty());
 
     // When
     this.propagateFromSrcToDest();

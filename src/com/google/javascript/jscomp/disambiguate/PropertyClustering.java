@@ -29,7 +29,9 @@ import javax.annotation.Nullable;
 /**
  * The disambiguation clusters for a given property name.
  *
- * <p>This is a struct used to aggragate information to be processed by other passes.
+ * <p>This is a struct used to aggregate information to be processed by other classes in this
+ * package. It is intentionally mutable and doesn't attempt to enforce invariants in the contents of
+ * its datastructures. Instances trust that sibling classes make mutations correctly.
  */
 final class PropertyClustering {
   private final String name;
@@ -40,27 +42,7 @@ final class PropertyClustering {
 
   @Nullable private FlatType originalNameClusterRep;
 
-  @Nullable private InvalidationReason invalidationReason;
-
-  static final class InvalidationReason {
-    final InvalidationKind invalidationKind;
-    @Nullable final String additionalInfo;
-
-    InvalidationReason(InvalidationKind invalidationKind) {
-      this(invalidationKind, null);
-    }
-
-    InvalidationReason(InvalidationKind invalidationKind, @Nullable String additionalInfo) {
-      this.invalidationKind = invalidationKind;
-      this.additionalInfo = additionalInfo;
-    }
-  }
-
-  enum InvalidationKind {
-    WELL_KNOWN_PROPERTY, // certain well-known properties like "prototype" are always invalidated
-    INVALIDATING_TYPE, // properties accessed on invalidating types (like Object) are invalidated
-    MISSING_PROPERTY; // properties accessed on types that don't decalre them are invalidated
-  }
+  @Nullable private Invalidation lastInvalidation;
 
   PropertyClustering(String name) {
     this.name = checkNotNull(name);
@@ -117,18 +99,19 @@ final class PropertyClustering {
   }
 
   boolean isInvalidated() {
-    return this.clusters == null;
+    return this.lastInvalidation != null;
   }
 
-  void invalidate(InvalidationReason invalidationReason) {
+  void invalidate(Invalidation invalidation) {
     this.clusters = null;
     this.originalNameClusterRep = null;
     this.useSites = null;
-    this.invalidationReason = invalidationReason;
+    this.lastInvalidation = checkNotNull(invalidation);
   }
 
-  InvalidationReason getInvalidationReason() {
-    return this.invalidationReason;
+  Invalidation getLastInvalidation() {
+    checkState(this.isInvalidated());
+    return this.lastInvalidation;
   }
 
   /**

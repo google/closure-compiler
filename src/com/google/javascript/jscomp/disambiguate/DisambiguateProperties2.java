@@ -40,8 +40,6 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.diagnostic.LogFile;
 import com.google.javascript.jscomp.disambiguate.FlatType.Arity;
-import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationKind;
-import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationReason;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -158,7 +156,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 PropertyClustering::getName,
                 prop ->
                     prop.isInvalidated()
-                        ? prop.getInvalidationReason()
+                        ? prop.getLastInvalidation()
                         : ImmutableSortedSet.copyOf(newNames.get(prop.getName()))));
   }
 
@@ -174,7 +172,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     for (String name : names) {
       propIndex
           .computeIfAbsent(name, PropertyClustering::new)
-          .invalidate(new InvalidationReason(InvalidationKind.WELL_KNOWN_PROPERTY));
+          .invalidate(Invalidation.wellKnownProperty());
     }
   }
 
@@ -182,7 +180,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     for (FlatType type : flattener.getAllKnownTypes()) {
       if (type.isInvalidating()) {
         for (PropertyClustering prop : type.getAssociatedProps()) {
-          prop.invalidate(new InvalidationReason(InvalidationKind.INVALIDATING_TYPE));
+          prop.invalidate(Invalidation.invalidatingType(type.getId()));
         }
       } else {
         invalidateNonDeclaredPropertyAccesses(type);
@@ -209,8 +207,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
                   .anyMatch(flatType -> flatType.getTypeSingle().hasProperty(prop.getName()));
 
       if (!mayHaveProperty) {
-        prop.invalidate(
-            new InvalidationReason(InvalidationKind.MISSING_PROPERTY, type.getId() + ""));
+        prop.invalidate(Invalidation.undeclaredAccess(type.getId()));
       }
     }
   }

@@ -26,8 +26,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
-import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationKind;
-import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationReason;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -190,7 +188,7 @@ public final class UseSiteRenamerTest {
     this.prop.getUseSites().put(name2, type2);
     this.prop.getUseSites().put(name3, type3);
 
-    this.prop.invalidate(new InvalidationReason(InvalidationKind.INVALIDATING_TYPE));
+    this.prop.invalidate(Invalidation.wellKnownProperty());
 
     // When
     this.runRename(null);
@@ -231,7 +229,7 @@ public final class UseSiteRenamerTest {
   @Test
   public void renameUses_reportsInvalidation() {
     // Given
-    this.prop.invalidate(new InvalidationReason(InvalidationKind.INVALIDATING_TYPE));
+    this.prop.invalidate(Invalidation.wellKnownProperty());
 
     // When
     this.runRename(ImmutableMap.of(PROP_NAME, CheckLevel.ERROR));
