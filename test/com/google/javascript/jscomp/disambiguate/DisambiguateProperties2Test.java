@@ -168,7 +168,8 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
             lines(
                 "/** @constructor */",
                 "function Foo() { };",
-                "Foo.z;",
+                "/** @type {number} */",
+                "Foo.z = 0;",
                 "",
                 "class Foo2 extends Foo {",
                 "  static z() { }",
@@ -181,7 +182,8 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
             lines(
                 "/** @constructor */",
                 "function Foo() { };",
-                "Foo.JSC$1_z;",
+                "/** @type {number} */",
+                "Foo.JSC$1_z = 0;",
                 "",
                 "class Foo2 extends Foo {",
                 "  static JSC$1_z() { }",
@@ -774,6 +776,56 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
+  public void propertiesAreInvalidated_givenMissingPropertyError() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  x() { }",
+                "  y() { }",
+                "  z() { }",
+                "}",
+                "class Bar { }",
+                "",
+                "function mix(/** (!Foo|!Bar) */ fooBar, /** !Bar */ bar) {",
+                // Invalidate bar.y() but not fooBar.x(). This mirrors the Closure typechecker,
+                // which thinks (!Foo|!Bar) may have an 'x' property and so allows the access.
+                "  fooBar.w();",
+                "  fooBar.x();",
+                "  bar.y();",
+                "}",
+                "",
+                "class Other {",
+                "  w() { }",
+                "  x() { }",
+                "  y() { }",
+                "  z() { }",
+                "}")),
+        expected(
+            lines(
+                "class Foo {",
+                "  JSC$6_x() { }",
+                "  y() { }",
+                "  JSC$1_z() { }",
+                "}",
+                "class Bar { }",
+                "",
+                "function mix(/** (!Foo|!Bar) */ fooBar, /** !Bar */ bar) {",
+                // x is disambiguated while w and y are invalidated.
+                "  fooBar.w();",
+                "  fooBar.JSC$6_x();",
+                "  bar.y();",
+                "}",
+                "",
+                "class Other {",
+                "  w() { }",
+                "  JSC$7_x() { }",
+                "  y() { }",
+                "  JSC$7_z() { }",
+                "}")));
+  }
+
+  @Test
   public void errorReported_forMalformedDefinerFunctions() {
     test(
         externs(PROP_DEFINER_DEFINITION),
@@ -904,8 +956,10 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "  w() { }",
                 "  z() { }",
                 "}",
-                "function use(/** (!Foo0|!Foo2) */ x) {",
+                "class Bar {}",
+                "function use(/** (!Foo0|!Foo2) */ x, /** !Bar */ y) {",
                 "  x.x();",
+                "  y.y();",
                 "}")));
   }
 

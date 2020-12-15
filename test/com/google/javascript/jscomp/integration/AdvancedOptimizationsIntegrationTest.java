@@ -1309,11 +1309,11 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
 
     String code =
         ""
-        + "/** @constructor */ var X = function() {"
-        + "/** @export */ this.abc = 1;};\n"
-        + "/** @constructor */ var Y = function() {"
-        + "/** @export */ this.abc = 1;};\n"
-        + "alert(new X().abc + new Y().abc);";
+            + "/** @constructor */ var X = function() {"
+            + "/** @export */ this.abc = 1;};\n"
+            + "/** @constructor */ var Y = function() {"
+            + "/** @export */ this.abc = 1;};\n"
+            + "alert(new X().abc + new Y().abc);";
 
     options.setExportLocalPropertyDefinitions(false);
 
@@ -1325,7 +1325,9 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setExportLocalPropertyDefinitions(true);
 
     // property name preserved due to export
-    test(options, code,
+    test(
+        options,
+        code,
         "alert((new function(){this.abc = 1}).abc + (new function(){this.abc = 1}).abc);");
 
     // unreferenced property not removed due to export.
@@ -2272,5 +2274,43 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             // Property ambiguation renames both ".foo" and ".bar" to ".a".
             "  return a.a + d.a;",
             "}"));
+  }
+
+  @Test
+  public void testDisambiguationWithInvalidCastDownAndCommonInterface() {
+    // test for a legacy-compat behavior of the disambiguator
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setDisambiguateProperties(true);
+    options.setUseGraphBasedDisambiguator(true);
+
+    test(
+        options,
+        lines(
+            "/** @interface */",
+            "class Speaker {",
+            "  speak() {}",
+            "}",
+            "/** @implements {Speaker} */",
+            "class SpeakerImpl {",
+            "  speak() { alert('Speaker'); }",
+            "}",
+            "/** @interface @extends {Speaker} */",
+            "class SpeakerChild {}",
+            "/** @param {!Speaker} speaker */",
+            "function speak(speaker) {",
+            // cast is invalid: a SpeakerImpl is passed. Note that this function is needed because
+            // the compiler is smart enough to detect invalid casts in
+            // /** @type {!SpeakerImpl} (/** @type {!Speaker} */ (new SpeakerImpl()));
+            "  /** @type {!SpeakerChild} */ (speaker).speak();",
+            "}",
+            "speak(new SpeakerImpl());",
+            "class Other {",
+            "  speak() { alert('other'); }",
+            "}",
+            "new Other().speak();"),
+        lines(
+            // Compiler calls SpeakerImpl.prototype.speak even though it's called off SpeakerChild.
+            "alert('Speaker'); alert('other');"));
   }
 }

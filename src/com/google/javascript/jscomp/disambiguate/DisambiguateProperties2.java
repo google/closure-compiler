@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
@@ -28,6 +29,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -37,13 +39,18 @@ import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.diagnostic.LogFile;
+import com.google.javascript.jscomp.disambiguate.FlatType.Arity;
+import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationKind;
+import com.google.javascript.jscomp.disambiguate.PropertyClustering.InvalidationReason;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -71,9 +78,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
             .addAll(compiler.getImplicitInterfaceUses())
             .build();
     this.invalidations =
-        new InvalidatingTypes.Builder(this.registry)
-            .addAllTypeMismatches(this.mismatches)
-            .build();
+        new InvalidatingTypes.Builder(this.registry).addAllTypeMismatches(this.mismatches).build();
   }
 
   @Override
@@ -97,6 +102,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
     NodeTraversal.traverse(this.compiler, externs.getParent(), findRefs);
     LinkedHashMap<String, PropertyClustering> propIndex = findRefs.getPropertyIndex();
+
     invalidateWellKnownProperties(propIndex);
     this.logForDiagnostics(
         "prop_refs",
@@ -107,6 +113,16 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
     graphBuilder.addAll(flattener.getAllKnownTypes());
     DiGraph<FlatType, Object> graph = graphBuilder.build();
+
+    // Model legacy behavior from the old (pre-December 2020) disambiguator.
+    for (FlatType flatType : flattener.getAllKnownTypes()) {
+      if (flatType.getArity().equals(Arity.SINGLE)) {
+        // Only need this step for SINGLE FlatTypes because union types don't have "own" properties
+        // and we will add properties of each alternate elsewhere in this loop.
+        registerOwnDeclaredProperties(flatType, propIndex);
+      }
+    }
+
     this.logForDiagnostics(
         "graph",
         () ->
@@ -115,21 +131,14 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .sorted(comparingInt((x) -> x.id))
                 .collect(toImmutableList()));
 
-    // must invaldiate after logging all prop_refs: invalidating a property deletes its list of
-    // use sites to save space, but the logging should include use sites
+    // Ensure this step happens after logging PropertyReferenceIndexJson. Invalidating a property
+    // destroys its list of use sites, which we need to log.
     invalidateBasedOnType(flattener);
 
     FixedPointGraphTraversal.newTraversal(propagator).computeFixedPoint(graph);
     propIndex.values().forEach(renamer::renameUses);
-    this.logForDiagnostics(
-        "renaming_index",
-        () ->
-            renamer.getRenamingIndex().asMap().entrySet().stream()
-                .collect(
-                    toImmutableSortedMap(
-                        naturalOrder(),
-                        Map.Entry::getKey,
-                        (e) -> ImmutableSortedSet.copyOf(e.getValue()))));
+
+    this.logForDiagnostics("renaming_index", () -> buildRenamingIndex(propIndex, renamer));
 
     this.logForDiagnostics(
         "mismatches",
@@ -137,6 +146,20 @@ public final class DisambiguateProperties2 implements CompilerPass {
             this.mismatches.stream()
                 .map((m) -> new TypeMismatchJson(m, flattener))
                 .collect(toImmutableSortedSet(naturalOrder())));
+  }
+
+  private static ImmutableMap<String, Object> buildRenamingIndex(
+      LinkedHashMap<String, PropertyClustering> props, UseSiteRenamer renamer) {
+    ImmutableSetMultimap<String, String> newNames = renamer.getRenamingIndex();
+    return props.values().stream()
+        .collect(
+            toImmutableSortedMap(
+                naturalOrder(),
+                PropertyClustering::getName,
+                prop ->
+                    prop.isInvalidated()
+                        ? prop.getInvalidationReason()
+                        : ImmutableSortedSet.copyOf(newNames.get(prop.getName()))));
   }
 
   private static void invalidateWellKnownProperties(
@@ -149,18 +172,72 @@ public final class DisambiguateProperties2 implements CompilerPass {
      */
     ImmutableList<String> names = ImmutableList.of("prototype", "constructor", "then");
     for (String name : names) {
-      propIndex.computeIfAbsent(name, PropertyClustering::new).invalidate();
+      propIndex
+          .computeIfAbsent(name, PropertyClustering::new)
+          .invalidate(new InvalidationReason(InvalidationKind.WELL_KNOWN_PROPERTY));
     }
   }
 
   private static void invalidateBasedOnType(TypeFlattener flattener) {
     for (FlatType type : flattener.getAllKnownTypes()) {
-      if (!type.isInvalidating()) {
+      if (type.isInvalidating()) {
+        for (PropertyClustering prop : type.getAssociatedProps()) {
+          prop.invalidate(new InvalidationReason(InvalidationKind.INVALIDATING_TYPE));
+        }
+      } else {
+        invalidateNonDeclaredPropertyAccesses(type);
+      }
+    }
+  }
+
+  private static void invalidateNonDeclaredPropertyAccesses(FlatType type) {
+    checkArgument(
+        !type.isInvalidating(),
+        "Not applicable to invalidating types. All their properties are invalidated");
+    // Invalidate all property accesses that cause "missing property" warnings. This behavior is not
+    // inherently necessary for correctness. It only exists because the older version of the
+    // disambiguator invalidated these properties and some projects began to rely on this.
+    for (PropertyClustering prop : type.getAssociatedProps()) {
+      if (prop.isInvalidated()) {
+        continue; // Skip unnecessary `hasProperty` lookups which can be expensive.
+      }
+
+      boolean mayHaveProperty =
+          type.hasArity(Arity.SINGLE)
+              ? type.getTypeSingle().hasProperty(prop.getName())
+              : type.getTypeUnion().stream()
+                  .anyMatch(flatType -> flatType.getTypeSingle().hasProperty(prop.getName()));
+
+      if (!mayHaveProperty) {
+        prop.invalidate(
+            new InvalidationReason(InvalidationKind.MISSING_PROPERTY, type.getId() + ""));
+      }
+    }
+  }
+
+  private void registerOwnDeclaredProperties(
+      FlatType flatType, Map<String, PropertyClustering> propIndex) {
+    checkArgument(flatType.hasArity(Arity.SINGLE));
+    JSType single = flatType.getTypeSingle();
+    checkState(!single.isBoxableScalar(), single);
+    ObjectType obj = single.toMaybeObjectType();
+    if (obj == null) {
+      return;
+    }
+
+    // For each type, get the list of its "own properties" and add them to its clustering. This
+    // is only to mimic the behavior of the old disambiguator and could be removed if we were
+    // confident we could update all existing code to be compatible.
+    for (String propName : obj.getOwnPropertyNames()) {
+      PropertyClustering prop = propIndex.get(propName);
+      if (prop == null) {
+        // Ignore declared properties without any visible references to rename.
+        continue;
+      } else if (prop.isInvalidated()) {
         continue;
       }
-      for (PropertyClustering prop : type.getAssociatedProps()) {
-        prop.invalidate();
-      }
+      prop.getClusters().add(flatType);
+      flatType.getAssociatedProps().add(prop);
     }
   }
 
@@ -228,7 +305,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
           t.getAssociatedProps().stream()
               .map(PropertyClustering::getName)
               .collect(toImmutableSortedSet(naturalOrder()));
-
     }
   }
 

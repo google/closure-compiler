@@ -40,6 +40,28 @@ final class PropertyClustering {
 
   @Nullable private FlatType originalNameClusterRep;
 
+  @Nullable private InvalidationReason invalidationReason;
+
+  static final class InvalidationReason {
+    final InvalidationKind invalidationKind;
+    @Nullable final String additionalInfo;
+
+    InvalidationReason(InvalidationKind invalidationKind) {
+      this(invalidationKind, null);
+    }
+
+    InvalidationReason(InvalidationKind invalidationKind, @Nullable String additionalInfo) {
+      this.invalidationKind = invalidationKind;
+      this.additionalInfo = additionalInfo;
+    }
+  }
+
+  enum InvalidationKind {
+    WELL_KNOWN_PROPERTY, // certain well-known properties like "prototype" are always invalidated
+    INVALIDATING_TYPE, // properties accessed on invalidating types (like Object) are invalidated
+    MISSING_PROPERTY; // properties accessed on types that don't decalre them are invalidated
+  }
+
   PropertyClustering(String name) {
     this.name = checkNotNull(name);
   }
@@ -98,10 +120,15 @@ final class PropertyClustering {
     return this.clusters == null;
   }
 
-  void invalidate() {
+  void invalidate(InvalidationReason invalidationReason) {
     this.clusters = null;
     this.originalNameClusterRep = null;
     this.useSites = null;
+    this.invalidationReason = invalidationReason;
+  }
+
+  InvalidationReason getInvalidationReason() {
+    return this.invalidationReason;
   }
 
   /**
