@@ -517,7 +517,10 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   @Test
   public void testGenerateExportsOff() {
-    testSame(createCompilerOptions(), "/** @export */ function f() {}");
+    CompilerOptions options = createCompilerOptions();
+    options.setGenerateExports(false);
+
+    testSame(options, "/** @export */ function f() {}");
   }
 
   @Test

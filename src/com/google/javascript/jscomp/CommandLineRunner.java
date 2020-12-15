@@ -522,15 +522,17 @@ public class CommandLineRunner extends
     )
     private boolean debug = false;
 
-    @Option(name = "--generate_exports",
+    @Option(
+        name = "--generate_exports",
         handler = BooleanOptionHandler.class,
         usage = "Generates export code for those marked with @export")
-    private boolean generateExports = false;
+    private boolean generateExports = true;
 
-    @Option(name = "--export_local_property_definitions",
+    @Option(
+        name = "--export_local_property_definitions",
         handler = BooleanOptionHandler.class,
         usage = "Generates export code for local properties marked with @export")
-    private boolean exportLocalPropertyDefinitions = false;
+    private boolean exportLocalPropertyDefinitions = true;
 
     @Option(name = "--formatting",
         usage = "Specifies which formatting options, if any, should be "

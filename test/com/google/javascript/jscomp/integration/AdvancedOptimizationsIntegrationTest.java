@@ -1315,7 +1315,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         + "/** @export */ this.abc = 1;};\n"
         + "alert(new X().abc + new Y().abc);";
 
-    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(false);
 
     // exports enabled, but not local exports
     compile(

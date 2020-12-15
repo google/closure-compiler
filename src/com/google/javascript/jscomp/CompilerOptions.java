@@ -1384,8 +1384,8 @@ public class CompilerOptions implements Serializable {
     rewriteGlobalDeclarationsForTryCatchWrapping = false;
     checksOnly = false;
     outputJs = OutputJs.NORMAL;
-    generateExports = false;
-    exportLocalPropertyDefinitions = false;
+    generateExports = true;
+    exportLocalPropertyDefinitions = true;
     cssRenamingMap = null;
     cssRenamingSkiplist = null;
     idGenerators = ImmutableMap.of();
