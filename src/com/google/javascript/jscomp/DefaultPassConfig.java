@@ -497,6 +497,11 @@ public final class DefaultPassConfig extends PassConfig {
       TranspilationPasses.addPostCheckTranspilationPasses(checks, options);
     }
 
+    // Create extern exports after the normalize because externExports depends on unique names.
+    if (options.isExternExportsEnabled() || options.externExportsPath != null) {
+      checks.add(externExports);
+    }
+
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
 
@@ -544,11 +549,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(normalize);
-
-    // Create extern exports after the normalize because externExports depends on unique names.
-    if (options.isExternExportsEnabled() || options.externExportsPath != null) {
-      passes.add(externExports);
-    }
 
     // Gather property names in externs so they can be queried by the
     // optimizing passes.
