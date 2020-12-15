@@ -33,6 +33,15 @@ var google = {};
 google.maps = {};
 
 /**
+ * Google Maps JavaScript API version loaded by the browser.
+ * @see https://developers.google.com/maps/documentation/javascript/versions
+ *
+ * @type {string}
+ * @const
+ */
+google.maps.version;
+
+/**
  * Animations that can be played on a marker. Use the <code>setAnimation</code>
  * method on Marker or the <code>animation</code> option to play an animation.
  * @enum {number}
@@ -895,7 +904,7 @@ google.maps.Data.LinearRing.prototype.getType = function() {};
 
 /**
  * This object is passed to mouse event handlers on a <code>Data</code> object.
- * @extends {google.maps.MouseEvent}
+ * @extends {google.maps.MapMouseEvent}
  * @record
  */
 google.maps.Data.MouseEvent = function() {};
@@ -2865,7 +2874,7 @@ google.maps.Icon.prototype.url;
  * default info window from showing up, call the stop() method on this event to
  * prevent it being propagated. Learn more about <a
  * href="/places/place-id">place IDs</a> in the Places API developer guide.
- * @extends {google.maps.MouseEvent}
+ * @extends {google.maps.MapMouseEvent}
  * @record
  */
 google.maps.IconMouseEvent = function() {};
@@ -4216,6 +4225,35 @@ google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(
 google.maps.MapCanvasProjection.prototype.getWorldWidth = function() {};
 
 /**
+ * This object is returned from various mouse events on the map and overlays,
+ * and contains all the fields shown below.
+ * @record
+ */
+google.maps.MapMouseEvent = function() {};
+
+/**
+ * The corresponding native DOM event. Developers should not rely on
+ * <code>target</code>, <code>currentTarget</code>, <code>relatedTarget</code>
+ * and <code>path</code> properties being defined and consistent. Developers
+ * should not also rely on the DOM structure of the internal implementation of
+ * the Maps API.
+ * @type {!MouseEvent|!TouchEvent|!PointerEvent|!Event}
+ */
+google.maps.MapMouseEvent.prototype.domEvent;
+
+/**
+ * The latitude/longitude that was below the cursor when the event occurred.
+ * @type {google.maps.LatLng}
+ */
+google.maps.MapMouseEvent.prototype.latLng;
+
+/**
+ * Prevents this event from propagating further.
+ * @return {undefined}
+ */
+google.maps.MapMouseEvent.prototype.stop = function() {};
+
+/**
  * MapOptions object used to define the properties that can be set on a Map.
  * @record
  */
@@ -5259,25 +5297,6 @@ google.maps.MotionTrackingControlOptions = function() {};
 google.maps.MotionTrackingControlOptions.prototype.position;
 
 /**
- * This object is returned from various mouse events on the map and overlays,
- * and contains all the fields shown below.
- * @record
- */
-google.maps.MouseEvent = function() {};
-
-/**
- * The latitude/longitude that was below the cursor when the event occurred.
- * @type {google.maps.LatLng}
- */
-google.maps.MouseEvent.prototype.latLng;
-
-/**
- * Prevents this event from propagating further.
- * @return {undefined}
- */
-google.maps.MouseEvent.prototype.stop = function() {};
-
-/**
  * You can implement this class if you want to display custom types of overlay
  * objects on the map. <br><br>Inherit from this class by setting your
  * overlay&#39;s prototype: <code>MyOverlay.prototype = new
@@ -5541,7 +5560,7 @@ google.maps.Point.prototype.toString = function() {};
 
 /**
  * This object is returned from mouse events on polylines and polygons.
- * @extends {google.maps.MouseEvent}
+ * @extends {google.maps.MapMouseEvent}
  * @record
  */
 google.maps.PolyMouseEvent = function() {};

@@ -33,6 +33,15 @@ var google = {};
 google.maps = {};
 
 /**
+ * Google Maps JavaScript API version loaded by the browser.
+ * @see https://developers.google.com/maps/documentation/javascript/versions
+ *
+ * @type {string}
+ * @const
+ */
+google.maps.version;
+
+/**
  * Animations that can be played on a marker. Use the <code>setAnimation</code>
  * method on Marker or the <code>animation</code> option to play an animation.
  * @enum {number}
@@ -895,7 +904,7 @@ google.maps.Data.LinearRing.prototype.getType = function() {};
 
 /**
  * This object is passed to mouse event handlers on a <code>Data</code> object.
- * @extends {google.maps.MouseEvent}
+ * @extends {google.maps.MapMouseEvent}
  * @record
  */
 google.maps.Data.MouseEvent = function() {};
@@ -2865,7 +2874,7 @@ google.maps.Icon.prototype.url;
  * default info window from showing up, call the stop() method on this event to
  * prevent it being propagated. Learn more about <a
  * href="/places/place-id">place IDs</a> in the Places API developer guide.
- * @extends {google.maps.MouseEvent}
+ * @extends {google.maps.MapMouseEvent}
  * @record
  */
 google.maps.IconMouseEvent = function() {};
@@ -4216,6 +4225,35 @@ google.maps.MapCanvasProjection.prototype.fromLatLngToDivPixel = function(
 google.maps.MapCanvasProjection.prototype.getWorldWidth = function() {};
 
 /**
+ * This object is returned from various mouse events on the map and overlays,
+ * and contains all the fields shown below.
+ * @record
+ */
+google.maps.MapMouseEvent = function() {};
+
+/**
+ * The corresponding native DOM event. Developers should not rely on
+ * <code>target</code>, <code>currentTarget</code>, <code>relatedTarget</code>
+ * and <code>path</code> properties being defined and consistent. Developers
+ * should not also rely on the DOM structure of the internal implementation of
+ * the Maps API.
+ * @type {!MouseEvent|!TouchEvent|!PointerEvent|!Event}
+ */
+google.maps.MapMouseEvent.prototype.domEvent;
+
+/**
+ * The latitude/longitude that was below the cursor when the event occurred.
+ * @type {google.maps.LatLng}
+ */
+google.maps.MapMouseEvent.prototype.latLng;
+
+/**
+ * Prevents this event from propagating further.
+ * @return {undefined}
+ */
+google.maps.MapMouseEvent.prototype.stop = function() {};
+
+/**
  * MapOptions object used to define the properties that can be set on a Map.
  * @record
  */
@@ -4256,7 +4294,7 @@ google.maps.MapOptions.prototype.controlSize;
  * not disable the keyboard controls, which are separately controlled by
  * the {@link google.maps.MapOptions.keyboardShortcuts} option. Does not disable
  * gesture controls, which are separately controlled by the {@link
-    * google.maps.MapOptions.gestureHandling} option.
+ * google.maps.MapOptions.gestureHandling} option.
  * @type {?boolean|undefined}
  */
 google.maps.MapOptions.prototype.disableDefaultUI;
@@ -5084,7 +5122,7 @@ google.maps.MarkerOptions.prototype.icon;
 /**
  * Adds a label to the marker. The label can either be a string, or a
  * <code>MarkerLabel</code> object. If provided and {@link
-    * google.maps.MarkerOptions.title} is not provided, an accessibility text (e.g.
+ * google.maps.MarkerOptions.title} is not provided, an accessibility text (e.g.
  * for use with screen readers) will be added to the marker with the provided
  * label&#39;s text. Please note that the <code>label</code> is currently only
  * used for accessibility text for non-optimized markers.
@@ -5257,25 +5295,6 @@ google.maps.MotionTrackingControlOptions = function() {};
  * @type {?google.maps.ControlPosition|undefined}
  */
 google.maps.MotionTrackingControlOptions.prototype.position;
-
-/**
- * This object is returned from various mouse events on the map and overlays,
- * and contains all the fields shown below.
- * @record
- */
-google.maps.MouseEvent = function() {};
-
-/**
- * The latitude/longitude that was below the cursor when the event occurred.
- * @type {google.maps.LatLng}
- */
-google.maps.MouseEvent.prototype.latLng;
-
-/**
- * Prevents this event from propagating further.
- * @return {undefined}
- */
-google.maps.MouseEvent.prototype.stop = function() {};
 
 /**
  * You can implement this class if you want to display custom types of overlay
@@ -5469,7 +5488,7 @@ google.maps.PathElevationResponse.prototype.results;
 /**
  * Contains information needed to locate, identify, or describe a place for
  * a {@link google.maps.DirectionsRequest} or {@link
-    * google.maps.DistanceMatrixRequest}. In this context, &quot;place&quot; means
+ * google.maps.DistanceMatrixRequest}. In this context, &quot;place&quot; means
  * a business, point of interest, or geographic location. For fetching
  * information about a place, see {@link google.maps.places.PlacesService}.
  * @record
@@ -5541,7 +5560,7 @@ google.maps.Point.prototype.toString = function() {};
 
 /**
  * This object is returned from mouse events on polylines and polygons.
- * @extends {google.maps.MouseEvent}
+ * @extends {google.maps.MapMouseEvent}
  * @record
  */
 google.maps.PolyMouseEvent = function() {};
@@ -6814,7 +6833,7 @@ google.maps.StreetViewPreference = {
 
 /**
  * The response resolved for a Promise from {@link
-    * google.maps.StreetViewService.getPanorama}.
+ * google.maps.StreetViewService.getPanorama}.
  * @record
  */
 google.maps.StreetViewResponse = function() {};
@@ -8193,7 +8212,7 @@ google.maps.localContext.LocalContextMapView = function(options) {};
 
 /**
  * See {@link
-    * google.maps.localContext.LocalContextMapViewOptions.directionsOptions}.
+ * google.maps.localContext.LocalContextMapViewOptions.directionsOptions}.
  * @type {?google.maps.localContext.MapDirectionsOptions|!google.maps.localContext.MapDirectionsOptionsLiteral|undefined}
  */
 google.maps.localContext.LocalContextMapView.prototype.directionsOptions;
@@ -8206,9 +8225,9 @@ google.maps.localContext.LocalContextMapView.prototype.element;
 
 /**
  * Is set to <code>true</code> before {@link
-    * google.maps.localContext.LocalContextMapView} begins changing the bounds of
+ * google.maps.localContext.LocalContextMapView} begins changing the bounds of
  * the inner {@link google.maps.Map}, and set to <code>false</code> after {@link
-    * google.maps.localContext.LocalContextMapView} finishes changing the bounds of
+ * google.maps.localContext.LocalContextMapView} finishes changing the bounds of
  * the inner {@link google.maps.Map}. (Not set when layout mode changes happen
  * due to responsive resizing.)
  * @type {boolean}
@@ -8225,7 +8244,7 @@ google.maps.localContext.LocalContextMapView.prototype.locationBias;
 
 /**
  * See {@link
-    * google.maps.localContext.LocalContextMapViewOptions.locationRestriction}.
+ * google.maps.localContext.LocalContextMapViewOptions.locationRestriction}.
  * Changing this property on the <code>LocalContextMapView</code> may trigger a
  * new search.
  * @type {?google.maps.places.LocationRestriction|undefined}
@@ -8234,7 +8253,7 @@ google.maps.localContext.LocalContextMapView.prototype.locationRestriction;
 
 /**
  * See {@link
-    * google.maps.localContext.LocalContextMapViewOptions.maxPlaceCount}. Changing
+ * google.maps.localContext.LocalContextMapViewOptions.maxPlaceCount}. Changing
  * this property on the <code>LocalContextMapView</code> may trigger a new
  * search.
  * @type {number}
@@ -8243,7 +8262,7 @@ google.maps.localContext.LocalContextMapView.prototype.maxPlaceCount;
 
 /**
  * See {@link
-    * google.maps.localContext.LocalContextMapViewOptions.placeTypePreferences}.
+ * google.maps.localContext.LocalContextMapViewOptions.placeTypePreferences}.
  * Changing this property on the <code>LocalContextMapView</code> may trigger a
  * new search. <code>Iterable&lt;string|PlaceTypePreference&gt;</code> is also
  * accepted.
@@ -8277,7 +8296,7 @@ google.maps.localContext.LocalContextMapView.prototype.search = function() {};
 
 /**
  * Options for constructing a {@link
-    * google.maps.localContext.LocalContextMapView}, or accessing an
+ * google.maps.localContext.LocalContextMapView}, or accessing an
  * existing {@link google.maps.localContext.LocalContextMapView}.
  * @record
  */
@@ -8377,7 +8396,7 @@ google.maps.localContext.LocalContextMapViewOptions.prototype
 
 /**
  * Provides settings for directions with a {@link
-    * google.maps.localContext.LocalContextMapView}.
+ * google.maps.localContext.LocalContextMapView}.
  * @implements {google.maps.localContext.MapDirectionsOptionsLiteral}
  * @constructor
  */
@@ -8394,9 +8413,9 @@ google.maps.localContext.MapDirectionsOptions.prototype.addListener = function(
 
 /**
  * Object literals are accepted in place of {@link
-    * google.maps.localContext.MapDirectionsOptions} objects, as a convenience, in
+ * google.maps.localContext.MapDirectionsOptions} objects, as a convenience, in
  * many places. These are converted to {@link
-    * google.maps.localContext.MapDirectionsOptions} objects when the Maps API
+ * google.maps.localContext.MapDirectionsOptions} objects when the Maps API
  * encounters them.
  * @record
  */
@@ -8582,7 +8601,7 @@ google.maps.places.Autocomplete.prototype.getBounds = function() {};
 /**
  * Returns the fields to be included for the Place in the details response when
  * the details are successfully retrieved. For a list of fields see {@link
-    * google.maps.places.PlaceResult}.
+ * google.maps.places.PlaceResult}.
  * @return {!Array<string>|undefined}
  */
 google.maps.places.Autocomplete.prototype.getFields = function() {};
@@ -8617,7 +8636,7 @@ google.maps.places.Autocomplete.prototype.setComponentRestrictions = function(
 /**
  * Sets the fields to be included for the Place in the details response when the
  * details are successfully retrieved. For a list of fields see {@link
-    * google.maps.places.PlaceResult}.
+ * google.maps.places.PlaceResult}.
  * @param {!Array<string>|undefined} fields
  * @return {undefined}
  */
@@ -8667,7 +8686,7 @@ google.maps.places.AutocompleteOptions.prototype.componentRestrictions;
  * will be billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). For a list of fields see {@link
-    * google.maps.places.PlaceResult}. Nested fields can be specified with
+ * google.maps.places.PlaceResult}. Nested fields can be specified with
  * dot-paths (for example, <code>"geometry.location"</code>).
  * @type {!Array<string>|undefined}
  */
@@ -8718,7 +8737,7 @@ google.maps.places.AutocompletePrediction.prototype.description;
 
 /**
  * The distance in meters of the place from the {@link
-    * google.maps.places.AutocompletionRequest.origin}.
+ * google.maps.places.AutocompletionRequest.origin}.
  * @type {number|undefined}
  */
 google.maps.places.AutocompletePrediction.prototype.distance_meters;
@@ -8735,7 +8754,7 @@ google.maps.places.AutocompletePrediction.prototype.matched_substrings;
 /**
  * A place ID that can be used to retrieve details about this place using the
  * place details service (see {@link
-    * google.maps.places.PlacesService.getDetails}).
+ * google.maps.places.PlacesService.getDetails}).
  * @type {string}
  */
 google.maps.places.AutocompletePrediction.prototype.place_id;
@@ -8795,7 +8814,7 @@ google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
 /**
  * Represents a session token used for tracking an autocomplete session, which
  * can be a series of {@link
-    * google.maps.places.AutocompleteService.getPlacePredictions} calls followed by
+ * google.maps.places.AutocompleteService.getPlacePredictions} calls followed by
  * a single {@link google.maps.places.PlacesService.getDetails} call.
  * @constructor
  */
@@ -8803,7 +8822,7 @@ google.maps.places.AutocompleteSessionToken = function() {};
 
 /**
  * An Autocompletion request to be sent to {@link
-    * google.maps.places.AutocompleteService.getPlacePredictions}.
+ * google.maps.places.AutocompleteService.getPlacePredictions}.
  * @record
  */
 google.maps.places.AutocompletionRequest = function() {};
@@ -8847,7 +8866,7 @@ google.maps.places.AutocompletionRequest.prototype.offset;
 
 /**
  * The location where {@link
-    * google.maps.places.AutocompletePrediction.distance_meters} is calculated
+ * google.maps.places.AutocompletePrediction.distance_meters} is calculated
  * from.
  * @type {!google.maps.LatLng|!google.maps.LatLngLiteral|undefined}
  */
@@ -8920,7 +8939,7 @@ google.maps.places.ComponentRestrictions.prototype.country;
 
 /**
  * A find place from text search request to be sent to {@link
-    * google.maps.places.PlacesService.findPlaceFromPhoneNumber}.
+ * google.maps.places.PlacesService.findPlaceFromPhoneNumber}.
  * @record
  */
 google.maps.places.FindPlaceFromPhoneNumberRequest = function() {};
@@ -8931,7 +8950,7 @@ google.maps.places.FindPlaceFromPhoneNumberRequest = function() {};
  * will be billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). For a list of fields see {@link
-    * google.maps.places.PlaceResult}. Nested fields can be specified with
+ * google.maps.places.PlaceResult}. Nested fields can be specified with
  * dot-paths (for example, <code>"geometry.location"</code>).
  * @type {!Array<string>}
  */
@@ -8953,7 +8972,7 @@ google.maps.places.FindPlaceFromPhoneNumberRequest.prototype.phoneNumber;
 
 /**
  * A find place from text search request to be sent to {@link
-    * google.maps.places.PlacesService.findPlaceFromQuery}.
+ * google.maps.places.PlacesService.findPlaceFromQuery}.
  * @record
  */
 google.maps.places.FindPlaceFromQueryRequest = function() {};
@@ -8964,7 +8983,7 @@ google.maps.places.FindPlaceFromQueryRequest = function() {};
  * will be billed for</a>. If <code>[&#39;ALL&#39;]</code> is passed in, all
  * available fields will be returned and billed for (this is not recommended for
  * production deployments). For a list of fields see {@link
-    * google.maps.places.PlaceResult}. Nested fields can be specified with
+ * google.maps.places.PlaceResult}. Nested fields can be specified with
  * dot-paths (for example, <code>"geometry.location"</code>).
  * @type {!Array<string>}
  */
@@ -9109,7 +9128,7 @@ google.maps.places.PlaceOpeningHours.prototype.periods;
  * hours appropriately for the current language. The ordering of the elements in
  * this array depends on the language. Some languages start the week on Monday
  * while others start on Sunday. Only available with {@link
-    * google.maps.places.PlacesService.getDetails}. Other calls may return an empty
+ * google.maps.places.PlacesService.getDetails}. Other calls may return an empty
  * array.
  * @type {!Array<string>|undefined}
  */
@@ -9118,8 +9137,8 @@ google.maps.places.PlaceOpeningHours.prototype.weekday_text;
 /**
  * Check whether the place is open now (when no date is passed), or at the given
  * date. If this place does not have {@link
-    * google.maps.places.PlaceResult.utc_offset_minutes} or {@link
-    * google.maps.places.PlaceOpeningHours.periods} then <code>undefined</code> is
+ * google.maps.places.PlaceResult.utc_offset_minutes} or {@link
+ * google.maps.places.PlaceOpeningHours.periods} then <code>undefined</code> is
  * returned ({@link google.maps.places.PlaceOpeningHours.periods} is only
  * available via {@link google.maps.places.PlacesService.getDetails}).
  * @param {!Date=} date
@@ -9184,10 +9203,10 @@ google.maps.places.PlaceOpeningHoursTime.prototype.minutes;
  * The timestamp (as milliseconds since the epoch, suitable for use with
  * <code>new Date()</code>) representing the next occurrence of this
  * PlaceOpeningHoursTime. It is calculated from the {@link
-    * google.maps.places.PlaceOpeningHoursTime.day} of week, the {@link
-    * google.maps.places.PlaceOpeningHoursTime.time}, and the {@link
-    * google.maps.places.PlaceResult.utc_offset}. If the {@link
-    * google.maps.places.PlaceResult.utc_offset} is <code>undefined</code>, then
+ * google.maps.places.PlaceOpeningHoursTime.day} of week, the {@link
+ * google.maps.places.PlaceOpeningHoursTime.time}, and the {@link
+ * google.maps.places.PlaceResult.utc_offset}. If the {@link
+ * google.maps.places.PlaceResult.utc_offset} is <code>undefined</code>, then
  * <code>nextDate</code> will be <code>undefined</code>.
  * @type {number|undefined}
  */
@@ -9305,7 +9324,7 @@ google.maps.places.PlaceResult.prototype.formatted_address;
  * The Place’s phone number, formatted according to the <a
  * href="http://en.wikipedia.org/wiki/Local_conventions_for_writing_telephone_numbers">
  * number&#39;s regional convention</a>. Only available with {@link
-    * google.maps.places.PlacesService.getDetails}.
+ * google.maps.places.PlacesService.getDetails}.
  * @type {string|undefined}
  */
 google.maps.places.PlaceResult.prototype.formatted_phone_number;
@@ -9364,7 +9383,7 @@ google.maps.places.PlaceResult.prototype.permanently_closed;
 
 /**
  * Photos of this Place. The collection will contain up to ten {@link
-    * google.maps.places.PlacePhoto} objects.
+ * google.maps.places.PlacePhoto} objects.
  * @type {!Array<!google.maps.places.PlacePhoto>|undefined}
  */
 google.maps.places.PlaceResult.prototype.photos;
@@ -9400,7 +9419,7 @@ google.maps.places.PlaceResult.prototype.rating;
 
 /**
  * A list of reviews of this Place. Only available with {@link
-    * google.maps.places.PlacesService.getDetails}.
+ * google.maps.places.PlacesService.getDetails}.
  * @type {!Array<!google.maps.places.PlaceReview>|undefined}
  */
 google.maps.places.PlaceResult.prototype.reviews;
@@ -9423,7 +9442,7 @@ google.maps.places.PlaceResult.prototype.url;
 
 /**
  * The number of user ratings which contributed to this Place’s {@link
-    * google.maps.places.PlaceResult.rating}.
+ * google.maps.places.PlaceResult.rating}.
  * @type {number|undefined}
  */
 google.maps.places.PlaceResult.prototype.user_ratings_total;
@@ -9434,7 +9453,7 @@ google.maps.places.PlaceResult.prototype.user_ratings_total;
  * <code>utc_offset</code> will be <code>660</code>. For timezones behind UTC,
  * the offset is negative. For example, the <code>utc_offset</code> is
  * <code>-60</code> for Cape Verde. Only available with {@link
-    * google.maps.places.PlacesService.getDetails}.
+ * google.maps.places.PlacesService.getDetails}.
  * @type {number|undefined}
  */
 google.maps.places.PlaceResult.prototype.utc_offset;
@@ -9455,7 +9474,7 @@ google.maps.places.PlaceResult.prototype.utc_offset_minutes;
  * number, and locality, but not the province/state, postal code, or country.
  * For example, Google&#39;s Sydney, Australia office has a vicinity value of
  * <code>"48 Pirrama Road, Pyrmont"</code>. Only available with {@link
-    * google.maps.places.PlacesService.getDetails}.
+ * google.maps.places.PlacesService.getDetails}.
  * @type {string|undefined}
  */
 google.maps.places.PlaceResult.prototype.vicinity;
@@ -9645,7 +9664,7 @@ google.maps.places.PlacesService = function(attrContainer) {};
  * Retrieves a list of places based on a phone number. In most cases there
  * should be just one item in the result list, however if the request is
  * ambiguous more than one result may be returned. The {@link
-    * google.maps.places.PlaceResult}s passed to the callback are subsets of a
+ * google.maps.places.PlaceResult}s passed to the callback are subsets of a
  * full {@link google.maps.places.PlaceResult}. Your app can get a more
  * detailed {@link google.maps.places.PlaceResult} for each place by
  * calling {@link google.maps.places.PlacesService.getDetails} and passing
@@ -9662,7 +9681,7 @@ google.maps.places.PlacesService.prototype.findPlaceFromPhoneNumber = function(
  * Retrieves a list of places based on a query string. In most cases there
  * should be just one item in the result list, however if the request is
  * ambiguous more than one result may be returned. The {@link
-    * google.maps.places.PlaceResult}s passed to the callback are subsets of a
+ * google.maps.places.PlaceResult}s passed to the callback are subsets of a
  * full {@link google.maps.places.PlaceResult}. Your app can get a more
  * detailed {@link google.maps.places.PlaceResult} for each place by
  * calling {@link google.maps.places.PlacesService.getDetails} and passing
@@ -9696,8 +9715,8 @@ google.maps.places.PlacesService.prototype.getDetails = function(
  * place by sending a <a
  * href="/maps/documentation/javascript/places#place_details_requests">Place
  * Details request</a> passing the {@link
-    * google.maps.places.PlaceResult.place_id} for the desired place. The {@link
-    * google.maps.places.PlaceSearchPagination} object can be used to fetch
+ * google.maps.places.PlaceResult.place_id} for the desired place. The {@link
+ * google.maps.places.PlaceSearchPagination} object can be used to fetch
  * additional pages of results (null if this is the last page of results or if
  * there is only one page of results).
  * @param {!google.maps.places.PlaceSearchRequest} request
@@ -9828,7 +9847,7 @@ google.maps.places.QueryAutocompletePrediction.prototype.matched_substrings;
 /**
  * Only available if prediction is a place. A place ID that can be used to
  * retrieve details about this place using the place details service (see {@link
-    * google.maps.places.PlacesService.getDetails}).
+ * google.maps.places.PlacesService.getDetails}).
  * @type {string|undefined}
  */
 google.maps.places.QueryAutocompletePrediction.prototype.place_id;
