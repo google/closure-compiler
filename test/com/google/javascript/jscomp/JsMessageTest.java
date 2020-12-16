@@ -59,6 +59,16 @@ public final class JsMessageTest {
   public void testNoAlternateId() {
     JsMessage msg = new JsMessage.Builder().setDesc("Hello.").build();
     assertThat(msg.getDesc()).isEqualTo("Hello.");
+    assertThat(msg.getId()).isEqualTo("MSG_12MI20AMYO9T6");
+    assertThat(msg.getAlternateId()).isNull();
+  }
+
+  @Test
+  public void testSelfReferentialAlternateId() {
+    JsMessage msg =
+        new JsMessage.Builder().setDesc("Hello.").setAlternateId("MSG_12MI20AMYO9T6").build();
+    assertThat(msg.getDesc()).isEqualTo("Hello.");
+    assertThat(msg.getId()).isEqualTo("MSG_12MI20AMYO9T6");
     assertThat(msg.getAlternateId()).isNull();
   }
 
@@ -76,6 +86,7 @@ public final class JsMessageTest {
             .appendStringPart("part2")
             .build();
     assertThat(msg.getDesc()).isEqualTo("Hello.");
+    assertThat(msg.getId()).isEqualTo("meaning");
     assertThat(msg.getAlternateId()).isEqualTo("foo");
   }
 }

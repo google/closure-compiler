@@ -352,6 +352,11 @@ public abstract class JsMessage {
         id = idGenerator == null ? defactoMeaning : idGenerator.generateId(defactoMeaning, parts);
       }
 
+      // An alternate ID that points to itself is a no-op, so just omit it.
+      if ((alternateId != null) && alternateId.equals(id)) {
+        alternateId = null;
+      }
+
       return new AutoValue_JsMessage(
           sourceName,
           key,
