@@ -94,13 +94,13 @@ import org.kohsuke.args4j.spi.StringOptionHandler;
 /**
  * CommandLineRunner translates flags into Java API calls on the Compiler.
  *
- * This class may be extended and used to create other Java classes
- * that behave the same as running the Compiler from the command line. If you
- * want to run the compiler in-process in Java, you should look at this class
- * for hints on what API calls to make, but you should not use this class
- * directly.
+ * <p>This class may be extended and used to create other Java classes that behave the same as
+ * running the Compiler from the command line. If you want to run the compiler in-process in Java,
+ * you should look at this class for hints on what API calls to make, but you should not use this
+ * class directly.
  *
- * Example:
+ * <p>Example:
+ *
  * <pre>
  * class MyCommandLineRunner extends CommandLineRunner {
  *   MyCommandLineRunner(String[] args) {
@@ -128,11 +128,9 @@ import org.kohsuke.args4j.spi.StringOptionHandler;
  * This class is totally not thread-safe.
  */
 @GwtIncompatible("Unnecessary")
-public class CommandLineRunner extends
-    AbstractCommandLineRunner<Compiler, CompilerOptions> {
+public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, CompilerOptions> {
 
-  public static final String OUTPUT_MARKER =
-      AbstractCommandLineRunner.OUTPUT_MARKER;
+  public static final String OUTPUT_MARKER = AbstractCommandLineRunner.OUTPUT_MARKER;
 
   // UTF-8 BOM is 0xEF, 0xBB, 0xBF, of which character code is 65279.
   public static final int UTF8_BOM_CODE = 65279;
@@ -160,37 +158,36 @@ public class CommandLineRunner extends
     private Integer browserFeaturesetYear = 0;
 
     @Option(
-      name = "--help",
-      handler = BooleanOptionHandler.class,
-      usage = "Displays this message on stdout and exit"
-    )
+        name = "--help",
+        handler = BooleanOptionHandler.class,
+        usage = "Displays this message on stdout and exit")
     private boolean displayHelp = false;
 
-    @Option(name = "--print_tree",
+    @Option(
+        name = "--print_tree",
         hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Prints out the parse tree and exits")
     private boolean printTree = false;
 
-    @Option(name = "--print_ast",
+    @Option(
+        name = "--print_ast",
         hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Prints a dot file describing the internal abstract syntax"
-        + " tree and exits")
+        usage = "Prints a dot file describing the internal abstract syntax" + " tree and exits")
     private boolean printAst = false;
 
-    @Option(name = "--print_pass_graph",
+    @Option(
+        name = "--print_pass_graph",
         hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Prints a dot file describing the passes that will get run"
-        + " and exits")
+        usage = "Prints a dot file describing the passes that will get run" + " and exits")
     private boolean printPassGraph = false;
 
     @Option(
-      name = "--emit_use_strict",
-      handler = BooleanOptionHandler.class,
-      usage = "Start output with \"'use strict';\"."
-    )
+        name = "--emit_use_strict",
+        handler = BooleanOptionHandler.class,
+        usage = "Start output with \"'use strict';\".")
     private boolean emitUseStrict = true;
 
     @Option(
@@ -201,32 +198,35 @@ public class CommandLineRunner extends
 
     // Turn on (very slow) extra validity checks for use when modifying the compiler.
     @Option(
-      name = "--jscomp_dev_mode",
-      hidden = true,
-      //no usage
-      aliases = {"--dev_mode"}
-    )
+        name = "--jscomp_dev_mode",
+        hidden = true,
+        // no usage
+        aliases = {"--dev_mode"})
     private CompilerOptions.DevMode jscompDevMode = CompilerOptions.DevMode.OFF;
 
-    @Option(name = "--logging_level",
+    @Option(
+        name = "--logging_level",
         hidden = true,
-        usage = "The logging level (standard java.util.logging.Level"
-        + " values) for Compiler progress. Does not control errors or"
-        + " warnings for the JavaScript code under compilation")
+        usage =
+            "The logging level (standard java.util.logging.Level"
+                + " values) for Compiler progress. Does not control errors or"
+                + " warnings for the JavaScript code under compilation")
     private String loggingLevel = Level.WARNING.getName();
 
-    @Option(name = "--externs",
-        usage = "The file containing JavaScript externs. You may specify"
-        + " multiple")
+    @Option(
+        name = "--externs",
+        usage = "The file containing JavaScript externs. You may specify" + " multiple")
     private List<String> externs = new ArrayList<>();
 
-    @Option(name = "--js",
+    @Option(
+        name = "--js",
         handler = JsOptionHandler.class,
-        usage = "The JavaScript filename. You may specify multiple. "
-        + "The flag name is optional, because args are interpreted as files by default. "
-        + "You may also use minimatch-style glob patterns. For example, use "
-        + "--js='**.js' --js='!**_test.js' to recursively include all "
-        + "js files that do not end in _test.js")
+        usage =
+            "The JavaScript filename. You may specify multiple. "
+                + "The flag name is optional, because args are interpreted as files by default. "
+                + "You may also use minimatch-style glob patterns. For example, use "
+                + "--js='**.js' --js='!**_test.js' to recursively include all "
+                + "js files that do not end in _test.js")
     private List<String> js = new ArrayList<>();
 
     @Option(
@@ -236,40 +236,46 @@ public class CommandLineRunner extends
         usage = "The JavaScript zip filename. You may specify multiple.")
     private List<String> unusedJsZip = null;
 
-    @Option(name = "--js_output_file",
-        usage = "Primary output filename. If not specified, output is "
-        + "written to stdout")
+    @Option(
+        name = "--js_output_file",
+        usage = "Primary output filename. If not specified, output is " + "written to stdout")
     private String jsOutputFile = "";
 
-    @Option(name = "--chunk",
-        usage = "A JavaScript chunk specification. The format is "
-        + "<name>:<num-js-files>[:[<dep>,...][:]]]. Chunk names must be "
-        + "unique. Each dep is the name of a chunk that this chunk "
-        + "depends on. Chunks must be listed in dependency order, and JS "
-        + "source files must be listed in the corresponding order. Where "
-        + "--chunk flags occur in relation to --js flags is unimportant. "
-        + "<num-js-files> may be set to 'auto' for the first chunk if it "
-        + "has no dependencies. "
-        + "Provide the value 'auto' to trigger chunk creation from CommonJS"
-        + "modules.",
+    @Option(
+        name = "--chunk",
+        usage =
+            "A JavaScript chunk specification. The format is "
+                + "<name>:<num-js-files>[:[<dep>,...][:]]]. Chunk names must be "
+                + "unique. Each dep is the name of a chunk that this chunk "
+                + "depends on. Chunks must be listed in dependency order, and JS "
+                + "source files must be listed in the corresponding order. Where "
+                + "--chunk flags occur in relation to --js flags is unimportant. "
+                + "<num-js-files> may be set to 'auto' for the first chunk if it "
+                + "has no dependencies. "
+                + "Provide the value 'auto' to trigger chunk creation from CommonJS"
+                + "modules.",
         aliases = "--module")
     private List<String> chunk = new ArrayList<>();
 
-    @Option(name = "--continue-saved-compilation",
+    @Option(
+        name = "--continue-saved-compilation",
         usage = "Filename where the intermediate compilation state was previously saved.",
         hidden = true)
     private String continueSavedCompilationFile = null;
 
-    @Option(name = "--save-after-checks",
-        usage = "Filename to save phase 1 intermediate state so that the compilation can be"
-            + " resumed later.",
+    @Option(
+        name = "--save-after-checks",
+        usage =
+            "Filename to save phase 1 intermediate state so that the compilation can be"
+                + " resumed later.",
         hidden = true)
     private String saveAfterChecksFile = null;
 
-
-    @Option(name = "--variable_renaming_report",
-        usage = "File where the serialized version of the variable "
-        + "renaming map produced should be saved")
+    @Option(
+        name = "--variable_renaming_report",
+        usage =
+            "File where the serialized version of the variable "
+                + "renaming map produced should be saved")
     private String variableMapOutputFile = "";
 
     @Option(
@@ -280,40 +286,48 @@ public class CommandLineRunner extends
                 + "be used in tandem with --instrument_for_coverage_option=PRODUCTION")
     private String instrumentationMappingOutputFile = "";
 
-    @Option(name = "--create_renaming_reports",
+    @Option(
+        name = "--create_renaming_reports",
         hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "If true, variable renaming and property renaming report "
-        + "files will be produced as {binary name}_vars_renaming_report.out "
-        + "and {binary name}_props_renaming_report.out. Note that this flag "
-        + "cannot be used in conjunction with either variable_renaming_report "
-        + "or property_renaming_report")
+        usage =
+            "If true, variable renaming and property renaming report "
+                + "files will be produced as {binary name}_vars_renaming_report.out "
+                + "and {binary name}_props_renaming_report.out. Note that this flag "
+                + "cannot be used in conjunction with either variable_renaming_report "
+                + "or property_renaming_report")
     private boolean createNameMapFiles = false;
 
-    @Option(name = "--source_map_include_content",
+    @Option(
+        name = "--source_map_include_content",
         handler = BooleanOptionHandler.class,
-        usage = "Includes sources content into source map. Greatly increases "
-        + "the size of source maps but offers greater portability")
+        usage =
+            "Includes sources content into source map. Greatly increases "
+                + "the size of source maps but offers greater portability")
     private boolean sourceMapIncludeSourcesContent = false;
 
-    @Option(name = "--property_renaming_report",
-        usage = "File where the serialized version of the property "
-        + "renaming map produced should be saved")
+    @Option(
+        name = "--property_renaming_report",
+        usage =
+            "File where the serialized version of the property "
+                + "renaming map produced should be saved")
     private String propertyMapOutputFile = "";
 
-    @Option(name = "--third_party",
+    @Option(
+        name = "--third_party",
         handler = BooleanOptionHandler.class,
-        usage = "Check source validity but do not enforce Closure style "
-        + "rules and conventions")
+        usage = "Check source validity but do not enforce Closure style " + "rules and conventions")
     private boolean thirdParty = false;
 
-    @Option(name = "--summary_detail_level",
+    @Option(
+        name = "--summary_detail_level",
         hidden = true,
-        usage = "Controls how detailed the compilation summary is. Values:"
-        + " 0 (never print summary), 1 (print summary only if there are "
-        + "errors or warnings), 2 (print summary if the 'checkTypes' "
-        + "diagnostic  group is enabled, see --jscomp_warning), "
-        + "3 (always print summary). The default level is 1")
+        usage =
+            "Controls how detailed the compilation summary is. Values:"
+                + " 0 (never print summary), 1 (print summary only if there are "
+                + "errors or warnings), 2 (print summary if the 'checkTypes' "
+                + "diagnostic  group is enabled, see --jscomp_warning), "
+                + "3 (always print summary). The default level is 1")
     private int summaryDetailLevel = 1;
 
     @Option(
@@ -325,144 +339,156 @@ public class CommandLineRunner extends
     private IsolationMode isolationMode = IsolationMode.NONE;
 
     @Option(
-      name = "--output_wrapper",
-      usage =
-          "Interpolate output into this string at the place denoted"
-              + " by the marker token %output%. Use marker token %output|jsstring%"
-              + " to do js string escaping on the output."
-              + " Consider using the --isolation_mode flag instead."
-    )
+        name = "--output_wrapper",
+        usage =
+            "Interpolate output into this string at the place denoted"
+                + " by the marker token %output%. Use marker token %output|jsstring%"
+                + " to do js string escaping on the output."
+                + " Consider using the --isolation_mode flag instead.")
     private String outputWrapper = "";
 
-    @Option(name = "--output_wrapper_file",
-        usage = "Loads the specified file and passes the file contents to the --output_wrapper"
-        + " flag, replacing the value if it exists. This is useful if you want special characters"
-        + " like newline in the wrapper.")
+    @Option(
+        name = "--output_wrapper_file",
+        usage =
+            "Loads the specified file and passes the file contents to the --output_wrapper flag,"
+                + " replacing the value if it exists. This is useful if you want special"
+                + " characters like newline in the wrapper.")
     private String outputWrapperFile = "";
 
-    @Option(name = "--chunk_wrapper",
-        usage = "An output wrapper for a JavaScript chunk (optional). "
-        + "The format is <name>:<wrapper>. The chunk name must correspond "
-        + "with a chunk specified using --chunk. The wrapper must "
-        + "contain %s as the code placeholder. "
-        + "Alternately, %output% can be used in place of %s. "
-        + "%n% can be used to represent a newline. "
-        + "The %basename% placeholder can "
-        + "also be used to substitute the base name of the chunk output file.",
+    @Option(
+        name = "--chunk_wrapper",
+        usage =
+            "An output wrapper for a JavaScript chunk (optional). "
+                + "The format is <name>:<wrapper>. The chunk name must correspond "
+                + "with a chunk specified using --chunk. The wrapper must "
+                + "contain %s as the code placeholder. "
+                + "Alternately, %output% can be used in place of %s. "
+                + "%n% can be used to represent a newline. "
+                + "The %basename% placeholder can "
+                + "also be used to substitute the base name of the chunk output file.",
         aliases = "--module_wrapper")
     private List<String> chunkWrapper = new ArrayList<>();
 
-    @Option(name = "--chunk_output_path_prefix",
-        usage = "Prefix for filenames of compiled JS chunks. "
-        + "<chunk-name>.js will be appended to this prefix. Directories "
-        + "will be created as needed. Use with --chunk",
+    @Option(
+        name = "--chunk_output_path_prefix",
+        usage =
+            "Prefix for filenames of compiled JS chunks. "
+                + "<chunk-name>.js will be appended to this prefix. Directories "
+                + "will be created as needed. Use with --chunk",
         aliases = "--module_output_path_prefix")
     private String chunkOutputPathPrefix = "./";
 
-    @Option(name = "--create_source_map",
-        usage = "If specified, a source map file mapping the generated "
-        + "source files back to the original source file will be "
-        + "output to the specified path. The %outname% placeholder will "
-        + "expand to the name of the output file that the source map "
-        + "corresponds to.")
+    @Option(
+        name = "--create_source_map",
+        usage =
+            "If specified, a source map file mapping the generated "
+                + "source files back to the original source file will be "
+                + "output to the specified path. The %outname% placeholder will "
+                + "expand to the name of the output file that the source map "
+                + "corresponds to.")
     private String createSourceMap = "";
 
-    @Option(name = "--source_map_format",
+    @Option(
+        name = "--source_map_format",
         hidden = true,
-        usage = "The source map format to produce. "
-        + "Options are V3 and DEFAULT, which are equivalent.")
+        usage =
+            "The source map format to produce. "
+                + "Options are V3 and DEFAULT, which are equivalent.")
     private SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
 
-    @Option(name = "--source_map_location_mapping",
-        usage = "Source map location mapping separated by a '|' "
-        + "(i.e. filesystem-path|webserver-path)")
+    @Option(
+        name = "--source_map_location_mapping",
+        usage =
+            "Source map location mapping separated by a '|' "
+                + "(i.e. filesystem-path|webserver-path)")
     private List<String> sourceMapLocationMapping = new ArrayList<>();
 
     @Option(
-      name = "--source_map_input",
-      hidden = false,
-      usage =
-          "Source map locations for input files, separated by a '|', "
-              + "(i.e. input-file-path|input-source-map)"
-    )
+        name = "--source_map_input",
+        hidden = false,
+        usage =
+            "Source map locations for input files, separated by a '|', "
+                + "(i.e. input-file-path|input-source-map)")
     private List<String> sourceMapInputs = new ArrayList<>();
 
-    @Option(name = "--parse_inline_source_maps",
+    @Option(
+        name = "--parse_inline_source_maps",
         handler = BooleanOptionHandler.class,
         hidden = true,
         usage = "Parse inline source maps (//# sourceMappingURL=data:...)")
     private Boolean parseInlineSourceMaps = true;
 
     @Option(
-      name = "--apply_input_source_maps",
-      handler = BooleanOptionHandler.class,
-      hidden = true,
-      usage =
-          "Apply input source maps to the output source map, i.e. have the result map back to"
-              + "original inputs.  Input sourcemaps can be located in 2 ways:\n 1) by the"
-              + "//# sourceMappingURL=<url>. \n 2) using the--source_map_location_mapping flag.\n"
-              + "sourceMappingURL=<url> can read both paths and inline Base64 encoded sourcemaps. "
-              + "For inline Base64 encoded sourcemaps, see --parse_inline_source_maps."
-    )
+        name = "--apply_input_source_maps",
+        handler = BooleanOptionHandler.class,
+        hidden = true,
+        usage =
+            "Apply input source maps to the output source map, i.e. have the result map back"
+                + " tooriginal inputs.  Input sourcemaps can be located in 2 ways:\n"
+                + " 1) by the//# sourceMappingURL=<url>. \n"
+                + " 2) using the--source_map_location_mapping flag.\n"
+                + "sourceMappingURL=<url> can read both paths and inline Base64 encoded"
+                + " sourcemaps. For inline Base64 encoded sourcemaps, see"
+                + " --parse_inline_source_maps.")
     private boolean applyInputSourceMaps = true;
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(
-      name = "--jscomp_error",
-      handler = WarningGuardErrorOptionHandler.class,
-      usage =
-          "Make the named class of warnings an error. Must be one "
-              + "of the error group items. '*' adds all supported."
-    )
+        name = "--jscomp_error",
+        handler = WarningGuardErrorOptionHandler.class,
+        usage =
+            "Make the named class of warnings an error. Must be one "
+                + "of the error group items. '*' adds all supported.")
     private List<String> jscompError = new ArrayList<>();
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(
-      name = "--jscomp_warning",
-      handler = WarningGuardWarningOptionHandler.class,
-      usage =
-          "Make the named class of warnings a normal warning. Must be one "
-              + "of the error group items. '*' adds all supported."
-    )
+        name = "--jscomp_warning",
+        handler = WarningGuardWarningOptionHandler.class,
+        usage =
+            "Make the named class of warnings a normal warning. Must be one "
+                + "of the error group items. '*' adds all supported.")
     private List<String> jscompWarning = new ArrayList<>();
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(
-      name = "--jscomp_off",
-      handler = WarningGuardOffOptionHandler.class,
-      usage =
-          "Turn off the named class of warnings. Must be one "
-              + "of the error group items. '*' adds all supported."
-    )
+        name = "--jscomp_off",
+        handler = WarningGuardOffOptionHandler.class,
+        usage =
+            "Turn off the named class of warnings. Must be one "
+                + "of the error group items. '*' adds all supported.")
     private List<String> jscompOff = new ArrayList<>();
 
-    @Option(name = "--define",
+    @Option(
+        name = "--define",
         aliases = {"--D", "-D"},
-        usage = "Override the value of a variable annotated @define. "
-        + "The format is <name>[=<val>], where <name> is the name of a @define "
-        + "variable and <val> is a boolean, number, or a single-quoted string "
-        + "that contains no single quotes. If [=<val>] is omitted, "
-        + "the variable is marked true")
+        usage =
+            "Override the value of a variable annotated @define. "
+                + "The format is <name>[=<val>], where <name> is the name of a @define "
+                + "variable and <val> is a boolean, number, or a single-quoted string "
+                + "that contains no single quotes. If [=<val>] is omitted, "
+                + "the variable is marked true")
     private List<String> define = new ArrayList<>();
 
-    @Option(name = "--charset",
-        usage = "Input and output charset for all files. By default, we "
+    @Option(
+        name = "--charset",
+        usage =
+            "Input and output charset for all files. By default, we "
                 + "accept UTF-8 as input and output US_ASCII")
     private String charset = "";
 
     @Option(
-      name = "--compilation_level",
-      aliases = {"-O"},
-      usage =
-          "Specifies the compilation level to use. Options: "
-              + "BUNDLE, "
-              + "WHITESPACE_ONLY, "
-              + "SIMPLE (default), "
-              + "ADVANCED"
-    )
+        name = "--compilation_level",
+        aliases = {"-O"},
+        usage =
+            "Specifies the compilation level to use. Options: "
+                + "BUNDLE, "
+                + "WHITESPACE_ONLY, "
+                + "SIMPLE (default), "
+                + "ADVANCED")
     private String compilationLevel = "SIMPLE";
 
     private CompilationLevel compilationLevelParsed = null;
@@ -474,52 +500,56 @@ public class CommandLineRunner extends
         usage = "Use multiple threads to parallelize parts of the compilation.")
     private int numParallelThreads = 1;
 
-    @Option(name = "--checks_only",
+    @Option(
+        name = "--checks_only",
         aliases = {"--checks-only"},
         handler = BooleanOptionHandler.class,
         usage = "Don't generate output. Run checks, but no optimization passes.")
     private boolean checksOnly = false;
 
     @Option(
-      name = "--incremental_check_mode",
-      usage = "Generate or check externs-like .i.js files representing individual libraries."
-    )
+        name = "--incremental_check_mode",
+        usage = "Generate or check externs-like .i.js files representing individual libraries.")
     private CompilerOptions.IncrementalCheckMode incrementalCheckMode =
         CompilerOptions.IncrementalCheckMode.OFF;
 
-    @Option(name = "--continue_after_errors",
+    @Option(
+        name = "--continue_after_errors",
         handler = BooleanOptionHandler.class,
         usage = "Continue trying to compile after an error is encountered.")
     private boolean continueAfterErrors = false;
 
-    @Option(name = "--use_types_for_optimization",
+    @Option(
+        name = "--use_types_for_optimization",
         handler = BooleanOptionHandler.class,
-        usage = "Enable or disable the optimizations "
-        + "based on available type information. Inaccurate type annotations "
-        + "may result in incorrect results.")
+        usage =
+            "Enable or disable the optimizations "
+                + "based on available type information. Inaccurate type annotations "
+                + "may result in incorrect results.")
     private boolean useTypesForOptimization = true;
 
-    @Option(name = "--assume_function_wrapper",
+    @Option(
+        name = "--assume_function_wrapper",
         handler = BooleanOptionHandler.class,
-        usage = "Enable additional optimizations based on the assumption that the output will be "
-        + "wrapped with a function wrapper.  This flag is used to indicate that \"global\" "
-        + "declarations will not actually be global but instead isolated to the compilation unit. "
-        + "This enables additional optimizations.")
+        usage =
+            "Enable additional optimizations based on the assumption that the output will be"
+                + " wrapped with a function wrapper.  This flag is used to indicate that"
+                + " \"global\" declarations will not actually be global but instead isolated to"
+                + " the compilation unit. This enables additional optimizations.")
     private boolean assumeFunctionWrapper = false;
 
-    @Option(name = "--warning_level",
+    @Option(
+        name = "--warning_level",
         aliases = {"-W"},
-        usage = "Specifies the warning level to use. Options: "
-        + "QUIET, DEFAULT, VERBOSE")
+        usage = "Specifies the warning level to use. Options: " + "QUIET, DEFAULT, VERBOSE")
     private WarningLevel warningLevel = WarningLevel.DEFAULT;
 
     @Option(
-      name = "--debug",
-      handler = BooleanOptionHandler.class,
-      usage =
-          "Enable debugging options. Property renaming uses long mangled names which can be "
-              + "mapped back to the original name."
-    )
+        name = "--debug",
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Enable debugging options. Property renaming uses long mangled names which can be "
+                + "mapped back to the original name.")
     private boolean debug = false;
 
     @Option(
@@ -534,28 +564,29 @@ public class CommandLineRunner extends
         usage = "Generates export code for local properties marked with @export")
     private boolean exportLocalPropertyDefinitions = true;
 
-    @Option(name = "--formatting",
-        usage = "Specifies which formatting options, if any, should be "
-        + "applied to the output JS. Options: "
-        + "PRETTY_PRINT, PRINT_INPUT_DELIMITER, SINGLE_QUOTES")
+    @Option(
+        name = "--formatting",
+        usage =
+            "Specifies which formatting options, if any, should be "
+                + "applied to the output JS. Options: "
+                + "PRETTY_PRINT, PRINT_INPUT_DELIMITER, SINGLE_QUOTES")
     private List<FormattingOption> formatting = new ArrayList<>();
 
-    @Option(name = "--process_common_js_modules",
+    @Option(
+        name = "--process_common_js_modules",
         handler = BooleanOptionHandler.class,
         usage = "Process CommonJS modules to a concatenable form.")
     private boolean processCommonJsModules = false;
 
     @Option(
-      name = "--common_js_module_path_prefix",
-      hidden = true,
-      usage = "Deprecated: use --js_module_root."
-    )
+        name = "--common_js_module_path_prefix",
+        hidden = true,
+        usage = "Deprecated: use --js_module_root.")
     private List<String> commonJsPathPrefix = new ArrayList<>();
 
     @Option(
-      name = "--js_module_root",
-      usage = "Path prefixes to be removed from ES6 & CommonJS modules."
-    )
+        name = "--js_module_root",
+        usage = "Path prefixes to be removed from ES6 & CommonJS modules.")
     private List<String> moduleRoot = new ArrayList<>();
 
     @Option(
@@ -565,18 +596,21 @@ public class CommandLineRunner extends
     @Deprecated
     private String commonJsEntryModule;
 
-    @Option(name = "--transform_amd_modules",
+    @Option(
+        name = "--transform_amd_modules",
         hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Deprecated: Transform AMD to CommonJS modules.")
     @Deprecated
     private boolean transformAmdModules = false;
 
-    @Option(name = "--process_closure_primitives",
+    @Option(
+        name = "--process_closure_primitives",
         handler = BooleanOptionHandler.class,
-        usage = "Processes built-ins from the Closure library, such as "
-        + "goog.require(), goog.provide(), and goog.exportSymbol(). "
-        + "True by default.")
+        usage =
+            "Processes built-ins from the Closure library, such as "
+                + "goog.require(), goog.provide(), and goog.exportSymbol(). "
+                + "True by default.")
     private boolean processClosurePrimitives = true;
 
     @Option(
@@ -599,23 +633,22 @@ public class CommandLineRunner extends
     @Deprecated
     private List<String> closureEntryPoint = new ArrayList<>();
 
-    @Option(name = "--angular_pass",
+    @Option(
+        name = "--angular_pass",
         handler = BooleanOptionHandler.class,
-        usage = "Generate $inject properties for AngularJS for functions "
-        + "annotated with @ngInject")
+        usage =
+            "Generate $inject properties for AngularJS for functions " + "annotated with @ngInject")
     private boolean angularPass = false;
 
     @Option(
-      name = "--polymer_pass",
-      handler = BooleanOptionHandler.class,
-      hidden = true,
-      usage = "Equivalent to --polymer_version=1"
-    )
+        name = "--polymer_pass",
+        handler = BooleanOptionHandler.class,
+        hidden = true,
+        usage = "Equivalent to --polymer_version=1")
     @Deprecated
     private boolean polymerPass = false;
 
-    @Option(name = "--polymer_version",
-        usage = "Which version of Polymer is being used (1 or 2).")
+    @Option(name = "--polymer_version", usage = "Which version of Polymer is being used (1 or 2).")
     private Integer polymerVersion = null;
 
     @Option(
@@ -625,24 +658,25 @@ public class CommandLineRunner extends
                 + "Values: LEGACY, EXPORT_ALL.")
     private String polymerExportPolicy = PolymerExportPolicy.LEGACY.name();
 
-    @Option(name = "--chrome_pass",
+    @Option(
+        name = "--chrome_pass",
         handler = BooleanOptionHandler.class,
         usage = "Enable Chrome-specific options for handling cr.* functions.",
         hidden = true)
     private boolean chromePass = false;
 
-    @Option(name = "--dart_pass",
+    @Option(
+        name = "--dart_pass",
         handler = BooleanOptionHandler.class,
         usage = "Rewrite Dart Dev Compiler output to be compiler-friendly.")
     private boolean dartPass = false;
 
     @Option(
-      name = "--j2cl_pass",
-      hidden = true,
-      usage =
-          "Rewrite J2CL output to be compiler-friendly if enabled (ON or AUTO). "
-              + "Options:OFF, ON, AUTO(default)"
-    )
+        name = "--j2cl_pass",
+        hidden = true,
+        usage =
+            "Rewrite J2CL output to be compiler-friendly if enabled (ON or AUTO). "
+                + "Options:OFF, ON, AUTO(default)")
     private String j2clPassMode = "AUTO";
 
     @Option(
@@ -662,7 +696,8 @@ public class CommandLineRunner extends
                 + "a manifest for each module.")
     private String outputManifest = "";
 
-    @Option(name = "--output_chunk_dependencies",
+    @Option(
+        name = "--output_chunk_dependencies",
         usage = "Prints out a JSON file of dependencies between chunks.",
         aliases = "--output_module_dependencies")
     private String outputChunkDependencies = "";
@@ -693,19 +728,23 @@ public class CommandLineRunner extends
         usage = "Prints the compiler version to stdout and exit.")
     private boolean version = false;
 
-    @Option(name = "--translations_file",
+    @Option(
+        name = "--translations_file",
         hidden = true,
         usage = "Source of translated messages. Currently only supports XTB.")
     private String translationsFile = "";
 
-    @Option(name = "--translations_project",
+    @Option(
+        name = "--translations_project",
         hidden = true,
-        usage = "Scopes all translations to the specified project."
-        + "When specified, we will use different message ids so that messages "
-        + "in different projects can have different translations.")
+        usage =
+            "Scopes all translations to the specified project."
+                + "When specified, we will use different message ids so that messages "
+                + "in different projects can have different translations.")
     private String translationsProject = null;
 
-    @Option(name = "--flagfile",
+    @Option(
+        name = "--flagfile",
         hidden = true,
         usage = "A file (or files) containing additional command-line options.")
     private List<String> flagFiles = new ArrayList<>();
@@ -719,9 +758,11 @@ public class CommandLineRunner extends
         aliases = {"--warnings_whitelist_file"})
     private String warningsAllowlistFile = "";
 
-    @Option(name = "--hide_warnings_for",
-        usage = "If specified, files whose path contains this string will "
-            + "have their warnings hidden. You may specify multiple.")
+    @Option(
+        name = "--hide_warnings_for",
+        usage =
+            "If specified, files whose path contains this string will "
+                + "have their warnings hidden. You may specify multiple.")
     private List<String> hideWarningsFor = new ArrayList<>();
 
     @Option(
@@ -729,60 +770,69 @@ public class CommandLineRunner extends
         usage = "A allowlist of tag names in JSDoc. You may specify multiple")
     private List<String> extraAnnotationName = new ArrayList<>();
 
-    @Option(name = "--tracer_mode",
+    @Option(
+        name = "--tracer_mode",
         hidden = true,
-        usage = "Shows the duration of each compiler pass and the impact to "
-        + "the compiled output size. "
-        + "Options: ALL, AST_SIZE, RAW_SIZE, TIMING_ONLY, OFF")
-    private CompilerOptions.TracerMode tracerMode =
-        CompilerOptions.TracerMode.OFF;
+        usage =
+            "Shows the duration of each compiler pass and the impact to "
+                + "the compiled output size. "
+                + "Options: ALL, AST_SIZE, RAW_SIZE, TIMING_ONLY, OFF")
+    private CompilerOptions.TracerMode tracerMode = CompilerOptions.TracerMode.OFF;
 
-    @Option(name = "--rename_variable_prefix",
+    @Option(
+        name = "--rename_variable_prefix",
         usage = "Specifies a prefix that will be prepended to all variables.")
     private String renamePrefix = null;
 
-    @Option(name = "--rename_prefix_namespace",
-        usage = "Specifies the name of an object that will be used to store all "
-        + "non-extern globals")
+    @Option(
+        name = "--rename_prefix_namespace",
+        usage =
+            "Specifies the name of an object that will be used to store all "
+                + "non-extern globals")
     private String renamePrefixNamespace = null;
 
-    @Option(name = "--conformance_configs",
+    @Option(
+        name = "--conformance_configs",
         usage = "A list of JS Conformance configurations in text protocol buffer format.")
     private List<String> conformanceConfigs = new ArrayList<>();
 
-    @Option(name = "--env",
-        usage = "Determines the set of builtin externs to load. "
-            + "Options: BROWSER, CUSTOM. Defaults to BROWSER.")
-    private CompilerOptions.Environment environment =
-        CompilerOptions.Environment.BROWSER;
+    @Option(
+        name = "--env",
+        usage =
+            "Determines the set of builtin externs to load. "
+                + "Options: BROWSER, CUSTOM. Defaults to BROWSER.")
+    private CompilerOptions.Environment environment = CompilerOptions.Environment.BROWSER;
 
     @Option(
-      name = "--json_streams",
-      hidden = true,
-      usage =
-          "Specifies whether standard input and output streams will be "
-              + "a JSON array of sources. Each source will be an object of the "
-              + "form {path: filename, src: file_contents, srcmap: srcmap_contents }. "
-              + "Intended for use by stream-based build systems such as gulpjs. "
-              + "Options: NONE, IN, OUT, BOTH. Defaults to NONE."
-    )
+        name = "--json_streams",
+        hidden = true,
+        usage =
+            "Specifies whether standard input and output streams will be "
+                + "a JSON array of sources. Each source will be an object of the "
+                + "form {path: filename, src: file_contents, srcmap: srcmap_contents }. "
+                + "Intended for use by stream-based build systems such as gulpjs. "
+                + "Options: NONE, IN, OUT, BOTH. Defaults to NONE.")
     private CompilerOptions.JsonStreamMode jsonStreamMode = CompilerOptions.JsonStreamMode.NONE;
 
-    @Option(name = "--preserve_type_annotations",
+    @Option(
+        name = "--preserve_type_annotations",
         hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Preserves type annotations.")
     private boolean preserveTypeAnnotations = false;
 
-    @Option(name = "--inject_libraries",
+    @Option(
+        name = "--inject_libraries",
         handler = BooleanOptionHandler.class,
         usage = "Allow injecting runtime libraries.")
     private boolean injectLibraries = true;
 
-    @Option(name = "--force_inject_library",
-        usage = "Force injection of named runtime libraries. "
-        + "The format is <name> where <name> is the name of a runtime library. "
-        + "Possible libraries include: base, es6_runtime, runtime_type_check")
+    @Option(
+        name = "--force_inject_library",
+        usage =
+            "Force injection of named runtime libraries. "
+                + "The format is <name> where <name> is the name of a runtime library. "
+                + "Possible libraries include: base, es6_runtime, runtime_type_check")
     private List<String> forceInjectLibraries = new ArrayList<>();
 
     @Option(
@@ -809,27 +859,26 @@ public class CommandLineRunner extends
                 + "Example: --entry_point=goog:goog.Promise")
     private List<String> entryPoint = new ArrayList<>();
 
-    @Option(name = "--rewrite_polyfills",
+    @Option(
+        name = "--rewrite_polyfills",
         handler = BooleanOptionHandler.class,
         usage = "Rewrite ES6 library calls to use polyfills provided by the compiler's runtime.")
     private boolean rewritePolyfills = true;
 
     @Option(
-      name = "--print_source_after_each_pass",
-      handler = BooleanOptionHandler.class,
-      hidden = true,
-      usage = "Whether to iteratively print resulting JS source per pass."
-    )
+        name = "--print_source_after_each_pass",
+        handler = BooleanOptionHandler.class,
+        hidden = true,
+        usage = "Whether to iteratively print resulting JS source per pass.")
     private boolean printSourceAfterEachPass = false;
 
     @Option(
-      name = "--module_resolution",
-      hidden = false,
-      usage =
-          "Specifies how the compiler locates modules. BROWSER requires all module imports "
-              + "to begin with a '.' or '/' and have a file extension. NODE uses the node module "
-              + "rules. WEBPACK looks up modules from a special lookup map."
-    )
+        name = "--module_resolution",
+        hidden = false,
+        usage =
+            "Specifies how the compiler locates modules. BROWSER requires all module imports "
+                + "to begin with a '.' or '/' and have a file extension. NODE uses the node module "
+                + "rules. WEBPACK looks up modules from a special lookup map.")
     private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
 
     @Option(
@@ -841,28 +890,28 @@ public class CommandLineRunner extends
     private Map<String, String> browserResolverPrefixReplacements = new HashMap<>();
 
     @Option(
-      name = "--package_json_entry_names",
-      usage =
-          "Ordered list of entries to look for in package.json files when processing "
-              + "modules with the NODE module resolution strategy (i.e. esnext:main,browser,main). "
-              + "Defaults to a list with the following entries: \"browser\", \"module\", \"main\"."
-    )
+        name = "--package_json_entry_names",
+        usage =
+            "Ordered list of entries to look for in package.json files when processing modules"
+                + " with the NODE module resolution strategy (i.e. esnext:main,browser,main)."
+                + " Defaults to a list with the following entries: \"browser\", \"module\","
+                + " \"main\".")
     private String packageJsonEntryNames = null;
 
     @Option(name = "--error_format", usage = "Specifies format for error messages.")
     private ErrorFormatOption errorFormat = ErrorFormatOption.STANDARD;
 
-    @Option(name = "--renaming",
+    @Option(
+        name = "--renaming",
         handler = BooleanOptionHandler.class,
         usage = "Disables variable renaming. Cannot be used with ADVANCED optimizations.")
     private boolean renaming = true;
 
     @Option(
-      name = "--help_markdown",
-      handler = BooleanOptionHandler.class,
-      hidden = true,
-      usage = "Prints markdown formatted flag usage"
-    )
+        name = "--help_markdown",
+        handler = BooleanOptionHandler.class,
+        hidden = true,
+        usage = "Prints markdown formatted flag usage")
     private boolean helpMarkdown = false;
 
     @Option(
@@ -886,17 +935,14 @@ public class CommandLineRunner extends
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
-    @Argument
-    private List<String> arguments = new ArrayList<>();
+    @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
     Flags() {
       parser = new CmdLineParser(this);
     }
 
-    /**
-     * Parse the given args list.
-     */
+    /** Parse the given args list. */
     private void parse(List<String> args) throws CmdLineException {
       parser.parseArgument(args.toArray(new String[] {}));
 
@@ -1165,9 +1211,10 @@ public class CommandLineRunner extends
 
     private static void printShortUsageAfterErrors(PrintStream ps) {
       ps.print("Sample usage: ");
-      ps.println("--compilation_level (-O) VAL --externs VAL --js VAL"
-          + " --js_output_file VAL"
-          + " --warning_level (-W) [QUIET | DEFAULT | VERBOSE]");
+      ps.println(
+          "--compilation_level (-O) VAL --externs VAL --js VAL"
+              + " --js_output_file VAL"
+              + " --warning_level (-W) [QUIET | DEFAULT | VERBOSE]");
       ps.println("Run with --help for all options and details");
       ps.flush();
     }
@@ -1234,11 +1281,11 @@ public class CommandLineRunner extends
     List<SourceMap.LocationMapping> getSourceMapLocationMappings() throws CmdLineException {
       ImmutableList.Builder<LocationMapping> locationMappings = ImmutableList.builder();
 
-      ImmutableMap<String, String> split = splitPipeParts(
-          sourceMapLocationMapping, "--source_map_location_mapping");
+      ImmutableMap<String, String> split =
+          splitPipeParts(sourceMapLocationMapping, "--source_map_location_mapping");
       for (Map.Entry<String, String> mapping : split.entrySet()) {
-        locationMappings.add(new SourceMap.PrefixLocationMapping(mapping.getKey(),
-            mapping.getValue()));
+        locationMappings.add(
+            new SourceMap.PrefixLocationMapping(mapping.getKey(), mapping.getValue()));
       }
 
       return locationMappings.build();
@@ -1248,16 +1295,16 @@ public class CommandLineRunner extends
       return splitPipeParts(sourceMapInputs, "--source_map_input");
     }
 
-    private ImmutableMap<String, String> splitPipeParts(Iterable<String> input,
-        String flagName) throws CmdLineException {
+    private ImmutableMap<String, String> splitPipeParts(Iterable<String> input, String flagName)
+        throws CmdLineException {
       ImmutableMap.Builder<String, String> result = new ImmutableMap.Builder<>();
 
       Splitter splitter = Splitter.on('|').limit(2);
       for (String inputSourceMap : input) {
         List<String> parts = splitter.splitToList(inputSourceMap);
         if (parts.size() != 2) {
-          throw new CmdLineException(parser, "Bad value for " + flagName +
-              " (duplicate key): " + input);
+          throw new CmdLineException(
+              parser, "Bad value for " + flagName + " (duplicate key): " + input);
         }
         result.put(parts.get(0), parts.get(1));
       }
@@ -1276,8 +1323,7 @@ public class CommandLineRunner extends
       private static final ImmutableSet<String> FALSES = ImmutableSet.of("false", "off", "no", "0");
 
       public BooleanOptionHandler(
-          CmdLineParser parser, OptionDef option,
-          Setter<? super Boolean> setter) {
+          CmdLineParser parser, OptionDef option, Setter<? super Boolean> setter) {
         super(parser, option, setter);
       }
 
@@ -1315,51 +1361,38 @@ public class CommandLineRunner extends
 
     // Our own parser for warning guards that preserves the original order
     // of the flags.
-    public static class WarningGuardErrorOptionHandler
-        extends StringOptionHandler {
+    public static class WarningGuardErrorOptionHandler extends StringOptionHandler {
       public WarningGuardErrorOptionHandler(
-          CmdLineParser parser, OptionDef option,
-          Setter<? super String> setter) {
-        super(parser, option,
-            new MultiFlagSetter<>(setter, CheckLevel.ERROR, guardLevels));
+          CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
+        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.ERROR, guardLevels));
       }
     }
 
-    public static class WarningGuardWarningOptionHandler
-        extends StringOptionHandler {
+    public static class WarningGuardWarningOptionHandler extends StringOptionHandler {
       public WarningGuardWarningOptionHandler(
-          CmdLineParser parser, OptionDef option,
-          Setter<? super String> setter) {
-        super(parser, option,
-            new MultiFlagSetter<>(setter, CheckLevel.WARNING, guardLevels));
+          CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
+        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.WARNING, guardLevels));
       }
     }
 
-    public static class WarningGuardOffOptionHandler
-        extends StringOptionHandler {
+    public static class WarningGuardOffOptionHandler extends StringOptionHandler {
       public WarningGuardOffOptionHandler(
-          CmdLineParser parser, OptionDef option,
-          Setter<? super String> setter) {
-        super(parser, option,
-            new MultiFlagSetter<>(setter, CheckLevel.OFF, guardLevels));
+          CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
+        super(parser, option, new MultiFlagSetter<>(setter, CheckLevel.OFF, guardLevels));
       }
     }
 
     public static class JsOptionHandler extends StringOptionHandler {
       public JsOptionHandler(
-          CmdLineParser parser, OptionDef option,
-          Setter<? super String> setter) {
-        super(parser, option,
-            new MultiFlagSetter<>(setter, JsSourceType.JS, mixedJsSources));
+          CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
+        super(parser, option, new MultiFlagSetter<>(setter, JsSourceType.JS, mixedJsSources));
       }
     }
 
     public static class JsZipOptionHandler extends StringOptionHandler {
       public JsZipOptionHandler(
-          CmdLineParser parser, OptionDef option,
-          Setter<? super String> setter) {
-        super(parser, option,
-            new MultiFlagSetter<>(setter, JsSourceType.JS_ZIP, mixedJsSources));
+          CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
+        super(parser, option, new MultiFlagSetter<>(setter, JsSourceType.JS_ZIP, mixedJsSources));
       }
     }
 
@@ -1368,22 +1401,24 @@ public class CommandLineRunner extends
       private final T flag;
       private final List<FlagEntry<T>> entries;
 
-      private MultiFlagSetter(
-          Setter<? super String> proxy, T flag, List<FlagEntry<T>> entries) {
+      private MultiFlagSetter(Setter<? super String> proxy, T flag, List<FlagEntry<T>> entries) {
         this.proxy = proxy;
         this.flag = flag;
         this.entries = entries;
       }
 
-      @Override public boolean isMultiValued() {
+      @Override
+      public boolean isMultiValued() {
         return proxy.isMultiValued();
       }
 
-      @Override public Class<String> getType() {
+      @Override
+      public Class<String> getType() {
         return (Class<String>) proxy.getType();
       }
 
-      @Override public void addValue(String value) throws CmdLineException {
+      @Override
+      public void addValue(String value) throws CmdLineException {
         // On windows, some quoted values seem to preserve the quotes as part of the value.
         String normalizedValue = value;
         if (value != null
@@ -1396,11 +1431,13 @@ public class CommandLineRunner extends
         entries.add(new FlagEntry<>(flag, normalizedValue));
       }
 
-      @Override public FieldSetter asFieldSetter() {
+      @Override
+      public FieldSetter asFieldSetter() {
         return proxy.asFieldSetter();
       }
 
-      @Override public AnnotatedElement asAnnotatedElement() {
+      @Override
+      public AnnotatedElement asAnnotatedElement() {
         return proxy.asAnnotatedElement();
       }
     }
@@ -1410,8 +1447,7 @@ public class CommandLineRunner extends
   public static enum FormattingOption {
     PRETTY_PRINT,
     PRINT_INPUT_DELIMITER,
-    SINGLE_QUOTES
-    ;
+    SINGLE_QUOTES;
 
     private void applyToOptions(CompilerOptions options) {
       switch (this) {
@@ -1436,16 +1472,12 @@ public class CommandLineRunner extends
 
   private boolean runCompiler = false;
 
-  /**
-   * Cached error stream to avoid passing it as a parameter to helper
-   * functions.
-   */
+  /** Cached error stream to avoid passing it as a parameter to helper functions. */
   private PrintStream errorStream;
 
   /**
-   * Create a new command-line runner. You should only need to call
-   * the constructor if you're extending this class. Otherwise, the main
-   * method should instantiate it.
+   * Create a new command-line runner. You should only need to call the constructor if you're
+   * extending this class. Otherwise, the main method should instantiate it.
    */
   protected CommandLineRunner(String[] args) {
     super();
@@ -1506,12 +1538,10 @@ public class CommandLineRunner extends
     }
   }
 
-  private void processFlagFile(String flagFileString)
-            throws CmdLineException, IOException {
+  private void processFlagFile(String flagFileString) throws CmdLineException, IOException {
     Path flagFile = Paths.get(flagFileString);
 
-    BufferedReader buffer =
-      java.nio.file.Files.newBufferedReader(flagFile, UTF_8);
+    BufferedReader buffer = java.nio.file.Files.newBufferedReader(flagFile, UTF_8);
     // Builds the tokens.
     StringBuilder builder = new StringBuilder();
     // Stores the built tokens.
@@ -1581,8 +1611,7 @@ public class CommandLineRunner extends
 
     // Currently we are not supporting this (prevent direct/indirect loops)
     if (!flags.flagFiles.isEmpty()) {
-      reportError("ERROR - Arguments in the file cannot contain "
-          + "--flagfile option.");
+      reportError("ERROR - Arguments in the file cannot contain " + "--flagfile option.");
     }
   }
 
@@ -1638,10 +1667,12 @@ public class CommandLineRunner extends
       }
     }
 
-    if (!flags.outputWrapper.isEmpty() &&
-        !flags.outputWrapper.contains(CommandLineRunner.OUTPUT_MARKER)) {
-      reportError("ERROR - invalid output_wrapper specified. Missing '" +
-          CommandLineRunner.OUTPUT_MARKER + "'.");
+    if (!flags.outputWrapper.isEmpty()
+        && !flags.outputWrapper.contains(CommandLineRunner.OUTPUT_MARKER)) {
+      reportError(
+          "ERROR - invalid output_wrapper specified. Missing '"
+              + CommandLineRunner.OUTPUT_MARKER
+              + "'.");
     }
 
     if (!flags.outputWrapper.isEmpty() && flags.isolationMode != IsolationMode.NONE) {
@@ -1771,8 +1802,7 @@ public class CommandLineRunner extends
 
   @Override
   protected void checkModuleName(String name) {
-    if (!TokenStream.isJSIdentifier(
-        extraChunkNameChars.matcher(name).replaceAll("_"))) {
+    if (!TokenStream.isJSIdentifier(extraChunkNameChars.matcher(name).replaceAll("_"))) {
       throw new FlagUsageException("Invalid chunk name: '" + name + "'");
     }
   }
@@ -1908,9 +1938,9 @@ public class CommandLineRunner extends
 
     if (!flags.translationsFile.isEmpty()) {
       try {
-        options.messageBundle = new XtbMessageBundle(
-            new FileInputStream(flags.translationsFile),
-            flags.translationsProject);
+        options.messageBundle =
+            new XtbMessageBundle(
+                new FileInputStream(flags.translationsFile), flags.translationsProject);
       } catch (IOException e) {
         throw new RuntimeException("Reading XTB file", e);
       }
@@ -2036,8 +2066,7 @@ public class CommandLineRunner extends
   }
 
   private static ImmutableList<ConformanceConfig> loadConformanceConfigs(List<String> configPaths) {
-    ImmutableList.Builder<ConformanceConfig> configs =
-        ImmutableList.builder();
+    ImmutableList.Builder<ConformanceConfig> configs = ImmutableList.builder();
 
     for (String configPath : configPaths) {
       try {
@@ -2050,8 +2079,7 @@ public class CommandLineRunner extends
     return configs.build();
   }
 
-  private static ConformanceConfig loadConformanceConfig(String configFile)
-      throws IOException {
+  private static ConformanceConfig loadConformanceConfig(String configFile) throws IOException {
     String textProto = Files.asCharSource(new File(configFile), UTF_8).read();
 
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
@@ -2076,9 +2104,9 @@ public class CommandLineRunner extends
   }
 
   /**
-   * Returns all the JavaScript files from the set of patterns. The patterns support
-   * globs, such as '*.js' for all JS files in a directory and '**.js' for all JS files
-   * within the directory and sub-directories.
+   * Returns all the JavaScript files from the set of patterns. The patterns support globs, such as
+   * '*.js' for all JS files in a directory and '**.js' for all JS files within the directory and
+   * sub-directories.
    */
   public static List<String> findJsFiles(Collection<String> patterns) throws IOException {
     return findJsFiles(patterns, false);
@@ -2117,8 +2145,9 @@ public class CommandLineRunner extends
     return new ArrayList<>(allJsInputs.values());
   }
 
-  private static void matchPaths(String pattern, final Map<String, String> allJsInputs,
-      final Set<String> excludes) throws IOException {
+  private static void matchPaths(
+      String pattern, final Map<String, String> allJsInputs, final Set<String> excludes)
+      throws IOException {
     FileSystem fs = FileSystems.getDefault();
     final boolean remove = pattern.indexOf('!') == 0;
     if (remove) {
@@ -2168,26 +2197,19 @@ public class CommandLineRunner extends
         });
   }
 
-  /**
-   * @return Whether the configuration is valid and specifies to run the
-   *         compiler.
-   */
+  /** @return Whether the configuration is valid and specifies to run the compiler. */
   public boolean shouldRunCompiler() {
     return this.runCompiler;
   }
 
-  /**
-   * @return Whether the configuration has errors.
-   */
+  /** @return Whether the configuration has errors. */
   public boolean hasErrors() {
     return this.errors;
   }
 
   private static final Logger phaseLogger = Logger.getLogger(PhaseOptimizer.class.getName());
 
-  /**
-   * Runs the Compiler. Exits cleanly in the event of an error.
-   */
+  /** Runs the Compiler. Exits cleanly in the event of an error. */
   public static void main(String[] args) {
     // disable any logging messages that can interfere with standard error reporting
     if (phaseLogger != null) {

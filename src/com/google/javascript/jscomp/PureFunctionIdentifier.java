@@ -598,10 +598,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
   private static final Predicate<Node> RHS_IS_ALWAYS_LOCAL = lhs -> true;
   private static final Predicate<Node> RHS_IS_NEVER_LOCAL = lhs -> false;
-  private static final Predicate<Node> FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE = lhs -> {
-    Node rhs = NodeUtil.getRValueOfLValue(lhs);
-    return rhs == null || NodeUtil.evaluatesToLocalValue(rhs);
-  };
+  private static final Predicate<Node> FIND_RHS_AND_CHECK_FOR_LOCAL_VALUE =
+      lhs -> {
+        Node rhs = NodeUtil.getRValueOfLValue(lhs);
+        return rhs == null || NodeUtil.evaluatesToLocalValue(rhs);
+      };
 
   /**
    * Inspects function bodies for side effects and applies them to the associated {@link

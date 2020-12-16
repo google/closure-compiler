@@ -62,8 +62,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
       if (rewriteScriptsToModules) {
         new Es6RewriteScriptsToModules(compiler).process(externs, root);
       }
-      new GatherModuleMetadata(
-              compiler, /* processCommonJsModules= */ true, ResolutionMode.BROWSER)
+      new GatherModuleMetadata(compiler, /* processCommonJsModules= */ true, ResolutionMode.BROWSER)
           .process(externs, root);
     };
   }
@@ -178,8 +177,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
             "  return exports;",
             "});"));
 
-    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
-        .containsExactly("my.module");
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
 
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
     assertThat(m.googNamespaces()).containsExactly("my.module");
@@ -201,8 +199,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
             "  return exports;",
             "});"));
 
-    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
-        .containsExactly("my.module");
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("my.module");
 
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("my.module");
     assertThat(m.googNamespaces()).containsExactly("my.module");
@@ -224,8 +221,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
             "  return exports;",
             "});"));
 
-    assertThat(metadataMap().getModulesByGoogNamespace().keySet())
-        .containsExactly("with.strict");
+    assertThat(metadataMap().getModulesByGoogNamespace().keySet()).containsExactly("with.strict");
 
     ModuleMetadata m = metadataMap().getModulesByGoogNamespace().get("with.strict");
     assertThat(m.googNamespaces()).containsExactly("with.strict");

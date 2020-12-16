@@ -55,12 +55,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // TODO(johnlenz): infer simple functions return results.
 
     // Verify arrows have do not have an incorrect inferred return.
-    testTypes(
-        lines(
-            "let fn = () => {",
-            "  return 1;",
-            "};",
-            "var /** null */ x = fn();"));
+    testTypes(lines("let fn = () => {", "  return 1;", "};", "var /** null */ x = fn();"));
   }
 
   @Test
@@ -68,10 +63,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // TODO(johnlenz): infer simple functions return results.
 
     // Verify arrows have do not have an incorrect inferred return.
-    testTypes(
-        lines(
-            "let fn = () => 1;",
-            "var /** null */ x = fn();"));
+    testTypes(lines("let fn = () => 1;", "var /** null */ x = fn();"));
   }
 
   @Test
@@ -86,10 +78,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "let fn = (a) => {",
             "  return a;",
             "}"),
-        lines(
-            "inconsistent return type",
-            "found   : number",
-            "required: null"));
+        lines("inconsistent return type", "found   : number", "required: null"));
   }
 
   @Test
@@ -103,10 +92,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "*/",
             "let fn = (a) => a",
             ""),
-        lines(
-            "inconsistent return type",
-            "found   : number",
-            "required: null"));
+        lines("inconsistent return type", "found   : number", "required: null"));
   }
 
   @Test
@@ -121,10 +107,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    return this;",
             "  }",
             "}"),
-        lines(
-            "inconsistent return type",
-            "found   : String",
-            "required: null"));
+        lines("inconsistent return type", "found   : String", "required: null"));
   }
 
   @Test
@@ -137,10 +120,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  */",
             "  let fn = () => this;",
             "}"),
-        lines(
-            "inconsistent return type",
-            "found   : String",
-            "required: null"));
+        lines("inconsistent return type", "found   : String", "required: null"));
   }
 
   @Test
@@ -156,10 +136,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    }",
             "  }",
             "}"),
-        lines(
-            "inconsistent return type",
-            "found   : number",
-            "required: null"));
+        lines("inconsistent return type", "found   : number", "required: null"));
   }
 
   @Test
@@ -173,17 +150,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    let fn = () => arguments;",
             "  }",
             "}"),
-        lines(
-            "inconsistent return type",
-            "found   : number",
-            "required: null"));
+        lines("inconsistent return type", "found   : number", "required: null"));
   }
 
   @Test
   public void testArrowCorrectInheritsArguments() {
     testTypesWithExtraExterns(
-        lines(
-            "/** @type {!Arguments} */ var arguments;"),
+        lines("/** @type {!Arguments} */ var arguments;"),
         lines(
             "/** @this {String} */ function fn() {",
             "  {",
@@ -193,17 +166,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    }",
             "  }",
             "}"),
-        lines(
-            "inconsistent return type",
-            "found   : Arguments",
-            "required: null"));
+        lines("inconsistent return type", "found   : Arguments", "required: null"));
   }
 
   @Test
   public void testArrowBlocklessCorrectInheritsArguments() {
     testTypesWithExtraExterns(
-        lines(
-            "/** @type {!Arguments} */ var arguments;"),
+        lines("/** @type {!Arguments} */ var arguments;"),
         lines(
             "/** @this {String} */ function fn() {",
             "  {",
@@ -211,10 +180,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    let fn = () => arguments;",
             "  }",
             "}"),
-        lines(
-            "inconsistent return type",
-            "found   : Arguments",
-            "required: null"));
+        lines("inconsistent return type", "found   : Arguments", "required: null"));
   }
 
   @Test
@@ -402,8 +368,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             " */",
             "function use(num, var_args) {}",
             ""),
-        lines(
-            "use(1, ...[{}]);"));
+        lines("use(1, ...[{}]);"));
     // TODO(bradfordcsmith): Should generate error indicating inferred type of `[{}]`
     // as `{Iterable<{prop: (number|undefined)}>}
   }
@@ -613,8 +578,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
         lines(
             "actual parameter 1 of use does not match formal parameter",
             "found   : number",
-            "required: string"
-        ));
+            "required: string"));
   }
 
   @Test
@@ -658,10 +622,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  var x = someUnknown ** 2;", // infer the result
             "  var /** null */ y = x;",
             "}"),
-        lines(
-            "initializing variable",
-            "found   : number",
-            "required: null"));
+        lines("initializing variable", "found   : number", "required: null"));
   }
 
   @Test
@@ -673,36 +634,21 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  x **= 2;", // infer the result
             "  var /** null */ y = x;",
             "}"),
-        lines(
-            "initializing variable",
-            "found   : number",
-            "required: null"));
+        lines("initializing variable", "found   : number", "required: null"));
   }
 
   @Test
   public void testExponent3() {
     testTypes(
-        lines(
-            "function fn(someUnknown) {",
-            "  var y = true ** 3;",
-            "}"),
-        lines(
-            "left operand",
-            "found   : boolean",
-            "required: number"));
+        lines("function fn(someUnknown) {", "  var y = true ** 3;", "}"),
+        lines("left operand", "found   : boolean", "required: number"));
   }
 
   @Test
   public void testExponent4() {
     testTypes(
-        lines(
-            "function fn(someUnknown) {",
-            "  var y = 1; y **= true;",
-            "}"),
-        lines(
-            "right operand",
-            "found   : boolean",
-            "required: number"));
+        lines("function fn(someUnknown) {", "  var y = 1; y **= true;", "}"),
+        lines("right operand", "found   : boolean", "required: number"));
   }
 
   @Test
@@ -949,9 +895,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
     // Make sure names declared with `const` and `let` are counted correctly for typed percentage.
     // This was created my a modifying a copy of TypeCheckTest.testGetTypedPercent1()
     String js =
-        lines(
-            "const id = function(x) { return x; }",
-            "let id2 = function(x) { return id(x); }");
+        lines("const id = function(x) { return x; }", "let id2 = function(x) { return id(x); }");
     assertThat(getTypedPercent(js)).isWithin(0.1).of(50.0);
   }
 
@@ -988,7 +932,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testBlockScopedVarInLoop3() {
-     // Tests that the qualified name alias.num is reset between loop iterations
+    // Tests that the qualified name alias.num is reset between loop iterations
     testTypes(
         lines(
             "function takesNumber(/** number */ n) {}",
@@ -1443,7 +1387,8 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "/** @type {!MyIterable<number, string>} */",
             "var mi;",
             "",
-            "for (var t of mi) { takesNumber(t); }", ""),
+            "for (var t of mi) { takesNumber(t); }",
+            ""),
         lines(
             "actual parameter 1 of takesNumber does not match formal parameter",
             "found   : string",
@@ -1738,11 +1683,9 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testGenerator_return2() {
-    testTypesWithCommonExterns("/** @return {!Generator<string>} */ function *gen() {  return 1; }",
-        lines(
-            "inconsistent return type",
-            "found   : number",
-            "required: string"));
+    testTypesWithCommonExterns(
+        "/** @return {!Generator<string>} */ function *gen() {  return 1; }",
+        lines("inconsistent return type", "found   : number", "required: string"));
   }
 
   @Test
@@ -1767,10 +1710,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testGenerator_yieldAll2() {
     testTypes(
         "/** @return {!Generator<number>} */ function *gen() { yield* 1; }",
-        lines(
-            "Expression yield* expects an iterable",
-            "found   : number",
-            "required: Iterable"));
+        lines("Expression yield* expects an iterable", "found   : number", "required: Iterable"));
   }
 
   @Test
@@ -2635,13 +2575,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassDeclarationWithSemicolonsBetweenMembers() {
-    testTypes(
-        lines(
-            "class Foo {",
-            "  constructor() {};",
-            "  foo() {};",
-            "  bar() {};",
-            "}"));
+    testTypes(lines("class Foo {", "  constructor() {};", "  foo() {};", "  bar() {};", "}"));
   }
 
   @Test
@@ -2827,10 +2761,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "class Baz {}",
             "/** @extends {Bar} */",
             "class Foo extends Baz {}"),
-        lines(
-            "mismatch in declaration of superclass type",
-            "found   : Baz",
-            "required: Bar"));
+        lines("mismatch in declaration of superclass type", "found   : Baz", "required: Bar"));
   }
 
   @Test
@@ -2876,10 +2807,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
               + " be specified in JSDoc",
           // TODO(sdh): This is a little confusing, but there doesn't seem to be a way to suppress
           // this additional error.
-          lines(
-              "initializing variable",
-              "found   : Bar",
-              "required: Foo"),
+          lines("initializing variable", "found   : Bar", "required: Foo"),
         });
   }
 
@@ -2897,10 +2825,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
               + " be specified in JSDoc",
           // TODO(sdh): This is a little confusing, but there doesn't seem to be a way to suppress
           // this additional error.
-          lines(
-              "initializing variable",
-              "found   : Bar",
-              "required: Foo"),
+          lines("initializing variable", "found   : Bar", "required: Foo"),
         });
   }
 
@@ -3417,12 +3342,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassMethodParameters() {
     testTypes(
-        lines(
-            "class C {",
-            "  /** @param {number} arg */",
-            "  m(arg) {}",
-            "}",
-            "new C().m('x');"),
+        lines("class C {", "  /** @param {number} arg */", "  m(arg) {}", "}", "new C().m('x');"),
         lines(
             "actual parameter 1 of C.prototype.m does not match formal parameter",
             "found   : string",
@@ -3479,12 +3399,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testStaticMethodParameters() {
     testTypes(
-        lines(
-            "class C {",
-            "  /** @param {number} arg */",
-            "  static m(arg) {}",
-            "}",
-            "C.m('x');"),
+        lines("class C {", "  /** @param {number} arg */", "  static m(arg) {}", "}", "C.m('x');"),
         lines(
             "actual parameter 1 of C.m does not match formal parameter",
             "found   : string",
@@ -3541,11 +3456,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testStaticMethodCalledOnInstance() {
     testTypes(
-        lines(
-            "class C {",
-            "  static m() {}",
-            "}",
-            "new C().m();"),
+        lines("class C {", "  static m() {}", "}", "new C().m();"),
         // TODO(b/111229815): Fix to "Property m never defined on instances of C".
         "Property m never defined on C");
   }
@@ -3553,11 +3464,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassInstanceMethodCalledOnClass() {
     testTypes(
-        lines(
-            "class C {",
-            "  m() {}",
-            "}",
-            "C.m();"),
+        lines("class C {", "  m() {}", "}", "C.m();"),
         // TODO(b/111229815): Fix to "Property m never defined on namespace C".
         "Property m never defined on C");
   }
@@ -3884,7 +3791,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "var foo = new Foo();",
             "foo.x = 42;"),
         "Cannot add a property to a struct instance after it is constructed."
-              + " (If you already declared the property, make sure to give it a type.)");
+            + " (If you already declared the property, make sure to give it a type.)");
   }
 
   @Test
@@ -3910,20 +3817,13 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassAnnotatedWithDictDotAccess() {
     disableStrictMissingPropertyChecks();
     testTypes(
-        lines(
-            "/** @dict */ class Foo {}",
-            "var foo = new Foo();",
-            "foo.x = 42;"),
+        lines("/** @dict */ class Foo {}", "var foo = new Foo();", "foo.x = 42;"),
         "Cannot do '.' access on a dict");
   }
 
   @Test
   public void testClassAnnotatedWithDictComputedAccess() {
-    testTypes(
-        lines(
-            "/** @dict */ class Foo {}",
-            "var foo = new Foo();",
-            "foo['x'] = 42;"));
+    testTypes(lines("/** @dict */ class Foo {}", "var foo = new Foo();", "foo['x'] = 42;"));
   }
 
   @Test
@@ -3975,12 +3875,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassSuperMethodNotPresent() {
     testTypes(
         lines(
-            "class Foo {}",
-            "class Bar extends Foo {",
-            "  foo() {",
-            "    super.foo();",
-            "  }",
-            "}"),
+            "class Foo {}", "class Bar extends Foo {", "  foo() {", "    super.foo();", "  }", "}"),
         "Property foo never defined on Foo");
   }
 
@@ -4038,10 +3933,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    var /** null */ x = super.foo();",
             "  }",
             "}"),
-        lines(
-            "initializing variable",
-            "found   : string",
-            "required: null"));
+        lines("initializing variable", "found   : string", "required: null"));
   }
 
   @Test
@@ -4057,10 +3949,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "    var /** null */ x = super.foo();",
             "  }",
             "}"),
-        lines(
-            "initializing variable",
-            "found   : string",
-            "required: null"));
+        lines("initializing variable", "found   : string", "required: null"));
   }
 
   @Test
@@ -4278,31 +4167,15 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassTypeOfThisInConstructor() {
     testTypes(
-        lines(
-            "class Foo {",
-            "  constructor() {",
-            "    var /** null */ foo = this;",
-            "  }",
-            "}"),
-        lines(
-            "initializing variable",
-            "found   : Foo",
-            "required: null"));
+        lines("class Foo {", "  constructor() {", "    var /** null */ foo = this;", "  }", "}"),
+        lines("initializing variable", "found   : Foo", "required: null"));
   }
 
   @Test
   public void testClassTypeOfThisInMethod() {
     testTypes(
-        lines(
-            "class Foo {",
-            "  foo() {",
-            "    var /** null */ foo = this;",
-            "  }",
-            "}"),
-        lines(
-            "initializing variable",
-            "found   : Foo",
-            "required: null"));
+        lines("class Foo {", "  foo() {", "    var /** null */ foo = this;", "  }", "}"),
+        lines("initializing variable", "found   : Foo", "required: null"));
   }
 
   @Test
@@ -4322,12 +4195,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassGetter() {
-    testTypes(
-        lines(
-            "class C {",
-            "  get x() {}",
-            "}",
-            "var /** null */ y = new C().x;"));
+    testTypes(lines("class C {", "  get x() {}", "}", "var /** null */ y = new C().x;"));
   }
 
   @Test
@@ -4339,20 +4207,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  get x() {}",
             "}",
             "var /** null */ y = new C().x;"),
-        lines(
-            "initializing variable",
-            "found   : number",
-            "required: null"));
+        lines("initializing variable", "found   : number", "required: null"));
   }
 
   @Test
   public void testClassStaticGetter() {
-    testTypes(
-        lines(
-            "class C {",
-            "  static get x() {}",
-            "}",
-            "var /** null */ y = C.x;"));
+    testTypes(lines("class C {", "  static get x() {}", "}", "var /** null */ y = C.x;"));
   }
 
   @Test
@@ -4364,20 +4224,12 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static get x() {}",
             "}",
             "var /** null */ y = C.x;"),
-        lines(
-            "initializing variable",
-            "found   : number",
-            "required: null"));
+        lines("initializing variable", "found   : number", "required: null"));
   }
 
   @Test
   public void testClassSetter() {
-    testTypes(
-        lines(
-            "class C {",
-            "  set x(arg) {}",
-            "}",
-            "new C().x = null;"));
+    testTypes(lines("class C {", "  set x(arg) {}", "}", "new C().x = null;"));
   }
 
   @Test
@@ -4389,10 +4241,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  set x(arg) {}",
             "}",
             "new C().x = null;"),
-        lines(
-            "assignment to property x of C",
-            "found   : null",
-            "required: number"));
+        lines("assignment to property x of C", "found   : null", "required: number"));
   }
 
   @Test
@@ -4402,12 +4251,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
 
   @Test
   public void testClassStaticSetter() {
-    testTypes(
-        lines(
-            "class C {",
-            "  static set x(arg) {}",
-            "}",
-            "C.x = null;"));
+    testTypes(lines("class C {", "  static set x(arg) {}", "}", "C.x = null;"));
   }
 
   @Test
@@ -4419,10 +4263,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "  static set x(arg) {}",
             "}",
             "C.x = null;"),
-        lines(
-            "assignment to property x of C",
-            "found   : null",
-            "required: number"));
+        lines("assignment to property x of C", "found   : null", "required: number"));
   }
 
   @Test
@@ -4573,59 +4414,41 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   public void testClassNewTargetInMethod() {
     testTypes(
         "class Foo { foo() { const /** null */ x = new.target; } }",
-        lines(
-            "initializing variable",
-            "found   : undefined",
-            "required: null"));
+        lines("initializing variable", "found   : undefined", "required: null"));
   }
 
   @Test
   public void testClassNewTargetInVanillaFunction() {
     testTypes(
         "function f() { const /** null */ x = new.target; }",
-        lines(
-            "initializing variable",
-            "found   : (Function|undefined)",
-            "required: null"));
+        lines("initializing variable", "found   : (Function|undefined)", "required: null"));
   }
 
   @Test
   public void testClassNewTargetInVanillaFunctionNestedArrow() {
     testTypes(
         "function f() { const f = () => { const /** null */ x = new.target; }; }",
-        lines(
-            "initializing variable",
-            "found   : (Function|undefined)",
-            "required: null"));
+        lines("initializing variable", "found   : (Function|undefined)", "required: null"));
   }
 
   @Test
   public void testClassNewTargetInConstructor() {
     testTypes(
         "class Foo { constructor() { const /** null */ x = new.target; } };",
-        lines(
-            "initializing variable",
-            "found   : Function",
-            "required: null"));
+        lines("initializing variable", "found   : Function", "required: null"));
   }
 
   @Test
   public void testClassNewTargetInConstructorNestedArrow() {
     testTypes(
         "class Foo { constructor() { const f = () => { const /** null */ x = new.target; }; } };",
-        lines(
-            "initializing variable",
-            "found   : Function",
-            "required: null"));
+        lines("initializing variable", "found   : Function", "required: null"));
   }
 
   @Test
   public void testClassEs5ClassCannotExtendEs6Class() {
     testTypes(
-        lines(
-            "class Base {}",
-            "/** @constructor @extends {Base} */",
-            "function Sub() {}"),
+        lines("class Base {}", "/** @constructor @extends {Base} */", "function Sub() {}"),
         "ES5 class Sub cannot extend ES6 class Base");
   }
 
@@ -4663,19 +4486,14 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassExtendsCycle() {
     testTypes(
-        lines(
-            "class Foo extends Bar {}",
-            "class Bar extends Foo {}"),
+        lines("class Foo extends Bar {}", "class Bar extends Foo {}"),
         "Parse error. Cycle detected in inheritance chain of type Bar");
   }
 
   @Test
   public void testClassExtendsCycleOnlyInJsdoc() {
     testTypes(
-        lines(
-            "class Bar {}",
-            "/** @extends {Foo} */",
-            "class Foo extends Bar {}"),
+        lines("class Bar {}", "/** @extends {Foo} */", "class Foo extends Bar {}"),
         new String[] {
           "Parse error. Cycle detected in inheritance chain of type Foo",
           "Could not resolve type in @extends tag of Foo",
@@ -4685,11 +4503,7 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Test
   public void testClassExtendsCycleOnlyInAst() {
     // TODO(sdh): This should give an error.
-    testTypes(
-        lines(
-            "class Bar {}",
-            "/** @extends {Bar} */",
-            "class Foo extends Foo {}"));
+    testTypes(lines("class Bar {}", "/** @extends {Bar} */", "class Foo extends Foo {}"));
   }
 
   @Test

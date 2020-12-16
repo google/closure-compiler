@@ -69,21 +69,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   private static final String UNLABELED_BREAK = "unlabelled break must be inside loop or switch";
 
-  private static final String UNEXPECTED_CONTINUE =
-      "continue must be inside loop";
+  private static final String UNEXPECTED_CONTINUE = "continue must be inside loop";
 
-  private static final String UNEXPECTED_RETURN =
-      "return must be inside function";
+  private static final String UNEXPECTED_RETURN = "return must be inside function";
 
   private static final String UNEXPECTED_LABELLED_CONTINUE =
       "continue can only use labeles of iteration statements";
 
   private static final String UNDEFINED_LABEL = "undefined label";
 
-  private static final String HTML_COMMENT_WARNING = "In some cases, '<!--' " +
-      "and '-->' are treated as a '//' " +
-      "for legacy reasons. Removing this from your code is " +
-      "safe for all browsers currently in use.";
+  private static final String HTML_COMMENT_WARNING =
+      "In some cases, '<!--' "
+          + "and '-->' are treated as a '//' "
+          + "for legacy reasons. Removing this from your code is "
+          + "safe for all browsers currently in use.";
 
   private static final String INVALID_ASSIGNMENT_TARGET = "invalid assignment target";
 
@@ -203,12 +202,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testFunctionTrailingCommaPreES8() {
     mode = LanguageMode.ECMASCRIPT7;
 
-    parseError(
-        "var f = function(x,y,z,) {}",
-        "Invalid trailing comma in formal parameter list");
-    parseError(
-        "function f(x,y,z,) {}",
-        "Invalid trailing comma in formal parameter list");
+    parseError("var f = function(x,y,z,) {}", "Invalid trailing comma in formal parameter list");
+    parseError("function f(x,y,z,) {}", "Invalid trailing comma in formal parameter list");
   }
 
   @Test
@@ -229,9 +224,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testCallTrailingCommaPreES8() {
     mode = LanguageMode.ECMASCRIPT7;
 
-    parseError(
-        "f(x,y,z,);",
-        "Invalid trailing comma in arguments list");
+    parseError("f(x,y,z,);", "Invalid trailing comma in arguments list");
   }
 
   @Test
@@ -336,10 +329,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     expectFeatures(Feature.FOR_OF);
-    parse(""
-        + "for (var x of [1, 2, 3]) {\n"
-        + "  if (x == 2) break;\n"
-        + "}");
+    parse("" + "for (var x of [1, 2, 3]) {\n" + "  if (x == 2) break;\n" + "}");
   }
 
   @Test
@@ -364,9 +354,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testContinueToLabelSwitch() {
-    parseError(
-        "while(1) {a: switch(1) {case(1): continue a; }}",
-        UNEXPECTED_LABELLED_CONTINUE);
+    parseError("while(1) {a: switch(1) {case(1): continue a; }}", UNEXPECTED_LABELLED_CONTINUE);
   }
 
   @Test
@@ -391,10 +379,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     expectFeatures(Feature.FOR_OF);
-    parse(""
-        + "for (var x of [1, 2, 3]) {\n"
-        + "  if (x == 2) continue;\n"
-        + "}");
+    parse("" + "for (var x of [1, 2, 3]) {\n" + "  if (x == 2) continue;\n" + "}");
   }
 
   /** @bug 19100575 */
@@ -422,7 +407,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     Node exprResult = n.getFirstChild();
     Node string = exprResult.getFirstChild();
     assertNode(string).hasType(Token.STRING);
-    assertNode(string).hasLength(7);  // 2 quotes, plus 5 characters
+    assertNode(string).hasLength(7); // 2 quotes, plus 5 characters
   }
 
   @Test
@@ -671,8 +656,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testLinenoCharnoForComparison() {
-    Node lt =
-      parse("for (; i < j;){}").getFirstChild().getSecondChild();
+    Node lt = parse("for (; i < j;){}").getFirstChild().getSecondChild();
 
     assertNode(lt).hasType(Token.LT);
     assertNode(lt).hasLineno(1);
@@ -711,8 +695,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testLinenoCharnoObjectLiteral() {
-    Node n = parse("\n\n var a = {a:0\n,b :1};")
-        .getFirstFirstChild().getFirstChild();
+    Node n = parse("\n\n var a = {a:0\n,b :1};").getFirstFirstChild().getFirstChild();
 
     assertNode(n).hasType(Token.OBJECTLIT);
     assertNode(n).hasLineno(3);
@@ -880,8 +863,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   private void testLinenoCharnoBinop(String binop) {
-    Node op = parse("var a = 89 " + binop + " 76;").getFirstChild().
-        getFirstFirstChild();
+    Node op = parse("var a = 89 " + binop + " 76;").getFirstChild().getFirstFirstChild();
 
     assertNode(op).hasLineno(1);
     assertNode(op).hasCharno(8);
@@ -965,8 +947,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testJSDocAttachment4() {
-    Node varNode = parse(
-        "var a, /** @define {number} */ b = 5;").getFirstChild();
+    Node varNode = parse("var a, /** @define {number} */ b = 5;").getFirstChild();
 
     // ASSIGN
     assertNode(varNode).hasType(Token.VAR);
@@ -1015,10 +996,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
    */
   @Test
   public void testJSDocAttachment6() {
-    Node functionNode = parse(
-        "var a = /** @param {number} index */5;"
-        + "/** @return {boolean} */function f(index){}")
-        .getSecondChild();
+    Node functionNode =
+        parse(
+                "var a = /** @param {number} index */5;"
+                    + "/** @return {boolean} */function f(index){}")
+            .getSecondChild();
 
     assertNode(functionNode).hasType(Token.FUNCTION);
     JSDocInfo info = functionNode.getJSDocInfo();
@@ -1082,9 +1064,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testJSDocAttachment11() {
-    Node varNode =
-       parse("/** @type {{x : number, 'y' : string, z}} */var a;")
-        .getFirstChild();
+    Node varNode = parse("/** @type {{x : number, 'y' : string, z}} */var a;").getFirstChild();
 
     // VAR
     assertNode(varNode).hasType(Token.VAR);
@@ -1104,9 +1084,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testJSDocAttachment12() {
-    Node varNode =
-       parse("var a = {/** @type {Object} */ b: c};")
-        .getFirstChild();
+    Node varNode = parse("var a = {/** @type {Object} */ b: c};").getFirstChild();
     Node objectLitNode = varNode.getFirstFirstChild();
     assertNode(objectLitNode).hasType(Token.OBJECTLIT);
     assertThat(objectLitNode.getFirstChild().getJSDocInfo()).isNotNull();
@@ -1132,8 +1110,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testJSDocAttachment16() {
-    Node exprCall =
-        parse("/** @private */ x(); function f() {};").getFirstChild();
+    Node exprCall = parse("/** @private */ x(); function f() {};").getFirstChild();
     assertNode(exprCall).hasType(Token.EXPR_RESULT);
     assertThat(exprCall.getNext().getJSDocInfo()).isNull();
     assertThat(exprCall.getFirstChild().getJSDocInfo()).isNotNull();
@@ -1142,10 +1119,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachmentForCastFnCall() {
     Node fn =
-        parse(
-            "function f() { " +
-            "  return /** @type {string} */ (g(1 /** @desc x */));" +
-            "};").getFirstChild();
+        parse("function f() { " + "  return /** @type {string} */ (g(1 /** @desc x */));" + "};")
+            .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstFirstChild();
     assertNode(cast).hasType(Token.CAST);
@@ -1154,10 +1129,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachmentForCastName() {
     Node fn =
-        parse(
-            "function f() { " +
-            "  var x = /** @type {string} */ (y);" +
-            "};").getFirstChild();
+        parse("function f() { " + "  var x = /** @type {string} */ (y);" + "};").getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstFirstChild().getFirstChild();
     assertNode(cast).hasType(Token.CAST);
@@ -1177,11 +1149,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachment19() {
     Node fn =
-        parse(
-            "function f() { " +
-            "  /** @type {string} */" +
-            "  return;" +
-            "};").getFirstChild();
+        parse("function f() { " + "  /** @type {string} */" + "  return;" + "};").getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
     Node ret = fn.getLastChild().getFirstChild();
@@ -1192,11 +1160,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testJSDocAttachment20() {
     Node fn =
-        parse(
-            "function f() { " +
-            "  /** @type {string} */" +
-            "  if (true) return;" +
-            "};").getFirstChild();
+        parse("function f() { " + "  /** @type {string} */" + "  if (true) return;" + "};")
+            .getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
     Node ret = fn.getLastChild().getFirstChild();
@@ -1569,9 +1534,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInlineJSDocAttachmentToArrayPatElement() {
-    Node letNode =
-        parse("let [/** string */ x] = [];")
-            .getFirstChild();
+    Node letNode = parse("let [/** string */ x] = [];").getFirstChild();
     assertNode(letNode).hasType(Token.LET);
 
     Node destructuringLhs = letNode.getFirstChild();
@@ -1582,9 +1545,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInlineJSDocAttachmentToArrayPatElementWithDefault() {
-    Node letNode =
-        parse("let [/** string */ x = 'hi'] = [];")
-            .getFirstChild();
+    Node letNode = parse("let [/** string */ x = 'hi'] = [];").getFirstChild();
     assertNode(letNode).hasType(Token.LET);
 
     Node destructuringLhs = letNode.getFirstChild();
@@ -1624,9 +1585,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInlineJSDocAttachmentToArrayPatElementAfterElision() {
-    Node letNode =
-        parse("let [, /** string */ x] = [];")
-            .getFirstChild();
+    Node letNode = parse("let [, /** string */ x] = [];").getFirstChild();
     assertNode(letNode).hasType(Token.LET);
 
     Node destructuringLhs = letNode.getFirstChild();
@@ -2073,8 +2032,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInlineJSDocAttachment2() {
-    Node fn = parse(
-        "function f(/** ? */ x) {}").getFirstChild();
+    Node fn = parse("function f(/** ? */ x) {}").getFirstChild();
     assertNode(fn).hasType(Token.FUNCTION);
 
     JSDocInfo info = fn.getSecondChild().getFirstChild().getJSDocInfo();
@@ -2089,10 +2047,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInlineJSDocAttachment4() {
-    parse(
-        "function f(/**\n" +
-        " * @type {string}\n" +
-        " */ x) {}");
+    parse("function f(/**\n" + " * @type {string}\n" + " */ x) {}");
   }
 
   @Test
@@ -2183,24 +2138,23 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testIncorrectJSDocDoesNotAlterJSParsing1() {
     assertNodeEquality(
         parse("var a = [1,2]"),
-        parseWarning("/** @type {Array<number} */var a = [1,2]",
-            MISSING_GT_MESSAGE));
+        parseWarning("/** @type {Array<number} */var a = [1,2]", MISSING_GT_MESSAGE));
   }
 
   @Test
   public void testIncorrectJSDocDoesNotAlterJSParsing2() {
     assertNodeEquality(
         parse("var a = [1,2]"),
-        parseWarning("/** @type {Array.<number}*/var a = [1,2]",
-            MISSING_GT_MESSAGE));
+        parseWarning("/** @type {Array.<number}*/var a = [1,2]", MISSING_GT_MESSAGE));
   }
 
   @Test
   public void testIncorrectJSDocDoesNotAlterJSParsing3() {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parseWarning("/** @param {Array.<number} nums */" +
-            "C.prototype.say=function(nums) {alert(nums.join(','));};",
+        parseWarning(
+            "/** @param {Array.<number} nums */"
+                + "C.prototype.say=function(nums) {alert(nums.join(','));};",
             MISSING_GT_MESSAGE));
   }
 
@@ -2208,16 +2162,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testIncorrectJSDocDoesNotAlterJSParsing4() {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parse("/** @return {boolean} */" +
-            "C.prototype.say=function(nums) {alert(nums.join(','));};"));
+        parse(
+            "/** @return {boolean} */"
+                + "C.prototype.say=function(nums) {alert(nums.join(','));};"));
   }
 
   @Test
   public void testIncorrectJSDocDoesNotAlterJSParsing5() {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parse("/** @param {boolean} this is some string*/" +
-            "C.prototype.say=function(nums) {alert(nums.join(','));};"));
+        parse(
+            "/** @param {boolean} this is some string*/"
+                + "C.prototype.say=function(nums) {alert(nums.join(','));};"));
   }
 
   @Test
@@ -2238,9 +2194,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parseWarning("/** @see */" +
-            "C.prototype.say=function(nums) {alert(nums.join(','));};",
-              "@see tag missing description"));
+        parseWarning(
+            "/** @see */" + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            "@see tag missing description"));
   }
 
   @Test
@@ -2249,9 +2205,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parseWarning("/** @author */" +
-            "C.prototype.say=function(nums) {alert(nums.join(','));};",
-              "@author tag missing author"));
+        parseWarning(
+            "/** @author */" + "C.prototype.say=function(nums) {alert(nums.join(','));};",
+            "@author tag missing author"));
   }
 
   @Test
@@ -2288,18 +2244,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError(js, "Invalid escape sequence");
 
     // The original repro case as reported.
-    js = Joiner.on('\n').join(
-        "(function() {",
-        "  var url=\"\";",
-        "  switch(true)",
-        "  {",
-        "    case /a.com\\/g|l.i/N/.test(url):",
-        "      return \"\";",
-        "    case /b.com\\/T/.test(url):",
-        "      return \"\";",
-        "  }",
-        "}",
-        ")();");
+    js =
+        Joiner.on('\n')
+            .join(
+                "(function() {",
+                "  var url=\"\";",
+                "  switch(true)",
+                "  {",
+                "    case /a.com\\/g|l.i/N/.test(url):",
+                "      return \"\";",
+                "    case /b.com\\/T/.test(url):",
+                "      return \"\";",
+                "  }",
+                "}",
+                ")();");
     parseError(js, "primary expression expected");
   }
 
@@ -2313,14 +2271,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     Node a = Node.newString(Token.NAME, "a");
     a.addChildToFront(Node.newString(Token.NAME, "b"));
-    List<ParserResult> testCases = ImmutableList.of(
-        new ParserResult(
-            "3;",
-            createScript(new Node(Token.EXPR_RESULT, Node.newNumber(3.0)))),
-        new ParserResult(
-            "var a = b;",
-             createScript(new Node(Token.VAR, a)))
-        );
+    List<ParserResult> testCases =
+        ImmutableList.of(
+            new ParserResult("3;", createScript(new Node(Token.EXPR_RESULT, Node.newNumber(3.0)))),
+            new ParserResult("var a = b;", createScript(new Node(Token.VAR, a))));
 
     for (ParserResult testCase : testCases) {
       assertNodeEquality(testCase.node, parse(testCase.code));
@@ -2384,17 +2338,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testAutomaticSemicolonInsertion() {
     // var statements
-    assertNodeEquality(
-        parse("var x = 1\nvar y = 2"),
-        parse("var x = 1; var y = 2;"));
-    assertNodeEquality(
-        parse("var x = 1\n, y = 2"),
-        parse("var x = 1, y = 2;"));
+    assertNodeEquality(parse("var x = 1\nvar y = 2"), parse("var x = 1; var y = 2;"));
+    assertNodeEquality(parse("var x = 1\n, y = 2"), parse("var x = 1, y = 2;"));
 
     // assign statements
-    assertNodeEquality(
-        parse("x = 1\ny = 2"),
-        parse("x = 1; y = 2;"));
+    assertNodeEquality(parse("x = 1\ny = 2"), parse("x = 1; y = 2;"));
 
     assertNodeEquality(
         parse("x = 1\n;y = 2"), //
@@ -2404,9 +2352,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
         parse("if (true) 1; else {}"));
 
     // if/else statements
-    assertNodeEquality(
-        parse("if (x)\n;else{}"),
-        parse("if (x) {} else {}"));
+    assertNodeEquality(parse("if (x)\n;else{}"), parse("if (x) {} else {}"));
   }
 
   @Test
@@ -2428,25 +2374,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testAutomaticSemicolonInsertion_examplesFromSpec() {
     parseError("{ 1 2 } 3", SEMICOLON_EXPECTED);
 
-    assertNodeEquality(
-        parse("{ 1\n2 } 3"),
-        parse("{ 1; 2; } 3;"));
+    assertNodeEquality(parse("{ 1\n2 } 3"), parse("{ 1; 2; } 3;"));
 
     parseError("for (a; b\n)", "';' expected");
 
     assertNodeEquality(
-        parse("function f() { return\na + b }"),
-        parse("function f() { return; a + b; }"));
+        parse("function f() { return\na + b }"), parse("function f() { return; a + b; }"));
 
-    assertNodeEquality(
-        parse("a = b\n++c"),
-        parse("a = b; ++c;"));
+    assertNodeEquality(parse("a = b\n++c"), parse("a = b; ++c;"));
 
     parseError("if (a > b)\nelse c = d", "primary expression expected");
 
-    assertNodeEquality(
-        parse("a = b + c\n(d + e).print()"),
-        parse("a = b + c(d + e).print()"));
+    assertNodeEquality(parse("a = b + c\n(d + e).print()"), parse("a = b + c(d + e).print()"));
   }
 
   @Test
@@ -2480,8 +2419,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // Static methods not allowed in object literals.
     expectFeatures();
-    parseError("var a = {static b() { alert('b'); }};",
-        "Cannot use keyword in short object literal");
+    parseError(
+        "var a = {static b() { alert('b'); }};", "Cannot use keyword in short object literal");
   }
 
   @Test
@@ -2643,37 +2582,26 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testComputedProperty() {
     expectFeatures(Feature.COMPUTED_PROPERTIES);
 
-    testComputedProperty(Joiner.on('\n').join(
-        "var prop = 'some complex expression';",
-        "",
-        "var x = {",
-        "  [prop]: 'foo'",
-        "}"));
+    testComputedProperty(
+        Joiner.on('\n')
+            .join(
+                "var prop = 'some complex expression';", "", "var x = {", "  [prop]: 'foo'", "}"));
 
-    testComputedProperty(Joiner.on('\n').join(
-        "var prop = 'some complex expression';",
-        "",
-        "var x = {",
-        "  [prop + '!']: 'foo'",
-        "}"));
+    testComputedProperty(
+        Joiner.on('\n')
+            .join(
+                "var prop = 'some complex expression';",
+                "",
+                "var x = {",
+                "  [prop + '!']: 'foo'",
+                "}"));
 
-    testComputedProperty(Joiner.on('\n').join(
-        "var prop;",
-        "",
-        "var x = {",
-        "  [prop = 'some expr']: 'foo'",
-        "}"));
+    testComputedProperty(
+        Joiner.on('\n').join("var prop;", "", "var x = {", "  [prop = 'some expr']: 'foo'", "}"));
 
-    testComputedProperty(Joiner.on('\n').join(
-        "var x = {",
-        "  [1 << 8]: 'foo'",
-        "}"));
+    testComputedProperty(Joiner.on('\n').join("var x = {", "  [1 << 8]: 'foo'", "}"));
 
-    String js = Joiner.on('\n').join(
-        "var x = {",
-        "  [1 << 8]: 'foo',",
-        "  [1 << 7]: 'bar'",
-        "}");
+    String js = Joiner.on('\n').join("var x = {", "  [1 << 8]: 'foo',", "  [1 << 7]: 'bar'", "}");
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
     parse(js);
@@ -2738,22 +2666,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testTrailingCommaWarning7() {
-    parseError("var a = {,};",
-        "'}' expected");
+    parseError("var a = {,};", "'}' expected");
   }
 
   @Test
   public void testCatchClauseForbidden() {
-    parseError("try { } catch (e if true) {}",
-        "')' expected");
+    parseError("try { } catch (e if true) {}", "')' expected");
   }
 
   @Test
   public void testConstForbidden() {
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.CONST_DECLARATIONS);
-    parseWarning("const x = 3;",
-        getRequiresEs6Message(Feature.CONST_DECLARATIONS));
+    parseWarning("const x = 3;", getRequiresEs6Message(Feature.CONST_DECLARATIONS));
   }
 
   @Test
@@ -2842,7 +2767,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "A default value cannot be specified after '...'");
     parseError("var [first, ...more, last] = foo();", "']' expected");
 
-
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(
         "var [first, ...rest] = foo();",
@@ -2868,8 +2792,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning(
-        "var {first, ...rest} = foo();",
-        getRequiresEs2018Message(Feature.OBJECT_PATTERN_REST));
+        "var {first, ...rest} = foo();", getRequiresEs2018Message(Feature.OBJECT_PATTERN_REST));
   }
 
   @Test
@@ -2881,9 +2804,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var o = [first, ...spread];");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(
-        "var o = [first, ...spread];",
-        getRequiresEs6Message(Feature.SPREAD_EXPRESSIONS));
+    parseWarning("var o = [first, ...spread];", getRequiresEs6Message(Feature.SPREAD_EXPRESSIONS));
   }
 
   @Test
@@ -2931,8 +2852,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("const {first, ...rest} = foo();");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseWarning("var {first, ...rest} = foo();",
-        getRequiresEs2018Message(Feature.OBJECT_PATTERN_REST));
+    parseWarning(
+        "var {first, ...rest} = foo();", getRequiresEs2018Message(Feature.OBJECT_PATTERN_REST));
   }
 
   @Test
@@ -3227,8 +3148,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testComprehensions() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    String error = "unsupported language feature:"
-        + " array/generator comprehensions";
+    String error = "unsupported language feature:" + " array/generator comprehensions";
 
     // array comprehensions
     parseError("[for (x of y) z];", error);
@@ -3247,16 +3167,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testLetForbidden1() {
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.LET_DECLARATIONS);
-    parseWarning("let x = 3;",
-        getRequiresEs6Message(Feature.LET_DECLARATIONS));
+    parseWarning("let x = 3;", getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
   @Test
   public void testLetForbidden2() {
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.LET_DECLARATIONS);
-    parseWarning("function f() { let x = 3; };",
-        getRequiresEs6Message(Feature.LET_DECLARATIONS));
+    parseWarning("function f() { let x = 3; };", getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
   @Test
@@ -3291,18 +3209,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testLetForbidden3() {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = STRICT;
-    parseError("function f() { var let = 3; }",
-        "'identifier' expected");
+    parseError("function f() { var let = 3; }", "'identifier' expected");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseError("function f() { var let = 3; }",
-        "'identifier' expected");
+    parseError("function f() { var let = 3; }", "'identifier' expected");
   }
 
   @Test
   public void testYieldForbidden() {
-    parseError("function f() { yield 3; }",
-        "primary expression expected");
+    parseError("function f() { yield 3; }", "primary expression expected");
     parseError("function f(x = yield 3) { return x }", "primary expression expected");
     parseError(
         "function *f(x = yield 3) { return x }", "`yield` is illegal in parameter default value.");
@@ -3321,84 +3236,74 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function f() { return function* g() {} }");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("function* f() { yield 3; }",
-        getRequiresEs6Message(Feature.GENERATORS));
-    parseWarning("var obj = { * f() { yield 3; } };",
+    parseWarning("function* f() { yield 3; }", getRequiresEs6Message(Feature.GENERATORS));
+    parseWarning(
+        "var obj = { * f() { yield 3; } };",
         getRequiresEs6Message(Feature.GENERATORS),
         getRequiresEs6Message(Feature.MEMBER_DECLARATIONS));
   }
 
   @Test
   public void testBracelessFunctionForbidden() {
-    parseError("var sq = function(x) x * x;",
-        "'{' expected");
+    parseError("var sq = function(x) x * x;", "'{' expected");
   }
 
   @Test
   public void testGeneratorsForbidden() {
-    parseError("var i = (x for (x in obj));",
-        "')' expected");
+    parseError("var i = (x for (x in obj));", "')' expected");
   }
 
   @Test
   public void testGettersForbidden1() {
     mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.GETTER);
-    parseError("var x = {get foo() { return 3; }};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get foo() { return 3; }};", IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   @Test
   public void testGettersForbidden2() {
     mode = LanguageMode.ECMASCRIPT3;
-    parseError("var x = {get foo bar() { return 3; }};",
-        "'(' expected");
+    parseError("var x = {get foo bar() { return 3; }};", "'(' expected");
   }
 
   @Test
   public void testGettersForbidden3() {
     mode = LanguageMode.ECMASCRIPT3;
-    parseError("var x = {a getter:function b() { return 3; }};",
-        "'}' expected");
+    parseError("var x = {a getter:function b() { return 3; }};", "'}' expected");
   }
 
   @Test
   public void testGettersForbidden4() {
     mode = LanguageMode.ECMASCRIPT3;
-    parseError("var x = {\"a\" getter:function b() { return 3; }};",
-        "':' expected");
+    parseError("var x = {\"a\" getter:function b() { return 3; }};", "':' expected");
   }
 
   @Test
   public void testGettersForbidden5() {
     mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.GETTER);
-    parseError("var x = {a: 2, get foo() { return 3; }};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {a: 2, get foo() { return 3; }};", IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   @Test
   public void testGettersForbidden6() {
     mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.GETTER);
-    parseError("var x = {get 'foo'() { return 3; }};",
-        IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get 'foo'() { return 3; }};", IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   @Test
   public void testSettersForbidden() {
     mode = LanguageMode.ECMASCRIPT3;
     expectFeatures(Feature.SETTER);
-    parseError("var x = {set foo(a) { y = 3; }};",
-        IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set foo(a) { y = 3; }};", IRFactory.SETTER_ERROR_MESSAGE);
   }
 
   @Test
   public void testSettersForbidden2() {
     mode = LanguageMode.ECMASCRIPT3;
     // TODO(johnlenz): maybe just report the first error, when not in IDE mode?
-    parseError("var x = {a setter:function b() { return 3; }};",
-        "'}' expected");
+    parseError("var x = {a setter:function b() { return 3; }};", "'}' expected");
   }
 
   @Test
@@ -3414,16 +3319,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testFileOverviewJSDocDoesNotHoseParsing() {
-    assertNode(
-            parse("/** @fileoverview Hi mom! \n */ function Foo() {}").getFirstChild())
+    assertNode(parse("/** @fileoverview Hi mom! \n */ function Foo() {}").getFirstChild())
         .hasType(Token.FUNCTION);
-    assertNode(
-            parse("/** @fileoverview Hi mom! \n * * * */ function Foo() {}").getFirstChild())
+    assertNode(parse("/** @fileoverview Hi mom! \n * * * */ function Foo() {}").getFirstChild())
         .hasType(Token.FUNCTION);
     assertNode(parse("/** @fileoverview \n * x */ function Foo() {}").getFirstChild())
         .hasType(Token.FUNCTION);
-    assertNode(
-            parse("/** @fileoverview \n * x \n */ function Foo() {}").getFirstChild())
+    assertNode(parse("/** @fileoverview \n * x \n */ function Foo() {}").getFirstChild())
         .hasType(Token.FUNCTION);
   }
 
@@ -3431,8 +3333,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testFileOverviewJSDoc2() {
     isIdeMode = true;
 
-    Node n = parse("/** @fileoverview Hi mom! */"
-        + " /** @constructor */ function Foo() {}");
+    Node n = parse("/** @fileoverview Hi mom! */" + " /** @constructor */ function Foo() {}");
     assertThat(n.getJSDocInfo()).isNotNull();
     assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("Hi mom!");
     assertThat(n.getFirstChild().getJSDocInfo()).isNotNull();
@@ -3631,17 +3532,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function * f() { (yield) + (yield); }"); // OK
     parse("function * f() { return yield; }"); // OK
     parse("function * f() { return yield 1; }"); // OK
-    parse(LINE_JOINER.join(
-        "function * f() {",
-        "  yield *", // line break allowed here
-        "      [1, 2, 3];",
-        "}"));
+    parse(
+        LINE_JOINER.join(
+            "function * f() {",
+            "  yield *", // line break allowed here
+            "      [1, 2, 3];",
+            "}"));
     expectFeatures();
-    parseError(LINE_JOINER.join(
-        "function * f() {",
-        "  yield", // line break not allowed here
-        "      *[1, 2, 3];",
-        "}"),
+    parseError(
+        LINE_JOINER.join(
+            "function * f() {",
+            "  yield", // line break not allowed here
+            "      *[1, 2, 3];",
+            "}"),
         "'}' expected");
     parseError("function * f() { yield *; }", "yield* requires an expression");
   }
@@ -3726,8 +3629,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private Node testTemplateLiteral(String s) {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = SLOPPY;
-    parseWarning(s,
-        getRequiresEs6Message(Feature.TEMPLATE_LITERALS));
+    parseWarning(s, getRequiresEs6Message(Feature.TEMPLATE_LITERALS));
 
     mode = LanguageMode.ECMASCRIPT6;
     return parse(s);
@@ -3826,10 +3728,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testUnterminatedTemplateLiteral() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    parseError("`hello",
-        "Unterminated template literal");
-    parseError("`hello\\`",
-        "Unterminated template literal");
+    parseError("`hello", "Unterminated template literal");
+    parseError("`hello\\`", "Unterminated template literal");
   }
 
   @Test
@@ -3843,8 +3743,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
 
     parseError("`hello\\x`", "Hex digit expected");
-    parseError("`hello\\x`",
-        "Hex digit expected");
+    parseError("`hello\\x`", "Hex digit expected");
 
     parseError("`hello\\1`", "Invalid escape sequence");
     parseError("`hello\\2`", "Invalid escape sequence");
@@ -3892,10 +3791,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("10E-10");
     parse("1.0E1");
     parseError("01E0", SEMICOLON_EXPECTED);
-    parseError("0E",
-        "Exponent part must contain at least one digit");
-    parseError("1E-",
-        "Exponent part must contain at least one digit");
+    parseError("0E", "Exponent part must contain at least one digit");
+    parseError("1E-", "Exponent part must contain at least one digit");
     parseError("1E1.1", SEMICOLON_EXPECTED);
   }
 
@@ -4045,16 +3942,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testOldStyleOctalLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseWarning("0001;",
-        "Octal integer literals are not supported in strict mode.");
+    parseWarning("0001;", "Octal integer literals are not supported in strict mode.");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("0001;",
-        "Octal integer literals are not supported in strict mode.");
+    parseWarning("0001;", "Octal integer literals are not supported in strict mode.");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseWarning("0001;",
-        "Octal integer literals are not supported in strict mode.");
+    parseWarning("0001;", "Octal integer literals are not supported in strict mode.");
   }
 
   @Test
@@ -4062,50 +3956,39 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = STRICT;
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseError("0001;",
-        "Octal integer literals are not supported in strict mode.");
+    parseError("0001;", "Octal integer literals are not supported in strict mode.");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseError("0001;",
-        "Octal integer literals are not supported in strict mode.");
+    parseError("0001;", "Octal integer literals are not supported in strict mode.");
   }
 
   @Test
   public void testInvalidOctalLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseError("0o08;",
-        "Invalid octal digit in octal literal.");
+    parseError("0o08;", "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseError("0o08;",
-        "Invalid octal digit in octal literal.");
+    parseError("0o08;", "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseError("0o08;",
-        "Invalid octal digit in octal literal.");
+    parseError("0o08;", "Invalid octal digit in octal literal.");
   }
 
   @Test
   public void testInvalidOldStyleOctalLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseError("08;",
-        "Invalid octal digit in octal literal.");
-    parseError("01238;",
-        "Invalid octal digit in octal literal.");
+    parseError("08;", "Invalid octal digit in octal literal.");
+    parseError("01238;", "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseError("08;",
-        "Invalid octal digit in octal literal.");
-    parseError("01238;",
-        "Invalid octal digit in octal literal.");
+    parseError("08;", "Invalid octal digit in octal literal.");
+    parseError("01238;", "Invalid octal digit in octal literal.");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parseError("08;",
-        "Invalid octal digit in octal literal.");
-    parseError("01238;",
-        "Invalid octal digit in octal literal.");
+    parseError("08;", "Invalid octal digit in octal literal.");
+    parseError("01238;", "Invalid octal digit in octal literal.");
   }
 
   @Test
@@ -4381,8 +4264,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testHtmlStartComment() {
-    parseWarning("alert(1) <!-- This text is ignored.\nalert(2)",
-        HTML_COMMENT_WARNING);
+    parseWarning("alert(1) <!-- This text is ignored.\nalert(2)", HTML_COMMENT_WARNING);
   }
 
   @Test
@@ -4425,8 +4307,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     parseError("var boolean;", "identifier is a reserved word");
-    parseError("function boolean() {};",
-        "identifier is a reserved word");
+    parseError("function boolean() {};", "identifier is a reserved word");
     parseError("boolean = 1;", "identifier is a reserved word");
 
     expectFeatures();
@@ -4444,7 +4325,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("class = 1;", "'identifier' expected");
     parseError("var import = 0;", "'identifier' expected");
     // TODO(johnlenz): reenable
-    //parse("public = 2;");
+    // parse("public = 2;");
 
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = STRICT;
@@ -4496,13 +4377,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning("x.class;", IRFactory.INVALID_ES3_PROP_NAME);
     expectFeatures();
     parse("x['class'];");
-    parse("var x = {let: 1};");  // 'let' is not reserved in ES3
+    parse("var x = {let: 1};"); // 'let' is not reserved in ES3
     parse("x.let;");
     parse("var x = {yield: 1};"); // 'yield' is not reserved in ES3
     parse("x.yield;");
     expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
-    parseWarning("x.prototype.catch = function() {};",
-        IRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x.prototype.catch = function() {};", IRFactory.INVALID_ES3_PROP_NAME);
     parseWarning("x().catch();", IRFactory.INVALID_ES3_PROP_NAME);
 
     mode = LanguageMode.ECMASCRIPT5;
@@ -4752,18 +4632,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testUnicodeEscapeInvalidIdentifierStart() {
-    parseError("var \\u0037yler",
-        "Character '7' (U+0037) is not a valid identifier start char");
-    parseError("var \\u{37}yler",
-        "Character '7' (U+0037) is not a valid identifier start char");
-    parseError("var \\u0020space",
-        "Invalid escape sequence");
+    parseError("var \\u0037yler", "Character '7' (U+0037) is not a valid identifier start char");
+    parseError("var \\u{37}yler", "Character '7' (U+0037) is not a valid identifier start char");
+    parseError("var \\u0020space", "Invalid escape sequence");
   }
 
   @Test
   public void testUnicodeEscapeInvalidIdentifierChar() {
-    parseError("var sp\\u0020ce",
-        "Invalid escape sequence");
+    parseError("var sp\\u0020ce", "Invalid escape sequence");
   }
 
   /**
@@ -4778,35 +4654,31 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testGetPropFunctionName() {
-    parseError("function a.b() {}",
-        "'(' expected");
-    parseError("var x = function a.b() {}",
-        "'(' expected");
+    parseError("function a.b() {}", "'(' expected");
+    parseError("var x = function a.b() {}", "'(' expected");
   }
 
   @Test
   public void testIdeModePartialTree() {
-    Node partialTree = parseError("function Foo() {} f.",
-        "'identifier' expected");
+    Node partialTree = parseError("function Foo() {} f.", "'identifier' expected");
     assertThat(partialTree).isNull();
 
     isIdeMode = true;
-    partialTree = parseError("function Foo() {} f.",
-        "'identifier' expected");
+    partialTree = parseError("function Foo() {} f.", "'identifier' expected");
     assertThat(partialTree).isNotNull();
   }
 
   @Test
   public void testForEach() {
     parseError(
-        "function f(stamp, status) {\n" +
-        "  for each ( var curTiming in this.timeLog.timings ) {\n" +
-        "    if ( curTiming.callId == stamp ) {\n" +
-        "      curTiming.flag = status;\n" +
-        "      break;\n" +
-        "    }\n" +
-        "  }\n" +
-        "};",
+        "function f(stamp, status) {\n"
+            + "  for each ( var curTiming in this.timeLog.timings ) {\n"
+            + "    if ( curTiming.callId == stamp ) {\n"
+            + "      curTiming.flag = status;\n"
+            + "      break;\n"
+            + "    }\n"
+            + "  }\n"
+            + "};",
         "'(' expected");
   }
 
@@ -4878,22 +4750,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testUnterminatedStringLiteral() {
-    parseError("var unterm = 'forgot closing quote",
-        "Unterminated string literal");
+    parseError("var unterm = 'forgot closing quote", "Unterminated string literal");
 
-    parseError("var unterm = 'forgot closing quote\n"
-        + "alert(unterm);",
-        "Unterminated string literal");
+    parseError(
+        "var unterm = 'forgot closing quote\n" + "alert(unterm);", "Unterminated string literal");
   }
 
   /** @bug 14231379 */
   @Test
   public void testUnterminatedRegExp() {
-    parseError("var unterm = /forgot trailing slash",
-        "Expected '/' in regular expression literal");
+    parseError("var unterm = /forgot trailing slash", "Expected '/' in regular expression literal");
 
-    parseError("var unterm = /forgot trailing slash\n" +
-        "alert(unterm);",
+    parseError(
+        "var unterm = /forgot trailing slash\n" + "alert(unterm);",
         "Expected '/' in regular expression literal");
   }
 
@@ -4935,10 +4804,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     // Invalid combinations
     parseError("/a/a", "Invalid RegExp flag 'a'");
     parseError("/a/b", "Invalid RegExp flag 'b'");
-    parseError("/a/abc",
-        "Invalid RegExp flag 'a'",
-        "Invalid RegExp flag 'b'",
-        "Invalid RegExp flag 'c'");
+    parseError(
+        "/a/abc", "Invalid RegExp flag 'a'", "Invalid RegExp flag 'b'", "Invalid RegExp flag 'c'");
   }
 
   /** New RegExp flags added in ES6. */
@@ -4953,12 +4820,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     expectFeatures(Feature.REGEXP_FLAG_Y);
-    parseWarning("/a/y",
-        getRequiresEs6Message(Feature.REGEXP_FLAG_Y));
+    parseWarning("/a/y", getRequiresEs6Message(Feature.REGEXP_FLAG_Y));
     expectFeatures(Feature.REGEXP_FLAG_U);
-    parseWarning("/a/u",
-        getRequiresEs6Message(Feature.REGEXP_FLAG_U));
-    parseWarning("/a/yu",
+    parseWarning("/a/u", getRequiresEs6Message(Feature.REGEXP_FLAG_U));
+    parseWarning(
+        "/a/yu",
         getRequiresEs6Message(Feature.REGEXP_FLAG_Y),
         getRequiresEs6Message(Feature.REGEXP_FLAG_U));
   }
@@ -4993,8 +4859,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function f(a, b=0, c) {}");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("function f(a, b=0) {}",
-        getRequiresEs6Message(Feature.DEFAULT_PARAMETERS));
+    parseWarning("function f(a, b=0) {}", getRequiresEs6Message(Feature.DEFAULT_PARAMETERS));
   }
 
   @Test
@@ -5060,8 +4925,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = SLOPPY;
     expectFeatures(Feature.REST_PARAMETERS);
-    parseWarning("function f(...b) {}",
-        getRequiresEs6Message(Feature.REST_PARAMETERS));
+    parseWarning("function f(...b) {}", getRequiresEs6Message(Feature.REST_PARAMETERS));
   }
 
   @Test
@@ -5116,13 +4980,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("class C {}");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("class C {}",
-        getRequiresEs6Message(Feature.CLASSES));
+    parseWarning("class C {}", getRequiresEs6Message(Feature.CLASSES));
 
     mode = LanguageMode.ECMASCRIPT3;
-    parseWarning("class C {}",
-        getRequiresEs6Message(Feature.CLASSES));
-
+    parseWarning("class C {}", getRequiresEs6Message(Feature.CLASSES));
   }
 
   @Test
@@ -5132,17 +4993,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     parse("class C {}");
 
-    parse("class C {\n" +
-          "  member() {}\n" +
-          "  get field() {}\n" +
-          "  set field(a) {}\n" +
-          "}\n");
+    parse("class C {\n" + "  member() {}\n" + "  get field() {}\n" + "  set field(a) {}\n" + "}\n");
 
-    parse("class C {\n" +
-        "  static member() {}\n" +
-        "  static get field() {}\n" +
-        "  static set field(a) {}\n" +
-        "}\n");
+    parse(
+        "class C {\n"
+            + "  static member() {}\n"
+            + "  static get field() {}\n"
+            + "  static set field(a) {}\n"
+            + "}\n");
   }
 
   @Test
@@ -5150,17 +5008,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES);
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    parse("class C {\n" +
-          "  member() {};\n" +
-          "  get field() {};\n" +
-          "  set field(a) {};\n" +
-          "}\n");
+    parse(
+        "class C {\n"
+            + "  member() {};\n"
+            + "  get field() {};\n"
+            + "  set field(a) {};\n"
+            + "}\n");
 
-    parse("class C {\n" +
-        "  static member() {};\n" +
-        "  static get field() {};\n" +
-        "  static set field(a) {};\n" +
-        "}\n");
+    parse(
+        "class C {\n"
+            + "  static member() {};\n"
+            + "  static get field() {};\n"
+            + "  static set field(a) {};\n"
+            + "}\n");
   }
 
   @Test
@@ -5168,12 +5028,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.CLASSES, Feature.KEYWORDS_AS_PROPERTIES);
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    parse(Joiner.on('\n').join(
-        "class KeywordMethods {",
-        "  continue() {}",
-        "  throw() {}",
-        "  else() {}",
-        "}"));
+    parse(
+        Joiner.on('\n')
+            .join("class KeywordMethods {", "  continue() {}", "  throw() {}", "  else() {}", "}"));
   }
 
   @Test
@@ -5183,11 +5040,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
     parse(
         LINE_JOINER.join(
-            "class C {",
-            "  import() {};",
-            "  get break() {};",
-            "  set break(a) {};",
-            "}"));
+            "class C {", "  import() {};", "  get break() {};", "  set break(a) {};", "}"));
 
     parse(
         LINE_JOINER.join(
@@ -5286,12 +5139,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("function f() {super;};");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("super;",
-        getRequiresEs6Message(Feature.SUPER));
+    parseWarning("super;", getRequiresEs6Message(Feature.SUPER));
 
     mode = LanguageMode.ECMASCRIPT3;
-    parseWarning("super;",
-        getRequiresEs6Message(Feature.SUPER));
+    parseWarning("super;", getRequiresEs6Message(Feature.SUPER));
   }
 
   @Test
@@ -5599,12 +5450,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = (a => b);");
 
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("a => b",
-        getRequiresEs6Message(Feature.ARROW_FUNCTIONS));
+    parseWarning("a => b", getRequiresEs6Message(Feature.ARROW_FUNCTIONS));
 
     mode = LanguageMode.ECMASCRIPT3;
-    parseWarning("a => b;",
-        getRequiresEs6Message(Feature.ARROW_FUNCTIONS));
+    parseWarning("a => b;", getRequiresEs6Message(Feature.ARROW_FUNCTIONS));
   }
 
   @Test
@@ -5620,8 +5469,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testInvalidAwait() {
     parseError("await 15;", "'await' used in a non-async function context");
-    parseError(
-        "function f() { return await 5; }", "'await' used in a non-async function context");
+    parseError("function f() { return await 5; }", "'await' used in a non-async function context");
     parseError(
         "async function f(x = await 15) { return x; }",
         "`await` is illegal in parameter default value.");
@@ -5658,13 +5506,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
         Feature.MEMBER_DECLARATIONS,
         Feature.CONST_DECLARATIONS,
         Feature.LET_DECLARATIONS);
-    parse(LINE_JOINER.join(
-        "class C {",
-        "  async(x) { return x; }",
-        "}",
-        "const c = new C();",
-        "c.async(1);",
-        "let foo = async(5);"));
+    parse(
+        LINE_JOINER.join(
+            "class C {",
+            "  async(x) { return x; }",
+            "}",
+            "const c = new C();",
+            "c.async(1);",
+            "let foo = async(5);"));
   }
 
   @Test
@@ -5922,11 +5771,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    parseError("for(var a, b of c) d;",
+    parseError(
+        "for(var a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
-    parseError("for(let a, b of c) d;",
+    parseError(
+        "for(let a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
-    parseError("for(const a, b of c) d;",
+    parseError(
+        "for(const a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
   }
 
@@ -5994,19 +5846,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
     strictMode = SLOPPY;
 
     // Destructuring forbids an initializer in for-in/for-of
-    parseError("for (var {x: y} = foo() in bar()) {}",
-        "for-in statement may not have initializer");
-    parseError("for (let {x: y} = foo() in bar()) {}",
-        "for-in statement may not have initializer");
-    parseError("for (const {x: y} = foo() in bar()) {}",
-        "for-in statement may not have initializer");
+    parseError("for (var {x: y} = foo() in bar()) {}", "for-in statement may not have initializer");
+    parseError("for (let {x: y} = foo() in bar()) {}", "for-in statement may not have initializer");
+    parseError(
+        "for (const {x: y} = foo() in bar()) {}", "for-in statement may not have initializer");
 
-    parseError("for (var {x: y} = foo() of bar()) {}",
-        "for-of statement may not have initializer");
-    parseError("for (let {x: y} = foo() of bar()) {}",
-        "for-of statement may not have initializer");
-    parseError("for (const {x: y} = foo() of bar()) {}",
-        "for-of statement may not have initializer");
+    parseError("for (var {x: y} = foo() of bar()) {}", "for-of statement may not have initializer");
+    parseError("for (let {x: y} = foo() of bar()) {}", "for-of statement may not have initializer");
+    parseError(
+        "for (const {x: y} = foo() of bar()) {}", "for-of statement may not have initializer");
 
     // but requires it in a vanilla for loop
     parseError("for (var {x: y};;) {}", "destructuring must have an initializer");
@@ -6108,14 +5956,10 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("import * as sm from './someModule'");
 
     expectFeatures();
-    parseError("import class from './someModule'",
-            "cannot use keyword 'class' here.");
-    parseError("import * as class from './someModule'",
-            "'identifier' expected");
-    parseError("import {a as class} from './someModule'",
-            "'identifier' expected");
-    parseError("import {class} from './someModule'",
-            "'as' expected");
+    parseError("import class from './someModule'", "cannot use keyword 'class' here.");
+    parseError("import * as class from './someModule'", "'identifier' expected");
+    parseError("import {a as class} from './someModule'", "'identifier' expected");
+    parseError("import {class} from './someModule'", "'as' expected");
   }
 
   @Test
@@ -6134,12 +5978,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("export {x as default, y as class}");
 
     expectFeatures();
-    parseError("export {default as x}",
-        "cannot use keyword 'default' here.");
-    parseError("export {package as x}",
-        "cannot use keyword 'package' here.");
-    parseError("export {package}",
-        "cannot use keyword 'package' here.");
+    parseError("export {default as x}", "cannot use keyword 'default' here.");
+    parseError("export {package as x}", "cannot use keyword 'package' here.");
+    parseError("export {package}", "cannot use keyword 'package' here.");
 
     expectFeatures(Feature.MODULES);
     parse("export {x as x1, y as y1} from './someModule'");
@@ -6182,21 +6023,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
   @Test
   public void testShebang() {
     parse("#!/usr/bin/node\n var x = 1;");
-    parseError("var x = 1; \n #!/usr/bin/node",
-        "primary expression expected");
+    parseError("var x = 1; \n #!/usr/bin/node", "primary expression expected");
   }
 
   @Test
   public void testLookaheadGithubIssue699() {
     long start = System.currentTimeMillis();
     parse(
-        "[1,[1,[1,[1,[1,[1,\n" +
-        "[1,[1,[1,[1,[1,[1,\n" +
-        "[1,[1,[1,[1,[1,[1,\n" +
-        "[1,[1,[1,[1,[1,[1,\n" +
-        "[1,[1,[1,[1,[1,[1,\n" +
-        "[1,[1,\n" +
-        "[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] ");
+        "[1,[1,[1,[1,[1,[1,\n"
+            + "[1,[1,[1,[1,[1,[1,\n"
+            + "[1,[1,[1,[1,[1,[1,\n"
+            + "[1,[1,[1,[1,[1,[1,\n"
+            + "[1,[1,[1,[1,[1,[1,\n"
+            + "[1,[1,\n"
+            + "[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] ");
 
     long stop = System.currentTimeMillis();
 
@@ -6205,18 +6045,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testInvalidHandling1() {
-    parse(""
-        + "/**\n"
-        + " * @fileoverview Definition.\n"
-        + " * @mods {ns.bar}\n"
-        + " * @modName mod\n"
-        + " *\n"
-        + " * @extends {ns.bar}\n"
-        + " * @author someone\n"
-        + " */\n"
-        + "\n"
-        + "goog.provide('ns.foo');\n"
-        + "");
+    parse(
+        ""
+            + "/**\n"
+            + " * @fileoverview Definition.\n"
+            + " * @mods {ns.bar}\n"
+            + " * @modName mod\n"
+            + " *\n"
+            + " * @extends {ns.bar}\n"
+            + " * @author someone\n"
+            + " */\n"
+            + "\n"
+            + "goog.provide('ns.foo');\n"
+            + "");
   }
 
   @Test
@@ -6280,18 +6121,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   @Test
   public void testParseInlineSourceMap() {
-    String code = "var X = (function () {\n"
-        + "    function X(input) {\n"
-        + "        this.y = input;\n"
-        + "    }\n"
-        + "    return X;\n"
-        + "}());\n"
-        + "console.log(new X(1));\n"
-        + "//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
-        + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
-        + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
-        + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
-        + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+    String code =
+        "var X = (function () {\n"
+            + "    function X(input) {\n"
+            + "        this.y = input;\n"
+            + "    }\n"
+            + "    return X;\n"
+            + "}());\n"
+            + "console.log(new X(1));\n"
+            + "//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
+            + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
+            + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
+            + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
+            + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
     ParseResult result = doParse(code);
     assertThat(result.sourceMapURL)
         .isEqualTo(
@@ -6587,6 +6429,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   /**
    * Verify that the given code has the given parse errors.
+   *
    * @return If in IDE mode, returns a partial tree.
    */
   private Node parseError(String source, String... errors) {
@@ -6610,6 +6453,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   /**
    * Verify that the given code has the given parse warnings.
+   *
    * @return The parse tree.
    */
   private Node parseWarning(String string, String... warnings) {
@@ -6619,11 +6463,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private ParserRunner.ParseResult doParse(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter().expectAllWarnings(warnings);
     StaticSourceFile file = new SimpleSourceFile("input", SourceKind.STRONG);
-    ParserRunner.ParseResult result = ParserRunner.parse(
-        file,
-        string,
-        createConfig(),
-        testErrorReporter);
+    ParserRunner.ParseResult result =
+        ParserRunner.parse(file, string, createConfig(), testErrorReporter);
 
     // check expected features if specified
     assertFS(result.features).contains(expectedFeatures);

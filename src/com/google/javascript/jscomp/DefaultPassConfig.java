@@ -80,11 +80,10 @@ import javax.annotation.Nullable;
 /**
  * Pass factories and meta-data for native JSCompiler passes.
  *
- * NOTE(dimvar): this needs some non-trivial refactoring. The pass config should
- * use as little state as possible. The recommended way for a pass to leave
- * behind some state for a subsequent pass is through the compiler object.
- * Any other state remaining here should only be used when the pass config is
- * creating the list of checks and optimizations, not after passes have started
+ * <p>NOTE(dimvar): this needs some non-trivial refactoring. The pass config should use as little
+ * state as possible. The recommended way for a pass to leave behind some state for a subsequent
+ * pass is through the compiler object. Any other state remaining here should only be used when the
+ * pass config is creating the list of checks and optimizations, not after passes have started
  * executing. For example, the field namespaceForChecks should be in Compiler.
  */
 public final class DefaultPassConfig extends PassConfig {
@@ -96,16 +95,15 @@ public final class DefaultPassConfig extends PassConfig {
   private static final String CLOSURE_LOCALE_CONSTANT_NAME = "goog.LOCALE";
 
   static final DiagnosticType CANNOT_USE_PROTOTYPE_AND_VAR =
-      DiagnosticType.error("JSC_CANNOT_USE_PROTOTYPE_AND_VAR",
+      DiagnosticType.error(
+          "JSC_CANNOT_USE_PROTOTYPE_AND_VAR",
           "Rename prototypes and inline variables cannot be used together.");
 
   // Miscellaneous errors.
   private static final java.util.regex.Pattern GLOBAL_SYMBOL_NAMESPACE_PATTERN =
-    java.util.regex.Pattern.compile("^[a-zA-Z0-9$_]+$");
+      java.util.regex.Pattern.compile("^[a-zA-Z0-9$_]+$");
 
-  /**
-   * A global namespace to share across checking passes.
-   */
+  /** A global namespace to share across checking passes. */
   private transient GlobalNamespace namespaceForChecks = null;
 
   /** A symbol table for registering references that get removed during preprocessing. */
@@ -113,8 +111,8 @@ public final class DefaultPassConfig extends PassConfig {
       preprocessorSymbolTableFactory = new PreprocessorSymbolTable.CachedInstanceFactory();
 
   /**
-   * Global state necessary for doing hotswap recompilation of files with references to
-   * processed goog.modules.
+   * Global state necessary for doing hotswap recompilation of files with references to processed
+   * goog.modules.
    */
   private transient ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
 
@@ -706,8 +704,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.customPasses != null) {
-      passes.add(getCustomPasses(
-          CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP));
+      passes.add(getCustomPasses(CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP));
     }
 
     passes.add(createEmptyPass(PassNames.BEFORE_MAIN_OPTIMIZATIONS));
@@ -737,8 +734,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Some optimizations belong outside the loop because running them more
     // than once would either have no benefit or be incorrect.
     if (options.customPasses != null) {
-      passes.add(getCustomPasses(
-          CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
+      passes.add(getCustomPasses(CustomPassExecutionTime.AFTER_OPTIMIZATION_LOOP));
     }
 
     if (options.inlineVariables || options.inlineLocalVariables) {
@@ -861,11 +857,9 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.renamePrefixNamespace != null) {
-      if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(
-          options.renamePrefixNamespace).matches()) {
+      if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(options.renamePrefixNamespace).matches()) {
         throw new IllegalArgumentException(
-            "Illegal character in renamePrefixNamespace name: "
-            + options.renamePrefixNamespace);
+            "Illegal character in renamePrefixNamespace name: " + options.renamePrefixNamespace);
       }
       passes.add(rescopeGlobalSymbols);
     }
@@ -1074,10 +1068,7 @@ public final class DefaultPassConfig extends PassConfig {
         polymerPass,
         "The Polymer pass must run after goog.provide processing.");
     assertPassOrder(
-        checks,
-        chromePass,
-        polymerPass,
-        "The Polymer pass must run after ChromePass processing.");
+        checks, chromePass, polymerPass, "The Polymer pass must run after ChromePass processing.");
     assertPassOrder(
         checks,
         polymerPass,
@@ -1151,6 +1142,7 @@ public final class DefaultPassConfig extends PassConfig {
    * Certain optimizations need to run in a particular order. For example, OptimizeCalls must run
    * before RemoveSuperMethodsPass, because the former can invalidate assumptions in the latter.
    * This enforces those constraints.
+   *
    * @param optimizations The list of optimization passes
    */
   private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
@@ -1217,20 +1209,19 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) -> {
                 CodingConvention convention = compiler.getCodingConvention();
-                  final GenerateExports pass =
-                      new GenerateExports(
-                          compiler,
-                          options.exportLocalPropertyDefinitions,
-                          convention.getExportSymbolFunction(),
-                          convention.getExportPropertyFunction());
-                  return new CompilerPass() {
-                    @Override
-                    public void process(Node externs, Node root) {
-                      pass.process(externs, root);
-                      compiler.addExportedNames(pass.getExportedVariableNames());
-                    }
-                  };
-
+                final GenerateExports pass =
+                    new GenerateExports(
+                        compiler,
+                        options.exportLocalPropertyDefinitions,
+                        convention.getExportSymbolFunction(),
+                        convention.getExportPropertyFunction());
+                return new CompilerPass() {
+                  @Override
+                  public void process(Node externs, Node root) {
+                    pass.process(externs, root);
+                    compiler.addExportedNames(pass.getExportedVariableNames());
+                  }
+                };
               })
           .setFeatureSetForChecks()
           .build();
@@ -1911,8 +1902,8 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Executes the given callbacks with a {@link CombinedCompilerPass}. */
-  private static HotSwapCompilerPass combineChecks(AbstractCompiler compiler,
-      List<Callback> callbacks) {
+  private static HotSwapCompilerPass combineChecks(
+      AbstractCompiler compiler, List<Callback> callbacks) {
     checkArgument(!callbacks.isEmpty());
     return new CombinedCompilerPass(compiler, callbacks);
   }
@@ -2620,8 +2611,7 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   private VariableMap runVariableRenaming(
-      AbstractCompiler compiler, VariableMap prevVariableMap,
-      Node externs, Node root) {
+      AbstractCompiler compiler, VariableMap prevVariableMap, Node externs, Node root) {
     char[] reservedChars = null;
     Set<String> reservedNames = new HashSet<>();
     if (options.renamePrefixNamespace != null) {
@@ -2712,10 +2702,10 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   /** Create a compiler pass that runs the given passes in serial. */
-  private static CompilerPass runInSerial(
-      final Collection<CompilerPass> passes) {
+  private static CompilerPass runInSerial(final Collection<CompilerPass> passes) {
     return new CompilerPass() {
-      @Override public void process(Node externs, Node root) {
+      @Override
+      public void process(Node externs, Node root) {
         for (CompilerPass pass : passes) {
           pass.process(externs, root);
         }
@@ -2732,8 +2722,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.closurePass && options.locale != null) {
-      additionalReplacements.put(CLOSURE_LOCALE_CONSTANT_NAME,
-          IR.string(options.locale));
+      additionalReplacements.put(CLOSURE_LOCALE_CONSTANT_NAME, IR.string(options.locale));
     }
 
     return additionalReplacements;

@@ -32,9 +32,7 @@ import com.google.javascript.rhino.jstype.JSType.Nullability;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-/**
- * This class walks the AST and validates that the structure is correct.
- */
+/** This class walks the AST and validates that the structure is correct. */
 public final class AstValidator implements CompilerPass {
 
   // Possible enhancements:
@@ -88,8 +86,8 @@ public final class AstValidator implements CompilerPass {
   /**
    * Enable or disable validation of type information.
    *
-   * TODO(b/74537281): Currently only expressions are checked for type information.
-   *     Do we need to do more?
+   * <p>TODO(b/74537281): Currently only expressions are checked for type information. Do we need to
+   * do more?
    */
   public AstValidator setTypeValidationEnabled(boolean isEnabled) {
     isTypeValidationEnabled = isEnabled;
@@ -257,7 +255,7 @@ public final class AstValidator implements CompilerPass {
       validateExpressionType(n);
     }
     switch (n.getToken()) {
-      // Childless expressions
+        // Childless expressions
       case NEW_TARGET:
         validateFeature(Feature.NEW_TARGET, n);
         validateChildless(n);
@@ -273,7 +271,7 @@ public final class AstValidator implements CompilerPass {
         validateChildless(n);
         return;
 
-      // General unary ops
+        // General unary ops
       case DELPROP:
       case POS:
       case NEG:
@@ -290,7 +288,7 @@ public final class AstValidator implements CompilerPass {
         validateIncDecOp(n);
         return;
 
-      // Assignments
+        // Assignments
       case ASSIGN:
         validateAssignmentExpression(n);
         return;
@@ -316,7 +314,7 @@ public final class AstValidator implements CompilerPass {
         validateTrinaryOp(n);
         return;
 
-      // Node types that require special handling
+        // Node types that require special handling
       case STRING:
         validateString(n);
         return;
@@ -333,7 +331,7 @@ public final class AstValidator implements CompilerPass {
         validateName(n);
         return;
 
-      // General binary ops
+        // General binary ops
       case EXPONENT:
         validateFeature(Feature.EXPONENT_OP, n);
         validateBinaryOp(n);
@@ -788,10 +786,7 @@ public final class AstValidator implements CompilerPass {
     validateChildCount(n, 0);
   }
 
-  /**
-   * In a class declaration, unlike a class expression,
-   * the class name is required.
-   */
+  /** In a class declaration, unlike a class expression, the class name is required. */
   private void validateClassDeclaration(Node n, boolean isAmbient) {
     validateClassHelper(n, isAmbient);
     validateName(n.getFirstChild());
@@ -1251,7 +1246,9 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateGetPropGetElemInLHS(Token contextType, Node n) {
-    if (contextType == Token.CONST || contextType == Token.LET || contextType == Token.VAR
+    if (contextType == Token.CONST
+        || contextType == Token.LET
+        || contextType == Token.VAR
         || contextType == Token.PARAM_LIST) {
       violation("Invalid child for " + contextType + " node", n);
       return;
@@ -1488,8 +1485,7 @@ public final class AstValidator implements CompilerPass {
       }
     }
     if (defaults > 1) {
-      violation("Expected at most 1 'default' in switch but was "
-          + defaults, n);
+      violation("Expected at most 1 'default' in switch but was " + defaults, n);
     }
   }
 
@@ -1836,7 +1832,6 @@ public final class AstValidator implements CompilerPass {
     validateAssignmentOpTarget(n.getFirstChild(), n.getToken());
   }
 
-
   private void validateUnaryOp(Node n) {
     validateChildCount(n, 1);
     validateExpression(n.getFirstChild());
@@ -1976,8 +1971,7 @@ public final class AstValidator implements CompilerPass {
     }
     int count = n.getChildCount();
     if (count < min || count > max) {
-      violation("Expected child count in [" + min + ", " + max
-          + "], but was " + count, n);
+      violation("Expected child count in [" + min + ", " + max + "], but was " + count, n);
     }
   }
 
@@ -2001,7 +1995,7 @@ public final class AstValidator implements CompilerPass {
     if (i == 1) {
       valid = !n.hasMoreThanOneChild();
     } else if (i == -1) {
-      valid = true;  // Varying number of children.
+      valid = true; // Varying number of children.
     } else {
       valid = n.getChildCount() <= i;
     }

@@ -100,7 +100,7 @@ public class IR {
     return paramList;
   }
 
-  public static Node root(Node ... rootChildren) {
+  public static Node root(Node... rootChildren) {
     Node root = new Node(Token.ROOT);
     for (Node child : rootChildren) {
       checkState(child.getToken() == Token.ROOT || child.getToken() == Token.SCRIPT);
@@ -120,7 +120,7 @@ public class IR {
     return block;
   }
 
-  public static Node block(Node ... stmts) {
+  public static Node block(Node... stmts) {
     Node block = block();
     for (Node stmt : stmts) {
       checkState(mayBeStatement(stmt));
@@ -148,7 +148,7 @@ public class IR {
     return block;
   }
 
-  public static Node script(Node ... stmts) {
+  public static Node script(Node... stmts) {
     Node block = script();
     for (Node stmt : stmts) {
       checkState(mayBeStatementNoReturn(stmt));
@@ -201,8 +201,7 @@ public class IR {
       checkState(lhs.isArrayPattern() || lhs.isObjectPattern());
       lhs = new Node(Token.DESTRUCTURING_LHS, lhs);
     }
-    Preconditions.checkState(mayBeExpression(value),
-        "%s can't be an expression", value);
+    Preconditions.checkState(mayBeExpression(value), "%s can't be an expression", value);
 
     lhs.addChildToBack(value);
     return new Node(type, lhs);
@@ -281,7 +280,7 @@ public class IR {
     return new Node(Token.FOR, init, cond, incr, body);
   }
 
-  public static Node switchNode(Node cond, Node ... cases) {
+  public static Node switchNode(Node cond, Node... cases) {
     checkState(mayBeExpression(cond));
     Node switchNode = new Node(Token.SWITCH, cond);
     for (Node caseNode : cases) {
@@ -331,8 +330,7 @@ public class IR {
     return new Node(Token.TRY, tryBody, catchBody);
   }
 
-  public static Node tryCatchFinally(
-      Node tryBody, Node catchNode, Node finallyBody) {
+  public static Node tryCatchFinally(Node tryBody, Node catchNode, Node finallyBody) {
     checkState(finallyBody.isBlock());
     Node tryNode = tryCatch(tryBody, catchNode);
     tryNode.addChildToBack(finallyBody);
@@ -365,7 +363,7 @@ public class IR {
     return new Node(Token.CONTINUE, name);
   }
 
-  public static Node call(Node target, Node ... args) {
+  public static Node call(Node target, Node... args) {
     Node call = new Node(Token.CALL, target);
     for (Node arg : args) {
       checkState(mayBeExpression(arg) || arg.isSpread(), arg);
@@ -374,7 +372,7 @@ public class IR {
     return call;
   }
 
-  public static Node startOptChainCall(Node target, Node ... args) {
+  public static Node startOptChainCall(Node target, Node... args) {
     Node call = new Node(Token.OPTCHAIN_CALL, target);
     for (Node arg : args) {
       checkState(mayBeExpression(arg) || arg.isSpread(), arg);
@@ -384,7 +382,7 @@ public class IR {
     return call;
   }
 
-  public static Node continueOptChainCall(Node target, Node ... args) {
+  public static Node continueOptChainCall(Node target, Node... args) {
     Node call = new Node(Token.OPTCHAIN_CALL, target);
     for (Node arg : args) {
       checkState(mayBeExpression(arg) || arg.isSpread(), arg);
@@ -394,7 +392,7 @@ public class IR {
     return call;
   }
 
-  public static Node newNode(Node target, Node ... args) {
+  public static Node newNode(Node target, Node... args) {
     Node newcall = new Node(Token.NEW, target);
     for (Node arg : args) {
       checkState(mayBeExpression(arg) || arg.isSpread(), arg);
@@ -404,8 +402,8 @@ public class IR {
   }
 
   public static Node name(String name) {
-    Preconditions.checkState(name.indexOf('.') == -1,
-        "Invalid name '%s'. Did you mean to use NodeUtil.newQName?", name);
+    Preconditions.checkState(
+        name.indexOf('.') == -1, "Invalid name '%s'. Did you mean to use NodeUtil.newQName?", name);
     return Node.newString(Token.NAME, name);
   }
 
@@ -431,7 +429,7 @@ public class IR {
     return new Node(Token.GETPROP, target, prop);
   }
 
-  public static Node getprop(Node target, Node prop, Node ...moreProps) {
+  public static Node getprop(Node target, Node prop, Node... moreProps) {
     checkState(mayBeExpression(target));
     checkState(prop.isString());
     Node result = new Node(Token.GETPROP, target, prop);
@@ -442,7 +440,7 @@ public class IR {
     return result;
   }
 
-  public static Node getprop(Node target, String prop, String ...moreProps) {
+  public static Node getprop(Node target, String prop, String... moreProps) {
     checkState(mayBeExpression(target));
     Node result = new Node(Token.GETPROP, target, IR.string(prop));
     for (String moreProp : moreProps) {
@@ -515,9 +513,7 @@ public class IR {
     return unaryOp(Token.NOT, expr1);
   }
 
-  /**
-   * "&lt;"
-   */
+  /** "&lt;" */
   public static Node lt(Node expr1, Node expr2) {
     return binaryOp(Token.LT, expr1, expr2);
   }
@@ -527,30 +523,22 @@ public class IR {
     return binaryOp(Token.GE, expr1, expr2);
   }
 
-  /**
-   * "=="
-   */
+  /** "==" */
   public static Node eq(Node expr1, Node expr2) {
     return binaryOp(Token.EQ, expr1, expr2);
   }
 
-  /**
-   * "!="
-   */
+  /** "!=" */
   public static Node ne(Node expr1, Node expr2) {
     return binaryOp(Token.NE, expr1, expr2);
   }
 
-  /**
-   * "==="
-   */
+  /** "===" */
   public static Node sheq(Node expr1, Node expr2) {
     return binaryOp(Token.SHEQ, expr1, expr2);
   }
 
-  /**
-   * "!=="
-   */
+  /** "!==" */
   public static Node shne(Node expr1, Node expr2) {
     return binaryOp(Token.SHNE, expr1, expr2);
   }
@@ -596,7 +584,7 @@ public class IR {
   // TODO(johnlenz): the rest of the ops
 
   // literals
-  public static Node objectlit(Node ... propdefs) {
+  public static Node objectlit(Node... propdefs) {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
       switch (propdef.getToken()) {
@@ -649,7 +637,7 @@ public class IR {
     return string;
   }
 
-  public static Node arraylit(Node ... exprs) {
+  public static Node arraylit(Node... exprs) {
     return arraylit(Arrays.asList(exprs));
   }
 
@@ -779,8 +767,7 @@ public class IR {
   //   GETTER_DEF, SETTER_DEF
 
   /**
-   * It isn't possible to always determine if a detached node is a expression,
-   * so make a best guess.
+   * It isn't possible to always determine if a detached node is a expression, so make a best guess.
    */
   private static boolean mayBeStatementNoReturn(Node n) {
     switch (n.getToken()) {
@@ -819,8 +806,7 @@ public class IR {
   }
 
   /**
-   * It isn't possible to always determine if a detached node is a expression,
-   * so make a best guess.
+   * It isn't possible to always determine if a detached node is a expression, so make a best guess.
    */
   public static boolean mayBeStatement(Node n) {
     if (!mayBeStatementNoReturn(n)) {
@@ -830,8 +816,7 @@ public class IR {
   }
 
   /**
-   * It isn't possible to always determine if a detached node is a expression,
-   * so make a best guess.
+   * It isn't possible to always determine if a detached node is a expression, so make a best guess.
    */
   public static boolean mayBeExpression(Node n) {
     switch (n.getToken()) {

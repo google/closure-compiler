@@ -353,16 +353,12 @@ public final class FeatureSet implements Serializable {
     return new FeatureSet(union(features, other.features));
   }
 
-  /**
-   * Does this {@link FeatureSet} contain all of the features of {@code other}?
-   */
+  /** Does this {@link FeatureSet} contain all of the features of {@code other}? */
   public boolean contains(FeatureSet other) {
     return this.features.containsAll(other.features);
   }
 
-  /**
-   * Does this {@link FeatureSet} contain the given feature?
-   */
+  /** Does this {@link FeatureSet} contain the given feature? */
   public boolean contains(Feature feature) {
     return this.features.containsAll(EnumSet.of(feature));
   }
@@ -419,9 +415,7 @@ public final class FeatureSet implements Serializable {
     return new FeatureSet(union(features, newFeatures.features));
   }
 
-  /**
-   * Does this {@link FeatureSet} include {@code feature}?
-   */
+  /** Does this {@link FeatureSet} include {@code feature}? */
   public boolean has(Feature feature) {
     return features.contains(feature);
   }
