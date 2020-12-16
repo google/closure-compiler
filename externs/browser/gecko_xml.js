@@ -68,6 +68,6 @@ function DOMParser() {}
  *
  * @param {!TrustedHTML|string} src The UTF16 string to be parsed.
  * @param {string} type The content type of the string.
- * @return {Document}
+ * @return {!Document}
  */
 DOMParser.prototype.parseFromString = function(src, type) {};
