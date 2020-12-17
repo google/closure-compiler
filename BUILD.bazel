@@ -119,12 +119,11 @@ oss_java_library(
             ],
             exclude = [
                 "**/debugger/**/*.java",
-                "**/gwt/**/*.java",
+                "**/j2clbuild/**/*.java",
                 "**/j2cl/**/*.java",
                 "**/super*/**/*.java",
                 "**/testing/**/*.java",
                 "**/webservice/**/*.java",
-                "src/com/google/debugging/sourcemap/*Js.java",
             ] + [
                 # Used as a template.
                 "src/com/google/javascript/jscomp/CommandLineRunner.java",
@@ -183,11 +182,10 @@ gen_java_tests(
             "src/**/testing/**/*.java",
         ],
         exclude = [
-            # These files are only needed by the GWT/J2CL build of the compiler.
+            # These files are only needed by the J2CL build of the compiler.
             "**/super*/**/*.java",
             "**/j2cl/**/*.java",
-            "**/gwt/**/*.java",
-            "src/com/google/debugging/sourcemap/*Js.java",
+            "**/j2clbuild/**/*.java",
         ],
     ),
     prefix_path = "test/",

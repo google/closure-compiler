@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.gwt.client;
+package com.google.javascript.jscomp.j2clbuild.client;
 
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.deps.JsFileFullParser;
