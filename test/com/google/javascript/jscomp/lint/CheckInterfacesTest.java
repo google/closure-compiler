@@ -97,10 +97,11 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   public void testRecordWithOtherContents() {
     testSame(
         lines(
-            "/** @record */",
+            "/** @record */", //
             "function R() {",
             "  /** @type {string} */",
-            "  this.foo = '';",
-            "}"));
+            "  let foo = '';",
+            "}"),
+        CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD);
   }
 }

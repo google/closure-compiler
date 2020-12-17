@@ -590,6 +590,7 @@ public class DiagnosticGroups {
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
               CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
+              CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD,
               CheckMissingSemicolon.MISSING_SEMICOLON,
               CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC,
