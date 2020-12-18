@@ -79,7 +79,7 @@ public class ColorDeserializerTest {
   public void deserializesSimpleObject() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Foo")))
+            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
             .build();
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
 
@@ -91,12 +91,16 @@ public class ColorDeserializerTest {
   public void deserializesObjectWithPrototypeAndInstanceType() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Foo.prototype")))
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Foo instance")))
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
+                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo.prototype")))
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo instance")))
+            .addType(
+                TypeProto.newBuilder()
                     .setObject(
-                        ObjectType.newBuilder()
+                        ObjectTypeProto.newBuilder()
                             .setUuid("Foo")
                             .setPrototype(poolPointer(0))
                             .setInstanceType(poolPointer(1))
@@ -124,8 +128,8 @@ public class ColorDeserializerTest {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
-                Type.newBuilder()
-                    .setObject(ObjectType.newBuilder().setUuid("Foo").setIsInvalidating(true)))
+                TypeProto.newBuilder()
+                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo").setIsInvalidating(true)))
             .build();
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
 
@@ -137,8 +141,8 @@ public class ColorDeserializerTest {
   public void addsSingleSupertypeToDirectSupertypesField() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Foo")))
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Bar")))
+            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
+            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Bar")))
             // Bar is a subtype of Foo
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
@@ -156,9 +160,9 @@ public class ColorDeserializerTest {
   public void addsMultipleSupertypesToDirectSupertypesField() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Foo")))
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Bar")))
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Baz")))
+            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
+            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Bar")))
+            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Baz")))
             // Bar is a subtype of Foo
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
@@ -182,7 +186,7 @@ public class ColorDeserializerTest {
   public void throwsErrorIfDisambiguationEdgesContainsInvalidId() {
     TypePool typePool =
         TypePool.newBuilder()
-            .addType(Type.newBuilder().setObject(ObjectType.newBuilder().setUuid("Foo")))
+            .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder()
                     .setSubtype(TypePointer.newBuilder().setPoolOffset(0))
@@ -214,15 +218,15 @@ public class ColorDeserializerTest {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(nativeTypePointer(NativeType.STRING_TYPE))))
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(nativeTypePointer(NativeType.BIGINT_TYPE))))
             .build();
@@ -245,16 +249,16 @@ public class ColorDeserializerTest {
         TypePool.newBuilder()
             // U0 := (number, string)
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(nativeTypePointer(NativeType.STRING_TYPE))))
             // U1 := (U1, bigint)
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(poolPointer(0))
                             .addUnionMember(nativeTypePointer(NativeType.BIGINT_TYPE))))
             .build();
@@ -281,23 +285,25 @@ public class ColorDeserializerTest {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(
                                 TypePointer.newBuilder()
                                     .setPoolOffset(1)
-                                    .setDescriptionForDebug("U1"))))
+                                    .setDebugInfo(
+                                        TypePointer.DebugInfo.newBuilder().setDescription("U1")))))
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(
                                 TypePointer.newBuilder()
                                     .setPoolOffset(0)
-                                    .setDescriptionForDebug("U0"))))
+                                    .setDebugInfo(
+                                        TypePointer.DebugInfo.newBuilder().setDescription("U0")))))
             .build();
 
     // Eventually we may need to support this case, but for now throwing an explicit exception is
@@ -330,7 +336,7 @@ public class ColorDeserializerTest {
 
   @Test
   public void throwsExceptionOnTypeWithoutKindCase() {
-    TypePool typePool = TypePool.newBuilder().addType(Type.getDefaultInstance()).build();
+    TypePool typePool = TypePool.newBuilder().addType(TypeProto.getDefaultInstance()).build();
 
     assertThrows(
         InvalidSerializedFormatException.class,
@@ -342,9 +348,9 @@ public class ColorDeserializerTest {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))))
             .build();
 
@@ -362,9 +368,9 @@ public class ColorDeserializerTest {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
-                Type.newBuilder()
+                TypeProto.newBuilder()
                     .setUnion(
-                        UnionType.newBuilder()
+                        UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))))
             .build();

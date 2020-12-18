@@ -22,10 +22,9 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.serialization.NativeType;
 import com.google.javascript.jscomp.serialization.SubtypingEdge;
-import com.google.javascript.jscomp.serialization.Type;
 import com.google.javascript.jscomp.serialization.TypePointer;
-import com.google.javascript.jscomp.serialization.TypePointer.TypeCase;
 import com.google.javascript.jscomp.serialization.TypePool;
+import com.google.javascript.jscomp.serialization.TypeProto;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.function.Supplier;
@@ -73,7 +72,7 @@ public final class TypePoolCreator<T> {
 
     final int totalTypeCount = this.seenSerializableTypes.size();
     for (SeenTypeRecord seen : this.seenSerializableTypes.values()) {
-      checkState(seen.pointer.getTypeCase().equals(TypePointer.TypeCase.POOL_OFFSET));
+      checkState(seen.pointer.getValueCase().equals(TypePointer.ValueCase.POOL_OFFSET));
       int offset = seen.pointer.getPoolOffset();
       checkState(offset >= 0);
       checkState(
@@ -123,7 +122,7 @@ public final class TypePoolCreator<T> {
    *
    * <p>The given serializer will be called only once per type during type pool generation.
    */
-  public TypePointer typeToPointer(T t, Supplier<Type> serialize) {
+  public TypePointer typeToPointer(T t, Supplier<TypeProto> serialize) {
     checkValid();
 
     SeenTypeRecord existing = this.seenSerializableTypes.get(t);
@@ -136,7 +135,7 @@ public final class TypePoolCreator<T> {
     TypePointer.Builder pointer =
         TypePointer.newBuilder().setPoolOffset(this.seenSerializableTypes.size());
     if (!SerializationOptions.SKIP_DEBUG_INFO.equals(this.serializationOptions)) {
-      pointer.setDescriptionForDebug(t.toString());
+      pointer.setDebugInfo(TypePointer.DebugInfo.newBuilder().setDescription(t.toString()));
     }
 
     SeenTypeRecord record = new SeenTypeRecord(pointer.build());
@@ -155,8 +154,8 @@ public final class TypePoolCreator<T> {
   public void addDisambiguationEdge(TypePointer subtype, TypePointer supertype) {
     checkState(this.state == State.COLLECTING_TYPES);
 
-    if (subtype.getTypeCase().equals(TypeCase.POOL_OFFSET)
-        && supertype.getTypeCase().equals(TypeCase.POOL_OFFSET)) {
+    if (subtype.getValueCase().equals(TypePointer.ValueCase.POOL_OFFSET)
+        && supertype.getValueCase().equals(TypePointer.ValueCase.POOL_OFFSET)) {
       this.disambiguateEdges.put(subtype, supertype);
     }
   }
@@ -168,7 +167,7 @@ public final class TypePoolCreator<T> {
 
   private static final class SeenTypeRecord {
     final TypePointer pointer;
-    Type type;
+    TypeProto type;
 
     SeenTypeRecord(TypePointer pointer) {
       this.pointer = pointer;

@@ -8,7 +8,7 @@ option java_multiple_files = true;
 // All of these proto definitions are in flux.  Please don't depend on them.
 
 message TypePool {
-  repeated Type type = 1;
+  repeated TypeProto type = 1;
   // edges used for Closure Compiler property disambiguation/ambiguation
   repeated SubtypingEdge disambiguation_edges = 2;
   // Human-readable representation of where this TypePool comes from.
@@ -24,7 +24,7 @@ message TypePool {
 // the overhead of serializing a type.
 message TypePointer {
   // required
-  oneof type {
+  oneof value {
     // Points to a user-defined type in a known type pool.
     int32 pool_offset = 1;
     // TODO(lharker): consider putting this field into Type and serializing
@@ -32,8 +32,12 @@ message TypePointer {
     // oneof.
     NativeType native_type = 2;
   }
-  // for debugging only -- may not be present
-  string description_for_debug = 3;
+
+  // Optional, doesn't contribute to type equality
+  DebugInfo debug_info = 3;
+  message DebugInfo {
+    string description = 1;
+  }
 }
 
 message SubtypingEdge {
@@ -41,11 +45,11 @@ message SubtypingEdge {
   TypePointer supertype = 2;
 }
 
-message UnionType {
+message UnionTypeProto {
   repeated TypePointer union_member = 1;
 }
 
-message ObjectType {
+message ObjectTypeProto {
   // TODO(lharker): consider storing the bool fields as a bitmask
 
   // If true, type-based property optimizations will back off optimizations on
@@ -67,18 +71,17 @@ message ObjectType {
   bool marked_constructor = 7;
 
   // Optional, doesn't contribute to type equality
-  TypeDebugInfo debug_info = 15;
+  DebugInfo debug_info = 15;
+  message DebugInfo {
+    string class_name = 1;
+    string filename = 2;
+  }
 }
 
-message TypeDebugInfo {
-  string class_name = 1;
-  string filename = 2;
-}
-
-message Type {
+message TypeProto {
   oneof kind {
-    ObjectType object = 2;
-    UnionType union = 4;
+    ObjectTypeProto object = 2;
+    UnionTypeProto union = 4;
   }
 }
 

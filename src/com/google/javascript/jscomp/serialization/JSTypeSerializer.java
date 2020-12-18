@@ -46,8 +46,6 @@ final class JSTypeSerializer {
   private final IdGenerator idGenerator;
   private final SerializationOptions serializationMode;
 
-  private static final TypeDebugInfo EMPTY_DEBUG_INFO = TypeDebugInfo.getDefaultInstance();
-
   private JSTypeSerializer(
       TypePoolCreator<JSType> typePoolCreator,
       ImmutableMap<JSType, TypePointer> nativeTypePointers,
@@ -148,7 +146,7 @@ final class JSTypeSerializer {
           typePoolCreator.typeToPointer(
               type,
               () ->
-                  com.google.javascript.jscomp.serialization.Type.newBuilder()
+                  TypeProto.newBuilder()
                       .setObject(serializeObjectType(type.toObjectType()))
                       .build());
       addSupertypeEdges(type.toMaybeObjectType(), serialized);
@@ -177,17 +175,14 @@ final class JSTypeSerializer {
     return typePoolCreator.typeToPointer(type, () -> serializeUnionType(serializedAlternates));
   }
 
-  private static Type serializeUnionType(ImmutableSet<TypePointer> serializedAlternates) {
-    return com.google.javascript.jscomp.serialization.Type.newBuilder()
-        .setUnion(
-            com.google.javascript.jscomp.serialization.UnionType.newBuilder()
-                .addAllUnionMember(serializedAlternates)
-                .build())
+  private static TypeProto serializeUnionType(ImmutableSet<TypePointer> serializedAlternates) {
+    return TypeProto.newBuilder()
+        .setUnion(UnionTypeProto.newBuilder().addAllUnionMember(serializedAlternates).build())
         .build();
   }
 
-  private static TypeDebugInfo getDebugInfo(ObjectType type) {
-    TypeDebugInfo defaultDebugInfo = defaultDebugInfo(type);
+  private static ObjectTypeProto.DebugInfo getDebugInfo(ObjectType type) {
+    ObjectTypeProto.DebugInfo defaultDebugInfo = defaultDebugInfo(type);
     if (type.isInstanceType()) {
       return instanceDebugInfo(type, defaultDebugInfo);
     } else if (type.isEnumType()) {
@@ -198,8 +193,8 @@ final class JSTypeSerializer {
     return defaultDebugInfo;
   }
 
-  private static TypeDebugInfo defaultDebugInfo(ObjectType type) {
-    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder();
+  private static ObjectTypeProto.DebugInfo defaultDebugInfo(ObjectType type) {
+    ObjectTypeProto.DebugInfo.Builder builder = ObjectTypeProto.DebugInfo.newBuilder();
     Node ownerNode = type.getOwnerFunction() != null ? type.getOwnerFunction().getSource() : null;
     if (ownerNode != null) {
       builder.setFilename(ownerNode.getSourceFileName());
@@ -211,19 +206,8 @@ final class JSTypeSerializer {
     return builder.build();
   }
 
-  private com.google.javascript.jscomp.serialization.ObjectType serializeObjectType(
-      ObjectType type) {
-    TypeDebugInfo debugInfo =
-        SerializationOptions.SKIP_DEBUG_INFO.equals(serializationMode)
-            ? EMPTY_DEBUG_INFO
-            : getDebugInfo(type);
-    return serializeObjectType(type, debugInfo);
-  }
-
-  private com.google.javascript.jscomp.serialization.ObjectType serializeObjectType(
-      ObjectType type, TypeDebugInfo debug) {
-    com.google.javascript.jscomp.serialization.ObjectType.Builder objBuilder =
-        com.google.javascript.jscomp.serialization.ObjectType.newBuilder();
+  private ObjectTypeProto serializeObjectType(ObjectType type) {
+    ObjectTypeProto.Builder objBuilder = ObjectTypeProto.newBuilder();
     if (type.isFunctionType()) {
       FunctionType fnType = type.toMaybeFunctionType();
       // Serialize prototypes and instance types for instantiable types. Even if these types never
@@ -237,8 +221,11 @@ final class JSTypeSerializer {
         }
       }
     }
-    if (!EMPTY_DEBUG_INFO.equals(debug)) {
-      objBuilder.setDebugInfo(debug);
+    if (!SerializationOptions.SKIP_DEBUG_INFO.equals(serializationMode)) {
+      ObjectTypeProto.DebugInfo debugInfo = getDebugInfo(type);
+      if (!debugInfo.equals(ObjectTypeProto.DebugInfo.getDefaultInstance())) {
+        objBuilder.setDebugInfo(debugInfo);
+      }
     }
     return objBuilder
         .setIsInvalidating(invalidatingTypes.isInvalidating(type))
@@ -254,10 +241,12 @@ final class JSTypeSerializer {
         .build();
   }
 
-  private static TypeDebugInfo instanceDebugInfo(ObjectType type, TypeDebugInfo defaultDebugInfo) {
+  private static ObjectTypeProto.DebugInfo instanceDebugInfo(
+      ObjectType type, ObjectTypeProto.DebugInfo defaultDebugInfo) {
     FunctionType constructor = type.getConstructor();
     String className = constructor.getReferenceName();
-    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder(defaultDebugInfo);
+    ObjectTypeProto.DebugInfo.Builder builder =
+        ObjectTypeProto.DebugInfo.newBuilder(defaultDebugInfo);
     if (className != null && !className.isEmpty()) {
       builder.setClassName(className + " instance");
     }
@@ -268,18 +257,21 @@ final class JSTypeSerializer {
     return builder.build();
   }
 
-  private static TypeDebugInfo enumDebugInfo(EnumType type, TypeDebugInfo defaultDebugInfo) {
-    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder(defaultDebugInfo);
+  private static ObjectTypeProto.DebugInfo enumDebugInfo(
+      EnumType type, ObjectTypeProto.DebugInfo defaultDebugInfo) {
+    ObjectTypeProto.DebugInfo.Builder builder =
+        ObjectTypeProto.DebugInfo.newBuilder(defaultDebugInfo);
     if (type.getSource() != null) {
       builder.setFilename(type.getSource().getSourceFileName());
     }
     return builder.build();
   }
 
-  private static TypeDebugInfo functionDebugInfo(
-      FunctionType type, TypeDebugInfo defaultDebugInfo) {
+  private static ObjectTypeProto.DebugInfo functionDebugInfo(
+      FunctionType type, ObjectTypeProto.DebugInfo defaultDebugInfo) {
     Node source = type.getSource();
-    TypeDebugInfo.Builder builder = TypeDebugInfo.newBuilder(defaultDebugInfo);
+    ObjectTypeProto.DebugInfo.Builder builder =
+        ObjectTypeProto.DebugInfo.newBuilder(defaultDebugInfo);
     if (source != null) {
       String filename = source.getSourceFileName();
       if (filename != null) {
