@@ -623,6 +623,56 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
+  public void testDirectGets() {
+    // None of the symbol uses here should be considered aliasing gets.
+    GlobalNamespace namespace =
+        parse(
+            lines(
+                "const ns = {};", //
+                "ns.n1 = 1;",
+                "ns.n2 = 2;",
+                "ns.n1 === ns.n2;",
+                "ns.n1 == ns.n2;",
+                "ns.n1 !== ns.n2;",
+                "ns.n1 != ns.n2;",
+                "ns.n1 <  ns.n2;",
+                "ns.n1 <= ns.n2;",
+                "ns.n1 >  ns.n2;",
+                "ns.n1 >= ns.n2;",
+                "ns.n1 + ns.n2;",
+                "ns.n1 - ns.n2;",
+                "ns.n1 * ns.n2;",
+                "ns.n1 / ns.n2;",
+                "ns.n1 % ns.n2;",
+                "ns.n1 ** ns.n2;",
+                "ns.n1 & ns.n2;",
+                "ns.n1 | ns.n2;",
+                "ns.n1 ^ ns.n2;",
+                "ns.n1 << ns.n2;",
+                "ns.n1 >> ns.n2;",
+                "ns.n1 >>> ns.n2;",
+                "ns.n1 && ns.n2;",
+                "ns.n1 || ns.n2;",
+                ""));
+
+    Name bar = namespace.getSlot("ns");
+    assertThat(bar.getGlobalSets()).isEqualTo(1);
+    assertThat(bar.getAliasingGets()).isEqualTo(0);
+    // getting `ns.n1` doesn't count as a get on `ns`
+    assertThat(bar.getTotalGets()).isEqualTo(0);
+
+    Name n1 = namespace.getSlot("ns.n1");
+    assertThat(n1.getGlobalSets()).isEqualTo(1);
+    assertThat(n1.getAliasingGets()).isEqualTo(0);
+    assertThat(n1.getTotalGets()).isEqualTo(22);
+
+    Name n2 = namespace.getSlot("ns.n2");
+    assertThat(n2.getGlobalSets()).isEqualTo(1);
+    assertThat(n2.getAliasingGets()).isEqualTo(0);
+    assertThat(n2.getTotalGets()).isEqualTo(22);
+  }
+
+  @Test
   public void testObjectPatternAliasInDeclaration() {
     GlobalNamespace namespace = parse("const ns = {a: 3}; const {a: b} = ns;");
 

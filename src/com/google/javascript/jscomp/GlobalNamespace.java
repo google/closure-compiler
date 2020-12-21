@@ -831,6 +831,26 @@ class GlobalNamespace
         case BITNOT:
         case POS:
         case NEG:
+        case SHEQ:
+        case EQ:
+        case SHNE:
+        case NE:
+        case LT:
+        case LE:
+        case GT:
+        case GE:
+        case ADD:
+        case SUB:
+        case MUL:
+        case DIV:
+        case MOD:
+        case EXPONENT:
+        case BITAND:
+        case BITOR:
+        case BITXOR:
+        case LSH:
+        case RSH:
+        case URSH:
           type = Ref.Type.DIRECT_GET;
           break;
         case OPTCHAIN_CALL:
@@ -902,6 +922,8 @@ class GlobalNamespace
         case ITER_SPREAD:
         case OBJECT_SPREAD:
         default:
+          // TODO(b/148237949): There are likely more cases where we should be returning
+          // DIRECT_GET.
           type = Ref.Type.ALIASING_GET;
           break;
       }
