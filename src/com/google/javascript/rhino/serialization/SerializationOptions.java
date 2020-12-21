@@ -23,7 +23,23 @@ package com.google.javascript.rhino.serialization;
  * included in the serialized output to make it more human readable.
  */
 public enum SerializationOptions {
-  SKIP_DEBUG_INFO,
-  INCLUDE_DEBUG_INFO,
-  INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS,
+  SKIP_DEBUG_INFO(false, false),
+  INCLUDE_DEBUG_INFO(true, false),
+  INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS(true, true);
+
+  private final boolean includeDebugInfo;
+  private final boolean runValidation;
+
+  private SerializationOptions(boolean includeDebugInfo, boolean runValidation) {
+    this.includeDebugInfo = includeDebugInfo;
+    this.runValidation = runValidation;
+  }
+
+  public boolean includeDebugInfo() {
+    return this.includeDebugInfo;
+  }
+
+  public boolean runValidation() {
+    return this.runValidation;
+  }
 }

@@ -65,8 +65,7 @@ public final class TypePoolCreator<T> {
 
   /** Checks that this instance is in a valid state. */
   private void checkValid() {
-    if (!SerializationOptions.INCLUDE_DEBUG_INFO_AND_EXPENSIVE_VALIDITY_CHECKS.equals(
-        this.serializationOptions)) {
+    if (!this.serializationOptions.runValidation()) {
       return;
     }
 

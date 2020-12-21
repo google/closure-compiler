@@ -221,7 +221,7 @@ final class JSTypeSerializer {
         }
       }
     }
-    if (!SerializationOptions.SKIP_DEBUG_INFO.equals(serializationMode)) {
+    if (this.serializationMode.includeDebugInfo()) {
       ObjectTypeProto.DebugInfo debugInfo = getDebugInfo(type);
       if (!debugInfo.equals(ObjectTypeProto.DebugInfo.getDefaultInstance())) {
         objBuilder.setDebugInfo(debugInfo);
