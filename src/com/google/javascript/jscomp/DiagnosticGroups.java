@@ -588,6 +588,7 @@ public class DiagnosticGroups {
               CheckNoMutatedEs6Exports.MUTATED_EXPORT,
               // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
               // checkTypes DiagnosticGroup
+              CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY,
               CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
               CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
               CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD,

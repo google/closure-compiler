@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
@@ -23,12 +25,14 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import javax.annotation.Nullable;
 
 /**
  * Checks for errors related to interfaces.
  */
 public final class CheckInterfaces extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
+
   public static final DiagnosticType NON_DECLARATION_STATEMENT_IN_RECORD =
       DiagnosticType.disabled(
           "JSC_NON_DECLARATION_STATEMENT_IN_RECORD",
@@ -36,8 +40,12 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
 
   public static final DiagnosticType INTERFACE_FUNCTION_NOT_EMPTY =
       DiagnosticType.disabled(
-          "JSC_INTERFACE_FUNCTION_NOT_EMPTY",
-          "interface functions must have an empty body");
+          "JSC_INTERFACE_FUNCTION_NOT_EMPTY", "interface functions must have an empty body");
+
+  public static final DiagnosticType INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY =
+      DiagnosticType.disabled(
+          "JSC_INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY",
+          "interface methods must have an empty body");
 
   public static final DiagnosticType INTERFACE_SHOULD_NOT_TAKE_ARGS =
       DiagnosticType.disabled(
@@ -60,46 +68,89 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
-  /** Whether a function is an interface constructor, or a method on an interface. */
-  private boolean isInterface(Node n) {
-    if (!n.isFunction()) {
-      return false;
-    }
-
-    JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+  /** Whether jsDoc is present and has an {@code @interface} or {@code @record} annotation */
+  private static boolean isInterface(JSDocInfo jsDoc) {
     return jsDoc != null && jsDoc.isInterface();
   }
 
-
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!isInterface(n)) {
-      return;
+    switch (n.getToken()) {
+      case FUNCTION:
+        {
+          JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
+          if (isInterface(jsdoc)) {
+            checkInterfaceFunctionArgs(t, n);
+            checkConstructorBlock(t, n, jsdoc);
+          }
+          break;
+        }
+      case CLASS:
+        {
+          JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
+          if (isInterface(jsdoc)) {
+            Node ctorDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
+            if (ctorDef != null) {
+              Node ctor = ctorDef.getFirstChild();
+              checkInterfaceFunctionArgs(t, ctor);
+              checkConstructorBlock(t, ctor, jsdoc);
+            }
+            checkClassMethods(t, n, ctorDef);
+          }
+          break;
+        }
+      default:
+        return;
     }
+  }
 
-    Node args = n.getSecondChild();
+  private static void checkInterfaceFunctionArgs(NodeTraversal t, Node funcNode) {
+    Node args = funcNode.getSecondChild();
     if (args.hasChildren()) {
       t.report(args.getFirstChild(), INTERFACE_SHOULD_NOT_TAKE_ARGS);
     }
+  }
 
-    Node block = n.getLastChild();
-    if (block.hasChildren()) {
-      if (NodeUtil.getBestJSDocInfo(n).usesImplicitMatch()) {
-        for (Node stmt : block.children()) {
-          if (stmt.isExprResult()
-              && stmt.getFirstChild().isGetProp()
-              && stmt.getFirstFirstChild().isThis()
-              && stmt.getFirstChild().getJSDocInfo() != null) {
-            // Field declarations are expected.
-          } else {
-            t.report(stmt, NON_DECLARATION_STATEMENT_IN_RECORD);
-            return;
-          }
-        }
+  // Non-static class methods must be empty for `@record` and `@interface` as per the style guide.
+  private static void checkClassMethods(NodeTraversal t, Node classNode, @Nullable Node ctorDef) {
+    Node classMembers = classNode.getLastChild();
+    checkState(classMembers.isClassMembers(), classMembers);
+    for (Node memberFuncDef : classMembers.children()) {
+      if (memberFuncDef.equals(ctorDef)) {
+        continue; // constructor was already checked; don't check here.
+      }
+      if (memberFuncDef.isStaticMember()) {
+        // TODO(user): Report here (in upcoming child CL) that a static member func present.
       } else {
-        t.report(block.getFirstChild(), INTERFACE_FUNCTION_NOT_EMPTY);
+        Node block = memberFuncDef.getLastChild().getLastChild();
+        if (block.hasChildren()) {
+          t.report(block.getFirstChild(), INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY);
+        }
       }
     }
   }
-}
 
+  // `@record` constructors can be non-empty, check that only field declarations exist in them.
+  private static void checkConstructorBlock(NodeTraversal t, Node funcNode, JSDocInfo jsDoc) {
+    Node block = funcNode.getLastChild();
+    if (!block.hasChildren()) {
+      return;
+    }
+
+    if (jsDoc.usesImplicitMatch()) {
+      for (Node stmt = block.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
+        if (stmt.isExprResult()
+            && stmt.getFirstChild().isGetProp()
+            && stmt.getFirstFirstChild().isThis()
+            && stmt.getFirstChild().getJSDocInfo() != null) {
+          // Field declarations are expected.
+        } else {
+          t.report(stmt, NON_DECLARATION_STATEMENT_IN_RECORD);
+          break;
+        }
+      }
+    } else {
+      t.report(block.getFirstChild(), INTERFACE_FUNCTION_NOT_EMPTY);
+    }
+  }
+}

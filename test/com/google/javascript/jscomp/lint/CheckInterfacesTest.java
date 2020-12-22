@@ -47,8 +47,19 @@ public final class CheckInterfacesTest extends CompilerTestCase {
         CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
+        "/** @interface */ class C { constructor(x) {} }",
+        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+
+    testSame(
         lines(
             "var ns = {};\n", "/** @interface */\n", "ns.SomeInterface = function(x) {};"),
+        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+
+    testSame(
+        lines(
+            "var ns = {};\n",
+            "/** @interface */\n",
+            "ns.SomeInterface = class { constructor(x) {}};"),
         CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
   }
 
@@ -57,19 +68,44 @@ public final class CheckInterfacesTest extends CompilerTestCase {
     testSame(
         "export /** @interface */ function A(x) {}",
         CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+
+    testSame(
+        "export /** @interface */ class C { constructor(x) {} }",
+        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
   }
 
   @Test
-  public void testInterfaceNotEmpty() {
-    testSame("/** @interface */ function A() { this.foo; }",
+  public void testInterfaceConstructorNotEmpty() {
+    testSame(
+        "/** @interface */ function A() { this.foo; }",
+        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+
+    testSame(
+        "/** @interface */ class C { constructor() { this.foo; }}",
+        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+
+    testSame(
+        lines("var ns = {};", "/** @interface */", "ns.SomeInterface = function() { this.foo; };"),
         CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
 
     testSame(
         lines(
-            "var ns = {};\n",
-            "/** @interface */\n",
-            "ns.SomeInterface = function() { this.foo; };"),
+            "var ns = {};",
+            "/** @interface */",
+            "ns.SomeInterface = class { constructor() { this.foo; }; }"),
         CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+  }
+
+  @Test
+  public void testInterfaceMethodNotEmpty() {
+    testSame(
+        lines(
+            "/** @interface */ ", //
+            "class C { ",
+            "  constructor() {} ",
+            "  A() { this.foo; }",
+            "}"),
+        CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY);
   }
 
   @Test
@@ -77,6 +113,37 @@ public final class CheckInterfacesTest extends CompilerTestCase {
     testSame(
         "export /** @interface */ function A() { this.foo; }",
         CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+
+    testSame(
+        "export /** @interface */ class C { constructor() { this.foo; } }",
+        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+  }
+
+  @Test
+  public void testInterfaceComputedProperties() {
+    testSame(
+        "/** @interface */  class C { ['f']() { return 1; }}",
+        CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY);
+  }
+
+  @Test
+  public void testInterfaceGetters() {
+    testSame(
+        "/** @interface */  class C { get One() { return 1; }}",
+        CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY);
+  }
+
+  @Test
+  public void testInterfaceSetters() {
+    testSame(
+        lines(
+            "/** @interface */", //
+            "class C {",
+            "  set One(x) {",
+            "   this.one = x;",
+            "  }",
+            "}"),
+        CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY);
   }
 
   @Test
