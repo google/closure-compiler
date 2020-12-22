@@ -592,6 +592,7 @@ public class DiagnosticGroups {
               CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
               CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
               CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD,
+              CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
               CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC,
@@ -743,3 +744,4 @@ public class DiagnosticGroups {
     options.setWarningLevel(group, level);
   }
 }
+

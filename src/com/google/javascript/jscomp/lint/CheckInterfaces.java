@@ -32,6 +32,8 @@ import javax.annotation.Nullable;
  */
 public final class CheckInterfaces extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
+  // Placeholder class name for error reporting on anonymous classes.
+  private static final String ANONYMOUS_CLASSNAME = "<anonymous>";
 
   public static final DiagnosticType NON_DECLARATION_STATEMENT_IN_RECORD =
       DiagnosticType.disabled(
@@ -51,6 +53,12 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
       DiagnosticType.disabled(
           "JSC_INTERFACE_SHOULD_NOT_TAKE_ARGS",
           "Interface functions should not take any arguments");
+
+  public static final DiagnosticType STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS =
+      DiagnosticType.disabled(
+          "JSC_STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS",
+          "Interface class should not have static member functions. "
+              + "Consider pulling out the static method into a flat name as {0}_{1}");
 
   private final AbstractCompiler compiler;
 
@@ -120,7 +128,13 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
         continue; // constructor was already checked; don't check here.
       }
       if (memberFuncDef.isStaticMember()) {
-        // TODO(user): Report here (in upcoming child CL) that a static member func present.
+        // `static foo() {...}`
+        String className = NodeUtil.getName(classNode);
+        if (className == null) {
+          className = ANONYMOUS_CLASSNAME;
+        }
+        String funcName = memberFuncDef.getString();
+        t.report(memberFuncDef, STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS, className, funcName);
       } else {
         Node block = memberFuncDef.getLastChild().getLastChild();
         if (block.hasChildren()) {
@@ -154,3 +168,4 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
     }
   }
 }
+

@@ -147,6 +147,55 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInterfaceEs6ClassDeclaration_havingStaticMethod() {
+    testSame(
+        srcs(
+            lines(
+                "/** @interface */",
+                "class I {",
+                "  constructor() {}",
+                "  static foo() {}",
+                "}",
+                "I.foo();")),
+        warning(CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS)
+            .withMessageContaining(
+                "Consider pulling out the static method into a flat name as I_foo"));
+  }
+
+  @Test
+  public void testInterfaceEs6ClassAssignment_havingStaticMethod() {
+    testSame(
+        srcs(
+            lines(
+                "/** @interface */",
+                "let I = class {",
+                "  constructor() {}",
+                "  static foo() {}",
+                "}",
+                "I.foo();")),
+        warning(CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS)
+            .withMessageContaining(
+                "Consider pulling out the static method into a flat name as I_foo"));
+  }
+
+  @Test
+  public void testInterfaceEs6ClassAssignment_havingStaticMethod2() {
+    testSame(
+        srcs(
+            lines(
+                "let C;",
+                "/** @interface */",
+                "C.I = class {",
+                "  constructor() {}",
+                "  static foo() {}",
+                "}",
+                "C.I.foo();")),
+        warning(CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS)
+            .withMessageContaining(
+                "Consider pulling out the static method into a flat name as C.I_foo"));
+  }
+
+  @Test
   public void testRecordWithFieldDeclarations() {
     testSame(
         lines(
