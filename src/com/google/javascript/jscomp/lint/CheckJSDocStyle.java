@@ -332,10 +332,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
                 WRONG_NUMBER_OF_PARAMS,
                 jsDoc.isOverride()
                     ?
-                    // moe:begin_strip
-                    " Please see go/tsjs-problematic-patterns for why @overrides require explicit"
-                        + " @param types."
-                    // moe:end_strip_and_replace ""
+                    ""
                     : ""));
         return;
       }
@@ -459,10 +456,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
               MISSING_RETURN_JSDOC,
               jsDoc != null && jsDoc.isOverride()
                   ?
-                  // moe:begin_strip
-                  " Please see go/tsjs-problematic-patterns for why @overrides require explicit"
-                      + " @return types.."
-                  // moe:end_strip_and_replace ""
+                  ""
                   : ""));
     }
   }
