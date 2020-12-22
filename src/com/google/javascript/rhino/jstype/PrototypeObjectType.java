@@ -287,23 +287,6 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  public final JSType unboxesTo() {
-    if (isStringObjectType()) {
-      return getNativeType(JSTypeNative.STRING_TYPE);
-    } else if (isBooleanObjectType()) {
-      return getNativeType(JSTypeNative.BOOLEAN_TYPE);
-    } else if (isNumberObjectType()) {
-      return getNativeType(JSTypeNative.NUMBER_TYPE);
-    } else if (isSymbolObjectType()) {
-      return getNativeType(JSTypeNative.SYMBOL_TYPE);
-    } else if (isBigIntObjectType()) {
-      return getNativeType(JSTypeNative.BIGINT_TYPE);
-    } else {
-      return super.unboxesTo();
-    }
-  }
-
-  @Override
   public boolean matchesObjectContext() {
     return true;
   }

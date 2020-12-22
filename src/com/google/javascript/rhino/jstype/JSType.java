@@ -866,16 +866,6 @@ public abstract class JSType implements Serializable {
     return autoboxesTo() != null;
   }
 
-  // TODO(johnlenz): this method is only used for testing, consider removing this.
-  /**
-   * Turn an object type to its corresponding scalar type.
-   *
-   * @return the unboxed type or {@code null} if this type does not unbox.
-   */
-  public JSType unboxesTo() {
-    return null;
-  }
-
   /**
    * Casts this to an ObjectType, or returns null if this is not an ObjectType.
    * If this is a scalar type, it will *not* be converted to an object type.

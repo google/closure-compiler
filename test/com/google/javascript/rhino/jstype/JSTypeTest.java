@@ -1311,9 +1311,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // autoboxesTo
     assertTypeEquals(NUMBER_OBJECT_TYPE, NUMBER_TYPE.autoboxesTo());
 
-    // unboxesTo
-    assertTypeEquals(NUMBER_TYPE, NUMBER_OBJECT_TYPE.unboxesTo());
-
     // isSubtype
     assertThat(NUMBER_OBJECT_TYPE.isSubtypeOf(ALL_TYPE)).isTrue();
     assertThat(NUMBER_OBJECT_TYPE.isSubtypeOf(STRING_OBJECT_TYPE)).isFalse();
@@ -2076,9 +2073,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // autoboxesTo
     assertTypeEquals(STRING_OBJECT_TYPE, STRING_TYPE.autoboxesTo());
 
-    // unboxesTo
-    assertTypeEquals(STRING_TYPE, STRING_OBJECT_TYPE.unboxesTo());
-
     // isSubtype
     assertThat(STRING_OBJECT_TYPE.isSubtypeOf(ALL_TYPE)).isTrue();
     assertThat(STRING_OBJECT_TYPE.isSubtypeOf(STRING_OBJECT_TYPE)).isTrue();
@@ -2232,9 +2226,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // autoboxesTo
     assertTypeEquals(STRING_OBJECT_TYPE, STRING_TYPE.autoboxesTo());
 
-    // unboxesTo
-    assertTypeEquals(STRING_TYPE, STRING_OBJECT_TYPE.unboxesTo());
-
     // isSubtype
     assertThat(STRING_TYPE.isSubtypeOf(ALL_TYPE)).isTrue();
     assertThat(STRING_TYPE.isSubtypeOf(STRING_TYPE)).isTrue();
@@ -2344,9 +2335,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // autoboxesTo
     assertTypeEquals(SYMBOL_OBJECT_TYPE, SYMBOL_TYPE.autoboxesTo());
-
-    // unboxesTo
-    assertTypeEquals(SYMBOL_TYPE, SYMBOL_OBJECT_TYPE.unboxesTo());
 
     // isSubtype
     assertThat(SYMBOL_TYPE.isSubtypeOf(ALL_TYPE)).isTrue();
@@ -3467,9 +3455,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // autoboxesTo
     assertTypeEquals(BOOLEAN_OBJECT_TYPE, BOOLEAN_TYPE.autoboxesTo());
-
-    // unboxesTo
-    assertTypeEquals(BOOLEAN_TYPE, BOOLEAN_OBJECT_TYPE.unboxesTo());
 
     // isSubtype
     assertThat(BOOLEAN_TYPE.isSubtypeOf(ALL_TYPE)).isTrue();

@@ -353,9 +353,8 @@ public class BigIntTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testBigIntAutoboxAndUnbox() {
+  public void testBigIntAutobox() {
     assertTypeEquals(BIGINT_TYPE.autoboxesTo(), BIGINT_OBJECT_TYPE);
-    assertTypeEquals(BIGINT_TYPE, BIGINT_OBJECT_TYPE.unboxesTo());
   }
 
   @Test
