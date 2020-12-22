@@ -699,6 +699,9 @@ public abstract class JSType implements Serializable {
 
   @Override
   public final boolean equals(@Nullable Object other) {
+    if (this == other) {
+      return true;
+    }
     return (other instanceof JSType)
         && new EqualityChecker().setEqMethod(EqMethod.IDENTITY).check(this, (JSType) other);
   }

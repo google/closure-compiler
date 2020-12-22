@@ -76,8 +76,10 @@ public final class TemplatizedType extends ProxyObjectType {
       JSType resolvedType = getTemplateTypeMap().getResolvedTemplateType(newlyFilledTemplateKey);
 
       builder.add(resolvedType);
-      maybeIsSpecializedOnlyWithUnknown =
-          maybeIsSpecializedOnlyWithUnknown && resolvedType.isUnknownType();
+      if (maybeIsSpecializedOnlyWithUnknown) {
+        maybeIsSpecializedOnlyWithUnknown =
+            this.getNativeType(JSTypeNative.UNKNOWN_TYPE).equals(resolvedType);
+      }
     }
     this.templateTypes = builder.build();
     this.isSpecializedOnlyWithUnknown = maybeIsSpecializedOnlyWithUnknown;
@@ -128,7 +130,7 @@ public final class TemplatizedType extends ProxyObjectType {
     int baseHash = super.recursionUnsafeHashCode();
 
     // TODO(b/110224889): This case can probably be removed if `equals()` is updated.
-    if (isSpecializedOnlyWithUnknown) {
+    if (this.isSpecializedOnlyWithUnknown) {
       return baseHash;
     }
     return Objects.hash(templateTypes, baseHash);

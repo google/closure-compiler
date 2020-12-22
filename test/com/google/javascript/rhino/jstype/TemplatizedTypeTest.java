@@ -126,30 +126,82 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     JSType templatizedUnknownUnknown =
         registry.createTemplatizedType(rawType, ImmutableList.of(UNKNOWN_TYPE, UNKNOWN_TYPE));
 
-    assertThat(templatizedStringNumber.isSubtypeOf(rawType)).isTrue();
-    assertThat(templatizedStringAll.isSubtypeOf(rawType)).isTrue();
-    assertThat(templatizedStringUnknown.isSubtypeOf(rawType)).isTrue();
-    assertThat(templatizedUnknownUnknown.isSubtypeOf(rawType)).isTrue();
+    assertType(templatizedStringNumber).isSubtypeOf(rawType);
+    assertType(templatizedStringAll).isSubtypeOf(rawType);
+    assertType(templatizedStringUnknown).isSubtypeOf(rawType);
+    assertType(templatizedUnknownUnknown).isSubtypeOf(rawType);
 
-    assertTypeNotEquals(templatizedStringNumber, rawType);
-    assertTypeNotEquals(templatizedStringAll, rawType);
-    assertTypeNotEquals(templatizedStringUnknown, rawType);
+    assertType(templatizedStringNumber).isNotEqualTo(rawType);
+    assertType(templatizedStringAll).isNotEqualTo(rawType);
+    assertType(templatizedStringUnknown).isNotEqualTo(rawType);
 
-    assertTypeEquals(templatizedStringNumber, secondTemplatizedStringNumber);
+    assertType(templatizedStringNumber).isEqualTo(secondTemplatizedStringNumber);
     // TODO(b/110224889): This case should probably be `assertTypeNotEquals`.
-    assertTypeEquals(templatizedUnknownUnknown, rawType);
+    assertType(templatizedUnknownUnknown).isEqualTo(rawType);
 
-    assertThat(rawType.isSubtypeOf(templatizedStringNumber)).isTrue();
-    assertThat(rawType.isSubtypeOf(templatizedStringAll)).isTrue();
-    assertThat(rawType.isSubtypeOf(templatizedStringUnknown)).isTrue();
-    assertThat(rawType.isSubtypeOf(templatizedUnknownUnknown)).isTrue();
+    assertType(rawType).isSubtypeOf(templatizedStringNumber);
+    assertType(rawType).isSubtypeOf(templatizedStringAll);
+    assertType(rawType).isSubtypeOf(templatizedStringUnknown);
+    assertType(rawType).isSubtypeOf(templatizedUnknownUnknown);
 
     assertType(templatizedStringNumber).isSubtypeOf(secondTemplatizedStringNumber);
-    assertThat(templatizedStringNumber.isSubtypeOf(templatizedStringAll)).isFalse();
-    assertThat(templatizedStringAll.isSubtypeOf(templatizedStringNumber)).isFalse();
+    assertType(templatizedStringNumber).isNotSubtypeOf(templatizedStringAll);
+    assertType(templatizedStringAll).isNotSubtypeOf(templatizedStringNumber);
 
-    assertThat(templatizedStringAll.isSubtypeOf(templatizedStringUnknown)).isTrue();
-    assertThat(templatizedStringUnknown.isSubtypeOf(templatizedStringAll)).isTrue();
+    assertType(templatizedStringAll).isSubtypeOf(templatizedStringUnknown);
+    assertType(templatizedStringUnknown).isSubtypeOf(templatizedStringAll);
+  }
+
+  @Test
+  public void testEqualityWithRawType_whenSpecializedOnUnknown_includingHashcode() {
+    ObjectType rawType = createCustomTemplatizedType("Baz");
+
+    JSType templatizedUnknownString =
+        registry.createTemplatizedType(rawType, ImmutableList.of(UNKNOWN_TYPE, STRING_TYPE));
+    assertType(rawType).isNotEqualTo(templatizedUnknownString);
+
+    JSType templatizedStringUnknown =
+        registry.createTemplatizedType(rawType, ImmutableList.of(STRING_TYPE, UNKNOWN_TYPE));
+    assertType(rawType).isNotEqualTo(templatizedStringUnknown);
+
+    JSType templatizedUnknownUnknown =
+        registry.createTemplatizedType(rawType, ImmutableList.of(UNKNOWN_TYPE, UNKNOWN_TYPE));
+    assertType(rawType).isEqualTo(templatizedUnknownUnknown);
+
+    // TODO(b/176172011): Should test `isNotEqualTo`, but if possible delete CHECKED_UNKNOWN_TYPE.
+    JSType templatizedCheckedUnknownUnknown =
+        registry.createTemplatizedType(
+            rawType, ImmutableList.of(CHECKED_UNKNOWN_TYPE, UNKNOWN_TYPE));
+    assertType(rawType).isEqualTo(templatizedCheckedUnknownUnknown);
+
+    TemplateType ramdomTemplate = this.registry.createTemplateType("X");
+    JSType templatizedTemplateUnknown =
+        registry.createTemplatizedType(rawType, ImmutableList.of(ramdomTemplate, UNKNOWN_TYPE));
+    assertType(ramdomTemplate).isUnknown();
+    assertType(rawType).isNotEqualTo(templatizedTemplateUnknown);
+
+    final NamedType resolvedNamedUnknown;
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      resolvedNamedUnknown = this.registry.createNamedType(null, "Y", "", -1, -1);
+      resolvedNamedUnknown.setReferencedType(UNKNOWN_TYPE);
+    }
+    JSType templatizedResolvedNamedUnknownUnknown =
+        registry.createTemplatizedType(
+            rawType, ImmutableList.of(resolvedNamedUnknown, UNKNOWN_TYPE));
+    assertType(resolvedNamedUnknown).isUnknown();
+    assertType(rawType).isEqualTo(templatizedResolvedNamedUnknownUnknown);
+
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      NamedType unresolvedNamedUnknown = this.registry.createNamedType(null, "Y", "", -1, -1);
+      unresolvedNamedUnknown.setReferencedType(UNKNOWN_TYPE);
+
+      JSType templatizedUnresolvedNamedUnknownUnknown =
+          registry.createTemplatizedType(
+              rawType, ImmutableList.of(unresolvedNamedUnknown, UNKNOWN_TYPE));
+      assertType(resolvedNamedUnknown).isUnknown();
+      // Not equal because we don't know yet whether the type args are all unknown.
+      assertType(rawType).isNotEqualTo(templatizedUnresolvedNamedUnknownUnknown);
+    }
   }
 
   @Test
