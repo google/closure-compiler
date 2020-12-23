@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp.transpile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.escape.Escaper;
+import com.google.common.io.BaseEncoding;
 import com.google.common.net.PercentEscaper;
 import java.net.URI;
 import java.util.Objects;
@@ -77,6 +79,18 @@ public final class TranspileResult {
     }
     String embedded =
         transpiled + "\n//# sourceMappingURL=data:," + ESCAPER.escape(sourceMap) + "\n";
+    return new TranspileResult(path, original, embedded, "");
+  }
+
+  public TranspileResult embedSourcemapBase64() {
+    if (sourceMap.isEmpty()) {
+      return this;
+    }
+    String embedded =
+        transpiled
+            + "\n//# sourceMappingURL=data:application/json;base64,"
+            + BaseEncoding.base64().encode(sourceMap.getBytes(UTF_8))
+            + "\n";
     return new TranspileResult(path, original, embedded, "");
   }
 
