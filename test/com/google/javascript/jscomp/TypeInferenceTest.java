@@ -1762,6 +1762,22 @@ public final class TypeInferenceTest {
   }
 
   @Test
+  public void testTypeInferenceOccursInConstObjectProperties() {
+    inFunction(
+        lines(
+            "/** @return {string} */",
+            "function foo() { return ''; }",
+            "",
+            "const obj = {",
+            "   prop: foo(),",
+            "}",
+            "LABEL: obj.prop;"));
+
+    assertTypeOfExpression("LABEL").toStringIsEqualTo("string");
+    assertTypeOfExpression("LABEL").isNotEqualTo(UNKNOWN_TYPE);
+  }
+
+  @Test
   public void testReturn1() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction("if (x) { return x; }\nx = {};\nreturn x;");
