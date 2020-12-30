@@ -13,11 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Accept a test pattern (PATTERN_test.js) to look for.
 if [ -z $1 ]; then
-  COMPILATION_LEVEL="SIMPLE"
-else
-  COMPILATION_LEVEL=$1
+    TEST_PATTERN="*"
+  else
+    TEST_PATTERN=$1;
 fi
+
+# Use SIMPLE mode for now.
+COMPILATION_LEVEL="SIMPLE"
 
 # This directory.
 THIS_DIR=$(dirname $0)
@@ -27,9 +31,9 @@ PROJECT_ROOT=$(readlink -f $THIS_DIR/../../../../../../..)
 
 # Get the location of the local compiler in this directory, if it exists.
 # If it doesn't, build it, then resume execution.
-LOCAL_COMPILER="$PROJECT_ROOT/target/closure-compiler-1.0-SNAPSHOT.jar"
+LOCAL_COMPILER="$PROJECT_ROOT/bazel-bin/compiler_unshaded_deploy.jar"
 if [ ! -f "$LOCAL_COMPILER" ]; then
-  echo -e "\nCompiler JAR not built. Building...\n" && yarn build:fast
+  echo -e "\nCompiler JAR not built. Building...\n" && npm run build
 fi
 
 # Build tests from the $TEST_DIR directory, where files like
@@ -88,5 +92,5 @@ EOF
 
 # build tests
 time(
-  compileRuntimeTests $(find $ABS_PATH -type f -name '*_test.js')
+  compileRuntimeTests $(find $ABS_PATH -type f -name "${TEST_PATTERN}_test.js")
 )
