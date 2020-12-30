@@ -21,7 +21,7 @@
   "scripts": {
     "build": "bazel build //:compiler_unshaded_deploy.jar",
     "build:all": "bazel build :all",
-    "compiler": "java -jar bazel-bin/compiler_unshaded_deploy.jar",
+    "compile": "java -jar bazel-bin/compiler_unshaded_deploy.jar",
     "clean": "yarn runtime_tests:clean && bazel clean",
     "runtime_tests:clean": "rm -rf $npm_package_config_runtime_tests/**/build/*",
     "runtime_tests:build": "$npm_package_config_runtime_tests/utils/build.sh",
