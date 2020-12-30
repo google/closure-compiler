@@ -14,7 +14,7 @@
     "chalk": "^4.1.0",
     "future-event": "^1.5.0",
     "glob": "^7.1.6",
-    "google-closure-library": "^20200719.0.0",
+    "google-closure-library": "^20201102.0.1",
     "jest": "^26.1.0",
     "jsdom": "^16.3.0"
   },
