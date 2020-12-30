@@ -1,8 +1,11 @@
 # [Google Closure Compiler](https://developers.google.com/closure/compiler/)
 
-[![Build Status](https://github.com/google/closure-compiler/workflows/Compiler%20CI/badge.svg)](https://github.com/google/closure-compiler/actions)
-[![Open Source Helpers](https://www.codetriage.com/google/closure-compiler/badges/users.svg)](https://www.codetriage.com/google/closure-compiler)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/google/closure-compiler/blob/master/code_of_conduct.md)
+[![Build
+Status](https://github.com/google/closure-compiler/workflows/Compiler%20CI/badge.svg)](https://github.com/google/closure-compiler/actions)
+[![Open Source
+Helpers](https://www.codetriage.com/google/closure-compiler/badges/users.svg)](https://www.codetriage.com/google/closure-compiler)
+[![Contributor
+Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/google/closure-compiler/blob/master/code_of_conduct.md)
 
 
 The [Closure Compiler](https://developers.google.com/closure/compiler/) is a
@@ -15,34 +18,144 @@ pitfalls.
 
 ## Getting Started
 
-*   Pre-compiled releases of the compiler are available via:
-    -   [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler)
-    -   [NPM](https://www.npmjs.com/package/google-closure-compiler) - includes
-        java, native and javascript versions.
-*   See the
-    [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app)
-    for documentation including instructions for running the compiler from the
-    command line.
+The easiest way to get the compiler is to install the precompiled binary
+globally using [NPM](https://npmjs.com) or [Yarn](https://yarnpkg.com):
 
-## Options for Getting Help
+```bash
+yarn global add google-closure-compiler
+# - or -
+npm i -g google-closure-compiler
+```
 
-1.  Post in the
-    [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
-1.  Ask a question on
-    [Stack Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
+The package manager will link the binary for you, and you can access the
+compiler with:
+
+```bash
+google-closure-compiler
+```
+
+This starts the compiler in interactive mode. Type:
+
+```javascript
+var x = 17 + 25;
+```
+
+Hit "Enter", then "Ctrl-Z" (on Windows) or "Ctrl-D" (on Mac or Linux), and
+"Enter" again. The Compiler will respond with the compiled output (using
+`SIMPLE` mode by default):
+
+```javascript
+var x=42;
+```
+
+### Basic usage
+The Closure Compiler has many options for reading input from a file, writing
+output to a file, checking your code, and running optimizations. Here is a
+simple example of compressing a JS program:
+
+```bash
+google-closure-compiler --js file.js --js_output_file file.out.js
+```
+
+We get the **most benefit** from the compiler if we give it **all of our source
+code** (see [Compiling Multiple Scripts](#compiling-multiple-scripts)), which
+means we can use `ADVANCED` mode:
+
+```bash
+google-closure-compiler -O ADVANCED rollup.js --js_output_file rollup.min.js
+```
+
+To see all of the compiler's options, type:
+
+```bash
+google-closure-compiler --help
+```
+| `--flag` | Description |
+| --- | --- |
+| `compilation_level (-O) VAL` | Specifies the compilation level to use. Options: `BUNDLE`, `WHITESPACE_ONLY`, `SIMPLE` (default), `ADVANCED` |
+| <code>env [BROWSER &#124; CUSTOM]</code>  | Determines the set of builtin externs to load. Options: `BROWSER`, `CUSTOM`. Defaults to `BROWSER`.  |
+|   `externs VAL`  | The file containing JavaScript externs. You may specify multiple  |
+| ` js VAL`  | The JavaScript filename. You may specify multiple. The flag name is optional, because args are interpreted as files by default. You may also use minimatch-style glob patterns. For example, use `--js='**.js' --js='!**_test.js'` to recursively include all js files that do not end in `_test.js`  | 
+|  `--js_output_file VAL`  |  Primary output filename. If not specified, output is written to stdout |
+|  `--language_in VAL` |  Sets the language spec to which input sources should conform. Options: `ECMASCRIPT3`, `ECMASCRIPT5`, `ECMASCRIPT5_STRICT`, `ECMASCRIPT6_TYPED` (experimental), `ECMASCRIPT_2015`, `ECMASCRIPT_2016`, `ECMASCRIPT_2017`, `ECMASCRIPT_2018`, `ECMASCRIPT_2019`, `STABLE`, `ECMASCRIPT_NEXT`  |
+|  `--language_out VAL`  |  Sets the language spec to which output should conform. Options: `ECMASCRIPT3`, `ECMASCRIPT5`, `ECMASCRIPT5_STRICT`,`ECMASCRIPT_2015`, `ECMASCRIPT_2016`, `ECMASCRIPT_2017`, `ECMASCRIPT_2018`,`ECMASCRIPT_2019`, `STABLE` |
+| <code>--warning_level (-W) [QUIET &#124; DEFAULT &#124; VERBOSE]</code>  | Specifies the warning level to use.  |
+
+#### See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
+
+### NodeJS API
+You can access the compiler in a JS program by importing
+`google-closure-compiler`:
+
+```javascript
+import closureCompiler from 'google-closure-compiler';
+const { compiler } = closureCompiler;
+
+new compiler({
+  js: 'file-one.js',
+  compilation_level: 'ADVANCED'
+});
+```
+
+This package will provide programmatic access to the native Graal binary in most
+cases, and will fall back to the Java version otherwise.
+
+#### Please see the [closure-compiler-npm](https://github.com/google/closure-compiler-npm/tree/master/packages/google-closure-compiler) repository for documentation on accessing the compiler in JS.
+
+## Compiling Multiple Scripts
+
+If you have multiple scripts, you should compile them all together with one
+compile command.
+
+```bash
+google-closure-compiler in1.js in2.js in3.js --js_output_file out.js
+```
+
+You can also use minimatch-style globs.
+
+```bash
+# Recursively include all js files in subdirs
+google-closure-compiler 'src/**.js' --js_output_file out.js
+
+# Recursively include all js files in subdirs, excluding test files.
+# Use single-quotes, so that bash doesn't try to expand the '!'
+google-closure-compiler 'src/**.js' '!**_test.js' --js_output_file out.js
+```
+
+The Closure Compiler will concatenate the files in the order they're passed at
+the command line.
+
+If you're using globs or many files, you may start to run into problems with
+managing dependencies between scripts. In this case, you should use the [Closure
+Library](https://developers.google.com/closure/library/). It contains functions
+for enforcing dependencies between scripts, and Closure Compiler will re-order
+the inputs automatically.
+
+## Getting Help
+
+1.  Post in the [Closure Compiler Discuss
+    Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
+1.  Ask a question on [Stack
+    Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
 1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
 
-## Building it Yourself
+## Building
 
-Note: The Closure Compiler requires [Java 8 or higher](https://www.java.com/).
+To build the compiler yourself, you will need the following:
 
-### Using [Bazel](https://bazel.build/)
+| Prerequisite | Description |
+| --- | --- |
+| [Java 8 or later](https://java.com) | Used to compile the compiler's source code. |
+| [Git](https://git-scm.com/) | Used by Bazel to download dependencies. |
+| [Bazel](https://docs.bazel.build/versions/master/install.html) | Used to build the various compiler targets. |
 
-Building using bazel requires `git` (to download dependencies).
+### Installing Bazel
 
-On Linux, all other required tools should be available in a standard
-distribution.
+#### Linux / MacOS
+All other required tools should be available in a [standard
+distribution](https://docs.bazel.build/versions/master/install.html).
 
+#### Windows
 On Windows, building closure-compiler additionally requires MSYS2, and a zip
 command-line executable (compatible with the one in linux).
 
@@ -61,41 +174,33 @@ command-line executable (compatible with the one in linux).
     If you want to integrate the compiler into a larger Java program, depend on
     `//:compiler_shaded_deploy.jar` instead.
 
+### Using a terminal
+
+You can trigger the build process easily with package.json scripts or by calling
+Bazel manually. 
+
+```bash
+# bazel build //:compiler_shaded_deploy.jar
+yarn build
+
+# bazel build :all
+yarn build:all
+```
+
 ### Using an IDE
 
-See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html)
+See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html).
 
 ## Running
 
-On the command line, at the root of this project, type
+Once the compiler has been built, the compiled JAR will be in the `bazel-bin/`
+directory. You can access it with a call to `java -jar ...` or by using the
+package.json script:
 
-```sh
-bazel-bin/compiler_unshaded_deploy.jar
+```bash
+# java -jar bazel-bin/compiler_unshaded_deploy.jar [...args]
+yarn compile [...args]
 ```
-
-This starts the compiler in interactive mode. Type
-
-```javascript
-var x = 17 + 25;
-```
-
-then hit "Enter", then hit "Ctrl-Z" (on Windows) or "Ctrl-D" (on Mac or Linux)
-and "Enter" again. The Compiler will respond:
-
-```javascript
-var x=42;
-```
-
-The Closure Compiler has many options for reading input from a file, writing
-output to a file, checking your code, and running optimizations. To learn more,
-type
-
-```
-java -jar compiler.jar --help
-```
-
-More detailed information about running the Closure Compiler is available in the
-[documentation](https://developers.google.com/closure/compiler/docs/gettingstarted_app).
 
 ### Run using Eclipse
 
@@ -107,59 +212,30 @@ More detailed information about running the Closure Compiler is available in the
     [bug](https://stackoverflow.com/questions/4711098/passing-end-of-transmission-ctrl-d-character-in-eclipse-cdt-console)
     regarding passing "End of Transmission" in the Eclipse console.
 
-## Compiling Multiple Scripts
-
-If you have multiple scripts, you should compile them all together with one
-compile command.
-
-```bash
-java -jar compiler.jar --js_output_file=out.js in1.js in2.js in3.js ...
-```
-
-You can also use minimatch-style globs.
-
-```bash
-# Recursively include all js files in subdirs
-java -jar compiler.jar --js_output_file=out.js 'src/**.js'
-
-# Recursively include all js files in subdirs, excluding test files.
-# Use single-quotes, so that bash doesn't try to expand the '!'
-java -jar compiler.jar --js_output_file=out.js 'src/**.js' '!**_test.js'
-```
-
-The Closure Compiler will concatenate the files in the order they're passed at
-the command line.
-
-If you're using globs or many files, you may start to run into problems with
-managing dependencies between scripts. In this case, you should use the
-[Closure Library](https://developers.google.com/closure/library/). It contains
-functions for enforcing dependencies between scripts, and Closure Compiler will
-re-order the inputs automatically.
-
 ## How to Contribute
 
 ### Contributor code of conduct
 
-However you choose to contribute, please abide by our
-[code of conduct](https://github.com/closure-compiler/code_of_conduct.md)
-to keep our community a healty and welcoming place.
+However you choose to contribute, please abide by our [code of
+conduct](https://github.com/closure-compiler/code_of_conduct.md) to keep our
+community a healthy and welcoming place.
 
 ### Reporting a bug
 
 1.  First make sure that it is really a bug and not simply the way that Closure
     Compiler works (especially true for ADVANCED_OPTIMIZATIONS).
-    *   Check the
-        [official documentation](https://developers.google.com/closure/compiler/)
+    *   Check the [official
+        documentation](https://developers.google.com/closure/compiler/)
     *   Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ)
-    *   Search on
-        [Stack Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler)
-        and in the
-        [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
-    *   Look through the list of
-        [compiler assumptions](https://github.com/google/closure-compiler/wiki/Compiler-Assumptions).
+    *   Search on [Stack
+        Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler)
+        and in the [Closure Compiler Discuss
+        Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+    *   Look through the list of [compiler
+        assumptions](https://github.com/google/closure-compiler/wiki/Compiler-Assumptions).
 2.  If you still think you have found a bug, make sure someone hasn't already
-    reported it. See the list of
-    [known issues](https://github.com/google/closure-compiler/issues).
+    reported it. See the list of [known
+    issues](https://github.com/google/closure-compiler/issues).
 3.  If it hasn't been reported yet, post a new issue. Make sure to add enough
     detail so that the bug can be recreated. The smaller the reproduction code,
     the better.
@@ -169,10 +245,10 @@ to keep our community a healty and welcoming place.
 1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ) to
     make sure that the behaviour you would like isn't specifically excluded
     (such as string inlining).
-2.  Make sure someone hasn't requested the same thing. See the list of
-    [known issues](https://github.com/google/closure-compiler/issues).
-3.  Read up on
-    [what type of feature requests are accepted](https://github.com/google/closure-compiler/wiki/FAQ#how-do-i-submit-a-feature-request-for-a-new-type-of-optimization).
+2.  Make sure someone hasn't requested the same thing. See the list of [known
+    issues](https://github.com/google/closure-compiler/issues).
+3.  Read up on [what type of feature requests are
+    accepted](https://github.com/google/closure-compiler/wiki/FAQ#how-do-i-submit-a-feature-request-for-a-new-type-of-optimization).
 4.  Submit your request as an issue.
 
 ### Submitting patches
@@ -181,19 +257,19 @@ to keep our community a healty and welcoming place.
     basically says that you own the rights to any code you contribute, and that
     you give us permission to use that code in Closure Compiler. You maintain
     the copyright on that code. If you own all the rights to your code, you can
-    fill out an
-    [individual CLA](https://code.google.com/legal/individual-cla-v1.0.html). If
-    your employer has any rights to your code, then they also need to fill out a
+    fill out an [individual
+    CLA](https://code.google.com/legal/individual-cla-v1.0.html). If your
+    employer has any rights to your code, then they also need to fill out a
     [corporate CLA](https://code.google.com/legal/corporate-cla-v1.0.html). If
     you don't know if your employer has any rights to your code, you should ask
     before signing anything. By default, anyone with an @google.com email
     address already has a CLA signed for them.
 2.  To make sure your changes are of the type that will be accepted, ask about
-    your patch on the
-    [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+    your patch on the [Closure Compiler Discuss
+    Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
 3.  Fork the repository.
-4.  Make your changes. Check out our
-    [coding conventions](https://github.com/google/closure-compiler/wiki/Contributors#coding-conventions)
+4.  Make your changes. Check out our [coding
+    conventions](https://github.com/google/closure-compiler/wiki/Contributors#coding-conventions)
     for details on making sure your code is in correct style.
 5.  Submit a pull request for your changes. A project developer will review your
     work and then merge your request into the project.
@@ -241,9 +317,9 @@ specific language governing permissions and limitations under the License.
   <tr>
     <td>Description</td>
     <td>A partial copy of Mozilla Rhino. Mozilla Rhino is an
-implementation of JavaScript for the JVM.  The JavaScript
-parse tree data structures were extracted and modified
-significantly for use by Google's JavaScript compiler.</td>
+implementation of JavaScript for the JVM.  The JavaScript parse tree data
+structures were extracted and modified significantly for use by Google's
+JavaScript compiler.</td>
   </tr>
 
   <tr>
