@@ -96,6 +96,12 @@ public final class FeatureSet implements Serializable {
           Feature.REGEXP_NAMED_GROUPS,
           Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
 
+  public static final FeatureSet BROWSER_2021 =
+      ES2020_MODULES.without(
+          // https://kangax.github.io/compat-table/es2016plus/
+          // Regexp lookbehind is missing in Safari 14.
+          Feature.REGEXP_LOOKBEHIND);
+
   public static final FeatureSet TS_UNSUPPORTED =
       TYPESCRIPT.with(LangVersion.ES_UNSUPPORTED.features());
 

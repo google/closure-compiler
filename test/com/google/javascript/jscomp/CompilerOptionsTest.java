@@ -32,10 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link CompilerOptions}.
- *
- */
+/** Tests for {@link CompilerOptions}. */
 @RunWith(JUnit4.class)
 public final class CompilerOptionsTest {
 
@@ -52,6 +49,9 @@ public final class CompilerOptionsTest {
 
     options.setBrowserFeaturesetYear(2020);
     assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2020);
+
+    options.setBrowserFeaturesetYear(2021);
+    assertThat(options.getOutputFeatureSet()).isEqualTo(FeatureSet.BROWSER_2021);
   }
 
   @Test

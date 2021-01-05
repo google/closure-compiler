@@ -142,7 +142,9 @@ public class CompilerOptions implements Serializable {
 
     public void setDependentValuesFromYear() {
       if (year != 0) {
-        if (year == 2020) {
+        if (year == 2021) {
+          CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2021);
+        } else if (year == 2020) {
           CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2020);
         } else if (year == 2019) {
           CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -167,9 +169,9 @@ public class CompilerOptions implements Serializable {
    */
   public void validateBrowserFeaturesetYearOption(Integer inputYear) {
     checkState(
-        inputYear == 2020 || inputYear == 2019 || inputYear == 2012,
+        inputYear == 2021 || inputYear == 2020 || inputYear == 2019 || inputYear == 2012,
         SimpleFormat.format(
-            "Illegal browser_featureset_year=%d. We support values 2012, 2019, and 2020 only",
+            "Illegal browser_featureset_year=%d. We support values 2012, 2019, 2020, and 2021 only",
             inputYear));
   }
 
