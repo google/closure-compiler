@@ -56,7 +56,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
               + " instead?");
 
   public static final DiagnosticType MISSING_PARAMETER_JSDOC =
-      DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.{0}");
+      DiagnosticType.disabled("JSC_MISSING_PARAMETER_JSDOC", "Parameter must have JSDoc.");
 
   public static final DiagnosticType MIXED_PARAM_JSDOC_STYLES =
       DiagnosticType.disabled("JSC_MIXED_PARAM_JSDOC_STYLES",

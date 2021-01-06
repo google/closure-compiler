@@ -1,7 +1,7 @@
 {
   "name": "closure-compiler",
   "config": {
-    "runtime_tests": "./test/com/google/javascript/jscomp/runtime_tests"
+    "runtime_tests_dir": "./test/com/google/javascript/jscomp/runtime_tests"
   },
   "version": "1.0.0",
   "repository": "git@github.com:google/closure-compiler.git",
@@ -14,20 +14,18 @@
     "chalk": "^4.1.0",
     "future-event": "^1.5.0",
     "glob": "^7.1.6",
-    "google-closure-library": "^20201102.0.1",
+    "google-closure-library": "^20200719.0.0",
     "jest": "^26.1.0",
     "jsdom": "^16.3.0"
   },
   "scripts": {
-    "build": "bazel build //:compiler_unshaded_deploy.jar",
-    "build:all": "bazel build :all",
-    "compile": "java -jar bazel-bin/compiler_unshaded_deploy.jar",
-    "clean": "npm run runtime_tests:clean && bazel clean",
-    "runtime_tests:clean": "rm -rf $npm_package_config_runtime_tests/**/build/*",
-    "runtime_tests:build": "$npm_package_config_runtime_tests/utils/build.sh",
-    "runtime_tests:run": "jest --testRegex $npm_package_config_runtime_tests/utils/test/* --verbose=true",
-    "runtime_tests": "npm run --silent runtime_tests:clean && npm run --silent runtime_tests:build && npm run runtime_tests:run",
-    "test": "bazel test //:all",
-    "test:all": "npm run test && npm run runtime_tests"
+    "build": "clean && mvn -DskipTests",
+    "build:fast": "mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml",
+    "clean": "yarn runtime_tests:clean && mvn clean",
+    "runtime_tests:build": "$npm_package_config_runtime_tests_dir/utils/build.sh",
+    "runtime_tests:clean": "rm -rf $npm_package_config_runtime_tests_dir/**/build/*",
+    "runtime_tests:run": "jest --testRegex $npm_package_config_runtime_tests_dir/utils/test/* --verbose=true",
+    "runtime_tests": "yarn runtime_tests:clean && yarn run --silent runtime_tests:build && yarn run --silent runtime_tests:run",
+    "test": "mvn test"
   }
 }
