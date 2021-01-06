@@ -27,7 +27,7 @@
     "runtime_tests:build": "$npm_package_config_runtime_tests/utils/build.sh",
     "runtime_tests:run": "jest --testRegex $npm_package_config_runtime_tests/utils/test/* --verbose=true",
     "runtime_tests": "yarn --silent runtime_tests:clean && yarn --silent runtime_tests:build && yarn run runtime_tests:run",
-    "test": "bazel test //:compiler_unshaded_deploy.jar",
-    "test:all": "bazel test :all"
+    "test": "bazel test //:all",
+    "test:all": "npm run test && npm run runtime_tests"
   }
 }
