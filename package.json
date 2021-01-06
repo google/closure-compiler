@@ -22,11 +22,11 @@
     "build": "bazel build //:compiler_unshaded_deploy.jar",
     "build:all": "bazel build :all",
     "compile": "java -jar bazel-bin/compiler_unshaded_deploy.jar",
-    "clean": "yarn runtime_tests:clean && bazel clean",
+    "clean": "npm run runtime_tests:clean && bazel clean",
     "runtime_tests:clean": "rm -rf $npm_package_config_runtime_tests/**/build/*",
     "runtime_tests:build": "$npm_package_config_runtime_tests/utils/build.sh",
     "runtime_tests:run": "jest --testRegex $npm_package_config_runtime_tests/utils/test/* --verbose=true",
-    "runtime_tests": "yarn --silent runtime_tests:clean && yarn --silent runtime_tests:build && yarn run runtime_tests:run",
+    "runtime_tests": "npm run --silent runtime_tests:clean && npm run --silent runtime_tests:build && npm run runtime_tests:run",
     "test": "bazel test //:all",
     "test:all": "npm run test && npm run runtime_tests"
   }
