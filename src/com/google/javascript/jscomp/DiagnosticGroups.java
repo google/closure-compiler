@@ -424,7 +424,30 @@ public class DiagnosticGroups {
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
-      DiagnosticGroups.registerDeprecatedGroup("missingRequire");
+      DiagnosticGroups.registerGroup(
+          "missingRequire",
+          CheckMissingRequires.MISSING_REQUIRE,
+          CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE,
+          CheckMissingRequires.MISSING_REQUIRE_TYPE,
+          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
+
+  /**
+   * Deprecated no-op diagnostic group.
+   *
+   * @deprecated please use "missingRequire" instead
+   */
+  @Deprecated
+  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
+      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
+
+  /**
+   * Deprecated alais of MISSING_REQUIRE.
+   *
+   * @deprecated please use "missingRequire" instead
+   */
+  @Deprecated
+  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup("stricterMissingRequire", MISSING_REQUIRE);
 
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
@@ -447,17 +470,6 @@ public class DiagnosticGroups {
           DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE),
           // ES Module imports of files not reachable from this partial program.
           DiagnosticGroup.forType(ModuleLoader.LOAD_WARNING));
-
-  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
-
-  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "stricterMissingRequire",
-          CheckMissingRequires.MISSING_REQUIRE,
-          CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE,
-          CheckMissingRequires.MISSING_REQUIRE_TYPE,
-          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerDeprecatedGroup("legacyGoogScopeRequire");
@@ -744,4 +756,3 @@ public class DiagnosticGroups {
     options.setWarningLevel(group, level);
   }
 }
-
