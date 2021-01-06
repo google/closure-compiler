@@ -852,10 +852,6 @@ public abstract class CompilerTestCase {
     typeCheckEnabled = true;
   }
 
-  protected final boolean isTypeCheckEnabled() {
-    return typeCheckEnabled;
-  }
-
   /**
    * Do not run type checking before running the test pass.
    *
@@ -2056,10 +2052,11 @@ public abstract class CompilerTestCase {
     }
 
     if (warnings != null) {
-      String warningMessage = "";
+      StringBuilder warningBuilder = new StringBuilder();
       for (JSError actualWarning : compiler.getWarnings()) {
-        warningMessage += actualWarning.getDescription() + "\n";
+        warningBuilder.append(actualWarning.getDescription()).append("\n");
       }
+      String warningMessage = warningBuilder.toString();
       assertWithMessage("There should be " + warnings.length + " warnings. " + warningMessage)
           .that(compiler.getWarningCount())
           .isEqualTo(warnings.length);
@@ -2095,12 +2092,9 @@ public abstract class CompilerTestCase {
     final List<Node> matches = new ArrayList<>();
     NodeUtil.visitPostOrder(
         root,
-        new NodeUtil.Visitor() {
-          @Override
-          public void visit(Node n) {
-            if (n.matchesQualifiedName(name)) {
-              matches.add(n);
-            }
+        n -> {
+          if (n.matchesQualifiedName(name)) {
+            matches.add(n);
           }
         });
     return matches;
