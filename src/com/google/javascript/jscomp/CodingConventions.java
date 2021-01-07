@@ -255,11 +255,6 @@ public final class CodingConventions {
     }
 
     @Override
-    public String getGlobalObject() {
-      return nextConvention.getGlobalObject();
-    }
-
-    @Override
     public Collection<AssertionFunctionSpec> getAssertionFunctions() {
       return nextConvention.getAssertionFunctions();
     }
@@ -504,11 +499,6 @@ public final class CodingConventions {
         List<NominalTypeBuilder> delegateProxies,
         Map<String, String> delegateCallingConventions) {
       // do nothing.
-    }
-
-    @Override
-    public String getGlobalObject() {
-      return "window";
     }
 
     @Override

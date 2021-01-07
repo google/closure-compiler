@@ -301,11 +301,6 @@ public interface CodingConvention extends Serializable {
       Map<String, String> delegateCallingConventions);
 
   /**
-   * Gets the name of the global object.
-   */
-  public String getGlobalObject();
-
-  /**
    * A Bind instance or null.
    */
   public Bind describeFunctionBind(Node n);

@@ -15663,24 +15663,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "/** @param {Object} obj */" + "function foo(obj) { do { } while (obj.impossible); }");
   }
 
-  @Test
-  public void testMissingProperty13() {
-    disableStrictMissingPropertyChecks();
-    testTypes(
-        "var goog = {}; goog.isDef = function(x) { return false; };"
-            + "/** @param {Object} obj */"
-            + "function foo(obj) { return goog.isDef(obj.impossible); }");
-  }
-
-  @Test
-  public void testMissingProperty14() {
-    disableStrictMissingPropertyChecks();
-    testTypes(
-        "var goog = {}; goog.isDef = function(x) { return false; };"
-            + "/** @param {Object} obj */"
-            + "function foo(obj) { return goog.isNull(obj.impossible); }",
-        "Property isNull never defined on goog");
-  }
+  // Note: testMissingProperty{13,14} pertained to a deleted coding convention.
 
   @Test
   public void testMissingProperty15() {
