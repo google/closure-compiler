@@ -39,166 +39,94 @@
 
 package com.google.javascript.rhino;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * A builder for {@link JSDocInfo} objects. This builder abstracts the
- * construction process of {@link JSDocInfo} objects whilst minimizing the
- * number of instances of {@link JSDocInfo} objects. It provides early
- * incompatibility detection among properties stored on the {@code JSDocInfo}
+ * A builder for {@link JSDocInfo} objects. This builder abstracts the construction process of
+ * {@link JSDocInfo} objects whilst minimizing the number of instances of {@link JSDocInfo} objects.
+ * It provides early incompatibility detection among properties stored on the {@code JSDocInfo}
  * object being created.
  *
+ * <p>This class is superseded by JSDocInfo.Builder and will soon be deleted.
+ *
  */
-public final class JSDocInfoBuilder {
-  // the current JSDoc which is being populated
-  private JSDocInfo currentInfo;
+public abstract class JSDocInfoBuilder {
 
-  // whether the current JSDocInfo has valuable information
-  private boolean populated;
-
-  // whether to include the documentation itself when parsing the JsDoc
-  private boolean parseDocumentation;
-
-  // the current marker, if any.
-  private JSDocInfo.Marker currentMarker;
-
-  // the set of unique license texts
-  private final Set<String> licenseTexts;
-
-  /** This constructor should not be called directly. Use JSDocInfo.builder() instead. */
-  JSDocInfoBuilder() {
-    this(new JSDocInfo(), false, false);
+  public static JSDocInfo.Builder copyFrom(JSDocInfo info) {
+    return info.toBuilder();
   }
 
-  private JSDocInfoBuilder(
-      JSDocInfo info, boolean parseDocumentation, boolean populated) {
-    this.currentInfo = info;
-    this.parseDocumentation = parseDocumentation;
-    this.populated = populated;
-    this.licenseTexts = new HashSet<>();
-  }
-
-  public static JSDocInfoBuilder copyFrom(JSDocInfo info) {
-    JSDocInfo clone = info.clone();
-    if (clone.getVisibility() == Visibility.INHERITED) {
-      clone.setVisibility(null);
-    }
-    return new JSDocInfoBuilder(clone, info.isDocumentationIncluded(), true);
-  }
-
-  public static JSDocInfoBuilder maybeCopyFrom(@Nullable JSDocInfo info) {
-    if (info == null) {
-      return new JSDocInfoBuilder().parseDocumentation();
-    }
-    return copyFrom(info);
+  public static JSDocInfo.Builder maybeCopyFrom(@Nullable JSDocInfo info) {
+    return info != null ? info.toBuilder() : JSDocInfo.builder().parseDocumentation();
   }
 
   /**
-   * Returns a JSDocInfoBuilder that contains a copy of the given JSDocInfo in which only the
+   * Returns a JSDocInfo.Builder that contains a copy of the given JSDocInfo in which only the
    * {@code @type} field of the JSDocInfo is replaced with the given typeExpression. This is done to
    * prevent generating code in the client module which references local variables from another
    * module.
    */
-  public static JSDocInfoBuilder maybeCopyFromWithNewType(
+  public static JSDocInfo.Builder maybeCopyFromWithNewType(
       JSDocInfo info, JSTypeExpression typeExpression) {
     if (info == null) {
-      JSDocInfo temp = new JSDocInfo();
-      temp.setIncludeDocumentation(true);
-      return copyFromWithNewType(temp, typeExpression);
+      return JSDocInfo.builder().parseDocumentation().setType(typeExpression);
     }
-    return copyFromWithNewType(info, typeExpression);
+    return info.toBuilder().setType(typeExpression);
   }
 
-  public static JSDocInfoBuilder copyFromWithNewType(
+  public static JSDocInfo.Builder copyFromWithNewType(
       JSDocInfo info, JSTypeExpression typeExpression) {
-    JSDocInfo newTypeInfo = info.cloneWithNewType(false, typeExpression);
-    return new JSDocInfoBuilder(newTypeInfo, info.isDocumentationIncluded(), true);
+    return info.toBuilder().setType(typeExpression);
   }
 
   /**
-   * Returns a JSDocInfoBuilder that contains a JSDoc in which all module local types (which may be
+   * Returns a JSDocInfo.Builder that contains a JSDoc in which all module local types (which may be
    * inside {@code @param}, {@code @type} or {@code @returns} are replaced with unknown. This is
    * done to prevent generating code in the client module which references local variables from
    * another module.
    */
-  public static JSDocInfoBuilder maybeCopyFromAndReplaceNames(
+  public static JSDocInfo.Builder maybeCopyFromAndReplaceNames(
       JSDocInfo info, Set<String> moduleLocalNamesToReplace) {
-    if (info == null) {
-      info = new JSDocInfo();
-      info.setIncludeDocumentation(true);
-    }
-    return copyFromAndReplaceNames(info, moduleLocalNamesToReplace);
+    return info != null
+        ? copyFromAndReplaceNames(info, moduleLocalNamesToReplace)
+        : JSDocInfo.builder().parseDocumentation();
   }
 
-  private static JSDocInfoBuilder copyFromAndReplaceNames(JSDocInfo info, Set<String> oldNames) {
-    JSDocInfo newTypeInfo = info.cloneAndReplaceTypeNames(oldNames);
-    return new JSDocInfoBuilder(newTypeInfo, info.isDocumentationIncluded(), true);
+  private static JSDocInfo.Builder copyFromAndReplaceNames(JSDocInfo info, Set<String> oldNames) {
+    return info.cloneAndReplaceTypeNames(oldNames).toBuilder(); // TODO - populated
   }
+
+  // package-private constructor
+  JSDocInfoBuilder() {}
 
   /**
    * Configures the builder to parse documentation. This should be called immediately after
    * instantiating the builder if documentation should be included, since it enables various
    * operations to do work that would otherwise be no-ops.
    */
-  public JSDocInfoBuilder parseDocumentation() {
-    parseDocumentation = true;
-    currentInfo.setIncludeDocumentation(true);
-    return this;
-  }
+  public abstract JSDocInfoBuilder parseDocumentation();
 
   /**
-   * Sets the original JSDoc comment string. This is a no-op if the builder
-   * isn't configured to record documentation.
+   * Sets the original JSDoc comment string. This is a no-op if the builder isn't configured to
+   * record documentation.
    */
-  public void recordOriginalCommentString(String sourceComment) {
-    if (parseDocumentation) {
-      currentInfo.setOriginalCommentString(sourceComment);
-    }
-  }
+  public abstract void recordOriginalCommentString(String sourceComment);
+
+  /** Sets the position of original JSDoc comment. */
+  public abstract void recordOriginalCommentPosition(int position);
+
+  public abstract boolean shouldParseDocumentation();
 
   /**
-   * Sets the position of original JSDoc comment.
+   * Returns whether this builder is populated with information that can be used to {@link #build} a
+   * {@link JSDocInfo} object that has a fileoverview tag.
    */
-  public void recordOriginalCommentPosition(int position) {
-    if (parseDocumentation) {
-      currentInfo.setOriginalCommentPosition(position);
-    }
-  }
+  public abstract boolean isPopulatedWithFileOverview();
 
-  public boolean shouldParseDocumentation() {
-    return parseDocumentation;
-  }
-
-  /**
-   * Returns whether this builder is populated with information that can be
-   * used to {@link #build} a {@link JSDocInfo} object.
-   */
-  public boolean isPopulated() {
-    return populated;
-  }
-
-  /**
-   * Returns whether this builder is populated with information that can be
-   * used to {@link #build} a {@link JSDocInfo} object that has a
-   * fileoverview tag.
-   */
-  public boolean isPopulatedWithFileOverview() {
-    return isPopulated() &&
-        (currentInfo.hasFileOverview() || currentInfo.isExterns() ||
-         currentInfo.isNoCompile() || currentInfo.isTypeSummary());
-  }
-
-  /**
-   * Returns whether this builder recorded a description.
-   */
-  public boolean isDescriptionRecorded() {
-    return currentInfo.getDescription() != null;
-  }
+  /** Returns whether this builder recorded a description. */
+  public abstract boolean isDescriptionRecorded();
 
   /**
    * Builds a {@link JSDocInfo} object based on the populated information and returns it.
@@ -206,203 +134,75 @@ public final class JSDocInfoBuilder {
    * @return a {@link JSDocInfo} object populated with the values given to this builder. If no value
    *     was populated, this method simply returns {@code null}
    */
-  public JSDocInfo build() {
-    return build(false);
-  }
+  public abstract JSDocInfo build();
 
   /**
-   * Builds a {@link JSDocInfo} object based on the populated information and
-   * returns it.
+   * Builds a {@link JSDocInfo} object based on the populated information and returns it.
    *
    * @param always Return an default JSDoc object.
-   * @return a {@link JSDocInfo} object populated with the values given to this
-   *     builder. If no value was populated and {@code always} is false, returns
-   *     {@code null}. If {@code always} is true, returns a default JSDocInfo.
+   * @return a {@link JSDocInfo} object populated with the values given to this builder. If no value
+   *     was populated and {@code always} is false, returns {@code null}. If {@code always} is true,
+   *     returns a default JSDocInfo.
    */
-  public JSDocInfo build(boolean always) {
-    if (populated || always) {
-      checkState(currentInfo != null);
-      JSDocInfo built = currentInfo;
-      currentInfo = null;
-      populateDefaults(built);
-      populated = false;
-      return built;
-    } else {
-      return null;
-    }
-  }
+  public abstract JSDocInfo build(boolean always);
 
   /**
-   * Builds a {@link JSDocInfo} object based on the populated information and
-   * returns it. Once this method is called, the builder can be reused to build
-   * another {@link JSDocInfo} object.
+   * Builds a {@link JSDocInfo} object based on the populated information and returns it. Once this
+   * method is called, the builder can be reused to build another {@link JSDocInfo} object.
    *
-   * @return a {@link JSDocInfo} object populated with the values given to this
-   *     builder. If no value was populated, this method simply returns
-   *     {@code null}
+   * @return a {@link JSDocInfo} object populated with the values given to this builder. If no value
+   *     was populated, this method simply returns {@code null}
    */
-  public JSDocInfo buildAndReset() {
-    JSDocInfo info = build(false);
-    if (currentInfo == null) {
-      currentInfo = new JSDocInfo();
-      if (parseDocumentation) {
-        currentInfo.setIncludeDocumentation(true);
-      }
-      populated = false;
-    }
-    return info;
-  }
-
-  /** Generate defaults when certain parameters are not specified. */
-  private static void populateDefaults(JSDocInfo info) {
-    if (info.getVisibility() == null) {
-      info.setVisibility(Visibility.INHERITED);
-    }
-  }
+  public abstract JSDocInfo buildAndReset();
 
   /**
-   * Adds a marker to the current JSDocInfo and populates the marker with the
-   * annotation information.
+   * Adds a marker to the current JSDocInfo and populates the marker with the annotation
+   * information.
    */
-  public void markAnnotation(String annotation, int lineno, int charno) {
-    JSDocInfo.Marker marker = currentInfo.addMarker();
+  public abstract void markAnnotation(String annotation, int lineno, int charno);
 
-    if (marker != null) {
-      JSDocInfo.TrimmedStringPosition position =
-          new JSDocInfo.TrimmedStringPosition();
-      position.setItem(annotation);
-      position.setPositionInformation(lineno, charno, lineno,
-          charno + annotation.length());
-      marker.setAnnotation(position);
-      populated = true;
-    }
+  /** Adds a textual block to the current marker. */
+  public abstract void markText(
+      String text, int startLineno, int startCharno, int endLineno, int endCharno);
 
-    currentMarker = marker;
-  }
+  /** Adds a type declaration to the current marker. */
+  public abstract void markTypeNode(
+      Node typeNode, int lineno, int startCharno, int endLineno, int endCharno, boolean hasLC);
 
-  /**
-   * Adds a textual block to the current marker.
-   */
-  public void markText(String text, int startLineno, int startCharno,
-      int endLineno, int endCharno) {
-    if (currentMarker != null) {
-      JSDocInfo.StringPosition position = new JSDocInfo.StringPosition();
-      position.setItem(text);
-      position.setPositionInformation(startLineno, startCharno,
-          endLineno, endCharno);
-      currentMarker.setDescription(position);
-    }
-  }
-
-  /**
-   * Adds a type declaration to the current marker.
-   */
-  public void markTypeNode(Node typeNode, int lineno, int startCharno,
-      int endLineno, int endCharno, boolean hasLC) {
-    if (currentMarker != null) {
-      JSDocInfo.TypePosition position = new JSDocInfo.TypePosition();
-      position.setItem(typeNode);
-      position.setHasBrackets(hasLC);
-      position.setPositionInformation(lineno, startCharno,
-          endLineno, endCharno);
-      currentMarker.setType(position);
-    }
-  }
-
-  /**
-   * Adds a name declaration to the current marker.
-   */
-  public void markName(String name, Node templateNode,
-      int lineno, int charno) {
-    if (currentMarker != null) {
-      // Record the name as both a SourcePosition<String> and a
-      // SourcePosition<Node>. The <String> form is deprecated,
-      // because <Node> is more consistent with how other name
-      // references are handled (see #markTypeNode)
-      //
-      // TODO(nicksantos): Remove all uses of the Name position
-      // and replace them with the NameNode position.
-      JSDocInfo.TrimmedStringPosition position =
-          new JSDocInfo.TrimmedStringPosition();
-      position.setItem(name);
-      position.setPositionInformation(lineno, charno,
-          lineno, charno + name.length());
-
-      JSDocInfo.NamePosition nodePos = new JSDocInfo.NamePosition();
-      Node node = Node.newString(Token.NAME, name, lineno, charno);
-      node.setLength(name.length());
-      if (templateNode != null) {
-        node.setStaticSourceFileFrom(templateNode);
-      }
-      nodePos.setItem(node);
-      nodePos.setPositionInformation(lineno, charno,
-          lineno, charno + name.length());
-      currentMarker.setNameNode(nodePos);
-    }
-  }
+  /** Adds a name declaration to the current marker. */
+  public abstract void markName(String name, Node templateNode, int lineno, int charno);
 
   /**
    * Records a block-level description.
    *
    * @return {@code true} if the description was recorded.
    */
-  public boolean recordBlockDescription(String description) {
-    populated = true;
-    return currentInfo.documentBlock(description);
-  }
+  public abstract boolean recordBlockDescription(String description);
 
   /**
    * Records a visibility.
    *
-   * @return {@code true} if the visibility was recorded and {@code false}
-   *     if it was already defined
+   * @return {@code true} if the visibility was recorded and {@code false} if it was already defined
    */
-  public boolean recordVisibility(Visibility visibility) {
-    if (currentInfo.getVisibility() == null) {
-      populated = true;
-      currentInfo.setVisibility(visibility);
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordVisibility(Visibility visibility);
 
-  public void overwriteVisibility(Visibility visibility) {
-    populated = true;
-    currentInfo.setVisibility(visibility);
-  }
+  public abstract void overwriteVisibility(Visibility visibility);
 
   /**
    * Records a typed parameter.
    *
-   * @return {@code true} if the typed parameter was recorded and
-   *     {@code false} if a parameter with the same name was already defined
+   * @return {@code true} if the typed parameter was recorded and {@code false} if a parameter with
+   *     the same name was already defined
    */
-  public boolean recordParameter(String parameterName, JSTypeExpression type) {
-    if (!hasAnySingletonTypeTags()
-        && currentInfo.declareParam(type, parameterName)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordParameter(String parameterName, JSTypeExpression type);
 
   /**
    * Records a parameter's description.
    *
-   * @return {@code true} if the parameter's description was recorded and
-   *     {@code false} if a parameter with the same name was already defined
+   * @return {@code true} if the parameter's description was recorded and {@code false} if a
+   *     parameter with the same name was already defined
    */
-  public boolean recordParameterDescription(
-      String parameterName, String description) {
-    if (currentInfo.documentParam(parameterName, description)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordParameterDescription(String parameterName, String description);
 
   /**
    * Records a template type name.
@@ -410,103 +210,38 @@ public final class JSDocInfoBuilder {
    * @return {@code true} if the template type name was recorded and {@code false} if the input
    *     template type name was already defined.
    */
-  public boolean recordTemplateTypeName(String name) {
-    return recordTemplateTypeName(name, null);
-  }
+  public abstract boolean recordTemplateTypeName(String name);
 
-  public boolean recordTemplateTypeName(String name, JSTypeExpression bound) {
-    if (currentInfo.declareTemplateTypeName(name, bound)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordTemplateTypeName(String name, JSTypeExpression bound);
 
-  /**
-   * Records a type transformation expression together with its template
-   * type name.
-   */
-  public boolean recordTypeTransformation(String name, Node expr) {
-    if (currentInfo.declareTypeTransformation(name, expr)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records a type transformation expression together with its template type name. */
+  public abstract boolean recordTypeTransformation(String name, Node expr);
 
-  /**
-   * Records a thrown type.
-   */
-  public boolean recordThrowType(JSTypeExpression type) {
-    if (type != null && !hasAnySingletonTypeTags()) {
-      currentInfo.declareThrows(type);
-      populated = true;
-      return true;
-    }
-    return false;
-  }
+  /** Records a thrown type. */
+  public abstract boolean recordThrowType(JSTypeExpression type);
 
   /**
    * Records a throw type's description.
    *
-   * @return {@code true} if the type's description was recorded and
-   *     {@code false} if a description with the same type was already defined
+   * @return {@code true} if the type's description was recorded and {@code false} if a description
+   *     with the same type was already defined
    */
-  public boolean recordThrowDescription(
-      JSTypeExpression type, String description) {
-    if (currentInfo.documentThrows(type, description)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordThrowDescription(JSTypeExpression type, String description);
 
+  /** Adds an author to the current information. */
+  public abstract boolean addAuthor(String author);
+
+  /** Adds a reference ("@see") to the current information. */
+  public abstract boolean addReference(String reference);
 
   /**
-   * Adds an author to the current information.
-   */
-  public boolean addAuthor(String author) {
-    if (currentInfo.documentAuthor(author)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-
-  /**
-   * Adds a reference ("@see") to the current information.
-   */
-  public boolean addReference(String reference) {
-    if (currentInfo.documentReference(reference)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isConsistentIdGenerator()} flag set to
-   * {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isConsistentIdGenerator()} flag set to {@code true}.
    *
-   * @return {@code true} if the consistentIdGenerator flag was recorded and
-   *     {@code false} if it was already recorded
+   * @return {@code true} if the consistentIdGenerator flag was recorded and {@code false} if it was
+   *     already recorded
    */
-  public boolean recordConsistentIdGenerator() {
-    if (!currentInfo.isConsistentIdGenerator()) {
-      currentInfo.setConsistentIdGenerator(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordConsistentIdGenerator();
 
   /**
    * Records that the {@link JSDocInfo} being built should have its {@link
@@ -515,15 +250,7 @@ public final class JSDocInfoBuilder {
    * @return {@code true} if the stableIdGenerator flag was recorded and {@code false} if it was
    *     already recorded.
    */
-  public boolean recordStableIdGenerator() {
-    if (!currentInfo.isStableIdGenerator()) {
-      currentInfo.setStableIdGenerator(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordStableIdGenerator();
 
   /**
    * Records that the {@link JSDocInfo} being built should have its {@link
@@ -532,15 +259,7 @@ public final class JSDocInfoBuilder {
    * @return {@code true} if the isXidGenerator flag was recorded and {@code false} if it was
    *     already recorded.
    */
-  public boolean recordXidGenerator() {
-    if (!currentInfo.isXidGenerator()) {
-      currentInfo.setXidGenerator(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordXidGenerator();
 
   /**
    * Records that the {@link JSDocInfo} being built should have its {@link
@@ -549,262 +268,114 @@ public final class JSDocInfoBuilder {
    * @return {@code true} if the stableIdGenerator flag was recorded and {@code false} if it was
    *     already recorded.
    */
-  public boolean recordMappedIdGenerator() {
-    if (!currentInfo.isMappedIdGenerator()) {
-      currentInfo.setMappedIdGenerator(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordMappedIdGenerator();
 
-  /**
-   * Records the version.
-   */
-  public boolean recordVersion(String version) {
-    if (currentInfo.documentVersion(version)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records the version. */
+  public abstract boolean recordVersion(String version);
 
-  /**
-   * Records the deprecation reason.
-   */
-  public boolean recordDeprecationReason(String reason) {
-    if (currentInfo.setDeprecationReason(reason)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records the deprecation reason. */
+  public abstract boolean recordDeprecationReason(String reason);
 
-  /**
-   * Returns whether a deprecation reason has been recorded.
-   */
-  public boolean isDeprecationReasonRecorded() {
-    return currentInfo.getDeprecationReason() != null;
-  }
+  /** Returns whether a deprecation reason has been recorded. */
+  public abstract boolean isDeprecationReasonRecorded();
 
   /**
    * Records the list of suppressed warnings, possibly adding to the set of already configured
    * warnings.
    */
-  public void recordSuppressions(Set<String> suppressions) {
-    currentInfo.addSuppressions(suppressions);
-    populated = true;
-  }
+  public abstract void recordSuppressions(Set<String> suppressions);
 
-  public void addSuppression(String suppression) {
-    currentInfo.addSuppression(suppression);
-    populated = true;
-  }
+  public abstract void addSuppression(String suppression);
 
-  /**
-   * Records the list of modifies warnings.
-   */
-  public boolean recordModifies(Set<String> modifies) {
-    if (!hasAnySingletonSideEffectTags()
-        && currentInfo.setModifies(modifies)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records the list of modifies warnings. */
+  public abstract boolean recordModifies(Set<String> modifies);
 
   /**
    * Records a type.
    *
-   * @return {@code true} if the type was recorded and {@code false} if
-   *     it is invalid or was already defined
+   * @return {@code true} if the type was recorded and {@code false} if it is invalid or was already
+   *     defined
    */
-  public boolean recordType(JSTypeExpression type) {
-    if (type != null && !hasAnyTypeRelatedTags()) {
-      currentInfo.setType(type);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordType(JSTypeExpression type);
 
-  public void recordInlineType() {
-    currentInfo.setInlineType();
-  }
+  public abstract void recordInlineType();
 
   /**
-   * Records that the {@link JSDocInfo} being built should be populated
-   * with a {@code typedef}'d type.
+   * Records that the {@link JSDocInfo} being built should be populated with a {@code typedef}'d
+   * type.
    */
-  public boolean recordTypedef(JSTypeExpression type) {
-    if (type != null && !hasAnyTypeRelatedTags() && currentInfo.declareTypedefType(type)) {
-      populated = true;
-      return true;
-    }
-    return false;
-  }
+  public abstract boolean recordTypedef(JSTypeExpression type);
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isIdGenerator()} flag set to
-   * {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isIdGenerator()} flag set to {@code true}.
    *
-   * @return {@code true} if the idGenerator flag was recorded and {@code false}
-   *     if it was already recorded
+   * @return {@code true} if the idGenerator flag was recorded and {@code false} if it was already
+   *     recorded
    */
-  public boolean recordIdGenerator() {
-    if (!currentInfo.isIdGenerator()) {
-      currentInfo.setIdGenerator(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordIdGenerator();
 
   /**
    * Records a return type.
    *
-   * @return {@code true} if the return type was recorded and {@code false} if
-   *     it is invalid or was already defined
+   * @return {@code true} if the return type was recorded and {@code false} if it is invalid or was
+   *     already defined
    */
-  public boolean recordReturnType(JSTypeExpression jsType) {
-    if (jsType != null && currentInfo.getReturnType() == null
-        && !hasAnySingletonTypeTags()) {
-      currentInfo.setReturnType(jsType);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordReturnType(JSTypeExpression jsType);
 
   /**
    * Records a return description
    *
-   * @return {@code true} if the return description was recorded and
-   *     {@code false} if it is invalid or was already defined
+   * @return {@code true} if the return description was recorded and {@code false} if it is invalid
+   *     or was already defined
    */
-  public boolean recordReturnDescription(String description) {
-    if (currentInfo.documentReturn(description)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordReturnDescription(String description);
 
   /**
    * Records the type of a define.
    *
-   * 'Define' values are special constants that may be manipulated by
-   * the compiler. They are designed to mimic the #define command in
-   * the C preprocessor.
+   * <p>'Define' values are special constants that may be manipulated by the compiler. They are
+   * designed to mimic the #define command in the C preprocessor.
    */
-  public boolean recordDefineType(JSTypeExpression type) {
-    if (type != null &&
-        !currentInfo.isConstant() &&
-        !currentInfo.isDefine() &&
-        recordType(type)) {
-      currentInfo.setDefine(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordDefineType(JSTypeExpression type);
 
   /**
    * Records a parameter type to an enum.
    *
-   * @return {@code true} if the enum's parameter type was recorded and
-   *     {@code false} if it was invalid or already defined
+   * @return {@code true} if the enum's parameter type was recorded and {@code false} if it was
+   *     invalid or already defined
    */
-  public boolean recordEnumParameterType(JSTypeExpression type) {
-    if (type != null && !hasAnyTypeRelatedTags()) {
-      currentInfo.setEnumParameterType(type);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordEnumParameterType(JSTypeExpression type);
 
-  // TODO(tbreisacher): Disallow nullable types here. If someone writes
-  // "@this {Foo}" in their JS we automatically treat it as though they'd written
-  // "@this {!Foo}". But, if the type node is created in the compiler
-  // (e.g. in the WizPass) we should explicitly add the '!'
   /**
    * Records a type for {@code @this} annotation.
    *
-   * @return {@code true} if the type was recorded and
-   *     {@code false} if it is invalid or if it collided with {@code @enum} or
-   *     {@code @type} annotations
+   * @return {@code true} if the type was recorded and {@code false} if it is invalid or if it
+   *     collided with {@code @enum} or {@code @type} annotations
    */
-  public boolean recordThisType(JSTypeExpression type) {
-    if (type != null && !hasAnySingletonTypeTags() &&
-        !currentInfo.hasThisType()) {
-      currentInfo.setThisType(type);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordThisType(JSTypeExpression type);
 
   /**
    * Records a base type.
    *
-   * @return {@code true} if the base type was recorded and {@code false}
-   *     if it was already defined
+   * @return {@code true} if the base type was recorded and {@code false} if it was already defined
    */
-  public boolean recordBaseType(JSTypeExpression jsType) {
-    if (jsType != null && !hasAnySingletonTypeTags() &&
-        !currentInfo.hasBaseType()) {
-      currentInfo.setBaseType(jsType);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordBaseType(JSTypeExpression jsType);
 
   /**
    * Changes a base type, even if one has already been set on currentInfo.
    *
    * @return {@code true} if the base type was changed successfully.
    */
-  public boolean changeBaseType(JSTypeExpression jsType) {
-    if (jsType != null && !hasAnySingletonTypeTags()) {
-      currentInfo.setBaseType(jsType);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean changeBaseType(JSTypeExpression jsType);
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isConstant()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isConstant()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the constancy was recorded and {@code false}
-   *     if it was already defined
+   * @return {@code true} if the constancy was recorded and {@code false} if it was already defined
    */
-  public boolean recordConstancy() {
-    if (!currentInfo.hasConstAnnotation()) {
-      currentInfo.setConstant(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordConstancy();
 
   /**
    * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isConstant()}
@@ -812,692 +383,279 @@ public final class JSDocInfoBuilder {
    *
    * @return {@code true} if the mutability was recorded and {@code false} if it was already defined
    */
-  public boolean recordMutable() {
-    if (currentInfo.hasConstAnnotation()) {
-      currentInfo.setConstant(false);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordMutable();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isFinal()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isFinal()} flag
+   * set to {@code true}.
    *
    * @return {@code true} if the finality was recorded and {@code false} if it was already defined
    */
-  public boolean recordFinality() {
-    if (!currentInfo.isFinal()) {
-      currentInfo.setFinal(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordFinality();
 
   /**
    * Records a description giving context for translation (i18n).
    *
-   * @return {@code true} if the description was recorded and {@code false}
-   *     if the description was invalid or was already defined
+   * @return {@code true} if the description was recorded and {@code false} if the description was
+   *     invalid or was already defined
    */
-  public boolean recordDescription(String description) {
-    if (description != null && currentInfo.getDescription() == null) {
-      currentInfo.setDescription(description);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordDescription(String description);
 
   /**
-   * Records a meaning giving context for translation (i18n). Different
-   * meanings will result in different translations.
+   * Records a meaning giving context for translation (i18n). Different meanings will result in
+   * different translations.
    *
    * @return {@code true} If the meaning was successfully updated.
    */
-  public boolean recordMeaning(String meaning) {
-    if (meaning != null && currentInfo.getMeaning() == null) {
-      currentInfo.setMeaning(meaning);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordMeaning(String meaning);
 
   /**
    * Records an ID for an alternate message to be used if this message is not yet translated.
    *
    * @return {@code true} If the alternate message ID was successfully updated.
    */
-  public boolean recordAlternateMessageId(String alternateMessageId) {
-    if (alternateMessageId != null && currentInfo.getAlternateMessageId() == null) {
-      currentInfo.setAlternateMessageId(alternateMessageId);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordAlternateMessageId(String alternateMessageId);
 
   /**
    * Records an identifier for a Closure Primitive. function.
    *
    * @return {@code true} If the id was successfully updated.
    */
-  public boolean recordClosurePrimitiveId(String closurePrimitiveId) {
-    if (closurePrimitiveId != null && currentInfo.getClosurePrimitiveId() == null) {
-      currentInfo.setClosurePrimitiveId(closurePrimitiveId);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordClosurePrimitiveId(String closurePrimitiveId);
 
   /**
    * Records a fileoverview description.
    *
-   * @return {@code true} if the description was recorded and {@code false}
-   *     if the description was invalid or was already defined.
+   * @return {@code true} if the description was recorded and {@code false} if the description was
+   *     invalid or was already defined.
    */
-  public boolean recordFileOverview(String description) {
-    if (currentInfo.documentFileOverview(description)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordFileOverview(String description);
 
-  public boolean recordLicense(String license) {
-    currentInfo.setLicense(license);
-    populated = true;
-    return true;
-  }
+  public abstract boolean recordLicense(String license);
 
-  public boolean addLicense(String license) {
-    if (!licenseTexts.add(license)) {
-      return false;
-    }
-
-    String txt = currentInfo.getLicense();
-    if (txt == null) {
-      txt = "";
-    }
-
-    currentInfo.setLicense(txt + license);
-    populated = true;
-    return true;
-  }
+  public abstract boolean addLicense(String license);
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isHidden()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isHidden()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the hiddenness was recorded and {@code false}
-   *     if it was already defined
+   * @return {@code true} if the hiddenness was recorded and {@code false} if it was already defined
    */
-  public boolean recordHiddenness() {
-    if (!currentInfo.isHidden()) {
-      currentInfo.setHidden(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordHiddenness();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoCompile()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isNoCompile()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the no compile flag was recorded and {@code false}
-   *     if it was already recorded
+   * @return {@code true} if the no compile flag was recorded and {@code false} if it was already
+   *     recorded
    */
-  public boolean recordNoCompile() {
-    if (!currentInfo.isNoCompile()) {
-      currentInfo.setNoCompile(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordNoCompile();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoCollapse()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isNoCollapse()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the no collapse flag was recorded and {@code false}
-   *     if it was already recorded
+   * @return {@code true} if the no collapse flag was recorded and {@code false} if it was already
+   *     recorded
    */
-  public boolean recordNoCollapse() {
-    if (!currentInfo.isNoCollapse()) {
-      currentInfo.setNoCollapse(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordNoCollapse();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoInline()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isNoInline()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the no inline flag was recorded and {@code false}
-   *     if it was already recorded
+   * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
+   *     recorded
    */
-  public boolean recordNoInline() {
-    if (!currentInfo.isNoInline()) {
-      currentInfo.setNoInline(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordNoInline();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isConstructor()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isConstructor()} flag set to {@code true}.
    *
-   * @return {@code true} if the constructor was recorded and {@code false}
-   *     if it was already defined or it was incompatible with the existing
-   *     flags
+   * @return {@code true} if the constructor was recorded and {@code false} if it was already
+   *     defined or it was incompatible with the existing flags
    */
-  public boolean recordConstructor() {
-    if (!hasAnySingletonTypeTags()
-        && !currentInfo.isConstructorOrInterface()) {
-      currentInfo.setConstructor(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordConstructor();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#usesImplicitMatch()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#usesImplicitMatch()} flag set to {@code true}.
    *
-   * @return {@code true} if the {@code @record} tag was recorded and {@code false}
-   *     if it was already defined or it was incompatible with the existing
-   *     flags
+   * @return {@code true} if the {@code @record} tag was recorded and {@code false} if it was
+   *     already defined or it was incompatible with the existing flags
    */
-  public boolean recordImplicitMatch() {
-    if (!hasAnySingletonTypeTags() &&
-        !currentInfo.isInterface() &&
-        !currentInfo.isConstructor()) {
-      currentInfo.setInterface(true);
-      currentInfo.setImplicitMatch(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordImplicitMatch();
 
   /**
-   * Whether the {@link JSDocInfo} being built will have its
-   * {@link JSDocInfo#isConstructor()} flag set to {@code true}.
+   * Whether the {@link JSDocInfo} being built will have its {@link JSDocInfo#isConstructor()} flag
+   * set to {@code true}.
    */
-  public boolean isConstructorRecorded() {
-    return currentInfo.isConstructor();
-  }
+  public abstract boolean isConstructorRecorded();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#makesUnrestricted()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#makesUnrestricted()} flag set to {@code true}.
    *
-   * @return {@code true} if annotation was recorded and {@code false}
-   * if it was already defined or it was incompatible with the existing flags
+   * @return {@code true} if annotation was recorded and {@code false} if it was already defined or
+   *     it was incompatible with the existing flags
    */
-  public boolean recordUnrestricted() {
-    if (hasAnySingletonTypeTags()
-        || currentInfo.isInterface()
-        || currentInfo.makesDicts()
-        || currentInfo.makesStructs()
-        || currentInfo.makesUnrestricted()) {
-      return false;
-    }
-    currentInfo.setUnrestricted();
-    populated = true;
-    return true;
-  }
+  public abstract boolean recordUnrestricted();
 
-  public boolean isUnrestrictedRecorded() {
-    return currentInfo.makesUnrestricted();
-  }
+  public abstract boolean isUnrestrictedRecorded();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isAbstract()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isAbstract()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the flag was recorded and {@code false}
-   * if it was already defined or it was incompatible with the existing flags
+   * @return {@code true} if the flag was recorded and {@code false} if it was already defined or it
+   *     was incompatible with the existing flags
    */
-  public boolean recordAbstract() {
-    if (!hasAnySingletonTypeTags()
-        && !currentInfo.isInterface()
-        && !currentInfo.isAbstract()
-        && !currentInfo.isFinal()
-        && currentInfo.getVisibility() != Visibility.PRIVATE) {
-      currentInfo.setAbstract();
-      populated = true;
-      return true;
-    }
-    return false;
-  }
+  public abstract boolean recordAbstract();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#makesStructs()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#makesStructs()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the struct was recorded and {@code false}
-   * if it was already defined or it was incompatible with the existing flags
+   * @return {@code true} if the struct was recorded and {@code false} if it was already defined or
+   *     it was incompatible with the existing flags
    */
-  public boolean recordStruct() {
-    if (hasAnySingletonTypeTags()
-        || currentInfo.makesDicts() || currentInfo.makesStructs()
-        || currentInfo.makesUnrestricted()) {
-      return false;
-    }
-    currentInfo.setStruct();
-    populated = true;
-    return true;
-  }
+  public abstract boolean recordStruct();
 
-  public boolean isStructRecorded() {
-    return currentInfo.makesStructs();
-  }
+  public abstract boolean isStructRecorded();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#makesDicts()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#makesDicts()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the dict was recorded and {@code false}
-   * if it was already defined or it was incompatible with the existing flags
+   * @return {@code true} if the dict was recorded and {@code false} if it was already defined or it
+   *     was incompatible with the existing flags
    */
-  public boolean recordDict() {
-    if (hasAnySingletonTypeTags()
-        || currentInfo.makesDicts() || currentInfo.makesStructs()
-        || currentInfo.makesUnrestricted()) {
-      return false;
-    }
-    currentInfo.setDict();
-    populated = true;
-    return true;
-  }
+  public abstract boolean recordDict();
 
-  public boolean isDictRecorded() {
-    return currentInfo.makesDicts();
-  }
+  public abstract boolean isDictRecorded();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isOverride()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isOverride()}
+   * flag set to {@code true}.
    */
-  public boolean recordOverride() {
-    if (!currentInfo.isOverride()) {
-      currentInfo.setOverride(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordOverride();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isDeprecated()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isDeprecated()}
+   * flag set to {@code true}.
    */
-  public boolean recordDeprecated() {
-    if (!currentInfo.isDeprecated()) {
-      currentInfo.setDeprecated(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordDeprecated();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isInterface()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isInterface()}
+   * flag set to {@code true}.
    *
-   * @return {@code true} if the flag was recorded and {@code false}
-   * if it was already defined or it was incompatible with the existing flags
+   * @return {@code true} if the flag was recorded and {@code false} if it was already defined or it
+   *     was incompatible with the existing flags
    */
-  public boolean recordInterface() {
-    if (hasAnySingletonTypeTags() ||
-        currentInfo.isConstructor() ||
-        currentInfo.isInterface() ||
-        currentInfo.isAbstract()) {
-      return false;
-    }
-    currentInfo.setInterface(true);
-    populated = true;
-    return true;
-  }
+  public abstract boolean recordInterface();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isExport()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExport()}
+   * flag set to {@code true}.
    */
-  public boolean recordExport() {
-    if (!currentInfo.isExport()) {
-      currentInfo.setExport(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordExport();
 
   /**
    * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExport()}
    * flag set to {@code false}.
    */
-  public boolean removeExport() {
-    if (currentInfo.isExport()) {
-      currentInfo.setExport(false);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean removeExport();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isExpose()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExpose()}
+   * flag set to {@code true}.
    */
-  public boolean recordExpose() {
-    if (!currentInfo.isExpose()) {
-      currentInfo.setExpose(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordExpose();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isImplicitCast()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isImplicitCast()} flag set to {@code true}.
    */
-  public boolean recordImplicitCast() {
-    if (!currentInfo.isImplicitCast()) {
-      currentInfo.setImplicitCast(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordImplicitCast();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoSideEffects()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isNoSideEffects()} flag set to {@code true}.
    */
-  public boolean recordNoSideEffects() {
-    if (!hasAnySingletonSideEffectTags()
-        && !currentInfo.isNoSideEffects()) {
-      currentInfo.setNoSideEffects(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordNoSideEffects();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isExterns()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExterns()}
+   * flag set to {@code true}.
    */
-  public boolean recordExterns() {
-    if (!currentInfo.isExterns() && !currentInfo.isTypeSummary()) {
-      currentInfo.setExterns(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordExterns();
 
   /**
-   * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isTypeSummary()} flag set to {@code true}.
+   * Records that the {@link JSDocInfo} being built should have its {@link
+   * JSDocInfo#isTypeSummary()} flag set to {@code true}.
    */
-  public boolean recordTypeSummary() {
-    if (!currentInfo.isTypeSummary() && !currentInfo.isExterns()) {
-      currentInfo.setTypeSummary(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordTypeSummary();
 
   /**
-   * Whether the {@link JSDocInfo} being built will have its
-   * {@link JSDocInfo#isInterface()} flag set to {@code true}.
+   * Whether the {@link JSDocInfo} being built will have its {@link JSDocInfo#isInterface()} flag
+   * set to {@code true}.
    */
-  public boolean isInterfaceRecorded() {
-    return currentInfo.isInterface();
-  }
+  public abstract boolean isInterfaceRecorded();
 
-  /**
-   * @return Whether a parameter of the given name has already been recorded.
-   */
-  public boolean hasParameter(String name) {
-    return currentInfo.hasParameter(name);
-  }
+  /** @return Whether a parameter of the given name has already been recorded. */
+  public abstract boolean hasParameter(String name);
 
-  /**
-   * Records an implemented interface.
-   */
-  public boolean recordImplementedInterface(JSTypeExpression interfaceName) {
-    if (interfaceName != null && currentInfo.addImplementedInterface(interfaceName)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records an implemented interface. */
+  public abstract boolean recordImplementedInterface(JSTypeExpression interfaceName);
 
-  /**
-   * Records an extended interface type.
-   */
-  public boolean recordExtendedInterface(JSTypeExpression interfaceType) {
-    if (interfaceType != null && currentInfo.addExtendedInterface(interfaceType)) {
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records an extended interface type. */
+  public abstract boolean recordExtendedInterface(JSTypeExpression interfaceType);
 
   /** Records that we're lending to another name. */
-  public boolean recordLends(JSTypeExpression name) {
-    if (!hasAnyTypeRelatedTags()) {
-      currentInfo.setLendsName(name);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordLends(JSTypeExpression name);
 
-  /**
-   * Returns whether current JSDoc is annotated with {@code @ngInject}.
-   */
-  public boolean isNgInjectRecorded() {
-    return currentInfo.isNgInject();
-  }
+  /** Returns whether current JSDoc is annotated with {@code @ngInject}. */
+  public abstract boolean isNgInjectRecorded();
 
-  /**
-   * Records that we'd like to add {@code $inject} property inferred from
-   * parameters.
-   */
-  public boolean recordNgInject(boolean ngInject) {
-    if (!isNgInjectRecorded()) {
-      currentInfo.setNgInject(ngInject);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records that we'd like to add {@code $inject} property inferred from parameters. */
+  public abstract boolean recordNgInject(boolean ngInject);
 
-  /**
-   * Returns whether current JSDoc is annotated with {@code @wizaction}.
-   */
-  public boolean isWizactionRecorded() {
-    return currentInfo.isWizaction();
-  }
+  /** Returns whether current JSDoc is annotated with {@code @wizaction}. */
+  public abstract boolean isWizactionRecorded();
 
-  /**
-   * Records that this method is to be exposed as a wizaction.
-   */
-  public boolean recordWizaction() {
-    if (!isWizactionRecorded()) {
-      currentInfo.setWizaction(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records that this method is to be exposed as a wizaction. */
+  public abstract boolean recordWizaction();
 
-  /**
-   * Returns whether current JSDoc is annotated with {@code @polymerBehavior}.
-   */
-  public boolean isPolymerBehaviorRecorded() {
-    return currentInfo.isPolymerBehavior();
-  }
+  /** Returns whether current JSDoc is annotated with {@code @polymerBehavior}. */
+  public abstract boolean isPolymerBehaviorRecorded();
 
-  /**
-   * Records that this method is to be exposed as a polymerBehavior.
-   */
-  public boolean recordPolymerBehavior() {
-    if (!isPolymerBehaviorRecorded()) {
-      currentInfo.setPolymerBehavior(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  /** Records that this method is to be exposed as a polymerBehavior. */
+  public abstract boolean recordPolymerBehavior();
 
   /** Returns whether current JSDoc is annotated with {@code @polymer}. */
-  public boolean isPolymerRecorded() {
-    return currentInfo.isPolymer();
-  }
+  public abstract boolean isPolymerRecorded();
 
   /** Records that this method is to be exposed as a polymer element. */
-  public boolean recordPolymer() {
-    if (!isPolymerRecorded()) {
-      currentInfo.setPolymer(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordPolymer();
 
   /** Returns whether current JSDoc is annotated with {@code @customElement}. */
-  public boolean isCustomElementRecorded() {
-    return currentInfo.isCustomElement();
-  }
+  public abstract boolean isCustomElementRecorded();
 
   /** Records that this method is to be exposed as a customElement. */
-  public boolean recordCustomElement() {
-    if (!isCustomElementRecorded()) {
-      currentInfo.setCustomElement(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }/** Returns whether current JSDoc is annotated with {@code @mixinClass}. */
-  public boolean isMixinClassRecorded() {
-    return currentInfo.isMixinClass();
-  }
+  public abstract boolean recordCustomElement();
+
+  /** Returns whether current JSDoc is annotated with {@code @mixinClass}. */
+  public abstract boolean isMixinClassRecorded();
 
   /** Records that this method is to be exposed as a mixinClass. */
-  public boolean recordMixinClass() {
-    if (!isMixinClassRecorded()) {
-      currentInfo.setMixinClass(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  public abstract boolean recordMixinClass();
 
   /** Returns whether current JSDoc is annotated with {@code @mixinFunction}. */
-  public boolean isMixinFunctionRecorded() {
-    return currentInfo.isMixinFunction();
-  }
+  public abstract boolean isMixinFunctionRecorded();
 
   /** Records that this method is to be exposed as a mixinFunction. */
-  public boolean recordMixinFunction() {
-    if (!isMixinFunctionRecorded()) {
-      currentInfo.setMixinFunction(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  public void mergePropertyBitfieldFrom(JSDocInfo other) {
-    currentInfo.mergePropertyBitfieldFrom(other);
-  }
-
-  /**
-   * Whether the current doc info has other type tags, like
-   * {@code @param} or {@code @return} or {@code @type} or etc.
-   */
-  private boolean hasAnyTypeRelatedTags() {
-    return currentInfo.isConstructor()
-        || currentInfo.isInterface()
-        || currentInfo.isAbstract()
-        || currentInfo.getParameterCount() > 0
-        || currentInfo.hasReturnType()
-        || currentInfo.hasBaseType()
-        || currentInfo.getExtendedInterfacesCount() > 0
-        || currentInfo.hasLendsName()
-        || currentInfo.hasThisType()
-        || hasAnySingletonTypeTags();
-  }
-
-  /**
-   * Whether the current doc info has any of the singleton type
-   * tags that may not appear with other type tags, like
-   * {@code @type} or {@code @typedef}.
-   */
-  private boolean hasAnySingletonTypeTags() {
-    return currentInfo.hasType() ||
-        currentInfo.hasTypedefType() ||
-        currentInfo.hasEnumParameterType();
-  }
-
-  /**
-   * Whether the current doc info has any of the singleton type
-   * tags that may not appear with other type tags, like
-   * {@code @type} or {@code @typedef}.
-   */
-  private boolean hasAnySingletonSideEffectTags() {
-    return currentInfo.isNoSideEffects() ||
-        currentInfo.hasModifies();
-  }
+  public abstract boolean recordMixinFunction();
 }
