@@ -454,6 +454,22 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
   }
 
   @Test
+  public void testPrototypeMethodDef_notConsideredSetterUse() {
+    enableTypeCheck();
+
+    test(
+        lines(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
+            "/** @constructor */ function D () {}",
+            "D.prototype.prop = function() {};"),
+        lines(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {});",
+            "/** @constructor */ function D () {}"));
+  }
+
+  @Test
   public void testEs6GettersWithoutTranspilation() {
     test(
         "class C { get value() { return 0; } }", // preserve newline
