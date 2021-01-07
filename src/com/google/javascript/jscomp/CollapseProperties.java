@@ -610,7 +610,7 @@ class CollapseProperties implements CompilerPass {
 
       JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.getNode().getParent());
       if (ref.getNode().getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)
-          || (info != null && info.isConstant())) {
+          || (info != null && info.hasConstAnnotation())) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
 
