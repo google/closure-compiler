@@ -1112,17 +1112,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testTypeOfReduction14() {
-    // Don't do type inference on GETELEMs.
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "function f(x) { "
-            + "  return goog.isString(arguments[0]) ? arguments[0] : 0;"
-            + "}",
-        null);
-  }
-
-  @Test
   public void testTypeOfReduction15() {
     // Don't do type inference on GETELEMs.
     testClosureTypes(

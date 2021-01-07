@@ -53,13 +53,8 @@ abstract class CompilerTypeTestCase {
           "/** @const */ var goog = {};",
           "goog.inherits = function(x, y) {};",
           "/** @type {!Function} */ goog.abstractMethod = function() {};",
-          "goog.isArray = function(x) {};",
-          "goog.isDef = function(x) {};",
           "goog.isFunction = function(x) {};",
-          "goog.isNull = function(x) {};",
-          "goog.isString = function(x) {};",
           "goog.isObject = function(x) {};",
-          "goog.isDefAndNotNull = function(x) {};",
           "/** @const */ goog.array = {};",
           // simplified ArrayLike definition
           "/**",
