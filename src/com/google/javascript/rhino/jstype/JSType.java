@@ -1528,7 +1528,7 @@ public abstract class JSType implements Serializable {
    * Bypasses the normal call to {@link #resolve(ErrorReporter)}. Useful if you are aware that no
    * resolution work needs to be done.
    */
-  void eagerlyResolveToSelf() {
+  final void eagerlyResolveToSelf() {
     checkState(!this.isResolved());
     resolveResult = this;
     this.registry.getResolver().resolveIfClosed(this, this.getTypeClass());
