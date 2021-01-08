@@ -26,7 +26,7 @@
 /** @const {!Object<string, ?>} map from classes (Map) to polyfills*/
 $jscomp.polyfills = {};
 
-/** @const {!Object<string, string>} */
+/** @const {!Object<string, (symbol|string)>} */
 $jscomp.propertyToPolyfillSymbol = {};
 
 /** @const {string} */
@@ -39,9 +39,11 @@ $jscomp.POLYFILL_PREFIX = '$jscp$';
  * This is a variable instead of a $jscomp.* property to make it simpler for
  * the compiler to avoid prematurely deleting it during optimizations.
  *
- * @param {*} target the receiver for the property access, e.g. `my.str`
- * @param {string} key the name of the property, e.g. `includes`
- * @return {?} if a polyfill is present, that polyfill property. otherwise
+ * @param {*} target the receiver for the property access, e.g. `my.str` in
+ *     `my.str.includes`
+ * @param {string} key the name of the property, e.g. `includes` in
+ *     `my.str.includes`
+ * @return {?} if a polyfill is present, that polyfill property. Otherwise
  *   the result of target[key]
  * @noinline prevent inlining so IsolatePolyfills can find this declaration.
  * @suppress {reportUnknownTypes}
@@ -129,7 +131,8 @@ $jscomp.polyfillUnisolated = function(target, polyfill, fromLang, toLang) {
  * The main differences between this method and $jscomp.polyfillUnisolated are:
  *  - classes are defined on $jscomp.polyfills, not window.
  *  - methods (Array.prototype.includes) are defined on Array.prototype under
- *    an obfuscated name Array.prototype.$jscp$includes or a Symbol, if native.
+ *    an obfuscated name Array.prototype.$jscp$907312$includes or a Symbol, if
+ * native.
  *  - this method installs our polyfill even when an existing implementation is
  *    found, as it might be an untrusted polyfill. The exception is that if
  *    Symbol is detected to be native, we assume any implementations of ES6
@@ -198,13 +201,12 @@ $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
     // of the method we're polyfilling. $jscomp$lookupPolyfilledValue will fall
     // back to the native version anyway.
     if ($jscomp.propertyToPolyfillSymbol[property] === undefined) {
+      var BIN_ID = (Math.random() * 1e9) >>> 0;
       $jscomp.propertyToPolyfillSymbol[property] = $jscomp.IS_SYMBOL_NATIVE ?
           // use bracket access to avoid injecting the Symbol polyfill
           $jscomp.global['Symbol'](property) :
-          $jscomp.POLYFILL_PREFIX + property;
+          $jscomp.POLYFILL_PREFIX + BIN_ID + '$' + property;
     }
-
-
     property = $jscomp.propertyToPolyfillSymbol[property];
 
     // Define the polyfilled method on its owner but under an obfuscated

@@ -35,7 +35,13 @@ public class RewriteAsyncIterationTest extends CompilerTestCase {
 
   public RewriteAsyncIterationTest() {
     super(
-        new TestExternsBuilder().addAsyncIterable().addArray().addArguments().addObject().build());
+        new TestExternsBuilder()
+            .addAsyncIterable()
+            .addArray()
+            .addMath()
+            .addArguments()
+            .addObject()
+            .build());
   }
 
   // TODO(johnplaisted): This is copy and pasted from RewriteAsyncFunctionsTest. We should have
