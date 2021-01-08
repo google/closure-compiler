@@ -43,57 +43,57 @@ public final class CheckInterfacesTest extends CompilerTestCase {
 
   @Test
   public void testInterfaceArgs() {
-    testSame("/** @interface */ function A(x) {}",
-        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+    testSame(
+        "/** @interface */ function A(x) {}",
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
         "/** @interface */ class C { constructor(x) {} }",
-        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
-        lines(
-            "var ns = {};\n", "/** @interface */\n", "ns.SomeInterface = function(x) {};"),
-        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+        lines("var ns = {};\n", "/** @interface */\n", "ns.SomeInterface = function(x) {};"),
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
         lines(
             "var ns = {};\n",
             "/** @interface */\n",
             "ns.SomeInterface = class { constructor(x) {}};"),
-        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
   }
 
   @Test
   public void testInterfaceArgs_withES6Modules() {
     testSame(
         "export /** @interface */ function A(x) {}",
-        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
 
     testSame(
         "export /** @interface */ class C { constructor(x) {} }",
-        CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
   }
 
   @Test
   public void testInterfaceConstructorNotEmpty() {
     testSame(
         "/** @interface */ function A() { this.foo; }",
-        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY);
 
     testSame(
         "/** @interface */ class C { constructor() { this.foo; }}",
-        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY);
 
     testSame(
         lines("var ns = {};", "/** @interface */", "ns.SomeInterface = function() { this.foo; };"),
-        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY);
 
     testSame(
         lines(
             "var ns = {};",
             "/** @interface */",
             "ns.SomeInterface = class { constructor() { this.foo; }; }"),
-        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY);
   }
 
   @Test
@@ -112,11 +112,11 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   public void testInterfaceNotEmpty_withES6Modules() {
     testSame(
         "export /** @interface */ function A() { this.foo; }",
-        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY);
 
     testSame(
         "export /** @interface */ class C { constructor() { this.foo; } }",
-        CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+        CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY);
   }
 
   @Test

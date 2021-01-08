@@ -601,8 +601,8 @@ public class DiagnosticGroups {
               // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY,
-              CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
-              CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
+              CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY,
+              CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS,
               CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD,
               CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
