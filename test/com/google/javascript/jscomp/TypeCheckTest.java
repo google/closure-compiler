@@ -24893,6 +24893,30 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "required: (typeof globalNs.Ctor)"));
   }
 
+  @Test
+  public void testDynamicImportSpecifier() {
+    testTypes(
+        "var foo = undefined; import(foo);",
+        lines("dynamic import specifier", "found   : undefined", "required: string"));
+  }
+
+  @Test
+  public void testDynamicImport1() {
+    testTypes(
+        "/** @type {number} */ var foo = import('foo.js');",
+        lines("initializing variable", "found   : Promise<?>", "required: number"));
+  }
+
+  @Test
+  public void testDynamicImport2() {
+    testTypes("/** @type {Promise} */ var foo2 = import('foo.js');");
+  }
+
+  @Test
+  public void testDynamicImport3() {
+    testTypes("/** @type {Promise<{default: number}>} */ var foo = import('foo.js');");
+  }
+
   private void testClosureTypes(String js, String description) {
     testClosureTypesMultipleWarnings(
         js, description == null ? null : ImmutableList.of(description));

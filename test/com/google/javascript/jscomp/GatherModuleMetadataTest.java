@@ -681,4 +681,16 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     assertThat(metadataMap().getModulesByPath().get("notimported.js").moduleType())
         .isEqualTo(ModuleType.SCRIPT);
   }
+
+  @Test
+  public void testDynamicImport() {
+    test(
+        srcs(
+            SourceFile.fromCode("imported.js", "export default function() {};"),
+            SourceFile.fromCode("script.js", "import('./imported.js')")));
+
+    ModuleMetadata m = metadataMap().getModulesByPath().get("script.js");
+    assertThat(m.isNonProvideScript()).isTrue();
+    assertThat(m.es6ImportSpecifiers()).containsExactly("./imported.js");
+  }
 }

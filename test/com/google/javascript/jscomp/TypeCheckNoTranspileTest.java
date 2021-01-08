@@ -7027,4 +7027,18 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
             "required: (Enum<string>|number)" // Verify this doesn't drop Enum<string>
             ));
   }
+
+  @Test
+  public void testDynamicImport() {
+    testTypes(
+        lines("/** @type {string} */", "let foo = import('./foo.js');"),
+        lines("initializing variable", "found   : Promise<?>", "required: string"));
+  }
+
+  @Test
+  public void testDynamicImportSpecifier() {
+    testTypes(
+        lines("const bar = null;", "import(bar);"),
+        lines("dynamic import specifier", "found   : null", "required: string"));
+  }
 }

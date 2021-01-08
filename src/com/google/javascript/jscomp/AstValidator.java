@@ -431,6 +431,11 @@ public final class AstValidator implements CompilerPass {
         validateAwait(n);
         return;
 
+      case DYNAMIC_IMPORT:
+        validateFeature(Feature.DYNAMIC_IMPORT, n);
+        validateUnaryOp(n);
+        return;
+
       default:
         violation("Expected expression but was " + n.getToken(), n);
     }

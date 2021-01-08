@@ -935,6 +935,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
+    @Option(
+        name = "--allow_dynamic_import",
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Indicates that the compiler should allow dynamic import expressions. Dynamic import "
+                + "expressions are not yet fully supported and may lead to broken output code.")
+    private boolean allowDynamicImport = false;
+
     @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
@@ -1052,10 +1060,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             .putAll(
                 "Miscellaneous",
                 ImmutableList.of(
+                    "browser_featureset_year",
                     "charset",
                     "checks_only",
                     "define",
-                    "browser_featureset_year",
                     "flagfile",
                     "help",
                     "third_party",
@@ -2006,6 +2014,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
     options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
+    options.setAllowDynamicImport(flags.allowDynamicImport);
 
     return options;
   }

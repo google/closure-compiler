@@ -166,6 +166,20 @@ public final class TypeInferenceTest {
     parseAndRunTypeInference("(function *() {" + js + "});");
   }
 
+  private void withModules(ImmutableList<String> js) {
+    Node script = compiler.parseTestCode(js);
+    assertWithMessage("parsing error: " + Joiner.on(", ").join(compiler.getErrors()))
+        .that(compiler.getErrorCount())
+        .isEqualTo(0);
+    Node root = IR.root(IR.root(), IR.root(script));
+    new GatherModuleMetadata(compiler, /* processCommonJsModules= */ false, ResolutionMode.BROWSER)
+        .process(root.getFirstChild(), root.getSecondChild());
+    new ModuleMapCreator(compiler, compiler.getModuleMetadataMap())
+        .process(root.getFirstChild(), root.getSecondChild());
+
+    parseAndRunTypeInference(root, root);
+  }
+
   private void parseAndRunTypeInference(String js) {
     Node script = compiler.parseTestCode(js);
     Node root = IR.root(IR.root(), IR.root(script));
@@ -3759,6 +3773,31 @@ public final class TypeInferenceTest {
 
     assertTypeOfExpression("FOO").isNumber();
     assertTypeOfExpression("BAR").isNumber();
+  }
+
+  @Test
+  public void testDynamicImport() {
+    inScript("const foo = import('foo');");
+
+    JSType promiseOfUnknownType =
+        registry.createTemplatizedType(
+            registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE),
+            registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+    assertType(getType("foo")).isSubtypeOf(promiseOfUnknownType);
+  }
+
+  @Test
+  public void testDynamicImport2() {
+    withModules(
+        ImmutableList.of(
+            "export default 1; export /** @return {string} */ function Bar() { return 'bar'; };",
+            // modules are named of the format `testcode#` based off their index.
+            // testcode0 refers the first module.
+            "const foo = import('./testcode0');"));
+
+    assertType(getType("foo"))
+        .toStringIsEqualTo(
+            "Promise<{\n" + "  Bar: function(): string,\n" + "  default: number\n" + "}>");
   }
 
   private static void testForAllBigInt(JSType type) {

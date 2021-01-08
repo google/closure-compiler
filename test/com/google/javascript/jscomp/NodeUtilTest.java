@@ -1490,6 +1490,10 @@ public final class NodeUtilTest {
               NodeUtil.evaluatesToLocalValue(
                   parseFirst(Token.NEW_TARGET, "function f() { new.target; }")))
           .isFalse();
+
+      // Dynamic import always returns a new Promise, which acts as a local value, even though
+      // the result of the Promise is definitely non-local.
+      assertThat(NodeUtil.evaluatesToLocalValue(parseExpr("import('./foo.js')"))).isTrue();
     }
 
     @Test

@@ -4773,6 +4773,9 @@ public final class NodeUtil {
       case HOOK:
         return evaluatesToLocalValue(value.getSecondChild())
             && evaluatesToLocalValue(value.getLastChild());
+      case DYNAMIC_IMPORT:
+        // Dynamic import always returns a newly created Promise.
+        return true;
       case THIS:
       case SUPER:
         return false;

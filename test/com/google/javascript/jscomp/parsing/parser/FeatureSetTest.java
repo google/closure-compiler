@@ -115,24 +115,25 @@ public final class FeatureSetTest {
 
   @Test
   public void testEsUnsupported() {
-    // ES_UNSUPPORTED is currently has more features than ES_NEXT, so versionForDebugging() will
-    // return es_unsupported
+    // ES_UNSUPPORTED is currently has the same features as ES_NEXT_IN, so versionForDebugging()
+    // will
+    // return es_next_in
     // This will change when new features are added to ES_NEXT/ES_UNSUPPORTED, so this test case
     // will then have to change.
     // This is on purpose so the test case serves as documentation that we intentionally
     // have ES_UNSUPPORTED the same as or different from ES_NEXT
-    assertThat(FeatureSet.ES_UNSUPPORTED.versionForDebugging()).isEqualTo("es_unsupported");
+    assertThat(FeatureSet.ES_UNSUPPORTED.versionForDebugging()).isEqualTo("es_next_in");
   }
 
   @Test
   public void testTsUnsupported() {
-    // TS_UNSUPPORTED is currently has more features than TYPESCRIPT, so versionForDebugging() will
-    // return ts_unsupported
+    // TS_UNSUPPORTED is currently has all features of TYPESCRIPT, so versionForDebugging() will
+    // return ts
     // This will change when new features are added to TYPESCRIPT/TS_UNSUPPORTED, so this test case
     // will then have to change.
     // This is on purpose so the test case serves as documentation that we intentionally
     // have TS_UNSUPPORTED the same as or different from TYPESCRIPT
-    assertThat(FeatureSet.TS_UNSUPPORTED.versionForDebugging()).isEqualTo("ts_unsupported");
+    assertThat(FeatureSet.TS_UNSUPPORTED.versionForDebugging()).isEqualTo("ts");
   }
 
   @Test

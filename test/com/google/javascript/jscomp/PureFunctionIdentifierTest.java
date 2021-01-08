@@ -2951,6 +2951,12 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         });
   }
 
+  @Test
+  public void testDynamicImport() {
+    assertNoPureCalls("import('./module.js')");
+    assertNoPureCalls("function doImport() { import('./module.js'); } doImport();");
+  }
+
   void assertCallableExpressionPure(boolean purity, String expression) {
     expression = "(" + expression + ")";
     String directInvocation = expression + "()";

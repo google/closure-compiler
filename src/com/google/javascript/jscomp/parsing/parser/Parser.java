@@ -1104,6 +1104,7 @@ public class Parser {
       case MINUS:
       case TILDE:
       case BANG:
+      case IMPORT:
         return true;
       default:
         return false;

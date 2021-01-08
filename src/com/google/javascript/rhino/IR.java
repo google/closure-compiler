@@ -855,6 +855,7 @@ public class IR {
       case DEC:
       case DELPROP:
       case DIV:
+      case DYNAMIC_IMPORT:
       case EQ:
       case EXPONENT:
       case FALSE:
