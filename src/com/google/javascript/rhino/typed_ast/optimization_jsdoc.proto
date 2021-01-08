@@ -25,4 +25,10 @@ enum JsdocTag {
   // Used by DevirtualizeMethods and CollapseProperties
   JSDOC_CONSTRUCTOR = 8;
   JSDOC_INTERFACE = 9;
+
+  // Used by CollapseProperties
+  JSDOC_ENUM = 10;
+  JSDOC_NO_COLLAPSE = 11;
+  JSDOC_THIS = 12;
+  JSDOC_CONST = 13;
 }

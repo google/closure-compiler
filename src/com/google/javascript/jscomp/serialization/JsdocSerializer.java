@@ -55,8 +55,20 @@ public final class JsdocSerializer {
     if (jsdoc.isNoInline()) {
       builder.addKind(JsdocTag.JSDOC_NO_INLINE);
     }
+    if (jsdoc.isNoCollapse()) {
+      builder.addKind(JsdocTag.JSDOC_NO_COLLAPSE);
+    }
+    if (jsdoc.hasThisType()) {
+      builder.addKind(JsdocTag.JSDOC_THIS);
+    }
+    if (jsdoc.hasEnumParameterType()) {
+      builder.addKind(JsdocTag.JSDOC_ENUM);
+    }
     if (jsdoc.isDefine()) {
       builder.addKind(JsdocTag.JSDOC_DEFINE);
+    }
+    if (jsdoc.hasConstAnnotation()) {
+      builder.addKind(JsdocTag.JSDOC_CONST);
     }
 
     // Used by PureFunctionIdentifier
@@ -113,6 +125,18 @@ public final class JsdocSerializer {
     TreeSet<String> modifies = new TreeSet<>();
     for (JsdocTag tag : serializedJsdoc.getKindList()) {
       switch (tag) {
+        case JSDOC_CONST:
+          builder.recordConstancy();
+          continue;
+        case JSDOC_ENUM:
+          builder.recordEnumParameterType(createUnknown());
+          continue;
+        case JSDOC_THIS:
+          builder.recordThisType(createUnknown());
+          continue;
+        case JSDOC_NO_COLLAPSE:
+          builder.recordNoCollapse();
+          continue;
         case JSDOC_NO_INLINE:
           builder.recordNoInline();
           continue;
