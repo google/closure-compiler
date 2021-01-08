@@ -32,7 +32,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -417,7 +416,7 @@ class CollapseProperties implements CompilerPass {
     //     string c
     // AFTER:
     //   name a$b$c
-    Node ref = NodeUtil.newName(compiler, alias, n, originalName);
+    Node ref = NodeUtil.newName(compiler, alias, n, originalName).copyTypeFrom(n);
     NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
     if (NodeUtil.isNormalOrOptChainCall(parent) && n == parent.getFirstChild()) {
       // The node was a call target. We are deliberately flattening these as
@@ -425,10 +424,6 @@ class CollapseProperties implements CompilerPass {
       parent.putBooleanProp(Node.FREE_CALL, true);
     }
 
-    JSType type = n.getJSType();
-    if (type != null) {
-      ref.setJSType(type);
-    }
 
     parent.replaceChild(n, ref);
     compiler.reportChangeToEnclosingScope(ref);
