@@ -80,21 +80,4 @@ testSuite({
     const /** ? */ x = Symbol;
     assertThrows(() => new x());
   },
-
-  testSymbolIds() {
-    var isSymbolNative =
-        typeof Symbol === 'function' && typeof Symbol('x') === 'symbol';
-    if (!isSymbolNative) {
-      assertContains('jscomp_symbol_', s1.toString());
-      assertContains('jscomp_symbol_', s2.toString());
-      assertNotEquals(s1.toString(), s2.toString());
-      assertNotEquals(s1, s2);
-    } else {
-      // not polyfilled
-      assertEquals('Symbol(example)', s1.toString());
-      assertEquals('Symbol(example)', s2.toString());
-      assertEquals(s1.toString(), s2.toString());
-      assertNotEquals(s1, s2);
-    }
-  },
 });

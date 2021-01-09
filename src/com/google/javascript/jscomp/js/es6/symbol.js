@@ -59,16 +59,9 @@ $jscomp.polyfill('Symbol', function(orig) {
   };
 
 
-  /**
-   * Identifier for this compiled binary.
-   * @const {number}
-   */
-  var BIN_ID = (Math.random() * 1e9) >>> 0;
-
   /** @const {string} */
-  var SYMBOL_PREFIX = 'jscomp_symbol_' + BIN_ID + '_';
+  var SYMBOL_PREFIX = 'jscomp_symbol_';
 
-  /** @type {number} */
   var counter = 0;
 
   /**
@@ -82,7 +75,7 @@ $jscomp.polyfill('Symbol', function(orig) {
       throw new TypeError('Symbol is not a constructor');
     }
     return (new SymbolClass(
-        SYMBOL_PREFIX + (opt_description || '') + '_' + counter++,
+        SYMBOL_PREFIX + (opt_description || '') + '_' + (counter++),
         opt_description));
   };
 

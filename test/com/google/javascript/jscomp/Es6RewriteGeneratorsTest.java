@@ -33,13 +33,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   public Es6RewriteGeneratorsTest() {
     super(
-        new TestExternsBuilder()
-            .addAsyncIterable()
-            .addArray()
-            .addArguments()
-            .addObject()
-            .addMath()
-            .build());
+        new TestExternsBuilder().addAsyncIterable().addArray().addArguments().addObject().build());
   }
 
   @Override
