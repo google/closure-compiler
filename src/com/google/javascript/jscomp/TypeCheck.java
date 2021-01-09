@@ -35,6 +35,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -508,31 +509,26 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         this.subtypingMode = SubtypingMode.NORMAL;
       }
       this.validator.setSubtypingMode(this.subtypingMode);
-    }
-    switch (n.getToken()) {
-      case FUNCTION:
-        // normal type checking
-        final TypedScope outerScope = t.getTypedScope();
-        // Check for a bug in IE9 (quirks mode) and earlier where bleeding function names would
-        // refer to the wrong variable (i.e. "var x; var y = function x() { use(x); }" would pass
-        // the 'x' from the outer scope, rather than the local alias bled into the function).
-        final TypedVar var = outerScope.getVar(n.getFirstChild().getString());
-        if (var != null
-            && var.getScope().hasSameContainerScope(outerScope)
-            // Ideally, we would want to check whether the type in the scope
-            // differs from the type being defined, but then the extern
-            // redeclarations of built-in types generates spurious warnings.
-            && !(var.getType() instanceof FunctionType)
-            && !TypeValidator.hasDuplicateDeclarationSuppression(compiler, var.getNameNode())) {
-          report(n, FUNCTION_MASKS_VARIABLE, var.getName());
-        }
+    } else if (n.isFunction()) {
+      // normal type checking
+      final TypedScope outerScope = t.getTypedScope();
+      // Check for a bug in IE9 (quirks mode) and earlier where bleeding function names would
+      // refer to the wrong variable (i.e. "var x; var y = function x() { use(x); }" would pass
+      // the 'x' from the outer scope, rather than the local alias bled into the function).
+      final TypedVar var = outerScope.getVar(n.getFirstChild().getString());
+      if (var != null
+          && var.getScope().hasSameContainerScope(outerScope)
+          // Ideally, we would want to check whether the type in the scope
+          // differs from the type being defined, but then the extern
+          // redeclarations of built-in types generates spurious warnings.
+          && !(var.getType() instanceof FunctionType)
+          && !TypeValidator.hasDuplicateDeclarationSuppression(compiler, var.getNameNode())) {
+        report(n, FUNCTION_MASKS_VARIABLE, var.getName());
+      }
 
-        // TODO(user): Only traverse the function's body. The function's
-        // name and arguments are traversed by the scope creator, and ideally
-        // should not be traversed by the type checker.
-        break;
-      default:
-        break;
+      // TODO(user): Only traverse the function's body. The function's
+      // name and arguments are traversed by the scope creator, and ideally
+      // should not be traversed by the type checker.
     }
     return true;
   }
@@ -2591,11 +2587,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     List<FunctionType> loopPath = functionType.checkExtendsLoop();
     if (loopPath != null) {
-      String strPath = "";
-      for (int i = 0; i < loopPath.size() - 1; i++) {
-        strPath += loopPath.get(i).getDisplayName() + " -> ";
-      }
-      strPath += Iterables.getLast(loopPath).getDisplayName();
+      String strPath = loopPath.stream().map(FunctionType::getDisplayName).collect(joining(" -> "));
       compiler.report(
           JSError.make(n, INTERFACE_EXTENDS_LOOP, loopPath.get(0).getDisplayName(), strPath));
     }
