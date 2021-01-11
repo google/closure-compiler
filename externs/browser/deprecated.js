@@ -34,14 +34,14 @@ function XSLTProcessor() {}
  * @return {undefined}
  * @deprecated
  */
-XSLTProcessor.importStylesheet = function(styleSheet) {};
+XSLTProcessor.prototype.importStylesheet = function(styleSheet) {};
 
 /**
  * @param {Node} source
  * @return {Document}
  * @deprecated
  */
-XSLTProcessor.transformToDocument = function(source) {};
+XSLTProcessor.prototype.transformToDocument = function(source) {};
 
 // The "methods" object is a place to hang arbitrary external
 // properties. It is a throwback to pre-typed days, and should
