@@ -381,10 +381,7 @@ public class DiagnosticGroups {
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   public static final DiagnosticGroup TYPE_INVALIDATION =
-      DiagnosticGroups.registerGroup(
-          "typeInvalidation",
-          PropertyRenamingDiagnostics.INVALIDATION,
-          PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE);
+      DiagnosticGroups.registerGroup("typeInvalidation", PropertyRenamingDiagnostics.INVALIDATION);
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",

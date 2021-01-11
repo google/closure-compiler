@@ -27,11 +27,6 @@ public final class PropertyRenamingDiagnostics {
               + " invalidating due to mismatches or structural matches at the following locations:"
               + "\n{2}");
 
-  public static final DiagnosticType INVALIDATION_ON_TYPE =
-      DiagnosticType.disabled(
-          "JSC_INVALIDATION_TYPE",
-          "Property disambiguator skipping instances of property {0} on type {1}. {2}");
-
   // TODO(tbreisacher): Check this in a separate pass, so that users get the error even if
   // optimizations are not running.
   public static final DiagnosticType INVALID_RENAME_FUNCTION =

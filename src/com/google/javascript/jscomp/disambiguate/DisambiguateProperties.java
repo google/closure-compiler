@@ -740,7 +740,6 @@ public class DisambiguateProperties implements CompilerPass {
     int instancesSkipped = 0;
     int singleTypeProps = 0;
 
-    Set<String> reported = new HashSet<>();
     for (Property prop : properties.values()) {
       if (!prop.wouldBeDisambiguatedByRenaming()) {
         if (!prop.isValidForRenaming) {
@@ -768,24 +767,8 @@ public class DisambiguateProperties implements CompilerPass {
           node.setString(newName);
           compiler.reportChangeToEnclosingScope(node);
           ++instancesRenamed;
-          continue;
-        }
-
-        ++instancesSkipped;
-
-        CheckLevel checkLevelForProp = propertiesToErrorFor.getOrDefault(prop.name, CheckLevel.OFF);
-        if (!prop.isValidForRenaming
-            && checkLevelForProp != CheckLevel.OFF
-            && !reported.contains(prop.name)) {
-          reported.add(prop.name);
-          compiler.report(
-              JSError.make(
-                  node,
-                  checkLevelForProp,
-                  PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE,
-                  prop.name,
-                  rootType.toString(),
-                  ""));
+        } else {
+          ++instancesSkipped;
         }
       }
     }

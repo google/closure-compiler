@@ -920,8 +920,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
         ImmutableSet.of(
             PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-            PropertyRenamingDiagnostics.INVALIDATION,
-            PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE);
+            PropertyRenamingDiagnostics.INVALIDATION);
 
     @Override
     protected int getPriority() {
