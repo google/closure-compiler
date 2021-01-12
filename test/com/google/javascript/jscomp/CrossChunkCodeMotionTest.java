@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
-import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,46 +61,6 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
       pure.process(externs, root);
       cross.process(externs, root);
     };
-  }
-
-  @Test
-  public void testPureFunctionCallMovement() {
-    JSModule[] modules =
-        JSChunkGraphBuilder.forChain()
-            // m1
-            .addChunk("function f1(a) { return a + 1 } var b = f1(1)")
-            // m2
-            .addChunk("var c = b")
-            .build();
-
-    test(
-        modules,
-        new String[]{
-            // m1
-            "",
-            // m2
-            "function f1(a) { return a + 1 } var b = f1(1); var c = b",
-        });
-  }
-
-  @Test
-  public void testUsedPureFunctionCallMovement() {
-    JSModule[] modules =
-            JSChunkGraphBuilder.forChain()
-                    // m1
-                    .addChunk("function f1(a) { return a + 1 } var a = f1(2); var b = f1(1);")
-                    // m2
-                    .addChunk("var c = b")
-                    .build();
-
-    test(
-            modules,
-            new String[]{
-                    // m1
-                    "function f1(a) { return a + 1 } var a = f1(2)",
-                    // m2
-                    "var b = f1(1); var c = b",
-            });
   }
 
   @Test
@@ -375,6 +334,69 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
                     "{{while(a)function f3(){}}}"))
             .addChunk("var a = new f();f2();f3();")
             .build());
+  }
+
+  @Test
+  public void testPureFunctionCallMovement() {
+    // Test a pure function call will be moved.
+    JSModule[] modules =
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("function f1(a) { return a + 1 } var b = f1(1)")
+            // m2
+            .addChunk("var c = b")
+            .build();
+
+    test(
+        modules,
+        new String[]{
+            // m1
+            "",
+            // m2
+            "function f1(a) { return a + 1 } var b = f1(1); var c = b",
+        });
+  }
+
+  @Test
+  public void testUsedPureFunctionCallMovement() {
+    // Test a pure function used in the root module  call will be moved.
+    JSModule[] modules =
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("function f1(a) { return a + 1 } var a = f1(2); var b = f1(1);")
+            // m2
+            .addChunk("var c = b")
+            .build();
+
+    test(
+        modules,
+        new String[]{
+            // m1
+            "function f1(a) { return a + 1 } var a = f1(2)",
+            // m2
+            "var b = f1(1); var c = b",
+        });
+  }
+
+  @Test
+  public void testImPureFunctionCallMovement() {
+    // Test a function call with side effects is not moved.
+    JSModule[] modules =
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("function f1(a) { console.log('side effect'); return a + 1 } var b = f1(1)")
+            // m2
+            .addChunk("var c = b")
+            .build();
+
+    test(
+        modules,
+        new String[]{
+            // m1
+            "function f1(a) { console.log('side effect'); return a + 1 } var b = f1(1)",
+            // m2
+            "var c = b",
+        });
   }
 
   @Test

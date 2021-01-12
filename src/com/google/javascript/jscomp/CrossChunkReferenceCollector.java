@@ -16,21 +16,16 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+
 import javax.annotation.Nullable;
+import java.util.*;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /** Collects global variable references for use by {@link CrossChunkCodeMotion}. */
 public final class CrossChunkReferenceCollector implements ScopedCallback, CompilerPass {
@@ -350,11 +345,12 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         return true;
 
       case CALL:
+        // If the function has been marked as having no side effects then it is safe to move to another module.
         if (valueNode.getSideEffectFlags() == 0) {
           return true;
         }
 
-        // In general it is not safe to move function calls, but we carve out an exception
+        // In general it is not safe to move function calls with side effects, but we carve out an exception
         // for the special stub method calls used for CrossChunkMethodMotion.
         // Case: `JSCompiler_stubMethod(x)`
         Node functionName = checkNotNull(valueNode.getFirstChild());
