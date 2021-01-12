@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.instrumentation.reporter;
 
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
@@ -114,9 +115,7 @@ final class ProfilingReport {
               String.valueOf(entry.getValue().numberOfReports)));
     }
 
-    return output.stream()
-        .map((row) -> row.stream().collect(Collectors.joining("\t")))
-        .collect(Collectors.joining("\n"));
+    return output.stream().map((row) -> row.stream().collect(joining("\t"))).collect(joining("\n"));
   }
 
   /** Metrics collected for particular InstrumentationPoint across all reports. */
