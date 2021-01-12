@@ -351,7 +351,7 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
 
       case CALL:
         // If the function has been marked as having no side effects then it is safe to move to another module.
-        if (valueNode.getSideEffectFlags() == 0) {
+        if (valueNode.isNoSideEffectsCall()) {
           return true;
         }
 
