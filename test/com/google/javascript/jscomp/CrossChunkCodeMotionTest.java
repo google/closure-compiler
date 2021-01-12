@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
+import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,8 +53,55 @@ public final class CrossChunkCodeMotionTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CrossChunkCodeMotion(
+    CompilerPass pure = new PureFunctionIdentifier.Driver(compiler);
+    CompilerPass cross = new CrossChunkCodeMotion(
         compiler, compiler.getModuleGraph(), parentModuleCanSeeSymbolsDeclaredInChildren);
+    compiler.setLifeCycleStage(AbstractCompiler.LifeCycleStage.NORMALIZED);
+
+    return (externs, root) -> {
+      pure.process(externs, root);
+      cross.process(externs, root);
+    };
+  }
+
+  @Test
+  public void testPureFunctionCallMovement() {
+    JSModule[] modules =
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk("function f1(a) { return a + 1 } var b = f1(1)")
+            // m2
+            .addChunk("var c = b")
+            .build();
+
+    test(
+        modules,
+        new String[]{
+            // m1
+            "",
+            // m2
+            "function f1(a) { return a + 1 } var b = f1(1); var c = b",
+        });
+  }
+
+  @Test
+  public void testUsedPureFunctionCallMovement() {
+    JSModule[] modules =
+            JSChunkGraphBuilder.forChain()
+                    // m1
+                    .addChunk("function f1(a) { return a + 1 } var a = f1(2); var b = f1(1);")
+                    // m2
+                    .addChunk("var c = b")
+                    .build();
+
+    test(
+            modules,
+            new String[]{
+                    // m1
+                    "function f1(a) { return a + 1 } var a = f1(2)",
+                    // m2
+                    "var b = f1(1); var c = b",
+            });
   }
 
   @Test

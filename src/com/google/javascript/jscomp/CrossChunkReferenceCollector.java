@@ -350,6 +350,10 @@ public final class CrossChunkReferenceCollector implements ScopedCallback, Compi
         return true;
 
       case CALL:
+        if (valueNode.getSideEffectFlags() == 0) {
+          return true;
+        }
+
         // In general it is not safe to move function calls, but we carve out an exception
         // for the special stub method calls used for CrossChunkMethodMotion.
         // Case: `JSCompiler_stubMethod(x)`
