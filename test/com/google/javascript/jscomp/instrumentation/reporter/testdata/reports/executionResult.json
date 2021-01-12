@@ -1,23 +1,9 @@
 {
-   "I":{
-      "frequency":1
-   },
-   "G":{
-      "frequency":9
-   },
-   "E":{
-      "frequency":4
-   },
-   "C":{
-      "frequency":5
-   },
-   "gB":{
-      "frequency":1
-   },
-   "W":{
-      "frequency":1
-   },
-   "S":{
-      "frequency":1
-   }
+   "I":1,
+   "G":9,
+   "E":4,
+   "C":5,
+   "gB":1,
+   "W":1,
+   "S":1
 }
