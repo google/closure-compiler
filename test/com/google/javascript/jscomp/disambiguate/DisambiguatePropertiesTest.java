@@ -1801,22 +1801,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "",
         "function f(/** I */ i) { return i.x; }");
 
-    // In this case, I.prototype.x and Bar.prototype.x could be the
-    // same property since Bar <: I (under structural interface matching).
-    // If there is no code that uses a Bar as an I, however, then we
-    // will consider the two types distinct and disambiguate the properties
-    // with different names.
-
-    String output = lines(
-        "/** @record */",
-        "function I(){}/** @type {number} */I.prototype.Foo_prototype$x;",
-        "/** @constructor @implements {I} */",
-        "function Foo(){}/** @type {number} */Foo.prototype.Foo_prototype$x;",
-        "/** @constructor */",
-        "function Bar(){}/** @type {number} */Bar.prototype.Bar_prototype$x;",
-        "function f(/** I */ i){return i.Foo_prototype$x}");
-
-    testSets(js, output, "{x=[[Bar.prototype], [Foo.prototype, I.prototype]]}");
+    testSets(js, js, "{}");
   }
 
   @Test
@@ -2057,7 +2042,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "/** @param {Foo|Bar} i */",
         "function f(i) { return i.x; }");
 
-    testSets(js, js, "{x=[[Bar.prototype, Foo.prototype, I.prototype]]}");
+    testSets(js, js, "{}");
   }
 
   @Test
@@ -2102,7 +2087,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "function f(i) { return i.x; }",
         "f(new Bar());");
 
-    testSets(js, js, "{x=[[Bar.prototype, Foo.prototype, I.prototype]]}");
+    testSets(js, js, "{}");
   }
 
   @Test
@@ -2126,17 +2111,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "/** @param {Foo|I} i */",
         "function f(i) { return i.x; }");
 
-    String output = lines(
-        "/** @record */",
-        "function I(){}/** @type {number} */I.prototype.Foo_prototype$x;",
-        "/** @constructor @implements {I} */",
-        "function Foo(){}/** @type {number} */Foo.prototype.Foo_prototype$x;",
-        "/** @constructor */",
-        "function Bar(){}/** @type {number} */Bar.prototype.Bar_prototype$x;",
-        "/** @param {Foo|I} i */",
-        "function f(i){return i.Foo_prototype$x}");
-
-    testSets(js, output, "{x=[[Bar.prototype], [Foo.prototype, I.prototype]]}");
+    testSets(js, js, "{}");
   }
 
   @Test
@@ -2159,48 +2134,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         "",
         "function f(/** Bar */ i) { return i.x; }");
 
-    String output =
-        lines(
-            "/** @record */",
-            "function I(){}",
-            "/** @type {number} */",
-            "I.prototype.Foo_prototype$x;",
-            "/** @constructor @implements {I} */",
-            "function Foo(){}",
-            "/** @type {number} */",
-            "Foo.prototype.Foo_prototype$x;",
-            "/** @constructor */",
-            "function Bar(){}",
-            "/** @type {number} */",
-            "Bar.prototype.Bar_prototype$x;",
-            "function f(/** Bar */ i){return i.Bar_prototype$x}");
-
-    testSets(js, output, "{x=[[Bar.prototype], [Foo.prototype, I.prototype]]}");
-  }
-
-  @Test
-  public void testStructuralTyping_typeConflationIsRecordedThroughTemplateTypes() {
-    testSets(
-        lines(
-            "/** @record */",
-            "class Record {",
-            "  /** @return {string} */",
-            "  bar() {}",
-            "}",
-            "",
-            "class Concrete {",
-            "  /** @return {string} */",
-            "  bar() { return ''; }",
-            "}",
-            "",
-            "/**",
-            " * @param {!Array<!Concrete>} concretes",
-            " * @return {!Array<!Record>}",
-            " */",
-            "function conflate(concretes) { return concretes; }"),
-        // TODO(b/124766232): The correct disambiguation sets would be:
-        // "{bar=[[Concrete.prototype, Record.prototype]]}"
-        "{bar=[[Concrete.prototype], [Record.prototype]]}");
+    testSets(js, js, "{}");
   }
 
   /**
@@ -3817,7 +3751,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             // "prop". See b/128355893#comment3
             "const {.../** !Bar */ bar} = new Foo();",
             "alert(bar.prop);"),
-        "{prop=[[Bar], [Foo]]}",
+        "{}",
         DiagnosticGroups.CHECK_TYPES);
   }
 
@@ -3853,7 +3787,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  const {.../** !Bar */ bar} = f;",
             "  alert(bar.prop);",
             "}"),
-        "{prop=[[Bar], [Foo]], uniqueProp=[[Foo]]}");
+        "{}");
   }
 
   @Test
@@ -3905,7 +3839,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             // "prop". See b/128355893#comment3
             "const /** !Bar */ bar = {...new Foo()};",
             "alert(bar.prop);"),
-        "{prop=[[Bar], [Foo]]}");
+        "{}");
   }
 
   @Test
@@ -3939,7 +3873,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
             "  const /** !Bar */ bar = {...f};",
             "  alert(bar.prop);",
             "}"),
-        "{prop=[[Bar], [Foo]], uniqueProp=[[Foo]]}",
+        "{}",
         DiagnosticGroups.CHECK_TYPES);
   }
 

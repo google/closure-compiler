@@ -234,15 +234,6 @@ class TypeValidator implements Serializable {
     this.subtypingMode = mode;
   }
 
-  /**
-   * all uses of implicitly implemented interfaces,
-   * captured during type validation and type checking
-   * (uses of explicitly @implemented structural interfaces are excluded)
-   */
-  public Iterable<TypeMismatch> getImplicitInterfaceUses() {
-    return this.mismatches.getImplicitInterfaceUses();
-  }
-
   // All non-private methods should have the form:
   // expectCondition(Node n, ...);
   // If there is a mismatch, the {@code expect} method should issue
@@ -667,9 +658,6 @@ class TypeValidator implements Serializable {
           rightType,
           leftType);
       return false;
-    } else if (!leftType.isNoType() && !rightType.isSubtypeWithoutStructuralTyping(leftType)){
-      this.mismatches.recordImplicitInterfaceUses(n, rightType, leftType);
-      this.mismatches.recordImplicitUseOfNativeObject(n, rightType, leftType);
     }
     return true;
   }
@@ -703,9 +691,6 @@ class TypeValidator implements Serializable {
     if (!rightType.isSubtypeOf(leftType)) {
       mismatch(n, msg, rightType, leftType);
       return false;
-    } else if (!rightType.isSubtypeWithoutStructuralTyping(leftType)) {
-      this.mismatches.recordImplicitInterfaceUses(n, rightType, leftType);
-      this.mismatches.recordImplicitUseOfNativeObject(n, rightType, leftType);
     }
     return true;
   }
@@ -729,9 +714,6 @@ class TypeValidator implements Serializable {
               ordinal, typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
           argType,
           paramType);
-    } else if (!argType.isSubtypeWithoutStructuralTyping(paramType)){
-      this.mismatches.recordImplicitInterfaceUses(n, argType, paramType);
-      this.mismatches.recordImplicitUseOfNativeObject(n, argType, paramType);
     }
   }
 
@@ -846,8 +828,10 @@ class TypeValidator implements Serializable {
           sourceType,
           targetType,
           JSError.make(n, INVALID_CAST, sourceType.toString(), targetType.toString()));
-    } else if (!sourceType.isSubtypeWithoutStructuralTyping(targetType)){
-      this.mismatches.recordImplicitInterfaceUses(n, sourceType, targetType);
+      // The "canCastTo" check is intentionally looser than the subtyping check, but we still want
+      // to record potential mismatches for disambiguation safety.
+    } else if (!sourceType.isSubtypeOf(targetType)) {
+      this.mismatches.registerMismatch(n, sourceType, targetType);
     }
   }
 

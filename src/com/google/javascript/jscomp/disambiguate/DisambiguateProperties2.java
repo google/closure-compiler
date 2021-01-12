@@ -73,7 +73,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
     this.mismatches =
         ImmutableSet.<TypeMismatch>builder()
             .addAll(compiler.getTypeMismatches())
-            .addAll(compiler.getImplicitInterfaceUses())
             .build();
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry).addAllTypeMismatches(this.mismatches).build();

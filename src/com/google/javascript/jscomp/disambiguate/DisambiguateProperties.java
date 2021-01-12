@@ -381,7 +381,6 @@ public class DisambiguateProperties implements CompilerPass {
         new InvalidatingTypes.Builder(registry)
             .writeInvalidationsInto(this.invalidationMap)
             .addAllTypeMismatches(compiler.getTypeMismatches())
-            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
             .build();
   }
 
@@ -454,10 +453,7 @@ public class DisambiguateProperties implements CompilerPass {
      * @param ownerType The type of the object the property is on (e.g. `ns.a` for `ns.a.MyType;`)
      */
     private void processExternsProperty(Property prop, JSType ownerType) {
-      if (invalidatingTypes.isInvalidating(ownerType)
-          // TODO(b/119886075): invalidating here when isStructuralInterfacePrototype is true is
-          // kind of arbitrary. We should only do it when the @record is implicitly implemented.
-          || isStructuralInterfacePrototype(ownerType)) {
+      if (invalidatingTypes.isInvalidating(ownerType)) {
         prop.invalidate();
       } else if (prop.isValidForRenaming) {
         prop.addTypeToSkip(ownerType);
@@ -984,14 +980,6 @@ public class DisambiguateProperties implements CompilerPass {
     representativeTypeCache.put(
         field, type, foundType == null ? representativeTypeSentinel : foundType);
     return foundType;
-  }
-
-  private static boolean isStructuralInterfacePrototype(JSType type) {
-    if (!type.isFunctionPrototypeType()) {
-      return false;
-    }
-    FunctionType constructor = type.toObjectType().getOwnerFunction();
-    return constructor != null && constructor.isStructuralInterface();
   }
 
   /**

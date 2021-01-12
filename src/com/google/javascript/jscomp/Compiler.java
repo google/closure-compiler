@@ -1587,14 +1587,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     throw new RuntimeException("Can't ask for type mismatches before type checking.");
   }
 
-  @Override
-  public Iterable<TypeMismatch> getImplicitInterfaceUses() {
-    if (this.typeCheckingHasRun) {
-      return getTypeValidator().getImplicitInterfaceUses();
-    }
-    throw new RuntimeException("Can't ask for type mismatches before type checking.");
-  }
-
   public void maybeSetTracker() {
     if (!options.getTracerMode().isOn()) {
       return;

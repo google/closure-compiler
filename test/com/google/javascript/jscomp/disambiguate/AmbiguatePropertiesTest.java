@@ -1062,7 +1062,24 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "  this.classProp = 'a';",
         "}",
         "f(new Type)");
-    testSame(js);
+
+    String expected =
+        lines(
+            "/** @record */",
+            "function Record() {}",
+            "/** @type {number|undefined} */",
+            "Record.prototype.recordProp;",
+            "",
+            "function f(/** !Record */ a) { use(a.recordProp); }",
+            "",
+            "/** @constructor */",
+            "function Type() {",
+            "  /** @const */",
+            "  this.a = 'a';",
+            "}",
+            "f(new Type)");
+
+    test(js, expected);
   }
 
   @Test
