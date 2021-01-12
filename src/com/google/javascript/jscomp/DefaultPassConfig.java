@@ -653,6 +653,7 @@ public final class DefaultPassConfig extends PassConfig {
       } else {
         passes.add(disambiguateProperties);
       }
+      passes.add(gatherGettersAndSetters);
     }
 
     if (options.checkTypes || options.inferTypes) {

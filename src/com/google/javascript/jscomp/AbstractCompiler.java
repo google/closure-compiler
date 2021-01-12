@@ -600,7 +600,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract AccessorSummary getAccessorSummary();
 
   /** Sets the summary of properties with getters and setters. */
-  abstract void setAccessorSummary(AccessorSummary summary);
+  public abstract void setAccessorSummary(AccessorSummary summary);
 
   /**
    * Returns all the comments from the given file.

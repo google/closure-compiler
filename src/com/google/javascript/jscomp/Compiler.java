@@ -3297,7 +3297,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void setAccessorSummary(AccessorSummary summary) {
+  public void setAccessorSummary(AccessorSummary summary) {
     this.accessorSummary = summary;
   }
 

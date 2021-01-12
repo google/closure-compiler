@@ -143,6 +143,9 @@ public final class DisambiguateProperties2 implements CompilerPass {
             this.mismatches.stream()
                 .map((m) -> new TypeMismatchJson(m, flattener))
                 .collect(toImmutableSortedSet(naturalOrder())));
+
+    // Signal that getter/setter info is stale
+    this.compiler.setAccessorSummary(null);
   }
 
   private static ImmutableMap<String, Object> buildRenamingIndex(

@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DestructuredTarget;
-import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -395,9 +394,8 @@ public class DisambiguateProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new FindRenamableProperties());
     // Do the actual renaming.
     renameProperties();
-    // Update any getters and setters we renamed.
-    // TODO(b/161947315): this shouldn't be the responsibility of DisambiguateProperties
-    GatherGetterAndSetterProperties.update(compiler, externs, root);
+    // Signal that getter/setter info is stale
+    this.compiler.setAccessorSummary(null);
   }
 
   /** Returns the property for the given name, creating it if necessary. */
