@@ -124,7 +124,6 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NonJSDocComment;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -226,7 +225,7 @@ class IRFactory {
 
   // @license text gets appended onto the fileLevelJsDocBuilder as found,
   // and stored in JSDocInfo for placeholder node.
-  JSDocInfoBuilder fileLevelJsDocBuilder;
+  JSDocInfo.Builder fileLevelJsDocBuilder;
   JSDocInfo fileOverviewInfo = null;
 
   // Use a template node for properties set on all nodes to minimize the
@@ -538,7 +537,7 @@ class IRFactory {
     if (fileOverviewInfo != null) {
       if ((irNode.getJSDocInfo() != null) &&
           (irNode.getJSDocInfo().getLicense() != null)) {
-        JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(fileOverviewInfo);
+        JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(fileOverviewInfo);
         builder.recordLicense(irNode.getJSDocInfo().getLicense());
         fileOverviewInfo = builder.build();
       }

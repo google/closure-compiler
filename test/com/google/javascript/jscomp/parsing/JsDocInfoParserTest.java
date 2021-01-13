@@ -36,7 +36,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
@@ -67,7 +66,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Set<String> extraAnnotations;
   private Set<String> extraSuppressions;
   private Set<String> extraPrimitives;
-  private JSDocInfoBuilder fileLevelJsDocBuilder = null;
+  private JSDocInfo.Builder fileLevelJsDocBuilder = null;
 
   private static final String MISSING_TYPE_DECL_WARNING_TEXT =
       "Missing type declaration.";

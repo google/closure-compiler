@@ -53,7 +53,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Outcome;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.NamedType.ResolutionKind;
@@ -6162,7 +6161,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testGetAndSetJSDocInfoWithNamedType() {
-    JSDocInfoBuilder builder = JSDocInfo.builder();
+    JSDocInfo.Builder builder = JSDocInfo.builder();
     builder.recordDeprecated();
     JSDocInfo info = builder.build();
 
@@ -6179,7 +6178,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(null, registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(null, sup);
 
-    JSDocInfoBuilder builder = JSDocInfo.builder();
+    JSDocInfo.Builder builder = JSDocInfo.builder();
     builder.recordDeprecated();
     JSDocInfo deprecated = builder.build();
 
@@ -6203,7 +6202,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   @Test
   public void testGetAndSetJSDocInfoWithNoType() {
-    JSDocInfoBuilder builder = JSDocInfo.builder();
+    JSDocInfo.Builder builder = JSDocInfo.builder();
     builder.recordDeprecated();
     JSDocInfo deprecated = builder.build();
 

@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -39,7 +38,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class JSDocInfoPrinterTest {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
-  private JSDocInfoBuilder builder;
+  private JSDocInfo.Builder builder;
   private JSDocInfoPrinter jsDocInfoPrinter;
 
   @Before

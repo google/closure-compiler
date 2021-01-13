@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.serialization.ColorDeserializer.InvalidSerializedFormatException;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -135,7 +134,7 @@ public final class JsdocSerializer {
     if (serializedJsdoc == null) {
       return null;
     }
-    JSDocInfoBuilder builder = JSDocInfo.builder();
+    JSDocInfo.Builder builder = JSDocInfo.builder();
     String license = serializedJsdoc.getLicenseText();
     if (!license.isEmpty()) {
       builder.addLicense(license);
