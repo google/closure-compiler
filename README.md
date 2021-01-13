@@ -139,7 +139,7 @@ the inputs automatically.
     Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
 1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
 
-## Building
+## Building the Compiler
 
 To build the compiler yourself, you will need the following:
 
@@ -240,7 +240,7 @@ community a healthy and welcoming place.
     detail so that the bug can be recreated. The smaller the reproduction code,
     the better.
 
-### Suggesting a Feature
+### Suggesting a feature
 
 1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ) to
     make sure that the behaviour you would like isn't specifically excluded
