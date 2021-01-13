@@ -88,7 +88,6 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
-    onlyValidateNoNewGettersAndSetters();
     keepLocals = true;
     keepGlobals = false;
   }

@@ -162,6 +162,7 @@ public final class DefaultPassConfig extends PassConfig {
           // nothing
           break;
       }
+      passes.add(gatherGettersAndSetters);
     }
 
     passes.add(checkSuper);
@@ -213,6 +214,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       checks.add(rewriteGoogJsImports);
       TranspilationPasses.addEs6ModulePass(checks, preprocessorSymbolTableFactory);
+      checks.add(gatherGettersAndSetters);
     }
 
     if (options.closurePass) {
@@ -549,6 +551,7 @@ public final class DefaultPassConfig extends PassConfig {
         || !options.stripNameSuffixes.isEmpty()
         || !options.stripNamePrefixes.isEmpty()) {
       passes.add(stripCode);
+      passes.add(gatherGettersAndSetters);
     }
 
     passes.add(normalize);
@@ -607,6 +610,7 @@ public final class DefaultPassConfig extends PassConfig {
         && options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
       // Relies on collapseProperties-triggered aggressive alias inlining.
       passes.add(j2clPropertyInlinerPass);
+      passes.add(gatherGettersAndSetters);
     }
 
     // Collapsing properties can undo constant inlining, so we do this before
@@ -783,10 +787,12 @@ public final class DefaultPassConfig extends PassConfig {
         && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED
         && options.isTypecheckingEnabled()) {
       passes.add(ambiguateProperties);
+      passes.add(gatherGettersAndSetters);
     }
 
     if (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.add(renameProperties);
+      passes.add(gatherGettersAndSetters);
     }
 
     // Reserve global names added to the "windows" object.

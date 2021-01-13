@@ -111,7 +111,6 @@ public final class RemoveUnusedCodeNameAnalyzerTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
-    onlyValidateNoNewGettersAndSetters();
   }
 
   @Test

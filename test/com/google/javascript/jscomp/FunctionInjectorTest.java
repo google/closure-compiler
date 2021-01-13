@@ -1933,6 +1933,7 @@ public final class FunctionInjectorTest {
 
     Node mainRoot = tree;
     new Normalize(compiler, false).process(externsRoot, mainRoot);
+    GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
     new PureFunctionIdentifier.Driver(compiler).process(externsRoot, mainRoot);
 
     Normalize normalize = new Normalize(compiler, false);

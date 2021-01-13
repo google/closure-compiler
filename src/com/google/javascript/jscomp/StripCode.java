@@ -95,8 +95,8 @@ class StripCode implements CompilerPass {
     }
 
     NodeTraversal.traverse(compiler, root, new Strip());
-    // This pass may remove definitions of getter or setter properties
-    GatherGetterAndSetterProperties.update(compiler, externs, root);
+    // Signal that getter/setter info is stale
+    this.compiler.setAccessorSummary(null);
   }
 
   // -------------------------------------------------------------------------

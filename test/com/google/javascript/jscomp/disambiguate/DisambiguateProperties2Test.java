@@ -73,7 +73,6 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     this.enableTypeCheck();
-    this.disableGetterAndSetterUpdateValidation();
   }
 
   @Override
