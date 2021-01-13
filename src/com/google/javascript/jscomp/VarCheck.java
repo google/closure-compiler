@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
@@ -240,7 +240,7 @@ class VarCheck implements ScopedCallback, HotSwapCompilerPass {
         && varsToDeclareInExterns.contains(varName)) {
       createSynthesizedExternVar(varName);
 
-      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+      JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(n.getJSDocInfo());
       builder.addSuppression("duplicate");
       n.setJSDocInfo(builder.build());
     }

@@ -35,7 +35,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -191,7 +190,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       existingInfo = srcName.getJSDocInfo();
       srcName.setJSDocInfo(null);
     }
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(existingInfo);
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(existingInfo);
     destDeclaration.setJSDocInfo(builder.build());
   }
 
@@ -202,7 +201,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // TODO(lharker): Check if this condition is still necessary, since NTI is deleted
         && !(srcParent.isForIn() && srcDeclaration == srcParent.getFirstChild())) {
       extractInlineJSDoc(srcDeclaration, srcName, destDeclaration);
-      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(destDeclaration.getJSDocInfo());
+      JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(destDeclaration.getJSDocInfo());
       builder.recordConstancy();
       destDeclaration.setJSDocInfo(builder.build());
     }

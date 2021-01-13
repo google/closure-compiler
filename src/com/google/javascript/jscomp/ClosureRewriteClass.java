@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -591,9 +590,9 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     Node superNode = cls.superClass;
 
     // Start with a clone of the constructor info if there is one.
-    JSDocInfoBuilder mergedInfo =
+    JSDocInfo.Builder mergedInfo =
         cls.constructor.info != null
-            ? JSDocInfoBuilder.copyFrom(ctorInfo)
+            ? JSDocInfo.Builder.copyFrom(ctorInfo)
             : JSDocInfo.builder().parseDocumentation();
     // Optionally, remove @export from the cloned constructor info.
     // TODO(b/138324343): remove this case (or, even better, just delete goog.defineClass support).

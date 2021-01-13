@@ -26,7 +26,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayDeque;
@@ -124,7 +124,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
         n.removeProp(Node.IS_CONSTANT_NAME);
         Node jsDocInfoNode = NodeUtil.getBestJSDocInfoNode(n);
         if (jsDocInfoNode != null && jsDocInfoNode.getJSDocInfo() != null) {
-          JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(jsDocInfoNode.getJSDocInfo());
+          JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(jsDocInfoNode.getJSDocInfo());
           builder.recordMutable();
           jsDocInfoNode.setJSDocInfo(builder.build());
         }

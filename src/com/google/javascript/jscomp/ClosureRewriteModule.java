@@ -34,7 +34,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -1433,7 +1432,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         if (varScope.getDepth() == currentScope.getDepth()) {
           JSDocInfo info = v.getJSDocInfo();
           if (info != null && info.hasTypedefType()) {
-            JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(info);
+            JSDocInfo.Builder builder = JSDocInfo.Builder.copyFrom(info);
             target.setJSDocInfo(builder.build());
             return;
           }
@@ -1615,7 +1614,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private static void markConst(Node n) {
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(n.getJSDocInfo());
     builder.recordConstancy();
     n.setJSDocInfo(builder.build());
   }
@@ -1634,7 +1633,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private static void markConstAndCopyJsDoc(Node from, Node target) {
     JSDocInfo info = from.getJSDocInfo();
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(info);
     builder.recordConstancy();
     target.setJSDocInfo(builder.build());
   }
@@ -1819,7 +1818,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           if (nameParent.isConst()) {
             // When replacing `const name = ...;` with `some.prop = ...`, ensure that `some.prop`
             // is annotated @const.
-            JSDocInfoBuilder jsdocBuilder = JSDocInfoBuilder.maybeCopyFrom(jsdoc);
+            JSDocInfo.Builder jsdocBuilder = JSDocInfo.Builder.maybeCopyFrom(jsdoc);
             jsdocBuilder.recordConstancy();
             jsdoc = jsdocBuilder.build();
             assign.setJSDocInfo(jsdoc);

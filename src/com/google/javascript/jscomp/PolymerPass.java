@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -246,7 +245,7 @@ final class PolymerPass extends ExternsSkippingCallback implements HotSwapCompil
         new JSTypeExpression(
             new Node(Token.BANG, IR.string(elementType).srcrefTree(polymerElementExterns)),
             VIRTUAL_FILE);
-    JSDocInfoBuilder baseDocs = JSDocInfoBuilder.copyFrom(baseExterns.getJSDocInfo());
+    JSDocInfo.Builder baseDocs = JSDocInfo.Builder.copyFrom(baseExterns.getJSDocInfo());
     baseDocs.changeBaseType(elementBaseType);
     baseExterns.setJSDocInfo(baseDocs.build());
     block.addChildToBack(baseExterns);

@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -211,7 +210,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     }
 
     JSDocInfo classJSDoc = NodeUtil.getBestJSDocInfo(classNode);
-    JSDocInfoBuilder newInfo = JSDocInfoBuilder.maybeCopyFrom(classJSDoc);
+    JSDocInfo.Builder newInfo = JSDocInfo.Builder.maybeCopyFrom(classJSDoc);
     newInfo.recordConstructor();
 
     Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
@@ -381,7 +380,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
     builder.propertyKey(memberName);
 
-    JSDocInfoBuilder jsDoc = JSDocInfo.builder();
+    JSDocInfo.Builder jsDoc = JSDocInfo.builder();
     jsDoc.recordNoCollapse();
     builder.jsDocInfo(jsDoc.build());
     membersToDeclare.put(memberName, builder.build());
@@ -402,7 +401,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
 
     JSDocInfo info = member.getJSDocInfo();
     if (member.isStaticMember() && NodeUtil.referencesOwnReceiver(assign.getLastChild())) {
-      JSDocInfoBuilder memberDoc = JSDocInfoBuilder.maybeCopyFrom(info);
+      JSDocInfo.Builder memberDoc = JSDocInfo.Builder.maybeCopyFrom(info);
       // adding an @this type prevents a JSC_UNSAFE_THIS error later on.
       memberDoc.recordThisType(
           new JSTypeExpression(

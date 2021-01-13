@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -913,7 +912,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       Node initModule = IR.var(IR.name(moduleName), IR.objectlit());
       initModule.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
       initModule.getFirstChild().makeNonIndexable();
-      JSDocInfoBuilder builder = JSDocInfo.builder().parseDocumentation();
+      JSDocInfo.Builder builder = JSDocInfo.builder().parseDocumentation();
       builder.recordConstancy();
       initModule.setJSDocInfo(builder.build());
       if (directAssignments == 0 || (!exports.isEmpty() && !moduleExports.isEmpty())) {
@@ -1514,7 +1513,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         Node parent = root.getParent();
         Node exportName = IR.exprResult(IR.assign(updatedExport, rValue.detach()));
         if (exportIsConst) {
-          JSDocInfoBuilder info = JSDocInfo.builder();
+          JSDocInfo.Builder info = JSDocInfo.builder();
           info.recordConstancy();
           exportName.getFirstChild().setJSDocInfo(info.build());
         }
@@ -1542,8 +1541,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         // Other references to "module.exports" are just replaced with the module name.
         export.node.replaceWith(updatedExport);
         if (updatedExport.getParent().isAssign() && exportIsConst) {
-          JSDocInfoBuilder infoBuilder =
-              JSDocInfoBuilder.maybeCopyFrom(updatedExport.getParent().getJSDocInfo());
+          JSDocInfo.Builder infoBuilder =
+              JSDocInfo.Builder.maybeCopyFrom(updatedExport.getParent().getJSDocInfo());
           infoBuilder.recordConstancy();
           updatedExport.getParent().setJSDocInfo(infoBuilder.build());
         }
@@ -1746,7 +1745,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               expr =
                   IR.exprResult(IR.assign(newNameRef, IR.nullNode()))
                       .useSourceInfoIfMissingFromForTree(nameRef);
-              JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(parent.getJSDocInfo());
+              JSDocInfo.Builder info = JSDocInfo.Builder.maybeCopyFrom(parent.getJSDocInfo());
               parent.setJSDocInfo(null);
               if (qualifiedNameIsConst) {
                 info.recordConstancy();
@@ -1800,7 +1799,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               expr.getFirstChild().replaceChild(expr.getFirstFirstChild(), parent);
             } else {
               expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
-              JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(parent.getJSDocInfo());
+              JSDocInfo.Builder info = JSDocInfo.Builder.maybeCopyFrom(parent.getJSDocInfo());
               parent.setJSDocInfo(null);
               if (qualifiedNameIsConst) {
                 info.recordConstancy();
@@ -1845,7 +1844,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               assign.setJSDocInfo(info);
               Node expr = IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nameRef);
               parent.replaceWith(expr);
-              JSDocInfoBuilder infoBuilder = JSDocInfoBuilder.maybeCopyFrom(info);
+              JSDocInfo.Builder infoBuilder = JSDocInfo.Builder.maybeCopyFrom(info);
               parent.setJSDocInfo(null);
               if (qualifiedNameIsConst) {
                 infoBuilder.recordConstancy();

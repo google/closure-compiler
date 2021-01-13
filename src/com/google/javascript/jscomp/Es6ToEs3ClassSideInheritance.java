@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -220,7 +219,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
         continue;
       }
 
-      JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticMember.getJSDocInfo());
+      JSDocInfo.Builder info = JSDocInfo.Builder.maybeCopyFrom(staticMember.getJSDocInfo());
       Node function = staticMember.getLastChild();
       Node sourceInfoNode = function;
       if (function.isFunction()) {

@@ -20,7 +20,6 @@ import com.google.common.base.Ascii;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -193,7 +192,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     Node name = IR.name(PROTECTOR_FN);
     name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     Node var = IR.var(name);
-    JSDocInfoBuilder builder = JSDocInfo.builder();
+    JSDocInfo.Builder builder = JSDocInfo.builder();
     var.setJSDocInfo(builder.build());
     CompilerInput input = compiler.getSynthesizedExternsInput();
     Node root = input.getAstRoot(compiler);

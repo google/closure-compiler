@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -395,7 +394,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
             .useSourceInfoIfMissingFromForTree(objectPattern);
     // TODO(tbreisacher): Remove the "if" and add this JSDoc unconditionally.
     if (parent.isConst()) {
-      JSDocInfoBuilder jsDoc = JSDocInfo.builder();
+      JSDocInfo.Builder jsDoc = JSDocInfo.builder();
       jsDoc.recordConstancy();
       tempDecl.setJSDocInfo(jsDoc.build());
     }

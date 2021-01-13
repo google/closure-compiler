@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 
@@ -43,7 +42,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
       }
 
       // Add @nocollapse.
-      JSDocInfoBuilder newDocs = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+      JSDocInfo.Builder newDocs = JSDocInfo.Builder.maybeCopyFrom(n.getJSDocInfo());
       newDocs.recordNoCollapse();
       n.setJSDocInfo(newDocs.build());
 
@@ -109,8 +108,8 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
         continue;
       }
       Node defaultValueKey = defaultValue.getParent();
-      JSDocInfoBuilder suppressDoc =
-          JSDocInfoBuilder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
+      JSDocInfo.Builder suppressDoc =
+          JSDocInfo.Builder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
       suppressDoc.addSuppression("checkTypes");
       suppressDoc.addSuppression("globalThis");
       suppressDoc.addSuppression("visibility");
@@ -122,7 +121,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
     for (Node keyNode : behaviorValue.children()) {
       if (keyNode.getFirstChild().isFunction()) {
         keyNode.removeProp(Node.JSDOC_INFO_PROP);
-        JSDocInfoBuilder suppressDoc = JSDocInfo.builder().parseDocumentation();
+        JSDocInfo.Builder suppressDoc = JSDocInfo.builder().parseDocumentation();
         suppressDoc.addSuppression("checkTypes");
         suppressDoc.addSuppression("globalThis");
         suppressDoc.addSuppression("visibility");

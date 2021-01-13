@@ -43,7 +43,6 @@ import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
@@ -611,7 +610,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         astFactory.createSingleVarNameDeclaration("$jscomp$tmp$exports$module$name", moduleObject);
     moduleVar.getFirstChild().putBooleanProp(Node.MODULE_EXPORT, true);
     // TODO(b/144593112): Stop adding JSDoc when this pass moves to always be after typechecking.
-    JSDocInfoBuilder infoBuilder = JSDocInfo.builder();
+    JSDocInfo.Builder infoBuilder = JSDocInfo.builder();
     infoBuilder.recordConstancy();
     moduleVar.setJSDocInfo(infoBuilder.build());
     moduleVar.getFirstChild().setDeclaredConstantVar(true);
@@ -639,7 +638,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       if (typedefs.contains(exportedName)) {
         // /** @typedef {foo} */
         // moduleName.foo;
-        JSDocInfoBuilder builder = JSDocInfo.builder().parseDocumentation();
+        JSDocInfo.Builder builder = JSDocInfo.builder().parseDocumentation();
         JSTypeExpression typeExpr =
             new JSTypeExpression(
                 astFactory.createString(exportedName).srcref(nodeForSourceInfo),
@@ -661,7 +660,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
             astFactory.createAssign(
                 getProp, astFactory.createName(boundVariableName, getProp.getJSType()));
         // TODO(b/144593112): Stop adding JSDoc when this pass moves to always be after typechecking
-        JSDocInfoBuilder builder = JSDocInfo.builder().parseDocumentation();
+        JSDocInfo.Builder builder = JSDocInfo.builder().parseDocumentation();
         builder.recordConstancy();
         JSDocInfo info = builder.build();
         assign.setJSDocInfo(info);
@@ -683,7 +682,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       // TODO(b/143904518): Remove this code when this pass is permanently moved after type checking
       // Type checker doesn't infer getters so mark the return as unknown.
       // { /** @return {?} */ get foo() { return foo; } }
-      JSDocInfoBuilder builder = JSDocInfo.builder().parseDocumentation();
+      JSDocInfo.Builder builder = JSDocInfo.builder().parseDocumentation();
       builder.recordReturnType(
           new JSTypeExpression(
               new Node(Token.QMARK).srcref(forSourceInfo), script.getSourceFileName()));
