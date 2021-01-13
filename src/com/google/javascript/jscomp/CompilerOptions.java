@@ -747,9 +747,6 @@ public class CompilerOptions implements Serializable {
   /** Name prefixes that determine which variables and properties to strip */
   public Set<String> stripNamePrefixes;
 
-  /** Qualified type name prefixes that determine which types to strip */
-  public Set<String> stripTypePrefixes;
-
   /** Custom passes */
   protected transient Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
 
@@ -1312,7 +1309,6 @@ public class CompilerOptions implements Serializable {
     stripTypes = ImmutableSet.of();
     stripNameSuffixes = ImmutableSet.of();
     stripNamePrefixes = ImmutableSet.of();
-    stripTypePrefixes = ImmutableSet.of();
     customPasses = null;
     defineReplacements = new HashMap<>();
     tweakProcessing = TweakProcessing.OFF;
@@ -2280,10 +2276,6 @@ public class CompilerOptions implements Serializable {
     this.stripNamePrefixes = stripNamePrefixes;
   }
 
-  public void setStripTypePrefixes(Set<String> stripTypePrefixes) {
-    this.stripTypePrefixes = stripTypePrefixes;
-  }
-
   public void addCustomPass(CustomPassExecutionTime time, CompilerPass customPass) {
     if (customPasses == null) {
       customPasses = LinkedHashMultimap.create();
@@ -2815,7 +2807,6 @@ public class CompilerOptions implements Serializable {
         .add("sourceMapOutputPath", sourceMapOutputPath)
         .add("stripNamePrefixes", stripNamePrefixes)
         .add("stripNameSuffixes", stripNameSuffixes)
-        .add("stripTypePrefixes", stripTypePrefixes)
         .add("stripTypes", stripTypes)
         .add("summaryDetailLevel", summaryDetailLevel)
         .add("syntheticBlockEndMarker", syntheticBlockEndMarker)

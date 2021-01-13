@@ -63,10 +63,8 @@ public final class StripCodeTest extends CompilerTestCase {
         "logBuffer_");
 
     Set<String> stripNamePrefixes = ImmutableSet.of("trace");
-    Set<String> stripTypePrefixes = ImmutableSet.of("e.f.Trace");
 
-    return new StripCode(compiler, stripTypes, stripNames, stripTypePrefixes,
-        stripNamePrefixes);
+    return new StripCode(compiler, stripTypes, stripNames, stripNamePrefixes);
   }
 
   @Override
@@ -547,8 +545,10 @@ public final class StripCodeTest extends CompilerTestCase {
 
   @Test
   public void testTypePrefix() {
-    test("e.f.TraceXXX = function() {}; " +
-         "e.f.TraceXXX.prototype.yyy = 2;", "");
+    testSame(
+        lines(
+            "e.f.TraceXXX = function() {};", //
+            "e.f.TraceXXX.prototype.yyy = 2;"));
   }
 
   @Test

@@ -66,14 +66,14 @@ class StripCode implements CompilerPass {
   StripCode(AbstractCompiler compiler,
             Set<String> stripTypes,
             Set<String> stripNameSuffixes,
-            Set<String> stripTypePrefixes,
             Set<String> stripNamePrefixes) {
 
     this.compiler = compiler;
     this.stripTypes = new HashSet<>(stripTypes);
     this.stripNameSuffixes = new HashSet<>(stripNameSuffixes);
-    this.stripTypePrefixes = new HashSet<>(stripTypePrefixes);
     this.stripNamePrefixes = new HashSet<>(stripNamePrefixes);
+    this.stripTypePrefixes = new HashSet<>();
+
     this.varsToRemove = new HashSet<>();
   }
 

@@ -547,7 +547,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getTweakProcessing().shouldStrip()
         || !options.stripTypes.isEmpty()
         || !options.stripNameSuffixes.isEmpty()
-        || !options.stripTypePrefixes.isEmpty()
         || !options.stripNamePrefixes.isEmpty()) {
       passes.add(stripCode);
     }
@@ -2015,7 +2014,6 @@ public final class DefaultPassConfig extends PassConfig {
                               compiler,
                               options.stripTypes,
                               options.stripNameSuffixes,
-                              options.stripTypePrefixes,
                               options.stripNamePrefixes);
                       if (options.getTweakProcessing().shouldStrip()) {
                         pass.enableTweakStripping();
