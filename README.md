@@ -193,7 +193,7 @@ yarn build:all
 
 See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html).
 
-## Running
+### Running
 
 Once the compiler has been built, the compiled JAR will be in the `bazel-bin/`
 directory. You can access it with a call to `java -jar ...` or by using the
@@ -204,7 +204,7 @@ package.json script:
 yarn compile [...args]
 ```
 
-### Run using Eclipse
+#### Run using Eclipse
 
 1.  Open the class `src/com/google/javascript/jscomp/CommandLineRunner.java` or
     create your own extended version of the class.
