@@ -137,9 +137,9 @@ the inputs automatically.
 
 1.  Post in the [Closure Compiler Discuss
     Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
-1.  Ask a question on [Stack
+2.  Ask a question on [Stack
     Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
-1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
+3.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
 
 ## Building the Compiler
 
