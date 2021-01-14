@@ -1527,19 +1527,19 @@ AudioWorkletNode.prototype.port;
  */
 function AudioWorkletNodeOptions() {};
 
-/** @type {number} */
+/** @type {number|undefined} */
 AudioWorkletNodeOptions.prototype.numberOfInputs;
 
-/** @type {number} */
+/** @type {number|undefined} */
 AudioWorkletNodeOptions.prototype.numberOfOutputs;
 
-/** @type {!Array<number>} */
+/** @type {!Array<number>|undefined} */
 AudioWorkletNodeOptions.prototype.outputChannelCount;
 
-/** @type {!Object<string, number>} */
+/** @type {!Object<string, number>|undefined} */
 AudioWorkletNodeOptions.prototype.parameterData;
 
-/** @type {?Object} */
+/** @type {?} */
 AudioWorkletNodeOptions.prototype.processorOptions;
 
 /**
