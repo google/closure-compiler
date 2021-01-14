@@ -67,7 +67,6 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
       }
     }
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
-    compiler.setAccessorSummary(null);
   }
 
   private static class LocalQName {

@@ -170,8 +170,8 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
     checkArgument(root.isRoot(), root);
     NodeTraversal.traverseRoots(compiler, this, externs, root);
     compiler.setFeatureSet(compiler.getFeatureSet().without(MODULES));
-    // Signal that getter/setter info is stale
-    this.compiler.setAccessorSummary(null);
+    // This pass may add getters properties on module objects.
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 
   @Override

@@ -269,7 +269,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private String lastPassName;
 
   private Set<String> externProperties = null;
-  private AccessorSummary accessorSummary = null;
+  private AccessorSummary accessorSummary = AccessorSummary.create(ImmutableMap.of());
 
   private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
 

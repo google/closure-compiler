@@ -60,8 +60,8 @@ public class J2clPropertyInlinerPass implements CompilerPass {
     }
 
     new StaticFieldGetterSetterInliner(root).run();
-    // Signal that getter/setter info is stale
-    this.compiler.setAccessorSummary(null);
+    // This pass may remove getters and setters.
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
   }
 
   class StaticFieldGetterSetterInliner {

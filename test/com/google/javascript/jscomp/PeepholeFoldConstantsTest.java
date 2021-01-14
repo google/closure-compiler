@@ -52,6 +52,10 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     disableTypeCheck();
+    // This pass will correctly inline some getters / setters. However since this is a peephole pass
+    // it can't really update the entire program's state of getters and setters. Not updating these
+    // is fine for removals like this - it just makes other passes more conservative.
+    onlyValidateNoNewGettersAndSetters();
     late = false;
     useTypes = true;
     // Reduce this to 1 if we get better expression evaluators.

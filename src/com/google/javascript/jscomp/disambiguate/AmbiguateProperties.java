@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DefaultNameGenerator;
+import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NameGenerator;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -247,8 +248,9 @@ public class AmbiguateProperties implements CompilerPass {
       }
     }
 
-    // Signal that getter/setter info is stale
-    this.compiler.setAccessorSummary(null);
+    // We may have renamed getter / setter properties.
+    // TODO(b/161947315): this shouldn't be the responsibility of AmbiguateProperties
+    GatherGetterAndSetterProperties.update(compiler, externs, root);
 
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("Collapsed " + numRenamedPropertyNames + " properties into "
