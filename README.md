@@ -176,7 +176,7 @@ command-line executable (compatible with the one in linux).
     If you want to integrate the compiler into a larger Java program, depend on
     `//:compiler_shaded_deploy.jar` instead.
 
-### Using a terminal
+### Building from a terminal
 
 You can trigger the build process easily with package.json scripts or by calling
 Bazel manually. 
@@ -189,7 +189,7 @@ yarn build
 yarn build:all
 ```
 
-### Using an IDE
+### Building from an IDE
 
 See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html).
 
@@ -204,7 +204,7 @@ package.json script:
 yarn compile [...args]
 ```
 
-#### Run using Eclipse
+#### Running using Eclipse
 
 1.  Open the class `src/com/google/javascript/jscomp/CommandLineRunner.java` or
     create your own extended version of the class.
@@ -214,7 +214,7 @@ yarn compile [...args]
     [bug](https://stackoverflow.com/questions/4711098/passing-end-of-transmission-ctrl-d-character-in-eclipse-cdt-console)
     regarding passing "End of Transmission" in the Eclipse console.
 
-## How to Contribute
+## Contributing
 
 ### Contributor code of conduct
 
