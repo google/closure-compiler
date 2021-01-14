@@ -17,13 +17,12 @@ checks syntax, variable references, and types, and warns about common JavaScript
 pitfalls.
 
 ## Getting Started
-
-The easiest way to get the compiler is to install the precompiled binary
-globally using [NPM](https://npmjs.com) or [Yarn](https://yarnpkg.com):
+The easiest way to install the compiler is with [NPM](https://npmjs.com) or
+[Yarn](https://yarnpkg.com):
 
 ```bash
 yarn global add google-closure-compiler
-# - or -
+# OR
 npm i -g google-closure-compiler
 ```
 
@@ -40,13 +39,16 @@ This starts the compiler in interactive mode. Type:
 var x = 17 + 25;
 ```
 
-Hit "Enter", then "Ctrl-Z" (on Windows) or "Ctrl-D" (on Mac or Linux), and
-"Enter" again. The Compiler will respond with the compiled output (using
-`SIMPLE` mode by default):
+Hit `Enter`, then `Ctrl+Z` (on Windows) or `Ctrl+D` (on Mac/Linux), then `Enter`
+again. The Compiler will respond with the compiled output (using `SIMPLE` mode
+by default):
 
 ```javascript
 var x=42;
 ```
+
+#### Downloading from Maven Repository
+A pre-compiled release of the compiler is also available via [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler).
 
 ### Basic usage
 The Closure Compiler has many options for reading input from a file, writing
