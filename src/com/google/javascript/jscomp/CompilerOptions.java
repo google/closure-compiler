@@ -739,13 +739,13 @@ public class CompilerOptions implements Serializable {
   public boolean gatherCssNames;
 
   /** Names of types to strip */
-  public Set<String> stripTypes;
+  ImmutableSet<String> stripTypes;
 
   /** Name suffixes that determine which variables and properties to strip */
-  public Set<String> stripNameSuffixes;
+  ImmutableSet<String> stripNameSuffixes;
 
   /** Name prefixes that determine which variables and properties to strip */
-  public Set<String> stripNamePrefixes;
+  ImmutableSet<String> stripNamePrefixes;
 
   /** Custom passes */
   protected transient Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
@@ -2264,16 +2264,28 @@ public class CompilerOptions implements Serializable {
     this.gatherCssNames = gatherCssNames;
   }
 
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
   public void setStripTypes(Set<String> stripTypes) {
-    this.stripTypes = stripTypes;
+    this.stripTypes = ImmutableSet.copyOf(stripTypes);
   }
 
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
+  public ImmutableSet<String> getStripTypes() {
+    return ImmutableSet.copyOf(this.stripTypes);
+  }
+
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
   public void setStripNameSuffixes(Set<String> stripNameSuffixes) {
-    this.stripNameSuffixes = stripNameSuffixes;
+    this.stripNameSuffixes = ImmutableSet.copyOf(stripNameSuffixes);
   }
 
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
   public void setStripNamePrefixes(Set<String> stripNamePrefixes) {
-    this.stripNamePrefixes = stripNamePrefixes;
+    this.stripNamePrefixes = ImmutableSet.copyOf(stripNamePrefixes);
   }
 
   public void addCustomPass(CustomPassExecutionTime time, CompilerPass customPass) {
