@@ -61,7 +61,7 @@ google-closure-compiler --js file.js --js_output_file file.out.js
 
 We get the **most benefit** from the compiler if we give it **all of our source
 code** (see [Compiling Multiple Scripts](#compiling-multiple-scripts)), which
-means we can use `ADVANCED` mode:
+allows us to use `ADVANCED` optimizations:
 
 ```bash
 google-closure-compiler -O ADVANCED rollup.js --js_output_file rollup.min.js
