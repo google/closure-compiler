@@ -416,7 +416,7 @@ public class DisambiguateProperties implements CompilerPass {
         Node recv = n.getFirstChild();
         JSType recvType = getType(recv);
         Property prop = getProperty(n.getLastChild().getString());
-        processExternsProperty(prop, recvType);
+        processExternsProperty(n, prop, recvType);
       } else if (n.isClass()) {
         JSType classType = n.getJSType();
         JSType classInstanceType =
@@ -439,7 +439,7 @@ public class DisambiguateProperties implements CompilerPass {
           JSType ownerType = member.isStaticMember() ? classType : classInstanceType;
 
           Property prop = getProperty(name);
-          processExternsProperty(prop, ownerType);
+          processExternsProperty(member, prop, ownerType);
         }
       }
     }
@@ -450,8 +450,12 @@ public class DisambiguateProperties implements CompilerPass {
      *
      * @param ownerType The type of the object the property is on (e.g. `ns.a` for `ns.a.MyType;`)
      */
-    private void processExternsProperty(Property prop, JSType ownerType) {
+    private void processExternsProperty(Node location, Property prop, JSType ownerType) {
       if (invalidatingTypes.isInvalidating(ownerType)) {
+        if (prop.isValidForRenaming) {
+          // Only report the first invalidation for any given property
+          reportInvalidation(location, prop.name, ownerType);
+        }
         prop.invalidate();
       } else if (prop.isValidForRenaming) {
         prop.addTypeToSkip(ownerType);

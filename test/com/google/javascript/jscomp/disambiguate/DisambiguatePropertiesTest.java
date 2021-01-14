@@ -1951,6 +1951,25 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testReportStructuralExternsTypeInvalidatesProperty() {
+    test(
+        externs(
+            lines(
+                "/** @record */",
+                "function I() {}",
+                "/** @type {number} */ I.prototype.foobar;",
+                "/** @record */",
+                "function J() {}",
+                "/** @type {number} */ J.prototype.foobar;")),
+        srcs(
+            lines(
+                "/** @param {!I} arg */ function f(arg) {}",
+                "/** @constructor @extends {I} */ function C() { this.foobar = 42; }",
+                "f(new C());")),
+        error(INVALIDATION).withMessageContaining("foobar"));
+  }
+
+  @Test
   public void testReportImplicitUseOfStructuralInterfaceInvalidingProperty() {
     test(
         srcs(lines(

@@ -1349,7 +1349,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     options.setAmbiguateProperties(true);
-    options.setPropertyInvalidationErrors(ImmutableMap.of("abc", CheckLevel.ERROR));
 
     test(
         options,
@@ -1366,6 +1365,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             + "/** @export */ this.abc = 1;};\n"
             + "alert(new X() + new Y());",
         "alert((new function(){this.abc = 1}) + (new function(){this.abc = 1}));");
+
+    options.setPropertyInvalidationErrors(ImmutableMap.of("abc", CheckLevel.ERROR));
+
+    test(options, code, DiagnosticGroups.TYPE_INVALIDATION);
   }
 
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
