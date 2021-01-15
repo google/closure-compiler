@@ -289,7 +289,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(extraRequires);
     }
 
-    if (options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE)) {
+    if (options.enables(DiagnosticGroups.MISSING_REQUIRE)) {
       checks.add(checkMissingRequires);
     }
 
