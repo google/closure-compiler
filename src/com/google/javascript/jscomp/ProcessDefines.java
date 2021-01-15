@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
+import static java.util.stream.Collectors.toCollection;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,8 +37,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -46,8 +45,6 @@ import javax.annotation.Nullable;
  * manipulated by the compiler, much like C preprocessor {@code #define}s.
  */
 class ProcessDefines implements CompilerPass {
-  private static final Logger logger =
-      Logger.getLogger("com.google.javascript.jscomp.ProcessDefines");
 
   /**
    * Defines in this set will not be flagged with "unknown define" warnings. There are flags that
@@ -57,7 +54,7 @@ class ProcessDefines implements CompilerPass {
       ImmutableSet.of("COMPILED", "goog.DEBUG", "$jscomp.ISOLATE_POLYFILLS");
 
   private final AbstractCompiler compiler;
-  private final Map<String, Node> dominantReplacements;
+  private final ImmutableMap<String, Node> replacementValues;
   private final boolean checksOnly;
   private final Supplier<GlobalNamespace> namespaceSupplier;
 
@@ -91,7 +88,7 @@ class ProcessDefines implements CompilerPass {
   /** Create a pass that overrides define constants. */
   private ProcessDefines(Builder builder) {
     this.compiler = builder.compiler;
-    this.dominantReplacements = ImmutableMap.copyOf(builder.replacements);
+    this.replacementValues = ImmutableMap.copyOf(builder.replacementValues);
     this.checksOnly = builder.checksOnly;
     this.namespaceSupplier = builder.namespaceSupplier;
   }
@@ -99,7 +96,7 @@ class ProcessDefines implements CompilerPass {
   /** Builder for ProcessDefines. */
   static class Builder {
     private final AbstractCompiler compiler;
-    private final Map<String, Node> replacements = new LinkedHashMap<>();
+    private final Map<String, Node> replacementValues = new LinkedHashMap<>();
     private boolean checksOnly;
     private Supplier<GlobalNamespace> namespaceSupplier;
 
@@ -107,8 +104,8 @@ class ProcessDefines implements CompilerPass {
       this.compiler = compiler;
     }
 
-    Builder putReplacements(Map<String, Node> replacements) {
-      this.replacements.putAll(replacements);
+    Builder putReplacements(Map<String, Node> replacementValues) {
+      this.replacementValues.putAll(replacementValues);
       return this;
     }
 
@@ -167,13 +164,9 @@ class ProcessDefines implements CompilerPass {
 
         String defineName = define.defineName;
 
-        Node inputValue = this.dominantReplacements.get(defineName);
+        Node inputValue = this.replacementValues.get(defineName);
         if (inputValue == null || inputValue == define.value) {
           continue;
-        }
-
-        if (logger.isLoggable(Level.FINE)) {
-          logger.fine("Overriding @define variable " + defineName);
         }
 
         boolean changed =
@@ -194,7 +187,7 @@ class ProcessDefines implements CompilerPass {
 
     Set<String> unusedReplacements =
         Sets.difference(
-            this.dominantReplacements.keySet(),
+            this.replacementValues.keySet(),
             Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()));
 
     for (String unknownDefine : unusedReplacements) {
@@ -308,7 +301,10 @@ class ProcessDefines implements CompilerPass {
 
   private void collectValidDefineValueExpressions() {
 
-    LinkedHashSet<Name> namesToCheck = new LinkedHashSet<>(this.namespace.getAllSymbols());
+    LinkedHashSet<Name> namesToCheck =
+        this.namespace.getAllSymbols().stream()
+            .filter(ProcessDefines::isGlobalConst)
+            .collect(toCollection(LinkedHashSet::new));
 
     // All defines are implicitly valid in the values of other defines.
     for (Define define : this.defineByDefineName.values()) {
@@ -319,34 +315,32 @@ class ProcessDefines implements CompilerPass {
           .forEachOrdered(this.validDefineValueExpressions::add);
     }
 
-    boolean additionalNameFoundValid = true;
-    while (additionalNameFoundValid) {
-      additionalNameFoundValid = false;
+    // Do a breadth-first search of all const names to find those defined in terms of valid values.
+    while (true) {
+      LinkedHashSet<Name> namesToCheckAgain = new LinkedHashSet<>();
 
-      LinkedHashSet<Name> indeterminateNames = new LinkedHashSet<>();
       for (Name name : namesToCheck) {
-        if (!isGlobalConst(name)) {
-          continue;
-        }
-
         Node declValue = getConstantDeclValue(name.getDeclaration().getNode());
         switch (isValidDefineValue(declValue)) {
           case TRUE:
             for (Ref ref : name.getRefs()) {
               this.validDefineValueExpressions.add(ref.getNode());
             }
-            additionalNameFoundValid = true;
             break;
 
           case UNKNOWN:
-            indeterminateNames.add(name);
+            namesToCheckAgain.add(name);
             break;
 
           default:
         }
       }
 
-      namesToCheck = indeterminateNames;
+      if (namesToCheckAgain.size() == namesToCheck.size()) {
+        break;
+      } else {
+        namesToCheck = namesToCheckAgain;
+      }
     }
   }
 
