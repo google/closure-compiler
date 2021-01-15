@@ -711,13 +711,12 @@ class PeepholeSubstituteAlternateSyntax
     return delimiters[i];
   }
 
-  private static final Pattern REGEXP_FLAGS_RE = Pattern.compile("^[gmi]*$");
+  private static final Pattern REGEXP_FLAGS_RE = Pattern.compile("^[gmiuys]*$");
 
   /**
-   * are the given flags valid regular expression flags?
-   * JavaScript recognizes several suffix flags for regular expressions,
-   * 'g' - global replace, 'i' - case insensitive, 'm' - multi-line.
-   * They are case insensitive, and JavaScript does not recognize the extended
+   * are the given flags valid regular expression flags? JavaScript recognizes several suffix flags
+   * for regular expressions, 'g' - global replace, 'i' - case insensitive, 'm' - multi-line, 'u' -
+   * unicode, 'y'- sticky. They are case insensitive, and JavaScript does not recognize the extended
    * syntax mode, single-line mode, or expression replacement mode from Perl 5.
    */
   private static boolean areValidRegexpFlags(String flags) {
