@@ -66,7 +66,6 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     enableNormalize();
     enableParseTypeInfo();
-    disableGetterAndSetterUpdateValidation();
   }
 
   @Override

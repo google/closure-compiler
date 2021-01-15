@@ -553,6 +553,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(normalize);
 
+    passes.add(gatherGettersAndSetters);
     // Gather property names in externs so they can be queried by the
     // optimizing passes.
     passes.add(gatherExternProperties);
@@ -652,7 +653,6 @@ public final class DefaultPassConfig extends PassConfig {
       } else {
         passes.add(disambiguateProperties);
       }
-      passes.add(gatherGettersAndSetters);
     }
 
     if (options.checkTypes || options.inferTypes) {

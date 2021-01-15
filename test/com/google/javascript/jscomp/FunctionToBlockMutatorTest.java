@@ -291,6 +291,7 @@ public final class FunctionToBlockMutatorTest {
     compiler.externAndJsRoot = IR.root(compiler.externsRoot, compiler.jsRoot);
 
     new Normalize(compiler, false).process(compiler.externsRoot, compiler.jsRoot);
+    GatherGetterAndSetterProperties.update(compiler, compiler.externsRoot, compiler.jsRoot);
     new PureFunctionIdentifier.Driver(compiler).process(compiler.externsRoot, compiler.jsRoot);
 
     final Node fnNode = findFunction(script, fnName);

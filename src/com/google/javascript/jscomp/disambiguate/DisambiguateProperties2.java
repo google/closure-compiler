@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.TypeMismatch;
@@ -144,8 +145,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .map((m) -> new TypeMismatchJson(m, flattener))
                 .collect(toImmutableSortedSet(naturalOrder())));
 
-    // Signal that getter/setter info is stale
-    this.compiler.setAccessorSummary(null);
+    GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
 
   private static ImmutableMap<String, Object> buildRenamingIndex(
