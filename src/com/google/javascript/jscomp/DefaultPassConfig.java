@@ -1990,7 +1990,10 @@ public final class DefaultPassConfig extends PassConfig {
                       .putReplacements(compiler.getDefaultDefineValues())
                       .putReplacements(getAdditionalReplacements(options))
                       .putReplacements(options.getDefineReplacements())
-                      .checksOnly(options.checksOnly)
+                      .setMode(
+                          options.checksOnly
+                              ? ProcessDefines.Mode.CHECK
+                              : ProcessDefines.Mode.CHECK_AND_OPTIMIZE)
                       .injectNamespace(() -> namespaceForChecks)
                       .build())
           .setFeatureSetForChecks()

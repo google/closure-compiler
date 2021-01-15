@@ -54,8 +54,9 @@ class ProcessDefines implements CompilerPass {
       ImmutableSet.of("COMPILED", "goog.DEBUG", "$jscomp.ISOLATE_POLYFILLS");
 
   private final AbstractCompiler compiler;
+  private final JSTypeRegistry registry;
   private final ImmutableMap<String, Node> replacementValues;
-  private final boolean checksOnly;
+  private final Mode mode;
   private final Supplier<GlobalNamespace> namespaceSupplier;
 
   private final LinkedHashSet<JSDocInfo> knownDefineJsdocs = new LinkedHashSet<>();
@@ -87,17 +88,32 @@ class ProcessDefines implements CompilerPass {
 
   /** Create a pass that overrides define constants. */
   private ProcessDefines(Builder builder) {
+    this.mode = builder.mode;
     this.compiler = builder.compiler;
+    this.registry = this.mode.check ? this.compiler.getTypeRegistry() : null;
     this.replacementValues = ImmutableMap.copyOf(builder.replacementValues);
-    this.checksOnly = builder.checksOnly;
     this.namespaceSupplier = builder.namespaceSupplier;
+  }
+
+  enum Mode {
+    CHECK(true, false),
+    OPTIMIZE(false, true),
+    CHECK_AND_OPTIMIZE(true, true);
+
+    private final boolean check;
+    private final boolean optimize;
+
+    Mode(boolean check, boolean optimize) {
+      this.check = check;
+      this.optimize = optimize;
+    }
   }
 
   /** Builder for ProcessDefines. */
   static class Builder {
     private final AbstractCompiler compiler;
     private final Map<String, Node> replacementValues = new LinkedHashMap<>();
-    private boolean checksOnly;
+    private Mode mode;
     private Supplier<GlobalNamespace> namespaceSupplier;
 
     Builder(AbstractCompiler compiler) {
@@ -109,8 +125,8 @@ class ProcessDefines implements CompilerPass {
       return this;
     }
 
-    Builder checksOnly(boolean checksOnly) {
-      this.checksOnly = checksOnly;
+    Builder setMode(Mode x) {
+      this.mode = x;
       return this;
     }
 
@@ -156,7 +172,7 @@ class ProcessDefines implements CompilerPass {
   }
 
   private void overrideDefines() {
-    if (!this.checksOnly) {
+    if (this.mode.optimize) {
       for (Define define : this.defineByDefineName.values()) {
         if (define.valueParent == null) {
           continue;
@@ -185,13 +201,15 @@ class ProcessDefines implements CompilerPass {
       }
     }
 
-    Set<String> unusedReplacements =
-        Sets.difference(
-            this.replacementValues.keySet(),
-            Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()));
+    if (this.mode.check) {
+      Set<String> unusedReplacements =
+          Sets.difference(
+              this.replacementValues.keySet(),
+              Sets.union(KNOWN_DEFINES, this.defineByDefineName.keySet()));
 
-    for (String unknownDefine : unusedReplacements) {
-      compiler.report(JSError.make(UNKNOWN_DEFINE_WARNING, unknownDefine));
+      for (String unknownDefine : unusedReplacements) {
+        compiler.report(JSError.make(UNKNOWN_DEFINE_WARNING, unknownDefine));
+      }
     }
   }
 
@@ -199,7 +217,6 @@ class ProcessDefines implements CompilerPass {
    * Only defines of literal number, string, or boolean are supported.
    */
   private boolean isValidDefineType(JSTypeExpression expression) {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
     JSType type = registry.evaluateTypeExpressionInGlobalScope(expression);
     return !type.isUnknownType()
         && type.isSubtypeOf(registry.getNativeType(NUMBER_STRING_BOOLEAN));
@@ -345,6 +362,10 @@ class ProcessDefines implements CompilerPass {
   }
 
   private final void validateDefineDeclarations() {
+    if (!this.mode.check) {
+      return;
+    }
+
     for (Define define : this.defineByDefineName.values()) {
       Node declarationNode = define.declaration.getNode();
 
@@ -368,6 +389,10 @@ class ProcessDefines implements CompilerPass {
   }
 
   private void reportDefineUnknownDeclarations(Node root) {
+    if (!this.mode.check) {
+      return;
+    }
+
     /**
      * This has to be done using a traversal because the global namespace doesn't record symbols
      * which only appear in local scopes.

@@ -35,14 +35,14 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   private final Map<String, Node> overrides = new HashMap<>();
   private GlobalNamespace namespace;
-  private boolean checksOnly;
+  private ProcessDefines.Mode mode;
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
     overrides.clear();
-    checksOnly = false;
+    mode = ProcessDefines.Mode.CHECK_AND_OPTIMIZE;
 
     // ProcessDefines emits warnings if the user tries to re-define a constant,
     // but the constant is not defined anywhere in the binary.
@@ -94,7 +94,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testChecksOnlyProducesErrors() {
-    checksOnly = true;
+    mode = ProcessDefines.Mode.CHECK;
     test(
         srcs("/** @define {Object} */ var DEF = {}"),
         error(ProcessDefines.INVALID_DEFINE_TYPE),
@@ -103,7 +103,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testChecksOnlyProducesUnknownDefineWarning() {
-    checksOnly = true;
+    mode = ProcessDefines.Mode.CHECK;
     overrides.put("a.B", new Node(Token.TRUE));
     test("var a = {};", "var a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
@@ -582,7 +582,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   @Test
   public void testConstProducesUnknownDefineWarning() {
-    checksOnly = true;
+    mode = ProcessDefines.Mode.CHECK;
     overrides.put("a.B", new Node(Token.TRUE));
     test("const a = {};", "const a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
@@ -676,7 +676,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
       namespace = new GlobalNamespace(compiler, externs, js);
       new ProcessDefines.Builder(compiler)
           .putReplacements(overrides)
-          .checksOnly(checksOnly)
+          .setMode(mode)
           .injectNamespace(() -> namespace)
           .build()
           .process(externs, js);
