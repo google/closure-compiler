@@ -1398,7 +1398,7 @@ public class JSDocInfo implements Serializable {
    * have immutable structure. It provides early incompatibility detection among properties stored
    * on the {@code JSDocInfo} object being created.
    */
-  public static class Builder extends JSDocInfoBuilder {
+  public static class Builder {
     TreeMap<Property<?>, Object> props = new TreeMap<>();
     long bits = 0L;
 
@@ -1452,18 +1452,24 @@ public class JSDocInfo implements Serializable {
       return info.cloneAndReplaceTypeNames(oldNames).toBuilder(); // TODO - populated
     }
 
-    @Override
+    /**
+     * Configures the builder to parse documentation. This should be called immediately after
+     * instantiating the builder if documentation should be included, since it enables various
+     * operations to do work that would otherwise be no-ops.
+     */
     public Builder parseDocumentation() {
       setBit(Bit.INCLUDE_DOCUMENTATION, true);
       return this;
     }
 
-    @Override
     public boolean shouldParseDocumentation() {
       return checkBit(Bit.INCLUDE_DOCUMENTATION);
     }
 
-    @Override
+    /**
+     * Sets the original JSDoc comment string. This is a no-op if the builder isn't configured to
+     * record documentation.
+     */
     public void recordOriginalCommentString(String sourceComment) {
       if (shouldParseDocumentation()) {
         populated = true;
@@ -1471,7 +1477,7 @@ public class JSDocInfo implements Serializable {
       }
     }
 
-    @Override
+    /** Sets the position of original JSDoc comment. */
     public void recordOriginalCommentPosition(int position) {
       if (shouldParseDocumentation()) {
         populated = true;
@@ -1479,7 +1485,10 @@ public class JSDocInfo implements Serializable {
       }
     }
 
-    @Override
+    /**
+     * Returns whether this builder is populated with information that can be used to {@link #build}
+     * a {@link JSDocInfo} object that has a fileoverview tag.
+     */
     public boolean isPopulatedWithFileOverview() {
       return populated
           && (bits
@@ -1490,17 +1499,29 @@ public class JSDocInfo implements Serializable {
               != 0;
     }
 
-    @Override
+    /** Returns whether this builder recorded a description. */
     public boolean isDescriptionRecorded() {
       return props.get(DESCRIPTION) != null;
     }
 
-    @Override
+    /**
+     * Builds a {@link JSDocInfo} object based on the populated information and returns it.
+     *
+     * @return a {@link JSDocInfo} object populated with the values given to this builder. If no
+     *     value was populated, this method simply returns {@code null}
+     */
     public JSDocInfo build() {
       return build(/* always= */ false);
     }
 
-    @Override
+    /**
+     * Builds a {@link JSDocInfo} object based on the populated information and returns it.
+     *
+     * @param always Return an default JSDoc object.
+     * @return a {@link JSDocInfo} object populated with the values given to this builder. If no
+     *     value was populated and {@code always} is false, returns {@code null}. If {@code always}
+     *     is true, returns a default JSDocInfo.
+     */
     public JSDocInfo build(boolean always) {
       if (populated || always) {
         JSDocInfo info = new JSDocInfo(bits, props);
@@ -1510,7 +1531,13 @@ public class JSDocInfo implements Serializable {
       return null;
     }
 
-    @Override
+    /**
+     * Builds a {@link JSDocInfo} object based on the populated information and returns it. Once
+     * this method is called, the builder can be reused to build another {@link JSDocInfo} object.
+     *
+     * @return a {@link JSDocInfo} object populated with the values given to this builder. If no
+     *     value was populated, this method simply returns {@code null}
+     */
     public JSDocInfo buildAndReset() {
       JSDocInfo info = build();
       bits &= Bit.INCLUDE_DOCUMENTATION.mask; // only keep this one flag
@@ -1519,7 +1546,10 @@ public class JSDocInfo implements Serializable {
       return info;
     }
 
-    @Override
+    /**
+     * Adds a marker to the current JSDocInfo and populates the marker with the annotation
+     * information.
+     */
     public void markAnnotation(String annotation, int lineno, int charno) {
       Marker marker = addMarker();
       if (marker != null) {
@@ -1545,7 +1575,7 @@ public class JSDocInfo implements Serializable {
       return null;
     }
 
-    @Override
+    /** Adds a textual block to the current marker. */
     public void markText(
         String text, int startLineno, int startCharno, int endLineno, int endCharno) {
       if (currentMarker != null) {
@@ -1556,7 +1586,7 @@ public class JSDocInfo implements Serializable {
       }
     }
 
-    @Override
+    /** Adds a type declaration to the current marker. */
     public void markTypeNode(
         Node typeNode, int lineno, int startCharno, int endLineno, int endCharno, boolean hasLC) {
       if (currentMarker != null) {
@@ -1568,7 +1598,7 @@ public class JSDocInfo implements Serializable {
       }
     }
 
-    @Override
+    /** Adds a name declaration to the current marker. */
     public void markName(String name, Node templateNode, int lineno, int charno) {
       if (currentMarker != null) {
         // Record the name as both a SourcePosition<String> and a
@@ -1594,7 +1624,11 @@ public class JSDocInfo implements Serializable {
       }
     }
 
-    @Override
+    /**
+     * Records a block-level description.
+     *
+     * @return {@code true} if the description was recorded.
+     */
     public boolean recordBlockDescription(String description) {
       populated = true;
       if (!shouldParseDocumentation()) {
@@ -1603,7 +1637,12 @@ public class JSDocInfo implements Serializable {
       return populateProp(BLOCK_DESCRIPTION, description);
     }
 
-    @Override
+    /**
+     * Records a visibility.
+     *
+     * @return {@code true} if the visibility was recorded and {@code false} if it was already
+     *     defined
+     */
     public boolean recordVisibility(Visibility visibility) {
       if (getProp(VISIBILITY) == null) {
         populated = true;
@@ -1613,18 +1652,27 @@ public class JSDocInfo implements Serializable {
       return false;
     }
 
-    @Override
     public void overwriteVisibility(Visibility visibility) {
       populated = true;
       setProp(VISIBILITY, visibility);
     }
 
-    @Override
+    /**
+     * Records a typed parameter.
+     *
+     * @return {@code true} if the typed parameter was recorded and {@code false} if a parameter
+     *     with the same name was already defined
+     */
     public boolean recordParameter(String parameterName, JSTypeExpression type) {
       return !hasAnySingletonTypeTags() && populatePropEntry(PARAMETERS, parameterName, type);
     }
 
-    @Override
+    /**
+     * Records a parameter's description.
+     *
+     * @return {@code true} if the parameter's description was recorded and {@code false} if a
+     *     parameter with the same name was already defined
+     */
     public boolean recordParameterDescription(String parameterName, String description) {
       if (!shouldParseDocumentation()) {
         return true;
@@ -1632,12 +1680,16 @@ public class JSDocInfo implements Serializable {
       return populatePropEntry(PARAMETER_DESCRIPTIONS, parameterName, description);
     }
 
-    @Override
+    /**
+     * Records a template type name.
+     *
+     * @return {@code true} if the template type name was recorded and {@code false} if the input
+     *     template type name was already defined.
+     */
     public boolean recordTemplateTypeName(String name) {
       return recordTemplateTypeName(name, null);
     }
 
-    @Override
     public boolean recordTemplateTypeName(String name, JSTypeExpression bound) {
       if (bound == null) {
         bound = JSTypeExpression.IMPLICIT_TEMPLATE_BOUND;
@@ -1650,7 +1702,7 @@ public class JSDocInfo implements Serializable {
       return populatePropEntry(TEMPLATE_TYPE_NAMES, name, bound);
     }
 
-    @Override
+    /** Records a type transformation expression together with its template type name. */
     public boolean recordTypeTransformation(String name, Node expr) {
       Map<String, JSTypeExpression> names = getProp(TEMPLATE_TYPE_NAMES);
       if (names != null && names.containsKey(name)) {
@@ -1659,7 +1711,7 @@ public class JSDocInfo implements Serializable {
       return populatePropEntry(TYPE_TRANSFORMATIONS, name, expr);
     }
 
-    @Override
+    /** Records a thrown type. */
     public boolean recordThrowType(JSTypeExpression type) {
       if (type != null && !hasAnySingletonTypeTags()) {
         getPropWithDefault(THROWN_TYPES, ArrayList::new).add(type);
@@ -1669,7 +1721,12 @@ public class JSDocInfo implements Serializable {
       return false;
     }
 
-    @Override
+    /**
+     * Records a throw type's description.
+     *
+     * @return {@code true} if the type's description was recorded and {@code false} if a
+     *     description with the same type was already defined
+     */
     public boolean recordThrowDescription(JSTypeExpression type, String description) {
       if (!shouldParseDocumentation()) {
         return true;
@@ -1677,7 +1734,7 @@ public class JSDocInfo implements Serializable {
       return populatePropEntry(THROWS_DESCRIPTIONS, type, description);
     }
 
-    @Override
+    /** Adds an author to the current information. */
     public boolean addAuthor(String author) {
       if (shouldParseDocumentation()) {
         getPropWithDefault(AUTHORS, ArrayList::new).add(author);
@@ -1686,7 +1743,7 @@ public class JSDocInfo implements Serializable {
       return true;
     }
 
-    @Override
+    /** Adds a reference ("@see") to the current information. */
     public boolean addReference(String reference) {
       if (shouldParseDocumentation()) {
         getPropWithDefault(SEES, ArrayList::new).add(reference);
@@ -1695,32 +1752,62 @@ public class JSDocInfo implements Serializable {
       return true;
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isConsistentIdGenerator()} flag set to {@code true}.
+     *
+     * @return {@code true} if the consistentIdGenerator flag was recorded and {@code false} if it
+     *     was already recorded
+     */
     public boolean recordConsistentIdGenerator() {
       return populateProp(ID_GENERATOR, IdGenerator.CONSISTENT);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isStableIdGenerator()} flag set to {@code true}.
+     *
+     * @return {@code true} if the stableIdGenerator flag was recorded and {@code false} if it was
+     *     already recorded.
+     */
     public boolean recordStableIdGenerator() {
       return populateProp(ID_GENERATOR, IdGenerator.STABLE);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isXidGenerator()} flag set to {@code true}.
+     *
+     * @return {@code true} if the isXidGenerator flag was recorded and {@code false} if it was
+     *     already recorded.
+     */
     public boolean recordXidGenerator() {
       return populateProp(ID_GENERATOR, IdGenerator.XID);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isStableIdGenerator()} flag set to {@code true}.
+     *
+     * @return {@code true} if the stableIdGenerator flag was recorded and {@code false} if it was
+     *     already recorded.
+     */
     public boolean recordMappedIdGenerator() {
       return populateProp(ID_GENERATOR, IdGenerator.MAPPED);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isIdGenerator()} flag set to {@code true}.
+     *
+     * @return {@code true} if the idGenerator flag was recorded and {@code false} if it was already
+     *     recorded
+     */
     public boolean recordIdGenerator() {
       return populateProp(ID_GENERATOR, IdGenerator.UNIQUE);
     }
 
-    @Override
+    /** Records the version. */
     public boolean recordVersion(String version) {
       if (!shouldParseDocumentation()) {
         return true;
@@ -1728,17 +1815,20 @@ public class JSDocInfo implements Serializable {
       return populateProp(VERSION, version);
     }
 
-    @Override
+    /** Records the deprecation reason. */
     public boolean recordDeprecationReason(String reason) {
       return populateProp(DEPRECATION_REASON, reason);
     }
 
-    @Override
+    /** Returns whether a deprecation reason has been recorded. */
     public boolean isDeprecationReasonRecorded() {
       return getProp(DEPRECATION_REASON) != null;
     }
 
-    @Override
+    /**
+     * Records the list of suppressed warnings, possibly adding to the set of already configured
+     * warnings.
+     */
     public void recordSuppressions(Set<String> suppressions) {
       populated = true;
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
@@ -1750,28 +1840,34 @@ public class JSDocInfo implements Serializable {
       setProp(SUPPRESSIONS, builder.build());
     }
 
-    @Override
     public void addSuppression(String suppression) {
       recordSuppressions(ImmutableSet.of(suppression));
     }
 
-    @Override
+    /** Records the list of modifies warnings. */
     public boolean recordModifies(Set<String> modifies) {
       return !hasAnySingletonSideEffectTags()
           && populateProp(MODIFIES, ImmutableSet.copyOf(modifies));
     }
 
-    @Override
+    /**
+     * Records a type.
+     *
+     * @return {@code true} if the type was recorded and {@code false} if it is invalid or was
+     *     already defined
+     */
     public boolean recordType(JSTypeExpression type) {
       return type != null && !hasAnyTypeRelatedTags() && populateProp(TYPE, type);
     }
 
-    @Override
     public void recordInlineType() {
       populateBit(Bit.INLINE_TYPE, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should be populated with a {@code typedef}'d
+     * type.
+     */
     public boolean recordTypedef(JSTypeExpression type) {
       return type != null
           && !hasAnyTypeRelatedTags()
@@ -1779,12 +1875,22 @@ public class JSDocInfo implements Serializable {
           && populateProp(TYPEDEF_TYPE, type);
     }
 
-    @Override
+    /**
+     * Records a return type.
+     *
+     * @return {@code true} if the return type was recorded and {@code false} if it is invalid or
+     *     was already defined
+     */
     public boolean recordReturnType(JSTypeExpression type) {
       return type != null && !hasAnySingletonTypeTags() && populateProp(RETURN_TYPE, type);
     }
 
-    @Override
+    /**
+     * Records a return description
+     *
+     * @return {@code true} if the return description was recorded and {@code false} if it is
+     *     invalid or was already defined
+     */
     public boolean recordReturnDescription(String description) {
       if (!shouldParseDocumentation()) {
         return true;
@@ -1792,7 +1898,12 @@ public class JSDocInfo implements Serializable {
       return populateProp(RETURN_DESCRIPTION, description);
     }
 
-    @Override
+    /**
+     * Records the type of a define.
+     *
+     * <p>'Define' values are special constants that may be manipulated by the compiler. They are
+     * designed to mimic the #define command in the C preprocessor.
+     */
     public boolean recordDefineType(JSTypeExpression type) {
       if (type != null && !checkBit(Bit.CONST) && !checkBit(Bit.DEFINE) && recordType(type)) {
         return populateBit(Bit.DEFINE, true);
@@ -1800,7 +1911,12 @@ public class JSDocInfo implements Serializable {
       return false;
     }
 
-    @Override
+    /**
+     * Records a parameter type to an enum.
+     *
+     * @return {@code true} if the enum's parameter type was recorded and {@code false} if it was
+     *     invalid or already defined
+     */
     public boolean recordEnumParameterType(JSTypeExpression type) {
       if (type != null && !hasAnyTypeRelatedTags()) {
         setProp(ENUM_PARAMETER_TYPE, type);
@@ -1814,17 +1930,31 @@ public class JSDocInfo implements Serializable {
     // "@this {Foo}" in their JS we automatically treat it as though they'd written
     // "@this {!Foo}". But, if the type node is created in the compiler
     // (e.g. in the WizPass) we should explicitly add the '!'
-    @Override
+    /**
+     * Records a type for {@code @this} annotation.
+     *
+     * @return {@code true} if the type was recorded and {@code false} if it is invalid or if it
+     *     collided with {@code @enum} or {@code @type} annotations
+     */
     public boolean recordThisType(JSTypeExpression type) {
       return type != null && !hasAnySingletonTypeTags() && populateProp(THIS_TYPE, type);
     }
 
-    @Override
+    /**
+     * Records a base type.
+     *
+     * @return {@code true} if the base type was recorded and {@code false} if it was already
+     *     defined
+     */
     public boolean recordBaseType(JSTypeExpression type) {
       return type != null && !hasAnySingletonTypeTags() && populateProp(BASE_TYPE, type);
     }
 
-    @Override
+    /**
+     * Changes a base type, even if one has already been set on currentInfo.
+     *
+     * @return {@code true} if the base type was changed successfully.
+     */
     public boolean changeBaseType(JSTypeExpression type) {
       if (type != null && !hasAnySingletonTypeTags()) {
         setProp(BASE_TYPE, type);
@@ -1834,42 +1964,82 @@ public class JSDocInfo implements Serializable {
       return false;
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isConstant()}
+     * flag set to {@code true}.
+     *
+     * @return {@code true} if the constancy was recorded and {@code false} if it was already
+     *     defined
+     */
     public boolean recordConstancy() {
       return populateBit(Bit.CONST, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isConstant()}
+     * flag set to {@code false}.
+     *
+     * @return {@code true} if the mutability was recorded and {@code false} if it was already
+     *     defined
+     */
     public boolean recordMutable() {
       return populateBit(Bit.CONST, false);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isFinal()}
+     * flag set to {@code true}.
+     *
+     * @return {@code true} if the finality was recorded and {@code false} if it was already defined
+     */
     public boolean recordFinality() {
       return populateBit(Bit.FINAL, true);
     }
 
-    @Override
+    /**
+     * Records a description giving context for translation (i18n).
+     *
+     * @return {@code true} if the description was recorded and {@code false} if the description was
+     *     invalid or was already defined
+     */
     public boolean recordDescription(String description) {
       return populateProp(DESCRIPTION, description);
     }
 
-    @Override
+    /**
+     * Records a meaning giving context for translation (i18n). Different meanings will result in
+     * different translations.
+     *
+     * @return {@code true} If the meaning was successfully updated.
+     */
     public boolean recordMeaning(String meaning) {
       return populateProp(MEANING, meaning);
     }
 
-    @Override
+    /**
+     * Records an ID for an alternate message to be used if this message is not yet translated.
+     *
+     * @return {@code true} If the alternate message ID was successfully updated.
+     */
     public boolean recordAlternateMessageId(String alternateMessageId) {
       return populateProp(ALTERNATE_MESSAGE_ID, alternateMessageId);
     }
 
-    @Override
+    /**
+     * Records an identifier for a Closure Primitive. function.
+     *
+     * @return {@code true} If the id was successfully updated.
+     */
     public boolean recordClosurePrimitiveId(String closurePrimitiveId) {
       return populateProp(CLOSURE_PRIMITIVE_ID, closurePrimitiveId);
     }
 
-    @Override
+    /**
+     * Records a fileoverview description.
+     *
+     * @return {@code true} if the description was recorded and {@code false} if the description was
+     *     invalid or was already defined.
+     */
     public boolean recordFileOverview(String description) {
       setBit(Bit.FILEOVERVIEW, true);
       populated = true;
@@ -1879,14 +2049,12 @@ public class JSDocInfo implements Serializable {
       return populateProp(FILEOVERVIEW_DESCRIPTION, description);
     }
 
-    @Override
     public boolean recordLicense(String license) {
       setProp(LICENSE, license);
       populated = true;
       return true;
     }
 
-    @Override
     public boolean addLicense(String license) {
       if (!licenseTexts.add(license)) {
         return false;
@@ -1896,34 +2064,70 @@ public class JSDocInfo implements Serializable {
       return recordLicense(nullToEmpty(txt) + license);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isHidden()}
+     * flag set to {@code true}.
+     *
+     * @return {@code true} if the hiddenness was recorded and {@code false} if it was already
+     *     defined
+     */
     public boolean recordHiddenness() {
       return populateBit(Bit.HIDDEN, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isNoCompile()} flag set to {@code true}.
+     *
+     * @return {@code true} if the no compile flag was recorded and {@code false} if it was already
+     *     recorded
+     */
     public boolean recordNoCompile() {
       return populateBit(Bit.NOCOMPILE, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isNoCollapse()} flag set to {@code true}.
+     *
+     * @return {@code true} if the no collapse flag was recorded and {@code false} if it was already
+     *     recorded
+     */
     public boolean recordNoCollapse() {
       return populateBit(Bit.NOCOLLAPSE, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isNoInline()}
+     * flag set to {@code true}.
+     *
+     * @return {@code true} if the no inline flag was recorded and {@code false} if it was already
+     *     recorded
+     */
     public boolean recordNoInline() {
       return populateBit(Bit.NOINLINE, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isConstructor()} flag set to {@code true}.
+     *
+     * @return {@code true} if the constructor was recorded and {@code false} if it was already
+     *     defined or it was incompatible with the existing flags
+     */
     public boolean recordConstructor() {
       return !hasAnySingletonTypeTags()
           && !isConstructorOrInterface()
           && populateBit(Bit.CONSTRUCTOR, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#usesImplicitMatch()} flag set to {@code true}.
+     *
+     * @return {@code true} if the {@code @record} tag was recorded and {@code false} if it was
+     *     already defined or it was incompatible with the existing flags
+     */
     public boolean recordImplicitMatch() {
       return !hasAnySingletonTypeTags()
           && !isConstructorOrInterface()
@@ -1931,24 +2135,38 @@ public class JSDocInfo implements Serializable {
           && populateBit(Bit.INTERFACE, true);
     }
 
-    @Override
+    /**
+     * Whether the {@link JSDocInfo} being built will have its {@link JSDocInfo#isConstructor()}
+     * flag set to {@code true}.
+     */
     public boolean isConstructorRecorded() {
       return checkBit(Bit.CONSTRUCTOR);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#makesUnrestricted()} flag set to {@code true}.
+     *
+     * @return {@code true} if annotation was recorded and {@code false} if it was already defined
+     *     or it was incompatible with the existing flags
+     */
     public boolean recordUnrestricted() {
       return !hasAnySingletonTypeTags()
           && ((bits & (Bit.INTERFACE.mask | Bit.DICT.mask | Bit.STRUCT.mask)) == 0)
           && populateBit(Bit.UNRESTRICTED, true);
     }
 
-    @Override
     public boolean isUnrestrictedRecorded() {
       return checkBit(Bit.UNRESTRICTED);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isAbstract()}
+     * flag set to {@code true}.
+     *
+     * @return {@code true} if the flag was recorded and {@code false} if it was already defined or
+     *     it was incompatible with the existing flags
+     */
     public boolean recordAbstract() {
       return !hasAnySingletonTypeTags()
           && ((bits & (Bit.INTERFACE.mask | Bit.FINAL.mask)) == 0)
@@ -1956,99 +2174,145 @@ public class JSDocInfo implements Serializable {
           && populateBit(Bit.ABSTRACT, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#makesStructs()} flag set to {@code true}.
+     *
+     * @return {@code true} if the struct was recorded and {@code false} if it was already defined
+     *     or it was incompatible with the existing flags
+     */
     public boolean recordStruct() {
       return !hasAnySingletonTypeTags()
           && ((bits & (Bit.DICT.mask | Bit.UNRESTRICTED.mask)) == 0)
           && populateBit(Bit.STRUCT, true);
     }
 
-    @Override
     public boolean isStructRecorded() {
       return checkBit(Bit.STRUCT);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#makesDicts()}
+     * flag set to {@code true}.
+     *
+     * @return {@code true} if the dict was recorded and {@code false} if it was already defined or
+     *     it was incompatible with the existing flags
+     */
     public boolean recordDict() {
       return !hasAnySingletonTypeTags()
           && ((bits & (Bit.STRUCT.mask | Bit.UNRESTRICTED.mask)) == 0)
           && populateBit(Bit.DICT, true);
     }
 
-    @Override
     public boolean isDictRecorded() {
       return checkBit(Bit.DICT);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isOverride()}
+     * flag set to {@code true}.
+     */
     public boolean recordOverride() {
       return populateBit(Bit.OVERRIDE, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isDeprecated()} flag set to {@code true}.
+     */
     public boolean recordDeprecated() {
       return populateBit(Bit.DEPRECATED, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isInterface()} flag set to {@code true}.
+     *
+     * @return {@code true} if the flag was recorded and {@code false} if it was already defined or
+     *     it was incompatible with the existing flags
+     */
     public boolean recordInterface() {
       return !hasAnySingletonTypeTags()
           && ((bits & (Bit.CONSTRUCTOR.mask | Bit.ABSTRACT.mask)) == 0)
           && populateBit(Bit.INTERFACE, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExport()}
+     * flag set to {@code true}.
+     */
     public boolean recordExport() {
       return populateBit(Bit.EXPORT, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExport()}
+     * flag set to {@code false}.
+     */
     public boolean removeExport() {
       return populateBit(Bit.EXPORT, false);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExpose()}
+     * flag set to {@code true}.
+     */
     public boolean recordExpose() {
       return populateBit(Bit.EXPOSE, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isImplicitCast()} flag set to {@code true}.
+     */
     public boolean recordImplicitCast() {
       return populateBit(Bit.IMPLICITCAST, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isNoSideEffects()} flag set to {@code true}.
+     */
     public boolean recordNoSideEffects() {
       return !hasAnySingletonSideEffectTags() && populateBit(Bit.NOSIDEEFFECTS, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link JSDocInfo#isExterns()}
+     * flag set to {@code true}.
+     */
     public boolean recordExterns() {
       return !checkBit(Bit.TYPE_SUMMARY) && populateBit(Bit.EXTERNS, true);
     }
 
-    @Override
+    /**
+     * Records that the {@link JSDocInfo} being built should have its {@link
+     * JSDocInfo#isTypeSummary()} flag set to {@code true}.
+     */
     public boolean recordTypeSummary() {
       return !checkBit(Bit.EXTERNS) && populateBit(Bit.TYPE_SUMMARY, true);
     }
 
-    @Override
+    /**
+     * Whether the {@link JSDocInfo} being built will have its {@link JSDocInfo#isInterface()} flag
+     * set to {@code true}.
+     */
     public boolean isInterfaceRecorded() {
       return checkBit(Bit.INTERFACE);
     }
 
-    @Override
+    /** @return Whether a parameter of the given name has already been recorded. */
     public boolean hasParameter(String name) {
       Map<String, JSTypeExpression> params = getProp(PARAMETERS);
       return params != null && params.containsKey(name);
     }
 
-    @Override
+    /** Records an implemented interface. */
     public boolean recordImplementedInterface(JSTypeExpression interfaceType) {
       return interfaceType != null && addUnique(IMPLEMENTED_INTERFACES, interfaceType);
     }
 
-    @Override
+    /** Records an extended interface type. */
     public boolean recordExtendedInterface(JSTypeExpression interfaceType) {
       return interfaceType != null && addUnique(EXTENDED_INTERFACES, interfaceType);
     }
@@ -2063,77 +2327,77 @@ public class JSDocInfo implements Serializable {
       return false;
     }
 
-    @Override
+    /** Records that we're lending to another name. */
     public boolean recordLends(JSTypeExpression name) {
       return !hasAnyTypeRelatedTags() && populateProp(LENDS_NAME, name);
     }
 
-    @Override
+    /** Returns whether current JSDoc is annotated with {@code @ngInject}. */
     public boolean isNgInjectRecorded() {
       return checkBit(Bit.NG_INJECT);
     }
 
-    @Override
+    /** Records that we'd like to add {@code $inject} property inferred from parameters. */
     public boolean recordNgInject(boolean ngInject) {
       return populateBit(Bit.NG_INJECT, true);
     }
 
-    @Override
+    /** Returns whether current JSDoc is annotated with {@code @wizaction}. */
     public boolean isWizactionRecorded() {
       return checkBit(Bit.WIZ_ACTION);
     }
 
-    @Override
+    /** Records that this method is to be exposed as a wizaction. */
     public boolean recordWizaction() {
       return populateBit(Bit.WIZ_ACTION, true);
     }
 
-    @Override
+    /** Returns whether current JSDoc is annotated with {@code @polymerBehavior}. */
     public boolean isPolymerBehaviorRecorded() {
       return checkBit(Bit.POLYMER_BEHAVIOR);
     }
 
-    @Override
+    /** Records that this method is to be exposed as a polymerBehavior. */
     public boolean recordPolymerBehavior() {
       return populateBit(Bit.POLYMER_BEHAVIOR, true);
     }
 
-    @Override
+    /** Returns whether current JSDoc is annotated with {@code @polymer}. */
     public boolean isPolymerRecorded() {
       return checkBit(Bit.POLYMER);
     }
 
-    @Override
+    /** Records that this method is to be exposed as a polymer element. */
     public boolean recordPolymer() {
       return populateBit(Bit.POLYMER, true);
     }
 
-    @Override
+    /** Returns whether current JSDoc is annotated with {@code @customElement}. */
     public boolean isCustomElementRecorded() {
       return checkBit(Bit.CUSTOM_ELEMENT);
     }
 
-    @Override
+    /** Records that this method is to be exposed as a customElement. */
     public boolean recordCustomElement() {
       return populateBit(Bit.CUSTOM_ELEMENT, true);
     }
 
-    @Override
+    /** Returns whether current JSDoc is annotated with {@code @mixinClass}. */
     public boolean isMixinClassRecorded() {
       return checkBit(Bit.MIXIN_CLASS);
     }
 
-    @Override
+    /** Records that this method is to be exposed as a mixinClass. */
     public boolean recordMixinClass() {
       return populateBit(Bit.MIXIN_CLASS, true);
     }
 
-    @Override
+    /** Returns whether current JSDoc is annotated with {@code @mixinFunction}. */
     public boolean isMixinFunctionRecorded() {
       return checkBit(Bit.MIXIN_FUNCTION);
     }
 
-    @Override
+    /** Records that this method is to be exposed as a mixinFunction. */
     public boolean recordMixinFunction() {
       return populateBit(Bit.MIXIN_FUNCTION, true);
     }
