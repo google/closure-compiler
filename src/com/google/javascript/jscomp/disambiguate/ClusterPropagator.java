@@ -27,12 +27,12 @@ final class ClusterPropagator implements FixedPointGraphTraversal.EdgeCallback<F
   public boolean traverseEdge(FlatType src, Object unused, FlatType dest) {
     int startDestPropCount = dest.getAssociatedProps().size();
 
-    for (PropertyClustering prop : src.getAssociatedProps()) {
+    for (PropertyClustering prop : src.getAssociatedProps().keySet()) {
       if (prop.isInvalidated()) {
         continue;
       }
 
-      dest.getAssociatedProps().add(prop);
+      dest.getAssociatedProps().putIfAbsent(prop, FlatType.PropAssociation.SUPERTYPE);
       prop.getClusters().union(src, dest);
     }
 

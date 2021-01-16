@@ -249,7 +249,7 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
     FlatType flatOwner = this.flattener.flatten(owner);
 
     // Set the initial condition for flowing this property along the graph.
-    flatOwner.getAssociatedProps().add(prop);
+    flatOwner.getAssociatedProps().put(prop, FlatType.PropAssociation.AST);
     // Make sure there's a cluster for this name/type combination.
     prop.getClusters().add(flatOwner);
     // Record the site to rename once clusters are found. If it's an extern, we won't rename anyway.

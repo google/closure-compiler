@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -112,13 +113,20 @@ public final class DisambiguateProperties2 implements CompilerPass {
     graphBuilder.addAll(flattener.getAllKnownTypes());
     DiGraph<FlatType, Object> graph = graphBuilder.build();
 
-    // Model legacy behavior from the old (pre-December 2020) disambiguator.
+    // Model legacy behavior from the old (pre-January 2021) disambiguator.
+    // TODO(b/177695515): delete this section.
     for (FlatType flatType : flattener.getAllKnownTypes()) {
-      if (flatType.getArity().equals(Arity.SINGLE)) {
+      if (graph.getOutEdges(flatType).isEmpty()) {
+        // Skipping leaf types improves code size, especially as "namespace" types are all leaf
+        // types and will often have their declared properties collapsed into variables.
+        continue;
+      }
+      if (flatType.getArity().equals(Arity.UNION)) {
         // Only need this step for SINGLE FlatTypes because union types don't have "own" properties
         // and we will add properties of each alternate elsewhere in this loop.
-        registerOwnDeclaredProperties(flatType, propIndex);
+        continue;
       }
+      registerOwnDeclaredProperties(flatType, propIndex);
     }
 
     this.logForDiagnostics(
@@ -181,7 +189,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private static void invalidateBasedOnType(TypeFlattener flattener) {
     for (FlatType type : flattener.getAllKnownTypes()) {
       if (type.isInvalidating()) {
-        for (PropertyClustering prop : type.getAssociatedProps()) {
+        for (PropertyClustering prop : type.getAssociatedProps().keySet()) {
           prop.invalidate(Invalidation.invalidatingType(type.getId()));
         }
       } else {
@@ -197,7 +205,8 @@ public final class DisambiguateProperties2 implements CompilerPass {
     // Invalidate all property accesses that cause "missing property" warnings. This behavior is not
     // inherently necessary for correctness. It only exists because the older version of the
     // disambiguator invalidated these properties and some projects began to rely on this.
-    for (PropertyClustering prop : type.getAssociatedProps()) {
+    // TODO(b/177695515): delete this method.
+    for (PropertyClustering prop : type.getAssociatedProps().keySet()) {
       if (prop.isInvalidated()) {
         continue; // Skip unnecessary `hasProperty` lookups which can be expensive.
       }
@@ -236,7 +245,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
         continue;
       }
       prop.getClusters().add(flatType);
-      flatType.getAssociatedProps().add(prop);
+      flatType.getAssociatedProps().putIfAbsent(prop, FlatType.PropAssociation.TYPE_SYSTEM);
     }
   }
 
@@ -287,7 +296,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     final boolean invalidating;
     final String name;
     final ImmutableSortedSet<TypeEdgeJson> edges;
-    final ImmutableSortedSet<String> props;
+    final ImmutableSortedMap<String, FlatType.PropAssociation> props;
 
     TypeNodeJson(DiGraphNode<FlatType, Object> n) {
       FlatType t = n.getValue();
@@ -301,9 +310,10 @@ public final class DisambiguateProperties2 implements CompilerPass {
               .map(TypeEdgeJson::new)
               .collect(toImmutableSortedSet(naturalOrder()));
       this.props =
-          t.getAssociatedProps().stream()
-              .map(PropertyClustering::getName)
-              .collect(toImmutableSortedSet(naturalOrder()));
+          t.getAssociatedProps().entrySet().stream()
+              .collect(
+                  toImmutableSortedMap(
+                      naturalOrder(), e -> e.getKey().getName(), Map.Entry::getValue));
     }
   }
 
