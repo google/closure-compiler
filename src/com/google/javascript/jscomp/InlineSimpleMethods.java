@@ -99,7 +99,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
           // Verify this is a trivial return
           Node returned = returnedExpression(firstDefinition);
           if (returned != null) {
-            if (isPropertyTree(returned)) {
+            if (isPropertyTree(returned) && !firstDefinition.isArrowFunction()) {
               if (logger.isLoggable(Level.FINE)) {
                 logger.fine("Inlining property accessor: " + callName);
               }
