@@ -462,14 +462,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(processTweaks);
     }
 
-    if (options.checksOnly) {
-      // Run process defines here so that warnings/errors from that pass are emitted as part of
-      // checks.
-      // TODO(rluble): Split process defines into two stages, one that performs only checks to be
-      // run here, and the one that actually changes the AST that would run in the optimization
-      // phase.
-      checks.add(processDefines);
-    }
+    checks.add(processDefinesCheck);
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.add(j2clChecksPass);
@@ -542,7 +535,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Defines in code always need to be processed.
-    passes.add(processDefines);
+    passes.add(processDefinesOptimize);
 
     if (options.getTweakProcessing().shouldStrip()
         || !options.stripTypes.isEmpty()
@@ -1066,7 +1059,7 @@ public final class DefaultPassConfig extends PassConfig {
     assertPassOrder(
         checks,
         closureRewriteModule,
-        processDefines,
+        processDefinesCheck,
         "Must rewrite goog.module before processing @define's, so that @defines in modules work.");
     assertPassOrder(
         checks,
@@ -1154,7 +1147,7 @@ public final class DefaultPassConfig extends PassConfig {
   private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
     assertPassOrder(
         optimizations,
-        processDefines,
+        processDefinesOptimize,
         j2clUtilGetDefineRewriterPass,
         "J2CL define re-writing should be done after processDefines since it relies on "
             + "collectDefines which has side effects.");
@@ -1980,24 +1973,28 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForChecks()
           .build();
 
-  /** Override @define-annotated constants. */
-  private final PassFactory processDefines =
-      PassFactory.builder()
-          .setName("processDefines")
-          .setInternalFactory(
-              (compiler) ->
-                  new ProcessDefines.Builder(compiler)
-                      .putReplacements(compiler.getDefaultDefineValues())
-                      .putReplacements(getAdditionalReplacements(options))
-                      .putReplacements(options.getDefineReplacements())
-                      .setMode(
-                          options.checksOnly
-                              ? ProcessDefines.Mode.CHECK
-                              : ProcessDefines.Mode.CHECK_AND_OPTIMIZE)
-                      .injectNamespace(() -> namespaceForChecks)
-                      .build())
-          .setFeatureSetForChecks()
-          .build();
+  /** Check @define-annotated constants. */
+  private final PassFactory processDefinesCheck = createProcessDefines(ProcessDefines.Mode.CHECK);
+
+  /** Replace @define-annotated constants. */
+  private final PassFactory processDefinesOptimize =
+      createProcessDefines(ProcessDefines.Mode.OPTIMIZE);
+
+  private PassFactory createProcessDefines(ProcessDefines.Mode mode) {
+    return PassFactory.builder()
+        .setName("processDefines_" + mode.name())
+        .setInternalFactory(
+            (compiler) ->
+                new ProcessDefines.Builder(compiler)
+                    .putReplacements(compiler.getDefaultDefineValues())
+                    .putReplacements(getAdditionalReplacements(options))
+                    .putReplacements(options.getDefineReplacements())
+                    .setMode(mode)
+                    .injectNamespace(() -> namespaceForChecks)
+                    .build())
+        .setFeatureSetForChecks()
+        .build();
+  }
 
   /**
    * Strips code for smaller compiled code. This is useful for removing debug statements to prevent
