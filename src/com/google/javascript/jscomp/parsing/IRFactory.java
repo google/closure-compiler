@@ -225,7 +225,7 @@ class IRFactory {
 
   // @license text gets appended onto the fileLevelJsDocBuilder as found,
   // and stored in JSDocInfo for placeholder node.
-  JSDocInfo.Builder fileLevelJsDocBuilder;
+  final JSDocInfo.Builder fileLevelJsDocBuilder;
   JSDocInfo fileOverviewInfo = null;
 
   // Use a template node for properties set on all nodes to minimize the
@@ -645,10 +645,7 @@ class IRFactory {
       case MEMBER_LOOKUP_EXPRESSION:
       case UPDATE_EXPRESSION:
         ParseTree nearest = findNearestNode(tree);
-        if (nearest.type == ParseTreeType.PAREN_EXPRESSION) {
-          return false;
-        }
-        return true;
+        return nearest.type != ParseTreeType.PAREN_EXPRESSION;
       default:
         return true;
     }
@@ -662,7 +659,7 @@ class IRFactory {
    * @return complete comment as NonJSDocComment
    */
   private static NonJSDocComment combineCommentsIntoSingleComment(ArrayList<Comment> comments) {
-    String result = "";
+    StringBuilder result = new StringBuilder();
     Iterator<Comment> itr = comments.iterator();
     int prevCommentEndLine = Integer.MAX_VALUE;
     int completeCommentBegin = Integer.MAX_VALUE;
@@ -676,10 +673,10 @@ class IRFactory {
         completeCommentEnd = currComment.location.end.offset;
       }
       while (prevCommentEndLine < currComment.location.start.line) {
-        result += "\n";
+        result.append("\n");
         prevCommentEndLine++;
       }
-      result += currComment.value;
+      result.append(currComment.value);
       if (itr.hasNext()) {
         prevCommentEndLine = currComment.location.end.line;
       }
@@ -688,7 +685,7 @@ class IRFactory {
     SourcePosition start = comments.get(0).location.start;
     SourcePosition end = Iterables.getLast(comments).location.end;
 
-    NonJSDocComment nonJSDocComment = new NonJSDocComment(start, end, result);
+    NonJSDocComment nonJSDocComment = new NonJSDocComment(start, end, result.toString());
     nonJSDocComment.setEndsAsLineComment(Iterables.getLast(comments).type == Comment.Type.LINE);
     return nonJSDocComment;
   }

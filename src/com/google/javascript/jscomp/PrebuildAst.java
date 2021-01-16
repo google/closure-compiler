@@ -45,15 +45,13 @@ class PrebuildAst {
   }
 
   void prebuild(Iterable<CompilerInput> allInputs) {
-    ThreadFactory threadFactory = new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
+    ThreadFactory threadFactory =
+        r -> {
           Thread t =
               new Thread(null, r, "jscompiler-PrebuildAst", CompilerExecutor.COMPILER_STACK_SIZE);
-          t.setDaemon(true);  // Do not prevent the JVM from exiting.
+          t.setDaemon(true); // Do not prevent the JVM from exiting.
           return t;
-        }
-    };
+        };
     ThreadPoolExecutor poolExecutor =
         new ThreadPoolExecutor(
             numParallelThreads,
