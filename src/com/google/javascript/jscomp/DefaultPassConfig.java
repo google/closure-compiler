@@ -166,12 +166,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(checkSuper);
 
-    // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
-    // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
-    if (options.dartPass && options.needsTranspilationFrom(ES6)) {
-      passes.add(dartSuperAccessorsPass);
-    }
-
     TranspilationPasses.addTranspilationRuntimeLibraries(passes, options);
 
     TranspilationPasses.addPostCheckTranspilationPasses(passes, options);
@@ -366,12 +360,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.computeFunctionSideEffects) {
       checks.add(checkRegExp);
-    }
-
-    // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
-    // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
-    if (options.dartPass && !options.getOutputFeatureSet().contains(ES6)) {
-      checks.add(dartSuperAccessorsPass);
     }
 
     // Passes running before this point should expect to see language features up to ES_2017.
@@ -1073,11 +1061,6 @@ public final class DefaultPassConfig extends PassConfig {
         polymerPass,
         suspiciousCode,
         "The Polymer pass must run before suspiciousCode processing.");
-    assertPassOrder(
-        checks,
-        dartSuperAccessorsPass,
-        TranspilationPasses.es6ConvertSuper,
-        "The Dart super accessors pass must run before ES6->ES3 super lowering.");
     assertPassOrder(
         checks,
         addSyntheticScript,
@@ -2752,14 +2735,6 @@ public final class DefaultPassConfig extends PassConfig {
       PassFactory.builder()
           .setName("chromePass")
           .setInternalFactory(ChromePass::new)
-          .setFeatureSetForChecks()
-          .build();
-
-  /** Rewrites the super accessors calls to support Dart Dev Compiler output. */
-  private final PassFactory dartSuperAccessorsPass =
-      PassFactory.builderForHotSwap()
-          .setName("dartSuperAccessorsPass")
-          .setInternalFactory(DartSuperAccessorsPass::new)
           .setFeatureSetForChecks()
           .build();
 

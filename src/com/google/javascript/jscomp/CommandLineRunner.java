@@ -666,12 +666,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean chromePass = false;
 
     @Option(
-        name = "--dart_pass",
-        handler = BooleanOptionHandler.class,
-        usage = "Rewrite Dart Dev Compiler output to be compiler-friendly.")
-    private boolean dartPass = false;
-
-    @Option(
         name = "--j2cl_pass",
         hidden = true,
         usage =
@@ -1037,7 +1031,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 "Library and Framework Specific",
                 ImmutableList.of(
                     "angular_pass",
-                    "dart_pass",
                     "force_inject_library",
                     "inject_libraries",
                     "polymer_version",
@@ -1913,8 +1906,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
 
     options.setChromePass(flags.chromePass);
-
-    options.setDartPass(flags.dartPass);
 
     if (!flags.j2clPassMode.isEmpty()) {
       try {

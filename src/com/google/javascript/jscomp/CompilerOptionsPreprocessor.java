@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 /**
@@ -37,15 +36,6 @@ public final class CompilerOptionsPreprocessor {
           "max_function_size_after_inlining has no effect if inlining is disabled.");
     }
 
-    if (options.dartPass) {
-      if (!options.getOutputFeatureSet().contains(FeatureSet.ES5)) {
-        throw new InvalidOptionsException("Dart requires --language_out=ES5 or higher.");
-      }
-      // --dart_pass does not support type-aware property renaming yet.
-      options.setAmbiguateProperties(false);
-      options.setDisambiguateProperties(false);
-    }
-
     // ECMASCRIPT6_TYPED and TS syntax support exist only for use by Gents
     // (https://github.com/angular/clutz) which outputs TS syntax but does not parse it.
     if (CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED.equals(options.getLanguageIn())) {
@@ -61,6 +51,5 @@ public final class CompilerOptionsPreprocessor {
   }
 
   // Don't instantiate.
-  private CompilerOptionsPreprocessor() {
-  }
+  private CompilerOptionsPreprocessor() {}
 }

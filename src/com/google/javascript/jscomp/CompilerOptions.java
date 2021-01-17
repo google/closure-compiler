@@ -716,9 +716,6 @@ public class CompilerOptions implements Serializable {
   /** Processes cr.* functions */
   private boolean chromePass;
 
-  /** Processes the output of the Dart Dev Compiler */
-  boolean dartPass;
-
   /** Processes the output of J2CL */
   J2clPassMode j2clPassMode;
 
@@ -1301,7 +1298,6 @@ public class CompilerOptions implements Serializable {
     angularPass = false;
     polymerVersion = null;
     polymerExportPolicy = PolymerExportPolicy.LEGACY;
-    dartPass = false;
     j2clPassMode = J2clPassMode.AUTO;
     j2clMinifierEnabled = true;
     removeAbstractMethods = false;
@@ -1637,10 +1633,6 @@ public class CompilerOptions implements Serializable {
 
   public boolean isChromePassEnabled() {
     return chromePass;
-  }
-
-  public void setDartPass(boolean dartPass) {
-    this.dartPass = dartPass;
   }
 
   public void setJ2clPass(J2clPassMode j2clPassMode) {
@@ -2690,7 +2682,6 @@ public class CompilerOptions implements Serializable {
         .add("cssRenamingMap", cssRenamingMap)
         .add("cssRenamingSkiplist", cssRenamingSkiplist)
         .add("customPasses", customPasses)
-        .add("dartPass", dartPass)
         .add("deadAssignmentElimination", deadAssignmentElimination)
         .add("debugLogDirectory", debugLogDirectory)
         .add("defineReplacements", getDefineReplacements())
