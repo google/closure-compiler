@@ -4087,6 +4087,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testInvalid_classSyntax_staticPropAssignmentInClass() {
+    expectFeatures();
+    strictMode = SLOPPY;
+    parseError("class Foo { static someStaticProp = 'someVal' };", "'(' expected");
+  }
+
+  @Test
   public void testSetter_ObjectLiteral_Es3() {
     expectFeatures(Feature.SETTER);
     mode = LanguageMode.ECMASCRIPT3;
