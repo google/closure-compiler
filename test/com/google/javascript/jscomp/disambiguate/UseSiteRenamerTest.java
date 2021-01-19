@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -235,7 +234,8 @@ public final class UseSiteRenamerTest {
     this.runRename(ImmutableMap.of(PROP_NAME, CheckLevel.ERROR));
 
     // Then
-    assertError(this.reportedErrors.remove(0)).hasType(PropertyRenamingDiagnostics.INVALIDATION);
+    assertError(this.reportedErrors.remove(0))
+        .hasType(DisambiguateProperties2.PROPERTY_INVALIDATION);
   }
 
   private void runRename(@Nullable ImmutableMap<String, CheckLevel> propsToInvalidate) {

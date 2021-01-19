@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
 import java.util.Objects;
@@ -112,7 +111,6 @@ final class UseSiteRenamer {
   }
 
   private static JSError createInvalidationError(CheckLevel level, String name) {
-    return JSError.make(
-        null, -1, -1, level, PropertyRenamingDiagnostics.INVALIDATION, name, "", "", "");
+    return JSError.make(null, -1, -1, level, DisambiguateProperties2.PROPERTY_INVALIDATION, name);
   }
 }

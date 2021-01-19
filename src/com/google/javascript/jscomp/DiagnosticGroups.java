@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
@@ -381,7 +382,10 @@ public class DiagnosticGroups {
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
 
   public static final DiagnosticGroup TYPE_INVALIDATION =
-      DiagnosticGroups.registerGroup("typeInvalidation", PropertyRenamingDiagnostics.INVALIDATION);
+      DiagnosticGroups.registerGroup(
+          "typeInvalidation",
+          PropertyRenamingDiagnostics.INVALIDATION,
+          DisambiguateProperties2.PROPERTY_INVALIDATION);
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",

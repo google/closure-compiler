@@ -860,8 +860,8 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "  x.mustDisambiguate0",
                 "  x.mustDisambiguate1",
                 "}")),
-        error(PropertyRenamingDiagnostics.INVALIDATION),
-        error(PropertyRenamingDiagnostics.INVALIDATION));
+        error(DisambiguateProperties2.PROPERTY_INVALIDATION),
+        error(DisambiguateProperties2.PROPERTY_INVALIDATION));
   }
 
   @Test
@@ -920,7 +920,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
         ImmutableSet.of(
             PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-            PropertyRenamingDiagnostics.INVALIDATION);
+            DisambiguateProperties2.PROPERTY_INVALIDATION);
 
     @Override
     protected int getPriority() {

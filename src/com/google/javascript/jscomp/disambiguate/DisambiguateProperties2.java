@@ -36,6 +36,7 @@ import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -56,6 +57,12 @@ import java.util.Map;
 
 /** Assembles the various parts of the diambiguator to execute them as a compiler pass. */
 public final class DisambiguateProperties2 implements CompilerPass {
+
+  public static final DiagnosticType PROPERTY_INVALIDATION =
+      DiagnosticType.error(
+          "JSC_DISAMBIGUATE2_PROPERTY_INVALIDATION",
+          "Property ''{0}'' was required to be disambiguated but was invalidated."
+          );
 
   private static final Gson GSON = new Gson();
 
