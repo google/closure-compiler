@@ -28,15 +28,11 @@ import java.util.BitSet;
 /**
  * A struct representing a {@link Color} for use in ambiguation.
  *
- * <p>"Flat" refers to the coercion of multiple {@link Color}s, which should behave the same during
- * disambiguation, into a single {@link ColorGraphNode}.
- *
- * <p>Each instance pairs a type with the information required for ambiguation to map this type to
- * the set of associated properties.
+ * <p>Each instance pairs a Color with additional information computed by/for optimizations.
  *
  * <p>Note: this design now depends on the implementation of Color to preserve invariants about
- * recursive Colors. The node factory can't be depended on for post-processing Colors without
- * losing type safety.
+ * recursive Colors. The node factory can't be depended on for post-processing Colors without losing
+ * type safety.
  */
 final class ColorGraphNode {
 
@@ -56,7 +52,7 @@ final class ColorGraphNode {
 
   @VisibleForTesting
   static ColorGraphNode createForTesting(int id) {
-    checkArgument(id < 0); // All test types have negative ids to differentiate them.
+    checkArgument(id < 0); // All test nodes have negative ids to differentiate them.
 
     return new ColorGraphNode(null, id);
   }
