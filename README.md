@@ -76,13 +76,13 @@ google-closure-compiler --help
 <table>
 <thead>
   <tr>
-    <td><code>--flag</code></td>
-    <td>Description</td>
+    <th><code>--flag</code></th>
+    <th>Description</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td style="white-space: nowrap"><code>--compilation_level (-O) VAL</code></td>
+    <td><code>--compilation_level (-O)</code></td>
     <td>
       Specifies the compilation level to use.
       Options: <code>BUNDLE</code>, <code>WHITESPACE_ONLY</code>,
@@ -90,7 +90,7 @@ google-closure-compiler --help
     </td>
   </tr>
   <tr>
-    <td style="white-space: nowrap"><code>--env VAL</code></td>
+    <td><code>--env</code></td>
     <td>
       Determines the set of builtin externs to load.
       Options: <code>BROWSER</code>, <code>CUSTOM</code>.
@@ -98,11 +98,11 @@ google-closure-compiler --help
     </td>
   </tr>
   <tr>
-    <td style="white-space: nowrap"><code>--externs VAL</code></td>
+    <td><code>--externs</code></td>
     <td>The file containing JavaScript externs. You may specify multiple</td>
   </tr>
   <tr>
-    <td style="white-space: nowrap"><code>--js VAL</code></td>
+    <td><code>--js</code></td>
     <td>
       The JavaScript filename. You may specify multiple. The flag name is
       optional, because args are interpreted as files by default. You may also
@@ -112,13 +112,13 @@ google-closure-compiler --help
     </td>
   </tr>
   <tr>
-    <td style="white-space: nowrap"><code>--js_output_file VAL</code></td>
+    <td><code>--js_output_file</code></td>
     <td>
       Primary output filename. If not specified, output is written to stdout.
     </td>
   </tr>
   <tr>
-    <td style="white-space: nowrap"><code>--language_in VAL</code></td>
+    <td><code>--language_in</code></td>
     <td>
       Sets the language spec to which input sources should conform.
       Options: <code>ECMASCRIPT3</code>, <code>ECMASCRIPT5</code>,
@@ -129,7 +129,7 @@ google-closure-compiler --help
     </td>
   </tr>
   <tr>
-    <td style="white-space: nowrap"><code>--language_out VAL</code></td>
+    <td><code>--language_out</code></td>
     <td>
       Sets the language spec to which output should conform.
       Options: <code>ECMASCRIPT3</code>, <code>ECMASCRIPT5</code>,
@@ -140,7 +140,7 @@ google-closure-compiler --help
     </td>
   </tr>
   <tr>
-    <td style="white-space: nowrap"><code>--warning_level (-W) VAL</code></td>
+    <td><code>--warning_level (-W)</code></td>
     <td>Specifies the warning level to use.
       Options: <code>QUIET</code>, <code>DEFAULT</code>, <code>VERBOSE</code>
     </td>
