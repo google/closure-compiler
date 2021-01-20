@@ -1302,8 +1302,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setPropertyInvalidationErrors(
-       ImmutableMap.of("a", CheckLevel.ERROR));
+    options.setPropertiesThatMustDisambiguate(ImmutableSet.of("a"));
     options.setRemoveDeadCode(true);
     options.setRemoveAbstractMethods(true);
     test(

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -1864,8 +1865,9 @@ public class CompilerOptions implements Serializable {
   }
 
   /** Sets the list of properties that we report property invalidation errors for. */
-  public void setPropertyInvalidationErrors(Map<String, CheckLevel> propertyInvalidationErrors) {
-    this.propertyInvalidationErrors = ImmutableMap.copyOf(propertyInvalidationErrors);
+  public void setPropertiesThatMustDisambiguate(Set<String> names) {
+    this.propertyInvalidationErrors =
+        names.stream().sorted().collect(toImmutableMap((x) -> x, (x) -> CheckLevel.ERROR));
   }
 
   public void setAllowHotswapReplaceScript(boolean allowRecompilation) {
