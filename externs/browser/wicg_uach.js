@@ -69,8 +69,11 @@ NavigatorUAData.prototype.brands;
 /** @type {boolean} */
 NavigatorUAData.prototype.mobile;
 
-/** @type {function(!Array<string>) : !Promise<!UADataValues>} */
-NavigatorUAData.prototype.getHighEntropyValues;
+/**
+ * @param {!Array<string>} hints
+ * @return {!Promise<!UADataValues>}
+ */
+NavigatorUAData.prototype.getHighEntropyValues = function(hints) {};
 
 /**
  * @type {?NavigatorUAData}
