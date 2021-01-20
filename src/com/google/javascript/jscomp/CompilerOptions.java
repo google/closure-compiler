@@ -142,7 +142,9 @@ public class CompilerOptions implements Serializable {
 
     public void setDependentValuesFromYear() {
       if (year != 0) {
-        if (year == 2020) {
+        if (year == 2021) {
+          CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2021);
+        } else if (year == 2020) {
           CompilerOptions.this.setOutputFeatureSet(FeatureSet.BROWSER_2020);
         } else if (year == 2019) {
           CompilerOptions.this.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
@@ -167,9 +169,9 @@ public class CompilerOptions implements Serializable {
    */
   public void validateBrowserFeaturesetYearOption(Integer inputYear) {
     checkState(
-        inputYear == 2020 || inputYear == 2019 || inputYear == 2012,
+        inputYear == 2021 || inputYear == 2020 || inputYear == 2019 || inputYear == 2012,
         SimpleFormat.format(
-            "Illegal browser_featureset_year=%d. We support values 2012, 2019, and 2020 only",
+            "Illegal browser_featureset_year=%d. We support values 2012, 2019, 2020, and 2021 only",
             inputYear));
   }
 
@@ -714,9 +716,6 @@ public class CompilerOptions implements Serializable {
   /** Processes cr.* functions */
   private boolean chromePass;
 
-  /** Processes the output of the Dart Dev Compiler */
-  boolean dartPass;
-
   /** Processes the output of J2CL */
   J2clPassMode j2clPassMode;
 
@@ -737,16 +736,13 @@ public class CompilerOptions implements Serializable {
   public boolean gatherCssNames;
 
   /** Names of types to strip */
-  public Set<String> stripTypes;
+  ImmutableSet<String> stripTypes;
 
   /** Name suffixes that determine which variables and properties to strip */
-  public Set<String> stripNameSuffixes;
+  ImmutableSet<String> stripNameSuffixes;
 
   /** Name prefixes that determine which variables and properties to strip */
-  public Set<String> stripNamePrefixes;
-
-  /** Qualified type name prefixes that determine which types to strip */
-  public Set<String> stripTypePrefixes;
+  ImmutableSet<String> stripNamePrefixes;
 
   /** Custom passes */
   protected transient Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
@@ -809,7 +805,7 @@ public class CompilerOptions implements Serializable {
   VariableMap replaceStringsInputMap;
 
   /** List of properties that we report invalidation errors for. */
-  Map<String, CheckLevel> propertyInvalidationErrors;
+  private ImmutableSet<String> propertiesThatMustDisambiguate;
 
   /** Transform AMD to CommonJS modules. */
   boolean transformAMDToCJSModules = false;
@@ -1198,6 +1194,17 @@ public class CompilerOptions implements Serializable {
     this.printConfig = printConfig;
   }
 
+  private boolean allowDynamicImport = false;
+
+  /** Whether to enable support for dynamic import expressions */
+  public void setAllowDynamicImport(boolean value) {
+    this.allowDynamicImport = value;
+  }
+
+  boolean shouldAllowDynamicImport() {
+    return this.allowDynamicImport;
+  }
+
   /**
    * Initializes compiler options. All options are disabled by default.
    *
@@ -1291,7 +1298,6 @@ public class CompilerOptions implements Serializable {
     angularPass = false;
     polymerVersion = null;
     polymerExportPolicy = PolymerExportPolicy.LEGACY;
-    dartPass = false;
     j2clPassMode = J2clPassMode.AUTO;
     j2clMinifierEnabled = true;
     removeAbstractMethods = false;
@@ -1299,7 +1305,6 @@ public class CompilerOptions implements Serializable {
     stripTypes = ImmutableSet.of();
     stripNameSuffixes = ImmutableSet.of();
     stripNamePrefixes = ImmutableSet.of();
-    stripTypePrefixes = ImmutableSet.of();
     customPasses = null;
     defineReplacements = new HashMap<>();
     tweakProcessing = TweakProcessing.OFF;
@@ -1314,7 +1319,7 @@ public class CompilerOptions implements Serializable {
     replaceStringsFunctionDescriptions = ImmutableList.of();
     replaceStringsPlaceholderToken = "";
     replaceStringsReservedStrings = ImmutableSet.of();
-    propertyInvalidationErrors = new HashMap<>();
+    propertiesThatMustDisambiguate = ImmutableSet.of();
     inputSourceMaps = ImmutableMap.of();
 
     instrumentForCoverageOption = InstrumentOption.NONE;
@@ -1630,10 +1635,6 @@ public class CompilerOptions implements Serializable {
     return chromePass;
   }
 
-  public void setDartPass(boolean dartPass) {
-    this.dartPass = dartPass;
-  }
-
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
   }
@@ -1863,8 +1864,12 @@ public class CompilerOptions implements Serializable {
   }
 
   /** Sets the list of properties that we report property invalidation errors for. */
-  public void setPropertyInvalidationErrors(Map<String, CheckLevel> propertyInvalidationErrors) {
-    this.propertyInvalidationErrors = ImmutableMap.copyOf(propertyInvalidationErrors);
+  public void setPropertiesThatMustDisambiguate(Set<String> names) {
+    this.propertiesThatMustDisambiguate = ImmutableSet.copyOf(names);
+  }
+
+  public ImmutableSet<String> getPropertiesThatMustDisambiguate() {
+    return this.propertiesThatMustDisambiguate;
   }
 
   public void setAllowHotswapReplaceScript(boolean allowRecompilation) {
@@ -2255,20 +2260,28 @@ public class CompilerOptions implements Serializable {
     this.gatherCssNames = gatherCssNames;
   }
 
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
   public void setStripTypes(Set<String> stripTypes) {
-    this.stripTypes = stripTypes;
+    this.stripTypes = ImmutableSet.copyOf(stripTypes);
   }
 
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
+  public ImmutableSet<String> getStripTypes() {
+    return ImmutableSet.copyOf(this.stripTypes);
+  }
+
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
   public void setStripNameSuffixes(Set<String> stripNameSuffixes) {
-    this.stripNameSuffixes = stripNameSuffixes;
+    this.stripNameSuffixes = ImmutableSet.copyOf(stripNameSuffixes);
   }
 
+  /** @deprecated StripCode is deprecated. Code should be designed to be removed by other means. */
+  @Deprecated
   public void setStripNamePrefixes(Set<String> stripNamePrefixes) {
-    this.stripNamePrefixes = stripNamePrefixes;
-  }
-
-  public void setStripTypePrefixes(Set<String> stripTypePrefixes) {
-    this.stripTypePrefixes = stripTypePrefixes;
+    this.stripNamePrefixes = ImmutableSet.copyOf(stripNamePrefixes);
   }
 
   public void addCustomPass(CustomPassExecutionTime time, CompilerPass customPass) {
@@ -2673,7 +2686,6 @@ public class CompilerOptions implements Serializable {
         .add("cssRenamingMap", cssRenamingMap)
         .add("cssRenamingSkiplist", cssRenamingSkiplist)
         .add("customPasses", customPasses)
-        .add("dartPass", dartPass)
         .add("deadAssignmentElimination", deadAssignmentElimination)
         .add("debugLogDirectory", debugLogDirectory)
         .add("defineReplacements", getDefineReplacements())
@@ -2764,7 +2776,7 @@ public class CompilerOptions implements Serializable {
         .add("printInputDelimiter", printInputDelimiter)
         .add("printSourceAfterEachPass", printSourceAfterEachPass)
         .add("processCommonJSModules", processCommonJSModules)
-        .add("propertyInvalidationErrors", propertyInvalidationErrors)
+        .add("propertiesThatMustDisambiguate", propertiesThatMustDisambiguate)
         .add("propertyRenaming", propertyRenaming)
         .add("protectHiddenSideEffects", protectHiddenSideEffects)
         .add("quoteKeywordProperties", quoteKeywordProperties)
@@ -2802,7 +2814,6 @@ public class CompilerOptions implements Serializable {
         .add("sourceMapOutputPath", sourceMapOutputPath)
         .add("stripNamePrefixes", stripNamePrefixes)
         .add("stripNameSuffixes", stripNameSuffixes)
-        .add("stripTypePrefixes", stripTypePrefixes)
         .add("stripTypes", stripTypes)
         .add("summaryDetailLevel", summaryDetailLevel)
         .add("syntheticBlockEndMarker", syntheticBlockEndMarker)

@@ -21,9 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.Multimaps.toMultimap;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
-import static com.google.javascript.jscomp.testing.JSCompCorrespondences.DIAGNOSTIC_EQUALITY;
 import static com.google.javascript.rhino.Token.GETTER_DEF;
 import static com.google.javascript.rhino.Token.MEMBER_FUNCTION_DEF;
 import static com.google.javascript.rhino.Token.SETTER_DEF;
@@ -42,19 +40,15 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.WarningsGuard;
-import com.google.javascript.jscomp.disambiguate.FindPropertyReferences.IsPropertyDefiner;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.junit.After;
 import org.junit.Before;
@@ -128,7 +122,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     // Given
     FlatType flatFoo = this.createFlatType();
 
-    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null, null);
+    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null);
 
     // When
     this.propIndex =
@@ -151,7 +145,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     // Given
     FlatType flatFoo = this.createFlatType();
 
-    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null, null);
+    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null);
 
     // When
     this.propIndex =
@@ -174,7 +168,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     // Given
     FlatType flatFoo = this.createFlatType();
 
-    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null, null);
+    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null);
 
     // When
     this.propIndex =
@@ -208,7 +202,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     // Given
     FlatType flatFoo = this.createFlatType();
 
-    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null, null);
+    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null);
 
     // When
     this.propIndex =
@@ -237,7 +231,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     FlatType flatFoo = this.createFlatType();
 
     FindPropertyReferences finder =
-        this.createFinder(ImmutableMap.of("Foo.prototype", flatFoo), null, null);
+        this.createFinder(ImmutableMap.of("Foo.prototype", flatFoo), null);
 
     // When
     this.propIndex =
@@ -265,7 +259,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     // Given
     FlatType flatFoo = this.createFlatType();
 
-    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null, null);
+    FindPropertyReferences finder = this.createFinder(ImmutableMap.of("Foo", flatFoo), null);
 
     // When
     this.propIndex =
@@ -291,7 +285,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     FlatType flatFoo = this.createFlatType();
 
     FindPropertyReferences finder =
-        this.createFinder(ImmutableMap.of("(typeof Foo)", flatFoo), null, null);
+        this.createFinder(ImmutableMap.of("(typeof Foo)", flatFoo), null);
 
     // When
     this.propIndex =
@@ -320,7 +314,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     FlatType flatFoo = this.createFlatType();
 
     FindPropertyReferences finder =
-        this.createFinder(ImmutableMap.of("Foo.prototype", flatFoo), null, null);
+        this.createFinder(ImmutableMap.of("Foo.prototype", flatFoo), null);
 
     // When
     this.propIndex =
@@ -354,8 +348,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
     FlatType flatFoo = this.createFlatType();
 
     FindPropertyReferences finder =
-        this.createFinder(
-            ImmutableMap.of("Foo.prototype", flatFoo), null, (s) -> s.equals("define"));
+        this.createFinder(ImmutableMap.of("Foo.prototype", flatFoo), ImmutableSet.of("reflect"));
 
     // When
     this.propIndex =
@@ -365,19 +358,19 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
             lines(
                 "class Foo { }", //
                 "",
-                "define('a', Foo.prototype);"));
+                "reflect('a', Foo.prototype);"));
 
     // Then
     this.assertThatUsesOf("a").containsExactly(flatFoo, STRING);
   }
 
   @Test
-  public void propDefinerFunction_tooFewArgs_isReported() {
+  public void propDefinerFunction_noObject_associatesWithJavaNull() {
     // Given
-    ArrayList<JSError> errors = new ArrayList<>();
+    FlatType flatJavaNull = this.createFlatType();
 
     FindPropertyReferences finder =
-        this.createFinder(ImmutableMap.of(), errors::add, (s) -> s.equals("define"));
+        this.createFinder(ImmutableMap.of("<null>", flatJavaNull), ImmutableSet.of("reflect"));
 
     // When
     this.propIndex =
@@ -385,22 +378,37 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
             finder,
             "",
             lines(
-                "define();" //
+                "reflect('a');" //
                 ));
 
     // Then
-    assertThat(errors)
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
+    this.assertThatUsesOf("a").containsExactly(flatJavaNull, STRING);
   }
 
   @Test
-  public void propDefinerFunction_nonLiteralName_isReported() {
+  public void propDefinerFunction_noString_findsNoNodes() {
     // Given
-    ArrayList<JSError> errors = new ArrayList<>();
-
     FindPropertyReferences finder =
-        this.createFinder(ImmutableMap.of(), errors::add, (s) -> s.equals("define"));
+        this.createFinder(ImmutableMap.of(), ImmutableSet.of("reflect"));
+
+    // When
+    this.propIndex =
+        this.collectProperties(
+            finder,
+            "",
+            lines(
+                "reflect();" //
+                ));
+
+    // Then
+    assertThat(this.propIndex.keySet()).isEmpty();
+  }
+
+  @Test
+  public void propDefinerFunction_nonLiteralName_findsNoNodes() {
+    // Given
+    FindPropertyReferences finder =
+        this.createFinder(ImmutableMap.of(), ImmutableSet.of("reflect"));
 
     // When
     this.propIndex =
@@ -409,35 +417,10 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
             "",
             lines(
                 "const foo = 'a';", //
-                "define(foo, {});"));
+                "reflect(foo, {});"));
 
     // Then
-    assertThat(errors)
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
-  }
-
-  @Test
-  public void propDefinerFunction_illegalName_isReported() {
-    // Given
-    ArrayList<JSError> errors = new ArrayList<>();
-
-    FindPropertyReferences finder =
-        this.createFinder(ImmutableMap.of(), errors::add, (s) -> s.equals("define"));
-
-    // When
-    this.propIndex =
-        this.collectProperties(
-            finder,
-            "",
-            lines(
-                "define('a.b', {});" //
-                ));
-
-    // Then
-    assertThat(errors)
-        .comparingElementsUsing(DIAGNOSTIC_EQUALITY)
-        .containsExactly(PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
+    assertThat(this.propIndex.keySet()).isEmpty();
   }
 
   @Test
@@ -451,9 +434,7 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
     FindPropertyReferences finder =
         this.createFinder(
-            ImmutableMap.of("Foo", flatFoo, "Bar", flatBar, "Qux", flatQux, "Tum", flatTum),
-            null,
-            null);
+            ImmutableMap.of("Foo", flatFoo, "Bar", flatBar, "Qux", flatQux, "Tum", flatTum), null);
 
     // When
     this.propIndex =
@@ -493,7 +474,6 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
                 .put("enum{Bar}", flatBar)
                 .put("Qux", flatQux)
                 .build(),
-            null,
             null);
 
     // When
@@ -521,9 +501,8 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
   @Test
   public void propertylessConstructorsAreRecordedInTypeFlattener() {
-    Consumer<JSError> errorCb = (e) -> assertWithMessage(e.getDescription()).fail();
     StubTypeFlattener flattener = new StubTypeFlattener(ImmutableMap.of());
-    FindPropertyReferences finder = new FindPropertyReferences(flattener, errorCb, (s) -> false);
+    FindPropertyReferences finder = new FindPropertyReferences(flattener, (s) -> false);
 
     this.propIndex =
         this.collectProperties(
@@ -554,16 +533,13 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
   private FindPropertyReferences createFinder(
       ImmutableMap<String, FlatType> typeIndex,
-      @Nullable Consumer<JSError> errorCb,
-      @Nullable IsPropertyDefiner isPropertyDefiner) {
-    if (errorCb == null) {
-      errorCb = (e) -> assertWithMessage(e.getDescription()).fail();
-    }
-    if (isPropertyDefiner == null) {
-      isPropertyDefiner = (s) -> false;
+      @Nullable ImmutableSet<String> propertyReflctorNames) {
+    if (propertyReflctorNames == null) {
+      propertyReflctorNames = ImmutableSet.of();
     }
 
-    return new FindPropertyReferences(new StubTypeFlattener(typeIndex), errorCb, isPropertyDefiner);
+    return new FindPropertyReferences(
+        new StubTypeFlattener(typeIndex), propertyReflctorNames::contains);
   }
 
   private FlatType createFlatType() {
@@ -593,8 +569,9 @@ public final class FindPropertyReferencesTest extends CompilerTestCase {
 
     @Override
     public FlatType flatten(JSType type) {
-      flattened.add(type.toString());
-      return stubs.getOrDefault(type.toString(), this.fallbackType);
+      String name = (type == null) ? "<null>" : type.toString();
+      flattened.add(name);
+      return stubs.getOrDefault(name, this.fallbackType);
     }
 
     @Override

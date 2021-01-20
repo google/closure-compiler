@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
@@ -338,7 +337,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     }
 
     private JSDocInfo buildNamespaceJSDoc() {
-      JSDocInfoBuilder builder = JSDocInfo.builder();
+      JSDocInfo.Builder builder = JSDocInfo.builder();
       builder.recordConstancy();
       builder.recordSuppressions(ImmutableSet.of("const", "duplicate"));
       return builder.build();

@@ -26,7 +26,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DestructuredTarget;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
@@ -92,8 +91,7 @@ public class DisambiguateProperties implements CompilerPass {
   // that we tell the user to fix per-property.
   private static final int MAX_INVALIDATION_WARNINGS_PER_PROPERTY = 10;
 
-  private static final Logger logger = Logger.getLogger(
-      DisambiguateProperties.class.getName());
+  private static final Logger logger = Logger.getLogger(DisambiguateProperties.class.getName());
   private static final Pattern NONWORD_PATTERN = Pattern.compile("[^\\w$]");
 
   private final AbstractCompiler compiler;
@@ -105,14 +103,13 @@ public class DisambiguateProperties implements CompilerPass {
   private final Multimap<JSType, Node> invalidationMap;
 
   /**
-   * In practice any large code base will have thousands and thousands of
-   * type invalidations, which makes reporting all of the errors useless.
-   * However, certain properties are worth specifically guarding because of the
-   * large amount of code that can be removed as dead code. This list contains
-   * the properties (eg: "toString") that we care about; if any of these
-   * properties is invalidated it causes an error.
+   * In practice any large code base will have thousands and thousands of type invalidations, which
+   * makes reporting all of the errors useless. However, certain properties are worth specifically
+   * guarding because of the large amount of code that can be removed as dead code. This list
+   * contains the properties (eg: "toString") that we care about; if any of these properties is
+   * invalidated it causes an error.
    */
-  private final Map<String, CheckLevel> propertiesToErrorFor;
+  private final ImmutableSet<String> propertiesToErrorFor;
 
   // Use this cache to call FunctionType#getImplementedInterfaces
   // or FunctionType#getExtendedInterfaces only once per constructor.
@@ -144,8 +141,8 @@ public class DisambiguateProperties implements CompilerPass {
     private UnionFind<JSType> types;
 
     /**
-     * A set of types for which renaming this field should be skipped. This
-     * list is first filled by fields defined in the externs file.
+     * A set of types for which renaming this field should be skipped. This list is first filled by
+     * fields defined in the externs file.
      */
     Set<JSType> typesToSkip = new HashSet<>();
 
@@ -156,15 +153,15 @@ public class DisambiguateProperties implements CompilerPass {
     boolean isValidForRenaming = true;
 
     /**
-     * A map from nodes that need renaming to the highest type in the prototype
-     * chain containing the field for each node. In the case of a union, the
-     * type is the highest type of one of the types in the union.
+     * A map from nodes that need renaming to the highest type in the prototype chain containing the
+     * field for each node. In the case of a union, the type is the highest type of one of the types
+     * in the union.
      */
     Map<Node, JSType> rootTypesByNode = new LinkedHashMap<>();
 
     /**
-     * For every property p and type t, we only need to run recordInterfaces
-     * once. Use this cache to avoid needless calls.
+     * For every property p and type t, we only need to run recordInterfaces once. Use this cache to
+     * avoid needless calls.
      */
     private final Set<JSType> recordInterfacesCache = new HashSet<>();
 
@@ -180,9 +177,7 @@ public class DisambiguateProperties implements CompilerPass {
       return types;
     }
 
-    /**
-     * Record that this property is referenced from this type.
-     */
+    /** Record that this property is referenced from this type. */
     void addType(JSType type, JSType relatedType) {
       checkState(this.isValidForRenaming, "Attempt to record an invalidated property: %s", name);
       JSType top = getRepresentativeType(this.name, type);
@@ -263,8 +258,7 @@ public class DisambiguateProperties implements CompilerPass {
     }
 
     /**
-     * Invalidates a field from renaming.  Used for field references on an
-     * object with unknown type.
+     * Invalidates a field from renaming. Used for field references on an object with unknown type.
      */
     boolean invalidate() {
       boolean changed = this.isValidForRenaming;
@@ -368,7 +362,7 @@ public class DisambiguateProperties implements CompilerPass {
   private final Map<String, Property> properties = new LinkedHashMap<>();
 
   public DisambiguateProperties(
-      AbstractCompiler compiler, Map<String, CheckLevel> propertiesToErrorFor) {
+      AbstractCompiler compiler, ImmutableSet<String> propertiesToErrorFor) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
     this.representativeTypeSentinel =
@@ -381,7 +375,6 @@ public class DisambiguateProperties implements CompilerPass {
         new InvalidatingTypes.Builder(registry)
             .writeInvalidationsInto(this.invalidationMap)
             .addAllTypeMismatches(compiler.getTypeMismatches())
-            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
             .build();
   }
 
@@ -396,9 +389,8 @@ public class DisambiguateProperties implements CompilerPass {
     NodeTraversal.traverse(compiler, root, new FindRenamableProperties());
     // Do the actual renaming.
     renameProperties();
-    // Update any getters and setters we renamed.
-    // TODO(b/161947315): this shouldn't be the responsibility of DisambiguateProperties
-    GatherGetterAndSetterProperties.update(compiler, externs, root);
+
+    GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
 
   /** Returns the property for the given name, creating it if necessary. */
@@ -419,7 +411,7 @@ public class DisambiguateProperties implements CompilerPass {
         Node recv = n.getFirstChild();
         JSType recvType = getType(recv);
         Property prop = getProperty(n.getLastChild().getString());
-        processExternsProperty(prop, recvType);
+        processExternsProperty(n, prop, recvType);
       } else if (n.isClass()) {
         JSType classType = n.getJSType();
         JSType classInstanceType =
@@ -442,7 +434,7 @@ public class DisambiguateProperties implements CompilerPass {
           JSType ownerType = member.isStaticMember() ? classType : classInstanceType;
 
           Property prop = getProperty(name);
-          processExternsProperty(prop, ownerType);
+          processExternsProperty(member, prop, ownerType);
         }
       }
     }
@@ -453,11 +445,12 @@ public class DisambiguateProperties implements CompilerPass {
      *
      * @param ownerType The type of the object the property is on (e.g. `ns.a` for `ns.a.MyType;`)
      */
-    private void processExternsProperty(Property prop, JSType ownerType) {
-      if (invalidatingTypes.isInvalidating(ownerType)
-          // TODO(b/119886075): invalidating here when isStructuralInterfacePrototype is true is
-          // kind of arbitrary. We should only do it when the @record is implicitly implemented.
-          || isStructuralInterfacePrototype(ownerType)) {
+    private void processExternsProperty(Node location, Property prop, JSType ownerType) {
+      if (invalidatingTypes.isInvalidating(ownerType)) {
+        if (prop.isValidForRenaming) {
+          // Only report the first invalidation for any given property
+          reportInvalidation(location, prop.name, ownerType);
+        }
         prop.invalidate();
       } else if (prop.isValidForRenaming) {
         prop.addTypeToSkip(ownerType);
@@ -474,8 +467,7 @@ public class DisambiguateProperties implements CompilerPass {
   }
 
   private void reportInvalidation(Node location, String propName, JSType receiver) {
-    CheckLevel level = propertiesToErrorFor.getOrDefault(propName, CheckLevel.OFF);
-    if (level.equals(CheckLevel.OFF)) {
+    if (!propertiesToErrorFor.contains(propName)) {
       return;
     }
 
@@ -487,7 +479,6 @@ public class DisambiguateProperties implements CompilerPass {
     compiler.report(
         JSError.make(
             location,
-            level,
             PropertyRenamingDiagnostics.INVALIDATION,
             propName,
             receiver.toString(),
@@ -598,7 +589,7 @@ public class DisambiguateProperties implements CompilerPass {
           && compiler.getCodingConvention().isPropertyRenameFunction(functionName)) {
         // We intentionally do not handle optional `goog.reflect.objectProperty?.()` because we
         // expect it to be defined or polyfill-ed
-        handlePropertyRenameFunctionCall(call, functionName);
+        handlePropertyRenameFunctionCall(call);
       } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
         // We intentionally do not check optional Object.defineProperties?.() because we expect it
         // to be defined or polyfill-ed
@@ -659,45 +650,18 @@ public class DisambiguateProperties implements CompilerPass {
       }
     }
 
-    private void handlePropertyRenameFunctionCall(Node call, String renameFunctionName) {
-      int childCount = call.getChildCount();
-      if (childCount != 2 && childCount != 3) {
-        compiler.report(
-            JSError.make(
-                call,
-                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-                renameFunctionName,
-                " Must be called with 1 or 2 arguments"));
-        return;
-      }
-
-      if (!call.getSecondChild().isString()) {
-        compiler.report(
-            JSError.make(
-                call,
-                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-                renameFunctionName,
-                " The first argument must be a string literal."));
-        return;
-      }
-
-      String propName = call.getSecondChild().getString();
-
-      if (propName.contains(".")) {
-        compiler.report(
-            JSError.make(
-                call,
-                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-                renameFunctionName,
-                " The first argument must not be a property path."));
+    private void handlePropertyRenameFunctionCall(Node call) {
+      Node propName = call.getSecondChild();
+      if (propName == null || !propName.isString()) {
         return;
       }
 
       Node obj = call.getChildAtIndex(2);
       JSType type = getType(obj);
-      Property prop = getProperty(propName);
-      if (!prop.scheduleRenaming(call.getSecondChild(), type)) {
-        reportInvalidation(obj, propName, type);
+      Property prop = getProperty(propName.getString());
+
+      if (!prop.scheduleRenaming(propName, type)) {
+        reportInvalidation(obj, propName.getString(), type);
       }
     }
 
@@ -740,7 +704,6 @@ public class DisambiguateProperties implements CompilerPass {
     int instancesSkipped = 0;
     int singleTypeProps = 0;
 
-    Set<String> reported = new HashSet<>();
     for (Property prop : properties.values()) {
       if (!prop.wouldBeDisambiguatedByRenaming()) {
         if (!prop.isValidForRenaming) {
@@ -768,41 +731,30 @@ public class DisambiguateProperties implements CompilerPass {
           node.setString(newName);
           compiler.reportChangeToEnclosingScope(node);
           ++instancesRenamed;
-          continue;
-        }
-
-        ++instancesSkipped;
-
-        CheckLevel checkLevelForProp = propertiesToErrorFor.getOrDefault(prop.name, CheckLevel.OFF);
-        if (!prop.isValidForRenaming
-            && checkLevelForProp != CheckLevel.OFF
-            && !reported.contains(prop.name)) {
-          reported.add(prop.name);
-          compiler.report(
-              JSError.make(
-                  node,
-                  checkLevelForProp,
-                  PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE,
-                  prop.name,
-                  rootType.toString(),
-                  ""));
+        } else {
+          ++instancesSkipped;
         }
       }
     }
 
     if (logger.isLoggable(Level.FINE)) {
-      logger.fine("Renamed " + instancesRenamed + " instances of "
-                  + propsRenamed + " properties.");
-      logger.fine("Skipped renaming " + instancesSkipped + " invalidated "
-                  + "properties, " + propsSkipped + " instances of properties "
-                  + "that were skipped for specific types and " + singleTypeProps
-                  + " properties that were referenced from only one type.");
+      logger.fine("Renamed " + instancesRenamed + " instances of " + propsRenamed + " properties.");
+      logger.fine(
+          "Skipped renaming "
+              + instancesSkipped
+              + " invalidated "
+              + "properties, "
+              + propsSkipped
+              + " instances of properties "
+              + "that were skipped for specific types and "
+              + singleTypeProps
+              + " properties that were referenced from only one type.");
     }
   }
 
   /**
-   * Chooses a name to use for renaming in each equivalence class and maps
-   * the representative type of that class to that name.
+   * Chooses a name to use for renaming in each equivalence class and maps the representative type
+   * of that class to that name.
    */
   private Map<JSType, String> buildPropNames(Property prop) {
     UnionFind<JSType> pTypes = prop.getTypes();
@@ -854,8 +806,8 @@ public class DisambiguateProperties implements CompilerPass {
   }
 
   /**
-   * Returns a set of types that should be skipped given the given type. This is
-   * necessary for interfaces, as all super interfaces must also be skipped.
+   * Returns a set of types that should be skipped given the given type. This is necessary for
+   * interfaces, as all super interfaces must also be skipped.
    */
   private ImmutableSet<JSType> getTypesToSkipForType(JSType type) {
     type = type.restrictByNotNullOrUndefined();
@@ -888,17 +840,16 @@ public class DisambiguateProperties implements CompilerPass {
   }
 
   /**
-   * Determines whether the given type is one whose properties should not be
-   * considered for renaming.
+   * Determines whether the given type is one whose properties should not be considered for
+   * renaming.
    */
   private boolean isTypeToSkip(JSType type) {
     return type.isEnumType();
   }
 
   /**
-   * Returns the alternatives if this is a type that represents multiple
-   * types, and null if not. Union and interface types can correspond to
-   * multiple other types.
+   * Returns the alternatives if this is a type that represents multiple types, and null if not.
+   * Union and interface types can correspond to multiple other types.
    */
   private Iterable<? extends JSType> getTypeAlternatives(JSType type) {
     if (type.isUnionType()) {
@@ -1001,14 +952,6 @@ public class DisambiguateProperties implements CompilerPass {
     representativeTypeCache.put(
         field, type, foundType == null ? representativeTypeSentinel : foundType);
     return foundType;
-  }
-
-  private static boolean isStructuralInterfacePrototype(JSType type) {
-    if (!type.isFunctionPrototypeType()) {
-      return false;
-    }
-    FunctionType constructor = type.toObjectType().getOwnerFunction();
-    return constructor != null && constructor.isStructuralInterface();
   }
 
   /**

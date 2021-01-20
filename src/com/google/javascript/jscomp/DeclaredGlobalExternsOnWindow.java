@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -68,7 +67,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
     Node newNode = getprop;
 
     if (oldJSDocInfo != null) {
-      JSDocInfoBuilder builder;
+      JSDocInfo.Builder builder;
 
       if (oldJSDocInfo.isConstructorOrInterface()
           || oldJSDocInfo.hasEnumParameterType()) {
@@ -98,7 +97,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
             newNode = IR.assign(getprop, rhs.cloneTree());
           }
         }
-        builder = JSDocInfoBuilder.copyFrom(oldJSDocInfo);
+        builder = JSDocInfo.Builder.copyFrom(oldJSDocInfo);
       }
 
       // TODO(blickly): Remove these suppressions when all externs declarations on window are gone.

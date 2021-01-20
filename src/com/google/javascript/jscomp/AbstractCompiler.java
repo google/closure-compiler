@@ -251,12 +251,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   /** Gets the central registry of type violations. */
   public abstract Iterable<TypeMismatch> getTypeMismatches();
 
-  /**
-   * Gets all types that are used implicitly as a matching interface type. These are recorded as
-   * TypeMismatchs only for convenience
-   */
-  public abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
-
   abstract void setExternExports(String externExports);
 
   /** Parses code for injecting. */
@@ -606,7 +600,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider, Compile
   abstract AccessorSummary getAccessorSummary();
 
   /** Sets the summary of properties with getters and setters. */
-  abstract void setAccessorSummary(AccessorSummary summary);
+  public abstract void setAccessorSummary(AccessorSummary summary);
 
   /**
    * Returns all the comments from the given file.

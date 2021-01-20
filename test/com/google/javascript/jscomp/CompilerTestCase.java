@@ -142,20 +142,8 @@ public abstract class CompilerTestCase {
   /** Whether to scan externs for property names. */
   private boolean gatherExternPropertiesEnabled;
 
-  /**
-   * Whether to verify that the list of getter and setter properties was correctly updated by the
-   * pass.
-   */
-  private boolean verifyGetterAndSetterUpdates;
-
   /** Whether to run {@link ModuleMapCreator} after parsing. */
   private boolean createModuleMap = false;
-
-  /**
-   * Whether to verify that no new getters / setters were added. This is looser than
-   * verifyGetterAndSetterUpdates.
-   */
-  private boolean verifyNoNewGettersOrSetters;
 
   /**
    * Whether the Normalize pass runs before pass being tested and whether the expected JS strings
@@ -199,7 +187,7 @@ public abstract class CompilerTestCase {
    *
    * <p>When this field is populated, automatic getter and setter collection is disabled.
    */
-  private LinkedHashMap<String, PropertyAccessKind> declaredAccessors;
+  private final LinkedHashMap<String, PropertyAccessKind> declaredAccessors = new LinkedHashMap<>();
 
   /** The most recently used Compiler instance. */
   private Compiler lastCompiler;
@@ -658,8 +646,6 @@ public abstract class CompilerTestCase {
     this.expectParseWarningsThisTest = false;
     this.expectedSymbolTableError = null;
     this.gatherExternPropertiesEnabled = false;
-    this.verifyGetterAndSetterUpdates = true;
-    this.verifyNoNewGettersOrSetters = false;
     this.inferConsts = false;
     this.languageOut = LanguageMode.ECMASCRIPT5;
     this.multistageCompilation = true;
@@ -852,10 +838,6 @@ public abstract class CompilerTestCase {
     typeCheckEnabled = true;
   }
 
-  protected final boolean isTypeCheckEnabled() {
-    return typeCheckEnabled;
-  }
-
   /**
    * Do not run type checking before running the test pass.
    *
@@ -1004,12 +986,7 @@ public abstract class CompilerTestCase {
   protected final void declareAccessor(String name, PropertyAccessKind kind) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     checkState(kind.hasGetterOrSetter(), "Kind should be a getter and/or setter.");
-
-    if (declaredAccessors == null) {
-      declaredAccessors = new LinkedHashMap<>();
-      disableGetterAndSetterUpdateValidation();
-    }
-    declaredAccessors.merge(name, kind, PropertyAccessKind::unionWith);
+    declaredAccessors.put(name, kind);
   }
 
   /**
@@ -1023,22 +1000,6 @@ public abstract class CompilerTestCase {
   protected final Set<String> getGatheredExternProperties() {
     checkState(this.gatherExternPropertiesEnabled, "Must enable gatherExternProperties");
     return lastCompiler.getExternProperties();
-  }
-
-  /** Disables verification that getters and setters were correctly updated by the pass. */
-  protected final void disableGetterAndSetterUpdateValidation() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    verifyGetterAndSetterUpdates = false;
-    verifyNoNewGettersOrSetters = false;
-  }
-
-  /**
-   * Only validation of getters and setters ensures that there are no new ones. This means it is
-   * okay for a pass to remove getters and setters and not update them.
-   */
-  protected final void onlyValidateNoNewGettersAndSetters() {
-    verifyGetterAndSetterUpdates = false;
-    verifyNoNewGettersOrSetters = true;
   }
 
   /**
@@ -1123,6 +1084,16 @@ public abstract class CompilerTestCase {
    */
   protected void test(String js, String expected) {
     test(srcs(js), expected(expected));
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output matches the expected output.
+   *
+   * @param srcs Input chunks
+   * @param expected Expected chunks
+   */
+  protected void test(JSModule[] srcs, JSModule[] expected) {
+    test(srcs(srcs), expected(expected));
   }
 
   /**
@@ -1629,19 +1600,7 @@ public abstract class CompilerTestCase {
           new InferConsts(compiler).process(externsRoot, mainRoot);
         }
 
-        if (i == 0) {
-          if (verifyGetterAndSetterUpdates || verifyNoNewGettersOrSetters) {
-            // These 2 options both require that we actually gather getter and setter properties
-            // from the test source code.
-            checkState(declaredAccessors == null);
-            GatherGetterAndSetterProperties.update(compiler, externsRoot, mainRoot);
-          } else if (declaredAccessors != null) {
-            // The test case explicitly specified which property names should be considered to have
-            // getters and/or setters. Use those rather than attempting to gather getters and
-            // setters from the tested source code.
-            compiler.setAccessorSummary(AccessorSummary.create(declaredAccessors));
-          }
-        }
+        updateAccessorSummary(compiler, mainRoot);
 
         if (computeSideEffects && i == 0) {
           recentChange.reset();
@@ -1676,7 +1635,7 @@ public abstract class CompilerTestCase {
           changeVerifier.checkRecordedChanges(mainRoot);
         }
 
-        verifyGetterAndSetterCollection(compiler, mainRoot);
+        verifyAccessorSummary(compiler, mainRoot);
 
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
@@ -1924,19 +1883,24 @@ public abstract class CompilerTestCase {
     normalize.process(externsRoot, mainRoot);
   }
 
-  private void verifyGetterAndSetterCollection(Compiler compiler, Node mainRoot) {
-    if (verifyGetterAndSetterUpdates) {
-      assertWithMessage("Pass did not update getters / setters")
-          .that(compiler.getAccessorSummary().getAccessors())
-          .containsExactlyEntriesIn(
-              GatherGetterAndSetterProperties.gather(compiler, mainRoot.getParent()));
-    } else if (verifyNoNewGettersOrSetters) {
-      // If the above assertions hold then these two must also hold.
-      assertWithMessage("Pass did not update new getters / setters")
-          .that(compiler.getAccessorSummary().getAccessors())
-          .containsAtLeastEntriesIn(
-              GatherGetterAndSetterProperties.gather(compiler, mainRoot.getParent()));
+  private void updateAccessorSummary(Compiler compiler, Node mainRoot) {
+    LinkedHashMap<String, PropertyAccessKind> union =
+        new LinkedHashMap<>(GatherGetterAndSetterProperties.gather(compiler, mainRoot.getParent()));
+    union.putAll(this.declaredAccessors);
+    compiler.setAccessorSummary(AccessorSummary.create(union));
+  }
+
+  private void verifyAccessorSummary(Compiler compiler, Node mainRoot) {
+    if (compiler.getAccessorSummary() == null) {
+      return;
     }
+
+    assertWithMessage(
+            "Pass created new getters/setters without calling"
+                + " GatherGetterAndSetterProperties.update")
+        .that(compiler.getAccessorSummary().getAccessors())
+        .containsAtLeastEntriesIn(
+            GatherGetterAndSetterProperties.gather(compiler, mainRoot.getParent()));
   }
 
   protected Node parseExpectedJs(String expected) {
@@ -2056,10 +2020,11 @@ public abstract class CompilerTestCase {
     }
 
     if (warnings != null) {
-      String warningMessage = "";
+      StringBuilder warningBuilder = new StringBuilder();
       for (JSError actualWarning : compiler.getWarnings()) {
-        warningMessage += actualWarning.getDescription() + "\n";
+        warningBuilder.append(actualWarning.getDescription()).append("\n");
       }
+      String warningMessage = warningBuilder.toString();
       assertWithMessage("There should be " + warnings.length + " warnings. " + warningMessage)
           .that(compiler.getWarningCount())
           .isEqualTo(warnings.length);
@@ -2095,12 +2060,9 @@ public abstract class CompilerTestCase {
     final List<Node> matches = new ArrayList<>();
     NodeUtil.visitPostOrder(
         root,
-        new NodeUtil.Visitor() {
-          @Override
-          public void visit(Node n) {
-            if (n.matchesQualifiedName(name)) {
-              matches.add(n);
-            }
+        n -> {
+          if (n.matchesQualifiedName(name)) {
+            matches.add(n);
           }
         });
     return matches;

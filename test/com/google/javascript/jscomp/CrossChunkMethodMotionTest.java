@@ -398,6 +398,24 @@ public final class CrossChunkMethodMotionTest extends CompilerTestCase {
   }
 
   @Test
+  public void doNotMoveFunctionCall_thatIsSideEffected() {
+    JSModule[] modules =
+        JSChunkGraphBuilder.forChain()
+            // m1
+            .addChunk(
+                lines(
+                    "var a = 0;", //
+                    "function f1(a) { return a + 1 }",
+                    "var b = f1(1);",
+                    "a += 1;"))
+            // m2
+            .addChunk("var c = b")
+            .build();
+
+    testSame(modules);
+  }
+
+  @Test
   public void doNotMoveClassMethodWithLocalClassNameReference() {
     // We could probably rewrite the internal reference, but it is unlikely that the added
     // complexity of doing so would be worthwhile.

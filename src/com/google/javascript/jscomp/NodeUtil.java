@@ -40,7 +40,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.QualifiedName;
@@ -4773,6 +4772,9 @@ public final class NodeUtil {
       case HOOK:
         return evaluatesToLocalValue(value.getSecondChild())
             && evaluatesToLocalValue(value.getLastChild());
+      case DYNAMIC_IMPORT:
+        // Dynamic import always returns a newly created Promise.
+        return true;
       case THIS:
       case SUPER:
         return false;
@@ -5325,7 +5327,7 @@ public final class NodeUtil {
   }
 
   static JSDocInfo createConstantJsDoc() {
-    JSDocInfoBuilder builder = JSDocInfo.builder();
+    JSDocInfo.Builder builder = JSDocInfo.builder();
     builder.recordConstancy();
     return builder.build();
   }

@@ -81,7 +81,6 @@ public final class RemoveUnusedCodeTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
-    onlyValidateNoNewGettersAndSetters();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
   }

@@ -129,14 +129,14 @@ public final class JSTypeResolver implements Serializable {
   }
 
   /**
-   * If {@link type} is finished construction, and the resolver is closed, resolve it.
+   * If {@code captured} is finished construction, and the resolver is closed, resolve it.
    *
    * <p>{@code caller} is used to cooperatively determine whether this call came from the final
    * constructor for {@code type}.
    *
    * <p>This should only be called at the end of {@link JSType} constructors which invoke super. It
-   * should be called from all such constructors, except those that directly resolve the instance,
-   * such as {@code AllType}.
+   * should be called from all such constructors. Some constructors (e.g. {@code AllType}) may
+   * choose to delegate that call through {@link JSType#eagerlyResolveToSelf}.
    */
   void resolveIfClosed(JSType captured, JSTypeClass caller) {
     if (!caller.isTypeOf(captured)) {

@@ -2081,6 +2081,26 @@ CSSProperties.prototype.clipPath;
  */
 CSSProperties.prototype.contain;
 
+// SVG Fill Properties
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/fill-stroke-3/#fill-shorthand
+ */
+CSSProperties.prototype.fill;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/fill-stroke-3/#fill-opacity
+ */
+CSSProperties.prototype.fillOpacity;
+
+/**
+ * @type {string}
+ * @see https://www.w3.org/TR/fill-stroke-3/#fill-rule
+ */
+CSSProperties.prototype.fillRule;
+
 // SVG Stroke Properties
 
 /**

@@ -1302,8 +1302,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
-    options.setPropertyInvalidationErrors(
-       ImmutableMap.of("a", CheckLevel.ERROR));
+    options.setPropertiesThatMustDisambiguate(ImmutableSet.of("a"));
     options.setRemoveDeadCode(true);
     options.setRemoveAbstractMethods(true);
     test(
@@ -1319,11 +1318,11 @@ public final class IntegrationTest extends IntegrationTestCase {
         lines(
             "function fn(x){return x.a;}",
             "function I(){}",
-            "I.prototype.a=function(x){};",
+            "I.prototype.a=function(x$jscomp$1){};",
             "function Foo(){}",
-            "Foo.prototype.a = function(x) {};",
+            "Foo.prototype.a = function(x$jscomp$2) {};",
             "function Bar(){}",
-            "Bar.prototype.a=function(x){};"),
+            "Bar.prototype.a=function(x$jscomp$3){};"),
         DiagnosticGroups.TYPE_INVALIDATION);
   }
 
@@ -4241,6 +4240,38 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, lines(googDefine, "/(?<=foo)/"), untranspilable);
     test(options, lines(googDefine, "/(?<!foo)/"), untranspilable);
     test(options, lines(googDefine, "/\\p{Number}/u"), untranspilable);
+  }
+
+  @Test
+  public void testBrowserFeaturesetYear2021() {
+    CompilerOptions options = createCompilerOptions();
+    options.setBrowserFeaturesetYear(2021);
+
+    String googDefine =
+        lines(
+            "const goog = {};", //
+            "/** @define {number} */",
+            "goog.FEATURESET_YEAR = 2012;\n");
+    String googDefineOutput = "const goog={};goog.FEATURESET_YEAR=2021;";
+
+    // bigints are emitted untranspiled.
+    test(options, lines(googDefine, "const big = 42n;"), googDefineOutput + "const big = 42n;");
+
+    // So is optional chaining
+    test(
+        options,
+        lines(googDefine, "document.querySelector('input')?.children?.[0];"),
+        googDefineOutput + "document.querySelector('input')?.children?.[0];");
+
+    // We won't emit regexp lookbehind.
+    DiagnosticGroup untranspilable = DiagnosticGroups.UNSTRANSPILABLE_FEATURES;
+    test(options, lines(googDefine, "/(?<=foo)/"), untranspilable);
+    test(options, lines(googDefine, "/(?<!foo)/"), untranspilable);
+
+    // But we will emit other ES2018 regexp features
+    test(options, lines(googDefine, "/foo/s"), googDefineOutput + "/foo/s");
+    test(options, lines(googDefine, "/(?<foo>.)/"), googDefineOutput + "/(?<foo>.)/");
+    test(options, lines(googDefine, "/\\p{Number}/u"), googDefineOutput + "/\\p{Number}/u");
   }
 
   @Test

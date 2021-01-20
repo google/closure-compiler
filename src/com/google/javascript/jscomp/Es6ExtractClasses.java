@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
@@ -196,7 +195,7 @@ public final class Es6ExtractClasses
     Node classDeclaration =
         IR.constNode(classNameLhs, classNode).useSourceInfoIfMissingFromForTree(classNode);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.CONST_DECLARATIONS, compiler);
-    classDeclaration.setJSDocInfo(JSDocInfoBuilder.maybeCopyFrom(info).build());
+    classDeclaration.setJSDocInfo(JSDocInfo.Builder.maybeCopyFrom(info).build());
     statement.getParent().addChildBefore(classDeclaration, statement);
 
     // If the original statement was a variable declaration or qualified name assignment like
@@ -244,7 +243,7 @@ public final class Es6ExtractClasses
    * @param node
    */
   private void addAtConstructor(Node node) {
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(node.getJSDocInfo());
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(node.getJSDocInfo());
     builder.recordConstructor();
     node.setJSDocInfo(builder.build());
   }

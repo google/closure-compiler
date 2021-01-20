@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -144,7 +143,7 @@ class Es6TemplateLiterals {
               siteObject.cloneTree(),
               raw);
     }
-    JSDocInfoBuilder jsDocInfoBuilder = JSDocInfo.builder();
+    JSDocInfo.Builder jsDocInfoBuilder = JSDocInfo.builder();
     jsDocInfoBuilder.recordNoInline();
     JSDocInfo info = jsDocInfoBuilder.build();
 

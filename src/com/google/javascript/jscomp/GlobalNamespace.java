@@ -29,6 +29,7 @@ import com.google.common.collect.Table;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -719,10 +720,7 @@ class GlobalNamespace
         addOrConfirmTwinRefs(nameObj, n, refType, module, scope);
       } else {
         addOrConfirmRef(nameObj, n, Ref.Type.SET_FROM_GLOBAL, module, scope);
-        if (isTypeDeclaration(n)) {
-          // Names with a @constructor or @enum annotation are always collapsed
-          nameObj.setDeclaredType();
-        }
+        nameObj.setDeclaredType(getDeclaredTypeKind(n));
       }
     }
 
@@ -757,23 +755,32 @@ class GlobalNamespace
      * literal key mapping.
      *
      * @param n The node that represents the name being set
-     * @return Whether the set operation is either a constructor or enum declaration
      */
-    private boolean isTypeDeclaration(Node n) {
+    private DeclaredTypeKind getDeclaredTypeKind(Node n) {
       Node valueNode = NodeUtil.getRValueOfLValue(n);
+      final DeclaredTypeKind kind;
       if (valueNode == null) {
-        return false;
+        kind = DeclaredTypeKind.NOT_A_TYPE;
       } else if (valueNode.isClass()) {
         // Always treat classes as having a declared type. (Transpiled classes are annotated
         // @constructor)
-        return true;
+        kind = DeclaredTypeKind.CLASS;
+      } else {
+        JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+        // Heed the annotations only if they're sensibly used.
+        if (info == null) {
+          kind = DeclaredTypeKind.NOT_A_TYPE;
+        } else if (info.isConstructor() && valueNode.isFunction()) {
+          kind = DeclaredTypeKind.CLASS;
+        } else if (info.isInterface() && valueNode.isFunction()) {
+          kind = DeclaredTypeKind.INTERFACE;
+        } else if (info.hasEnumParameterType() && valueNode.isObjectLit()) {
+          kind = DeclaredTypeKind.ENUM;
+        } else {
+          kind = DeclaredTypeKind.NOT_A_TYPE;
+        }
       }
-      JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
-      // Heed the annotations only if they're sensibly used.
-      return info != null
-          && ((info.isConstructor() && valueNode.isFunction())
-              || (info.isInterface() && valueNode.isFunction())
-              || (info.hasEnumParameterType() && valueNode.isObjectLit()));
+      return kind;
     }
 
     /**
@@ -1190,28 +1197,63 @@ class GlobalNamespace
     OTHER; // anything else, including `var x = 1;`, var x = new Something();`, etc.
   }
 
+  /** Indicates whether the name represents a declared type and, if so, what kind of type. */
+  private enum DeclaredTypeKind {
+    CLASS,
+    INTERFACE,
+    ENUM,
+    NOT_A_TYPE;
+  }
+
   /**
    * How much to inline a {@link Name}.
    *
-   * <p>The {@link INLINE_BUT_KEEP_DECLARATION} case is really an indicator that something 'unsafe'
-   * is happening in order to not break CollapseProperties as badly. Sadly {@link INLINE_COMPLETELY}
-   * may <em>also</em> be unsafe.
+   * <p>The `Inlinability#INLINE_BUT_KEEP_DECLARATION_*` cass are really an indicator that something
+   * 'unsafe' is happening in order to not break CollapseProperties as badly. Sadly {@link
+   * Inlinability #INLINE_COMPLETELY} may <em>also</em> be unsafe.
    */
   enum Inlinability {
-    INLINE_COMPLETELY,
-    INLINE_BUT_KEEP_DECLARATION,
-    DO_NOT_INLINE;
+    INLINE_COMPLETELY(
+        /* shouldInlineUsages = */ true,
+        /* shouldRemoveDeclaration */ true,
+        /* canCollapse = */ true),
+    INLINE_BUT_KEEP_DECLARATION_ENUM(
+        /* shouldInlineUsages = */ true,
+        /* shouldRemoveDeclaration */ false,
+        /* canCollapse = */ true),
+    INLINE_BUT_KEEP_DECLARATION_INTERFACE(
+        /* shouldInlineUsages = */ true,
+        /* shouldRemoveDeclaration */ false,
+        /* canCollapse = */ true),
+    INLINE_BUT_KEEP_DECLARATION_CLASS(
+        /* shouldInlineUsages = */ true,
+        /* shouldRemoveDeclaration */ false,
+        /* canCollapse = */ true),
+    DO_NOT_INLINE(
+        /* shouldInlineUsages = */ false,
+        /* shouldRemoveDeclaration */ false,
+        /* canCollapse = */ false);
+
+    private final boolean shouldInlineUsages;
+    private final boolean shouldRemoveDeclaration;
+    private final boolean canCollapse;
+
+    Inlinability(boolean shouldInlineUsages, boolean shouldRemoveDeclaration, boolean canCollapse) {
+      this.shouldInlineUsages = shouldInlineUsages;
+      this.shouldRemoveDeclaration = shouldRemoveDeclaration;
+      this.canCollapse = canCollapse;
+    }
 
     boolean shouldInlineUsages() {
-      return this != DO_NOT_INLINE;
+      return this.shouldInlineUsages;
     }
 
     boolean shouldRemoveDeclaration() {
-      return this == INLINE_COMPLETELY;
+      return this.shouldRemoveDeclaration;
     }
 
     boolean canCollapse() {
-      return this != DO_NOT_INLINE;
+      return this.canCollapse;
     }
   }
 
@@ -1239,7 +1281,7 @@ class GlobalNamespace
     private final Map<Node, ImmutableList<Ref>> refsForNodeMap = new HashMap<>();
 
     private NameType type; // not final to handle forward references to names
-    private boolean declaredType = false;
+    private DeclaredTypeKind declaredType = DeclaredTypeKind.NOT_A_TYPE;
     private boolean isDeclared = false;
     private boolean isModuleProp = false;
     private boolean isProvided = false; // If this name was in any goog.provide() calls.
@@ -1864,32 +1906,43 @@ class GlobalNamespace
           }
           // maybe inline usages of this name, but only if a declared type. non-declared-types just
           // back off and don't inline at all
-          return declaredType
-              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
-              : Inlinability.DO_NOT_INLINE;
+          return getUnsafeInlinabilityBasedOnDeclaredType();
 
-        case INLINE_BUT_KEEP_DECLARATION:
+        case INLINE_BUT_KEEP_DECLARATION_CLASS:
+        case INLINE_BUT_KEEP_DECLARATION_ENUM:
+        case INLINE_BUT_KEEP_DECLARATION_INTERFACE:
           // this is definitely not safe to completely inline/collapse of its parent
           // if it's a declared type, we should still partially inline it and completely collapse it
           // if not a declared type we should partially inline it iff the other conditions hold
-          if (declaredType) {
-            return Inlinability.INLINE_BUT_KEEP_DECLARATION;
+          if (isDeclaredType()) {
+            return getUnsafeInlinabilityBasedOnDeclaredType();
           }
           // Not a declared type. We may still 'partially' inline it because it must be a property
           // on an @enum or @constructor, but only if it actually matches conditions (a) and (b)
-          return isUnchangedThroughFullName
-              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
-              : Inlinability.DO_NOT_INLINE;
+          return isUnchangedThroughFullName ? parentInlinability : Inlinability.DO_NOT_INLINE;
 
         case DO_NOT_INLINE:
           // If the parent is unsafely to collapse/inline, we will still inline it if it's on
           // a declaredType (i.e. @constructor or @enum), but we propagate the information that
           // the parent is unsafe. If this is not a declared type, return DO_NOT_INLINE.
-          return declaredType
-              ? Inlinability.INLINE_BUT_KEEP_DECLARATION
-              : Inlinability.DO_NOT_INLINE;
+          return getUnsafeInlinabilityBasedOnDeclaredType();
       }
       throw new IllegalStateException("unknown enum value " + parentInlinability);
+    }
+
+    private Inlinability getUnsafeInlinabilityBasedOnDeclaredType() {
+      switch (declaredType) {
+        case CLASS:
+          return Inlinability.INLINE_BUT_KEEP_DECLARATION_CLASS;
+        case INTERFACE:
+          return Inlinability.INLINE_BUT_KEEP_DECLARATION_INTERFACE;
+        case ENUM:
+          return Inlinability.INLINE_BUT_KEEP_DECLARATION_ENUM;
+        case NOT_A_TYPE:
+          return Inlinability.DO_NOT_INLINE;
+      }
+      throw new IllegalStateException(
+          SimpleFormat.format("unexpected declaredType value: %s", declaredType));
     }
 
     /**
@@ -2006,14 +2059,14 @@ class GlobalNamespace
       // later. So we won't be able to collapse its properties.
       // condition (b)
       if (parent != null && parent.shouldKeepKeys()) {
-        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
+        return getUnsafeInlinabilityBasedOnDeclaredType();
       }
 
       // If this is aliased, then its properties can't be collapsed either. but we may do so anyway
       // if it's a declared type.
       // condition (b)
       if (aliasingGets > 0) {
-        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
+        return getUnsafeInlinabilityBasedOnDeclaredType();
       }
 
       if (parent == null) {
@@ -2030,7 +2083,7 @@ class GlobalNamespace
       if (parentInlinability == Inlinability.DO_NOT_INLINE) {
         // the parent name is used in a way making this unsafe to inline, but we might want to
         // inline usages of this name
-        return declaredType ? Inlinability.INLINE_BUT_KEEP_DECLARATION : Inlinability.DO_NOT_INLINE;
+        return getUnsafeInlinabilityBasedOnDeclaredType();
       }
       return parentInlinability;
     }
@@ -2067,15 +2120,17 @@ class GlobalNamespace
           && !isCollapsingExplicitlyDenied();
     }
 
-    void setDeclaredType() {
-      declaredType = true;
-      for (Name ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
-        ancestor.isDeclared = true;
+    void setDeclaredType(DeclaredTypeKind kind) {
+      declaredType = kind;
+      if (kind != DeclaredTypeKind.NOT_A_TYPE) {
+        for (Name ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
+          ancestor.isDeclared = true;
+        }
       }
     }
 
     boolean isDeclaredType() {
-      return declaredType;
+      return declaredType != DeclaredTypeKind.NOT_A_TYPE;
     }
 
     boolean isConstructor() {

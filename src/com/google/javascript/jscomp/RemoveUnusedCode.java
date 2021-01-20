@@ -1080,11 +1080,16 @@ class RemoveUnusedCode implements CompilerPass {
     } else if (lhs.isGetProp()) {
       Node getPropLhs = lhs.getFirstChild();
       Node propNameNode = lhs.getLastChild();
+      // Assignments `Foo.prototype.bar = function() {`
+      boolean isDotPrototypeLhs = isDotPrototype(getPropLhs);
+      boolean isPrototypeMethodDef = isDotPrototypeLhs && valueNode.isFunction();
 
-      if (considerForAccessorSideEffects(lhs, PropertyAccessKind.SETTER_ONLY)) {
+      if (!isPrototypeMethodDef
+          && considerForAccessorSideEffects(lhs, PropertyAccessKind.SETTER_ONLY)) {
         // And the possible side-effects mean we can't do any removal. We don't use the
         // `AstAnalyzer` because we only want to consider side-effect from the assignment, not the
         // entire l-value subtree.
+        // Assume prototype method assignments never trigger setters, matching ES class semantics
         traverseNode(getPropLhs, scope); // Don't re-traverse the GETPROP as a read.
         traverseNode(valueNode, scope);
       } else if (getPropLhs.isName()) {
@@ -1093,7 +1098,7 @@ class RemoveUnusedCode implements CompilerPass {
         RemovableBuilder builder = new RemovableBuilder();
         traverseRemovableAssignValue(valueNode, builder, scope);
         varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode, varInfo));
-      } else if (isDotPrototype(getPropLhs)) {
+      } else if (isDotPrototypeLhs) {
         // objExpression.prototype.propertyName = someValue
         Node objExpression = getPropLhs.getFirstChild();
         RemovableBuilder builder = new RemovableBuilder().setIsPrototypeDotPropertyReference(true);

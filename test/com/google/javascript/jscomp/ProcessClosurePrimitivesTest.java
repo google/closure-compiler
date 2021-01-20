@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJ
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_RENAMING_MAP;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_DEFINE_NAME_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_RENAME_FUNCTION;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_STYLE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_DEFINE_ANNOTATION;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
@@ -473,5 +474,45 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   @Test
   public void testOtherBaseCall() {
     testSame("class Foo extends BaseFoo { method() { baz.base('arg'); } }");
+  }
+
+  @Test
+  public void testRenameFunction_withOneStringLit_isOk() {
+    testSame("const p = JSCompiler_renameProperty('a')");
+  }
+
+  @Test
+  public void testRenameFunction_withOneStringLit_andAnotherArg_isOk() {
+    testSame("const p = JSCompiler_renameProperty('a', 0)");
+  }
+
+  @Test
+  public void testRenameFunction_withZeroArgs_isReported() {
+    test(
+        srcs("const p = JSCompiler_renameProperty()"),
+        error(INVALID_RENAME_FUNCTION).withMessageContaining("1 or 2 arguments"),
+        error(INVALID_RENAME_FUNCTION).withMessageContaining("string literal"));
+  }
+
+  @Test
+  public void testRenameFunction_withThreeArgs_isReported() {
+    test(
+        srcs("const p = JSCompiler_renameProperty(1, 2, 3)"),
+        error(INVALID_RENAME_FUNCTION).withMessageContaining("1 or 2 arguments"),
+        error(INVALID_RENAME_FUNCTION).withMessageContaining("string literal"));
+  }
+
+  @Test
+  public void testRenameFunction_withNonStringArg_isReported() {
+    test(
+        srcs("const p = JSCompiler_renameProperty(0)"),
+        error(INVALID_RENAME_FUNCTION).withMessageContaining("string literal"));
+  }
+
+  @Test
+  public void testInvalidRenameFunction_withPropertyRefInFirstArg_isReported() {
+    test(
+        srcs("const p = JSCompiler_renameProperty('a.b')"),
+        error(INVALID_RENAME_FUNCTION).withMessageContaining("property path"));
   }
 }

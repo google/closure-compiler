@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.jscomp.serialization.ColorDeserializer.InvalidSerializedFormatException;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -55,8 +54,23 @@ public final class JsdocSerializer {
     if (jsdoc.isNoInline()) {
       builder.addKind(JsdocTag.JSDOC_NO_INLINE);
     }
+    if (jsdoc.isNoCollapse()) {
+      builder.addKind(JsdocTag.JSDOC_NO_COLLAPSE);
+    }
+    if (jsdoc.hasThisType()) {
+      builder.addKind(JsdocTag.JSDOC_THIS);
+    }
+    if (jsdoc.hasEnumParameterType()) {
+      builder.addKind(JsdocTag.JSDOC_ENUM);
+    }
     if (jsdoc.isDefine()) {
       builder.addKind(JsdocTag.JSDOC_DEFINE);
+    }
+    if (jsdoc.hasConstAnnotation()) {
+      builder.addKind(JsdocTag.JSDOC_CONST);
+    }
+    if (jsdoc.isAnyIdGenerator()) {
+      builder.addKind(serializeIdGenerator(jsdoc));
     }
 
     // Used by PureFunctionIdentifier
@@ -95,6 +109,21 @@ public final class JsdocSerializer {
     return checkNotNull(result);
   }
 
+  private static JsdocTag serializeIdGenerator(JSDocInfo doc) {
+    if (doc.isConsistentIdGenerator()) {
+      return JsdocTag.JSDOC_ID_GENERATOR_CONSISTENT;
+    } else if (doc.isStableIdGenerator()) {
+      return JsdocTag.JSDOC_ID_GENERATOR_STABLE;
+    } else if (doc.isXidGenerator()) {
+      return JsdocTag.JSDOC_ID_GENERATOR_XID;
+    } else if (doc.isMappedIdGenerator()) {
+      return JsdocTag.JSDOC_ID_GENERATOR_MAPPED;
+    } else if (doc.isIdGenerator()) {
+      return JsdocTag.JSDOC_ID_GENERATOR_INCONSISTENT;
+    }
+    throw new IllegalStateException("Failed to identify idGenerator inside JSDoc: " + doc);
+  }
+
   // Optimizations shouldn't care about the contents of JSTypeExpressions but some JSDoc APIs
   // expect their presense, so just create a dummy '?' type.
   private static JSTypeExpression createUnknown() {
@@ -105,7 +134,7 @@ public final class JsdocSerializer {
     if (serializedJsdoc == null) {
       return null;
     }
-    JSDocInfoBuilder builder = JSDocInfo.builder();
+    JSDocInfo.Builder builder = JSDocInfo.builder();
     String license = serializedJsdoc.getLicenseText();
     if (!license.isEmpty()) {
       builder.addLicense(license);
@@ -113,6 +142,18 @@ public final class JsdocSerializer {
     TreeSet<String> modifies = new TreeSet<>();
     for (JsdocTag tag : serializedJsdoc.getKindList()) {
       switch (tag) {
+        case JSDOC_CONST:
+          builder.recordConstancy();
+          continue;
+        case JSDOC_ENUM:
+          builder.recordEnumParameterType(createUnknown());
+          continue;
+        case JSDOC_THIS:
+          builder.recordThisType(createUnknown());
+          continue;
+        case JSDOC_NO_COLLAPSE:
+          builder.recordNoCollapse();
+          continue;
         case JSDOC_NO_INLINE:
           builder.recordNoInline();
           continue;
@@ -136,6 +177,22 @@ public final class JsdocSerializer {
           continue;
         case JSDOC_INTERFACE:
           builder.recordInterface();
+          continue;
+
+        case JSDOC_ID_GENERATOR_CONSISTENT:
+          builder.recordConsistentIdGenerator();
+          continue;
+        case JSDOC_ID_GENERATOR_STABLE:
+          builder.recordStableIdGenerator();
+          continue;
+        case JSDOC_ID_GENERATOR_MAPPED:
+          builder.recordMappedIdGenerator();
+          continue;
+        case JSDOC_ID_GENERATOR_XID:
+          builder.recordXidGenerator();
+          continue;
+        case JSDOC_ID_GENERATOR_INCONSISTENT:
+          builder.recordIdGenerator();
           continue;
 
         case JSDOC_UNSPECIFIED:

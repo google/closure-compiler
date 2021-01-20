@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
@@ -576,7 +575,7 @@ class ScopedAliases implements HotSwapCompilerPass {
 
           // Pull out inline type declaration if present.
           if (n.getJSDocInfo() != null) {
-            JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(parent.getJSDocInfo());
+            JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(parent.getJSDocInfo());
             if (isFunctionDecl) { // Fix inline return type.
               builder.recordReturnType(n.getJSDocInfo().getType());
             } else {

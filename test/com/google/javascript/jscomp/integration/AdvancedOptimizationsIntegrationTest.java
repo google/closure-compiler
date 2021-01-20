@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ClosureCodingConvention;
@@ -1349,7 +1348,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     options.setAmbiguateProperties(true);
-    options.setPropertyInvalidationErrors(ImmutableMap.of("abc", CheckLevel.ERROR));
 
     test(
         options,
@@ -1366,6 +1364,10 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             + "/** @export */ this.abc = 1;};\n"
             + "alert(new X() + new Y());",
         "alert((new function(){this.abc = 1}) + (new function(){this.abc = 1}));");
+
+    options.setPropertiesThatMustDisambiguate(ImmutableSet.of("abc"));
+
+    test(options, code, DiagnosticGroups.TYPE_INVALIDATION);
   }
 
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250

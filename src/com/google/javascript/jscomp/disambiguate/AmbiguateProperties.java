@@ -25,12 +25,10 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DefaultNameGenerator;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NameGenerator;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.NativeColorId;
@@ -352,15 +350,6 @@ public class AmbiguateProperties implements CompilerPass {
     }
   }
 
-  private void reportInvalidRenameFunction(Node n, String functionName, String message) {
-    compiler.report(
-        JSError.make(
-            n, PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION, functionName, message));
-  }
-  private static final String WRONG_ARGUMENT_COUNT = " Must be called with 1 or 2 arguments.";
-  private static final String WANT_STRING_LITERAL = " The first argument must be a string literal.";
-  private static final String DO_NOT_WANT_PATH = " The first argument must not be a property path.";
-
   /**
    * Finds all property references, recording the types on which they occur, and records all
    * constructors and their instance types in the {@link ColorGraphNodeFactory}.
@@ -420,20 +409,9 @@ public class AmbiguateProperties implements CompilerPass {
       String renameFunctionName = target.getOriginalQualifiedName();
       if (renameFunctionName != null
           && compiler.getCodingConvention().isPropertyRenameFunction(renameFunctionName)) {
-        int childCount = call.getChildCount();
-        if (childCount != 2 && childCount != 3) {
-          reportInvalidRenameFunction(call, renameFunctionName, WRONG_ARGUMENT_COUNT);
-          return;
-        }
 
         Node propName = call.getSecondChild();
-        if (!propName.isString()) {
-          reportInvalidRenameFunction(call, renameFunctionName, WANT_STRING_LITERAL);
-          return;
-        }
-
-        if (propName.getString().contains(".")) {
-          reportInvalidRenameFunction(call, renameFunctionName, DO_NOT_WANT_PATH);
+        if (propName == null || !propName.isString()) {
           return;
         }
 

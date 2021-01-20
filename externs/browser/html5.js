@@ -926,6 +926,18 @@ function TextMetrics() {}
 /** @const {number} */
 TextMetrics.prototype.width;
 
+/** @const {number|undefined} */
+TextMetrics.prototype.actualBoundingBoxAscent;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.actualBoundingBoxDescent;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.actualBoundingBoxLeft;
+
+/** @const {number|undefined} */
+TextMetrics.prototype.actualBoundingBoxRight;
+
 /**
  * @param {!Uint8ClampedArray|number} dataOrWidth In the first form, this is the
  *     array of pixel data.  In the second form, this is the image width.

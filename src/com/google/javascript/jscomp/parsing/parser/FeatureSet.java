@@ -96,6 +96,12 @@ public final class FeatureSet implements Serializable {
           Feature.REGEXP_NAMED_GROUPS,
           Feature.REGEXP_UNICODE_PROPERTY_ESCAPE);
 
+  public static final FeatureSet BROWSER_2021 =
+      ES2020_MODULES.without(
+          // https://kangax.github.io/compat-table/es2016plus/
+          // Regexp lookbehind is missing in Safari 14.
+          Feature.REGEXP_LOOKBEHIND);
+
   public static final FeatureSet TS_UNSUPPORTED =
       TYPESCRIPT.with(LangVersion.ES_UNSUPPORTED.features());
 
@@ -199,10 +205,8 @@ public final class FeatureSet implements Serializable {
     // https://github.com/tc39/proposal-optional-catch-binding
     OPTIONAL_CATCH_BINDING("Optional catch binding", LangVersion.ES2019),
 
-    // Stage 3 proposals likely to be part of ES2020
-    DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES_UNSUPPORTED),
-
     // ES 2020 Stage 4
+    DYNAMIC_IMPORT("Dynamic module import", LangVersion.ES2020),
     BIGINT("bigint", LangVersion.ES2020),
     IMPORT_META("import.meta", LangVersion.ES2020),
     NULL_COALESCE_OP("Nullish coalescing", LangVersion.ES2020),

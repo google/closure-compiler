@@ -40,9 +40,11 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.modules.Export;
 import com.google.javascript.jscomp.modules.Module;
+import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -867,6 +869,10 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       case EXPORT_SPECS:
         // These don't need to be typed here, since they only affect control flow.
         isTypeable = false;
+        break;
+
+      case DYNAMIC_IMPORT:
+        traverseDynamicImport(n, scope);
         break;
 
       case TRUE:
@@ -2594,6 +2600,33 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     await.setJSType(Promises.getResolvedType(registry, exprType));
 
     return scope;
+  }
+
+  private FlowScope traverseDynamicImport(Node dynamicImport, FlowScope scope) {
+    JSType templateType = registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+
+    // If the module specifier is a string, attempt to resolve the module
+    ModuleMap moduleMap = compiler.getModuleMap();
+    if (dynamicImport.getFirstChild().isString() && moduleMap != null) {
+      ModulePath targetPath =
+          compiler.getModuleLoader().resolve(dynamicImport.getFirstChild().getString());
+      Module targetModule = moduleMap.getModule(targetPath);
+      if (targetModule != null) {
+        // TypedScopeCreator ensures that the MODULE_BODY type is the export namespace type
+        Node scriptNode = targetModule.metadata().rootNode();
+        JSType exportNamespaceType =
+            scriptNode != null ? scriptNode.getOnlyChild().getJSType() : null;
+        if (exportNamespaceType != null) {
+          templateType = exportNamespaceType;
+        }
+      }
+    }
+
+    dynamicImport.setJSType(
+        registry.createTemplatizedType(
+            registry.getNativeObjectType(JSTypeNative.PROMISE_TYPE), templateType));
+
+    return traverseChildren(dynamicImport, scope);
   }
 
   private static BooleanLiteralSet joinBooleanOutcomes(

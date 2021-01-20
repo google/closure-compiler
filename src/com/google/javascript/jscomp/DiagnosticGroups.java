@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.jscomp.ijs.IjsErrors;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckConstantCaseNames;
@@ -384,7 +385,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup(
           "typeInvalidation",
           PropertyRenamingDiagnostics.INVALIDATION,
-          PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE);
+          DisambiguateProperties2.PROPERTY_INVALIDATION);
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",
@@ -424,7 +425,30 @@ public class DiagnosticGroups {
           RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
-      DiagnosticGroups.registerDeprecatedGroup("missingRequire");
+      DiagnosticGroups.registerGroup(
+          "missingRequire",
+          CheckMissingRequires.MISSING_REQUIRE,
+          CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE,
+          CheckMissingRequires.MISSING_REQUIRE_TYPE,
+          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
+
+  /**
+   * Deprecated no-op diagnostic group.
+   *
+   * @deprecated please use "missingRequire" instead
+   */
+  @Deprecated
+  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
+      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
+
+  /**
+   * Deprecated alais of MISSING_REQUIRE.
+   *
+   * @deprecated please use "missingRequire" instead
+   */
+  @Deprecated
+  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
+      DiagnosticGroups.registerGroup("stricterMissingRequire", MISSING_REQUIRE);
 
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
@@ -447,17 +471,6 @@ public class DiagnosticGroups {
           DiagnosticGroup.forType(ProcessDefines.INVALID_DEFINE_VALUE),
           // ES Module imports of files not reachable from this partial program.
           DiagnosticGroup.forType(ModuleLoader.LOAD_WARNING));
-
-  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
-
-  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup(
-          "stricterMissingRequire",
-          CheckMissingRequires.MISSING_REQUIRE,
-          CheckMissingRequires.MISSING_REQUIRE_IN_PROVIDES_FILE,
-          CheckMissingRequires.MISSING_REQUIRE_TYPE,
-          CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
   public static final DiagnosticGroup STRICT_REQUIRES =
       DiagnosticGroups.registerDeprecatedGroup("legacyGoogScopeRequire");
@@ -589,8 +602,8 @@ public class DiagnosticGroups {
               // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
               // checkTypes DiagnosticGroup
               CheckInterfaces.INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY,
-              CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
-              CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
+              CheckInterfaces.INTERFACE_CONSTRUCTOR_NOT_EMPTY,
+              CheckInterfaces.INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS,
               CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD,
               CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
@@ -744,4 +757,3 @@ public class DiagnosticGroups {
     options.setWarningLevel(group, level);
   }
 }
-

@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +57,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     replaceTypesWithColors();
     enableNormalize();
-    enableClosurePass();
     enableGatherExternProperties();
     disableCompareJsDoc(); // removeTypes also deletes JSDocInfo
   }
@@ -277,6 +275,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testExtends() {
+    this.enableClosurePass();
+
     String js = lines(
         "/** @constructor */ var Foo = function(){};",
         "Foo.prototype.x=0;",
@@ -412,6 +412,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "});");
 
+    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
+    disableLineNumberCheck();
     test(js, result);
   }
 
@@ -451,6 +453,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "});");
 
+    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
+    disableLineNumberCheck();
     test(js, result);
   }
 
@@ -490,6 +494,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
             "  }",
             "});");
 
+    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
+    disableLineNumberCheck();
     test(js, result);
   }
 
@@ -652,6 +658,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testStaticAndSubInstanceProperties() {
+    this.enableClosurePass();
+
     String js = lines(
         "/** @constructor */ var Foo = function(){};",
         "Foo.x=0;",
@@ -943,6 +951,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testPredeclaredType() {
+    this.enableClosurePass();
+
     String js =
         lines(
             "goog.forwardDeclare('goog.Foo');",
@@ -1056,7 +1066,24 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "  this.classProp = 'a';",
         "}",
         "f(new Type)");
-    testSame(js);
+
+    String expected =
+        lines(
+            "/** @record */",
+            "function Record() {}",
+            "/** @type {number|undefined} */",
+            "Record.prototype.recordProp;",
+            "",
+            "function f(/** !Record */ a) { use(a.recordProp); }",
+            "",
+            "/** @constructor */",
+            "function Type() {",
+            "  /** @const */",
+            "  this.a = 'a';",
+            "}",
+            "f(new Type)");
+
+    test(js, expected);
   }
 
   @Test
@@ -1216,6 +1243,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testObjectLitExtends() {
+    this.enableClosurePass();
+
     String js = lines(
         "/** @constructor */ var Foo = function(){};",
         "Foo.prototype = {x: 0};",
@@ -1284,6 +1313,8 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   @Test
   public void testEnum() {
+    // The generated '?' inside jsdoc does not currently contain correct source file informationm.
+    disableLineNumberCheck();
     testSame(
         lines(
             "/** @enum {string} */ var Foo = {X: 'y'};",
@@ -1427,31 +1458,10 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInvalidRenameFunction_withZeroArgs_causesWarning() {
-    testError(
-        "const p = JSCompiler_renameProperty()",
-        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
-  }
-
-  @Test
-  public void testInvalidRenameFunction_withThreeArgs_causesWarning() {
-    testError(
-        "const p = JSCompiler_renameProperty('foo', 0, 1)",
-        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
-  }
-
-  @Test
-  public void testInvalidRenameFunction_withNonStringArg_causesWarning() {
-    testError(
-        "const p = JSCompiler_renameProperty(0)",
-        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
-  }
-
-  @Test
-  public void testInvalidRenameFunction_withPropertyRefInFirstArg_causesWarning() {
-    testError(
-        "const p = JSCompiler_renameProperty('a.b')",
-        PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION);
+  public void testInvalidRenameFunction_doesNotCrash() {
+    testSame("const p = JSCompiler_renameProperty('foo', 0, 1)");
+    testSame("const p = JSCompiler_renameProperty(0)");
+    testSame("const p = JSCompiler_renameProperty('a.b')");
   }
 
   @Test

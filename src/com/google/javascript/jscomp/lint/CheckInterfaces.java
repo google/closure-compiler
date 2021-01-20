@@ -40,19 +40,19 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
           "JSC_NON_DECLARATION_STATEMENT_IN_RECORD",
           "@record functions should not contain statements other than field declarations");
 
-  public static final DiagnosticType INTERFACE_FUNCTION_NOT_EMPTY =
+  public static final DiagnosticType INTERFACE_CONSTRUCTOR_NOT_EMPTY =
       DiagnosticType.disabled(
-          "JSC_INTERFACE_FUNCTION_NOT_EMPTY", "interface functions must have an empty body");
+          "JSC_INTERFACE_CONSTRUCTOR_NOT_EMPTY", "interface constructor must have an empty body");
 
   public static final DiagnosticType INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY =
       DiagnosticType.disabled(
           "JSC_INTERFACE_CLASS_NONSTATIC_METHOD_NOT_EMPTY",
           "interface methods must have an empty body");
 
-  public static final DiagnosticType INTERFACE_SHOULD_NOT_TAKE_ARGS =
+  public static final DiagnosticType INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS =
       DiagnosticType.disabled(
-          "JSC_INTERFACE_SHOULD_NOT_TAKE_ARGS",
-          "Interface functions should not take any arguments");
+          "JSC_INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS",
+          "Interface constructors should not take any arguments");
 
   public static final DiagnosticType STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS =
       DiagnosticType.disabled(
@@ -88,7 +88,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
         {
           JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
           if (isInterface(jsdoc)) {
-            checkInterfaceFunctionArgs(t, n);
+            checkInterfaceConstructorArgs(t, n);
             checkConstructorBlock(t, n, jsdoc);
           }
           break;
@@ -100,7 +100,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
             Node ctorDef = NodeUtil.getEs6ClassConstructorMemberFunctionDef(n);
             if (ctorDef != null) {
               Node ctor = ctorDef.getFirstChild();
-              checkInterfaceFunctionArgs(t, ctor);
+              checkInterfaceConstructorArgs(t, ctor);
               checkConstructorBlock(t, ctor, jsdoc);
             }
             checkClassMethods(t, n, ctorDef);
@@ -112,10 +112,10 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
     }
   }
 
-  private static void checkInterfaceFunctionArgs(NodeTraversal t, Node funcNode) {
+  private static void checkInterfaceConstructorArgs(NodeTraversal t, Node funcNode) {
     Node args = funcNode.getSecondChild();
     if (args.hasChildren()) {
-      t.report(args.getFirstChild(), INTERFACE_SHOULD_NOT_TAKE_ARGS);
+      t.report(args.getFirstChild(), INTERFACE_CONSTRUCTOR_SHOULD_NOT_TAKE_ARGS);
     }
   }
 
@@ -164,7 +164,7 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
         }
       }
     } else {
-      t.report(block.getFirstChild(), INTERFACE_FUNCTION_NOT_EMPTY);
+      t.report(block.getFirstChild(), INTERFACE_CONSTRUCTOR_NOT_EMPTY);
     }
   }
 }

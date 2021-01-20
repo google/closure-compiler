@@ -20,10 +20,9 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.function.Function.identity;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.rhino.Node;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +33,7 @@ final class UseSiteRenamer {
 
   private static final String INVALIDATED_NAME_VALUE = "<INVALIDATED>";
 
-  private final ImmutableMap<String, CheckLevel> propsToCheckLevel;
+  private final ImmutableSet<String> propertiesThatMustDisambiguate;
   private final Consumer<JSError> errorCb;
   private final Consumer<Node> mutationCb;
 
@@ -42,10 +41,10 @@ final class UseSiteRenamer {
       ImmutableSetMultimap.builder();
 
   UseSiteRenamer(
-      ImmutableMap<String, CheckLevel> propsToCheckLevel,
+      ImmutableSet<String> propertiesThatMustDisambiguate,
       Consumer<JSError> errorCb,
       Consumer<Node> mutationCb) {
-    this.propsToCheckLevel = propsToCheckLevel;
+    this.propertiesThatMustDisambiguate = propertiesThatMustDisambiguate;
     this.errorCb = errorCb;
     this.mutationCb = mutationCb;
   }
@@ -59,9 +58,8 @@ final class UseSiteRenamer {
     if (prop.isInvalidated()) {
       this.renamingIndex.put(prop.getName(), INVALIDATED_NAME_VALUE);
 
-      CheckLevel level = this.propsToCheckLevel.getOrDefault(prop.getName(), CheckLevel.OFF);
-      if (!level.equals(CheckLevel.OFF)) {
-        this.errorCb.accept(createInvalidationError(level, prop.getName()));
+      if (this.propertiesThatMustDisambiguate.contains(prop.getName())) {
+        this.errorCb.accept(createInvalidationError(prop.getName()));
       }
 
       return;
@@ -111,8 +109,7 @@ final class UseSiteRenamer {
     return "JSC$" + rep.getId() + "_" + prop.getName();
   }
 
-  private static JSError createInvalidationError(CheckLevel level, String name) {
-    return JSError.make(
-        null, -1, -1, level, PropertyRenamingDiagnostics.INVALIDATION, name, "", "", "");
+  private static JSError createInvalidationError(String name) {
+    return JSError.make(null, -1, -1, DisambiguateProperties2.PROPERTY_INVALIDATION, name);
   }
 }

@@ -296,15 +296,8 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     classType.declareConstructorProperty("instance_", classType.instance(), defSite);
   }
 
-  @Override
-  public String getGlobalObject() {
-    return "goog.global";
-  }
-
-  private final ImmutableSet<String> propertyTestFunctions = ImmutableSet.of(
-      "goog.isDef", "goog.isNull", "goog.isDefAndNotNull",
-      "goog.isString", "goog.isNumber", "goog.isBoolean",
-      "goog.isFunction", "goog.isArray", "goog.isArrayLike", "goog.isObject");
+  private final ImmutableSet<String> propertyTestFunctions =
+      ImmutableSet.of("goog.isArrayLike", "goog.isObject");
 
   @Override
   public boolean isPropertyTestFunction(Node call) {

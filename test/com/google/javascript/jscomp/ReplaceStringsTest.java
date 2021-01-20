@@ -26,9 +26,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
 import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -127,9 +125,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node js) {
-        Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
-        propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
-
         if (rename) {
           NodeTraversal.traverse(compiler, js, new Renamer());
         }
@@ -139,7 +134,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
               new SourceInformationAnnotator("test", false /* checkAnnotated */);
           NodeTraversal.traverse(compiler, js, sia);
 
-          new DisambiguateProperties(compiler, propertiesToErrorFor).process(externs, js);
+          new DisambiguateProperties(compiler, ImmutableSet.of("foobar")).process(externs, js);
         }
         pass.process(externs, js);
       }

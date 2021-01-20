@@ -92,11 +92,11 @@ public final class ClusterPropagatorTest {
   @After
   public void verifyPropertyFlow() {
     ImmutableSet<PropertyClustering> validSrcProps =
-        this.src.getAssociatedProps().stream()
+        this.src.getAssociatedProps().keySet().stream()
             .filter((p) -> !p.isInvalidated())
             .collect(toImmutableSet());
 
-    assertThat(this.dest.getAssociatedProps()).containsAtLeastElementsIn(validSrcProps);
+    assertThat(this.dest.getAssociatedProps().keySet()).containsAtLeastElementsIn(validSrcProps);
   }
 
   @After
@@ -112,16 +112,16 @@ public final class ClusterPropagatorTest {
 
   private static boolean areAssociated(PropertyClustering prop, FlatType flat) {
     if (prop.getClusters().elements().contains(flat)) {
-      assertThat(flat.getAssociatedProps()).contains(prop);
+      assertThat(flat.getAssociatedProps()).containsKey(prop);
       return true;
     }
 
-    assertThat(flat.getAssociatedProps()).doesNotContain(prop);
+    assertThat(flat.getAssociatedProps()).doesNotContainKey(prop);
     return false;
   }
 
   private static void associate(PropertyClustering prop, FlatType flat) {
-    flat.getAssociatedProps().add(prop);
+    flat.getAssociatedProps().put(prop, FlatType.PropAssociation.AST);
     prop.getClusters().add(flat);
   }
 

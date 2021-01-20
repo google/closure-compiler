@@ -666,12 +666,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     private boolean chromePass = false;
 
     @Option(
-        name = "--dart_pass",
-        handler = BooleanOptionHandler.class,
-        usage = "Rewrite Dart Dev Compiler output to be compiler-friendly.")
-    private boolean dartPass = false;
-
-    @Option(
         name = "--j2cl_pass",
         hidden = true,
         usage =
@@ -935,6 +929,14 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     private InstrumentOption instrumentCodeParsed = InstrumentOption.NONE;
 
+    @Option(
+        name = "--allow_dynamic_import",
+        handler = BooleanOptionHandler.class,
+        usage =
+            "Indicates that the compiler should allow dynamic import expressions. Dynamic import "
+                + "expressions are not yet fully supported and may lead to broken output code.")
+    private boolean allowDynamicImport = false;
+
     @Argument private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
@@ -1029,7 +1031,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 "Library and Framework Specific",
                 ImmutableList.of(
                     "angular_pass",
-                    "dart_pass",
                     "force_inject_library",
                     "inject_libraries",
                     "polymer_version",
@@ -1052,10 +1053,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
             .putAll(
                 "Miscellaneous",
                 ImmutableList.of(
+                    "browser_featureset_year",
                     "charset",
                     "checks_only",
                     "define",
-                    "browser_featureset_year",
                     "flagfile",
                     "help",
                     "third_party",
@@ -1906,8 +1907,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
 
     options.setChromePass(flags.chromePass);
 
-    options.setDartPass(flags.dartPass);
-
     if (!flags.j2clPassMode.isEmpty()) {
       try {
         CompilerOptions.J2clPassMode j2clPassMode =
@@ -2006,6 +2005,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     }
     options.setInstrumentForCoverageOption(flags.instrumentCodeParsed);
     options.setProductionInstrumentationArrayName(flags.productionInstrumentationArrayName);
+    options.setAllowDynamicImport(flags.allowDynamicImport);
 
     return options;
   }

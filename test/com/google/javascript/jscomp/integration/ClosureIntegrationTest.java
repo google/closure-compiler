@@ -265,10 +265,17 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
       DiagnosticGroups.CHECK_TYPES
     };
     String[] input = {
-      "var goog = {};" + "goog.provide('foo.bar');" + "/** @define{foo.bar} */ foo.bar = {};"
+      lines(
+          "var goog = {};", //
+          "goog.provide('foo.bar');",
+          "/** @define {foo.bar} */ foo.bar = {};"),
     };
     String[] output = {
-      "var goog = {};" + "var foo = {};" + "/** @define{foo.bar} */ foo.bar = {};"
+      "",
+      lines(
+          "var goog = {};", //
+          "var foo = {};",
+          "/** @define {foo.bar} */ foo.bar = {};"),
     };
     test(options, input, output, warnings);
   }
@@ -1240,9 +1247,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testGoogReflectObjectPropertyNoArgs() {
+  public void testGoogReflectObjectProperty_withNoArgs_doesNotCrash() {
     CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
+    options.setClosurePass(false);
     // options.setCheckTypes(true);
     // options.setChecksOnly(true);
 

@@ -29,9 +29,8 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * A utility class to assist in creating JS bundle files.
- */
+// TODO(user): Convert this class to a builder/autovalue.
+/** A utility class to assist in creating JS bundle files. */
 public final class ClosureBundler {
 
   private final Transpiler transpiler;
@@ -40,6 +39,7 @@ public final class ClosureBundler {
   private final EvalMode mode;
   private final String sourceUrl;
   private final String path;
+  private final boolean embedSourcemap;
 
   // TODO(sdh): This cache should be moved out into a higher level, but is
   // currently required due to the API that source maps must be accessible
@@ -63,7 +63,8 @@ public final class ClosureBundler {
         /* sourceUrl= */ null,
         /* path= */ "unknown_source",
         null,
-        new ConcurrentHashMap<>());
+        new ConcurrentHashMap<>(),
+        /* embedSourcemap= */ false);
   }
 
   private ClosureBundler(
@@ -73,7 +74,8 @@ public final class ClosureBundler {
       String sourceUrl,
       String path,
       Object minifier,
-      Map<String, String> sourceMapCache) {
+      Map<String, String> sourceMapCache,
+      boolean embedSourcemap) {
     this.transpiler = transpiler;
     this.mode = mode;
     this.sourceUrl = sourceUrl;
@@ -81,12 +83,20 @@ public final class ClosureBundler {
     this.sourceMapCache = sourceMapCache;
     this.es6ModuleTranspiler = es6ModuleTranspiler;
     this.minifier = minifier;
+    this.embedSourcemap = embedSourcemap;
   }
 
   public ClosureBundler withTranspilers(
       Transpiler newTranspiler, Transpiler newEs6ModuleTranspiler) {
     return new ClosureBundler(
-        newTranspiler, newEs6ModuleTranspiler, mode, sourceUrl, path, minifier, sourceMapCache);
+        newTranspiler,
+        newEs6ModuleTranspiler,
+        mode,
+        sourceUrl,
+        path,
+        minifier,
+        sourceMapCache,
+        embedSourcemap);
   }
 
   public ClosureBundler withTranspiler(Transpiler newTranspiler) {
@@ -105,23 +115,57 @@ public final class ClosureBundler {
         sourceUrl,
         path,
         /* minifier= */ null,
-        sourceMapCache);
+        sourceMapCache,
+        embedSourcemap);
   }
 
   public final ClosureBundler useEval(boolean useEval) {
     EvalMode newMode = useEval ? EvalMode.EVAL : EvalMode.NORMAL;
     return new ClosureBundler(
-        transpiler, es6ModuleTranspiler, newMode, sourceUrl, path, minifier, sourceMapCache);
+        transpiler,
+        es6ModuleTranspiler,
+        newMode,
+        sourceUrl,
+        path,
+        minifier,
+        sourceMapCache,
+        embedSourcemap);
   }
 
   public final ClosureBundler withSourceUrl(String newSourceUrl) {
     return new ClosureBundler(
-        transpiler, es6ModuleTranspiler, mode, newSourceUrl, path, minifier, sourceMapCache);
+        transpiler,
+        es6ModuleTranspiler,
+        mode,
+        newSourceUrl,
+        path,
+        minifier,
+        sourceMapCache,
+        embedSourcemap);
   }
 
   public final ClosureBundler withPath(String newPath) {
     return new ClosureBundler(
-        transpiler, es6ModuleTranspiler, mode, sourceUrl, newPath, minifier, sourceMapCache);
+        transpiler,
+        es6ModuleTranspiler,
+        mode,
+        sourceUrl,
+        newPath,
+        minifier,
+        sourceMapCache,
+        embedSourcemap);
+  }
+
+  public final ClosureBundler embedSourcemap() {
+    return new ClosureBundler(
+        transpiler,
+        es6ModuleTranspiler,
+        mode,
+        sourceUrl,
+        path,
+        minifier,
+        sourceMapCache,
+        /* embedSourcemap= */ true);
   }
 
   /** Append the contents of the string to the supplied appendable. */
@@ -210,7 +254,7 @@ public final class ClosureBundler {
       throw new RuntimeException(e);
     }
     sourceMapCache.put(path, result.sourceMap());
-    return result.transpiled();
+    return embedSourcemap ? result.embedSourcemapBase64().transpiled() : result.transpiled();
   }
 
   private String transpile(String s) {

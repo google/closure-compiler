@@ -103,7 +103,6 @@ public final class RefactoringDriver {
     options.setGenerateExports(true);
     options.setPreserveClosurePrimitives(true);
 
-    options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
 
     return options;

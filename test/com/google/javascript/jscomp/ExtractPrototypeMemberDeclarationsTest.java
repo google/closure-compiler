@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +57,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   public void testExtractingSingleClassPrototype() {
     extract(
         generatePrototypeDeclarations("x", 7),
-        loadPrototype("x") + generateExtractedDeclarations(7));
+        loadPrototype("x") + generateExtractedDeclarations(0, 7));
   }
 
   @Test
@@ -66,16 +68,14 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
 
   @Test
   public void testClassDefinedInBlock() {
+    String tmp = TMP + "0";
     test(
+        lines("{", generatePrototypeDeclarations("x", 7), "}"),
         lines(
+            "var " + tmp + ";",
             "{",
-            generatePrototypeDeclarations("x", 7),
-            "}"),
-        lines(
-            "var " + TMP + ";",
-            "{",
-            TMP + " = x.prototype;",
-            generateExtractedDeclarations(7),
+            tmp + " = x.prototype;",
+            generateExtractedDeclarations(0, 7),
             "}"));
   }
 
@@ -102,9 +102,9 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     extract(
         generatePrototypeDeclarations("x", 6) + generatePrototypeDeclarations("y", 6),
         loadPrototype("x")
-            + generateExtractedDeclarations(6)
+            + generateExtractedDeclarations(0, 6)
             + loadPrototype("y")
-            + generateExtractedDeclarations(6));
+            + generateExtractedDeclarations(0, 6));
   }
 
   @Test
@@ -115,10 +115,10 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + generatePrototypeDeclarations("y", 6)
             + "}",
         loadPrototype("x")
-            + generateExtractedDeclarations(6)
+            + generateExtractedDeclarations(0, 6)
             + "if (foo()) {"
             + loadPrototype("y")
-            + generateExtractedDeclarations(6)
+            + generateExtractedDeclarations(0, 6)
             + "}");
   }
 
@@ -134,7 +134,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   public void testExtractingPrototypeWithQName() {
     extract(
         generatePrototypeDeclarations("com.google.javascript.jscomp.x", 7),
-        loadPrototype("com.google.javascript.jscomp.x") + generateExtractedDeclarations(7));
+        loadPrototype("com.google.javascript.jscomp.x") + generateExtractedDeclarations(0, 7));
   }
 
   @Test
@@ -150,6 +150,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
 
   @Test
   public void testExtractingPrototypeWithNestedMembers() {
+    String tmp = TMP + "0";
     extract(
         "x.prototype.y.a = 1;"
             + "x.prototype.y.b = 1;"
@@ -159,17 +160,25 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "x.prototype.y.f = 1;"
             + "x.prototype.y.g = 1;",
         loadPrototype("x")
-            + TMP + ".y.a = 1;"
-            + TMP + ".y.b = 1;"
-            + TMP + ".y.c = 1;"
-            + TMP + ".y.d = 1;"
-            + TMP + ".y.e = 1;"
-            + TMP + ".y.f = 1;"
-            + TMP + ".y.g = 1;");
+            + tmp
+            + ".y.a = 1;"
+            + tmp
+            + ".y.b = 1;"
+            + tmp
+            + ".y.c = 1;"
+            + tmp
+            + ".y.d = 1;"
+            + tmp
+            + ".y.e = 1;"
+            + tmp
+            + ".y.f = 1;"
+            + tmp
+            + ".y.g = 1;");
   }
 
   @Test
   public void testWithDevirtualization() {
+    String tmp = TMP + "0";
     extract(
         "x.prototype.a = 1;"
             + "x.prototype.b = 1;"
@@ -180,14 +189,21 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "x.prototype.f = 1;"
             + "x.prototype.g = 1;",
         loadPrototype("x")
-            + TMP + ".a = 1;"
-            + TMP + ".b = 1;"
+            + tmp
+            + ".a = 1;"
+            + tmp
+            + ".b = 1;"
             + "function devirtualize1() { }"
-            + TMP + ".c = 1;"
-            + TMP + ".d = 1;"
-            + TMP + ".e = 1;"
-            + TMP + ".f = 1;"
-            + TMP + ".g = 1;");
+            + tmp
+            + ".c = 1;"
+            + tmp
+            + ".d = 1;"
+            + tmp
+            + ".e = 1;"
+            + tmp
+            + ".f = 1;"
+            + tmp
+            + ".g = 1;");
 
     extract(
         "x.prototype.a = 1;"
@@ -201,16 +217,23 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "function devirtualize3() { }"
             + "x.prototype.g = 1;",
         loadPrototype("x")
-            + TMP + ".a = 1;"
-            + TMP + ".b = 1;"
+            + tmp
+            + ".a = 1;"
+            + tmp
+            + ".b = 1;"
             + "function devirtualize1() { }"
-            + TMP + ".c = 1;"
-            + TMP + ".d = 1;"
+            + tmp
+            + ".c = 1;"
+            + tmp
+            + ".d = 1;"
             + "function devirtualize2() { }"
-            + TMP + ".e = 1;"
-            + TMP + ".f = 1;"
+            + tmp
+            + ".e = 1;"
+            + tmp
+            + ".f = 1;"
             + "function devirtualize3() { }"
-            + TMP + ".g = 1;");
+            + tmp
+            + ".g = 1;");
   }
 
   @Test
@@ -219,14 +242,14 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
 
     extract(
         generatePrototypeDeclarations("x", 3),
-        generateExtractedDeclarations(3) + loadPrototype("x"));
+        generateExtractedDeclarations(0, 3) + loadPrototype("x"));
 
     testSame(generatePrototypeDeclarations("x", 1));
     testSame(generatePrototypeDeclarations("x", 2));
 
     extract(
         generatePrototypeDeclarations("x", 7),
-        generateExtractedDeclarations(7) + loadPrototype("x"));
+        generateExtractedDeclarations(0, 7) + loadPrototype("x"));
   }
 
   @Test
@@ -283,9 +306,49 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
             + "bar();");
   }
 
+  @Test
+  public void testNotEnoughPrototypeToExtractInChunk() {
+    for (int i = 0; i < 7; i++) {
+      JSModule[] modules =
+          JSChunkGraphBuilder.forStar()
+              .addChunk(generatePrototypeDeclarations("x", i))
+              .addChunk(generatePrototypeDeclarations("y", i))
+              .build();
+      testSame(modules);
+    }
+  }
+
+  @Test
+  public void testExtractingSingleClassPrototypeInChunk() {
+    JSModule[] modules =
+        JSChunkGraphBuilder.forStar()
+            .addChunk(generatePrototypeDeclarations("x", 7))
+            .addChunk(generatePrototypeDeclarations("y", 7))
+            .build();
+
+    StringBuilder builderX = new StringBuilder();
+    StringBuilder builderY = new StringBuilder();
+    String xTmp = TMP + "0";
+    String yTmp = TMP + "1";
+    builderX
+        .append(SimpleFormat.format("var %s; %s = x.prototype;", xTmp, xTmp))
+        .append(generateExtractedDeclarations(0, 7));
+    builderY
+        .append(SimpleFormat.format("var %s; %s = y.prototype;", yTmp, yTmp))
+        .append(generateExtractedDeclarations(1, 7));
+
+    JSModule[] expectedModules =
+        JSChunkGraphBuilder.forStar()
+            .addChunk(builderX.toString())
+            .addChunk(builderY.toString())
+            .build();
+
+    test(modules, expectedModules);
+  }
+
   private String loadPrototype(String qName) {
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
-      return TMP + " = " + qName + ".prototype;";
+      return TMP + "0 = " + qName + ".prototype;";
     } else {
       return "})(" + qName + ".prototype);";
     }
@@ -293,7 +356,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
 
   private void extract(String src, String expected) {
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
-      test(src, "var " + TMP + ";" + expected);
+      test(src, "var " + TMP + "0;" + expected);
     } else {
       test(src, expected);
     }
@@ -312,21 +375,24 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
     return className + ".prototype." + member + " = " + value + ";";
   }
 
-  private String generateExtractedDeclarations(int num) {
+  private String generateExtractedDeclarations(int fileIndex, int num) {
     StringBuilder builder = new StringBuilder();
 
+    String alias = TMP;
     if (pattern == Pattern.USE_IIFE) {
       builder.append("(function(").append(TMP).append("){");
+    } else {
+      alias += fileIndex;
     }
 
     for (int i = 0; i < num; i++) {
       char member = (char) ('a' + i);
-      builder.append(generateExtractedDeclaration("" + member,  "" + member));
+      builder.append(generateExtractedDeclaration(alias, "" + member, "" + member));
     }
     return builder.toString();
   }
 
-  private String generateExtractedDeclaration(String member, String value) {
-    return TMP + "." + member + " = " + value + ";";
+  private static String generateExtractedDeclaration(String alias, String member, String value) {
+    return alias + "." + member + " = " + value + ";";
   }
 }

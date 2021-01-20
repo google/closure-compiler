@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -163,7 +162,7 @@ public class AstFactoryTest {
     AstFactory astFactory = createTestAstFactory();
 
     Node numberNode = astFactory.createNumber(0);
-    JSDocInfoBuilder infoBuilder = JSDocInfo.builder();
+    JSDocInfo.Builder infoBuilder = JSDocInfo.builder();
     infoBuilder.recordType(new JSTypeExpression(new Node(Token.QMARK), "test.js"));
     JSDocInfo info = infoBuilder.build();
     Node castNode = astFactory.createCastToUnknown(numberNode, info);

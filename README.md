@@ -1,12 +1,8 @@
 # [Google Closure Compiler](https://developers.google.com/closure/compiler/)
 
-[![Build
-Status](https://github.com/google/closure-compiler/workflows/Compiler%20CI/badge.svg)](https://github.com/google/closure-compiler/actions)
-[![Open Source
-Helpers](https://www.codetriage.com/google/closure-compiler/badges/users.svg)](https://www.codetriage.com/google/closure-compiler)
-[![Contributor
-Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/google/closure-compiler/blob/master/code_of_conduct.md)
-
+[![Build Status](https://github.com/google/closure-compiler/workflows/Compiler%20CI/badge.svg)](https://github.com/google/closure-compiler/actions)
+[![Open Source Helpers](https://www.codetriage.com/google/closure-compiler/badges/users.svg)](https://www.codetriage.com/google/closure-compiler)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/google/closure-compiler/blob/master/code_of_conduct.md)
 
 The [Closure Compiler](https://developers.google.com/closure/compiler/) is a
 tool for making JavaScript download and run faster. It is a true compiler for
@@ -17,6 +13,7 @@ checks syntax, variable references, and types, and warns about common JavaScript
 pitfalls.
 
 ## Getting Started
+
 The easiest way to install the compiler is with [NPM](https://npmjs.com) or
 [Yarn](https://yarnpkg.com):
 
@@ -48,9 +45,12 @@ var x=42;
 ```
 
 #### Downloading from Maven Repository
-A pre-compiled release of the compiler is also available via [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler).
+
+A pre-compiled release of the compiler is also available via
+[Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler).
 
 ### Basic usage
+
 The Closure Compiler has many options for reading input from a file, writing
 output to a file, checking your code, and running optimizations. Here is a
 simple example of compressing a JS program:
@@ -85,6 +85,7 @@ google-closure-compiler --help
 #### See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
 ### NodeJS API
+
 You can access the compiler in a JS program by importing
 `google-closure-compiler`:
 
@@ -127,64 +128,51 @@ The Closure Compiler will concatenate the files in the order they're passed at
 the command line.
 
 If you're using globs or many files, you may start to run into problems with
-managing dependencies between scripts. In this case, you should use the [Closure
-Library](https://developers.google.com/closure/library/). It contains functions
-for enforcing dependencies between scripts, and Closure Compiler will re-order
-the inputs automatically.
+managing dependencies between scripts. In this case, you should use the
+[Closure Library](https://developers.google.com/closure/library/). It contains
+functions for enforcing dependencies between scripts, and Closure Compiler will
+re-order the inputs automatically.
 
 ## Getting Help
 
-1.  Post in the [Closure Compiler Discuss
-    Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
-2.  Ask a question on [Stack
-    Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
+1.  Post in the
+    [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
+2.  Ask a question on
+    [Stack Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
 3.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
 
 ## Building the Compiler
 
 To build the compiler yourself, you will need the following:
 
-| Prerequisite | Description |
-| --- | --- |
-| [Java 8 or later](https://java.com) | Used to compile the compiler's source code. |
-| [Git](https://git-scm.com/) | Used by Bazel to download dependencies. |
-| [Bazel](https://docs.bazel.build/versions/master/install.html) | Used to build the various compiler targets. |
+Prerequisite                                                               | Description
+-------------------------------------------------------------------------- | -----------
+[Java 8 or later](https://java.com)                                        | Used to compile the compiler's source code.
+[Git](https://git-scm.com/)                                                | Used by Bazel to download dependencies.
+[Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html) | Used to build the various compiler targets.
 
-### Installing Bazel
+### Installing Bazelisk
 
-#### Linux / MacOS
-All other required tools should be available in a [standard
-distribution](https://docs.bazel.build/versions/master/install.html).
+Bazelisk is a wrapper around Bazel that dynamically loads the appropriate
+version of Bazel for a given repository. Using it prevents spurious errors that
+result from using the wrong version of Bazel to build the compiler, as well as
+makes it easy to use different Bazel versions for other projects.
 
-#### Windows
-On Windows, building closure-compiler additionally requires MSYS2, and a zip
-command-line executable (compatible with the one in linux).
+Bazelisk is available through many package managers. Feel free to use whichever
+you're most comfortable with.
 
-1.  Install
-    [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
-
-2.  On the command line, at the root of this project, run
-
-    ```sh
-    bazelisk build //:compiler_unshaded_deploy.jar
-    ```
-
-    This will produce a JAR called `bazel-bin/compiler_unshaded_deploy.jar`. You
-    can run this JAR as per the [Running section](#running) of this Readme.
-
-    If you want to integrate the compiler into a larger Java program, depend on
-    `//:compiler_shaded_deploy.jar` instead.
+[Instructions for installing Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
 
 ### Building from a terminal
 
 You can trigger the build process easily with package.json scripts or by calling
-Bazel manually. 
+Bazel manually.
 
 ```bash
-# bazel build //:compiler_shaded_deploy.jar
+# bazelisk build //:compiler_shaded_deploy.jar
 yarn build
 
-# bazel build :all
+# bazelisk build :all
 yarn build:all
 ```
 
@@ -217,26 +205,26 @@ yarn compile [...args]
 
 ### Contributor code of conduct
 
-However you choose to contribute, please abide by our [code of
-conduct](https://github.com/closure-compiler/code_of_conduct.md) to keep our
-community a healthy and welcoming place.
+However you choose to contribute, please abide by our
+[code of conduct](https://github.com/closure-compiler/code_of_conduct.md) to
+keep our community a healthy and welcoming place.
 
 ### Reporting a bug
 
 1.  First make sure that it is really a bug and not simply the way that Closure
     Compiler works (especially true for ADVANCED_OPTIMIZATIONS).
-    *   Check the [official
-        documentation](https://developers.google.com/closure/compiler/)
+    *   Check the
+        [official documentation](https://developers.google.com/closure/compiler/)
     *   Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ)
-    *   Search on [Stack
-        Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler)
-        and in the [Closure Compiler Discuss
-        Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
-    *   Look through the list of [compiler
-        assumptions](https://github.com/google/closure-compiler/wiki/Compiler-Assumptions).
+    *   Search on
+        [Stack Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler)
+        and in the
+        [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+    *   Look through the list of
+        [compiler assumptions](https://github.com/google/closure-compiler/wiki/Compiler-Assumptions).
 2.  If you still think you have found a bug, make sure someone hasn't already
-    reported it. See the list of [known
-    issues](https://github.com/google/closure-compiler/issues).
+    reported it. See the list of
+    [known issues](https://github.com/google/closure-compiler/issues).
 3.  If it hasn't been reported yet, post a new issue. Make sure to add enough
     detail so that the bug can be recreated. The smaller the reproduction code,
     the better.
@@ -246,10 +234,10 @@ community a healthy and welcoming place.
 1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ) to
     make sure that the behaviour you would like isn't specifically excluded
     (such as string inlining).
-2.  Make sure someone hasn't requested the same thing. See the list of [known
-    issues](https://github.com/google/closure-compiler/issues).
-3.  Read up on [what type of feature requests are
-    accepted](https://github.com/google/closure-compiler/wiki/FAQ#how-do-i-submit-a-feature-request-for-a-new-type-of-optimization).
+2.  Make sure someone hasn't requested the same thing. See the list of
+    [known issues](https://github.com/google/closure-compiler/issues).
+3.  Read up on
+    [what type of feature requests are accepted](https://github.com/google/closure-compiler/wiki/FAQ#how-do-i-submit-a-feature-request-for-a-new-type-of-optimization).
 4.  Submit your request as an issue.
 
 ### Submitting patches
@@ -258,19 +246,19 @@ community a healthy and welcoming place.
     basically says that you own the rights to any code you contribute, and that
     you give us permission to use that code in Closure Compiler. You maintain
     the copyright on that code. If you own all the rights to your code, you can
-    fill out an [individual
-    CLA](https://code.google.com/legal/individual-cla-v1.0.html). If your
-    employer has any rights to your code, then they also need to fill out a
+    fill out an
+    [individual CLA](https://code.google.com/legal/individual-cla-v1.0.html). If
+    your employer has any rights to your code, then they also need to fill out a
     [corporate CLA](https://code.google.com/legal/corporate-cla-v1.0.html). If
     you don't know if your employer has any rights to your code, you should ask
     before signing anything. By default, anyone with an @google.com email
     address already has a CLA signed for them.
 2.  To make sure your changes are of the type that will be accepted, ask about
-    your patch on the [Closure Compiler Discuss
-    Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
+    your patch on the
+    [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
 3.  Fork the repository.
-4.  Make your changes. Check out our [coding
-    conventions](https://github.com/google/closure-compiler/wiki/Contributors#coding-conventions)
+4.  Make your changes. Check out our
+    [coding conventions](https://github.com/google/closure-compiler/wiki/Contributors#coding-conventions)
     for details on making sure your code is in correct style.
 5.  Submit a pull request for your changes. A project developer will review your
     work and then merge your request into the project.

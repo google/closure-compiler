@@ -24,8 +24,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.rhino.jstype.JSType;
-import java.util.BitSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import javax.annotation.Nullable;
 
 /**
@@ -56,15 +55,26 @@ final class FlatType {
     UNION;
   }
 
+  /**
+   * Reasons a property name became associated with a type.
+   *
+   * <p>This information is only used for debugging. It doesn't affect the behaviour of the pass.
+   */
+  enum PropAssociation {
+    AST, // a property associated with a FlatType because of an AST access flatType.prop
+    TYPE_SYSTEM, // a property associated with a FlatType because the type system recorded such an
+    // association, despite no association being found in the AST
+    SUPERTYPE // a property inherited from a supertype in the type graph
+  }
+
   private final Arity arity;
   @Nullable private final JSType typeSingle;
   @Nullable private final ImmutableSet<FlatType> typeUnion;
 
   private final int id;
 
-  private final LinkedHashSet<PropertyClustering> associatedProps = new LinkedHashSet<>();
-
-  private final BitSet subtypeIds = new BitSet();
+  private final LinkedHashMap<PropertyClustering, PropAssociation> associatedProps =
+      new LinkedHashMap<>();
 
   private boolean invalidating = false;
 
@@ -139,13 +149,8 @@ final class FlatType {
   }
 
   /** The set of properties that that might be accessed from this type. */
-  LinkedHashSet<PropertyClustering> getAssociatedProps() {
+  LinkedHashMap<PropertyClustering, PropAssociation> getAssociatedProps() {
     return this.associatedProps;
-  }
-
-  /** The IDs of other FlatTypes that have been found to be subtypes of this type. */
-  BitSet getSubtypeIds() {
-    return this.subtypeIds;
   }
 
   /**

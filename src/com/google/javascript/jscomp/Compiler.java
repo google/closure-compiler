@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.Math.min;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -269,7 +270,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private String lastPassName;
 
   private Set<String> externProperties = null;
-  private AccessorSummary accessorSummary = AccessorSummary.create(ImmutableMap.of());
+  private AccessorSummary accessorSummary = null;
 
   private static final Joiner pathJoiner = Joiner.on(Platform.getFileSeperator());
 
@@ -393,7 +394,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
             @Override
             public Iterator<String> iterator() {
-              return Collections.<String>emptySet().iterator();
+              return Collections.emptyIterator();
             }
 
             @Override
@@ -1330,7 +1331,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   // Where to put a new synthetic externs file.
-  private static enum SyntheticExternsPosition {
+  private enum SyntheticExternsPosition {
     START,
     END
   }
@@ -1359,16 +1360,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return inputsById.put(id, input);
   }
 
-  /**
-   * Replace a source input dynamically. Intended for incremental
-   * re-compilation.
-   *
-   * If the new source input doesn't parse, then keep the old input
-   * in the AST and return false.
-   *
-   * @return Whether the new AST was attached successfully.
-   */
-  boolean replaceIncrementalSourceAst(JsAst ast) {
+  /** Replace a source input dynamically. Intended for incremental re-compilation. */
+  void replaceIncrementalSourceAst(JsAst ast) {
     CompilerInput oldInput = getInput(ast.getInputId());
     checkNotNull(oldInput, "No input to replace: %s", ast.getInputId().getIdName());
     Node newRoot = checkNotNull(ast.getAstRoot(this));
@@ -1388,21 +1381,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(newInput.getInputId().equals(oldInput.getInputId()));
     InputId inputIdOnAst = newInput.getAstRoot(this).getInputId();
     checkState(newInput.getInputId().equals(inputIdOnAst));
-
-    return true;
   }
 
   /**
    * Add a new source input dynamically. Intended for incremental compilation.
-   * <p>
-   * If the new source input doesn't parse, it will not be added, and a false
-   * will be returned.
    *
    * @param ast the JS Source to add.
-   * @return true if the source was added successfully, false otherwise.
    * @throws IllegalStateException if an input for this ast already exists.
    */
-  boolean addNewSourceAst(JsAst ast) {
+  void addNewSourceAst(JsAst ast) {
     CompilerInput oldInput = getInput(ast.getInputId());
     if (oldInput != null) {
       throw new IllegalStateException(
@@ -1420,8 +1407,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     putCompilerInput(ast.getInputId(), newInput);
-
-    return true;
   }
 
   /**
@@ -1583,14 +1568,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public Iterable<TypeMismatch> getTypeMismatches() {
     if (this.typeCheckingHasRun) {
       return getTypeValidator().getMismatches();
-    }
-    throw new RuntimeException("Can't ask for type mismatches before type checking.");
-  }
-
-  @Override
-  public Iterable<TypeMismatch> getImplicitInterfaceUses() {
-    if (this.typeCheckingHasRun) {
-      return getTypeValidator().getImplicitInterfaceUses();
     }
     throw new RuntimeException("Can't ask for type mismatches before type checking.");
   }
@@ -2691,12 +2668,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
       }
     }
-    switch (context) {
-      case EXTERNS:
-        return externsParserConfig;
-      default:
-        return parserConfig;
+    if (context == ConfigContext.EXTERNS) {
+      return externsParserConfig;
     }
+    return parserConfig;
   }
 
   protected Config createConfig(Config.LanguageMode mode, Config.StrictMode strictMode) {
@@ -3282,11 +3257,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   void setProgress(double newProgress, String passName) {
     this.lastPassName = passName;
-    if (newProgress > 1.0) {
-      progress = 1.0;
-    } else {
-      progress = newProgress;
-    }
+    progress = min(newProgress, 1.0);
   }
 
   @Override
@@ -3305,8 +3276,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void setAccessorSummary(AccessorSummary summary) {
-    this.accessorSummary = summary;
+  public void setAccessorSummary(AccessorSummary summary) {
+    this.accessorSummary = checkNotNull(summary);
   }
 
   /**
@@ -3318,9 +3289,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public void replaceScript(JsAst ast) {
     CompilerInput input = this.getInput(ast.getInputId());
-    if (!replaceIncrementalSourceAst(ast)) {
-      return;
-    }
+    replaceIncrementalSourceAst(ast);
     Node originalRoot = checkNotNull(input.getAstRoot(this));
 
     processNewScript(ast, originalRoot);
@@ -3334,9 +3303,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * @param ast the ast of the new file
    */
   public void addNewScript(JsAst ast) {
-    if (!addNewSourceAst(ast)) {
-      return;
-    }
+    addNewSourceAst(ast);
     Node emptyScript = new Node(Token.SCRIPT);
     InputId inputId = ast.getInputId();
     emptyScript.setInputId(inputId);
@@ -3513,7 +3480,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       JSModule newModule = newModules.get(i);
       deserializedModule.setName(newModule.getName());
     }
-    return;
   }
 
   public void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {

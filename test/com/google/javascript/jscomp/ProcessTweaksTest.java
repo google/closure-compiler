@@ -55,8 +55,7 @@ public final class ProcessTweaksTest extends CompilerTestCase {
 
         if (stripTweaks) {
           Set<String> emptySet = ImmutableSet.of();
-          final StripCode stripCode =
-              new StripCode(compiler, emptySet, emptySet, emptySet, emptySet);
+          final StripCode stripCode = new StripCode(compiler, emptySet, emptySet, emptySet);
           stripCode.enableTweakStripping();
           stripCode.process(externs, root);
         }

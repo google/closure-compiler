@@ -101,7 +101,6 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     enableNormalize();
     enableGatherExternProperties();
-    onlyValidateNoNewGettersAndSetters();
     disableTypeCheck();
   }
 
@@ -451,6 +450,22 @@ public final class RemoveUnusedCodeClassPropertiesTest extends CompilerTestCase 
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
             "C.prop = 2;"));
+  }
+
+  @Test
+  public void testPrototypeMethodDef_notConsideredSetterUse() {
+    enableTypeCheck();
+
+    test(
+        lines(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
+            "/** @constructor */ function D () {}",
+            "D.prototype.prop = function() {};"),
+        lines(
+            "/** @constructor */ function C() {}",
+            "Object.defineProperties(C, {});",
+            "/** @constructor */ function D () {}"));
   }
 
   @Test

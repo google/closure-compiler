@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
@@ -378,7 +377,7 @@ public final class AstValidatorTest extends CompilerTestCase {
     // Since we're building the AST by hand, there won't be any types on it.
     enableTypeInfoValidation = false;
 
-    JSDocInfoBuilder jsdoc = JSDocInfo.builder();
+    JSDocInfo.Builder jsdoc = JSDocInfo.builder();
     jsdoc.recordType(new JSTypeExpression(IR.string("number"), "<AstValidatorTest>"));
     Node n = IR.exprResult(
         new Node(

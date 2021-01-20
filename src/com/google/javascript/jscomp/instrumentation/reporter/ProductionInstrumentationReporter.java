@@ -22,19 +22,15 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.google.javascript.jscomp.instrumentation.reporter.ProfilingReport.ProfilingData;
+import com.google.javascript.jscomp.instrumentation.reporter.proto.InstrumentationPoint;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -88,20 +84,18 @@ final class ProductionInstrumentationReporter {
    * ProfilingData> data structure where it is a mapping of the unique param value to the encoded
    * values. The folder contains all the reports sent by the instrumented production code.
    */
-  private ImmutableList<Map<String, ProfilingData>> getAllExecutionResults(File folder)
-      throws IOException {
-    List<Map<String, ProfilingData>> result = new ArrayList<>();
+  private ImmutableList<Map<String, Long>> getAllExecutionResults(File folder) throws IOException {
+    ImmutableList.Builder<Map<String, Long>> result = ImmutableList.builder();
 
     for (final File fileEntry : folder.listFiles()) {
       String executionResult = readFile(fileEntry.getAbsolutePath());
-      Type type = new TypeToken<Map<String, ProfilingData>>() {}.getType();
-      Map<String, ProfilingData> executedInstrumentationData =
-          new Gson().fromJson(executionResult, type);
+      Type type = new TypeToken<Map<String, Long>>() {}.getType();
+      Map<String, Long> executedInstrumentationData = new Gson().fromJson(executionResult, type);
 
       result.add(executedInstrumentationData);
     }
 
-    return ImmutableList.copyOf(result);
+    return result.build();
   }
 
   /**
@@ -124,19 +118,16 @@ final class ProductionInstrumentationReporter {
 
     parseCmdLineArguments(args);
 
-    InstrumentationMapping instrumentationMapping =
-        InstrumentationMapping.parse(instrumentationMappingLocation);
+    Map<String, InstrumentationPoint> mapping =
+        ReportDecoder.parseMappingFromFile(instrumentationMappingLocation);
 
     File folder = new File(instrumentationReportsDirectory);
 
-    ImmutableList<Map<String, ProfilingData>> listOfExecutionResults =
-        getAllExecutionResults(folder);
+    ImmutableList<Map<String, Long>> listOfExecutionResults = getAllExecutionResults(folder);
 
-    ProfilingReport profilingReport =
-        ProfilingReport.createProfilingReport(instrumentationMapping, listOfExecutionResults);
-
-    Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    createFile(finalResultOutput, gson.toJson(profilingReport));
+    createFile(
+        finalResultOutput,
+        ProfilingReport.createTabSeparatedProfilingReport(mapping, listOfExecutionResults));
   }
 
   private void parseCmdLineArguments(String[] args) {
@@ -148,16 +139,6 @@ final class ProductionInstrumentationReporter {
     } catch (CmdLineException e) {
       System.err.println(e.getMessage());
       return;
-    }
-  }
-
-  public enum InstrumentationType {
-    FUNCTION,
-    BRANCH,
-    BRANCH_DEFAULT;
-
-    public static List<InstrumentationType> convertFromStringList(List<String> typesAsString) {
-      return typesAsString.stream().map(InstrumentationType::valueOf).collect(Collectors.toList());
     }
   }
 }

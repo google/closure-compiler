@@ -45,7 +45,6 @@ final class SerializeTypesCallback extends AbstractPostOrderCallback {
     InvalidatingTypes invalidatingTypes =
         new InvalidatingTypes.Builder(compiler.getTypeRegistry())
             .addAllTypeMismatches(compiler.getTypeMismatches())
-            .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
             .build();
     JSTypeSerializer jsTypeSerializer =
         JSTypeSerializer.create(

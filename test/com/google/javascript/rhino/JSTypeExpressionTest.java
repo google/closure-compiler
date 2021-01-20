@@ -40,6 +40,7 @@ package com.google.javascript.rhino;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.JSTypeExpression.IMPLICIT_TEMPLATE_BOUND;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +62,27 @@ public final class JSTypeExpressionTest {
                 .map(Node::getString)
                 .collect(toImmutableList()))
         .containsExactly("foo.Bar", "string", "Object", "string");
+  }
+
+  @Test
+  public void testIsExplicitUnknownTemplateBound() throws Exception {
+    // Explicit unknown template bound should return true.
+    assertThat(new JSTypeExpression(new Node(Token.QMARK), "").isExplicitUnknownTemplateBound())
+        .isTrue();
+
+    // The implicit bound should return false, including copies of it.
+    JSTypeExpression implicitBoundCopy = JSTypeExpression.IMPLICIT_TEMPLATE_BOUND.copy();
+    assertThat(implicitBoundCopy).isNotSameInstanceAs(IMPLICIT_TEMPLATE_BOUND);
+    assertThat(IMPLICIT_TEMPLATE_BOUND.isExplicitUnknownTemplateBound()).isFalse();
+    assertThat(implicitBoundCopy.isExplicitUnknownTemplateBound()).isFalse();
+
+    // Non-unknown bounds should return false, even if they start with a "?".
+    assertThat(new JSTypeExpression(new Node(Token.STAR), "").isExplicitUnknownTemplateBound())
+        .isFalse();
+    assertThat(
+            new JSTypeExpression(new Node(Token.QMARK, Node.newString("number")), "")
+                .isExplicitUnknownTemplateBound())
+        .isFalse();
   }
 
   private static JSTypeExpression getTestExpression() throws Exception {

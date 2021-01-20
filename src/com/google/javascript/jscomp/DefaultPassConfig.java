@@ -25,7 +25,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -65,6 +64,7 @@ import com.google.javascript.jscomp.lint.CheckVar;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -165,12 +165,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(checkSuper);
 
-    // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
-    // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
-    if (options.dartPass && options.needsTranspilationFrom(ES6)) {
-      passes.add(dartSuperAccessorsPass);
-    }
-
     TranspilationPasses.addTranspilationRuntimeLibraries(passes, options);
 
     TranspilationPasses.addPostCheckTranspilationPasses(passes, options);
@@ -245,6 +239,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(gatherGettersAndSetters);
 
+    if (options.getLanguageIn().toFeatureSet().contains(Feature.DYNAMIC_IMPORT)
+        && !options.shouldAllowDynamicImport()) {
+      checks.add(forbidDynamicImportUsage);
+    }
+
     checks.add(createEmptyPass("beforeStandardChecks"));
 
     if (!options.processCommonJSModules
@@ -283,7 +282,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(extraRequires);
     }
 
-    if (options.enables(DiagnosticGroups.STRICTER_MISSING_REQUIRE)) {
+    if (options.enables(DiagnosticGroups.MISSING_REQUIRE)) {
       checks.add(checkMissingRequires);
     }
 
@@ -360,12 +359,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.computeFunctionSideEffects) {
       checks.add(checkRegExp);
-    }
-
-    // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
-    // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
-    if (options.dartPass && !options.getOutputFeatureSet().contains(ES6)) {
-      checks.add(dartSuperAccessorsPass);
     }
 
     // Passes running before this point should expect to see language features up to ES_2017.
@@ -456,14 +449,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(processTweaks);
     }
 
-    if (options.checksOnly) {
-      // Run process defines here so that warnings/errors from that pass are emitted as part of
-      // checks.
-      // TODO(rluble): Split process defines into two stages, one that performs only checks to be
-      // run here, and the one that actually changes the AST that would run in the optimization
-      // phase.
-      checks.add(processDefines);
-    }
+    checks.add(processDefinesCheck);
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.add(j2clChecksPass);
@@ -536,18 +522,18 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Defines in code always need to be processed.
-    passes.add(processDefines);
+    passes.add(processDefinesOptimize);
 
     if (options.getTweakProcessing().shouldStrip()
         || !options.stripTypes.isEmpty()
         || !options.stripNameSuffixes.isEmpty()
-        || !options.stripTypePrefixes.isEmpty()
         || !options.stripNamePrefixes.isEmpty()) {
       passes.add(stripCode);
     }
 
     passes.add(normalize);
 
+    passes.add(gatherGettersAndSetters);
     // Gather property names in externs so they can be queried by the
     // optimizing passes.
     passes.add(gatherExternProperties);
@@ -1060,7 +1046,7 @@ public final class DefaultPassConfig extends PassConfig {
     assertPassOrder(
         checks,
         closureRewriteModule,
-        processDefines,
+        processDefinesCheck,
         "Must rewrite goog.module before processing @define's, so that @defines in modules work.");
     assertPassOrder(
         checks,
@@ -1074,11 +1060,6 @@ public final class DefaultPassConfig extends PassConfig {
         polymerPass,
         suspiciousCode,
         "The Polymer pass must run before suspiciousCode processing.");
-    assertPassOrder(
-        checks,
-        dartSuperAccessorsPass,
-        TranspilationPasses.es6ConvertSuper,
-        "The Dart super accessors pass must run before ES6->ES3 super lowering.");
     assertPassOrder(
         checks,
         addSyntheticScript,
@@ -1148,7 +1129,7 @@ public final class DefaultPassConfig extends PassConfig {
   private void assertValidOrderForOptimizations(List<PassFactory> optimizations) {
     assertPassOrder(
         optimizations,
-        processDefines,
+        processDefinesOptimize,
         j2clUtilGetDefineRewriterPass,
         "J2CL define re-writing should be done after processDefines since it relies on "
             + "collectDefines which has side effects.");
@@ -1974,21 +1955,28 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForChecks()
           .build();
 
-  /** Override @define-annotated constants. */
-  private final PassFactory processDefines =
-      PassFactory.builder()
-          .setName("processDefines")
-          .setInternalFactory(
-              (compiler) ->
-                  new ProcessDefines.Builder(compiler)
-                      .putReplacements(compiler.getDefaultDefineValues())
-                      .putReplacements(getAdditionalReplacements(options))
-                      .putReplacements(options.getDefineReplacements())
-                      .checksOnly(options.checksOnly)
-                      .injectNamespace(() -> namespaceForChecks)
-                      .build())
-          .setFeatureSetForChecks()
-          .build();
+  /** Check @define-annotated constants. */
+  private final PassFactory processDefinesCheck = createProcessDefines(ProcessDefines.Mode.CHECK);
+
+  /** Replace @define-annotated constants. */
+  private final PassFactory processDefinesOptimize =
+      createProcessDefines(ProcessDefines.Mode.OPTIMIZE);
+
+  private PassFactory createProcessDefines(ProcessDefines.Mode mode) {
+    return PassFactory.builder()
+        .setName("processDefines_" + mode.name())
+        .setInternalFactory(
+            (compiler) ->
+                new ProcessDefines.Builder(compiler)
+                    .putReplacements(compiler.getDefaultDefineValues())
+                    .putReplacements(getAdditionalReplacements(options))
+                    .putReplacements(options.getDefineReplacements())
+                    .setMode(mode)
+                    .injectNamespace(() -> namespaceForChecks)
+                    .build())
+        .setFeatureSetForChecks()
+        .build();
+  }
 
   /**
    * Strips code for smaller compiled code. This is useful for removing debug statements to prevent
@@ -2008,7 +1996,6 @@ public final class DefaultPassConfig extends PassConfig {
                               compiler,
                               options.stripTypes,
                               options.stripNameSuffixes,
-                              options.stripTypePrefixes,
                               options.stripNamePrefixes);
                       if (options.getTweakProcessing().shouldStrip()) {
                         pass.enableTweakStripping();
@@ -2188,7 +2175,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.DISAMBIGUATE_PROPERTIES)
           .setInternalFactory(
               (compiler) ->
-                  new DisambiguateProperties(compiler, options.propertyInvalidationErrors))
+                  new DisambiguateProperties(compiler, options.getPropertiesThatMustDisambiguate()))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2199,7 +2186,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new DisambiguateProperties2(
-                      compiler, ImmutableMap.copyOf(options.propertyInvalidationErrors)))
+                      compiler, options.getPropertiesThatMustDisambiguate()))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2750,14 +2737,6 @@ public final class DefaultPassConfig extends PassConfig {
           .setFeatureSetForChecks()
           .build();
 
-  /** Rewrites the super accessors calls to support Dart Dev Compiler output. */
-  private final PassFactory dartSuperAccessorsPass =
-      PassFactory.builderForHotSwap()
-          .setName("dartSuperAccessorsPass")
-          .setInternalFactory(DartSuperAccessorsPass::new)
-          .setFeatureSetForChecks()
-          .build();
-
   /** Rewrites J2CL constructs to be more optimizable. */
   private final PassFactory j2clConstantHoisterPass =
       PassFactory.builder()
@@ -2932,5 +2911,13 @@ public final class DefaultPassConfig extends PassConfig {
           .setName("MERGE_SYNTHETIC_SCRIPT")
           .setFeatureSet(FeatureSet.all())
           .setInternalFactory((compiler) -> (externs, js) -> compiler.mergeSyntheticCodeInput())
+          .build();
+
+  /** Rewrites ES6 modules import paths to be browser compliant */
+  private static final PassFactory forbidDynamicImportUsage =
+      PassFactory.builder()
+          .setName("FORBID_DYNAMIC_IMPORT")
+          .setFeatureSet(FeatureSet.all())
+          .setInternalFactory(ForbidDynamicImportUsage::new)
           .build();
 }

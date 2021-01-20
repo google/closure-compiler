@@ -97,10 +97,11 @@ public final class InvalidatingTypes {
       FunctionType ownerFunction = type.getOwnerFunction();
       return ownerFunction == null
           || !ownerFunction.isNominalConstructorOrInterface()
-          || ownerFunction.isAmbiguousConstructor();
+          || ownerFunction.isAmbiguousConstructor()
+          || ownerFunction.isStructuralInterface();
     } else if (type.isInstanceType()) {
       FunctionType ctor = type.getConstructor();
-      return ctor == null || ctor.isAmbiguousConstructor();
+      return ctor == null || ctor.isAmbiguousConstructor() || ctor.isStructuralInterface();
     }
 
     return true;

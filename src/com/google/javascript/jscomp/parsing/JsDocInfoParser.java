@@ -28,7 +28,6 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
@@ -62,7 +61,7 @@ public final class JsDocInfoParser {
           + " for more information.";
 
   private final JsDocTokenStream stream;
-  private final JSDocInfoBuilder jsdocBuilder;
+  private final JSDocInfo.Builder jsdocBuilder;
   private final ErrorReporter errorReporter;
 
   // Use a template node for properties set on all nodes to minimize the
@@ -133,17 +132,15 @@ public final class JsDocInfoParser {
   private static final Set<String> primitiveTypes =
       ImmutableSet.of("number", "string", "boolean", "symbol");
 
-  private JSDocInfoBuilder fileLevelJsDocBuilder;
+  private JSDocInfo.Builder fileLevelJsDocBuilder;
 
   /**
-   * Sets the JsDocBuilder for the file-level (root) node of this parse. The
-   * parser uses the builder to append any preserve annotations it encounters
-   * in JsDoc comments.
+   * Sets the JsDocBuilder for the file-level (root) node of this parse. The parser uses the builder
+   * to append any preserve annotations it encounters in JsDoc comments.
    *
    * @param fileLevelJsDocBuilder
    */
-  void setFileLevelJsDocBuilder(
-      JSDocInfoBuilder fileLevelJsDocBuilder) {
+  void setFileLevelJsDocBuilder(JSDocInfo.Builder fileLevelJsDocBuilder) {
     this.fileLevelJsDocBuilder = fileLevelJsDocBuilder;
   }
 

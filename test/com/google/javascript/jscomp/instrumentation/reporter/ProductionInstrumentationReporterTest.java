@@ -16,16 +16,14 @@
 
 package com.google.javascript.jscomp.instrumentation.reporter;
 
-import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -38,7 +36,7 @@ public class ProductionInstrumentationReporterTest {
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
   private static String readFile(String filePath) throws IOException {
-    return CharStreams.toString(Files.newBufferedReader(Paths.get(filePath), UTF_8));
+    return CharStreams.toString(Files.newBufferedReader(Paths.get(filePath), UTF_8)).trim();
   }
 
   @Test
@@ -59,32 +57,10 @@ public class ProductionInstrumentationReporterTest {
 
     ProductionInstrumentationReporter.main(args);
 
-    List<String> actualFileContents =
-        Splitter.on('\n').omitEmptyStrings().splitToList(readFile(tempFilePath.toString()));
-
-    List<String> expectedFileContents =
-        Splitter.on('\n')
-            .omitEmptyStrings()
-            .splitToList(
-                readFile(
-                    "test/"
-                        + "com/google/javascript/jscomp/instrumentation/reporter/testdata/expectedFinalResult.json"));
-
-    assertWithMessage("Number of lines between expected and actual do not match")
-        .that(actualFileContents.size())
-        .isEqualTo(expectedFileContents.size());
-
-    for (int i = 0; i < actualFileContents.size(); i++) {
-      assertWithMessage(
-              "Expected final JSON does not match expected at line no: "
-                  + (i + 1)
-                  + "\nExpected:\n"
-                  + expectedFileContents.get(i)
-                  + "\nFound:\n"
-                  + actualFileContents.get(i)
-                  + "\n")
-          .that(actualFileContents.get(i))
-          .isEqualTo(expectedFileContents.get(i));
-    }
+    assertThat(readFile(tempFilePath.toString()))
+        .isEqualTo(
+            readFile(
+                "test/"
+                    + "com/google/javascript/jscomp/instrumentation/reporter/testdata/expectedFinalResult.txt"));
   }
 }

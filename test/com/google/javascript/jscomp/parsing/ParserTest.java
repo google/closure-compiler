@@ -4087,6 +4087,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testInvalid_classSyntax_staticPropAssignmentInClass() {
+    expectFeatures();
+    strictMode = SLOPPY;
+    parseError("class Foo { static someStaticProp = 'someVal' };", "'(' expected");
+  }
+
+  @Test
   public void testSetter_ObjectLiteral_Es3() {
     expectFeatures(Feature.SETTER);
     mode = LanguageMode.ECMASCRIPT3;
@@ -6214,7 +6221,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
             "import('foo')",
             "import('foo').then(function(a) { return a; })",
             "var moduleNamespace = import('foo')",
-            "Promise.all([import('foo')]).then(function(a) { return a; })");
+            "Promise.all([import('foo')]).then(function(a) { return a; })",
+            "function foo() { foo(); import('foo'); } foo();");
     expectFeatures(Feature.DYNAMIC_IMPORT);
 
     for (LanguageMode m : LanguageMode.values()) {
@@ -6226,10 +6234,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
         }
       } else {
         for (String importUseSource : dynamicImportUses) {
-          parseWarning(importUseSource, unsupportedFeatureMessage(Feature.DYNAMIC_IMPORT));
+          parseWarning(
+              importUseSource,
+              requiresLanguageModeMessage(LanguageMode.ECMASCRIPT_2020, Feature.DYNAMIC_IMPORT));
         }
       }
     }
+
+    mode = LanguageMode.ECMASCRIPT_2020;
+    strictMode = STRICT;
+    parseError("function foo() { import bar from './someModule'; }", "'(' expected");
   }
 
   @Test
@@ -6405,10 +6419,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
         + languageMode
         + " mode or better: "
         + feature;
-  }
-
-  private static String unsupportedFeatureMessage(Feature feature) {
-    return "This language feature is not currently supported by the compiler: " + feature;
   }
 
   private static Node script(Node stmt) {

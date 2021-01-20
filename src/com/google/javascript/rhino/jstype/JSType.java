@@ -508,10 +508,7 @@ public abstract class JSType implements Serializable {
     return toMaybeTemplatizedType() != null;
   }
 
-  /**
-   * Downcasts this to a TemplatizedType, or returns null if this is not
-   * a function.
-   */
+  /** Downcasts this to a TemplatizedType, or returns null if this is not a templatized type. */
   public TemplatizedType toMaybeTemplatizedType() {
     return null;
   }
@@ -520,10 +517,7 @@ public abstract class JSType implements Serializable {
     return toMaybeTemplateType() != null;
   }
 
-  /**
-   * Downcasts this to a TemplateType, or returns null if this is not
-   * a function.
-   */
+  /** Downcasts this to a TemplateType, or returns null if this is not a template type. */
   public TemplateType toMaybeTemplateType() {
     return null;
   }
@@ -1414,7 +1408,7 @@ public abstract class JSType implements Serializable {
   }
 
   /** In files translated from Java, we typecheck null and undefined loosely. */
-  public static enum SubtypingMode {
+  public enum SubtypingMode {
     NORMAL,
     IGNORE_NULL_UNDEFINED
   }
@@ -1528,7 +1522,7 @@ public abstract class JSType implements Serializable {
    * Bypasses the normal call to {@link #resolve(ErrorReporter)}. Useful if you are aware that no
    * resolution work needs to be done.
    */
-  void eagerlyResolveToSelf() {
+  final void eagerlyResolveToSelf() {
     checkState(!this.isResolved());
     resolveResult = this;
     this.registry.getResolver().resolveIfClosed(this, this.getTypeClass());
@@ -1573,9 +1567,7 @@ public abstract class JSType implements Serializable {
     return validator.apply(this);
   }
 
-  /**
-   * a data structure that represents a pair of types
-   */
+  /** Represents a pair of types. */
   public static class TypePair {
     public final JSType typeA;
     public final JSType typeB;
@@ -1621,20 +1613,16 @@ public abstract class JSType implements Serializable {
   }
 
   /**
-   * describe the status of checking that a function
-   * implicitly implements an interface.
+   * describe the status of checking that a function implicitly implements an interface.
    *
-   * it also be used to describe the status of checking
-   * that a record type structurally matches another
-   * record type
+   * <p>it also be used to describe the status of checking that a record type structurally matches
+   * another record type
    *
-   * A function implicitly implements an interface if
-   * the function does not use @implements to declare
-   * that it implements the interface, but its class
-   * structure complies with the protocol defined
-   * by the interface
+   * <p>A function implicitly implements an interface if the function does not use @implements to
+   * declare that it implements the interface, but its class structure complies with the protocol
+   * defined by the interface
    */
-  static enum MatchStatus {
+  enum MatchStatus {
     /**
      * indicate that a function implicitly
      * implements an interface (i.e., the function

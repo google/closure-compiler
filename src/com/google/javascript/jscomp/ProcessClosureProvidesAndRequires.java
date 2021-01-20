@@ -24,7 +24,6 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -956,7 +955,7 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
   }
 
   private JSDocInfo createUnknownTypeJsDocInfo(Node sourceNode) {
-    JSDocInfoBuilder castToUnknownBuilder = JSDocInfo.builder().parseDocumentation();
+    JSDocInfo.Builder castToUnknownBuilder = JSDocInfo.builder().parseDocumentation();
     castToUnknownBuilder.recordType(
         new JSTypeExpression(
             new Node(Token.QMARK).srcref(sourceNode), "<ProcessClosurePrimitives.java>"));

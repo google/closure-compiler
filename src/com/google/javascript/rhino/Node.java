@@ -2584,11 +2584,11 @@ public class Node implements Serializable {
     return this;
   }
 
-  //==========================================================================
+  // ==========================================================================
   // Custom annotations
 
   /**
-   * Returns the compiled inferred type on this node. Not to be confused with {@link
+   * Returns the compiler inferred type on this node. Not to be confused with {@link
    * #getDeclaredTypeExpression()} which returns the syntactically specified type.
    */
   @Nullable

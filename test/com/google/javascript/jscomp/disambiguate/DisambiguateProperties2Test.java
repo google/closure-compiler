@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.CheckLevel;
@@ -32,7 +31,6 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.WarningsGuard;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,7 +60,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
           "/** @return {string} */",
           "goog.reflect.objectProperty = function(prop, obj) { return ''; };");
 
-  private ImmutableMap<String, CheckLevel> propertiesToErrorFor = ImmutableMap.of();
+  private ImmutableSet<String> propertiesThatMustDisambiguate = ImmutableSet.of();
 
   public DisambiguateProperties2Test() {
     super("");
@@ -77,7 +75,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new DisambiguateProperties2(compiler, propertiesToErrorFor);
+    return new DisambiguateProperties2(compiler, propertiesThatMustDisambiguate);
   }
 
   @Override
@@ -826,25 +824,40 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void errorReported_forMalformedDefinerFunctions() {
+  public void propertiesReferenced_throughReflectorFunctions_areRenamed() {
     test(
         externs(PROP_DEFINER_DEFINITION),
         srcs(
             lines(
-                "class Foo { }",
-                "const notAStringLiteral = 'm';",
+                "class Foo {",
+                "  m() { }",
+                "}",
                 "",
-                "goog.reflect.objectProperty(notAStringLiteral, Foo.prototype);")),
-        error(PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION));
+                "class Other {",
+                "  m() { }",
+                "}",
+                "",
+                "goog.reflect.objectProperty('m', Foo.prototype);")),
+        expected(
+            lines(
+                "class Foo {",
+                "  JSC$3_m() { }",
+                "}",
+                "",
+                "class Other {",
+                "  JSC$5_m() { }",
+                "}",
+                "",
+                "goog.reflect.objectProperty('JSC$3_m', Foo.prototype);")));
   }
 
   @Test
   public void errorReported_forInvalidation_ofSpecifiedPropNames_oncePerName() {
     this.allowSourcelessWarnings();
-    this.propertiesToErrorFor =
-        ImmutableMap.of(
-            "mustDisambiguate0", CheckLevel.ERROR, //
-            "mustDisambiguate1", CheckLevel.ERROR);
+    this.propertiesThatMustDisambiguate =
+        ImmutableSet.of(
+            "mustDisambiguate0", //
+            "mustDisambiguate1");
 
     test(
         srcs(
@@ -860,8 +873,8 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "  x.mustDisambiguate0",
                 "  x.mustDisambiguate1",
                 "}")),
-        error(PropertyRenamingDiagnostics.INVALIDATION),
-        error(PropertyRenamingDiagnostics.INVALIDATION));
+        error(DisambiguateProperties2.PROPERTY_INVALIDATION),
+        error(DisambiguateProperties2.PROPERTY_INVALIDATION));
   }
 
   @Test
@@ -919,9 +932,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   private static final class SilenceNoiseGuard extends WarningsGuard {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
         ImmutableSet.of(
-            PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-            PropertyRenamingDiagnostics.INVALIDATION,
-            PropertyRenamingDiagnostics.INVALIDATION_ON_TYPE);
+            DisambiguateProperties2.PROPERTY_INVALIDATION);
 
     @Override
     protected int getPriority() {

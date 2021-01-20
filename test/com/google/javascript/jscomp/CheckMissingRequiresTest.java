@@ -39,7 +39,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setWarningLevel(DiagnosticGroups.STRICTER_MISSING_REQUIRE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);
     return options;
   }
 

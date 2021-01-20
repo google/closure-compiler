@@ -1112,17 +1112,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void testTypeOfReduction14() {
-    // Don't do type inference on GETELEMs.
-    testClosureTypes(
-        CLOSURE_DEFS
-            + "function f(x) { "
-            + "  return goog.isString(arguments[0]) ? arguments[0] : 0;"
-            + "}",
-        null);
-  }
-
-  @Test
   public void testTypeOfReduction15() {
     // Don't do type inference on GETELEMs.
     testClosureTypes(
@@ -15663,24 +15652,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
         "/** @param {Object} obj */" + "function foo(obj) { do { } while (obj.impossible); }");
   }
 
-  @Test
-  public void testMissingProperty13() {
-    disableStrictMissingPropertyChecks();
-    testTypes(
-        "var goog = {}; goog.isDef = function(x) { return false; };"
-            + "/** @param {Object} obj */"
-            + "function foo(obj) { return goog.isDef(obj.impossible); }");
-  }
-
-  @Test
-  public void testMissingProperty14() {
-    disableStrictMissingPropertyChecks();
-    testTypes(
-        "var goog = {}; goog.isDef = function(x) { return false; };"
-            + "/** @param {Object} obj */"
-            + "function foo(obj) { return goog.isNull(obj.impossible); }",
-        "Property isNull never defined on goog");
-  }
+  // Note: testMissingProperty{13,14} pertained to a deleted coding convention.
 
   @Test
   public void testMissingProperty15() {
@@ -24919,6 +24891,30 @@ public final class TypeCheckTest extends TypeCheckTestCase {
             "assignment to property Ctor of globalNs",
             "found   : (typeof Ctor)",
             "required: (typeof globalNs.Ctor)"));
+  }
+
+  @Test
+  public void testDynamicImportSpecifier() {
+    testTypes(
+        "var foo = undefined; import(foo);",
+        lines("dynamic import specifier", "found   : undefined", "required: string"));
+  }
+
+  @Test
+  public void testDynamicImport1() {
+    testTypes(
+        "/** @type {number} */ var foo = import('foo.js');",
+        lines("initializing variable", "found   : Promise<?>", "required: number"));
+  }
+
+  @Test
+  public void testDynamicImport2() {
+    testTypes("/** @type {Promise} */ var foo2 = import('foo.js');");
+  }
+
+  @Test
+  public void testDynamicImport3() {
+    testTypes("/** @type {Promise<{default: number}>} */ var foo = import('foo.js');");
   }
 
   private void testClosureTypes(String js, String description) {

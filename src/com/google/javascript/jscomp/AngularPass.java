@@ -23,7 +23,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
@@ -138,7 +137,7 @@ class AngularPass extends AbstractPostOrderCallback
       statement.useSourceInfoFromForTree(entry.getNode());
       statement.setOriginalName(name);
       // Set the visibility of the newly created property.
-      JSDocInfoBuilder newPropertyDoc = JSDocInfo.builder();
+      JSDocInfo.Builder newPropertyDoc = JSDocInfo.builder();
       newPropertyDoc.recordVisibility(Visibility.PUBLIC);
       statement.getFirstChild().setJSDocInfo(newPropertyDoc.build());
 

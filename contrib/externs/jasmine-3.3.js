@@ -199,6 +199,7 @@ jasmine.Matchers.prototype.toBeLessThanOrEqual = function(
 
 /**
  * @param {*} value
+ * @param {*=} precision
  * @param {*=} expectationFailOutput
  */
 jasmine.Matchers.prototype.toBeCloseTo = function(

@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
@@ -53,8 +52,8 @@ final class JsdocUtil {
     return makeBuilderWithType(null, new Node(Token.QMARK)).build();
   }
 
-  private static JSDocInfoBuilder makeBuilderWithType(@Nullable JSDocInfo oldJSDoc, Node typeAst) {
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
+  private static JSDocInfo.Builder makeBuilderWithType(@Nullable JSDocInfo oldJSDoc, Node typeAst) {
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(oldJSDoc);
     builder.recordType(
         new JSTypeExpression(typeAst.srcrefTree(SYNTETIC_SRCINFO_NODE), SYNTHETIC_FILE_NAME));
     return builder;
@@ -65,13 +64,13 @@ final class JsdocUtil {
   }
 
   private static JSDocInfo getConstJSDoc(JSDocInfo oldJSDoc, Node typeAst) {
-    JSDocInfoBuilder builder = makeBuilderWithType(oldJSDoc, typeAst);
+    JSDocInfo.Builder builder = makeBuilderWithType(oldJSDoc, typeAst);
     builder.recordConstancy();
     return builder.build();
   }
 
   static JSDocInfo markConstant(JSDocInfo oldJSDoc) {
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(oldJSDoc);
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(oldJSDoc);
     builder.recordConstancy();
     return builder.build();
   }
@@ -80,7 +79,7 @@ final class JsdocUtil {
     if (inlineJsdoc == null || !inlineJsdoc.hasType()) {
       return classicJsdoc;
     }
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(classicJsdoc);
+    JSDocInfo.Builder builder = JSDocInfo.Builder.maybeCopyFrom(classicJsdoc);
     builder.recordType(inlineJsdoc.getType());
     return builder.build();
   }

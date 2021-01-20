@@ -134,6 +134,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
           "Closure primitive method {0} may not be aliased  outside a module (ES "
               + "module, CommonJS module, or goog.module)");
 
+  static final DiagnosticType INVALID_RENAME_FUNCTION =
+      DiagnosticType.error("JSC_INVALID_RENAME_FUNCTION", "{0} call is invalid: {1}");
+
   /** The root Closure namespace */
   static final String GOOG = "goog";
 
@@ -201,58 +204,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case CALL:
-        Node left = n.getFirstChild();
-        if (left.isGetProp()) {
-          Node name = left.getFirstChild();
-          if (name.isName() && GOOG.equals(name.getString())) {
-            // For the sake of simplicity, we report code changes
-            // when we see a provides/requires, and don't worry about
-            // reporting the change when we actually do the replacement.
-            String methodName = name.getNext().getString();
-            switch (methodName) {
-              case "define":
-                processDefineCall(t, n, parent);
-                break;
-              case "inherits":
-                // Note: inherits is allowed in local scope
-                processInheritsCall(n);
-                break;
-              case "exportSymbol":
-                // Note: exportSymbol is allowed in local scope
-                Node arg = left.getNext();
-                if (arg.isString()) {
-                  String argString = arg.getString();
-                  int dot = argString.indexOf('.');
-                  if (dot == -1) {
-                    exportedVariables.add(argString);
-                  } else {
-                    exportedVariables.add(argString.substring(0, dot));
-                  }
-                }
-                break;
-              case "addDependency":
-                if (validateUnaliasablePrimitiveCall(t, n, methodName)) {
-                  processAddDependency(n, parent);
-                }
-                break;
-              case "setCssNameMapping":
-                processSetCssNameMapping(n, parent);
-                break;
-              case "forwardDeclare":
-                if (validatePrimitiveCallWithMessage(
-                    t,
-                    n,
-                    methodName,
-                    ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR)) {
-                  processForwardDeclare(n);
-                }
-                break;
-              default: // fall out
-            }
-          } else if (left.getLastChild().getString().equals("base")) {
-            // maybe an "base" setup by goog.inherits
-            maybeProcessClassBaseCall(n);
-          }
+        {
+          this.checkGoogFunctions(t, n);
+          this.maybeProcessClassBaseCall(n);
+          this.checkPropertyRenameCall(n);
         }
         break;
 
@@ -265,6 +220,63 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
 
       default:
         break;
+    }
+  }
+
+  private void checkGoogFunctions(NodeTraversal t, Node call) {
+    Node callee = call.getFirstChild();
+    if (!callee.isGetProp()) {
+      return;
+    }
+
+    Node receiver = callee.getFirstChild();
+    if (!receiver.isName() || !receiver.getString().equals(GOOG)) {
+      return;
+    }
+
+    // For the sake of simplicity, we report code changes
+    // when we see a provides/requires, and don't worry about
+    // reporting the change when we actually do the replacement.
+    String methodName = receiver.getNext().getString();
+    switch (methodName) {
+      case "define":
+        processDefineCall(t, call, call.getParent());
+        break;
+      case "inherits":
+        // Note: inherits is allowed in local scope
+        processInheritsCall(call);
+        break;
+      case "exportSymbol":
+        // Note: exportSymbol is allowed in local scope
+        Node arg = callee.getNext();
+        if (arg.isString()) {
+          String argString = arg.getString();
+          int dot = argString.indexOf('.');
+          if (dot == -1) {
+            exportedVariables.add(argString);
+          } else {
+            exportedVariables.add(argString.substring(0, dot));
+          }
+        }
+        break;
+      case "addDependency":
+        if (validateUnaliasablePrimitiveCall(t, call, methodName)) {
+          processAddDependency(call, call.getParent());
+        }
+        break;
+      case "setCssNameMapping":
+        processSetCssNameMapping(call, call.getParent());
+        break;
+      case "forwardDeclare":
+        if (validatePrimitiveCallWithMessage(
+            t,
+            call,
+            methodName,
+            ProcessClosurePrimitives.CLOSURE_CALL_CANNOT_BE_ALIASED_OUTSIDE_MODULE_ERROR)) {
+          processForwardDeclare(call);
+        }
+        break;
+      default: // fall out
     }
   }
 
@@ -377,6 +389,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // structure is what we expect it to be.
 
     Node callTarget = n.getFirstChild();
+    if (!callTarget.isGetProp()) {
+      return;
+    }
+
+    Node targetName = callTarget.getSecondChild();
+    if (!targetName.getString().equals("base")) {
+      return;
+    }
+
     Node baseContainerNode = callTarget.getFirstChild();
     if (!baseContainerNode.isUnscopedQualifiedName()) {
       // Some unknown "base" method.
@@ -843,6 +864,45 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
   private void maybeAddNameToSymbolTable(Node name) {
     if (preprocessorSymbolTable != null) {
       preprocessorSymbolTable.addReference(name);
+    }
+  }
+
+  private void checkPropertyRenameCall(Node call) {
+    Node callee = call.getFirstChild();
+    String calleeName = callee.getOriginalQualifiedName();
+    if (calleeName == null
+        || !compiler.getCodingConvention().isPropertyRenameFunction(calleeName)) {
+      return;
+    }
+
+    switch (call.getChildCount() - 1) {
+      case 1:
+      case 2:
+        break;
+      default:
+        compiler.report(
+            JSError.make(
+                call,
+                INVALID_RENAME_FUNCTION,
+                calleeName,
+                "Must be called with 1 or 2 arguments."));
+    }
+
+    Node propName = callee.getNext();
+    if (propName == null || !propName.isString()) {
+      compiler.report(
+          JSError.make(
+              call,
+              INVALID_RENAME_FUNCTION,
+              calleeName,
+              "The first argument must be a string literal."));
+    } else if (propName.getString().contains(".")) {
+      compiler.report(
+          JSError.make(
+              call,
+              INVALID_RENAME_FUNCTION,
+              calleeName,
+              "The first argument must not be a property path."));
     }
   }
 }
