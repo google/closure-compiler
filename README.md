@@ -4,7 +4,6 @@
 [![Open Source Helpers](https://www.codetriage.com/google/closure-compiler/badges/users.svg)](https://www.codetriage.com/google/closure-compiler)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/google/closure-compiler/blob/master/code_of_conduct.md)
 
-
 The [Closure Compiler](https://developers.google.com/closure/compiler/) is a
 tool for making JavaScript download and run faster. It is a true compiler for
 JavaScript. Instead of compiling from a source language to machine code, it
@@ -15,97 +14,127 @@ pitfalls.
 
 ## Getting Started
 
-*   Pre-compiled releases of the compiler are available via:
-    -   [Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler)
-    -   [NPM](https://www.npmjs.com/package/google-closure-compiler) - includes
-        java, native and javascript versions.
-*   See the
-    [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app)
-    for documentation including instructions for running the compiler from the
-    command line.
+The easiest way to install the compiler is with [NPM](https://npmjs.com) or
+[Yarn](https://yarnpkg.com):
 
-## Options for Getting Help
-
-1.  Post in the
-    [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
-1.  Ask a question on
-    [Stack Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
-1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
-
-## Building it Yourself
-
-Note: The Closure Compiler requires [Java 8 or higher](https://www.java.com/).
-
-### Using [Bazel](https://bazel.build/)
-
-Building using bazel requires `git` (to download dependencies).
-
-On Linux, all other required tools should be available in a standard
-distribution.
-
-On Windows, building closure-compiler additionally requires MSYS2, and a zip
-command-line executable (compatible with the one in linux).
-
-1.  Install
-    [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
-
-2.  On the command line, at the root of this project, run
-
-    ```sh
-    bazelisk build //:compiler_unshaded_deploy.jar
-    ```
-
-    This will produce a JAR called `bazel-bin/compiler_unshaded_deploy.jar`. You
-    can run this JAR as per the [Running section](#running) of this Readme.
-
-    If you want to integrate the compiler into a larger Java program, depend on
-    `//:compiler_shaded_deploy.jar` instead.
-
-### Using an IDE
-
-See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html)
-
-## Running
-
-On the command line, at the root of this project, type
-
-```sh
-bazel-bin/compiler_unshaded_deploy.jar
+```bash
+yarn global add google-closure-compiler
+# OR
+npm i -g google-closure-compiler
 ```
 
-This starts the compiler in interactive mode. Type
+The package manager will link the binary for you, and you can access the
+compiler with:
+
+```bash
+google-closure-compiler
+```
+
+This starts the compiler in interactive mode. Type:
 
 ```javascript
 var x = 17 + 25;
 ```
 
-then hit "Enter", then hit "Ctrl-Z" (on Windows) or "Ctrl-D" (on Mac or Linux)
-and "Enter" again. The Compiler will respond:
+Hit `Enter`, then `Ctrl+Z` (on Windows) or `Ctrl+D` (on Mac/Linux), then `Enter`
+again. The Compiler will respond with the compiled output (using `SIMPLE` mode
+by default):
 
 ```javascript
 var x=42;
 ```
 
+#### Downloading from Maven Repository
+
+A pre-compiled release of the compiler is also available via
+[Maven](https://mvnrepository.com/artifact/com.google.javascript/closure-compiler).
+
+### Basic usage
+
 The Closure Compiler has many options for reading input from a file, writing
-output to a file, checking your code, and running optimizations. To learn more,
-type
+output to a file, checking your code, and running optimizations. Here is a
+simple example of compressing a JS program:
 
+```bash
+google-closure-compiler --js file.js --js_output_file file.out.js
 ```
-java -jar compiler.jar --help
+
+We get the **most benefit** from the compiler if we give it **all of our source
+code** (see [Compiling Multiple Scripts](#compiling-multiple-scripts)), which
+allows us to use `ADVANCED` optimizations:
+
+```bash
+google-closure-compiler -O ADVANCED rollup.js --js_output_file rollup.min.js
 ```
 
-More detailed information about running the Closure Compiler is available in the
-[documentation](https://developers.google.com/closure/compiler/docs/gettingstarted_app).
+To see all of the compiler's options, type:
 
-### Run using Eclipse
+```bash
+google-closure-compiler --help
+```
 
-1.  Open the class `src/com/google/javascript/jscomp/CommandLineRunner.java` or
-    create your own extended version of the class.
-2.  Run the class in Eclipse.
-3.  See the instructions above on how to use the interactive mode - but beware
-    of the
-    [bug](https://stackoverflow.com/questions/4711098/passing-end-of-transmission-ctrl-d-character-in-eclipse-cdt-console)
-    regarding passing "End of Transmission" in the Eclipse console.
+| `--flag`                          | Description                             |
+| --------------------------------- | --------------------------------------- |
+| `compilation_level (-O) VAL`      | Specifies the compilation level to use. |
+:                                   : Options\: `BUNDLE`, `WHITESPACE_ONLY`,  :
+:                                   : `SIMPLE` (default), `ADVANCED`          :
+| <code>env [BROWSER &#124;         | Determines the set of builtin externs   |
+: CUSTOM]</code>                    : to load. Options\: `BROWSER`, `CUSTOM`. :
+:                                   : Defaults to `BROWSER`.                  :
+| `externs VAL`                     | The file containing JavaScript externs. |
+:                                   : You may specify multiple                :
+| `js VAL`                          | The JavaScript filename. You may        |
+:                                   : specify multiple. The flag name is      :
+:                                   : optional, because args are interpreted  :
+:                                   : as files by default. You may also use   :
+:                                   : minimatch-style glob patterns. For      :
+:                                   : example, use `--js='**.js'              :
+:                                   : --js='!**_test.js'` to recursively      :
+:                                   : include all js files that do not end in :
+:                                   : `_test.js`                              :
+| `--js_output_file VAL`            | Primary output filename. If not         |
+:                                   : specified, output is written to stdout  :
+| `--language_in VAL`               | Sets the language spec to which input   |
+:                                   : sources should conform. Options\:       :
+:                                   : `ECMASCRIPT3`, `ECMASCRIPT5`,           :
+:                                   : `ECMASCRIPT5_STRICT`,                   :
+:                                   : `ECMASCRIPT6_TYPED` (experimental),     :
+:                                   : `ECMASCRIPT_2015`, `ECMASCRIPT_2016`,   :
+:                                   : `ECMASCRIPT_2017`, `ECMASCRIPT_2018`,   :
+:                                   : `ECMASCRIPT_2019`, `STABLE`,            :
+:                                   : `ECMASCRIPT_NEXT`                       :
+| `--language_out VAL`              | Sets the language spec to which output  |
+:                                   : should conform. Options\:               :
+:                                   : `ECMASCRIPT3`, `ECMASCRIPT5`,           :
+:                                   : `ECMASCRIPT5_STRICT`,`ECMASCRIPT_2015`, :
+:                                   : `ECMASCRIPT_2016`, `ECMASCRIPT_2017`,   :
+:                                   : `ECMASCRIPT_2018`,`ECMASCRIPT_2019`,    :
+:                                   : `STABLE`                                :
+| <code>--warning_level (-W) [QUIET | Specifies the warning level to use.     |
+: &#124; DEFAULT &#124;             :                                         :
+: VERBOSE]</code>                   :                                         :
+
+#### See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
+
+### NodeJS API
+
+You can access the compiler in a JS program by importing
+`google-closure-compiler`:
+
+```javascript
+import closureCompiler from 'google-closure-compiler';
+const { compiler } = closureCompiler;
+
+new compiler({
+  js: 'file-one.js',
+  compilation_level: 'ADVANCED'
+});
+```
+
+This package will provide programmatic access to the native Graal binary in most
+cases, and will fall back to the Java version otherwise.
+
+#### Please see the [closure-compiler-npm](https://github.com/google/closure-compiler-npm/tree/master/packages/google-closure-compiler) repository for documentation on accessing the compiler in JS.
 
 ## Compiling Multiple Scripts
 
@@ -113,18 +142,18 @@ If you have multiple scripts, you should compile them all together with one
 compile command.
 
 ```bash
-java -jar compiler.jar --js_output_file=out.js in1.js in2.js in3.js ...
+google-closure-compiler in1.js in2.js in3.js --js_output_file out.js
 ```
 
 You can also use minimatch-style globs.
 
 ```bash
 # Recursively include all js files in subdirs
-java -jar compiler.jar --js_output_file=out.js 'src/**.js'
+google-closure-compiler 'src/**.js' --js_output_file out.js
 
 # Recursively include all js files in subdirs, excluding test files.
 # Use single-quotes, so that bash doesn't try to expand the '!'
-java -jar compiler.jar --js_output_file=out.js 'src/**.js' '!**_test.js'
+google-closure-compiler 'src/**.js' '!**_test.js' --js_output_file out.js
 ```
 
 The Closure Compiler will concatenate the files in the order they're passed at
@@ -136,13 +165,81 @@ managing dependencies between scripts. In this case, you should use the
 functions for enforcing dependencies between scripts, and Closure Compiler will
 re-order the inputs automatically.
 
-## How to Contribute
+## Getting Help
+
+1.  Post in the
+    [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
+2.  Ask a question on
+    [Stack Overflow](https://stackoverflow.com/questions/tagged/google-closure-compiler).
+3.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
+
+## Building the Compiler
+
+To build the compiler yourself, you will need the following:
+
+Prerequisite                                                               | Description
+-------------------------------------------------------------------------- | -----------
+[Java 8 or later](https://java.com)                                        | Used to compile the compiler's source code.
+[Git](https://git-scm.com/)                                                | Used by Bazel to download dependencies.
+[Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html) | Used to build the various compiler targets.
+
+### Installing Bazelisk
+
+Bazelisk is a wrapper around Bazel that dynamically loads the appropriate
+version of Bazel for a given repository. Using it prevents spurious errors that
+result from using the wrong version of Bazel to build the compiler, as well as
+makes it easy to use different Bazel versions for other projects.
+
+Bazelisk is available through many package managers. Feel free to use whichever
+you're most comfortable with.
+
+[Instructions for installing Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html).
+
+### Building from a terminal
+
+You can trigger the build process easily with package.json scripts or by calling
+Bazel manually.
+
+```bash
+# bazelisk build //:compiler_shaded_deploy.jar
+yarn build
+
+# bazelisk build :all
+yarn build:all
+```
+
+### Building from an IDE
+
+See [Bazel IDE Integrations](https://docs.bazel.build/versions/master/ide.html).
+
+### Running
+
+Once the compiler has been built, the compiled JAR will be in the `bazel-bin/`
+directory. You can access it with a call to `java -jar ...` or by using the
+package.json script:
+
+```bash
+# java -jar bazel-bin/compiler_unshaded_deploy.jar [...args]
+yarn compile [...args]
+```
+
+#### Running using Eclipse
+
+1.  Open the class `src/com/google/javascript/jscomp/CommandLineRunner.java` or
+    create your own extended version of the class.
+2.  Run the class in Eclipse.
+3.  See the instructions above on how to use the interactive mode - but beware
+    of the
+    [bug](https://stackoverflow.com/questions/4711098/passing-end-of-transmission-ctrl-d-character-in-eclipse-cdt-console)
+    regarding passing "End of Transmission" in the Eclipse console.
+
+## Contributing
 
 ### Contributor code of conduct
 
 However you choose to contribute, please abide by our
-[code of conduct](https://github.com/closure-compiler/code_of_conduct.md)
-to keep our community a healty and welcoming place.
+[code of conduct](https://github.com/closure-compiler/code_of_conduct.md) to
+keep our community a healthy and welcoming place.
 
 ### Reporting a bug
 
@@ -164,7 +261,7 @@ to keep our community a healty and welcoming place.
     detail so that the bug can be recreated. The smaller the reproduction code,
     the better.
 
-### Suggesting a Feature
+### Suggesting a feature
 
 1.  Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ) to
     make sure that the behaviour you would like isn't specifically excluded
@@ -241,9 +338,9 @@ specific language governing permissions and limitations under the License.
   <tr>
     <td>Description</td>
     <td>A partial copy of Mozilla Rhino. Mozilla Rhino is an
-implementation of JavaScript for the JVM.  The JavaScript
-parse tree data structures were extracted and modified
-significantly for use by Google's JavaScript compiler.</td>
+implementation of JavaScript for the JVM.  The JavaScript parse tree data
+structures were extracted and modified significantly for use by Google's
+JavaScript compiler.</td>
   </tr>
 
   <tr>
