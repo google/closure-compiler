@@ -589,7 +589,7 @@ public class DisambiguateProperties implements CompilerPass {
           && compiler.getCodingConvention().isPropertyRenameFunction(functionName)) {
         // We intentionally do not handle optional `goog.reflect.objectProperty?.()` because we
         // expect it to be defined or polyfill-ed
-        handlePropertyRenameFunctionCall(call, functionName);
+        handlePropertyRenameFunctionCall(call);
       } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
         // We intentionally do not check optional Object.defineProperties?.() because we expect it
         // to be defined or polyfill-ed
@@ -650,45 +650,18 @@ public class DisambiguateProperties implements CompilerPass {
       }
     }
 
-    private void handlePropertyRenameFunctionCall(Node call, String renameFunctionName) {
-      int childCount = call.getChildCount();
-      if (childCount != 2 && childCount != 3) {
-        compiler.report(
-            JSError.make(
-                call,
-                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-                renameFunctionName,
-                " Must be called with 1 or 2 arguments"));
-        return;
-      }
-
-      if (!call.getSecondChild().isString()) {
-        compiler.report(
-            JSError.make(
-                call,
-                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-                renameFunctionName,
-                " The first argument must be a string literal."));
-        return;
-      }
-
-      String propName = call.getSecondChild().getString();
-
-      if (propName.contains(".")) {
-        compiler.report(
-            JSError.make(
-                call,
-                PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-                renameFunctionName,
-                " The first argument must not be a property path."));
+    private void handlePropertyRenameFunctionCall(Node call) {
+      Node propName = call.getSecondChild();
+      if (propName == null || !propName.isString()) {
         return;
       }
 
       Node obj = call.getChildAtIndex(2);
       JSType type = getType(obj);
-      Property prop = getProperty(propName);
-      if (!prop.scheduleRenaming(call.getSecondChild(), type)) {
-        reportInvalidation(obj, propName, type);
+      Property prop = getProperty(propName.getString());
+
+      if (!prop.scheduleRenaming(propName, type)) {
+        reportInvalidation(obj, propName.getString(), type);
       }
     }
 

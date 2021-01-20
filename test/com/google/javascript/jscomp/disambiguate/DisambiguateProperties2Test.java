@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.jscomp.WarningsGuard;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -825,16 +824,31 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   }
 
   @Test
-  public void errorReported_forMalformedDefinerFunctions() {
+  public void propertiesReferenced_throughReflectorFunctions_areRenamed() {
     test(
         externs(PROP_DEFINER_DEFINITION),
         srcs(
             lines(
-                "class Foo { }",
-                "const notAStringLiteral = 'm';",
+                "class Foo {",
+                "  m() { }",
+                "}",
                 "",
-                "goog.reflect.objectProperty(notAStringLiteral, Foo.prototype);")),
-        error(PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION));
+                "class Other {",
+                "  m() { }",
+                "}",
+                "",
+                "goog.reflect.objectProperty('m', Foo.prototype);")),
+        expected(
+            lines(
+                "class Foo {",
+                "  JSC$3_m() { }",
+                "}",
+                "",
+                "class Other {",
+                "  JSC$5_m() { }",
+                "}",
+                "",
+                "goog.reflect.objectProperty('JSC$3_m', Foo.prototype);")));
   }
 
   @Test
@@ -918,7 +932,6 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   private static final class SilenceNoiseGuard extends WarningsGuard {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
         ImmutableSet.of(
-            PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
             DisambiguateProperties2.PROPERTY_INVALIDATION);
 
     @Override

@@ -27,10 +27,5 @@ public final class PropertyRenamingDiagnostics {
               + " invalidating due to mismatches or structural matches at the following locations:"
               + "\n{2}");
 
-  // TODO(tbreisacher): Check this in a separate pass, so that users get the error even if
-  // optimizations are not running.
-  public static final DiagnosticType INVALID_RENAME_FUNCTION =
-      DiagnosticType.error("JSC_INVALID_RENAME_FUNCTION", "{0} call is invalid: {1}");
-
   private PropertyRenamingDiagnostics() {}
 }

@@ -77,10 +77,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     this.propertiesThatMustDisambiguate = propertiesThatMustDisambiguate;
     this.registry = this.compiler.getTypeRegistry();
 
-    this.mismatches =
-        ImmutableSet.<TypeMismatch>builder()
-            .addAll(compiler.getTypeMismatches())
-            .build();
+    this.mismatches = ImmutableSet.copyOf(compiler.getTypeMismatches());
     this.invalidations =
         new InvalidatingTypes.Builder(this.registry).addAllTypeMismatches(this.mismatches).build();
   }
@@ -93,7 +90,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
     FindPropertyReferences findRefs =
         new FindPropertyReferences(
             flattener,
-            /* errorCb= */ this.compiler::report,
             this.compiler.getCodingConvention()::isPropertyRenameFunction);
     TypeGraphBuilder graphBuilder =
         new TypeGraphBuilder(flattener, LowestCommonAncestorFinder::new);

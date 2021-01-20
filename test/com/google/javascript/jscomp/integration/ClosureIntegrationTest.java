@@ -1247,9 +1247,9 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   }
 
   @Test
-  public void testGoogReflectObjectPropertyNoArgs() {
+  public void testGoogReflectObjectProperty_withNoArgs_doesNotCrash() {
     CompilerOptions options = createCompilerOptions();
-    options.setClosurePass(true);
+    options.setClosurePass(false);
     // options.setCheckTypes(true);
     // options.setChecksOnly(true);
 

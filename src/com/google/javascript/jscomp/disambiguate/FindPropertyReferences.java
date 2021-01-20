@@ -18,15 +18,12 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.jscomp.PropertyRenamingDiagnostics;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import java.util.LinkedHashMap;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -40,36 +37,30 @@ import java.util.function.Function;
 final class FindPropertyReferences extends AbstractPostOrderCallback {
 
   /**
-   * Tests whether the named JS function is a "property definer", similar to
-   * `Object.defineProperty`.
+   * Tests whether the named JS function is a "property reflector"; a function that treats a string
+   * literal as a property name.
    *
-   * <p>Such a function is assumed to accept two or three arguments:
+   * <p>Such a function is assumed to have the following signature:
    *
    * <ol>
-   *   <li>A string literal that is the name being defined.
-   *   <li>An object on which to define the property.
-   *   <li>An property descriptor. (optional)
+   *   <li>A string literal that is the name being reflected.
+   *   <li>An object on which the property is referenced. (Optional)
+   *   <li>Var args.
    * </ol>
-   *
-   * <p>This allows the compiler to recognize calls to such functions as property definitions, even
-   * though they may be custom-defined in user code and the property name is quoted.
    */
   @FunctionalInterface
-  interface IsPropertyDefiner {
+  interface IsPropertyReflector {
     boolean test(String name);
   }
 
   private LinkedHashMap<String, PropertyClustering> propIndex = new LinkedHashMap<>();
 
   private final TypeFlattener flattener;
-  private final Consumer<JSError> errorCb;
-  private final IsPropertyDefiner isPropertyDefiner;
+  private final IsPropertyReflector isPropertyReflector;
 
-  FindPropertyReferences(
-      TypeFlattener flattener, Consumer<JSError> errorCb, IsPropertyDefiner isPropertyDefiner) {
+  FindPropertyReferences(TypeFlattener flattener, IsPropertyReflector isPropertyReflector) {
     this.flattener = flattener;
-    this.errorCb = errorCb;
-    this.isPropertyDefiner = isPropertyDefiner;
+    this.isPropertyReflector = isPropertyReflector;
   }
 
   LinkedHashMap<String, PropertyClustering> getPropertyIndex() {
@@ -123,8 +114,8 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
     }
 
     String functionName = target.getOriginalQualifiedName();
-    if (functionName != null && this.isPropertyDefiner.test(functionName)) {
-      this.handlePropertyDefiningFunctionCall(call, functionName);
+    if (functionName != null && this.isPropertyReflector.test(functionName)) {
+      this.handlePropertyReflectorCall(call);
     } else if (NodeUtil.isObjectDefinePropertiesDefinition(call)) {
       this.handleObjectDefineProperties(call);
     }
@@ -160,43 +151,16 @@ final class FindPropertyReferences extends AbstractPostOrderCallback {
     this.traverseObjectlitLike(pattern, (m) -> owner);
   }
 
-  private void handlePropertyDefiningFunctionCall(Node call, String renameFunctionName) {
-    int childCount = call.getChildCount();
-    int argCount = childCount - 1;
-    if (argCount != 1 && argCount != 2) {
-      this.errorCb.accept(
-          JSError.make(
-              call,
-              PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-              renameFunctionName,
-              " Must be called with 1 or 2 arguments"));
+  private void handlePropertyReflectorCall(Node call) {
+    Node name = call.getSecondChild();
+    if (name == null || !name.isString()) {
       return;
     }
 
-    if (!call.getSecondChild().isString()) {
-      this.errorCb.accept(
-          JSError.make(
-              call,
-              PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-              renameFunctionName,
-              " The first argument must be a string literal."));
-      return;
-    }
+    Node obj = name.getNext();
+    JSType objType = (obj == null) ? null : obj.getJSType();
 
-    String propName = call.getSecondChild().getString();
-
-    if (propName.contains(".")) {
-      this.errorCb.accept(
-          JSError.make(
-              call,
-              PropertyRenamingDiagnostics.INVALID_RENAME_FUNCTION,
-              renameFunctionName,
-              " The first argument must not be a property path."));
-      return;
-    }
-
-    Node obj = call.getChildAtIndex(2);
-    this.registerPropertyUse(call.getSecondChild(), obj.getJSType());
+    this.registerPropertyUse(name, objType);
   }
 
   private void handleObjectDefineProperties(Node call) {
