@@ -20,10 +20,8 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -231,21 +229,21 @@ public final class UseSiteRenamerTest {
     this.prop.invalidate(Invalidation.wellKnownProperty());
 
     // When
-    this.runRename(ImmutableMap.of(PROP_NAME, CheckLevel.ERROR));
+    this.runRename(ImmutableSet.of(PROP_NAME));
 
     // Then
     assertError(this.reportedErrors.remove(0))
         .hasType(DisambiguateProperties2.PROPERTY_INVALIDATION);
   }
 
-  private void runRename(@Nullable ImmutableMap<String, CheckLevel> propsToInvalidate) {
-    if (propsToInvalidate == null) {
-      propsToInvalidate = ImmutableMap.of();
+  private void runRename(@Nullable ImmutableSet<String> propertiesThatMustDisambiguate) {
+    if (propertiesThatMustDisambiguate == null) {
+      propertiesThatMustDisambiguate = ImmutableSet.of();
     }
 
     UseSiteRenamer renamer =
         new UseSiteRenamer(
-            propsToInvalidate, this.reportedErrors::add, this.reportedMutations::add);
+            propertiesThatMustDisambiguate, this.reportedErrors::add, this.reportedMutations::add);
     renamer.renameUses(this.prop);
 
     this.renamingIndex = renamer.getRenamingIndex();

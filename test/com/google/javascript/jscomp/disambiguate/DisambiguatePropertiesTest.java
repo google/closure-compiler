@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.disambiguate;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PropertyRenamingDiagnostics.INVALIDATION;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
@@ -28,8 +28,6 @@ import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
 import com.google.javascript.jscomp.DiagnosticType;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -71,12 +69,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return (externs, root) -> {
-      Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
-      propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
-
       // This must be created after type checking is run as it depends on
       // any mismatches found during checking.
-      lastPass = new DisambiguateProperties(compiler, propertiesToErrorFor);
+      lastPass = new DisambiguateProperties(compiler, ImmutableSet.of("foobar"));
 
       lastPass.process(externs, root);
     };

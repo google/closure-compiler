@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
@@ -67,16 +66,15 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private static final Gson GSON = new Gson();
 
   private final AbstractCompiler compiler;
-  private final ImmutableMap<String, CheckLevel> invalidationReportingLevelByProp;
+  private final ImmutableSet<String> propertiesThatMustDisambiguate;
   private final ImmutableSet<TypeMismatch> mismatches;
   private final JSTypeRegistry registry;
   private final InvalidatingTypes invalidations;
 
   public DisambiguateProperties2(
-      AbstractCompiler compiler,
-      ImmutableMap<String, CheckLevel> invalidationReportingLevelByProp) {
+      AbstractCompiler compiler, ImmutableSet<String> propertiesThatMustDisambiguate) {
     this.compiler = compiler;
-    this.invalidationReportingLevelByProp = invalidationReportingLevelByProp;
+    this.propertiesThatMustDisambiguate = propertiesThatMustDisambiguate;
     this.registry = this.compiler.getTypeRegistry();
 
     this.mismatches =
@@ -102,7 +100,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     ClusterPropagator propagator = new ClusterPropagator();
     UseSiteRenamer renamer =
         new UseSiteRenamer(
-            this.invalidationReportingLevelByProp,
+            this.propertiesThatMustDisambiguate,
             /* errorCb= */ this.compiler::report,
             /* mutationCb= */ this.compiler::reportChangeToEnclosingScope);
 

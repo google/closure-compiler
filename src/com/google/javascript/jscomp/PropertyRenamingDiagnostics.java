@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 public final class PropertyRenamingDiagnostics {
   // TODO(user): {1} and {2} are not exactly useful for most people.
   public static final DiagnosticType INVALIDATION =
-      DiagnosticType.disabled(
+      DiagnosticType.error(
           "JSC_INVALIDATION",
           ""
               + "Property ''{0}'' was required to be disambiguated but was invalidated. This is due"

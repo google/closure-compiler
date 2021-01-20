@@ -25,7 +25,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
@@ -2176,7 +2175,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setName(PassNames.DISAMBIGUATE_PROPERTIES)
           .setInternalFactory(
               (compiler) ->
-                  new DisambiguateProperties(compiler, options.propertyInvalidationErrors))
+                  new DisambiguateProperties(compiler, options.getPropertiesThatMustDisambiguate()))
           .setFeatureSetForOptimizations()
           .build();
 
@@ -2187,7 +2186,7 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(
               (compiler) ->
                   new DisambiguateProperties2(
-                      compiler, ImmutableMap.copyOf(options.propertyInvalidationErrors)))
+                      compiler, options.getPropertiesThatMustDisambiguate()))
           .setFeatureSetForOptimizations()
           .build();
 

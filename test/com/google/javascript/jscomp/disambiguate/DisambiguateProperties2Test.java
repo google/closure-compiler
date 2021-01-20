@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.CheckLevel;
@@ -62,7 +61,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
           "/** @return {string} */",
           "goog.reflect.objectProperty = function(prop, obj) { return ''; };");
 
-  private ImmutableMap<String, CheckLevel> propertiesToErrorFor = ImmutableMap.of();
+  private ImmutableSet<String> propertiesThatMustDisambiguate = ImmutableSet.of();
 
   public DisambiguateProperties2Test() {
     super("");
@@ -77,7 +76,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new DisambiguateProperties2(compiler, propertiesToErrorFor);
+    return new DisambiguateProperties2(compiler, propertiesThatMustDisambiguate);
   }
 
   @Override
@@ -841,10 +840,10 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   @Test
   public void errorReported_forInvalidation_ofSpecifiedPropNames_oncePerName() {
     this.allowSourcelessWarnings();
-    this.propertiesToErrorFor =
-        ImmutableMap.of(
-            "mustDisambiguate0", CheckLevel.ERROR, //
-            "mustDisambiguate1", CheckLevel.ERROR);
+    this.propertiesThatMustDisambiguate =
+        ImmutableSet.of(
+            "mustDisambiguate0", //
+            "mustDisambiguate1");
 
     test(
         srcs(

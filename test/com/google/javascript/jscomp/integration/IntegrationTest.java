@@ -1318,11 +1318,11 @@ public final class IntegrationTest extends IntegrationTestCase {
         lines(
             "function fn(x){return x.a;}",
             "function I(){}",
-            "I.prototype.a=function(x){};",
+            "I.prototype.a=function(x$jscomp$1){};",
             "function Foo(){}",
-            "Foo.prototype.a = function(x) {};",
+            "Foo.prototype.a = function(x$jscomp$2) {};",
             "function Bar(){}",
-            "Bar.prototype.a=function(x){};"),
+            "Bar.prototype.a=function(x$jscomp$3){};"),
         DiagnosticGroups.TYPE_INVALIDATION);
   }
 

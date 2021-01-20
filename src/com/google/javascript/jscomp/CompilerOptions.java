@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -806,7 +805,7 @@ public class CompilerOptions implements Serializable {
   VariableMap replaceStringsInputMap;
 
   /** List of properties that we report invalidation errors for. */
-  Map<String, CheckLevel> propertyInvalidationErrors;
+  private ImmutableSet<String> propertiesThatMustDisambiguate;
 
   /** Transform AMD to CommonJS modules. */
   boolean transformAMDToCJSModules = false;
@@ -1320,7 +1319,7 @@ public class CompilerOptions implements Serializable {
     replaceStringsFunctionDescriptions = ImmutableList.of();
     replaceStringsPlaceholderToken = "";
     replaceStringsReservedStrings = ImmutableSet.of();
-    propertyInvalidationErrors = new HashMap<>();
+    propertiesThatMustDisambiguate = ImmutableSet.of();
     inputSourceMaps = ImmutableMap.of();
 
     instrumentForCoverageOption = InstrumentOption.NONE;
@@ -1866,8 +1865,11 @@ public class CompilerOptions implements Serializable {
 
   /** Sets the list of properties that we report property invalidation errors for. */
   public void setPropertiesThatMustDisambiguate(Set<String> names) {
-    this.propertyInvalidationErrors =
-        names.stream().sorted().collect(toImmutableMap((x) -> x, (x) -> CheckLevel.ERROR));
+    this.propertiesThatMustDisambiguate = ImmutableSet.copyOf(names);
+  }
+
+  public ImmutableSet<String> getPropertiesThatMustDisambiguate() {
+    return this.propertiesThatMustDisambiguate;
   }
 
   public void setAllowHotswapReplaceScript(boolean allowRecompilation) {
@@ -2774,7 +2776,7 @@ public class CompilerOptions implements Serializable {
         .add("printInputDelimiter", printInputDelimiter)
         .add("printSourceAfterEachPass", printSourceAfterEachPass)
         .add("processCommonJSModules", processCommonJSModules)
-        .add("propertyInvalidationErrors", propertyInvalidationErrors)
+        .add("propertiesThatMustDisambiguate", propertiesThatMustDisambiguate)
         .add("propertyRenaming", propertyRenaming)
         .add("protectHiddenSideEffects", protectHiddenSideEffects)
         .add("quoteKeywordProperties", quoteKeywordProperties)
