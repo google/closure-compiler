@@ -72,17 +72,16 @@ To see all of the compiler's options, type:
 ```bash
 google-closure-compiler --help
 ```
-| `--flag` | Description |
-| --- | --- |
-| `compilation_level (-O) VAL` | Specifies the compilation level to use. Options: `BUNDLE`, `WHITESPACE_ONLY`, `SIMPLE` (default), `ADVANCED` |
-| <code>env [BROWSER &#124; CUSTOM]</code>  | Determines the set of builtin externs to load. Options: `BROWSER`, `CUSTOM`. Defaults to `BROWSER`.  |
-|   `externs VAL`  | The file containing JavaScript externs. You may specify multiple  |
-| ` js VAL`  | The JavaScript filename. You may specify multiple. The flag name is optional, because args are interpreted as files by default. You may also use minimatch-style glob patterns. For example, use `--js='**.js' --js='!**_test.js'` to recursively include all js files that do not end in `_test.js`  | 
-|  `--js_output_file VAL`  |  Primary output filename. If not specified, output is written to stdout |
-|  `--language_in VAL` |  Sets the language spec to which input sources should conform. Options: `ECMASCRIPT3`, `ECMASCRIPT5`, `ECMASCRIPT5_STRICT`, `ECMASCRIPT6_TYPED` (experimental), `ECMASCRIPT_2015`, `ECMASCRIPT_2016`, `ECMASCRIPT_2017`, `ECMASCRIPT_2018`, `ECMASCRIPT_2019`, `STABLE`, `ECMASCRIPT_NEXT`  |
-|  `--language_out VAL`  |  Sets the language spec to which output should conform. Options: `ECMASCRIPT3`, `ECMASCRIPT5`, `ECMASCRIPT5_STRICT`,`ECMASCRIPT_2015`, `ECMASCRIPT_2016`, `ECMASCRIPT_2017`, `ECMASCRIPT_2018`,`ECMASCRIPT_2019`, `STABLE` |
-| <code>--warning_level (-W) [QUIET &#124; DEFAULT &#124; VERBOSE]</code>  | Specifies the warning level to use.  |
-
+| `--flag`                                                                | Description                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `compilation_level (-O) VAL`                                            | Specifies the compilation level to use. Options: `BUNDLE`, `WHITESPACE_ONLY`, `SIMPLE` (default), `ADVANCED`                                                                                                                                                                                         |
+| <code>env [BROWSER &#124; CUSTOM]</code>                                | Determines the set of builtin externs to load. Options: `BROWSER`, `CUSTOM`. Defaults to `BROWSER`.                                                                                                                                                                                                  |
+| `externs VAL`                                                           | The file containing JavaScript externs. You may specify multiple                                                                                                                                                                                                                                     |
+| ` js VAL`                                                               | The JavaScript filename. You may specify multiple. The flag name is optional, because args are interpreted as files by default. You may also use minimatch-style glob patterns. For example, use `--js='**.js' --js='!**_test.js'` to recursively include all js files that do not end in `_test.js` |
+| `--js_output_file VAL`                                                  | Primary output filename. If not specified, output is written to stdout                                                                                                                                                                                                                               |
+| `--language_in VAL`                                                     | Sets the language spec to which input sources should conform. Options: `ECMASCRIPT3`, `ECMASCRIPT5`, `ECMASCRIPT5_STRICT`, `ECMASCRIPT6_TYPED` (experimental), `ECMASCRIPT_2015`, `ECMASCRIPT_2016`, `ECMASCRIPT_2017`, `ECMASCRIPT_2018`, `ECMASCRIPT_2019`, `STABLE`, `ECMASCRIPT_NEXT`            |
+| `--language_out VAL`                                                    | Sets the language spec to which output should conform. Options: `ECMASCRIPT3`, `ECMASCRIPT5`, `ECMASCRIPT5_STRICT`,`ECMASCRIPT_2015`, `ECMASCRIPT_2016`, `ECMASCRIPT_2017`, `ECMASCRIPT_2018`,`ECMASCRIPT_2019`, `STABLE`                                                                            |
+| <code>--warning_level (-W) [QUIET &#124; DEFAULT &#124; VERBOSE]</code> | Specifies the warning level to use.                                                                                                                                                                                                                                                                  |
 #### See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
 ### NodeJS API
