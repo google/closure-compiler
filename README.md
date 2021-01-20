@@ -73,46 +73,80 @@ To see all of the compiler's options, type:
 google-closure-compiler --help
 ```
 
-| `--flag`                          | Description                             |
-| --------------------------------- | --------------------------------------- |
-| `compilation_level (-O) VAL`      | Specifies the compilation level to use. |
-:                                   : Options\: `BUNDLE`, `WHITESPACE_ONLY`,  :
-:                                   : `SIMPLE` (default), `ADVANCED`          :
-| <code>env [BROWSER &#124;         | Determines the set of builtin externs   |
-: CUSTOM]</code>                    : to load. Options\: `BROWSER`, `CUSTOM`. :
-:                                   : Defaults to `BROWSER`.                  :
-| `externs VAL`                     | The file containing JavaScript externs. |
-:                                   : You may specify multiple                :
-| `js VAL`                          | The JavaScript filename. You may        |
-:                                   : specify multiple. The flag name is      :
-:                                   : optional, because args are interpreted  :
-:                                   : as files by default. You may also use   :
-:                                   : minimatch-style glob patterns. For      :
-:                                   : example, use `--js='**.js'              :
-:                                   : --js='!**_test.js'` to recursively      :
-:                                   : include all js files that do not end in :
-:                                   : `_test.js`                              :
-| `--js_output_file VAL`            | Primary output filename. If not         |
-:                                   : specified, output is written to stdout  :
-| `--language_in VAL`               | Sets the language spec to which input   |
-:                                   : sources should conform. Options\:       :
-:                                   : `ECMASCRIPT3`, `ECMASCRIPT5`,           :
-:                                   : `ECMASCRIPT5_STRICT`,                   :
-:                                   : `ECMASCRIPT6_TYPED` (experimental),     :
-:                                   : `ECMASCRIPT_2015`, `ECMASCRIPT_2016`,   :
-:                                   : `ECMASCRIPT_2017`, `ECMASCRIPT_2018`,   :
-:                                   : `ECMASCRIPT_2019`, `STABLE`,            :
-:                                   : `ECMASCRIPT_NEXT`                       :
-| `--language_out VAL`              | Sets the language spec to which output  |
-:                                   : should conform. Options\:               :
-:                                   : `ECMASCRIPT3`, `ECMASCRIPT5`,           :
-:                                   : `ECMASCRIPT5_STRICT`,`ECMASCRIPT_2015`, :
-:                                   : `ECMASCRIPT_2016`, `ECMASCRIPT_2017`,   :
-:                                   : `ECMASCRIPT_2018`,`ECMASCRIPT_2019`,    :
-:                                   : `STABLE`                                :
-| <code>--warning_level (-W) [QUIET | Specifies the warning level to use.     |
-: &#124; DEFAULT &#124;             :                                         :
-: VERBOSE]</code>                   :                                         :
+<table>
+<thead>
+  <tr>
+    <td><code>--flag</code></td>
+    <td>Description</td>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td style="white-space: nowrap"><code>--compilation_level (-O) VAL</code></td>
+    <td>
+      Specifies the compilation level to use.
+      Options: <code>BUNDLE</code>, <code>WHITESPACE_ONLY</code>,
+      <code>SIMPLE</code> (default), <code>ADVANCED</code>
+    </td>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap"><code>--env VAL</code></td>
+    <td>
+      Determines the set of builtin externs to load.
+      Options: <code>BROWSER</code>, <code>CUSTOM</code>.
+      Defaults to <code>BROWSER</code>.
+    </td>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap"><code>--externs VAL</code></td>
+    <td>The file containing JavaScript externs. You may specify multiple</td>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap"><code>--js VAL</code></td>
+    <td>
+      The JavaScript filename. You may specify multiple. The flag name is
+      optional, because args are interpreted as files by default. You may also
+      use minimatch-style glob patterns. For example, use
+      <code>--js='**.js' --js='!**_test.js'</code> to recursively include all
+      js files that do not end in <code>_test.js</code>
+    </td>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap"><code>--js_output_file VAL</code></td>
+    <td>
+      Primary output filename. If not specified, output is written to stdout.
+    </td>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap"><code>--language_in VAL</code></td>
+    <td>
+      Sets the language spec to which input sources should conform.
+      Options: <code>ECMASCRIPT3</code>, <code>ECMASCRIPT5</code>,
+      <code>ECMASCRIPT5_STRICT</code>, <code>ECMASCRIPT_2015</code>,
+      <code>ECMASCRIPT_2016</code>, <code>ECMASCRIPT_2017</code>,
+      <code>ECMASCRIPT_2018</code>, <code>ECMASCRIPT_2019</code>,
+      <code>STABLE</code>, <code>ECMASCRIPT_NEXT</code>
+    </td>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap"><code>--language_out VAL</code></td>
+    <td>
+      Sets the language spec to which output should conform.
+      Options: <code>ECMASCRIPT3</code>, <code>ECMASCRIPT5</code>,
+      <code>ECMASCRIPT5_STRICT</code>, <code>ECMASCRIPT_2015</code>,
+      <code>ECMASCRIPT_2016</code>, <code>ECMASCRIPT_2017</code>,
+      <code>ECMASCRIPT_2018</code>, <code>ECMASCRIPT_2019</code>,
+      <code>STABLE</code>
+    </td>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap"><code>--warning_level (-W) VAL</code></td>
+    <td>Specifies the warning level to use.
+      Options: <code>QUIET</code>, <code>DEFAULT</code>, <code>VERBOSE</code>
+    </td>
+  </tr>
+</tbody>
+</table>
 
 #### See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
