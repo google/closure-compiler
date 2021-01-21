@@ -423,7 +423,7 @@ google.maps.Data.prototype.contains = function(feature) {};
  * Repeatedly invokes the given function, passing a feature in the collection to
  * the function on each invocation. The order of iteration through the features
  * is undefined.
- * @param {function(!google.maps.Data.Feature)} callback
+ * @param {function(!google.maps.Data.Feature): void} callback
  * @return {undefined}
  */
 google.maps.Data.prototype.forEach = function(callback) {};
@@ -481,7 +481,7 @@ google.maps.Data.prototype.getStyle = function() {};
  * and then call <code>addGeoJson()</code>.
  * @param {string} url
  * @param {google.maps.Data.GeoJsonOptions=} options
- * @param {function(!Array<!google.maps.Data.Feature>)=} callback
+ * @param {(function(!Array<!google.maps.Data.Feature>): void)=} callback
  * @return {undefined}
  */
 google.maps.Data.prototype.loadGeoJson = function(url, options, callback) {};
@@ -562,7 +562,7 @@ google.maps.Data.prototype.setStyle = function(style) {};
 
 /**
  * Exports the features in the collection to a GeoJSON object.
- * @param {function(!Object)} callback
+ * @param {function(!Object): void} callback
  * @return {undefined}
  */
 google.maps.Data.prototype.toGeoJson = function(callback) {};
@@ -646,7 +646,7 @@ google.maps.Data.Feature = function(options) {};
 /**
  * Repeatedly invokes the given function, passing a property value and name on
  * each invocation. The order of iteration through the properties is undefined.
- * @param {function(*, string)} callback
+ * @param {function(*, string): void} callback
  * @return {undefined}
  */
 google.maps.Data.Feature.prototype.forEachProperty = function(callback) {};
@@ -698,7 +698,7 @@ google.maps.Data.Feature.prototype.setProperty = function(name, newValue) {};
 
 /**
  * Exports the feature to a GeoJSON object.
- * @param {function(!Object)} callback
+ * @param {function(!Object): void} callback
  * @return {undefined}
  */
 google.maps.Data.Feature.prototype.toGeoJson = function(callback) {};
@@ -755,7 +755,7 @@ google.maps.Data.Geometry = function() {};
 /**
  * Repeatedly invokes the given function, passing a point from the geometry to
  * the function on each invocation.
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  */
 google.maps.Data.Geometry.prototype.forEachLatLng = function(callback) {};
@@ -782,7 +782,7 @@ google.maps.Data.Geometry.prototype.getType = function() {};
 google.maps.Data.GeometryCollection = function(elements) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -825,7 +825,7 @@ google.maps.Data.GeometryCollection.prototype.getType = function() {};
 google.maps.Data.LineString = function(elements) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -869,7 +869,7 @@ google.maps.Data.LineString.prototype.getType = function() {};
 google.maps.Data.LinearRing = function(elements) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -925,7 +925,7 @@ google.maps.Data.MouseEvent.prototype.feature;
 google.maps.Data.MultiLineString = function(elements) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -968,7 +968,7 @@ google.maps.Data.MultiLineString.prototype.getType = function() {};
 google.maps.Data.MultiPoint = function(elements) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -1011,7 +1011,7 @@ google.maps.Data.MultiPoint.prototype.getType = function() {};
 google.maps.Data.MultiPolygon = function(elements) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -1053,7 +1053,7 @@ google.maps.Data.MultiPolygon.prototype.getType = function() {};
 google.maps.Data.Point = function(latLng) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -1086,7 +1086,7 @@ google.maps.Data.Point.prototype.getType = function() {};
 google.maps.Data.Polygon = function(elements) {};
 
 /**
- * @param {function(!google.maps.LatLng)} callback
+ * @param {function(!google.maps.LatLng): void} callback
  * @return {undefined}
  * @override
  */
@@ -1850,8 +1850,8 @@ google.maps.DirectionsService = function() {};
  * returned</strong>. More information is available in the <a
  * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
  * @param {!google.maps.DirectionsRequest} request
- * @param {function(?google.maps.DirectionsResult,
- *     !google.maps.DirectionsStatus)=} callback
+ * @param {(function(?google.maps.DirectionsResult,
+ *     !google.maps.DirectionsStatus): void)=} callback
  * @return {?Promise<!google.maps.DirectionsResult>}
  */
 google.maps.DirectionsService.prototype.route = function(request, callback) {};
@@ -2068,7 +2068,7 @@ google.maps.DistanceMatrixRequest.prototype.avoidTolls;
  * An array containing destination address strings, or <code>LatLng</code>, or
  * <code>Place</code> objects, to which to calculate distance and time.
  * Required.
- * @type {!Array<string|!google.maps.LatLng|!google.maps.Place>}
+ * @type {!Array<string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.Place>}
  */
 google.maps.DistanceMatrixRequest.prototype.destinations;
 
@@ -2083,7 +2083,7 @@ google.maps.DistanceMatrixRequest.prototype.drivingOptions;
  * An array containing origin address strings, or <code>LatLng</code>, or
  * <code>Place</code> objects, from which to calculate distance and time.
  * Required.
- * @type {!Array<string|!google.maps.LatLng|!google.maps.Place>}
+ * @type {!Array<string|!google.maps.LatLng|!google.maps.LatLngLiteral|!google.maps.Place>}
  */
 google.maps.DistanceMatrixRequest.prototype.origins;
 
@@ -2211,8 +2211,8 @@ google.maps.DistanceMatrixService = function() {};
  * returned</strong>. More information is available in the <a
  * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
  * @param {!google.maps.DistanceMatrixRequest} request
- * @param {function(?google.maps.DistanceMatrixResponse,
- *     !google.maps.DistanceMatrixStatus)=} callback
+ * @param {(function(?google.maps.DistanceMatrixResponse,
+ *     !google.maps.DistanceMatrixStatus): void)=} callback
  * @return {?Promise<!google.maps.DistanceMatrixResponse>}
  */
 google.maps.DistanceMatrixService.prototype.getDistanceMatrix = function(
@@ -2346,8 +2346,8 @@ google.maps.ElevationService = function() {};
  * <code>v=beta</code></strong>. More information is available in the <a
  * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
  * @param {!google.maps.PathElevationRequest} request
- * @param {function(?Array<!google.maps.ElevationResult>,
- *     !google.maps.ElevationStatus)=} callback
+ * @param {(function(?Array<!google.maps.ElevationResult>,
+ *     !google.maps.ElevationStatus): void)=} callback
  * @return {?Promise<!google.maps.PathElevationResponse>}
  */
 google.maps.ElevationService.prototype.getElevationAlongPath = function(
@@ -2360,8 +2360,8 @@ google.maps.ElevationService.prototype.getElevationAlongPath = function(
  * available in the <a href="/maps/documentation/javascript/promises">Promises
  * guide</a>.</aside>
  * @param {!google.maps.LocationElevationRequest} request
- * @param {function(?Array<!google.maps.ElevationResult>,
- *     !google.maps.ElevationStatus)=} callback
+ * @param {(function(?Array<!google.maps.ElevationResult>,
+ *     !google.maps.ElevationStatus): void)=} callback
  * @return {?Promise<!google.maps.LocationElevationResponse>}
  */
 google.maps.ElevationService.prototype.getElevationForLocations = function(
@@ -2435,8 +2435,8 @@ google.maps.Geocoder = function() {};
  * is available in the <a
  * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
  * @param {!google.maps.GeocoderRequest} request
- * @param {?function(?Array<!google.maps.GeocoderResult>,
- *     !google.maps.GeocoderStatus)} callback
+ * @param {?(function(?Array<!google.maps.GeocoderResult>,
+ *     !google.maps.GeocoderStatus): void)} callback
  * @return {?Promise<!google.maps.GeocoderResponse>}
  */
 google.maps.Geocoder.prototype.geocode = function(request, callback) {};
@@ -3799,7 +3799,7 @@ google.maps.MVCArray.prototype.clear = function() {};
 /**
  * Iterate over each element, calling the provided callback. The callback is
  * called for each element like: callback(element, index).
- * @param {function(T, number)} callback
+ * @param {function(T, number): void} callback
  * @return {undefined}
  */
 google.maps.MVCArray.prototype.forEach = function(callback) {};
@@ -3951,20 +3951,20 @@ google.maps.Map = function(mapDiv, opts) {};
  * the control&#39;s <code>&lt;div&gt;</code> to the <code>MVCArray</code>
  * corresponding to the <code>ControlPosition</code> where it should be
  * rendered.
- * @type {Array<google.maps.MVCArray<Node>>}
+ * @type {!Array<!google.maps.MVCArray<!Node>>}
  */
 google.maps.Map.prototype.controls;
 
 /**
  * An instance of <code>Data</code>, bound to the map. Add features to this
  * <code>Data</code> object to conveniently display them on this map.
- * @type {google.maps.Data}
+ * @type {!google.maps.Data}
  */
 google.maps.Map.prototype.data;
 
 /**
  * A registry of <code>MapType</code> instances by string ID.
- * @type {google.maps.MapTypeRegistry}
+ * @type {!google.maps.MapTypeRegistry}
  */
 google.maps.Map.prototype.mapTypes;
 
@@ -3984,7 +3984,7 @@ google.maps.Map.prototype.overlayMapTypes;
  * To change the viewport while the map is hidden, set the map to
  * <code>visibility: hidden</code>, thereby ensuring the map div has an actual
  * size.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} bounds
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral} bounds
  * @param {(number|!google.maps.Padding)=} padding
  * @return {undefined}
  */
@@ -3993,18 +3993,18 @@ google.maps.Map.prototype.fitBounds = function(bounds, padding) {};
 /**
  * Returns the lat/lng bounds of the current viewport. If more than one copy of
  * the world is visible, the bounds range in longitude from -180 to 180 degrees
- * inclusive. If the map is not yet initialized (i.e. the mapType is still
- * null), or center and zoom have not been set then the result is
- * <code>null</code> or <code>undefined</code>.
- * @return {google.maps.LatLngBounds}
+ * inclusive. If the map is not yet initialized or center and zoom have not been
+ * set then the result is <code>undefined</code>.
+ * @return {!google.maps.LatLngBounds|undefined}
  */
 google.maps.Map.prototype.getBounds = function() {};
 
 /**
  * Returns the position displayed at the center of the map. Note that this
  * <code>LatLng</code> object is <em>not</em> wrapped. See <code><a
- * href="#LatLng">LatLng</a></code> for more information.
- * @return {google.maps.LatLng}
+ * href="#LatLng">LatLng</a></code> for more information. If the center or
+ * bounds have not been set then the result is <code>undefined</code>.
+ * @return {!google.maps.LatLng|undefined}
  */
 google.maps.Map.prototype.getCenter = function() {};
 
@@ -4012,7 +4012,7 @@ google.maps.Map.prototype.getCenter = function() {};
  * Returns the clickability of the map icons. A map icon represents a point of
  * interest, also known as a POI. If the returned value is true, then the icons
  * are clickable on the map.
- * @return {boolean}
+ * @return {boolean|undefined}
  */
 google.maps.Map.prototype.getClickableIcons = function() {};
 
@@ -4023,22 +4023,23 @@ google.maps.Map.prototype.getDiv = function() {};
 
 /**
  * Returns the compass heading of aerial imagery. The heading value is measured
- * in degrees (clockwise) from cardinal direction North.
- * @return {number}
+ * in degrees (clockwise) from cardinal direction North. If the map is not yet
+ * initialized then the result is undefined.
+ * @return {number|undefined}
  */
 google.maps.Map.prototype.getHeading = function() {};
 
 /**
- * @return {google.maps.MapTypeId|string}
+ * @return {!google.maps.MapTypeId|string|undefined}
  */
 google.maps.Map.prototype.getMapTypeId = function() {};
 
 /**
  * Returns the current <code>Projection</code>. If the map is not yet
- * initialized (i.e. the mapType is still null) then the result is null. Listen
- * to <code>projection_changed</code> and check its value to ensure it is not
- * null.
- * @return {google.maps.Projection}
+ * initialized then the result is undefined. Listen to the
+ * <code>projection_changed</code> event and check its value to ensure it is not
+ * undefined.
+ * @return {!google.maps.Projection|undefined}
  */
 google.maps.Map.prototype.getProjection = function() {};
 
@@ -4048,7 +4049,7 @@ google.maps.Map.prototype.getProjection = function() {};
  * <code>setStreetView()</code>. Changes to the map&#39;s
  * <code>streetViewControl</code> will be reflected in the display of such a
  * bound panorama.
- * @return {google.maps.StreetViewPanorama}
+ * @return {!google.maps.StreetViewPanorama|undefined}
  */
 google.maps.Map.prototype.getStreetView = function() {};
 
@@ -4060,12 +4061,14 @@ google.maps.Map.prototype.getStreetView = function() {};
  * <code>hybrid</code> map types, within some locations, and at some zoom
  * levels. <b>Note:</b> This method does not return the value set by
  * <code>setTilt</code>. See <code>setTilt</code> for details.
- * @return {number}
+ * @return {number|undefined}
  */
 google.maps.Map.prototype.getTilt = function() {};
 
 /**
- * @return {number}
+ * Returns the zoom of the map. If the zoom has not been set then the result is
+ * <code>undefined</code>.
+ * @return {number|undefined}
  */
 google.maps.Map.prototype.getZoom = function() {};
 
@@ -4084,7 +4087,7 @@ google.maps.Map.prototype.panBy = function(x, y) {};
  * Changes the center of the map to the given <code>LatLng</code>. If the change
  * is less than both the width and height of the map, the transition will be
  * smoothly animated.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} latLng
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @return {undefined}
  */
 google.maps.Map.prototype.panTo = function(latLng) {};
@@ -4094,7 +4097,7 @@ google.maps.Map.prototype.panTo = function(latLng) {};
  * <code>LatLngBounds</code>. It makes no guarantee where on the map the bounds
  * will be, except that the map will be panned to show as much of the bounds as
  * possible inside <code>{currentMapSizeInPx} - {padding}</code>.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral}
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral}
  *     latLngBounds
  * @param {(number|!google.maps.Padding)=} padding
  * @return {undefined}
@@ -4102,7 +4105,7 @@ google.maps.Map.prototype.panTo = function(latLng) {};
 google.maps.Map.prototype.panToBounds = function(latLngBounds, padding) {};
 
 /**
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latlng
  * @return {undefined}
  */
 google.maps.Map.prototype.setCenter = function(latlng) {};
@@ -4125,13 +4128,13 @@ google.maps.Map.prototype.setClickableIcons = function(value) {};
 google.maps.Map.prototype.setHeading = function(heading) {};
 
 /**
- * @param {google.maps.MapTypeId|string} mapTypeId
+ * @param {!google.maps.MapTypeId|string} mapTypeId
  * @return {undefined}
  */
 google.maps.Map.prototype.setMapTypeId = function(mapTypeId) {};
 
 /**
- * @param {google.maps.MapOptions} options
+ * @param {?google.maps.MapOptions} options
  * @return {undefined}
  */
 google.maps.Map.prototype.setOptions = function(options) {};
@@ -4310,10 +4313,11 @@ google.maps.MapOptions.prototype.disableDoubleClickZoom;
 
 /**
  * If false, prevents the map from being dragged. Dragging is enabled by
- * default. <p><strong>Note</strong>: This property is
- * <strong>deprecated</strong>. To disable dragging on the map, you can use the
- * <code>gestureHandling</code> property, and set it to <code>"none"</code>.
+ * default.
  * @type {?boolean|undefined}
+ * @deprecated Deprecated in 2017. To disable dragging on the map, you can use
+ *     the <code>gestureHandling</code> property, and set it to
+ *     <code>"none"</code>.
  */
 google.maps.MapOptions.prototype.draggable;
 
@@ -5259,7 +5263,7 @@ google.maps.MaxZoomService = function() {};
  * returned</strong>. More information is available in the <a
  * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
  * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
- * @param {function(!google.maps.MaxZoomResult)=} callback
+ * @param {(function(!google.maps.MaxZoomResult): void)=} callback
  * @return {?Promise<!google.maps.MaxZoomResult>}
  */
 google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(
@@ -5598,7 +5602,7 @@ google.maps.PolyMouseEvent.prototype.vertex;
  * href="#Data.Polygon">Data layer</a> to create a polygon. The Data layer
  * offers a simpler way of creating holes because it handles the order of the
  * inner and outer paths for you.
- * @param {google.maps.PolygonOptions=} opts
+ * @param {?google.maps.PolygonOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -5618,13 +5622,13 @@ google.maps.Polygon.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this shape is attached.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.Polygon.prototype.getMap = function() {};
 
 /**
  * Retrieves the first path.
- * @return {google.maps.MVCArray<google.maps.LatLng>}
+ * @return {!google.maps.MVCArray<!google.maps.LatLng>}
  */
 google.maps.Polygon.prototype.getPath = function() {};
 
@@ -5659,13 +5663,13 @@ google.maps.Polygon.prototype.setEditable = function(editable) {};
 /**
  * Renders this shape on the specified map. If map is set to null, the shape
  * will be removed.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.Polygon.prototype.setMap = function(map) {};
 
 /**
- * @param {google.maps.PolygonOptions} options
+ * @param {?google.maps.PolygonOptions} options
  * @return {undefined}
  */
 google.maps.Polygon.prototype.setOptions = function(options) {};
@@ -5673,7 +5677,7 @@ google.maps.Polygon.prototype.setOptions = function(options) {};
 /**
  * Sets the first path. See <em><code><a
  * href="#PolygonOptions">PolygonOptions</a></code></em> for more details.
- * @param {google.maps.MVCArray<google.maps.LatLng>|Array<google.maps.LatLng|google.maps.LatLngLiteral>}
+ * @param {!google.maps.MVCArray<!google.maps.LatLng>|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>}
  *     path
  * @return {undefined}
  */
@@ -5681,7 +5685,7 @@ google.maps.Polygon.prototype.setPath = function(path) {};
 
 /**
  * Sets the path for this polygon.
- * @param {google.maps.MVCArray<google.maps.MVCArray<google.maps.LatLng>>|google.maps.MVCArray<google.maps.LatLng>|Array<Array<google.maps.LatLng|google.maps.LatLngLiteral>>|Array<google.maps.LatLng|google.maps.LatLngLiteral>}
+ * @param {!google.maps.MVCArray<!google.maps.MVCArray<!google.maps.LatLng>>|!google.maps.MVCArray<!google.maps.LatLng>|!Array<!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>>|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>}
  *     paths
  * @return {undefined}
  */
@@ -5807,7 +5811,7 @@ google.maps.PolygonOptions.prototype.zIndex;
 
 /**
  * A polyline is a linear overlay of connected line segments on the map.
- * @param {google.maps.PolylineOptions=} opts
+ * @param {?google.maps.PolylineOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -5827,7 +5831,7 @@ google.maps.Polyline.prototype.getEditable = function() {};
 
 /**
  * Returns the map on which this shape is attached.
- * @return {google.maps.Map}
+ * @return {?google.maps.Map}
  */
 google.maps.Polyline.prototype.getMap = function() {};
 
@@ -5862,13 +5866,13 @@ google.maps.Polyline.prototype.setEditable = function(editable) {};
 /**
  * Renders this shape on the specified map. If map is set to null, the shape
  * will be removed.
- * @param {google.maps.Map} map
+ * @param {?google.maps.Map} map
  * @return {undefined}
  */
 google.maps.Polyline.prototype.setMap = function(map) {};
 
 /**
- * @param {google.maps.PolylineOptions} options
+ * @param {?google.maps.PolylineOptions} options
  * @return {undefined}
  */
 google.maps.Polyline.prototype.setOptions = function(options) {};
@@ -5876,7 +5880,7 @@ google.maps.Polyline.prototype.setOptions = function(options) {};
 /**
  * Sets the path. See <em><code><a
  * href="#PolylineOptions">PolylineOptions</a></code></em> for more details.
- * @param {google.maps.MVCArray<google.maps.LatLng>|Array<google.maps.LatLng|google.maps.LatLngLiteral>}
+ * @param {!google.maps.MVCArray<!google.maps.LatLng>|!Array<!google.maps.LatLng|!google.maps.LatLngLiteral>}
  *     path
  * @return {undefined}
  */
@@ -6340,13 +6344,13 @@ google.maps.StreetViewLocation = function() {};
 
 /**
  * A localized string describing the location.
- * @type {?string}
+ * @type {?string|undefined}
  */
 google.maps.StreetViewLocation.prototype.description;
 
 /**
  * The latlng of the panorama.
- * @type {?google.maps.LatLng}
+ * @type {?google.maps.LatLng|undefined}
  */
 google.maps.StreetViewLocation.prototype.latLng;
 
@@ -6359,7 +6363,7 @@ google.maps.StreetViewLocation.prototype.pano;
 
 /**
  * Short description of the location.
- * @type {?string}
+ * @type {?string|undefined}
  */
 google.maps.StreetViewLocation.prototype.shortDescription;
 
@@ -6861,8 +6865,8 @@ google.maps.StreetViewService = function() {};
  * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
  * @param {!google.maps.StreetViewLocationRequest|!google.maps.StreetViewPanoRequest}
  *     request
- * @param {function(?google.maps.StreetViewPanoramaData,
- *     !google.maps.StreetViewStatus)=} callback
+ * @param {(function(?google.maps.StreetViewPanoramaData,
+ *     !google.maps.StreetViewStatus): void)=} callback
  * @return {?Promise<!google.maps.StreetViewResponse>}
  */
 google.maps.StreetViewService.prototype.getPanorama = function(
@@ -8586,7 +8590,7 @@ google.maps.places = {};
  * entry in that field. The list of predictions is presented as a drop-down
  * list, and is updated as text is entered.
  * @param {!HTMLInputElement} inputField
- * @param {google.maps.places.AutocompleteOptions=} opts
+ * @param {?google.maps.places.AutocompleteOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -8610,7 +8614,7 @@ google.maps.places.Autocomplete.prototype.getFields = function() {};
  * Returns the details of the Place selected by user if the details were
  * successfully retrieved. Otherwise returns a stub Place object, with the
  * <code>name</code> property set to the current value of the input field.
- * @return {google.maps.places.PlaceResult}
+ * @return {!google.maps.places.PlaceResult}
  */
 google.maps.places.Autocomplete.prototype.getPlace = function() {};
 
@@ -8627,7 +8631,7 @@ google.maps.places.Autocomplete.prototype.setBounds = function(bounds) {};
  * Sets the component restrictions. Component restrictions are used to restrict
  * predictions to only those within the parent component. For example, the
  * country.
- * @param {google.maps.places.ComponentRestrictions} restrictions
+ * @param {?google.maps.places.ComponentRestrictions} restrictions
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setComponentRestrictions = function(
@@ -8643,7 +8647,7 @@ google.maps.places.Autocomplete.prototype.setComponentRestrictions = function(
 google.maps.places.Autocomplete.prototype.setFields = function(fields) {};
 
 /**
- * @param {google.maps.places.AutocompleteOptions} options
+ * @param {?google.maps.places.AutocompleteOptions} options
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setOptions = function(options) {};
@@ -8654,7 +8658,7 @@ google.maps.places.Autocomplete.prototype.setOptions = function(options) {};
  * href="https://developers.google.com/places/supported_types#table3">
  * developer&#39;s guide</a>. If no type is specified, all types will be
  * returned. The <code>setTypes</code> method accepts a single element array.
- * @param {Array<string>} types
+ * @param {?Array<string>} types
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setTypes = function(types) {};
@@ -8698,6 +8702,10 @@ google.maps.places.AutocompleteOptions.prototype.fields;
  * fields, with the place_id, types and description returned by the Autocomplete
  * service. Disabled by default.
  * @type {boolean|undefined}
+ * @deprecated <code>placeIdOnly</code> is deprecated as of January 15, 2019,
+ *     and will be turned off on January 15, 2020. Use {@link
+ *     google.maps.places.AutocompleteOptions.fields} instead: <code>fields:
+ *     [&#39;place_id&#39;, &#39;name&#39;, &#39;types&#39;]</code>.
  */
 google.maps.places.AutocompleteOptions.prototype.placeIdOnly;
 
@@ -8792,9 +8800,9 @@ google.maps.places.AutocompleteService = function() {};
 /**
  * Retrieves place autocomplete predictions based on the supplied autocomplete
  * request.
- * @param {google.maps.places.AutocompletionRequest} request
- * @param {function(Array<google.maps.places.AutocompletePrediction>,
- *     google.maps.places.PlacesServiceStatus)} callback
+ * @param {!google.maps.places.AutocompletionRequest} request
+ * @param {function(?Array<!google.maps.places.AutocompletePrediction>,
+ *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
 google.maps.places.AutocompleteService.prototype.getPlacePredictions = function(
@@ -8803,9 +8811,9 @@ google.maps.places.AutocompleteService.prototype.getPlacePredictions = function(
 /**
  * Retrieves query autocomplete predictions based on the supplied query
  * autocomplete request.
- * @param {google.maps.places.QueryAutocompletionRequest} request
- * @param {function(Array<google.maps.places.QueryAutocompletePrediction>,
- *     google.maps.places.PlacesServiceStatus)} callback
+ * @param {!google.maps.places.QueryAutocompletionRequest} request
+ * @param {function(?Array<!google.maps.places.QueryAutocompletePrediction>,
+ *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
 google.maps.places.AutocompleteService.prototype.getQueryPredictions = function(
@@ -8933,7 +8941,7 @@ google.maps.places.ComponentRestrictions = function() {};
  * code, case insensitive). For example, <code>'us'</code>, <code>'br'</code>,
  * or <code>'au'</code>. You can provide a single one, or an array of up to five
  * country code strings.
- * @type {string|Array<string>}
+ * @type {string|?Array<string>}
  */
 google.maps.places.ComponentRestrictions.prototype.country;
 
@@ -9111,6 +9119,10 @@ google.maps.places.PlaceOpeningHours = function() {};
 /**
  * Whether the Place is open at the current time.
  * @type {boolean|undefined}
+ * @deprecated <code>open_now</code> is deprecated as of November 2019. Use
+ *     the {@link google.maps.places.PlaceOpeningHours.isOpen} method from
+ *     a {@link google.maps.places.PlacesService.getDetails} result instead. See
+ *     <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
  */
 google.maps.places.PlaceOpeningHours.prototype.open_now;
 
@@ -9378,6 +9390,11 @@ google.maps.places.PlaceResult.prototype.opening_hours;
  * temporarily. If the place is operational, or if no data is available, the
  * flag is absent from the response.
  * @type {boolean|undefined}
+ * @deprecated <code>permanently_closed</code> is deprecated as of May 2020 and
+ *     will be turned off in May 2021. Use {@link
+ *     google.maps.places.PlaceResult.business_status} instead as
+ *     <code>permanently_closed</code> does not distinguish between temporary
+ *     and permanent closures.
  */
 google.maps.places.PlaceResult.prototype.permanently_closed;
 
@@ -9455,6 +9472,9 @@ google.maps.places.PlaceResult.prototype.user_ratings_total;
  * <code>-60</code> for Cape Verde. Only available with {@link
  * google.maps.places.PlacesService.getDetails}.
  * @type {number|undefined}
+ * @deprecated <code>utc_offset</code> is deprecated as of November 2019.
+ *     Use {@link google.maps.places.PlaceResult.utc_offset_minutes} instead.
+ *     See <a href="https://goo.gle/js-open-now">https://goo.gle/js-open-now</a>
  */
 google.maps.places.PlaceResult.prototype.utc_offset;
 
@@ -9494,7 +9514,7 @@ google.maps.places.PlaceReview = function() {};
 
 /**
  * The aspects rated by the review. The ratings on a scale of 0 to 3.
- * @type {Array<google.maps.places.PlaceAspectRating>}
+ * @type {!Array<!google.maps.places.PlaceAspectRating>|undefined}
  */
 google.maps.places.PlaceReview.prototype.aspects;
 
@@ -9671,7 +9691,7 @@ google.maps.places.PlacesService = function(attrContainer) {};
  * the {@link google.maps.places.PlaceResult.place_id} for the desired place.
  * @param {!google.maps.places.FindPlaceFromPhoneNumberRequest} request
  * @param {function(?Array<!google.maps.places.PlaceResult>,
- *     !google.maps.places.PlacesServiceStatus)} callback
+ *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.findPlaceFromPhoneNumber = function(
@@ -9688,7 +9708,7 @@ google.maps.places.PlacesService.prototype.findPlaceFromPhoneNumber = function(
  * the {@link google.maps.places.PlaceResult.place_id} for the desired place.
  * @param {!google.maps.places.FindPlaceFromQueryRequest} request
  * @param {function(?Array<!google.maps.places.PlaceResult>,
- *     !google.maps.places.PlacesServiceStatus)} callback
+ *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.findPlaceFromQuery = function(
@@ -9699,7 +9719,7 @@ google.maps.places.PlacesService.prototype.findPlaceFromQuery = function(
  * <code>placeId</code>.
  * @param {!google.maps.places.PlaceDetailsRequest} request
  * @param {function(?google.maps.places.PlaceResult,
- *     !google.maps.places.PlacesServiceStatus)} callback
+ *     !google.maps.places.PlacesServiceStatus): void} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.getDetails = function(
@@ -9722,7 +9742,7 @@ google.maps.places.PlacesService.prototype.getDetails = function(
  * @param {!google.maps.places.PlaceSearchRequest} request
  * @param {function(?Array<!google.maps.places.PlaceResult>,
  *     !google.maps.places.PlacesServiceStatus,
- *     ?google.maps.places.PlaceSearchPagination)} callback
+ *     ?google.maps.places.PlaceSearchPagination): void} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.nearbySearch = function(
@@ -9741,7 +9761,7 @@ google.maps.places.PlacesService.prototype.nearbySearch = function(
  * @param {!google.maps.places.TextSearchRequest} request
  * @param {function(?Array<!google.maps.places.PlaceResult>,
  *     !google.maps.places.PlacesServiceStatus,
- *     ?google.maps.places.PlaceSearchPagination)} callback
+ *     ?google.maps.places.PlaceSearchPagination): void} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.textSearch = function(
@@ -9927,7 +9947,7 @@ google.maps.places.RankBy = {
  * entry in that field. The list of predictions is presented as a drop-down
  * list, and is updated as text is entered.
  * @param {!HTMLInputElement} inputField
- * @param {google.maps.places.SearchBoxOptions=} opts
+ * @param {?google.maps.places.SearchBoxOptions=} opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -9935,21 +9955,21 @@ google.maps.places.SearchBox = function(inputField, opts) {};
 
 /**
  * Returns the bounds to which query predictions are biased.
- * @return {google.maps.LatLngBounds}
+ * @return {!google.maps.LatLngBounds|undefined}
  */
 google.maps.places.SearchBox.prototype.getBounds = function() {};
 
 /**
- * Returns the query selected by the user, or <code>null</code> if no places
- * have been found yet, to be used with <code>places_changed</code> event.
- * @return {Array<google.maps.places.PlaceResult>}
+ * Returns the query selected by the user to be used with
+ * <code>places_changed</code> event.
+ * @return {!Array<!google.maps.places.PlaceResult>|undefined}
  */
 google.maps.places.SearchBox.prototype.getPlaces = function() {};
 
 /**
  * Sets the region to use for biasing query predictions. Results will only be
  * biased towards this area and not be completely restricted to it.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} bounds
+ * @param {?google.maps.LatLngBounds|?google.maps.LatLngBoundsLiteral} bounds
  * @return {undefined}
  */
 google.maps.places.SearchBox.prototype.setBounds = function(bounds) {};
