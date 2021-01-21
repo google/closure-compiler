@@ -138,7 +138,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     // (Note that Object doesn't appear. This is because it's deserialized to UNKNOWN. If we begin
     // to deserialize Object to an actual known color, then this test will require an update.)
     this.assertThatResultAsTable().containsCell("UNKNOWN", "IFoo.prototype", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo instance", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo", CAN_HOLD);
   }
 
   @Test
@@ -159,7 +159,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
 
     // Then
     this.assertThatResultAsTable().containsCell("UNKNOWN", "Foo.prototype", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo instance", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
   }
 
   @Test
@@ -181,8 +181,8 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
 
     // Then
     this.assertThatResultAsTable().containsCell("UNKNOWN", "Foo.prototype", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo instance", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo instance", "Bar.prototype", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Foo", "Bar.prototype", CAN_HOLD);
   }
 
   @Test
@@ -205,11 +205,11 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo instance", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo instance", "Bar.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Bar.prototype", "Bar instance", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo instance", "Qux.prototype", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Qux.prototype", "Qux instance", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Foo", "Bar.prototype", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Bar.prototype", "Bar", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Foo", "Qux.prototype", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Qux.prototype", "Qux", CAN_HOLD);
   }
 
   @Test
@@ -230,7 +230,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
 
     // Then
     this.assertThatResultAsTable().containsCell("UNKNOWN", "Foo.prototype", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo instance", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
   }
 
   @Test
@@ -251,7 +251,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo instance", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo", CAN_HOLD);
   }
 
   @Test
@@ -273,9 +273,9 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("UNKNOWN", "Foo0", ALGEBRAIC);
-    this.assertThatResultAsTable().containsCell("Foo0", "Foo1", CAN_HOLD);
-    this.assertThatResultAsTable().containsCell("Foo1", "Foo2", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("UNKNOWN", "(typeof Foo0)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("(typeof Foo0)", "(typeof Foo1)", CAN_HOLD);
+    this.assertThatResultAsTable().containsCell("(typeof Foo1)", "(typeof Foo2)", CAN_HOLD);
   }
 
   @Test
@@ -305,8 +305,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     StubLcaFinder stubFinder =
         new StubLcaFinder()
             .addStub(
-                ImmutableSet.of("Foo instance", "Bar instance", "Qux instance"),
-                ImmutableSet.of("(Bar instance|Foo instance|Qux instance)", "UNKNOWN"));
+                ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "UNKNOWN"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -323,12 +322,9 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable()
-        .containsCell("(Bar instance|Foo instance|Qux instance)", "Bar instance", ALGEBRAIC);
-    this.assertThatResultAsTable()
-        .containsCell("(Bar instance|Foo instance|Qux instance)", "Foo instance", ALGEBRAIC);
-    this.assertThatResultAsTable()
-        .containsCell("(Bar instance|Foo instance|Qux instance)", "Qux instance", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "Bar", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "Foo", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "Qux", ALGEBRAIC);
   }
 
   @Test
@@ -336,14 +332,12 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     // Given
     StubLcaFinder stubFinder =
         new StubLcaFinder()
-            .addStub(
-                ImmutableSet.of("Foo instance", "Bar instance", "Qux instance"),
-                ImmutableSet.of("(Bar instance|Foo instance|Qux instance)", "Kif instance"));
+            .addStub(ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "Kif"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
     ColorGraphNode flatKif =
         this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Kif instance").build()));
+            Color.createSingleton(createWithUniqueName("Kif").build()));
     builder.add(flatKif);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -360,8 +354,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable()
-        .containsCell("Kif instance", "(Bar instance|Foo instance|Qux instance)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("Kif", "(Bar|Foo|Qux)", ALGEBRAIC);
   }
 
   @Test
@@ -370,19 +363,18 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     StubLcaFinder stubFinder =
         new StubLcaFinder()
             .addStub(
-                ImmutableSet.of("Foo instance", "Bar instance", "Qux instance"),
-                ImmutableSet.of(
-                    "(Bar instance|Foo instance|Qux instance)", "Kif instance", "Lop instance"));
+                ImmutableSet.of("Foo", "Bar", "Qux"),
+                ImmutableSet.of("(Bar|Foo|Qux)", "Kif", "Lop"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
     ColorGraphNode flatKif =
         this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Kif instance").build()));
+            Color.createSingleton(createWithUniqueName("Kif").build()));
     builder.add(flatKif);
 
     ColorGraphNode flatLop =
         this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Lop instance").build()));
+            Color.createSingleton(createWithUniqueName("Lop").build()));
     builder.add(flatLop);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -399,10 +391,9 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable()
-        .containsCell("Kif instance", "(Bar instance|Foo instance|Qux instance)", ALGEBRAIC);
-    // this.assertThatResultAsTable().containsCell("Lop instance", "(Bar instance|Foo instance|Qux
-    // instance)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("Kif", "(Bar|Foo|Qux)", ALGEBRAIC);
+    // this.assertThatResultAsTable().containsCell("Lop", "(Bar|Foo|Qux
+    // )", ALGEBRAIC);
   }
 
   @Test
@@ -410,18 +401,13 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     // Given
     StubLcaFinder stubFinder =
         new StubLcaFinder()
-            .addStub(
-                ImmutableSet.of("Foo instance", "Bar instance", "Qux instance"),
-                ImmutableSet.of("(Bar instance|Foo instance|Qux instance)", "Kif instance"))
-            .addStub(
-                ImmutableSet.of("Foo instance", "Bar instance"),
-                ImmutableSet.of(
-                    "(Bar instance|Foo instance)", "(Bar instance|Foo instance|Qux instance)"));
+            .addStub(ImmutableSet.of("Foo", "Bar", "Qux"), ImmutableSet.of("(Bar|Foo|Qux)", "Kif"))
+            .addStub(ImmutableSet.of("Foo", "Bar"), ImmutableSet.of("(Bar|Foo)", "(Bar|Foo|Qux)"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
     ColorGraphNode flatKif =
         this.graphNodeFactory.createNode(
-            Color.createSingleton(createWithUniqueName("Kif instance").build()));
+            Color.createSingleton(createWithUniqueName("Kif").build()));
     builder.add(flatKif);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -439,11 +425,8 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable()
-        .containsCell("Kif instance", "(Bar instance|Foo instance|Qux instance)", ALGEBRAIC);
-    this.assertThatResultAsTable()
-        .containsCell(
-            "(Bar instance|Foo instance|Qux instance)", "(Bar instance|Foo instance)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("Kif", "(Bar|Foo|Qux)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("(Bar|Foo|Qux)", "(Bar|Foo)", ALGEBRAIC);
   }
 
   @Test
@@ -453,7 +436,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
         new StubLcaFinder()
             .addStub(
                 ImmutableSet.of("Foo.prototype", "Bar.prototype"),
-                ImmutableSet.of("(Bar.prototype|Foo.prototype)", "Kif instance"));
+                ImmutableSet.of("(Bar.prototype|Foo.prototype)", "Kif"));
     ColorGraphBuilder builder = this.createBuilder(stubFinder);
 
     LinkedHashMap<String, ColorGraphNode> testTypes =
@@ -470,8 +453,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable()
-        .containsCell("Kif instance", "(Bar.prototype|Foo.prototype)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("Kif", "(Bar.prototype|Foo.prototype)", ALGEBRAIC);
 
     // Also check post-conditions.
   }

@@ -248,7 +248,7 @@ final class JSTypeSerializer {
     ObjectTypeProto.DebugInfo.Builder builder =
         ObjectTypeProto.DebugInfo.newBuilder(defaultDebugInfo);
     if (className != null && !className.isEmpty()) {
-      builder.setClassName(className + " instance");
+      builder.setClassName(className);
     }
     if (builder.getFilename().isEmpty() && constructor.getSource() != null) {
       String filename = constructor.getSource().getSourceFileName();
@@ -277,6 +277,12 @@ final class JSTypeSerializer {
       if (filename != null) {
         builder.setFilename(filename);
       }
+    }
+    if (type.hasInstanceType() && type.getSource() != null) {
+      // Render function types known to be type definitions as "(typeof Foo)". This includes types
+      // defined like "/** @constructor */ function Foo() { }" but not to those defined like "@param
+      // {function(new:Foo)}". Only the former will have a source node.
+      builder.setClassName("(typeof " + builder.getClassName() + ")");
     }
     return builder.build();
   }
