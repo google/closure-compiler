@@ -734,6 +734,10 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
+    if (options.optimizeESClassConstructors && options.getOutputFeatureSet().contains(ES6)) {
+      passes.add(optimizeConstructors);
+    }
+
     // Isolate injected polyfills from the global scope. Runs late in the optimization loop
     // to take advantage of property renaming & RemoveUnusedCode, as this pass will increase code
     // size by wrapping all potential polyfill usages.
@@ -2235,6 +2239,22 @@ public final class DefaultPassConfig extends PassConfig {
                       .addPass(new OptimizeReturns(compiler))
                       // Remove all parameters that are constants or unused.
                       .addPass(new OptimizeParameters(compiler))
+                      .build())
+          .setFeatureSetForOptimizations()
+          .build();
+
+  /** Removes ECMAScript class constructors when an implicit constructor is sufficient. */
+  private final PassFactory optimizeConstructors =
+      PassFactory.builder()
+          .setName("optimizeConstructors")
+          .setRunInFixedPointLoop(false)
+          .setInternalFactory(
+              (compiler) ->
+                  OptimizeCalls.builder()
+                      .setCompiler(compiler)
+                      .setConsiderExterns(false)
+                      // Remove redundant constructor definitions.
+                      .addPass(new OptimizeConstructors(compiler))
                       .build())
           .setFeatureSetForOptimizations()
           .build();

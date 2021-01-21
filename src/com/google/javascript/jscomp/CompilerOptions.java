@@ -512,8 +512,13 @@ public class CompilerOptions implements Serializable {
   /** Reduces the size of common function expressions. */
   public boolean rewriteFunctionExpressions;
 
-  /** Remove unused parameters from call sites. */
+  /**
+   * Remove unused function arguments, remove unused return values, and inlines constant parameters.
+   */
   public boolean optimizeCalls;
+
+  /** Removes trivial constructors where ES class implicit constructors are sufficient. */
+  boolean optimizeESClassConstructors;
 
   /** Provide formal names for elements of arguments array. */
   public boolean optimizeArgumentsArray;
@@ -2107,6 +2112,10 @@ public class CompilerOptions implements Serializable {
     this.optimizeCalls = optimizeCalls;
   }
 
+  public void setOptimizeESClassConstructors(boolean optimizeESClassConstructors) {
+    this.optimizeESClassConstructors = optimizeESClassConstructors;
+  }
+
   public void setOptimizeArgumentsArray(boolean optimizeArgumentsArray) {
     this.optimizeArgumentsArray = optimizeArgumentsArray;
   }
@@ -2755,6 +2764,7 @@ public class CompilerOptions implements Serializable {
         .add("nameGenerator", nameGenerator)
         .add("optimizeArgumentsArray", optimizeArgumentsArray)
         .add("optimizeCalls", optimizeCalls)
+        .add("optimizeESClassConstructors", optimizeESClassConstructors)
         .add("outputCharset", outputCharset)
         .add("outputFeatureSet", outputFeatureSet)
         .add("outputJs", outputJs)
