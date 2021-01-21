@@ -26,6 +26,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.CompilerOptions.ChunkOutputType;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
@@ -842,7 +843,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(stripSideEffectProtection);
     }
 
-    if (options.renamePrefixNamespace != null) {
+    if (options.renamePrefixNamespace != null
+        && options.chunkOutputType == ChunkOutputType.GLOBAL_NAMESPACE) {
       if (!GLOBAL_SYMBOL_NAMESPACE_PATTERN.matcher(options.renamePrefixNamespace).matches()) {
         throw new IllegalArgumentException(
             "Illegal character in renamePrefixNamespace name: " + options.renamePrefixNamespace);
@@ -857,6 +859,10 @@ public final class DefaultPassConfig extends PassConfig {
     // Raise to ES6, if allowed
     if (options.getOutputFeatureSet().contains(ES6)) {
       passes.add(optimizeToEs6);
+    }
+    // must run after ast validity check as modules may not be allowed in the output feature set
+    if (options.chunkOutputType == ChunkOutputType.ES_MODULES) {
+      passes.add(convertChunksToESModules);
     }
 
     assertValidOrderForOptimizations(passes);
@@ -2147,6 +2153,14 @@ public final class DefaultPassConfig extends PassConfig {
                       compiler,
                       options.renamePrefixNamespace,
                       options.renamePrefixNamespaceAssumeCrossChunkNames))
+          .setFeatureSetForOptimizations()
+          .build();
+
+  /** Converts cross chunk references into ES Module import and export statements. */
+  private final PassFactory convertChunksToESModules =
+      PassFactory.builder()
+          .setName("convertChunksToESModules")
+          .setInternalFactory(ConvertChunksToESModules::new)
           .setFeatureSetForOptimizations()
           .build();
 

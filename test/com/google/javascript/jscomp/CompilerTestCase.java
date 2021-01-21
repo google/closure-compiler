@@ -122,8 +122,8 @@ public abstract class CompilerTestCase {
   private boolean rewriteClosureCode;
 
   /**
-   * If true, run type checking together with the pass being tested. A separate
-   * flag controls whether type checking runs before or after the pass.
+   * If true, run type checking together with the pass being tested. A separate flag controls
+   * whether type checking runs before or after the pass.
    */
   private boolean typeCheckEnabled;
 
@@ -171,15 +171,10 @@ public abstract class CompilerTestCase {
   /** Whether we expect parse warnings in the current test. */
   private boolean expectParseWarningsThisTest;
 
-  /**
-   * An expected symbol table error. Only useful for testing the
-   * symbol table error-handling.
-   */
+  /** An expected symbol table error. Only useful for testing the symbol table error-handling. */
   private DiagnosticType expectedSymbolTableError;
 
-  /**
-   * Whether the PureFunctionIdentifier pass runs before the pass being tested
-   */
+  /** Whether the PureFunctionIdentifier pass runs before the pass being tested */
   private boolean computeSideEffects;
 
   /**
@@ -192,9 +187,7 @@ public abstract class CompilerTestCase {
   /** The most recently used Compiler instance. */
   private Compiler lastCompiler;
 
-  /**
-   * Whether to accept ES6, ES5 or ES3 source.
-   */
+  /** Whether to accept ES6, ES5 or ES3 source. */
   private LanguageMode acceptedLanguage;
 
   private LanguageMode languageOut;
@@ -205,14 +198,10 @@ public abstract class CompilerTestCase {
   /** How to parse JS Documentation. */
   private JsDocParsing parseJsDocDocumentation;
 
-  /**
-   * Whether externs changes should be allowed for this pass.
-   */
+  /** Whether externs changes should be allowed for this pass. */
   private boolean allowExternsChanges;
 
-  /**
-   * Whether the AST should be validated.
-   */
+  /** Whether the AST should be validated. */
   private boolean astValidationEnabled;
 
   /**
@@ -607,9 +596,7 @@ public abstract class CompilerTestCase {
     librariesToInject = new HashSet<>();
   }
 
-  /**
-   * Constructs a test. Uses AST comparison and no externs.
-   */
+  /** Constructs a test. Uses AST comparison and no externs. */
   protected CompilerTestCase() {
     this("");
   }
@@ -713,8 +700,8 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Enables parsing type info from JSDoc comments. This sets the compiler option,
-   * but does not actually run the type checking pass.
+   * Enables parsing type info from JSDoc comments. This sets the compiler option, but does not
+   * actually run the type checking pass.
    */
   protected final void enableParseTypeInfo() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
@@ -733,10 +720,7 @@ public abstract class CompilerTestCase {
     this.runTypeCheckAfterProcessing = true;
   }
 
-  /**
-   * Returns the number of times the pass should be run before results are
-   * verified.
-   */
+  /** Returns the number of times the pass should be run before results are verified. */
   @ForOverride
   protected int getNumRepetitions() {
     return 1;
@@ -767,17 +751,13 @@ public abstract class CompilerTestCase {
     return lastCompiler;
   }
 
-  /**
-   * What language to allow in source parsing. Also sets the output language.
-   */
+  /** What language to allow in source parsing. Also sets the output language. */
   protected final void setAcceptedLanguage(LanguageMode lang) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     setLanguage(lang, lang);
   }
 
-  /**
-   * Sets the input and output language modes..
-   */
+  /** Sets the input and output language modes.. */
   protected final void setLanguage(LanguageMode langIn, LanguageMode langOut) {
     this.acceptedLanguage = langIn;
     setLanguageOut(langOut);
@@ -798,25 +778,19 @@ public abstract class CompilerTestCase {
     this.parseJsDocDocumentation = parseJsDocDocumentation;
   }
 
-  /**
-   * Whether to run InferConsts before passes
-   */
+  /** Whether to run InferConsts before passes */
   protected final void enableInferConsts() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.inferConsts = true;
   }
 
-  /**
-   * Enables running CheckAccessControls after the pass being tested (and checking types).
-   */
+  /** Enables running CheckAccessControls after the pass being tested (and checking types). */
   protected final void enableCheckAccessControls() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.checkAccessControls = true;
   }
 
-  /**
-   * Allow externs to change.
-   */
+  /** Allow externs to change. */
   protected final void allowExternsChanges() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.allowExternsChanges = true;
@@ -828,8 +802,8 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Perform type checking before running the test pass. This will check
-   * for type errors and annotate nodes with type information.
+   * Perform type checking before running the test pass. This will check for type errors and
+   * annotate nodes with type information.
    *
    * @see TypeCheck
    */
@@ -873,25 +847,19 @@ public abstract class CompilerTestCase {
     compareSyntheticCode = false;
   }
 
-  /**
-   * Run using multistage compilation.
-   */
+  /** Run using multistage compilation. */
   protected final void enableMultistageCompilation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = true;
   }
 
-  /**
-   * Run using singlestage compilation.
-   */
+  /** Run using singlestage compilation. */
   protected final void disableMultistageCompilation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = false;
   }
 
-  /**
-   * Disable checking to make sure that line numbers were preserved.
-   */
+  /** Disable checking to make sure that line numbers were preserved. */
   protected final void disableLineNumberCheck() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     checkLineNumbers = false;
@@ -903,9 +871,7 @@ public abstract class CompilerTestCase {
     checkAstChangeMarking = false;
   }
 
-  /**
-   * Process closure library primitives.
-   */
+  /** Process closure library primitives. */
   protected final void enableClosurePass() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     closurePassEnabled = true;
@@ -922,18 +888,14 @@ public abstract class CompilerTestCase {
     processCommonJsModules = true;
   }
 
-  /**
-   * Rewrite Closure code before the test is run.
-   */
+  /** Rewrite Closure code before the test is run. */
   protected final void enableRewriteClosureCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     rewriteClosureCode = true;
     enableCreateModuleMap();
   }
 
-  /**
-   * Don't rewrite Closure code before the test is run.
-   */
+  /** Don't rewrite Closure code before the test is run. */
   protected final void disableRewriteClosureCode() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     rewriteClosureCode = false;
@@ -949,9 +911,7 @@ public abstract class CompilerTestCase {
     this.normalizeEnabled = true;
   }
 
-  /**
-   * Perform AST transpilation before running the test pass.
-   */
+  /** Perform AST transpilation before running the test pass. */
   protected final void enableTranspile() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     transpileEnabled = true;
@@ -959,6 +919,7 @@ public abstract class CompilerTestCase {
 
   /**
    * Don't perform AST normalization before running the test pass.
+   *
    * @see Normalize
    */
   protected final void disableNormalize() {
@@ -989,9 +950,7 @@ public abstract class CompilerTestCase {
     declaredAccessors.put(name, kind);
   }
 
-  /**
-   * Scan externs for properties that should not be renamed.
-   */
+  /** Scan externs for properties that should not be renamed. */
   protected final void enableGatherExternProperties() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     gatherExternPropertiesEnabled = true;
@@ -1002,9 +961,7 @@ public abstract class CompilerTestCase {
     return lastCompiler.getExternProperties();
   }
 
-  /**
-   * Disable validating the AST after each run of the pass.
-   */
+  /** Disable validating the AST after each run of the pass. */
   protected final void disableAstValidation() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     astValidationEnabled = false;
@@ -1106,25 +1063,19 @@ public abstract class CompilerTestCase {
     test(srcs(js), error(error));
   }
 
-  /**
-   * Verifies that the compiler generates the given error and description for the given input.
-   */
+  /** Verifies that the compiler generates the given error and description for the given input. */
   protected void testError(String js, DiagnosticType error, String description) {
     assertThat(error).isNotNull();
     test(srcs(js), error(error).withMessage(description));
   }
 
-  /**
-   * Verifies that the compiler generates the given error and description for the given input.
-   */
+  /** Verifies that the compiler generates the given error and description for the given input. */
   protected void testError(Sources srcs, Diagnostic error) {
     assertThat(error.level).isEqualTo(CheckLevel.ERROR);
     test(srcs, error);
   }
 
-  /**
-   * Verifies that the compiler generates the given error and description for the given input.
-   */
+  /** Verifies that the compiler generates the given error and description for the given input. */
   protected void testError(Externs externs, Sources srcs, Diagnostic error) {
     assertThat(error.level).isEqualTo(CheckLevel.ERROR);
     test(externs, srcs, error);
@@ -1141,20 +1092,22 @@ public abstract class CompilerTestCase {
     test(js, error(error));
   }
 
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
-   */
+  /** Verifies that the compiler generates the given warning for the given input. */
   protected void testError(List<SourceFile> inputs, DiagnosticType error) {
     assertThat(error).isNotNull();
     test(srcs(inputs), error(error));
   }
 
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
-   */
+  /** Verifies that the compiler generates the given warning for the given input. */
   protected void testError(List<SourceFile> inputs, DiagnosticType error, String description) {
     assertThat(error).isNotNull();
     test(srcs(inputs), error(error).withMessage(description));
+  }
+
+  /** Verifies that the compiler generates the given error for the given input. */
+  protected void testError(JSModule[] srcs, DiagnosticType error, String description) {
+    assertThat(error).isNotNull();
+    test(srcs(srcs), error(error).withMessage(description));
   }
 
   /**
@@ -1197,9 +1150,7 @@ public abstract class CompilerTestCase {
     test(srcs, warning(warning));
   }
 
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
-   */
+  /** Verifies that the compiler generates the given warning for the given input. */
   protected void testWarning(List<SourceFile> inputs, DiagnosticType warning) {
     assertThat(warning).isNotNull();
     test(srcs(inputs), warning(warning));
@@ -1216,9 +1167,7 @@ public abstract class CompilerTestCase {
     test(srcs(js), warning(warning).withMessage(description));
   }
 
-  /**
-   * Verifies that the compiler generates the given warning for the given input.
-   */
+  /** Verifies that the compiler generates the given warning for the given input. */
   protected void testWarning(List<SourceFile> inputs, DiagnosticType warning, String description) {
     assertThat(warning).isNotNull();
     test(srcs(inputs), warning(warning).withMessage(description));
@@ -1240,9 +1189,7 @@ public abstract class CompilerTestCase {
     test(srcs(js));
   }
 
-  /**
-   * Verifies that the compiler generates no warnings for the given input.
-   */
+  /** Verifies that the compiler generates no warnings for the given input. */
   protected void testNoWarning(Sources srcs) {
     test(srcs);
   }
@@ -1252,17 +1199,15 @@ public abstract class CompilerTestCase {
     test(externs, srcs);
   }
 
-  /**
-   * Verifies that the compiler generates no warnings for the given input.
-   */
+  /** Verifies that the compiler generates no warnings for the given input. */
   public void testNoWarning(List<SourceFile> inputs) {
     test(srcs(inputs));
   }
 
   /**
-   * Verifies that the compiler pass's JS output matches the expected output
-   * and (optionally) that an expected warning is issued. Or, if an error is
-   * expected, this method just verifies that the error is encountered.
+   * Verifies that the compiler pass's JS output matches the expected output and (optionally) that
+   * an expected warning is issued. Or, if an error is expected, this method just verifies that the
+   * error is encountered.
    *
    * @param js Input
    * @param expected Expected output, or null if an error is expected
@@ -1354,16 +1299,15 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Verifies that the compiler pass's JS output matches the expected output
-   * and (optionally) that an expected warning is issued. Or, if an error is
-   * expected, this method just verifies that the error is encountered.
+   * Verifies that the compiler pass's JS output matches the expected output and (optionally) that
+   * an expected warning is issued. Or, if an error is expected, this method just verifies that the
+   * error is encountered.
    *
    * @param modules Module inputs
    * @param expected Expected JS outputs (one per module)
    * @param diagnostic the warning or error expected
    */
-  protected void test(
-      JSModule[] modules, String[] expected, Diagnostic diagnostic) {
+  protected void test(JSModule[] modules, String[] expected, Diagnostic diagnostic) {
     test(srcs(modules), expected(expected), diagnostic);
   }
 
@@ -1377,8 +1321,8 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued.
+   * Verifies that the compiler pass's JS output is the same as its input and (optionally) that an
+   * expected warning is issued.
    *
    * @param js Input and output
    * @param warning Expected warning, or null if no warning is expected
@@ -1441,9 +1385,7 @@ public abstract class CompilerTestCase {
       List<Diagnostic> diagnostics,
       List<Postcondition> postconditions) {
     List<SourceFile> inputs =
-        (inputsObj instanceof FlatSources)
-            ? ((FlatSources) inputsObj).sources
-            : null;
+        (inputsObj instanceof FlatSources) ? ((FlatSources) inputsObj).sources : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
     List<Diagnostic> expectedErrors =
         diagnostics.stream().filter(d -> d.level == CheckLevel.ERROR).collect(toImmutableList());
@@ -1904,14 +1846,10 @@ public abstract class CompilerTestCase {
   }
 
   protected Node parseExpectedJs(String expected) {
-    return parseExpectedJs(
-        ImmutableList.of(
-            SourceFile.fromCode("expected", expected)));
+    return parseExpectedJs(ImmutableList.of(SourceFile.fromCode("expected", expected)));
   }
 
-  /**
-   * Parses expected JS inputs and returns the root of the parse tree.
-   */
+  /** Parses expected JS inputs and returns the root of the parse tree. */
   protected Node parseExpectedJs(List<SourceFile> inputs) {
     Compiler compiler = createCompiler();
 
@@ -1954,19 +1892,17 @@ public abstract class CompilerTestCase {
     testExternChanges(extern, input, expectedExtern, (DiagnosticType[]) null);
   }
 
-  protected void testExternChanges(String input, String expectedExtern,
-      DiagnosticType... warnings) {
+  protected void testExternChanges(
+      String input, String expectedExtern, DiagnosticType... warnings) {
     testExternChanges("", input, expectedExtern, warnings);
   }
 
-  protected void testExternChanges(String extern, String input, String expectedExtern,
-      DiagnosticType... warnings) {
+  protected void testExternChanges(
+      String extern, String input, String expectedExtern, DiagnosticType... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.init(
-        maybeCreateSources("extern", extern),
-        maybeCreateSources("input", input),
-        options);
+        maybeCreateSources("extern", extern), maybeCreateSources("input", input), options);
     compiler.parseInputs();
 
     if (createModuleMap) {
@@ -2069,14 +2005,14 @@ public abstract class CompilerTestCase {
   }
 
   /**
-   * Returns a node that defines the given qualified name. The returned node
-   * should have a valid type defined on it, if type checking occurred.  Will
-   * return null if no definition is found.  Only nodes in the top-level script
-   * are traversed.
+   * Returns a node that defines the given qualified name. The returned node should have a valid
+   * type defined on it, if type checking occurred. Will return null if no definition is found. Only
+   * nodes in the top-level script are traversed.
    */
   protected static Node findDefinition(Compiler compiler, String name) {
     for (Node node = compiler.getJsRoot().getFirstFirstChild();
-         node != null; node = node.getNext()) {
+        node != null;
+        node = node.getNext()) {
       switch (node.getToken()) {
         case FUNCTION:
           if (name.equals(node.getFirstChild().getString())) {
@@ -2112,7 +2048,7 @@ public abstract class CompilerTestCase {
   }
 
   protected static Sources srcs(String srcText) {
-    return new FlatSources(maybeCreateSources("testcode",  srcText));
+    return new FlatSources(maybeCreateSources("testcode", srcText));
   }
 
   protected static Sources srcs(String... srcTexts) {
@@ -2132,7 +2068,7 @@ public abstract class CompilerTestCase {
   }
 
   protected static Expected expected(String srcText) {
-    return new Expected(maybeCreateSources("expected",  srcText));
+    return new Expected(maybeCreateSources("expected", srcText));
   }
 
   protected static Expected expected(String... srcTexts) {
@@ -2162,7 +2098,7 @@ public abstract class CompilerTestCase {
   }
 
   protected static Externs externs(String externSrc) {
-    return new Externs(maybeCreateSources("externs",  externSrc));
+    return new Externs(maybeCreateSources("externs", externSrc));
   }
 
   protected static Externs externs(String... srcTexts) {
@@ -2255,19 +2191,16 @@ public abstract class CompilerTestCase {
 
   // TODO(johnlenz): make this a abstract class with a private constructor
   /**
-   * Marker interface for configuration parameters of a test invocation.
-   * This is essentially a closed union type consisting of four subtypes:
-   * (1) Externs, (2) Expected, (3) Sources, and (4) Diagnostic.  Sharing
-   * a common marker interface, allows specifying any combination of these
-   * types to the 'test' method, and makes it very clear what function
-   * each parameter serves (since the first three can all be represented
-   * as simple strings).  Moreover, it reduces the combinatorial explosion
-   * of different ways to express the parts (a single string, a list of
-   * SourceFiles, a list of modules, a DiagnosticType, a DiagnosticType with
-   * an expected message, etc).
+   * Marker interface for configuration parameters of a test invocation. This is essentially a
+   * closed union type consisting of four subtypes: (1) Externs, (2) Expected, (3) Sources, and (4)
+   * Diagnostic. Sharing a common marker interface, allows specifying any combination of these types
+   * to the 'test' method, and makes it very clear what function each parameter serves (since the
+   * first three can all be represented as simple strings). Moreover, it reduces the combinatorial
+   * explosion of different ways to express the parts (a single string, a list of SourceFiles, a
+   * list of modules, a DiagnosticType, a DiagnosticType with an expected message, etc).
    *
-   * Note that this API is intended to be a medium-term temporary API while
-   * developing and migrating to a more fluent assertion style.
+   * <p>Note that this API is intended to be a medium-term temporary API while developing and
+   * migrating to a more fluent assertion style.
    */
   protected interface TestPart {}
 

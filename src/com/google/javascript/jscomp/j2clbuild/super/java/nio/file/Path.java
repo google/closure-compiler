@@ -18,9 +18,13 @@ package java.nio.file;
 
 /** GWT compatible no-op replacement for {@code Path} */
 public interface Path {
+  Path getParent();
+
   Path resolveSibling(String other);
 
   Path normalize();
+
+  Path relativize(Path other);
 
   Path resolve(String other);
 

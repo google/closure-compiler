@@ -1205,6 +1205,8 @@ public class CompilerOptions implements Serializable {
     return this.allowDynamicImport;
   }
 
+  ChunkOutputType chunkOutputType;
+
   /**
    * Initializes compiler options. All options are disabled by default.
    *
@@ -1335,6 +1337,7 @@ public class CompilerOptions implements Serializable {
     colorizeErrorOutput = false;
     errorFormat = ErrorFormat.FULL;
     externExports = false;
+    chunkOutputType = ChunkOutputType.GLOBAL_NAMESPACE;
 
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
@@ -2858,6 +2861,15 @@ public class CompilerOptions implements Serializable {
           return null;
       }
     }
+  }
+
+  /** Format for compiler output when multiple chunks are requested. */
+  public enum ChunkOutputType {
+    // Original format - each chunk is a simple script
+    GLOBAL_NAMESPACE,
+    // Each chunk is an ES module with dependencies and symbol access set up using import and export
+    // statements.
+    ES_MODULES;
   }
 
   /**
