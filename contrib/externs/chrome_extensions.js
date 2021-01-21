@@ -4808,8 +4808,11 @@ chrome.identity.launchWebAuthFlow = function(details, callback) {};
 chrome.identity.WebAuthFlowDetails;
 
 
+/** @typedef {?{id: string, email: string}} */
+chrome.identity.ProfileUserInfo;
+
 /**
- * @param {function(!Object):void} callback
+ * @param {function(!chrome.identity.ProfileUserInfo):void} callback
  * @return {undefined}
  */
 chrome.identity.getProfileUserInfo = function(callback) {};
