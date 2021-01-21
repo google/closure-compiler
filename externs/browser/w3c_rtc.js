@@ -1706,6 +1706,7 @@ var RTCPeerConnectionState;
 /**
  * @param {string} type
  * @param {!Object} eventInitDict
+ * @extends {Event}
  * @constructor
  */
 function RTCPeerConnectionIceEvent(type, eventInitDict) {}
