@@ -387,6 +387,23 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testArrowFunction() {
+    // Arrow functions cannot be trivially inlined.
+    // This is only an issue if ES6+ is being targetted,
+    // because otherwise the arrow function is removed before this pass.
+    testSame(
+        lines(
+            "class Holder {",
+            "    constructor() {",
+            "        this.val = {internal: true};",
+            "        this.context =  {getVal: () => this.val}",
+            "    }",
+            "}",
+            "",
+            "console.log(new Holder().context.getVal().internal);"));
+  }
+
+  @Test
   public void testAnonymousGet() {
     // Anonymous object definition without side-effect should be removed.
     testSame("({get a(){return function(){}},b:alert}).a('a')");
