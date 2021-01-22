@@ -116,7 +116,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
     // Attempt to replace the argument access and if the AST has been change,
     // report back to the compiler.
-    tryReplaceArguments(traversal.getScope());
+    tryReplaceArguments(traversal.getScopeRoot());
 
     currentArgumentsAccesses = argumentsAccessStack.pop();
   }
@@ -147,9 +147,9 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    *
    * @param scope scope of the function
    */
-  private void tryReplaceArguments(Scope scope) {
+  private void tryReplaceArguments(Node scopeRoot) {
     // Find the number of parameters that can be accessed without using `arguments`.
-    Node parametersList = NodeUtil.getFunctionParameters(scope.getRootNode());
+    Node parametersList = NodeUtil.getFunctionParameters(scopeRoot);
     checkState(parametersList.isParamList(), parametersList);
     int numParameters = parametersList.getChildCount();
 
