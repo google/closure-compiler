@@ -433,24 +433,6 @@ public class DiagnosticGroups {
           CheckMissingRequires.MISSING_REQUIRE_TYPE_IN_PROVIDES_FILE);
 
   /**
-   * Deprecated no-op diagnostic group.
-   *
-   * @deprecated please use "missingRequire" instead
-   */
-  @Deprecated
-  public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerDeprecatedGroup("strictMissingRequire");
-
-  /**
-   * Deprecated alais of MISSING_REQUIRE.
-   *
-   * @deprecated please use "missingRequire" instead
-   */
-  @Deprecated
-  public static final DiagnosticGroup STRICTER_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup("stricterMissingRequire", MISSING_REQUIRE);
-
-  /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
    * (tool that extracts TypeScript definitions from JS code).
    */
