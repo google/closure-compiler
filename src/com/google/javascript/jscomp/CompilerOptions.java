@@ -2112,6 +2112,10 @@ public class CompilerOptions implements Serializable {
     this.optimizeCalls = optimizeCalls;
   }
 
+  public boolean getOptimizeESClassConstructors() {
+    return this.optimizeESClassConstructors;
+  }
+
   public void setOptimizeESClassConstructors(boolean optimizeESClassConstructors) {
     this.optimizeESClassConstructors = optimizeESClassConstructors;
   }
