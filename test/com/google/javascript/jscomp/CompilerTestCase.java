@@ -44,6 +44,7 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
+import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1564,7 +1565,8 @@ public abstract class CompilerTestCase {
         }
 
         if (replaceTypesWithColors) {
-          new ConvertTypesToColors(compiler).process(externsRoot, mainRoot);
+          new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+              .process(externsRoot, mainRoot);
           new RemoveTypes(compiler).process(externsRoot, mainRoot);
         }
 

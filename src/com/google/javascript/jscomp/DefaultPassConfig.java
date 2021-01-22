@@ -69,6 +69,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.serialization.ConvertTypesToColors;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -2853,7 +2854,9 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory typesToColors =
       PassFactory.builder()
           .setName("typesToColors")
-          .setInternalFactory(ConvertTypesToColors::new)
+          .setInternalFactory(
+              (compiler) ->
+                  new ConvertTypesToColors(compiler, SerializationOptions.SKIP_DEBUG_INFO))
           .setFeatureSetForOptimizations()
           .build();
 

@@ -34,9 +34,12 @@ import java.util.IdentityHashMap;
  */
 public final class ConvertTypesToColors implements CompilerPass {
   private final AbstractCompiler compiler;
+  private final SerializationOptions serializationOptions;
 
-  public ConvertTypesToColors(AbstractCompiler compiler) {
+  public ConvertTypesToColors(
+      AbstractCompiler compiler, SerializationOptions serializationOptions) {
     this.compiler = compiler;
+    this.serializationOptions = serializationOptions;
   }
 
   private static class ColorAst extends AbstractPostOrderCallback {
@@ -68,7 +71,7 @@ public final class ConvertTypesToColors implements CompilerPass {
     // Step 1: Serialize types
     Node externsAndJsRoot = root.getParent();
     SerializeTypesCallback serializeJstypes =
-        SerializeTypesCallback.create(compiler, SerializationOptions.INCLUDE_DEBUG_INFO);
+        SerializeTypesCallback.create(compiler, this.serializationOptions);
     NodeTraversal.traverse(compiler, externsAndJsRoot, serializeJstypes);
 
     // Step 2: Remove types and add colors
