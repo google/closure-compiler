@@ -656,6 +656,18 @@ public enum CompilationParam {
     }
   },
 
+  OPTIMIZE_CONSTRUCTORS(ParamGroup.OPTIMIZATION) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setOptimizeESClassConstructors(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.getOptimizeESClassConstructors();
+    }
+  },
+
   OPTIMIZE_ARGUMENTS_ARRAY(ParamGroup.OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
