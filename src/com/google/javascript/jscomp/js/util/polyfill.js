@@ -23,44 +23,64 @@
 'require util/global';
 'require util/shouldpolyfill';
 
-/** @const {!Object<string, ?>} map from classes (Map) to polyfills*/
+/** @const {!Object<string, ?>} map from classes (Map) to polyfills */
 $jscomp.polyfills = {};
 
-/** @const {!Object<string, string>} */
+/**
+ * Maps a property to an obfuscated look-up string for that property. Only used
+ * when `$jscomp.ISOLATE_POLYFILLS is enabled.
+ *
+ * When compiling with polyfill isolation enabled, to polyfill an
+ * `owner.prototype.method` the `$jscomp.polyfill` library function:
+ * <ol>
+ * <li> creates an obfuscated string for `method`
+ * <li> adds the obfuscated string as a new property on the `owner` object
+ * <li> assigns the polyfill implementation of `method` to this new obfuscated
+ * property on the `owner` object. </li>
+ *</ol>
+ *
+ * This maps the original property name `method` to the new obfuscated property
+ * name.
+ * @const {!Object<string, string>}
+ */
 $jscomp.propertyToPolyfillSymbol = {};
 
 /** @const {string} */
 $jscomp.POLYFILL_PREFIX = '$jscp$';
 
 /**
- * Returns a polyfilled version of the given property if present, otherwise
+ * Returns the polyfill function of the given property if present, otherwise
  * returns the actual property.
  *
  * This is a variable instead of a $jscomp.* property to make it simpler for
  * the compiler to avoid prematurely deleting it during optimizations.
  *
- * @param {*} target the receiver for the property access, e.g. `my.str`
- * @param {string} key the name of the property, e.g. `includes`
- * @return {?} if a polyfill is present, that polyfill property. otherwise
- *   the result of target[key]
+ * @param {*} target the receiver for the property access, e.g. `my.str` in
+ *     `my.str.includes`
+ * @param {string} property the name of the property, e.g. `includes` in
+ *     `my.str.includes`
+ * @return {?} if an obfuscated symbol for the property was added onto the
+ *     target, then this function returns the polyfill for the property.
+ *     Otherwise simply looks up the property on the target and returns it as
+ *     `target[key]`.
  * @noinline prevent inlining so IsolatePolyfills can find this declaration.
  * @suppress {reportUnknownTypes}
  */
-var $jscomp$lookupPolyfilledValue = function(target, key) {
+var $jscomp$lookupPolyfilledValue = function(target, property) {
   /** @const */
-  var polyfilledKey = $jscomp.propertyToPolyfillSymbol[key];
-  if (polyfilledKey == null) {
-    return target[key];
+  var obfuscatedName = $jscomp.propertyToPolyfillSymbol[property];
+  if (obfuscatedName == null) {
+    return target[property];
   }
 
   // NOTE: this will throw if `target` is null or undefined.
   /** @const */
-  var polyfill = target[polyfilledKey];
+  var polyfill = target[obfuscatedName];
 
   // Checking `polyfill !== undefined` is sufficient because $jscomp.polyfill
   // never installs nullish polyfills. Otherwise we'd have to check something
   // like `key in target`.
-  return polyfill !== undefined ? polyfill : target[key];
+  return polyfill !== undefined ? polyfill : target[property];
 };
 
 /**
@@ -188,7 +208,7 @@ $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
     // unconditionally replaces `Symbol` with `$jscomp.polyfills['Symbol']`.
 
     // Use $jscomp.polyfills instead of ownerObject. For simple names like
-    // Promise and Symbol, ownerObject is the  global object, and we want to
+    // Promise and Symbol, ownerObject is the global object, and we want to
     // avoid adding new global variables.
     $jscomp.defineProperty(
         $jscomp.polyfills, property,
@@ -204,14 +224,14 @@ $jscomp.polyfillIsolated = function(target, polyfill, fromLang, toLang) {
           $jscomp.POLYFILL_PREFIX + property;
     }
 
-
-    property = $jscomp.propertyToPolyfillSymbol[property];
+    /** @const {string} */
+    var obfuscatedName = $jscomp.propertyToPolyfillSymbol[property];
 
     // Define the polyfilled method on its owner but under an obfuscated
-    // name to avoid collisions. The owner will be a native class like Promise
-    // or a native class's prototype like Array.prototype.
+    // name to avoid collisions. The owner will be a native class like `Promise`
+    // or a native class's prototype like `Array.prototype`.
     $jscomp.defineProperty(
-        ownerObject, property,
+        ownerObject, obfuscatedName,
         {configurable: true, writable: true, value: impl});
   }
 };
