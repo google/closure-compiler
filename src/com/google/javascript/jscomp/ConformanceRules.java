@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -2095,6 +2096,33 @@ public final class ConformanceRules {
         return true;
       }
       return false;
+    }
+  }
+
+  /** Checks that {@code this} is not being referenced directly within a static member function. */
+  public static final class BanStaticThis extends AbstractTypeRestrictionRule {
+    public BanStaticThis(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (!n.isThis()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      Node enclosingFunction = NodeUtil.getEnclosingNonArrowFunction(n);
+      if (enclosingFunction != null && isStaticMethod(enclosingFunction)) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private static boolean isStaticMethod(Node n) {
+      checkArgument(n.isFunction());
+      Node parent = n.getParent();
+      return parent != null && parent.isMemberFunctionDef() && parent.isStaticMember();
     }
   }
 }

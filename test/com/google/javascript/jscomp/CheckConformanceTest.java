@@ -2556,4 +2556,69 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testNoWarning("goog.dom.createDom('span', {'textContent': text});");
     testNoWarning("goog.dom.createDom('span', {}, text);");
   }
+
+  @Test
+  public void testBanStaticThis() {
+    configuration =
+        lines(
+            "requirement: {", //
+            "  type: CUSTOM",
+            "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanStaticThis'",
+            "  error_message: 'BanStaticThis Message'",
+            "}");
+
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  static bar() {",
+            "    this;",
+            "  }",
+            "}"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanStaticThis Message");
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  static bar() {",
+            "    this.buzz();",
+            "  }",
+            "  static buzz() {}",
+            "}"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanStaticThis Message");
+    testWarning(
+        lines(
+            "class Foo {", //
+            "  static bar() {",
+            "    let fn = () => this;",
+            "  }",
+            "}"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanStaticThis Message");
+
+    testNoWarning("let fn = function() { this.buzz(); };");
+    testNoWarning(
+        lines(
+            "class Foo {", //
+            "  bar() {",
+            "    this.buzz();",
+            "  }",
+            "  buzz() {}",
+            "}"));
+    testNoWarning(
+        lines(
+            "class Foo {", //
+            "  static buzz() {}",
+            "}",
+            "Foo.bar = function() {",
+            "  this.buzz();",
+            "}"));
+    testNoWarning(
+        lines(
+            "class Foo {", //
+            "  static bar() {",
+            "    let fn = function() { this; };",
+            "  }",
+            "}"));
+  }
 }
