@@ -91,7 +91,8 @@ class ExpressionDecomposer {
   }
 
   // An arbitrary limit to prevent catch infinite recursion.
-  private static final int MAX_ITERATIONS = 100;
+  // Raised from 100->1000 on Jan 22, 2021
+  private static final int MAX_ITERATIONS = 1000;
 
   /**
    * Perform any rewriting necessary so that the specified expression is {@code MOVABLE}.
