@@ -217,12 +217,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         {
           // Pretend that `super` is an alias for the superclass reference.
           Node clazz = checkNotNull(NodeUtil.getEnclosingClass(expr));
-          Node function = checkNotNull(NodeUtil.getEnclosingFunction(expr));
-          Node ctorDef = checkNotNull(NodeUtil.getEs6ClassConstructorMemberFunctionDef(clazz));
-
-          // The only place SUPER should be a callable expression is in a class ctor.
-          checkState(
-              function.isFirstChildOf(ctorDef), "Unknown SUPER reference: %s", expr.toStringTree());
           return collectCallableLeavesInternal(clazz.getSecondChild(), results);
         }
 
@@ -1095,7 +1089,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       case OPTCHAIN_GETPROP:
         return PROP_NAME_PREFIX + nameRef.getSecondChild().getString();
       default:
-        throw new IllegalStateException("Unexpected name reference: " + nameRef.toStringTree());
+        throw new IllegalStateException("Unexpected name reference: " + nameRef);
     }
   }
 
