@@ -42,6 +42,7 @@ import com.google.javascript.jscomp.lint.CheckExtraRequires;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckMissingSemicolon;
+import com.google.javascript.jscomp.lint.CheckNestedNames;
 import com.google.javascript.jscomp.lint.CheckNoMutatedEs6Exports;
 import com.google.javascript.jscomp.lint.CheckNullabilityModifiers;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
@@ -589,6 +590,7 @@ public class DiagnosticGroups {
               CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD,
               CheckInterfaces.STATIC_MEMBER_FUNCTION_IN_INTERFACE_CLASS,
               CheckMissingSemicolon.MISSING_SEMICOLON,
+              CheckNestedNames.NESTED_NAME_IN_GOOG_MODULE,
               CheckNullabilityModifiers.MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.NULL_MISSING_NULLABILITY_MODIFIER_JSDOC,
               CheckNullabilityModifiers.REDUNDANT_NULLABILITY_MODIFIER_JSDOC,
