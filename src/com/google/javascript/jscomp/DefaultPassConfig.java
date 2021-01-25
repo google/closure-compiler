@@ -488,6 +488,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(externExports);
     }
 
+    if (!options.checksOnly) {
+      checks.add(removeWeakSources);
+      checks.add(garbageCollectChecks);
+    }
+
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
 
@@ -504,14 +509,10 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
-    passes.add(removeWeakSources);
-
     // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
     if (!options.allowsHotswapReplaceScript()) {
       passes.add(inlineTypeAliases);
     }
-
-    passes.add(garbageCollectChecks);
 
     // i18n
     // If you want to customize the compiler to use a different i18n pass,

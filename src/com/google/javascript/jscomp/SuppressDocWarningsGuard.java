@@ -111,10 +111,11 @@ class SuppressDocWarningsGuard extends FileAwareWarningsGuard {
       } else if (current.isScript()) {
         info = current.getJSDocInfo();
       } else if (NodeUtil.isNameDeclaration(current)
-          || (NodeUtil.isAssignmentOp(current) && current.getParent().isExprResult())
-          || (current.isGetProp() && current.getParent().isExprResult())
           || NodeUtil.mayBeObjectLitKey(current)
-          || current.isComputedProp()) {
+          || current.isComputedProp()
+          || ((NodeUtil.isAssignmentOp(current) || current.isGetProp())
+              && current.getParent() != null
+              && current.getParent().isExprResult())) {
         info = NodeUtil.getBestJSDocInfo(current);
       }
 
