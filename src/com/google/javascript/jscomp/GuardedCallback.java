@@ -377,17 +377,19 @@ abstract class GuardedCallback<T> implements Callback {
 
   // Extend the coding convention's idea of property test functions to also
   // include String() and Boolean().
+  @SuppressWarnings("ReferenceEquality")
   private static boolean isPropertyTestFunction(AbstractCompiler compiler, Node n) {
     if (compiler.getCodingConvention().isPropertyTestFunction(n)) {
       return true;
     }
     Node target = n.getFirstChild();
-    return target.isName() && PROPERTY_TEST_FUNCTIONS.contains(target.getString());
+    if (target.isName()) {
+      String name = target.getString();
+      // AST name node string are interned so to allow for identity checks.
+      return name == "String" || name == "Boolean";
+    }
+    return false;
   }
-
-  // NOTE: we currently assume these are simple (unqualified) names.
-  private static final ImmutableSet<String> PROPERTY_TEST_FUNCTIONS =
-      ImmutableSet.of("String", "Boolean");
 
   // Tokens that are allowed to have guards on them (no point doing a hash lookup on
   // any other type of node).

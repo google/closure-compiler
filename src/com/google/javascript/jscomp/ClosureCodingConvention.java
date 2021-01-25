@@ -296,15 +296,25 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     classType.declareConstructorProperty("instance_", classType.instance(), defSite);
   }
 
-  private final ImmutableSet<String> propertyTestFunctions =
-      ImmutableSet.of("goog.isArrayLike", "goog.isObject");
-
   @Override
+  @SuppressWarnings("ReferenceEquality")
   public boolean isPropertyTestFunction(Node call) {
     checkArgument(call.isCall());
-    return propertyTestFunctions.contains(
-        call.getFirstChild().getQualifiedName()) ||
-        super.isPropertyTestFunction(call);
+    // Avoid building the qualified name and check for
+    // "goog.isArrayLike", "goog.isObject"
+    Node target = call.getFirstChild();
+    if (target.isGetProp()) {
+      Node src = target.getFirstChild();
+      String prop = target.getLastChild().getString();
+      // AST Name and String node strings are interned to allow for identity checks.
+      if (src.isName()
+          && src.getString() == "goog"
+          && (prop == "isArrayLike" || prop == "isObject")) {
+        return true;
+      }
+    }
+
+    return super.isPropertyTestFunction(call);
   }
 
   @Override
