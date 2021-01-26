@@ -40,7 +40,6 @@ import java.util.Collection;
 final class JSTypeSerializer {
 
   private final TypePoolCreator<JSType> typePoolCreator;
-  private final ImmutableMap<JSType, TypePointer> nativeTypePointers;
   private final TypePointer unknownPointer;
   private final InvalidatingTypes invalidatingTypes;
   private final IdGenerator idGenerator;
@@ -48,13 +47,11 @@ final class JSTypeSerializer {
 
   private JSTypeSerializer(
       TypePoolCreator<JSType> typePoolCreator,
-      ImmutableMap<JSType, TypePointer> nativeTypePointers,
       TypePointer unknownPointer,
       InvalidatingTypes invalidatingTypes,
       IdGenerator idGenerator,
       SerializationOptions serializationMode) {
     this.typePoolCreator = typePoolCreator;
-    this.nativeTypePointers = nativeTypePointers;
     this.unknownPointer = unknownPointer;
     this.invalidatingTypes = invalidatingTypes;
     this.idGenerator = idGenerator;
@@ -66,13 +63,13 @@ final class JSTypeSerializer {
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
       SerializationOptions serializationMode) {
-    ImmutableMap<JSType, TypePointer> nativeTypePointers = buildNativeTypeMap(registry);
+    ImmutableMap<JSType, TypePointer> nativeTypePointers =
+        serializeNativeTypes(registry, typePoolCreator);
     IdGenerator idGenerator = new IdGenerator();
 
     collectInvalidatingNatives(registry, invalidatingTypes, typePoolCreator);
     return new JSTypeSerializer(
         typePoolCreator,
-        nativeTypePointers,
         nativeTypePointers.get(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
         invalidatingTypes,
         idGenerator,
@@ -104,10 +101,6 @@ final class JSTypeSerializer {
 
   /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
   TypePointer serializeType(JSType type) {
-    if (nativeTypePointers.containsKey(type)) {
-      return nativeTypePointers.get(type);
-    }
-
     if (type.isNamedType()) {
       return serializeType(type.toMaybeNamedType().getReferencedType());
     }
@@ -135,9 +128,13 @@ final class JSTypeSerializer {
       return serializeType(type.toMaybeFunctionType().getCanonicalRepresentation());
     }
 
-    if (type.isNoResolvedType()) {
-      // The Closure type system creates separate instances of NoResolvedType per type name. For
-      // optimizations treat them all identically.
+    if (type.isNoResolvedType()
+        || type.isAllType()
+        || type.isCheckedUnknownType()
+        || type.isUnknownType()
+        || type.isNoType()
+        || type.isNoObjectType()) {
+      // Merge all the various top/bottom-like/unknown types into a single unknown type.
       return unknownPointer;
     }
 
@@ -151,6 +148,15 @@ final class JSTypeSerializer {
                       .build());
       addSupertypeEdges(type.toMaybeObjectType(), serialized);
       return serialized;
+    }
+
+    if (type.isBoxableScalar() || type.isNullType() || type.isVoidType()) {
+      return typePoolCreator.typeToPointer(
+          type,
+          () -> {
+            throw new IllegalStateException(
+                "Primitive types must already have been registered in TypePoolCreator");
+          });
     }
 
     throw new IllegalStateException("Unsupported type " + type);
@@ -323,15 +329,18 @@ final class JSTypeSerializer {
         .collect(toImmutableList());
   }
 
-  private static ImmutableMap<JSType, TypePointer> buildNativeTypeMap(JSTypeRegistry registry) {
+  private static ImmutableMap<JSType, TypePointer> serializeNativeTypes(
+      JSTypeRegistry registry, TypePoolCreator<JSType> typePoolCreator) {
     ImmutableMap.Builder<JSType, TypePointer> nativeTypes = ImmutableMap.builder();
     for (JSTypeNative jsNativeType : JSTypeNative.values()) {
       NativeType serializedNativeType = translateNativeType(jsNativeType);
-      if (serializedNativeType != null) {
-        nativeTypes.put(
-            registry.getNativeType(jsNativeType),
-            TypePointer.newBuilder().setNativeType(serializedNativeType).build());
+      if (serializedNativeType == null) {
+        continue;
       }
+      JSType jsType = registry.getNativeType(jsNativeType);
+      TypePointer pointer = TypePointer.newBuilder().setNativeType(serializedNativeType).build();
+      nativeTypes.put(jsType, pointer);
+      typePoolCreator.registerPointerForType(jsType, pointer);
     }
     return nativeTypes.build();
   }
