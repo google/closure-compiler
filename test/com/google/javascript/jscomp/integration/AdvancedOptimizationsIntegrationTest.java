@@ -300,6 +300,9 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
             "  constructor() {",
             // We can't delete this call despite being pointless. It's syntactically required.
             "    super();",
+            // NOTE: this alert is here to prevent the entire constructor from being removed. Any
+            // statement after the super call will do.
+            "    alert('hi');",
             "  }",
             "}",
             "",

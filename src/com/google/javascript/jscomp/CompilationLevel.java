@@ -196,6 +196,7 @@ public enum CompilationLevel {
     // Call optimizations
     options.setDevirtualizeMethods(true);
     options.setOptimizeCalls(true);
+    options.setOptimizeESClassConstructors(true);
   }
 
   /**
