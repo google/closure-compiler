@@ -144,14 +144,12 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
         srcs("goog.module('a'); class C {}; C.E = class {};"),
         warning(NESTED_NAME_IN_GOOG_MODULE)
             .withMessageContaining(
-                "A nested class is created on the name `C`. A nested class, enum, typedef or"
-                    + " interface slows down TS migration"
-                    + "."
+                "A nested class is created on the name `C`."
                     + " Fix this linter finding by converting the module-level static property"
                     + " assignment on `C` into a module-level flat name (i.e. change `C.prop ="
                     + " ...` into `C_prop = ...`. You can (if required) export this flat name"
-                    + " using named exports (`exports.C_prop = C_prop`). See"
-                    + " go/js-nested-names-lint-faq."));
+                    + " using named exports (`exports.C_prop = C_prop`)."
+                ));
   }
 
   @Test
