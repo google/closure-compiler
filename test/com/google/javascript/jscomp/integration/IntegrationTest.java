@@ -1261,11 +1261,9 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setDisambiguateProperties(true);
     options.setCheckTypes(true);
-    test(
-        options,
-        code,
-        "function Foo(){} Foo.prototype.JSC$43_bar = 3;"
-            + "function Baz(){} Baz.prototype.JSC$45_bar = 3;");
+    test(options, code,
+        "function Foo(){} Foo.prototype.Foo_prototype$bar = 3;"
+        + "function Baz(){} Baz.prototype.Baz_prototype$bar = 3;");
   }
 
   // When closure-code-removal runs before disambiguate-properties, make sure
@@ -1626,17 +1624,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         "  something.foo(); " +
         "}";
 
-    String expected =
-        "function A() {} "
-            + "A.prototype.JSC$43_foo = function() { "
-            + "  window.console.log('A'); "
-            + "}; "
-            + "function B() {} "
-            + "window['main'] = function() { "
-            + "  var a = window['a'] = new A; "
-            + "  a.JSC$43_foo(); "
-            + "  window['b'] = new B; "
-            + "}";
+    String expected = "function A() {} " +
+        "A.prototype.A_prototype$foo = function() { " +
+        "  window.console.log('A'); " +
+        "}; " +
+        "function B() {} " +
+        "window['main'] = function() { " +
+        "  var a = window['a'] = new A; " +
+        "  a.A_prototype$foo(); " +
+        "  window['b'] = new B; " +
+        "}";
 
     test(options, code, expected);
   }
@@ -1692,24 +1689,24 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     // B.prototype.sometimes should be stripped out, as it is not used, and the
     // type ambiguity in function notCalled is unreachable.
-    String expected =
-        "function A() {} "
-            + "A.prototype.JSC$43_always = function() { "
-            + "  window.console.log('AA'); "
-            + "}; "
-            + "A.prototype.JSC$43_sometimes = function(){ "
-            + "  window.console.log('SA'); "
-            + "}; "
-            + "function B() {} "
-            + "B.prototype.JSC$45_always=function(){ "
-            + "  window.console.log('AB'); "
-            + "};"
-            + "window['main'] = function() { "
-            + "  var a = window['a'] = new A; "
-            + "  a.JSC$43_always(); "
-            + "  a.JSC$43_sometimes(); "
-            + "  (window['b'] = new B).JSC$45_always(); "
-            + "}";
+    String expected = "function A() {} " +
+        "A.prototype.A_prototype$always = function() { " +
+        "  window.console.log('AA'); " +
+        "}; " +
+        "A.prototype.A_prototype$sometimes = function(){ " +
+        "  window.console.log('SA'); " +
+        "}; " +
+        "function B() {} " +
+        "B.prototype.B_prototype$always=function(){ " +
+        "  window.console.log('AB'); " +
+        "};" +
+        "window['main'] = function() { " +
+        "  var a = window['a'] = new A; " +
+        "  a.A_prototype$always(); " +
+        "  a.A_prototype$sometimes(); " +
+        "  (window['b'] = new B).B_prototype$always(); " +
+        "}";
+
 
     test(options, code, expected);
 
@@ -1792,18 +1789,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
 
-    test(
-        options,
-        code,
+    test(options, code,
         LINE_JOINER.join(
             "/** @constructor */",
             "var Arrays = function() {};",
             "Arrays.$create = function() { return {}; }",
             "/** @constructor */",
-            "function Foo() { this.JSC$43_myprop = 1; }",
+            "function Foo() { this.Foo$myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$45_myprop = 2; }",
-            "var x = {}.JSC$43_myprop;"));
+            "function Bar() { this.Bar$myprop = 2; }",
+            "var x = {}.Foo$myprop;"));
   }
 
   @Test
@@ -1834,21 +1829,19 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     // Verify that property disambiguation continues to work after the local
     // var and cast have been removed by inlining.
-    test(
-        options,
-        code,
+    test(options, code,
         LINE_JOINER.join(
             "/** @constructor */",
-            "function Foo() { this.JSC$42_myprop = 1; }",
+            "function Foo() { this.Foo$myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$44_myprop = 2; }",
+            "function Bar() { this.Bar$myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$42_myprop;",
+            "  return 1 != getSomething().Foo$myprop;",
             "})()"));
   }
 
@@ -1886,21 +1879,19 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     // Verify that property disambiguation continues to work after the local
     // var and cast have been removed by inlining.
-    test(
-        options,
-        code,
+    test(options, code,
         LINE_JOINER.join(
             "/** @constructor */",
-            "function Foo() { this.JSC$42_myprop = 1; }",
+            "function Foo() { this.Foo$myprop = 1; }",
             "/** @constructor */",
-            "function Bar() { this.JSC$44_myprop = 2; }",
+            "function Bar() { this.Bar$myprop = 2; }",
             "/** @return {Object} */",
             "function getSomething() {",
             "  var x = new Bar();",
             "  return new Foo();",
             "}",
             "(function someMethod() {",
-            "  return 1 != getSomething().JSC$42_myprop;",
+            "  return 1 != getSomething().Foo$myprop;",
             "})()"));
   }
 
