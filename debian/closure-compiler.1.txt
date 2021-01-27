@@ -123,7 +123,7 @@ OPTIONS
 
 **--extra_annotation_name** `TAGNAME`
 
-    Specify `TAGNAME` to append to the whitelist of tag names in JSDoc.
+    Specify `TAGNAME` to add an additional allowed tag name in JSDoc.
 
     You may specify this option multiple times to append additional
     `TAGNAME` values.
@@ -349,7 +349,7 @@ OPTIONS
 
     Values: ``QUIET``, ``DEFAULT``, ``VERBOSE``.
 
-**--warnings_whitelist_file** `LISTFILE`
+**--warnings_allowlist_file** `LISTFILE`
 
     Suppress warnings listed in `LISTFILE`. Each line should be of the form
     <file-name>:<line-number>? <warning-d escription>

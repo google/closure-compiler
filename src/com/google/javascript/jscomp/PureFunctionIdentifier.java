@@ -196,8 +196,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * one way to find the possible callees of an invocation is to pass the complex expression
    * representing the final callee to this method.
    *
-   * <p>This function uses a white-list approach. If a node that isn't understood is detected, the
-   * entire collection is invalidated.
+   * <p>If a node that isn't understood is detected, false is returned and the caller is expected to
+   * invalidate the entire collection.
    *
    * @see {@link #collectCallableLeaves}
    * @param exp A possibly complicated expression.

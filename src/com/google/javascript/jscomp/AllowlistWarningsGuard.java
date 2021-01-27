@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 
 /**
  * An extension of {@code WarningsGuard} that provides functionality to maintain a list of warnings
- * (white-list). It is subclasses' responsibility to decide what to do with the white-list by
+ * (allowlist). It is subclasses' responsibility to decide what to do with the allowlist by
  * implementing the {@code level} function. Warnings are defined by the name of the JS file and the
  * first line of warnings description.
  */
@@ -60,11 +60,11 @@ public class AllowlistWarningsGuard extends WarningsGuard {
   }
 
   /**
-   * This class depends on an input set that contains the white-list. The format of each white-list
+   * This class depends on an input set that contains the allowlist. The format of each allowlist
    * string is: {@code <file-name>:<line-number>? <warning-description>} {@code #
    * <optional-comment>}
    *
-   * @param allowlist The set of JS-warnings that are white-listed. This is expected to have similar
+   * @param allowlist The set of JS-warnings that are allowlisted. This is expected to have similar
    *     format as {@code formatWarning(JSError)}.
    */
   public AllowlistWarningsGuard(Set<String> allowlist) {
@@ -107,10 +107,10 @@ public class AllowlistWarningsGuard extends WarningsGuard {
     return null;
   }
   /**
-   * Determines whether a given warning is included in the white-list.
+   * Determines whether a given warning is included in the allowlist.
    *
    * @param formattedWarning the warning formatted by {@code formattedWarning}
-   * @return whether the given warning is white-listed or not.
+   * @return whether the given warning is allowlisted or not.
    */
   protected boolean containWarning(String formattedWarning) {
     return allowlist.contains(formattedWarning);
