@@ -43,6 +43,14 @@ XSLTProcessor.prototype.importStylesheet = function(styleSheet) {};
  */
 XSLTProcessor.prototype.transformToDocument = function(source) {};
 
+/**
+ * @param {Node} source
+ * @param {Document} document
+ * @return {DocumentFragment}
+ * @deprecated
+ */
+XSLTProcessor.prototype.transformToFragment = function(source, document) {};
+
 // The "methods" object is a place to hang arbitrary external
 // properties. It is a throwback to pre-typed days, and should
 // not be used for any new definitions; it exists only to bridge
