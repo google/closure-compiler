@@ -523,7 +523,7 @@ gadgets.json = {};
 /**
  * Convert a JSON object into a string.
  * @param {Object} json
- * @return {string} The JSON as a string
+ * @return {String} The JSON as a string
  */
 gadgets.json.stringify = function(json) {};
 
@@ -577,7 +577,7 @@ gadgets.config.get = function(opt_component) {};
  * Initializes the configuration.
  *
  * @param {Object} config The full set of configuration data.
- * @param {boolean=} opt_noValidation True if you want to skip validation.
+ * @param {Boolean=} opt_noValidation True if you want to skip validation.
  */
 gadgets.config.init = function(config, opt_noValidation) {};
 
