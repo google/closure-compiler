@@ -813,3 +813,9 @@ webCrypto.Crypto.prototype.subtle;
  * @type {!webCrypto.Crypto|undefined}
  */
 var crypto;
+
+/**
+ * @type {!webCrypto.Crypto}
+ * @see https://www.w3.org/TR/WebCryptoAPI/#crypto-interface
+ */
+WorkerGlobalScope.prototype.crypto;
