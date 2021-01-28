@@ -18,9 +18,9 @@ package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.TypeMismatch;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph.LinkedDiGraphNode;
@@ -233,38 +233,21 @@ final class TypeGraphBuilder {
   }
 
   /**
-   * Returns the interfaces directly implemented or extended by {@code type}.
+   * Returns the interfaces directly implemented and extended by {@code type}.
    *
-   * <p>This is distinct from any of the methods on {@link FunctionType}. Specifically, the result
-   * only contains:
-   *
-   * <ul>
-   *   <li>own/direct supertypes
-   *   <li>supertypes that are actually interfaces
-   * </ul>
+   * <p>We include both categories of superinterface because we need to be more forgiving here than
+   * in typechecking. Some of these relationships represent type errors; however, the graph needs to
+   * contain those edges for safe disambiguation. In particular, code generated from other languages
+   * (e.g TS) might have more flexible subtyping rules.
    */
-  private static ImmutableList<ObjectType> ownAncestorInterfacesOf(ObjectType type) {
+  private static Iterable<ObjectType> ownAncestorInterfacesOf(ObjectType type) {
     FunctionType ctorType = type.getConstructor();
     if (ctorType == null) {
       return ImmutableList.of();
     }
 
-    final Collection<ObjectType> ifaceTypes;
-    if (ctorType.isInterface()) {
-      ifaceTypes = ctorType.getExtendedInterfaces();
-    } else if (ctorType.isConstructor()) {
-      ifaceTypes = ctorType.getOwnImplementedInterfaces();
-    } else {
-      throw new AssertionError();
-    }
-
-    if (ifaceTypes.isEmpty()) {
-      return ImmutableList.of();
-    }
-
-    return ifaceTypes.stream()
-        .filter((t) -> t.getConstructor() != null && t.getConstructor().isInterface())
-        .collect(toImmutableList());
+    return Iterables.concat(
+        ctorType.getExtendedInterfaces(), ctorType.getOwnImplementedInterfaces());
   }
 
   private void connectSourceToDest(

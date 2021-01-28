@@ -281,7 +281,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   }
 
   @Test
-  public void interfaces_classImplementingClass_doesNotCreateConnection() {
+  public void interfaces_classImplementingClass_createsConnection() {
     // Given
     TypeGraphBuilder builder = this.createBuilder(null);
 
@@ -300,7 +300,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsMultimap().doesNotContainEntry("Parent", "Child");
+    this.assertThatResultAsMultimap().containsEntry("Parent", "Child");
   }
 
   @Test
@@ -327,7 +327,30 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
   }
 
   @Test
-  public void interfaces_interfaceExtendingClass_doesNotCreateConnection() {
+  public void interfaces_classImplementingInlineRecord_doesNotCreateConnection() {
+    // Given
+    TypeGraphBuilder builder = this.createBuilder(null);
+
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      FunctionType child =
+          FunctionType.builder(this.registry).forConstructor().withName("Child").build();
+      // A type created by an object literal like "const obj = {};"
+      ObjectType parent = registry.createAnonymousObjectType(null);
+
+      child.setImplementedInterfaces(ImmutableList.of(parent));
+
+      builder.add(flattener.flatten(child.getInstanceType()));
+    }
+
+    // When
+    this.result = builder.build();
+
+    // Then
+    this.assertThatResultAsMultimap().containsEntry("{}", "Child");
+  }
+
+  @Test
+  public void interfaces_interfaceExtendingClass_createsConnection() {
     // Given
     TypeGraphBuilder builder = this.createBuilder(null);
 
@@ -346,7 +369,7 @@ public final class TypeGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsMultimap().doesNotContainEntry("Parent", "Child");
+    this.assertThatResultAsMultimap().containsEntry("Parent", "Child");
   }
 
   @Test

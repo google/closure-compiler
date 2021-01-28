@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.IdGenerator;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.rhino.Node;
@@ -35,7 +36,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import com.google.javascript.rhino.serialization.TypePoolCreator;
-import java.util.Collection;
 
 final class JSTypeSerializer {
 
@@ -294,15 +294,11 @@ final class JSTypeSerializer {
   }
 
   /**
-   * Returns the interfaces directly implemented or extended by {@code type}.
+   * Returns the interfaces directly implemented and extended by {@code type}.
    *
-   * <p>This is distinct from any of the methods on {@link FunctionType}. Specifically, the result
-   * only contains:
-   *
-   * <ul>
-   *   <li>own/direct supertypes
-   *   <li>supertypes that are actually interfaces
-   * </ul>
+   * <p>Some of these relationships represent type errors; however, the graph needs to contain those
+   * edges for safe disambiguation. In particular, code generated from other languages (e.g TS)
+   * might have more flexible subtyping rules.
    */
   private ImmutableList<TypePointer> ownAncestorInterfacesOf(ObjectType type) {
     FunctionType ctorType = type.getConstructor();
@@ -310,21 +306,9 @@ final class JSTypeSerializer {
       return ImmutableList.of();
     }
 
-    final Collection<ObjectType> ifaceTypes;
-    if (ctorType.isInterface()) {
-      ifaceTypes = ctorType.getExtendedInterfaces();
-    } else if (ctorType.isConstructor()) {
-      ifaceTypes = ctorType.getOwnImplementedInterfaces();
-    } else {
-      throw new AssertionError();
-    }
-
-    if (ifaceTypes.isEmpty()) {
-      return ImmutableList.of();
-    }
-
-    return ifaceTypes.stream()
-        .filter((t) -> t.getConstructor() != null && t.getConstructor().isInterface())
+    return Streams.concat(
+            ctorType.getExtendedInterfaces().stream(),
+            ctorType.getOwnImplementedInterfaces().stream())
         .map(this::serializeType)
         .collect(toImmutableList());
   }
