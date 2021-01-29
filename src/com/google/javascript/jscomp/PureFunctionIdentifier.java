@@ -23,11 +23,9 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CodingConvention.Cache;
@@ -44,6 +42,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -608,52 +607,31 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * <p>This callback also fills {@link #allFunctionCalls}
    */
   private final class FunctionBodyAnalyzer implements ScopedCallback {
-    private final SetMultimap<Node, Var> skiplistedVarsByFunction = HashMultimap.create();
-    private final SetMultimap<Node, Var> taintedVarsByFunction = HashMultimap.create();
 
-    /**
-     * For each function we're inside, the number of "catches" around the current node.
-     *
-     * <p>The stack is preloaded with a `0` to represent the global scope.
-     */
-    private final ArrayDeque<Integer> catchDepthStack = new ArrayDeque<>(ImmutableList.of(0));
+    // Preloaded with an entry to represent the global scope.
+    private final ArrayDeque<FunctionStackEntry> functionScopeStack =
+        new ArrayDeque<>(ImmutableList.of(new FunctionStackEntry(null)));
+
+    final class FunctionStackEntry {
+      final Node root;
+      final LinkedHashSet<Var> skiplistedVars = new LinkedHashSet<>();
+      final LinkedHashSet<Var> taintedVars = new LinkedHashSet<>();
+      int catchDepth = 0; // The number of try-catch blocks around the current node.
+
+      FunctionStackEntry(Node root) {
+        this.root = root;
+      }
+    }
 
     @Override
     public boolean shouldTraverse(NodeTraversal traversal, Node node, Node parent) {
       this.addToCatchDepthIfTryBlock(node, 1);
-
-      if (node.isFunction()) {
-        this.catchDepthStack.addLast(0);
-
-        // Functions need to be processed as part of pre-traversal so that an entry for the
-        // function
-        // exists in the summariesForAllNamesOfFunctionByNode map when processing assignments
-        // and
-        // calls within the body.
-
-        if (!summariesForAllNamesOfFunctionByNode.containsKey(node)) {
-          // This function was not part of a definition which is why it was not created by
-          // {@link populateDatastructuresForAnalysisTraversal}. For example, an anonymous
-          // function.
-          AmbiguatedFunctionSummary summary =
-              AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<anonymous>");
-          summariesForAllNamesOfFunctionByNode.put(node, summary);
-        }
-      }
-
       return true;
     }
 
     @Override
     public void visit(NodeTraversal traversal, Node node, Node parent) {
       this.addToCatchDepthIfTryBlock(node, -1);
-      if (node.isFunction()) {
-        checkState(this.catchDepthStack.removeLast() == 0);
-      }
-
-      if (!compiler.getAstAnalyzer().nodeTypeMayHaveSideEffects(node)) {
-        return;
-      }
 
       if (NodeUtil.isInvocation(node)) {
         // We collect these after filtering for side-effects because there's no point re-processing
@@ -662,17 +640,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         allFunctionCalls.add(node);
       }
 
-      Scope containerScope = traversal.getScope().getClosestContainerScope();
-      if (!containerScope.isFunctionScope()) {
+      Node root = this.functionScopeStack.getLast().root;
+      if (root != null) {
         // We only need to look at nodes in function scopes.
-        return;
-      }
-      Node enclosingFunction = containerScope.getRootNode();
-
-      for (AmbiguatedFunctionSummary encloserSummary :
-          summariesForAllNamesOfFunctionByNode.get(enclosingFunction)) {
-        checkNotNull(encloserSummary);
-        updateSideEffectsForNode(encloserSummary, traversal, node, enclosingFunction);
+        for (AmbiguatedFunctionSummary summary : summariesForAllNamesOfFunctionByNode.get(root)) {
+          updateSideEffectsForNode(checkNotNull(summary), traversal, node);
+        }
       }
     }
 
@@ -683,10 +656,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * the node (possibly) has side effects.
      */
     private void updateSideEffectsForNode(
-        AmbiguatedFunctionSummary encloserSummary,
-        NodeTraversal traversal,
-        Node node,
-        Node enclosingFunction) {
+        AmbiguatedFunctionSummary encloserSummary, NodeTraversal traversal, Node node) {
       if (encloserSummary.mutatesGlobalState()) {
         return; // Functions with MUTATES_GLOBAL_STATE already have all side-effects set.
       }
@@ -705,7 +675,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           visitLhsNodes(
               encloserSummary,
               traversal.getScope(),
-              enclosingFunction,
               NodeUtil.findLhsNodesInNode(node),
               rhsLocality);
           break;
@@ -716,7 +685,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           visitLhsNodes(
               encloserSummary,
               traversal.getScope(),
-              enclosingFunction,
               ImmutableList.of(node.getOnlyChild()),
               // The value assigned by a unary op is always local.
               RHS_IS_ALWAYS_LOCAL);
@@ -732,7 +700,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           visitLhsNodes(
               encloserSummary,
               traversal.getScope(),
-              enclosingFunction,
               NodeUtil.findLhsNodesInNode(node),
               // The RHS of a for-of must always be an iterable, making it a container, so we can't
               // consider its contents to be local
@@ -748,7 +715,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           visitLhsNodes(
               encloserSummary,
               traversal.getScope(),
-              enclosingFunction,
               NodeUtil.findLhsNodesInNode(node),
               // A for-in always assigns a string, which is a local value by definition.
               RHS_IS_ALWAYS_LOCAL);
@@ -771,23 +737,22 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           visitLhsNodes(
               encloserSummary,
               traversal.getScope(),
-              enclosingFunction,
               NodeUtil.findLhsNodesInNode(node.getParent()),
               RHS_IS_NEVER_LOCAL);
           break;
 
         case NAME:
-          // Variable definition are not side effects. Check that the name appears in the context of
-          // a variable declaration.
-          checkArgument(NodeUtil.isNameDeclaration(node.getParent()), node.getParent());
-          Node value = node.getFirstChild();
-          // Assignment to local, if the value isn't a safe local value,
-          // new object creation or literal or known primitive result
-          // value, add it to the local skiplist.
-          if (value != null && !NodeUtil.evaluatesToLocalValue(value)) {
-            Scope scope = traversal.getScope();
-            Var var = scope.getVar(node.getString());
-            skiplistedVarsByFunction.put(enclosingFunction, var);
+          // Local variable declarations are not a side-effect, but we do want to track them.
+          if (NodeUtil.isNameDeclaration(node.getParent())) {
+            Node value = node.getFirstChild();
+            // Assignment to local, if the value isn't a safe local value,
+            // new object creation or literal or known primitive result
+            // value, add it to the local skiplist.
+            if (value != null && !NodeUtil.evaluatesToLocalValue(value)) {
+              Scope scope = traversal.getScope();
+              Var var = scope.getVar(node.getString());
+              this.functionScopeStack.getLast().skiplistedVars.add(var);
+            }
           }
           break;
 
@@ -850,7 +815,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             visitLhsNodes(
                 encloserSummary,
                 traversal.getScope(),
-                enclosingFunction,
                 ImmutableList.of(node.getFirstChild()),
                 // The update assignments (e.g. `+=) always assign primitive, and therefore local,
                 // values.
@@ -858,7 +822,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             break;
           }
 
-          throw new IllegalArgumentException("Unhandled side effect node type " + node);
+          if (compiler.getAstAnalyzer().nodeTypeMayHaveSideEffects(node)) {
+            throw new IllegalArgumentException("Unhandled side effect node type " + node);
+          }
       }
     }
 
@@ -887,29 +853,50 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     private void recordThrowsBasedOnContext(AmbiguatedFunctionSummary encloserSummary) {
-      if (this.catchDepthStack.getLast() == 0) {
+      if (this.functionScopeStack.getLast().catchDepth == 0) {
         encloserSummary.setThrows();
       }
     }
 
     @Override
     public void enterScope(NodeTraversal t) {
-      // Nothing to do.
+      if (!t.getScope().isFunctionScope()) {
+        return;
+      }
+
+      Node function = t.getScopeRoot();
+      checkState(function.isFunction(), function);
+
+      this.functionScopeStack.addLast(new FunctionStackEntry(function));
+      if (!summariesForAllNamesOfFunctionByNode.containsKey(function)) {
+        // This function was not part of a definition which is why it was not created by
+        // {@link populateDatastructuresForAnalysisTraversal}. For example, an anonymous
+        // function.
+        AmbiguatedFunctionSummary summary =
+            AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<anonymous>");
+        summariesForAllNamesOfFunctionByNode.put(function, summary);
+      }
     }
 
     @Override
     public void exitScope(NodeTraversal t) {
-      Scope closestContainerScope = t.getScope().getClosestContainerScope();
-      if (!closestContainerScope.isFunctionScope()) {
-        // Only functions and the scopes within them are of interest to us.
+      // We want to process block scope as well as function scopes
+      Scope functionScope = t.getScope().getClosestContainerScope();
+      if (!functionScope.isFunctionScope()) {
         return;
       }
-      Node function = closestContainerScope.getRootNode();
+
+      FunctionStackEntry functionEntry = this.functionScopeStack.getLast();
+      checkState(
+          functionScope.getRootNode().equals(functionEntry.root), functionScope.getRootNode());
+      if (t.getScopeRoot().equals(functionEntry.root)) {
+        this.functionScopeStack.removeLast();
+      }
 
       // Handle deferred local variable modifications:
       for (AmbiguatedFunctionSummary sideEffectInfo :
-          summariesForAllNamesOfFunctionByNode.get(function)) {
-        checkNotNull(sideEffectInfo, "%s has no side effect info.", function);
+          summariesForAllNamesOfFunctionByNode.get(functionEntry.root)) {
+        checkNotNull(sideEffectInfo, "%s has no side effect info.", functionEntry.root);
 
         if (sideEffectInfo.mutatesGlobalState()) {
           continue;
@@ -921,8 +908,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               // Ignore destructuring parameters because they don't directly correspond to an
               // argument passed to the function for the purposes of "setMutatesArguments"
               && !isFromDestructuring
-              && !skiplistedVarsByFunction.containsEntry(function, v)
-              && taintedVarsByFunction.containsEntry(function, v)) {
+              && !functionEntry.skiplistedVars.contains(v)
+              && functionEntry.taintedVars.contains(v)) {
             sideEffectInfo.setMutatesArguments();
             continue;
           }
@@ -936,8 +923,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           }
 
           // Take care of locals that might have been tainted.
-          if (!localVar || skiplistedVarsByFunction.containsEntry(function, v)) {
-            if (taintedVarsByFunction.containsEntry(function, v)) {
+          if (!localVar || functionEntry.skiplistedVars.contains(v)) {
+            if (functionEntry.taintedVars.contains(v)) {
               // If the function has global side-effects
               // don't bother with the local side-effects.
               sideEffectInfo.setMutatesGlobalStateAndAllOtherFlags();
@@ -945,12 +932,6 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             }
           }
         }
-      }
-
-      // Clean up memory after exiting out of the function scope where we will no longer need these.
-      if (t.getScopeRoot().isFunction()) {
-        skiplistedVarsByFunction.removeAll(function);
-        taintedVarsByFunction.removeAll(function);
       }
     }
 
@@ -966,14 +947,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      *
      * @param encloserSummary Function side effect record to be updated
      * @param scope variable scope in which the variable assignment occurs
-     * @param enclosingFunction FUNCTION node for the enclosing function
      * @param lhsNodes LHS nodes that are all assigned values by a given parent node
      * @param hasLocalRhs Predicate indicating whether a given LHS is being assigned a local value
      */
     private void visitLhsNodes(
         AmbiguatedFunctionSummary encloserSummary,
         Scope scope,
-        Node enclosingFunction,
         List<Node> lhsNodes,
         Predicate<Node> hasLocalRhs) {
       for (Node lhs : lhsNodes) {
@@ -987,7 +966,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               if (isVarDeclaredInSameContainerScope(var, scope)) {
                 // Maybe a local object modification.  We won't know for sure until
                 // we exit the scope and can validate the value of the local.
-                taintedVarsByFunction.put(enclosingFunction, var);
+                this.functionScopeStack.getLast().taintedVars.add(var);
               } else {
                 encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
               }
@@ -1004,7 +983,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               // Assigned value is not guaranteed to be a local value,
               // so if we see any property assignments on this variable,
               // they could be tainting a non-local value.
-              skiplistedVarsByFunction.put(enclosingFunction, var);
+              this.functionScopeStack.getLast().skiplistedVars.add(var);
             }
           } else {
             encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
@@ -1032,7 +1011,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return;
       }
 
-      boolean propatesThrows = this.catchDepthStack.getLast() == 0;
+      boolean propatesThrows = this.functionScopeStack.getLast().catchDepth == 0;
       for (AmbiguatedFunctionSummary calleeInfo : calleeSummaries) {
         SideEffectPropagation edge =
             SideEffectPropagation.forInvocation(invocation, propatesThrows);
@@ -1051,7 +1030,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return;
       }
 
-      this.catchDepthStack.addLast(this.catchDepthStack.removeLast() + delta);
+      this.functionScopeStack.getLast().catchDepth += delta;
     }
   }
 
