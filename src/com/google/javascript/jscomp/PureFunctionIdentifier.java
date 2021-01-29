@@ -137,7 +137,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
    * parameters, or inner functions.
    */
   private final AmbiguatedFunctionSummary unknownFunctionSummary =
-      AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<unknown>").setAllFlags();
+      AmbiguatedFunctionSummary.createInGraph(reverseCallGraph, "<unknown>")
+          .setMutatesGlobalStateAndAllOtherFlags();
 
   private final boolean assumeGettersArePure;
 
@@ -439,7 +440,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       // - There are no L-values with this name.
       // - There's a an L-value and we can't find the associated R-values.
       // - There's a an L-value with R-values are not all known to be callable.
-      summaryForName.setAllFlags();
+      summaryForName.setMutatesGlobalStateAndAllOtherFlags();
     } else {
       rvaluesAssignedToName.stream()
           .flatMap(List::stream)
@@ -479,6 +480,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
   private void markPureFunctionCalls() {
     for (Node callNode : allFunctionCalls) {
       List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(callNode);
+
       // Default to side effects, non-local results
       Node.SideEffectFlags flags = new Node.SideEffectFlags();
       if (calleeSummaries.isEmpty()) {
@@ -562,30 +564,31 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       }
     }
 
-    /** Update function for @nosideeffects annotations. */
     private void updateSideEffectsForExternFunction(
         Node externFunction, AmbiguatedFunctionSummary summary) {
       checkArgument(externFunction.isFunction());
       checkArgument(externFunction.isFromExterns());
 
       JSDocInfo info = NodeUtil.getBestJSDocInfo(externFunction);
-      // Handle externs.
       if (info == null) {
         // We don't know anything about this function so we assume it has side effects.
-        summary.setMutatesGlobalState();
-        summary.setFunctionThrows();
-      } else {
-        if (info.modifiesThis()) {
-          summary.setMutatesThis();
-        } else if (info.hasSideEffectsArgumentsAnnotation()) {
-          summary.setMutatesArguments();
-        } else if (!info.getThrownTypes().isEmpty()) {
-          summary.setFunctionThrows();
-        } else if (info.isNoSideEffects()) {
-          // Do nothing.
-        } else {
-          summary.setMutatesGlobalState();
-        }
+        summary.setMutatesGlobalStateAndAllOtherFlags();
+        return;
+      }
+
+      if (info.modifiesThis()) {
+        summary.setMutatesThis();
+      }
+      if (info.hasSideEffectsArgumentsAnnotation()) {
+        summary.setMutatesArguments();
+      }
+      if (!info.getThrownTypes().isEmpty()) {
+        summary.setThrows();
+      }
+
+      if (!info.isNoSideEffects() && summary.hasNoFlagsSet()) {
+        // We don't know anything about this function so we assume it has side effects.
+        summary.setMutatesGlobalStateAndAllOtherFlags();
       }
     }
   }
@@ -674,7 +677,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /**
-     * Updates the side effects of a given node.
+     * Updates the side effects of summary based on a given node.
      *
      * <p>This node should be known to (possibly have) side effects. This method does not check if
      * the node (possibly) has side effects.
@@ -684,6 +687,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         NodeTraversal traversal,
         Node node,
         Node enclosingFunction) {
+      if (encloserSummary.mutatesGlobalState()) {
+        return; // Functions with MUTATES_GLOBAL_STATE already have all side-effects set.
+      }
 
       switch (node.getToken()) {
         case ASSIGN:
@@ -800,18 +806,17 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
           deprecatedSetSideEffectsForControlLoss(encloserSummary);
           break;
 
-        case ITER_REST:
         case OBJECT_REST:
-        case ITER_SPREAD:
         case OBJECT_SPREAD:
-          if (node.getParent().isObjectPattern() || node.getParent().isObjectLit()) {
-            if (!assumeGettersArePure) {
-              // Object-rest and object-spread may trigger a getter.
-              setSideEffectsForUnknownCall(encloserSummary);
-            }
-          } else {
-            checkIteratesImpureIterable(node, encloserSummary);
+          if (!assumeGettersArePure) {
+            // May trigger a getter.
+            encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
           }
+          break;
+
+        case ITER_REST:
+        case ITER_SPREAD:
+          checkIteratesImpureIterable(node, encloserSummary);
           break;
 
         case STRING_KEY:
@@ -819,7 +824,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             // This is an l-value STRING_KEY.
             // Assumption: GETELEM (via a COMPUTED_PROP) is never side-effectful.
             if (getPropertyKind(node.getString()).hasGetter()) {
-              setSideEffectsForUnknownCall(encloserSummary);
+              encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
             }
           }
           break;
@@ -828,14 +833,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         case GETPROP:
           // Assumption: GETELEM and OPTCHAIN_GETELEM are never side-effectful.
           if (getPropertyKind(node.getLastChild().getString()).hasGetterOrSetter()) {
-            setSideEffectsForUnknownCall(encloserSummary);
+            encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
           }
           break;
 
         case DYNAMIC_IMPORT:
           // Modules may be imported for side-effecfts only. This is frequently
           // a pattern used to load polyfills.
-          encloserSummary.setMutatesGlobalState();
+          encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
           break;
 
         default:
@@ -865,7 +870,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       if (!NodeUtil.iteratesImpureIterable(node)) {
         return;
       }
-      setSideEffectsForUnknownCall(encloserSummary);
+      encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
     }
 
     /**
@@ -881,20 +886,9 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       this.recordThrowsBasedOnContext(encloserSummary);
     }
 
-    /**
-     * Assigns the set of side-effects associated with an unknown function to {@code
-     * encloserSummary}.
-     */
-    private void setSideEffectsForUnknownCall(AmbiguatedFunctionSummary encloserSummary) {
-      this.recordThrowsBasedOnContext(encloserSummary);
-      encloserSummary.setMutatesGlobalState();
-      encloserSummary.setMutatesArguments();
-      encloserSummary.setMutatesThis();
-    }
-
     private void recordThrowsBasedOnContext(AmbiguatedFunctionSummary encloserSummary) {
       if (this.catchDepthStack.getLast() == 0) {
-        encloserSummary.setFunctionThrows();
+        encloserSummary.setThrows();
       }
     }
 
@@ -946,7 +940,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
             if (taintedVarsByFunction.containsEntry(function, v)) {
               // If the function has global side-effects
               // don't bother with the local side-effects.
-              sideEffectInfo.setMutatesGlobalState();
+              sideEffectInfo.setMutatesGlobalStateAndAllOtherFlags();
               break;
             }
           }
@@ -970,14 +964,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
      * <p>If the operation modifies this or taints global state, mark the enclosing function as
      * having those side effects.
      *
-     * @param sideEffectInfo Function side effect record to be updated
+     * @param encloserSummary Function side effect record to be updated
      * @param scope variable scope in which the variable assignment occurs
      * @param enclosingFunction FUNCTION node for the enclosing function
      * @param lhsNodes LHS nodes that are all assigned values by a given parent node
      * @param hasLocalRhs Predicate indicating whether a given LHS is being assigned a local value
      */
     private void visitLhsNodes(
-        AmbiguatedFunctionSummary sideEffectInfo,
+        AmbiguatedFunctionSummary encloserSummary,
         Scope scope,
         Node enclosingFunction,
         List<Node> lhsNodes,
@@ -985,7 +979,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       for (Node lhs : lhsNodes) {
         if (NodeUtil.isNormalGet(lhs)) {
           if (lhs.getFirstChild().isThis()) {
-            sideEffectInfo.setMutatesThis();
+            encloserSummary.setMutatesThis();
           } else {
             Node objectNode = lhs.getFirstChild();
             if (objectNode.isName()) {
@@ -995,11 +989,11 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
                 // we exit the scope and can validate the value of the local.
                 taintedVarsByFunction.put(enclosingFunction, var);
               } else {
-                sideEffectInfo.setMutatesGlobalState();
+                encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
               }
             } else {
               // Don't track multi level locals: local.prop.prop2++;
-              sideEffectInfo.setMutatesGlobalState();
+              encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
             }
           }
         } else {
@@ -1013,7 +1007,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
               skiplistedVarsByFunction.put(enclosingFunction, var);
             }
           } else {
-            sideEffectInfo.setMutatesGlobalState();
+            encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
           }
         }
       }
@@ -1034,7 +1028,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       List<AmbiguatedFunctionSummary> calleeSummaries = getSummariesForCallee(invocation);
       if (calleeSummaries.isEmpty()) {
-        callerInfo.setAllFlags();
+        callerInfo.setMutatesGlobalStateAndAllOtherFlags();
         return;
       }
 
@@ -1210,16 +1204,16 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
       if (callee.mutatesGlobalState()) {
         // If the callee modifies global state then so does that caller.
-        caller.setMutatesGlobalState();
+        caller.setMutatesGlobalStateAndAllOtherFlags();
       }
       if (this.propagateThrows && callee.functionThrows()) {
         // If the callee throws an exception then so does the caller.
-        caller.setFunctionThrows();
+        caller.setThrows();
       }
       if (callee.mutatesArguments() && !allArgsUnescapedLocal) {
         // If the callee mutates its input arguments and the arguments escape the caller then it has
         // unbounded side effects.
-        caller.setMutatesGlobalState();
+        caller.setMutatesGlobalStateAndAllOtherFlags();
       }
       if (callee.mutatesThis()) {
         if (invocation.isNew()) {
@@ -1227,7 +1221,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         } else if (calleeThisEqualsCallerThis) {
           caller.setMutatesThis();
         } else {
-          caller.setMutatesGlobalState();
+          caller.setMutatesGlobalStateAndAllOtherFlags();
         }
       }
 
@@ -1283,6 +1277,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     boolean mutatesThis() {
+      // MUTATES_GLOBAL_STATE implies MUTATES_THIS
       return getMask(MUTATES_THIS);
     }
 
@@ -1293,11 +1288,12 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
 
     /** Returns true if function has an explicit "throw". */
     boolean functionThrows() {
+      // MUTATES_GLOBAL_STATE implies THROWS
       return getMask(THROWS);
     }
 
     /** Marks the function as having "throw" side effects. */
-    AmbiguatedFunctionSummary setFunctionThrows() {
+    AmbiguatedFunctionSummary setThrows() {
       return setMask(THROWS);
     }
 
@@ -1307,13 +1303,14 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
     }
 
     /** Marks the function as having "modifies globals" side effects. */
-    AmbiguatedFunctionSummary setMutatesGlobalState() {
-      return setMask(MUTATES_GLOBAL_STATE);
+    AmbiguatedFunctionSummary setMutatesGlobalStateAndAllOtherFlags() {
+      return setMask(THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE);
     }
 
     /** Returns true if function mutates its arguments. */
     boolean mutatesArguments() {
-      return getMask(MUTATES_GLOBAL_STATE | MUTATES_ARGUMENTS);
+      // MUTATES_GLOBAL_STATE implies MUTATES_ARGUMENTS
+      return getMask(MUTATES_ARGUMENTS);
     }
 
     /** Marks the function as having "modifies arguments" side effects. */
@@ -1321,8 +1318,8 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
       return setMask(MUTATES_ARGUMENTS);
     }
 
-    AmbiguatedFunctionSummary setAllFlags() {
-      return setMask(THROWS | MUTATES_THIS | MUTATES_ARGUMENTS | MUTATES_GLOBAL_STATE);
+    boolean hasNoFlagsSet() {
+      return this.bitmask == 0;
     }
 
     @Override

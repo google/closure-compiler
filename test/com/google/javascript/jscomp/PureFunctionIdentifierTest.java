@@ -37,7 +37,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class PureFunctionIdentifierTest extends CompilerTestCase {
   List<Node> noSideEffectCalls;
-  List<Node> localResultCalls;
 
   boolean regExpHaveSideEffects = true;
 
@@ -188,7 +187,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     @Override
     public void process(Node externs, Node root) {
       noSideEffectCalls = new ArrayList<>();
-      localResultCalls = new ArrayList<>();
       // TODO(nickreid): Move these into 'getOptions' and 'getCompiler' overrides.
       compiler.setHasRegExpGlobalReferences(regExpHaveSideEffects);
       compiler.getOptions().setUseTypesForLocalOptimization(true);
@@ -704,7 +702,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     assertPureCallsMarked(prefix + "externNsef1()" + suffix, ImmutableList.of("externNsef1", "f"));
     assertPureCallsMarked(
         prefix + "externObj.nsef1()" + suffix, ImmutableList.of("externObj.nsef1", "f"));
-    assertUnescapedReturnCallsMarked("externNsef1(); externObj.nsef1()", ImmutableList.of());
 
     assertNoPureCalls(prefix + "externSef1()" + suffix);
     assertNoPureCalls(prefix + "externObj.sef1()" + suffix);
@@ -2995,13 +2992,6 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
                 post.verify(compiler);
               }
             }));
-  }
-
-  void assertUnescapedReturnCallsMarked(String source, final List<String> expected) {
-    testSame(srcs(source));
-    assertThat(localResultCalls)
-        .comparingElementsUsing(JSCompCorrespondences.EQUALITY_WHEN_PARSED_AS_EXPRESSION)
-        .containsExactlyElementsIn(expected);
   }
 
   @Override
