@@ -164,7 +164,7 @@ class FunctionRewriter implements CompilerPass {
    * in that branch.
    */
   private class ReductionGatherer implements Callback {
-    private final List<Reducer> reducers;
+    private final Reducer[] reducers;
     private final Multimap<Reducer, Reduction> reductions;
 
     /**
@@ -174,7 +174,9 @@ class FunctionRewriter implements CompilerPass {
      */
     ReductionGatherer(List<Reducer> reducers,
                       Multimap<Reducer, Reduction> reductions) {
-      this.reducers = reducers;
+      // Use a native array to avoid creating an iterator for every node in the AST.
+      // which accord to pprof accounts for ~20% of the runtime of this pass.
+      this.reducers = reducers.toArray(new Reducer[0]);
       this.reductions = reductions;
     }
 
