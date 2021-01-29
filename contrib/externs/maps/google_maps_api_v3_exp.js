@@ -3582,15 +3582,15 @@ google.maps.LatLng.prototype.toUrlValue = function(precision) {};
  * A <code><a href="#LatLngBounds">LatLngBounds</a></code> instance represents a
  * rectangle in geographical coordinates, including one that crosses the 180
  * degrees longitudinal meridian.
- * @param {(google.maps.LatLng|google.maps.LatLngLiteral)=} sw
- * @param {(google.maps.LatLng|google.maps.LatLngLiteral)=} ne
+ * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} sw
+ * @param {(?google.maps.LatLng|?google.maps.LatLngLiteral)=} ne
  * @constructor
  */
 google.maps.LatLngBounds = function(sw, ne) {};
 
 /**
  * Returns <code>true</code> if the given lat/lng is in this bounds.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} latLng
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} latLng
  * @return {boolean}
  */
 google.maps.LatLngBounds.prototype.contains = function(latLng) {};
@@ -3598,14 +3598,14 @@ google.maps.LatLngBounds.prototype.contains = function(latLng) {};
 /**
  * Returns <code>true</code> if this bounds approximately equals the given
  * bounds.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} other
+ * @param {?google.maps.LatLngBounds|?google.maps.LatLngBoundsLiteral} other
  * @return {boolean}
  */
 google.maps.LatLngBounds.prototype.equals = function(other) {};
 
 /**
  * Extends this bounds to contain the given point.
- * @param {google.maps.LatLng|google.maps.LatLngLiteral} point
+ * @param {!google.maps.LatLng|!google.maps.LatLngLiteral} point
  * @return {!google.maps.LatLngBounds}
  */
 google.maps.LatLngBounds.prototype.extend = function(point) {};
@@ -3631,7 +3631,7 @@ google.maps.LatLngBounds.prototype.getSouthWest = function() {};
 /**
  * Returns <code>true</code> if this bounds shares any points with the other
  * bounds.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} other
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral} other
  * @return {boolean}
  */
 google.maps.LatLngBounds.prototype.intersects = function(other) {};
@@ -3675,7 +3675,7 @@ google.maps.LatLngBounds.prototype.toUrlValue = function(precision) {};
 
 /**
  * Extends this bounds to contain the union of this and the given bounds.
- * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} other
+ * @param {!google.maps.LatLngBounds|!google.maps.LatLngBoundsLiteral} other
  * @return {!google.maps.LatLngBounds}
  */
 google.maps.LatLngBounds.prototype.union = function(other) {};
@@ -8066,13 +8066,13 @@ google.maps.geometry.encoding = {};
 /**
  * Decodes an encoded path string into a sequence of LatLngs.
  * @param {string} encodedPath
- * @return {!Array<google.maps.LatLng>}
+ * @return {!Array<!google.maps.LatLng>}
  */
 google.maps.geometry.encoding.decodePath = function(encodedPath) {};
 
 /**
  * Encodes a sequence of LatLngs into an encoded path string.
- * @param {Array<google.maps.LatLng>|google.maps.MVCArray<google.maps.LatLng>}
+ * @param {!Array<!google.maps.LatLng>|!google.maps.MVCArray<!google.maps.LatLng>}
  *     path
  * @return {string}
  */
@@ -8117,7 +8117,7 @@ google.maps.geometry.spherical = {};
  * Returns the area of a closed path. The computed area uses the same units as
  * the radius. The radius defaults to the Earth&#39;s radius in meters, in which
  * case the area is in square meters.
- * @param {Array<google.maps.LatLng>|google.maps.MVCArray<google.maps.LatLng>}
+ * @param {!Array<!google.maps.LatLng>|!google.maps.MVCArray<!google.maps.LatLng>}
  *     path
  * @param {number=} radius
  * @return {number}
@@ -8127,8 +8127,8 @@ google.maps.geometry.spherical.computeArea = function(path, radius) {};
 /**
  * Returns the distance, in meters, between two LatLngs. You can optionally
  * specify a custom radius. The radius defaults to the radius of the Earth.
- * @param {google.maps.LatLng} from
- * @param {google.maps.LatLng} to
+ * @param {!google.maps.LatLng} from
+ * @param {!google.maps.LatLng} to
  * @param {number=} radius
  * @return {number}
  */
@@ -8138,15 +8138,15 @@ google.maps.geometry.spherical.computeDistanceBetween = function(
 /**
  * Returns the heading from one LatLng to another LatLng. Headings are expressed
  * in degrees clockwise from North within the range [-180,180).
- * @param {google.maps.LatLng} from
- * @param {google.maps.LatLng} to
+ * @param {!google.maps.LatLng} from
+ * @param {!google.maps.LatLng} to
  * @return {number}
  */
 google.maps.geometry.spherical.computeHeading = function(from, to) {};
 
 /**
  * Returns the length of the given path.
- * @param {Array<google.maps.LatLng>|google.maps.MVCArray<google.maps.LatLng>}
+ * @param {!Array<!google.maps.LatLng>|!google.maps.MVCArray<!google.maps.LatLng>}
  *     path
  * @param {number=} radius
  * @return {number}
@@ -8156,7 +8156,7 @@ google.maps.geometry.spherical.computeLength = function(path, radius) {};
 /**
  * Returns the LatLng resulting from moving a distance from an origin in the
  * specified heading (expressed in degrees clockwise from north).
- * @param {google.maps.LatLng} from
+ * @param {!google.maps.LatLng} from
  * @param {number} distance
  * @param {number} heading
  * @param {number=} radius
@@ -8170,11 +8170,11 @@ google.maps.geometry.spherical.computeOffset = function(
  * meters travelled and original heading. Headings are expressed in degrees
  * clockwise from North. This function returns null when no solution is
  * available.
- * @param {google.maps.LatLng} to
+ * @param {!google.maps.LatLng} to
  * @param {number} distance
  * @param {number} heading
  * @param {number=} radius
- * @return {google.maps.LatLng}
+ * @return {?google.maps.LatLng}
  */
 google.maps.geometry.spherical.computeOffsetOrigin = function(
     to, distance, heading, radius) {};
@@ -8184,7 +8184,7 @@ google.maps.geometry.spherical.computeOffsetOrigin = function(
  * determine the orientation of the path. The computed area uses the same units
  * as the radius. The radius defaults to the Earth&#39;s radius in meters, in
  * which case the area is in square meters.
- * @param {Array<google.maps.LatLng>|google.maps.MVCArray<google.maps.LatLng>}
+ * @param {!Array<!google.maps.LatLng>|!google.maps.MVCArray<!google.maps.LatLng>}
  *     loop
  * @param {number=} radius
  * @return {number}
@@ -8194,8 +8194,8 @@ google.maps.geometry.spherical.computeSignedArea = function(loop, radius) {};
 /**
  * Returns the LatLng which lies the given fraction of the way between the
  * origin LatLng and the destination LatLng.
- * @param {google.maps.LatLng} from
- * @param {google.maps.LatLng} to
+ * @param {!google.maps.LatLng} from
+ * @param {!google.maps.LatLng} to
  * @param {number} fraction
  * @return {!google.maps.LatLng}
  */
