@@ -30,7 +30,9 @@ class PeepholeOptimizationsPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final String passName;
-  private final List<AbstractPeepholeOptimization> peepholeOptimizations;
+  // NOTE: Use a native array rather than a List to avoid creating iterators for every node in the
+  // AST.
+  private final AbstractPeepholeOptimization[] peepholeOptimizations;
   private boolean retraverseOnChange;
 
   /** Creates a peephole optimization pass that runs the given optimizations. */
@@ -45,7 +47,7 @@ class PeepholeOptimizationsPass implements CompilerPass {
       List<AbstractPeepholeOptimization> optimizations) {
     this.compiler = compiler;
     this.passName = passName;
-    this.peepholeOptimizations = optimizations;
+    this.peepholeOptimizations = optimizations.toArray(new AbstractPeepholeOptimization[0]);
     this.retraverseOnChange = true;
   }
 
