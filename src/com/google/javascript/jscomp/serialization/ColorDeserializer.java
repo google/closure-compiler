@@ -16,15 +16,17 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static com.google.javascript.jscomp.serialization.NativeType.NUMBER_OBJECT_TYPE;
+import static java.util.Arrays.stream;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Convert a {@link TypePool} (from a single compilation) into {@link Color}s.
@@ -42,12 +45,7 @@ import java.util.Set;
  * different libraries. For now it only handles a single type-pool.
  */
 public final class ColorDeserializer {
-  private final ArrayList<Color> typeColors; // filled in as we go. initially all null
-  // to avoid infinite recursion on types in cycles
-  private final Set<TypeProto> currentlyDeserializing = new LinkedHashSet<>();
-  // keys are indices into the type pool and values are pointers to its supertypes
-  private final Multimap<Integer, TypePointer> disambiguationEdges;
-  private final TypePool typePool;
+  private final ImmutableList<Color> colorPool;
   private final ColorRegistry colorRegistry;
 
   /** Error emitted when the deserializer sees a serialized type it cannot support deserialize */
@@ -57,14 +55,8 @@ public final class ColorDeserializer {
     }
   }
 
-  private ColorDeserializer(
-      TypePool typePool,
-      Multimap<Integer, TypePointer> disambiguationEdges,
-      ColorRegistry colorRegistry) {
-    this.typePool = typePool;
-    this.typeColors = new ArrayList<>();
-    this.disambiguationEdges = disambiguationEdges;
-    typeColors.addAll(Collections.nCopies(typePool.getTypeCount(), null));
+  private ColorDeserializer(ImmutableList<Color> colorPool, ColorRegistry colorRegistry) {
+    this.colorPool = colorPool;
     this.colorRegistry = colorRegistry;
   }
 
@@ -72,8 +64,15 @@ public final class ColorDeserializer {
     return this.colorRegistry;
   }
 
+  /**
+   * Builds a pool of Colors and a {@link ColorRegistry} from the given pool of types.
+   *
+   * <p>This method does all of the deserialization work in advance so that {@link #getRegistry()}
+   * and {@link #pointerToColor(TypePointer)} willexecute in constant time.
+   */
   public static ColorDeserializer buildFromTypePool(TypePool typePool) {
-    Multimap<Integer, TypePointer> disambiguationEdges = LinkedHashMultimap.create();
+    ImmutableMultimap.Builder<Integer, TypePointer> disambiguationEdges =
+        ImmutableMultimap.builder();
     for (SubtypingEdge edge : typePool.getDisambiguationEdgesList()) {
       TypePointer subtype = edge.getSubtype();
       TypePointer supertype = edge.getSupertype();
@@ -90,93 +89,161 @@ public final class ColorDeserializer {
             typePool.getInvalidatingNativeList().stream()
                 .map(ColorDeserializer::nativeTypeToColor)
                 .collect(toImmutableSet()));
-    return new ColorDeserializer(typePool, disambiguationEdges, colorRegistry);
+
+    ImmutableMap<NativeType, Color> nativeColors =
+        stream(NativeType.values())
+            .filter((nativeType) -> nativeTypeToColor(nativeType) != null)
+            .collect(
+                toImmutableMap(
+                    Function.identity(),
+                    (nativeType) -> colorRegistry.get(nativeTypeToColor(nativeType))));
+
+    ImmutableList<Color> colorPool =
+        new ColorPoolBuilder(typePool, disambiguationEdges.build(), nativeColors).build();
+    return new ColorDeserializer(colorPool, colorRegistry);
   }
 
   /**
-   * Given an index into the type pool, creating its corresponding color if not already
-   * deserialized.
+   * Contains necessary logic and mutable state to create a pool of {@link Color}s from a {@link
+   * TypePool}.
    */
-  private void deserializeTypeFromPoolIfEmpty(int i) {
-    if (typeColors.get(i) != null) {
-      return;
+  private static final class ColorPoolBuilder {
+    private final ArrayList<Color> colorPool; // filled in as we go. initially all null
+    // to avoid infinite recursion on types in cycles
+    private final Set<TypeProto> currentlyDeserializing = new LinkedHashSet<>();
+    // keys are indices into the type pool and values are pointers to its supertypes
+    private final ImmutableMultimap<Integer, TypePointer> disambiguationEdges;
+    private final TypePool typePool;
+    private final ImmutableMap<NativeType, Color> nativeToColor;
+
+    private ColorPoolBuilder(
+        TypePool typePool,
+        ImmutableMultimap<Integer, TypePointer> disambiguationEdges,
+        ImmutableMap<NativeType, Color> nativeToColor) {
+      this.typePool = typePool;
+      this.colorPool = new ArrayList<>();
+      this.disambiguationEdges = disambiguationEdges;
+      colorPool.addAll(Collections.nCopies(typePool.getTypeCount(), null));
+      this.nativeToColor = nativeToColor;
     }
-    Color color = deserializeType(i, typePool.getTypeList().get(i));
-    typeColors.set(i, color);
+
+    private ImmutableList<Color> build() {
+      for (int i = 0; i < this.typePool.getTypeCount(); i++) {
+        if (this.colorPool.get(i) == null) {
+          this.deserializeTypeByOffset(i);
+        }
+      }
+
+      return ImmutableList.copyOf(this.colorPool);
   }
 
-  /**
-   * Safely deserializes a type after verifying it's not going to cause infinite recursion
-   *
-   * <p>Currently this always initializes a new {@link Color} and we assume there are no duplicate
-   * types in the serialized type pool.
-   */
-  private Color deserializeType(int i, TypeProto serialized) {
-    if (currentlyDeserializing.contains(serialized)) {
-      throw new InvalidSerializedFormatException("Cannot deserialize type in cycle " + serialized);
+    /**
+     * Given an index into the type pool, creating its corresponding color if not already
+     * deserialized.
+     */
+    private void deserializeTypeByOffset(int i) {
+      Color color = deserializeType(i, typePool.getTypeList().get(i));
+      colorPool.set(i, color);
     }
-    currentlyDeserializing.add(serialized);
 
-    Color newColor = deserializeTypeAssumingSafe(i, serialized);
-
-    currentlyDeserializing.remove(serialized);
-    return newColor;
-  }
-
-  /** Creates a color from a TypeProto without checking for any type cycles */
-  private Color deserializeTypeAssumingSafe(int offset, TypeProto serialized) {
-    switch (serialized.getKindCase()) {
-      case OBJECT:
-        return createObjectColor(offset, serialized.getObject());
-      case UNION:
-        return createUnionColor(serialized.getUnion());
-      case KIND_NOT_SET:
+    /**
+     * Safely deserializes a type after verifying it's not going to cause infinite recursion
+     *
+     * <p>Currently this always initializes a new {@link Color} and we assume there are no duplicate
+     * types in the serialized type pool.
+     */
+    private Color deserializeType(int i, TypeProto serialized) {
+      if (currentlyDeserializing.contains(serialized)) {
         throw new InvalidSerializedFormatException(
-            "Expected all Types to have a Kind, found " + serialized);
-    }
-    throw new AssertionError();
-  }
+            "Cannot deserialize type in cycle " + serialized);
+      }
+      currentlyDeserializing.add(serialized);
 
-  private Color createObjectColor(int offset, ObjectTypeProto serialized) {
-    ImmutableList<Color> directSupertypes =
-        this.disambiguationEdges.get(offset).stream()
-            .map(this::pointerToColor)
-            .collect(toImmutableList());
-    ObjectTypeProto.DebugInfo serializedDebugInfo = serialized.getDebugInfo();
-    SingletonColorFields.Builder builder =
-        SingletonColorFields.builder()
-            .setId(serialized.getUuid())
-            .setInvalidating(serialized.getIsInvalidating())
-            .setPropertiesKeepOriginalName(serialized.getPropertiesKeepOriginalName())
-            .setDisambiguationSupertypes(directSupertypes)
-            .setDebugInfo(
-                DebugInfo.builder()
-                    .setFilename(serializedDebugInfo.getFilename())
-                    .setClassName(serializedDebugInfo.getClassName())
-                    .build());
-    if (serialized.hasPrototype()) {
-      builder.setPrototype(this.pointerToColor(serialized.getPrototype()));
-    }
-    if (serialized.hasInstanceType()) {
-      builder.setInstanceColor(this.pointerToColor(serialized.getInstanceType()));
-    }
-    builder.setConstructor(serialized.getMarkedConstructor());
-    return Color.createSingleton(builder.build());
-  }
+      Color newColor = deserializeTypeAssumingSafe(i, serialized);
 
-  private Color createUnionColor(UnionTypeProto serialized) {
-    if (serialized.getUnionMemberCount() <= 1) {
-      throw new InvalidSerializedFormatException(
-          "Unions must have >= 2 elements, found " + serialized);
+      currentlyDeserializing.remove(serialized);
+      return newColor;
     }
-    ImmutableSet<Color> allAlternates =
-        serialized.getUnionMemberList().stream()
-            .map(this::pointerToColor)
-            .collect(toImmutableSet());
-    if (allAlternates.size() == 1) {
-      return Iterables.getOnlyElement(allAlternates);
-    } else {
-      return Color.createUnion(allAlternates);
+
+    /** Creates a color from a TypeProto without checking for any type cycles */
+    private Color deserializeTypeAssumingSafe(int offset, TypeProto serialized) {
+      switch (serialized.getKindCase()) {
+        case OBJECT:
+          return createObjectColor(offset, serialized.getObject());
+        case UNION:
+          return createUnionColor(serialized.getUnion());
+        case KIND_NOT_SET:
+          throw new InvalidSerializedFormatException(
+              "Expected all Types to have a Kind, found " + serialized);
+      }
+      throw new AssertionError();
+    }
+
+    private Color createObjectColor(int offset, ObjectTypeProto serialized) {
+      ImmutableList<Color> directSupertypes =
+          this.disambiguationEdges.get(offset).stream()
+              .map(this::pointerToColor)
+              .collect(toImmutableList());
+      ObjectTypeProto.DebugInfo serializedDebugInfo = serialized.getDebugInfo();
+      SingletonColorFields.Builder builder =
+          SingletonColorFields.builder()
+              .setId(serialized.getUuid())
+              .setInvalidating(serialized.getIsInvalidating())
+              .setPropertiesKeepOriginalName(serialized.getPropertiesKeepOriginalName())
+              .setDisambiguationSupertypes(directSupertypes)
+              .setDebugInfo(
+                  DebugInfo.builder()
+                      .setFilename(serializedDebugInfo.getFilename())
+                      .setClassName(serializedDebugInfo.getClassName())
+                      .build());
+      if (serialized.hasPrototype()) {
+        builder.setPrototype(this.pointerToColor(serialized.getPrototype()));
+      }
+      if (serialized.hasInstanceType()) {
+        builder.setInstanceColor(this.pointerToColor(serialized.getInstanceType()));
+      }
+      builder.setConstructor(serialized.getMarkedConstructor());
+      return Color.createSingleton(builder.build());
+    }
+
+    private Color createUnionColor(UnionTypeProto serialized) {
+      if (serialized.getUnionMemberCount() <= 1) {
+        throw new InvalidSerializedFormatException(
+            "Unions must have >= 2 elements, found " + serialized);
+      }
+      ImmutableSet<Color> allAlternates =
+          serialized.getUnionMemberList().stream()
+              .map(this::pointerToColor)
+              .collect(toImmutableSet());
+      if (allAlternates.size() == 1) {
+        return Iterables.getOnlyElement(allAlternates);
+      } else {
+        return Color.createUnion(allAlternates);
+      }
+    }
+
+    private Color pointerToColor(TypePointer typePointer) {
+      switch (typePointer.getValueCase()) {
+        case NATIVE_TYPE:
+          return this.nativeToColor.get(typePointer.getNativeType());
+        case POOL_OFFSET:
+          int poolOffset = typePointer.getPoolOffset();
+          if (poolOffset < 0 || poolOffset >= this.colorPool.size()) {
+            throw new InvalidSerializedFormatException(
+                "TypeProto pointer has out-of-bounds pool offset: "
+                    + typePointer
+                    + " for pool size "
+                    + this.colorPool.size());
+          }
+          if (this.colorPool.get(typePointer.getPoolOffset()) == null) {
+            this.deserializeTypeByOffset(poolOffset);
+          }
+          return this.colorPool.get(poolOffset);
+        case VALUE_NOT_SET:
+          throw new InvalidSerializedFormatException(
+              "Cannot dereference TypePointer " + typePointer);
+      }
+      throw new AssertionError();
     }
   }
 
@@ -216,27 +283,29 @@ public final class ColorDeserializer {
       default:
         // Switch cannot be exhaustive because Java protos add an additional "UNRECOGNIZED" field
         // while J2CL protos do not.
-        throw new InvalidSerializedFormatException("unrecognized nativetype " + nativeType);
+        return null;
     }
   }
 
   public Color pointerToColor(TypePointer typePointer) {
     switch (typePointer.getValueCase()) {
       case NATIVE_TYPE:
-        return this.colorRegistry.get(nativeTypeToColor(typePointer.getNativeType()));
+        NativeColorId nativeColorId = nativeTypeToColor(typePointer.getNativeType());
+        if (nativeColorId == null) {
+          throw new InvalidSerializedFormatException(
+              "Unrecognized NativeType " + typePointer.getNativeType());
+        }
+        return this.colorRegistry.get(nativeColorId);
       case POOL_OFFSET:
         int poolOffset = typePointer.getPoolOffset();
-        if (poolOffset < 0 || poolOffset >= this.typeColors.size()) {
+        if (poolOffset < 0 || poolOffset >= this.colorPool.size()) {
           throw new InvalidSerializedFormatException(
               "TypeProto pointer has out-of-bounds pool offset: "
                   + typePointer
                   + " for pool size "
-                  + this.typeColors.size());
+                  + this.colorPool.size());
         }
-        if (this.typeColors.get(typePointer.getPoolOffset()) == null) {
-          this.deserializeTypeFromPoolIfEmpty(poolOffset);
-        }
-        return this.typeColors.get(poolOffset);
+        return checkNotNull(this.colorPool.get(poolOffset));
       case VALUE_NOT_SET:
         throw new InvalidSerializedFormatException("Cannot dereference TypePointer " + typePointer);
     }
