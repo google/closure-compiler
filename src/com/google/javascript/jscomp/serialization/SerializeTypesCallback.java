@@ -23,33 +23,28 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
-import com.google.javascript.rhino.serialization.TypePoolCreator;
 import java.util.IdentityHashMap;
 
 /** Grab a TypePointer for each JSType on the AST. */
 final class SerializeTypesCallback extends AbstractPostOrderCallback {
 
-  private final TypePoolCreator<JSType> typePoolCreator;
   private final JSTypeSerializer jstypeSerializer;
   private final IdentityHashMap<JSType, TypePointer> typePointersByJstype = new IdentityHashMap<>();
 
-  private SerializeTypesCallback(
-      TypePoolCreator<JSType> typePoolCreator, JSTypeSerializer jstypeSerializer) {
-    this.typePoolCreator = typePoolCreator;
+  private SerializeTypesCallback(JSTypeSerializer jstypeSerializer) {
     this.jstypeSerializer = jstypeSerializer;
   }
 
   static SerializeTypesCallback create(
       AbstractCompiler compiler, SerializationOptions serializationOptions) {
-    TypePoolCreator<JSType> typePoolCreator = TypePoolCreator.create(serializationOptions);
     InvalidatingTypes invalidatingTypes =
         new InvalidatingTypes.Builder(compiler.getTypeRegistry())
             .addAllTypeMismatches(compiler.getTypeMismatches())
             .build();
     JSTypeSerializer jsTypeSerializer =
         JSTypeSerializer.create(
-            typePoolCreator, compiler.getTypeRegistry(), invalidatingTypes, serializationOptions);
-    return new SerializeTypesCallback(typePoolCreator, jsTypeSerializer);
+            compiler.getTypeRegistry(), invalidatingTypes, serializationOptions);
+    return new SerializeTypesCallback(jsTypeSerializer);
   }
 
   @Override
@@ -65,6 +60,6 @@ final class SerializeTypesCallback extends AbstractPostOrderCallback {
   }
 
   TypePool generateTypePool() {
-    return typePoolCreator.generateTypePool();
+    return jstypeSerializer.generateTypePool();
   }
 }

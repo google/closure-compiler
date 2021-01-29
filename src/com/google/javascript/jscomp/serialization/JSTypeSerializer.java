@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
@@ -23,9 +24,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.IdGenerator;
 import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.serialization.TypePointer.ValueCase;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -35,23 +39,35 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
-import com.google.javascript.rhino.serialization.TypePoolCreator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 final class JSTypeSerializer {
 
-  private final TypePoolCreator<JSType> typePoolCreator;
+  // Cache the unknownPointer since it's commonly used
   private final TypePointer unknownPointer;
   private final InvalidatingTypes invalidatingTypes;
   private final IdGenerator idGenerator;
   private final SerializationOptions serializationMode;
+  private State state = State.COLLECTING_TYPES;
+  private final LinkedHashMap<JSType, SeenTypeRecord> seenSerializableTypes = new LinkedHashMap<>();
+  private int currentPoolSize = 0;
+  private final Multimap<TypePointer, TypePointer> disambiguateEdges = LinkedHashMultimap.create();
+  private final LinkedHashSet<NativeType> invalidatingNatives = new LinkedHashSet<>();
+
+  private enum State {
+    COLLECTING_TYPES,
+    GENERATING_POOL,
+    FINISHED,
+  }
 
   private JSTypeSerializer(
-      TypePoolCreator<JSType> typePoolCreator,
       TypePointer unknownPointer,
       InvalidatingTypes invalidatingTypes,
       IdGenerator idGenerator,
       SerializationOptions serializationMode) {
-    this.typePoolCreator = typePoolCreator;
     this.unknownPointer = unknownPointer;
     this.invalidatingTypes = invalidatingTypes;
     this.idGenerator = idGenerator;
@@ -59,21 +75,23 @@ final class JSTypeSerializer {
   }
 
   public static JSTypeSerializer create(
-      TypePoolCreator<JSType> typePoolCreator,
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
       SerializationOptions serializationMode) {
-    ImmutableMap<JSType, TypePointer> nativeTypePointers =
-        serializeNativeTypes(registry, typePoolCreator);
     IdGenerator idGenerator = new IdGenerator();
 
-    collectInvalidatingNatives(registry, invalidatingTypes, typePoolCreator);
-    return new JSTypeSerializer(
-        typePoolCreator,
-        nativeTypePointers.get(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)),
-        invalidatingTypes,
-        idGenerator,
-        serializationMode);
+    JSTypeSerializer serializer =
+        new JSTypeSerializer(
+            TypePointer.newBuilder().setNativeType(NativeType.UNKNOWN_TYPE).build(),
+            invalidatingTypes,
+            idGenerator,
+            serializationMode);
+
+    serializer.serializeNativeTypes(registry);
+    serializer.collectInvalidatingNatives(registry, invalidatingTypes);
+    serializer.checkValid();
+
+    return serializer;
   }
 
   /**
@@ -82,10 +100,8 @@ final class JSTypeSerializer {
    * <p>Native types are not explicitly serialized, since the only bit of information that differs
    * between compilation units is their "invalidatingness".
    */
-  private static void collectInvalidatingNatives(
-      JSTypeRegistry registry,
-      InvalidatingTypes invalidatingTypes,
-      TypePoolCreator<JSType> typePoolCreator) {
+  private void collectInvalidatingNatives(
+      JSTypeRegistry registry, InvalidatingTypes invalidatingTypes) {
     for (JSTypeNative jsTypeNative : JSTypeNative.values()) {
       // First check if this type is also native in the colors
       NativeType correspondingType = translateNativeType(jsTypeNative);
@@ -94,7 +110,7 @@ final class JSTypeSerializer {
       }
       // Then check if it is invalidating
       if (invalidatingTypes.isInvalidating(registry.getNativeType(jsTypeNative))) {
-        typePoolCreator.registerInvalidatingNative(correspondingType);
+        registerInvalidatingNative(correspondingType);
       }
     }
   }
@@ -140,7 +156,7 @@ final class JSTypeSerializer {
 
     if (type.toObjectType() != null) {
       TypePointer serialized =
-          typePoolCreator.typeToPointer(
+          typeToPointer(
               type,
               () ->
                   TypeProto.newBuilder()
@@ -151,11 +167,10 @@ final class JSTypeSerializer {
     }
 
     if (type.isBoxableScalar() || type.isNullType() || type.isVoidType()) {
-      return typePoolCreator.typeToPointer(
+      return typeToPointer(
           type,
           () -> {
-            throw new IllegalStateException(
-                "Primitive types must already have been registered in TypePoolCreator");
+            throw new IllegalStateException("Primitive types must already have been registered");
           });
     }
 
@@ -164,11 +179,10 @@ final class JSTypeSerializer {
 
   private void addSupertypeEdges(ObjectType subtype, TypePointer serializedSubtype) {
     for (TypePointer ancestor : ownAncestorInterfacesOf(subtype)) {
-      typePoolCreator.addDisambiguationEdge(serializedSubtype, ancestor);
+      addDisambiguationEdge(serializedSubtype, ancestor);
     }
     if (subtype.getImplicitPrototype() != null) {
-      typePoolCreator.addDisambiguationEdge(
-          serializedSubtype, serializeType(subtype.getImplicitPrototype()));
+      addDisambiguationEdge(serializedSubtype, serializeType(subtype.getImplicitPrototype()));
     }
   }
 
@@ -178,7 +192,7 @@ final class JSTypeSerializer {
     if (serializedAlternates.size() == 1) {
       return Iterables.getOnlyElement(serializedAlternates);
     }
-    return typePoolCreator.typeToPointer(type, () -> serializeUnionType(serializedAlternates));
+    return typeToPointer(type, () -> serializeUnionType(serializedAlternates));
   }
 
   private static TypeProto serializeUnionType(ImmutableSet<TypePointer> serializedAlternates) {
@@ -313,8 +327,7 @@ final class JSTypeSerializer {
         .collect(toImmutableList());
   }
 
-  private static ImmutableMap<JSType, TypePointer> serializeNativeTypes(
-      JSTypeRegistry registry, TypePoolCreator<JSType> typePoolCreator) {
+  private ImmutableMap<JSType, TypePointer> serializeNativeTypes(JSTypeRegistry registry) {
     ImmutableMap.Builder<JSType, TypePointer> nativeTypes = ImmutableMap.builder();
     for (JSTypeNative jsNativeType : JSTypeNative.values()) {
       NativeType serializedNativeType = translateNativeType(jsNativeType);
@@ -324,9 +337,156 @@ final class JSTypeSerializer {
       JSType jsType = registry.getNativeType(jsNativeType);
       TypePointer pointer = TypePointer.newBuilder().setNativeType(serializedNativeType).build();
       nativeTypes.put(jsType, pointer);
-      typePoolCreator.registerPointerForType(jsType, pointer);
+      registerPointerForType(jsType, pointer);
     }
     return nativeTypes.build();
+  }
+
+  /** Checks that this instance is in a valid state. */
+  private void checkValid() {
+    if (!this.serializationMode.runValidation()) {
+      return;
+    }
+
+    final int totalTypeCount = currentPoolSize;
+    for (SeenTypeRecord seen : this.seenSerializableTypes.values()) {
+      if (!seen.pointer.getValueCase().equals(TypePointer.ValueCase.POOL_OFFSET)) {
+        continue;
+      }
+      int offset = seen.pointer.getPoolOffset();
+      checkState(offset >= 0);
+      checkState(
+          offset <= totalTypeCount,
+          "Found invalid pointer %s, out of a total of %s user-defined types",
+          offset,
+          totalTypeCount);
+    }
+  }
+
+  /**
+   * Generates a "type-pool" representing all the types that this class has encountered through
+   * calls to {@link #typeToPointer(JSType, Supplier)}.
+   *
+   * <p>After generation, no new types can be added, so subsequent calls to {@link
+   * #typeToPointer(JSType, Supplier)} can only be used to retrieve pointers to existing types in
+   * the type pool.
+   */
+  TypePool generateTypePool() {
+    checkState(this.state == State.COLLECTING_TYPES);
+    checkValid();
+    this.state = State.GENERATING_POOL;
+
+    TypePool.Builder builder = TypePool.newBuilder();
+    for (SeenTypeRecord seen : this.seenSerializableTypes.values()) {
+      if (seen.type == null) {
+        continue;
+      }
+      builder.addType(seen.type);
+    }
+    for (TypePointer subtype : this.disambiguateEdges.keySet()) {
+      for (TypePointer supertype : this.disambiguateEdges.get(subtype)) {
+        builder.addDisambiguationEdges(
+            SubtypingEdge.newBuilder().setSubtype(subtype).setSupertype(supertype));
+      }
+    }
+    TypePool pool = builder.addAllInvalidatingNative(this.invalidatingNatives).build();
+
+    this.state = State.FINISHED;
+    checkValid();
+    return pool;
+  }
+
+  /**
+   * Returns the type-pointer for the given AST-type, adding it to the type-pool if not present.
+   *
+   * <p>The type-pointer is a reference that can be later used to look up the given type in the
+   * type-pool. This function memoizes type-pointers and can be safely called multiple times for a
+   * given type.
+   *
+   * <p>The given serializer will be called only once per type during type pool generation.
+   */
+  private TypePointer typeToPointer(JSType jsType, Supplier<TypeProto> serialize) {
+    checkValid();
+
+    SeenTypeRecord existing = this.seenSerializableTypes.get(jsType);
+    if (existing != null) {
+      return existing.pointer;
+    }
+
+    checkState(State.COLLECTING_TYPES == this.state || State.GENERATING_POOL == this.state);
+
+    TypePointer.Builder pointer = TypePointer.newBuilder().setPoolOffset(currentPoolSize);
+    if (!SerializationOptions.SKIP_DEBUG_INFO.equals(this.serializationMode)) {
+      pointer.setDebugInfo(TypePointer.DebugInfo.newBuilder().setDescription(jsType.toString()));
+    }
+
+    SeenTypeRecord record = new SeenTypeRecord(pointer.build());
+    this.seenSerializableTypes.put(jsType, record);
+    currentPoolSize++;
+    // Serialize after the pointer is in the pool in case serialization requires a pool lookup.
+    record.type = serialize.get();
+
+    checkValid();
+    return record.pointer;
+  }
+
+  /**
+   * Caches a particular pointer with a particular type so that future {@link #typeToPointer} calls
+   * will return the given {@code pointer}.
+   *
+   * <p>An error will be thrown if either the pointer refers to an out-of-bounds pool offset or the
+   * given type is already recorded in the type pool.
+   */
+  private void registerPointerForType(JSType type, TypePointer pointer) {
+    if (pointer.getValueCase().equals(ValueCase.POOL_OFFSET)) {
+      checkState(
+          pointer.getPoolOffset() >= 0 && pointer.getPoolOffset() < currentPoolSize,
+          "Invalid type pointer %s",
+          pointer);
+    }
+
+    // Avoid multiple map lookups by combining a) verifying that `type` isn'JSType already present
+    // in our
+    // map and b) putting (type, pointer) into the map.
+    this.seenSerializableTypes.compute(
+        type,
+        (jsType, existingValue) -> {
+          checkState(
+              existingValue == null,
+              "Cannot register duplicate pointer value %s for type %s",
+              existingValue,
+              jsType);
+          return new SeenTypeRecord(pointer);
+        });
+  }
+
+  /**
+   * Adds an edge from the given subtype to the given supertype if both are user-defined types and
+   * not native.
+   */
+  private void addDisambiguationEdge(TypePointer subtype, TypePointer supertype) {
+    checkState(this.state == State.COLLECTING_TYPES);
+
+    if (subtype.getValueCase().equals(TypePointer.ValueCase.POOL_OFFSET)
+        && supertype.getValueCase().equals(TypePointer.ValueCase.POOL_OFFSET)) {
+      this.disambiguateEdges.put(subtype, supertype);
+    }
+  }
+
+  private void registerInvalidatingNative(NativeType invalidatingType) {
+    checkState(this.state == State.COLLECTING_TYPES);
+    this.invalidatingNatives.add(invalidatingType);
+  }
+
+  private static final class SeenTypeRecord {
+    final TypePointer pointer;
+    // If null, indicates that this SeenTypeRecord either corresponds to a native type pointer or
+    // is an alias of a SeenTypeRecord with the same pool offset + a non-null TypeProto.
+    @Nullable TypeProto type;
+
+    SeenTypeRecord(TypePointer pointer) {
+      this.pointer = pointer;
+    }
   }
 
   /**
