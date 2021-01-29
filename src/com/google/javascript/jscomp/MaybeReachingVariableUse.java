@@ -28,10 +28,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,20 +74,10 @@ class MaybeReachingVariableUse extends DataFlowAnalysis<Node, ReachingUses> {
   private final Map<String, Var> allVarsInFn;
 
   MaybeReachingVariableUse(
-      ControlFlowGraph<Node> cfg,
-      Scope jsScope,
-      AbstractCompiler compiler,
-      SyntacticScopeCreator scopeCreator) {
+      ControlFlowGraph<Node> cfg, Set<Var> escaped, Map<String, Var> allVarsInFn) {
     super(cfg, new ReachingUsesJoinOp());
-    this.escaped = new HashSet<>();
-    this.allVarsInFn = new HashMap<>();
-    List<Var> orderedVars = new ArrayList<>();
-
-    // TODO(user): Maybe compute it somewhere else and re-use the escape
-    // local set here.
-    computeEscaped(jsScope.getParent(), escaped, compiler, scopeCreator);
-    NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope.getParent());
+    this.escaped = escaped;
+    this.allVarsInFn = allVarsInFn;
   }
 
   /**

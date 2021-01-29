@@ -30,7 +30,9 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -180,15 +182,25 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     cfa.process(null, functionScopeRoot);
     cfg = cfa.getCfg();
 
-    reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler, scopeCreator);
+    HashSet<Var> escaped = new HashSet<>();
+    HashMap<String, Var> allVarsInFn = new HashMap<>();
+    ArrayList<Var> orderedVars = new ArrayList<>();
+    Scope scope = t.getScope();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, compiler, scopeCreator, scope.getParent());
+    DataFlowAnalysis.computeEscaped(
+        scope.getParent(), escaped, compiler, scopeCreator, allVarsInFn);
+
+    reachingDef = new MustBeReachingVariableDef(cfg, compiler, escaped, allVarsInFn);
     reachingDef.analyze();
     candidates = new LinkedHashSet<>();
 
     // Using the forward reaching definition search to find all the inline
     // candidates
     NodeTraversal.traverse(compiler, t.getScopeRoot(), new GatherCandidates());
-    // Compute the backward reaching use. The CFG can be reused.
-    reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler, scopeCreator);
+
+    // Compute the backward reaching use. The CFG and per-function variable info can be reused.
+    reachingUses = new MaybeReachingVariableUse(cfg, escaped, allVarsInFn);
     reachingUses.analyze();
     while (!candidates.isEmpty()) {
       Candidate c = candidates.iterator().next();

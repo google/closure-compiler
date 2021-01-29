@@ -24,11 +24,9 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -54,17 +52,13 @@ final class MustBeReachingVariableDef
 
   MustBeReachingVariableDef(
       ControlFlowGraph<Node> cfg,
-      Scope jsScope,
       AbstractCompiler compiler,
-      SyntacticScopeCreator scopeCreator) {
+      Set<Var> escaped,
+      Map<String, Var> allVarsInFn) {
     super(cfg, new MustDefJoin());
     this.compiler = compiler;
-    this.escaped = new HashSet<>();
-    this.allVarsInFn = new HashMap<>();
-    List<Var> orderedVars = new ArrayList<>();
-    computeEscaped(jsScope.getParent(), escaped, compiler, scopeCreator);
-    NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope.getParent());
+    this.escaped = escaped;
+    this.allVarsInFn = allVarsInFn;
   }
 
   /**

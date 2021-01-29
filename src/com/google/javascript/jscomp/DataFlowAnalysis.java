@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -532,7 +531,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       final Scope jsScope,
       final Set<Var> escaped,
       AbstractCompiler compiler,
-      SyntacticScopeCreator scopeCreator) {
+      SyntacticScopeCreator scopeCreator,
+      Map<String, Var> allVarsInFn) {
 
     checkArgument(jsScope.isFunctionScope());
 
@@ -558,10 +558,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           }
         };
 
-    Map<String, Var> allVarsInFn = new HashMap<>();
-    List<Var> orderedVars = new ArrayList<>();
-    NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(jsScope);
 

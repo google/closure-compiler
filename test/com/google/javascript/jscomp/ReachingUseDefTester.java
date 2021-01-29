@@ -25,6 +25,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /** Utility for testing {@link MaybeReachingVariableUse} and {@link MustBeReachingVariableDef} */
@@ -69,7 +71,14 @@ final class ReachingUseDefTester {
     root = script.getFirstChild();
     Scope funcBlockScope = computeFunctionBlockScope(script, root);
     ControlFlowGraph<Node> cfg = computeCfg(root);
-    reachingUse = new MaybeReachingVariableUse(cfg, funcBlockScope, compiler, scopeCreator);
+    HashSet<Var> escaped = new HashSet<>();
+    HashMap<String, Var> allVarsInFn = new HashMap<>();
+
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, new ArrayList<>(), compiler, scopeCreator, funcBlockScope.getParent());
+    DataFlowAnalysis.computeEscaped(
+        funcBlockScope.getParent(), escaped, compiler, scopeCreator, allVarsInFn);
+    reachingUse = new MaybeReachingVariableUse(cfg, escaped, allVarsInFn);
     reachingUse.analyze();
   }
 
@@ -82,7 +91,14 @@ final class ReachingUseDefTester {
     root = script.getFirstChild();
     Scope funcBlockScope = computeFunctionBlockScope(script, root);
     ControlFlowGraph<Node> cfg = computeCfg(root);
-    reachingDef = new MustBeReachingVariableDef(cfg, funcBlockScope, compiler, scopeCreator);
+    HashSet<Var> escaped = new HashSet<>();
+    HashMap<String, Var> allVarsInFn = new HashMap<>();
+
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, new ArrayList<>(), compiler, scopeCreator, funcBlockScope.getParent());
+    DataFlowAnalysis.computeEscaped(
+        funcBlockScope.getParent(), escaped, compiler, scopeCreator, allVarsInFn);
+    reachingDef = new MustBeReachingVariableDef(cfg, compiler, escaped, allVarsInFn);
     reachingDef.analyze();
   }
 
