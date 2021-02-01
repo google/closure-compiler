@@ -134,8 +134,8 @@ public final class ModuleLoader {
   }
 
   /**
-   * A path to a module.  Provides access to the module's closurized name
-   * and a way to resolve relative paths.
+   * A path to a module. Provides access to the module's closurized name and a way to resolve
+   * relative paths.
    */
   public class ModulePath {
     private final String path;
@@ -158,9 +158,9 @@ public final class ModuleLoader {
     }
 
     /**
-     * Turns a filename into a JS identifier that is used for moduleNames in
-     * rewritten code. Removes leading /, replaces / with $, removes trailing .js
-     * and replaces - with _. All moduleNames get a "module$" prefix.
+     * Turns a filename into a JS identifier that is used for moduleNames in rewritten code. Removes
+     * leading /, replaces / with $, removes trailing .js and replaces - with _. All moduleNames get
+     * a "module$" prefix.
      */
     public String toModuleName() {
       return ModuleNames.toModuleName(path);
@@ -266,8 +266,7 @@ public final class ModuleLoader {
       String canonicalizedPath = escaper.escape(name);
       if (!knownPaths.add(normalize(canonicalizedPath, roots))) {
         // Having root paths "a" and "b" and source files "a/f.js" and "b/f.js" is ambiguous.
-        throw new IllegalArgumentException(
-            "Duplicate module path after resolving: " + name);
+        throw new IllegalArgumentException("Duplicate module path after resolving: " + name);
       }
       if (isAmbiguousIdentifier(canonicalizedPath)) {
         canonicalizedPath = MODULE_SLASH + canonicalizedPath;
@@ -380,10 +379,8 @@ public final class ModuleLoader {
     /**
      * Mimics the behavior of MS Edge.
      *
-     * Modules must begin with a "." or "/" character.
-     * Modules must include the file extension
-     * MS Edge was the only browser to define a module resolution behavior at the time of this
-     * writing.
+     * <p>Modules must begin with a "." or "/" character. Modules must include the file extension MS
+     * Edge was the only browser to define a module resolution behavior at the time of this writing.
      */
     BROWSER,
 
@@ -391,7 +388,7 @@ public final class ModuleLoader {
      * A limited superset of BROWSER that transforms some path prefixes.
      *
      * <p>For example one could configure this so that "@root/" is replaced with
-     * "/my/path/to/project/" within import paths.</p>
+     * "/my/path/to/project/" within import paths.
      */
     BROWSER_WITH_TRANSFORMED_PREFIXES,
 

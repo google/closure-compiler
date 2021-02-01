@@ -215,9 +215,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
     }
   }
 
-  /**
-   * Adds an es6 module from an import node (import or export statement) to the graph.
-   */
+  /** Adds an es6 module from an import node (import or export statement) to the graph. */
   private void addEs6ModuleImportToGraph(NodeTraversal t, Node n) {
     String moduleName = getEs6ModuleNameFromImportNode(t, n);
     if (moduleName.startsWith("goog.")) {
@@ -226,9 +224,7 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
     t.getInput().addOrderedRequire(Require.es6Import(moduleName, n.getLastChild().getString()));
   }
 
-  /**
-   * Get the module name from an import node (import or export statement).
-   */
+  /** Get the module name from an import node (import or export statement). */
   private String getEs6ModuleNameFromImportNode(NodeTraversal t, Node n) {
     String importName = n.getLastChild().getString();
     boolean isNamespaceImport = importName.startsWith("goog:");
