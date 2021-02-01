@@ -169,7 +169,7 @@ public final class ChangeVerifierTest {
     if (n.isCall()) {
       return n;
     }
-    for (Node c : n.children()) {
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       Node result = getCallNode(c);
       if (result != null) {
         return result;

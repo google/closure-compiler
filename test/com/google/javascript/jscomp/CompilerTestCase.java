@@ -1930,7 +1930,7 @@ public abstract class CompilerTestCase {
       // Ignore and remove empty externs, so that if we start with an empty extern and only add
       // to the synthetic externs, we can still enable compareAsTree.
       if (externs.hasMoreThanOneChild()) {
-        for (Node c : externs.children()) {
+        for (Node c = externs.getFirstChild(); c != null; c = c.getNext()) {
           if (!c.hasChildren()) {
             c.detach();
           }

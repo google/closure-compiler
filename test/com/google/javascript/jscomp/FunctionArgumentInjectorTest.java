@@ -750,7 +750,7 @@ public final class FunctionArgumentInjectorTest {
       }
     }
 
-    for (Node c : n.children()) {
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       Node result = findCall(c, name);
       if (result != null) {
         return result;
@@ -767,7 +767,7 @@ public final class FunctionArgumentInjectorTest {
       }
     }
 
-    for (Node c : n.children()) {
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       Node result = findFunction(c, name);
       if (result != null) {
         return result;

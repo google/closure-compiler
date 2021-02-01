@@ -1995,7 +1995,7 @@ public final class ExpressionDecomposerTest {
     if (n.isClass()) {
       return n;
     }
-    for (Node child : n.children()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       Node maybeClass = findClass(child);
       if (maybeClass != null) {
         return maybeClass;

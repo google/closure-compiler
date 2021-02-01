@@ -175,7 +175,7 @@ public final class NodeUtilTest {
   // TODO(nickreid): Consider an overload that takes a `Predicate` rather than a `Token`.
   @Nullable
   private static Node getNodeOrNull(Node root, Token token) {
-    for (Node n : root.children()) {
+    for (Node n = root.getFirstChild(); n != null; n = n.getNext()) {
       if (n.getToken() == token) {
         return n;
       }
@@ -4690,7 +4690,7 @@ public final class NodeUtilTest {
     if (nodeType.equals(n.getToken()) && n.getString().equals(name)) {
       return n;
     }
-    for (Node c : n.children()) {
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       Node result = getStringNode(c, name, nodeType);
       if (result != null) {
         return result;
@@ -4705,7 +4705,7 @@ public final class NodeUtilTest {
     if (tree.isDestructuringPattern()) {
       return tree;
     }
-    for (Node c : tree.children()) {
+    for (Node c = tree.getFirstChild(); c != null; c = c.getNext()) {
       Node result = getPattern(c);
       if (result != null) {
         return result;

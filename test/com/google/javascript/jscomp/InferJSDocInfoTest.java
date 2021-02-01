@@ -1186,7 +1186,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
         return current.getJSType();
       }
 
-      for (Node child : current.children()) {
+      for (Node child = current.getFirstChild(); child != null; child = child.getNext()) {
         queue.push(child);
       }
     }

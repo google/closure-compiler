@@ -1747,7 +1747,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     if (root.matchesQualifiedName(qname)) {
       nodesSoFar.add(root);
     }
-    for (Node child : root.children()) {
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
       addAllNodesMatchingQNameHelper(child, qname, nodesSoFar);
     }
   }
@@ -1757,7 +1757,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     if (root.matchesQualifiedName(qname)) {
       return root;
     }
-    for (Node child : root.children()) {
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
       Node result = getNodeMatchingQName(child, qname);
       if (result != null) {
         return result;

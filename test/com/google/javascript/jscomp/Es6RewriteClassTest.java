@@ -2784,7 +2784,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
       //   NAME foo
       return root.getSecondChild();
     }
-    for (Node child : root.children()) {
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
       Node result = getNodeMatchingLabel(child, label);
       if (result != null) {
         return result;
@@ -2809,7 +2809,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         break;
     }
 
-    for (Node child : root.children()) {
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
       Node result = getNodeWithName(child, name);
       if (result != null) {
         return result;

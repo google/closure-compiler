@@ -131,7 +131,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
       if (node.isVar()) {
         Set<Node> nodesToRemove = new HashSet<>();
 
-        for (Node child : node.children()) {
+        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
           if ("x".equals(child.getString())) {
             nodesToRemove.add(child);
           }

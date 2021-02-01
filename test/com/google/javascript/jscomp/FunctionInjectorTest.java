@@ -2064,7 +2064,7 @@ public final class FunctionInjectorTest {
       }
     }
 
-    for (Node c : n.children()) {
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       Node result = findFunction(c, name);
       if (result != null) {
         return result;

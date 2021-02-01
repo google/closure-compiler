@@ -449,7 +449,7 @@ public final class WarningsGuardTest {
       return root;
     }
 
-    for (Node n : root.children()) {
+    for (Node n = root.getFirstChild(); n != null; n = n.getNext()) {
       Node result = findNameNode(n, name);
       if (result != null) {
         return result;

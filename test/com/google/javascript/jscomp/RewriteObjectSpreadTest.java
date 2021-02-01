@@ -94,7 +94,7 @@ public final class RewriteObjectSpreadTest extends CompilerTestCase {
     if (root.matchesQualifiedName(qname)) {
       return root;
     }
-    for (Node child : root.children()) {
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
       Node result = getNodeMatchingQName(child, qname);
       if (result != null) {
         return result;

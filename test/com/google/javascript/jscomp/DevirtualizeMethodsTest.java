@@ -151,7 +151,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
           labelledBlock);
       return labelledBlock.getOnlyChild().getOnlyChild();
     }
-    for (Node child : root.children()) {
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
       Node possibleMatch = getLabelledExpressionIfPresent(label, child);
       if (possibleMatch != null) {
         return possibleMatch;
