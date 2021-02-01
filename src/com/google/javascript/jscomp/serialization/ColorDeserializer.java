@@ -92,7 +92,9 @@ public final class ColorDeserializer {
 
     ImmutableMap<NativeType, Color> nativeColors =
         stream(NativeType.values())
-            .filter((nativeType) -> nativeTypeToColor(nativeType) != null)
+            // The UNRECOGNIZED type is added by the Java proto format. Since TypedAST protos aren't
+            // passed between processes we don't expect to see it in the deserializer.
+            .filter(nativeType -> !NativeType.UNRECOGNIZED.equals(nativeType))
             .collect(
                 toImmutableMap(
                     Function.identity(),
@@ -135,7 +137,7 @@ public final class ColorDeserializer {
       }
 
       return ImmutableList.copyOf(this.colorPool);
-  }
+    }
 
     /**
      * Given an index into the type pool, creating its corresponding color if not already
@@ -247,7 +249,6 @@ public final class ColorDeserializer {
     }
   }
 
-  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch") // needed for J2CL protos
   private static NativeColorId nativeTypeToColor(NativeType nativeType) {
     switch (nativeType) {
       case TOP_OBJECT:
@@ -280,21 +281,17 @@ public final class ColorDeserializer {
         return NativeColorId.STRING_OBJECT;
       case SYMBOL_OBJECT_TYPE:
         return NativeColorId.SYMBOL_OBJECT;
-      default:
-        // Switch cannot be exhaustive because Java protos add an additional "UNRECOGNIZED" field
-        // while J2CL protos do not.
-        return null;
+
+      case UNRECOGNIZED:
+        throw new InvalidSerializedFormatException("Unrecognized NativeType " + nativeType);
     }
+    throw new AssertionError();
   }
 
   public Color pointerToColor(TypePointer typePointer) {
     switch (typePointer.getValueCase()) {
       case NATIVE_TYPE:
         NativeColorId nativeColorId = nativeTypeToColor(typePointer.getNativeType());
-        if (nativeColorId == null) {
-          throw new InvalidSerializedFormatException(
-              "Unrecognized NativeType " + typePointer.getNativeType());
-        }
         return this.colorRegistry.get(nativeColorId);
       case POOL_OFFSET:
         int poolOffset = typePointer.getPoolOffset();
