@@ -231,7 +231,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       if (t.inGlobalScope()
           || hasAnyInlineJsDoc(function)
           || !jsDoc.getParameterNames().isEmpty()
-          || jsDoc.hasReturnType()) {
+          || jsDoc.hasReturnType()
+          || jsDoc.isOverride()) {
         checkParams(t, function, jsDoc);
       }
       checkNoTypeOnGettersAndSetters(t, function, jsDoc);

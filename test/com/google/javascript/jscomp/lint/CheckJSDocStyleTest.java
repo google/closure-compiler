@@ -1173,6 +1173,45 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMissingOverrideTypes_bothParamAndReturnMissing() {
+    String src =
+        lines(
+            "/**", //
+            " * @override",
+            " */",
+            " function f(x) { return x; }");
+    test(srcs(src), warning(MISSING_RETURN_JSDOC), warning(MISSING_PARAMETER_JSDOC));
+  }
+
+  @Test
+  public void testMissingOverrideTypes_bothParamAndReturnMissing_inGoogModule() {
+    String src =
+        lines(
+            "goog.module('a');", //
+            "/**",
+            " * @override",
+            " */",
+            " function f(x) { return x; }");
+    test(srcs(src), warning(MISSING_RETURN_JSDOC), warning(MISSING_PARAMETER_JSDOC));
+  }
+
+  @Test
+  public void testMissingOverrideTypes_bothParamAndReturnMissing_inGoogModule_inFunction() {
+    String src =
+        lines(
+            "goog.module('a');", //
+            "/** Module local function having a JSDoc */",
+            "function foo() {",
+            "  /**",
+            "   * @override",
+            "   */",
+            "   function f(x) { return x; }",
+            "}");
+
+    test(srcs(src), warning(MISSING_RETURN_JSDOC), warning(MISSING_PARAMETER_JSDOC));
+  }
+
+  @Test
   public void testMissingReturn_var_noWarning() {
     testSame("/** @param {number} x */ var f = function(x) {}");
     testSame("/** @constructor */ var f = function() {}");
