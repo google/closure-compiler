@@ -235,7 +235,7 @@ You can trigger the build process easily with package.json scripts or by calling
 Bazel manually.
 
 ```bash
-# bazelisk build //:compiler_shaded_deploy.jar
+# bazelisk build //:compiler_unshaded_deploy.jar
 yarn build
 
 # bazelisk build :all
