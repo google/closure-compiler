@@ -39,11 +39,11 @@ public class NodeTraversal {
   private final AbstractCompiler compiler;
   private final Callback callback;
 
-  /** Contains the current node*/
-  private Node curNode;
+  /** Contains the current node */
+  private Node currentNode;
 
   /** Contains the enclosing SCRIPT node if there is one, otherwise null. */
-  private Node curScript;
+  private Node currentScript;
 
   /** The change scope for the current node being visiteds */
   private Node currentChangeScope;
@@ -383,14 +383,15 @@ public class NodeTraversal {
     // line number of the code that caused it.
     String message = unexpectedException.getMessage();
 
-    // TODO(user): It is possible to get more information if curNode or
+    // TODO(user): It is possible to get more information if currentNode or
     // its parent is missing. We still have the scope stack in which it is still
     // very useful to find out at least which function caused the exception.
     if (inputId != null) {
       message =
-          unexpectedException.getMessage() + "\n"
-          + formatNodeContext("Node", curNode)
-          + (curNode == null ?  "" : formatNodeContext("Parent", curNode.getParent()));
+          unexpectedException.getMessage()
+              + "\n"
+              + formatNodeContext("Node", currentNode)
+              + (currentNode == null ? "" : formatNodeContext("Parent", currentNode.getParent()));
     }
     compiler.throwInternalError(message, unexpectedException);
   }
@@ -409,7 +410,7 @@ public class NodeTraversal {
   public void traverse(Node root) {
     try {
       initTraversal(root);
-      curNode = root;
+      currentNode = root;
       pushScope(root);
       // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(root, null);
@@ -437,7 +438,7 @@ public class NodeTraversal {
       checkNotNull(scopeRoot);
 
       initTraversal(scopeRoot);
-      curNode = scopeRoot;
+      currentNode = scopeRoot;
       pushScope(scopeRoot);
 
       traverseBranch(externs, scopeRoot);
@@ -483,7 +484,7 @@ public class NodeTraversal {
     checkState(s.isGlobal() || s.isModuleScope(), s);
     try {
       initTraversal(root);
-      curNode = root;
+      currentNode = root;
       pushScope(s);
       traverseBranch(root, null);
       popScope();
@@ -500,7 +501,7 @@ public class NodeTraversal {
   void traverseAtScope(AbstractScope<?, ?> s) {
     Node n = s.getRootNode();
     initTraversal(n);
-    curNode = n;
+    currentNode = n;
     Deque<AbstractScope<?, ?>> parentScopes = new ArrayDeque<>();
     AbstractScope<?, ?> temp = s.getParent();
     while (temp != null) {
@@ -587,7 +588,7 @@ public class NodeTraversal {
   private void traverseScopeRoot(Node scopeRoot) {
     try {
       initTraversal(scopeRoot);
-      curNode = scopeRoot;
+      currentNode = scopeRoot;
       initScopeRoots(scopeRoot.getParent());
       traverseBranch(scopeRoot, scopeRoot.getParent());
     } catch (Error | Exception unexpectedException) {
@@ -701,9 +702,9 @@ public class NodeTraversal {
     checkState(node.isFunction(), node);
     checkNotNull(scope.getRootNode());
     initTraversal(node);
-    curNode = node.getParent();
+    currentNode = node.getParent();
     pushScope(scope, true /* quietly */);
-    traverseBranch(node, curNode);
+    traverseBranch(node, currentNode);
     popScope(true /* quietly */);
   }
 
@@ -721,7 +722,7 @@ public class NodeTraversal {
     checkNotNull(parent);
     initTraversal(node);
     if (refinedScope != null && getAbstractScope() != refinedScope) {
-      curNode = node;
+      currentNode = node;
       pushScope(refinedScope);
       traverseBranch(node, parent);
       popScope();
@@ -739,7 +740,7 @@ public class NodeTraversal {
    * number is retrieved lazily as a running time optimization.
    */
   public int getLineNumber() {
-    Node cur = curNode;
+    Node cur = currentNode;
     while (cur != null) {
       int line = cur.getLineno();
       if (line >= 0) {
@@ -755,7 +756,7 @@ public class NodeTraversal {
    * number is retrieved lazily as a running time optimization.
    */
   public int getCharno() {
-    Node cur = curNode;
+    Node cur = currentNode;
     while (cur != null) {
       int line = cur.getCharno();
       if (line >= 0) {
@@ -795,7 +796,7 @@ public class NodeTraversal {
 
   /** Returns the node currently being traversed. */
   public Node getCurrentNode() {
-    return curNode;
+    return currentNode;
   }
 
   /**
@@ -836,11 +837,11 @@ public class NodeTraversal {
     setChangeScope(n);
     setInputId(n.getInputId(), getSourceName(n));
 
-    curNode = n;
-    curScript = n;
+    currentNode = n;
+    currentScript = n;
     if (callback.shouldTraverse(this, n, parent)) {
       traverseChildren(n);
-      curNode = n;
+      currentNode = n;
       callback.visit(this, n, parent);
     }
     setChangeScope(null);
@@ -849,10 +850,10 @@ public class NodeTraversal {
   private void handleFunction(Node n, Node parent) {
     Node changeScope = this.currentChangeScope;
     setChangeScope(n);
-    curNode = n;
+    currentNode = n;
     if (callback.shouldTraverse(this, n, parent)) {
       traverseFunction(n, parent);
-      curNode = n;
+      currentNode = n;
       callback.visit(this, n, parent);
     }
     setChangeScope(changeScope);
@@ -861,9 +862,9 @@ public class NodeTraversal {
   /** Traverses a module. */
   private void handleModule(Node n, Node parent) {
     pushScope(n);
-    curNode = n;
+    currentNode = n;
     if (callback.shouldTraverse(this, n, parent)) {
-      curNode = n;
+      currentNode = n;
       traverseChildren(n);
       callback.visit(this, n, parent);
     }
@@ -892,7 +893,7 @@ public class NodeTraversal {
         break;
     }
 
-    curNode = n;
+    currentNode = n;
     if (!callback.shouldTraverse(this, n, parent)) {
       return;
     }
@@ -905,7 +906,7 @@ public class NodeTraversal {
       traverseChildren(n);
     }
 
-    curNode = n;
+    currentNode = n;
     callback.visit(this, n, parent);
   }
 
@@ -928,7 +929,7 @@ public class NodeTraversal {
       traverseBranch(fnName, n);
     }
 
-    curNode = n;
+    currentNode = n;
     pushScope(n);
 
     if (!isFunctionDeclaration) {
@@ -959,7 +960,7 @@ public class NodeTraversal {
    * last, body, child) before visiting the name (first child) or body (last child).
    */
   private void handleClass(Node n, Node parent) {
-    this.curNode = n;
+    this.currentNode = n;
     if (!callback.shouldTraverse(this, n, parent)) {
       return;
     }
@@ -985,7 +986,7 @@ public class NodeTraversal {
       traverseBranch(className, n);
     }
 
-    curNode = n;
+    currentNode = n;
     pushScope(n);
 
     if (isClassExpression) {
@@ -999,13 +1000,13 @@ public class NodeTraversal {
 
     popScope();
 
-    this.curNode = n;
+    this.currentNode = n;
     callback.visit(this, n, parent);
   }
 
   /** Traverse class members, excluding keys of computed props. */
   private void handleClassMembers(Node n, Node parent) {
-    this.curNode = n;
+    this.currentNode = n;
     if (!callback.shouldTraverse(this, n, parent)) {
       return;
     }
@@ -1013,10 +1014,10 @@ public class NodeTraversal {
     for (Node child = n.getFirstChild(); child != null;) {
       Node next = child.getNext(); // see traverseChildren
       if (child.isComputedProp()) {
-        curNode = n;
+        currentNode = n;
         if (callback.shouldTraverse(this, child, n)) {
           traverseBranch(child.getLastChild(), child);
-          curNode = n;
+          currentNode = n;
           callback.visit(this, child, n);
         }
       } else {
@@ -1025,7 +1026,7 @@ public class NodeTraversal {
       child = next;
     }
 
-    this.curNode = n;
+    this.currentNode = n;
     callback.visit(this, n, parent);
   }
 
@@ -1056,7 +1057,7 @@ public class NodeTraversal {
 
   /** Creates a new scope (e.g. when entering a function). */
   private void pushScope(Node node) {
-    checkNotNull(curNode);
+    checkNotNull(currentNode);
     checkNotNull(node);
     scopeRoots.add(node);
     recordScopeRoot(node);
@@ -1075,7 +1076,7 @@ public class NodeTraversal {
    * @param quietly Don't fire an enterScope callback.
    */
   private void pushScope(AbstractScope<?, ?> s, boolean quietly) {
-    checkNotNull(curNode);
+    checkNotNull(currentNode);
     scopes.push(s);
     recordScopeRoot(s.getRootNode());
     if (!quietly && scopeCallback != null) {
@@ -1329,7 +1330,7 @@ public class NodeTraversal {
    */
   @Nullable
   Node getCurrentScript() {
-    return curScript;
+    return currentScript;
   }
 
   /**
@@ -1358,7 +1359,7 @@ public class NodeTraversal {
     } else {
       setInputId(null, "");
     }
-    curScript = script;
+    currentScript = script;
   }
 
   /**
