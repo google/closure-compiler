@@ -1884,13 +1884,8 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
       level.setWrappedOutputOptimizations(options);
     }
 
-    if (flags.generateExports) {
-      options.setGenerateExports(flags.generateExports);
-    }
-
-    if (flags.exportLocalPropertyDefinitions) {
-      options.setExportLocalPropertyDefinitions(true);
-    }
+    options.setGenerateExports(flags.generateExports);
+    options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
 
     WarningLevel wLevel = flags.warningLevel;
     wLevel.setOptionsForWarningLevel(options);
