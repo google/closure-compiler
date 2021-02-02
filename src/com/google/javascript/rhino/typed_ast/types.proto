@@ -24,14 +24,10 @@ message TypePool {
 // the overhead of serializing a type.
 message TypePointer {
   // required
-  oneof value {
-    // Points to a user-defined type in a known type pool.
-    int32 pool_offset = 1;
-    // TODO(lharker): consider putting this field into Type and serializing
-    // actual Type messages for the native types, to remove the need for this
-    // oneof.
-    NativeType native_type = 2;
-  }
+  // Points to either a user-defined type in a known type pool or a NativeType.
+  // If the offset is < # NativeTypes, points to the corresponding NativeType,
+  // otherwise to the type pool subtract # Native Types
+  int32 pool_offset = 1;
 
   // Optional, doesn't contribute to type equality
   DebugInfo debug_info = 3;
@@ -88,6 +84,13 @@ message TypeProto {
 /*
  * Types that are built-in to a JavaScript engine and other types that occur
  * very commonly in a JS program.
+ *
+ * To reference a NativeType in a TypePointer, create a TypePointer whose pool
+ * offset equals the numeric value of the NativeType.
+ *
+ * IMPORTANT: to simplify the NativeType => TypePointer mapping, the compiler
+ * requires that the numeric values of this enum are sequential. Do not skip
+ * numbers. This is also checked inside jscomp.serialization.JSTypeSerializer.
  */
 enum NativeType {
   // Type-system only type: The Closure '*' and '?', or TS 'any' and 'unknown'
@@ -101,18 +104,18 @@ enum NativeType {
   NUMBER_TYPE = 3;
   // Optimizations treat null and void identically
   NULL_OR_VOID_TYPE = 4;
-  SYMBOL_TYPE = 6;
-  BIGINT_TYPE = 7;
+  SYMBOL_TYPE = 5;
+  BIGINT_TYPE = 6;
 
   // Top object type (supertype of all objects and invalidating)
-  TOP_OBJECT = 8;
+  TOP_OBJECT = 7;
 
   // Boxed scalars
-  BOOLEAN_OBJECT_TYPE = 9;
-  STRING_OBJECT_TYPE = 10;
-  NUMBER_OBJECT_TYPE = 11;
-  SYMBOL_OBJECT_TYPE = 12;
-  BIGINT_OBJECT_TYPE = 13;
+  BOOLEAN_OBJECT_TYPE = 8;
+  STRING_OBJECT_TYPE = 9;
+  NUMBER_OBJECT_TYPE = 10;
+  SYMBOL_OBJECT_TYPE = 11;
+  BIGINT_OBJECT_TYPE = 12;
 }
 
 // Used for testing only and possibly only temporary. Wraps type pools from

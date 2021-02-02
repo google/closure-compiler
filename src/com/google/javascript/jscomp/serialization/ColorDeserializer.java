@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.serialization;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -47,6 +46,7 @@ import java.util.function.Function;
 public final class ColorDeserializer {
   private final ImmutableList<Color> colorPool;
   private final ColorRegistry colorRegistry;
+  private final TypePool typePool;
 
   /** Error emitted when the deserializer sees a serialized type it cannot support deserialize */
   public static final class InvalidSerializedFormatException extends RuntimeException {
@@ -55,9 +55,11 @@ public final class ColorDeserializer {
     }
   }
 
-  private ColorDeserializer(ImmutableList<Color> colorPool, ColorRegistry colorRegistry) {
+  private ColorDeserializer(
+      ImmutableList<Color> colorPool, ColorRegistry colorRegistry, TypePool typePool) {
     this.colorPool = colorPool;
     this.colorRegistry = colorRegistry;
+    this.typePool = typePool;
   }
 
   public ColorRegistry getRegistry() {
@@ -76,12 +78,12 @@ public final class ColorDeserializer {
     for (SubtypingEdge edge : typePool.getDisambiguationEdgesList()) {
       TypePointer subtype = edge.getSubtype();
       TypePointer supertype = edge.getSupertype();
-      if (subtype.getValueCase() != TypePointer.ValueCase.POOL_OFFSET
-          || supertype.getValueCase() != TypePointer.ValueCase.POOL_OFFSET) {
-        throw new InvalidSerializedFormatException(
-            "Subtyping only supported for pool offsets, found " + subtype + " , " + supertype);
-      }
-      disambiguationEdges.put(subtype.getPoolOffset(), supertype);
+      validatePointer(subtype, typePool);
+      validatePointer(supertype, typePool);
+      // Make the offset correspond to the actual list of type protos and exclude native types, as
+      // native types are hardcoded in the ColorRegistry.
+      disambiguationEdges.put(
+          subtype.getPoolOffset() - JSTypeSerializer.NATIVE_POOL_SIZE, supertype);
     }
 
     ColorRegistry colorRegistry =
@@ -102,7 +104,7 @@ public final class ColorDeserializer {
 
     ImmutableList<Color> colorPool =
         new ColorPoolBuilder(typePool, disambiguationEdges.build(), nativeColors).build();
-    return new ColorDeserializer(colorPool, colorRegistry);
+    return new ColorDeserializer(colorPool, colorRegistry, typePool);
   }
 
   /**
@@ -110,10 +112,11 @@ public final class ColorDeserializer {
    * TypePool}.
    */
   private static final class ColorPoolBuilder {
+    // the size of the color pool corersponds to the TypePool.getTypeList() size
     private final ArrayList<Color> colorPool; // filled in as we go. initially all null
     // to avoid infinite recursion on types in cycles
     private final Set<TypeProto> currentlyDeserializing = new LinkedHashSet<>();
-    // keys are indices into the type pool and values are pointers to its supertypes
+    // keys are indices into the type proto list and values are pointers to its supertypes
     private final ImmutableMultimap<Integer, TypePointer> disambiguationEdges;
     private final TypePool typePool;
     private final ImmutableMap<NativeType, Color> nativeToColor;
@@ -125,12 +128,12 @@ public final class ColorDeserializer {
       this.typePool = typePool;
       this.colorPool = new ArrayList<>();
       this.disambiguationEdges = disambiguationEdges;
-      colorPool.addAll(Collections.nCopies(typePool.getTypeCount(), null));
+      this.colorPool.addAll(Collections.nCopies(typePool.getTypeCount(), null));
       this.nativeToColor = nativeToColor;
     }
 
     private ImmutableList<Color> build() {
-      for (int i = 0; i < this.typePool.getTypeCount(); i++) {
+      for (int i = 0; i < this.colorPool.size(); i++) {
         if (this.colorPool.get(i) == null) {
           this.deserializeTypeByOffset(i);
         }
@@ -142,9 +145,13 @@ public final class ColorDeserializer {
     /**
      * Given an index into the type pool, creating its corresponding color if not already
      * deserialized.
+     *
+     * <p>Note: this index must correspond to the actual type proto list, so slots 0-N are /not/
+     * reserved for the native types.
      */
     private void deserializeTypeByOffset(int i) {
       Color color = deserializeType(i, typePool.getTypeList().get(i));
+
       colorPool.set(i, color);
     }
 
@@ -225,27 +232,16 @@ public final class ColorDeserializer {
     }
 
     private Color pointerToColor(TypePointer typePointer) {
-      switch (typePointer.getValueCase()) {
-        case NATIVE_TYPE:
-          return this.nativeToColor.get(typePointer.getNativeType());
-        case POOL_OFFSET:
-          int poolOffset = typePointer.getPoolOffset();
-          if (poolOffset < 0 || poolOffset >= this.colorPool.size()) {
-            throw new InvalidSerializedFormatException(
-                "TypeProto pointer has out-of-bounds pool offset: "
-                    + typePointer
-                    + " for pool size "
-                    + this.colorPool.size());
-          }
-          if (this.colorPool.get(typePointer.getPoolOffset()) == null) {
-            this.deserializeTypeByOffset(poolOffset);
-          }
-          return this.colorPool.get(poolOffset);
-        case VALUE_NOT_SET:
-          throw new InvalidSerializedFormatException(
-              "Cannot dereference TypePointer " + typePointer);
+      validatePointer(typePointer, this.typePool);
+      int poolOffset = typePointer.getPoolOffset();
+      if (poolOffset < JSTypeSerializer.NATIVE_POOL_SIZE) {
+        return this.nativeToColor.get(NativeType.forNumber(poolOffset));
       }
-      throw new AssertionError();
+      int adjustedOffset = poolOffset - JSTypeSerializer.NATIVE_POOL_SIZE;
+      if (this.colorPool.get(adjustedOffset) == null) {
+        this.deserializeTypeByOffset(adjustedOffset);
+      }
+      return this.colorPool.get(adjustedOffset);
     }
   }
 
@@ -289,23 +285,26 @@ public final class ColorDeserializer {
   }
 
   public Color pointerToColor(TypePointer typePointer) {
-    switch (typePointer.getValueCase()) {
-      case NATIVE_TYPE:
-        NativeColorId nativeColorId = nativeTypeToColor(typePointer.getNativeType());
-        return this.colorRegistry.get(nativeColorId);
-      case POOL_OFFSET:
-        int poolOffset = typePointer.getPoolOffset();
-        if (poolOffset < 0 || poolOffset >= this.colorPool.size()) {
-          throw new InvalidSerializedFormatException(
-              "TypeProto pointer has out-of-bounds pool offset: "
-                  + typePointer
-                  + " for pool size "
-                  + this.colorPool.size());
-        }
-        return checkNotNull(this.colorPool.get(poolOffset));
-      case VALUE_NOT_SET:
-        throw new InvalidSerializedFormatException("Cannot dereference TypePointer " + typePointer);
+    validatePointer(typePointer, this.typePool);
+    int poolOffset = typePointer.getPoolOffset();
+    if (poolOffset < JSTypeSerializer.NATIVE_POOL_SIZE) {
+      return this.colorRegistry.get(nativeTypeToColor(NativeType.forNumber(poolOffset)));
     }
-    throw new AssertionError();
+    int adjustedOffset = poolOffset - JSTypeSerializer.NATIVE_POOL_SIZE;
+    return this.colorPool.get(adjustedOffset);
+  }
+
+  /** Validates that the given typePointer is valid according to the given pool of types */
+  private static void validatePointer(TypePointer typePointer, TypePool typePool) {
+    int poolOffset = typePointer.getPoolOffset();
+    // Account for the first N type pointer offsets being reserved for the native types.
+    if (poolOffset < 0
+        || poolOffset >= typePool.getTypeCount() + JSTypeSerializer.NATIVE_POOL_SIZE) {
+      throw new InvalidSerializedFormatException(
+          "TypeProto pointer has out-of-bounds pool offset: "
+              + typePointer
+              + " for pool size "
+              + typePool.getTypeCount());
+    }
   }
 }

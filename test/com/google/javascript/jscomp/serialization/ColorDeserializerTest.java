@@ -145,9 +145,7 @@ public class ColorDeserializerTest {
             .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Bar")))
             // Bar is a subtype of Foo
             .addDisambiguationEdges(
-                SubtypingEdge.newBuilder()
-                    .setSubtype(TypePointer.newBuilder().setPoolOffset(1))
-                    .setSupertype(TypePointer.newBuilder().setPoolOffset(0)))
+                SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(0)))
             .build();
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
 
@@ -165,14 +163,10 @@ public class ColorDeserializerTest {
             .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Baz")))
             // Bar is a subtype of Foo
             .addDisambiguationEdges(
-                SubtypingEdge.newBuilder()
-                    .setSubtype(TypePointer.newBuilder().setPoolOffset(1))
-                    .setSupertype(TypePointer.newBuilder().setPoolOffset(0)))
+                SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(0)))
             // Bar is also a subtype of Baz
             .addDisambiguationEdges(
-                SubtypingEdge.newBuilder()
-                    .setSubtype(TypePointer.newBuilder().setPoolOffset(1))
-                    .setSupertype(TypePointer.newBuilder().setPoolOffset(2)))
+                SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(2)))
             .build();
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
 
@@ -188,29 +182,11 @@ public class ColorDeserializerTest {
         TypePool.newBuilder()
             .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
             .addDisambiguationEdges(
-                SubtypingEdge.newBuilder()
-                    .setSubtype(TypePointer.newBuilder().setPoolOffset(0))
-                    .setSupertype(TypePointer.newBuilder().setPoolOffset(1)))
+                SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
             .build();
     assertThrows(
         InvalidSerializedFormatException.class,
         () -> ColorDeserializer.buildFromTypePool(typePool).pointerToColor(poolPointer(0)));
-  }
-
-  @Test
-  public void throwsErrorIfDisambiguationEdgesContainsNativeType() {
-    // Disambiguation doesn't care about supertyping/subtyping for native types. It's assumed that
-    // every type is a subtype of NativeType.UNKNOWN_TYPE.
-    TypePool typePool =
-        TypePool.newBuilder()
-            .addDisambiguationEdges(
-                SubtypingEdge.newBuilder()
-                    .setSubtype(TypePointer.newBuilder().setNativeType(NativeType.UNKNOWN_TYPE))
-                    .setSupertype(TypePointer.newBuilder().setNativeType(NativeType.NUMBER_TYPE)))
-            .build();
-    assertThrows(
-        InvalidSerializedFormatException.class,
-        () -> ColorDeserializer.buildFromTypePool(typePool));
   }
 
   @Test
@@ -290,8 +266,7 @@ public class ColorDeserializerTest {
                         UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(
-                                TypePointer.newBuilder()
-                                    .setPoolOffset(1)
+                                poolPointerBuilder(1)
                                     .setDebugInfo(
                                         TypePointer.DebugInfo.newBuilder().setDescription("U1")))))
             .addType(
@@ -300,8 +275,7 @@ public class ColorDeserializerTest {
                         UnionTypeProto.newBuilder()
                             .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
                             .addUnionMember(
-                                TypePointer.newBuilder()
-                                    .setPoolOffset(0)
+                                poolPointerBuilder(0)
                                     .setDebugInfo(
                                         TypePointer.DebugInfo.newBuilder().setDescription("U0")))))
             .build();
@@ -312,26 +286,6 @@ public class ColorDeserializerTest {
     assertThrows(
         InvalidSerializedFormatException.class,
         () -> ColorDeserializer.buildFromTypePool(typePool).pointerToColor(poolPointer(0)));
-  }
-
-  @Test
-  public void throwsExceptionOnTypePointerWithoutKind() {
-    ColorDeserializer deserializer =
-        ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
-
-    assertThrows(
-        InvalidSerializedFormatException.class,
-        () -> deserializer.pointerToColor(TypePointer.getDefaultInstance()));
-  }
-
-  @Test
-  public void throwsExceptionOnUnrecognizedNativeType() {
-    ColorDeserializer deserializer =
-        ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
-
-    assertThrows(
-        InvalidSerializedFormatException.class,
-        () -> deserializer.pointerToColor(TypePointer.newBuilder().setNativeTypeValue(-1).build()));
   }
 
   @Test
@@ -382,10 +336,14 @@ public class ColorDeserializerTest {
   }
 
   private static TypePointer nativeTypePointer(NativeType nativeType) {
-    return TypePointer.newBuilder().setNativeType(nativeType).build();
+    return TypePointer.newBuilder().setPoolOffset(nativeType.getNumber()).build();
   }
 
   private static TypePointer poolPointer(int offset) {
-    return TypePointer.newBuilder().setPoolOffset(offset).build();
+    return poolPointerBuilder(offset).build();
+  }
+
+  private static TypePointer.Builder poolPointerBuilder(int offset) {
+    return TypePointer.newBuilder().setPoolOffset(offset + JSTypeSerializer.NATIVE_POOL_SIZE);
   }
 }

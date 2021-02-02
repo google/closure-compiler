@@ -135,9 +135,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    // (Note that Object doesn't appear. This is because it's deserialized to UNKNOWN. If we begin
-    // to deserialize Object to an actual known color, then this test will require an update.)
-    this.assertThatResultAsTable().containsCell("UNKNOWN", "IFoo.prototype", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "IFoo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("IFoo.prototype", "IFoo", CAN_HOLD);
   }
 
@@ -158,7 +156,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("UNKNOWN", "Foo.prototype", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "Foo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
   }
 
@@ -180,7 +178,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("UNKNOWN", "Foo.prototype", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "Foo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo", "Bar.prototype", CAN_HOLD);
   }
@@ -229,7 +227,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("UNKNOWN", "Foo.prototype", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "Foo.prototype", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("Foo.prototype", "Foo", CAN_HOLD);
   }
 
@@ -273,7 +271,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
     this.result = builder.build();
 
     // Then
-    this.assertThatResultAsTable().containsCell("UNKNOWN", "(typeof Foo0)", ALGEBRAIC);
+    this.assertThatResultAsTable().containsCell("TOP_OBJECT", "(typeof Foo0)", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("(typeof Foo0)", "(typeof Foo1)", CAN_HOLD);
     this.assertThatResultAsTable().containsCell("(typeof Foo1)", "(typeof Foo2)", CAN_HOLD);
   }
