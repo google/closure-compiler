@@ -1760,6 +1760,9 @@ HTMLElement.prototype.dropzone;
 HTMLElement.prototype.hidden;
 
 /** @type {boolean} */
+HTMLElement.prototype.inert;
+
+/** @type {boolean} */
 HTMLElement.prototype.spellcheck;
 
 /**
