@@ -24,7 +24,7 @@ message ConformanceConfig {
 }
 
 // A specification of code requirements
-// NEXT ID: 17
+// NEXT ID: 20
 message Requirement {
   // Required: The message to report when a requirement is violated. This should
   // reference a document describing the reasoning for the requirement
@@ -38,6 +38,14 @@ message Requirement {
   // Optional: A list of source paths regexs that are exempt from the
   // requirement.
   repeated string whitelist_regexp = 3;
+
+  // Optional: A list of source path prefixes that are exempt from the
+  // requirement.
+  repeated string allowlist = 17;
+
+  // Optional: A list of source path prefixes that are exempt from the
+  // requirement.
+  repeated string allowlist_regexp = 18;
 
   message WhitelistEntry {
     enum Reason {
@@ -67,12 +75,14 @@ message Requirement {
 
   repeated WhitelistEntry whitelist_entry = 14;
 
+  repeated WhitelistEntry allowlist_entry = 19;
+
   // Optional: A list of source paths that will be checked for the requirement
-  // (the opposite of whitelist).
+  // (the opposite of allowlist/whitelist).
   repeated string only_apply_to = 4;
 
   // Optional: A list of source path regexps that will be checked for
-  // the requirement (the opposite of whitelist_regexp).
+  // the requirement (the opposite of allowlist_regexp/whitelist_regexp).
   repeated string only_apply_to_regexp = 5;
 
   // A classification of the requirement and how it is enforced.
@@ -181,13 +191,13 @@ message Requirement {
   optional Type type = 6;
 
   // The value banned, optional for "custom" requirements.  Some custom
-  // requirements repurpose this for different purposes, such as for whitelists
-  // of types.
+  // requirements repurpose this for different purposes, such as for allowlists
+  // (aka. whitelists) of types.
   repeated string value = 7;
 
   // Whether to allow subconfigs to extend the "value" field.  This does not
-  // make sense for banning values, but when the value is used as a whitelist,
-  // it becomes important.
+  // make sense for banning values, but when the value is used as an allowlist
+  // (aka whitelist), it becomes important.
   optional bool allow_extending_value = 15;
 
   // Strategy to use for matching types in the value parameter (e.g. for
@@ -202,9 +212,10 @@ message Requirement {
   // through 'extends'. An example of ID is 'closure:innerHtml'.
   optional string rule_id = 9;
 
-  // Allows extending whitelists of rules with the specified rule_id. If this
-  // field is specified then all fields except whitelist, whitelist_regexp,
-  // only_apply_to and only_apply_to_regexp are ignored.
+  // Allows extending allowlists/whitelists of rules with the specified rule_id.
+  // If this field is specified then all fields except allowlist/whitelist,
+  // allowlist_regexp/whitelist_regexp, only_apply_to and only_apply_to_regexp
+  // are ignored.
   optional string extends = 10;
 
   // Whether to report possible violations when type information is not exact.

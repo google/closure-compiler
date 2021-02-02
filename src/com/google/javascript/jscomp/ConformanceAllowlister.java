@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.Requirement.Severity;
 import com.google.javascript.rhino.Node;
 
-/** Creates or updates conformance whitelist entries. */
+/** Creates or updates conformance allowlist/whitelist entries. */
 @GwtIncompatible("Conformance")
 public class ConformanceAllowlister {
   private ConformanceAllowlister() {}
@@ -46,11 +46,13 @@ public class ConformanceAllowlister {
   public static ImmutableList<JSError> getConformanceErrors(
       Compiler compiler, Node externs, Node ast, Requirement requirement) {
     Requirement cleanedRequirement =
-        requirement
-            .toBuilder()
+        requirement.toBuilder()
             .clearWhitelist()
+            .clearAllowlist()
             .clearWhitelistRegexp()
+            .clearAllowlistRegexp()
             .clearWhitelistEntry()
+            .clearAllowlistEntry()
             .setSeverity(Severity.ERROR)
             .build(); // So we only have one type of error.
     ConformanceConfig cleanedConfig =

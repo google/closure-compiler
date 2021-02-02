@@ -62,7 +62,7 @@ public class ConformanceAllowlisterTest {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.title = 'test';")));
 
-    Requirement requirement =
+    Requirement whitelistRequirement =
         Requirement.newBuilder()
             .setType(Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
@@ -70,7 +70,17 @@ public class ConformanceAllowlisterTest {
             .addWhitelist("/entry.js")
             .build();
 
-    assertThat(testConformanceAllowlister(sources.build(), requirement)).isEmpty();
+    assertThat(testConformanceAllowlister(sources.build(), whitelistRequirement)).isEmpty();
+
+    Requirement allowlistRequirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addAllowlist("/entry.js")
+            .build();
+
+    assertThat(testConformanceAllowlister(sources.build(), allowlistRequirement)).isEmpty();
   }
 
   @Test
@@ -82,7 +92,7 @@ public class ConformanceAllowlisterTest {
             "/entry.js",
             lines("var foo = document.getElementById('name');", "foo.title = 'test';")));
 
-    Requirement requirement =
+    Requirement whitelistRequirement =
         Requirement.newBuilder()
             .setType(Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
@@ -90,7 +100,18 @@ public class ConformanceAllowlisterTest {
             .addWhitelist("/entry.js")
             .build();
 
-    assertThat(testConformanceAllowlister(sources.build(), requirement))
+    assertThat(testConformanceAllowlister(sources.build(), whitelistRequirement))
+        .containsExactly("/entry.js", 2);
+
+    Requirement allowlistRequirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.title")
+            .addAllowlist("/entry.js")
+            .build();
+
+    assertThat(testConformanceAllowlister(sources.build(), allowlistRequirement))
         .containsExactly("/entry.js", 2);
   }
 
@@ -106,7 +127,7 @@ public class ConformanceAllowlisterTest {
             "/test/entry.js",
             lines("var foo = document.getElementById('name');", "foo.innerHTML = 'test';")));
 
-    Requirement requirement =
+    Requirement whitelistRequirement =
         Requirement.newBuilder()
             .setType(Type.BANNED_PROPERTY)
             .setErrorMessage("Lorem Ipsum")
@@ -114,7 +135,18 @@ public class ConformanceAllowlisterTest {
             .addWhitelist("/test/")
             .build();
 
-    assertThat(testConformanceAllowlister(sources.build(), requirement))
+    assertThat(testConformanceAllowlister(sources.build(), whitelistRequirement))
+        .containsExactly("/test/entry.js", 2);
+
+    Requirement allowlistRequirement =
+        Requirement.newBuilder()
+            .setType(Type.BANNED_PROPERTY)
+            .setErrorMessage("Lorem Ipsum")
+            .addValue("Object.prototype.innerHTML")
+            .addAllowlist("/test/")
+            .build();
+
+    assertThat(testConformanceAllowlister(sources.build(), allowlistRequirement))
         .containsExactly("/test/entry.js", 2);
   }
 

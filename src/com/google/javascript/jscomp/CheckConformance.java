@@ -44,14 +44,10 @@ public final class CheckConformance implements Callback, CompilerPass {
       DiagnosticType.error("JSC_CONFORMANCE_ERROR", "Violation: {0}{1}{2}");
 
   static final DiagnosticType CONFORMANCE_VIOLATION =
-      DiagnosticType.warning(
-          "JSC_CONFORMANCE_VIOLATION",
-          "Violation: {0}{1}{2}");
+      DiagnosticType.warning("JSC_CONFORMANCE_VIOLATION", "Violation: {0}{1}{2}");
 
   static final DiagnosticType CONFORMANCE_POSSIBLE_VIOLATION =
-      DiagnosticType.warning(
-          "JSC_CONFORMANCE_POSSIBLE_VIOLATION",
-          "Possible violation: {0}{1}{2}");
+      DiagnosticType.warning("JSC_CONFORMANCE_POSSIBLE_VIOLATION", "Possible violation: {0}{1}{2}");
 
   static final DiagnosticType INVALID_REQUIREMENT_SPEC =
       DiagnosticType.error(
@@ -66,12 +62,8 @@ public final class CheckConformance implements Callback, CompilerPass {
     void check(NodeTraversal t, Node n);
   }
 
-  /**
-   * @param configs The rules to check.
-   */
-  CheckConformance(
-      AbstractCompiler compiler,
-      ImmutableList<ConformanceConfig> configs) {
+  /** @param configs The rules to check. */
+  CheckConformance(AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
     this.compiler = compiler;
     // Initialize the map of functions to inspect for renaming candidates.
     this.rules = initRules(compiler, configs);
@@ -98,10 +90,7 @@ public final class CheckConformance implements Callback, CompilerPass {
     }
   }
 
-  /**
-   * Build the data structures need by this pass from the provided
-   * configurations.
-   */
+  /** Build the data structures need by this pass from the provided configurations. */
   private static ImmutableList<Rule> initRules(
       AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
     ImmutableList.Builder<Rule> builder = ImmutableList.builder();
@@ -123,14 +112,16 @@ public final class CheckConformance implements Callback, CompilerPass {
           "only_apply_to_regexp",
           "whitelist",
           "whitelist_regexp",
+          "allowlist",
+          "allowlist_regexp",
           "value");
 
   /**
-   * Gets requirements from all configs. Merges whitelists of requirements with 'extends' equal to
-   * 'rule_id' of other rule.
+   * Gets requirements from all configs. Merges allowlists/whitelists of requirements with 'extends'
+   * equal to 'rule_id' of other rule.
    */
-  static List<Requirement> mergeRequirements(AbstractCompiler compiler,
-      List<ConformanceConfig> configs) {
+  static List<Requirement> mergeRequirements(
+      AbstractCompiler compiler, List<ConformanceConfig> configs) {
     List<Requirement.Builder> builders = new ArrayList<>();
     Map<String, Requirement.Builder> extendable = new HashMap<>();
     for (ConformanceConfig config : configs) {
@@ -142,7 +133,9 @@ public final class CheckConformance implements Callback, CompilerPass {
             continue;
           }
           if (extendable.containsKey(requirement.getRuleId())) {
-            reportInvalidRequirement(compiler, requirement,
+            reportInvalidRequirement(
+                compiler,
+                requirement,
                 "two requirements with the same rule_id: " + requirement.getRuleId());
             continue;
           }
@@ -159,14 +152,14 @@ public final class CheckConformance implements Callback, CompilerPass {
         if (requirement.hasExtends()) {
           Requirement.Builder existing = extendable.get(requirement.getExtends());
           if (existing == null) {
-            reportInvalidRequirement(compiler, requirement,
-                "no requirement with rule_id: " + requirement.getExtends());
+            reportInvalidRequirement(
+                compiler, requirement, "no requirement with rule_id: " + requirement.getExtends());
             continue;
           }
           for (Descriptors.FieldDescriptor field : requirement.getAllFields().keySet()) {
             if (!EXTENDABLE_FIELDS.contains(field.getName())) {
-              reportInvalidRequirement(compiler, requirement,
-                  "extending rules allow only " + EXTENDABLE_FIELDS);
+              reportInvalidRequirement(
+                  compiler, requirement, "extending rules allow only " + EXTENDABLE_FIELDS);
             }
           }
           if (requirement.getValueCount() > 0 && !existing.getAllowExtendingValue()) {
@@ -178,9 +171,12 @@ public final class CheckConformance implements Callback, CompilerPass {
           existing
               .addAllWhitelist(requirement.getWhitelistList())
               .addAllWhitelistRegexp(requirement.getWhitelistRegexpList())
+              .addAllAllowlist(requirement.getAllowlistList())
+              .addAllAllowlistRegexp(requirement.getAllowlistRegexpList())
               .addAllOnlyApplyTo(requirement.getOnlyApplyToList())
               .addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList())
               .addAllWhitelistEntry(requirement.getWhitelistEntryList())
+              .addAllAllowlistEntry(requirement.getAllowlistEntryList())
               .addAllValue(requirement.getValueList())
               .addAllConfigFile(requirement.getConfigFileList());
         }
@@ -199,8 +195,14 @@ public final class CheckConformance implements Callback, CompilerPass {
     final Set<String> list1 = ImmutableSet.copyOf(requirement.getWhitelistList());
     requirement.clearWhitelist().addAllWhitelist(list1);
 
+    final Set<String> allowlist = ImmutableSet.copyOf(requirement.getAllowlistList());
+    requirement.clearAllowlist().addAllAllowlist(allowlist);
+
     final Set<String> list2 = ImmutableSet.copyOf(requirement.getWhitelistRegexpList());
     requirement.clearWhitelistRegexp().addAllWhitelistRegexp(list2);
+
+    final Set<String> allowlistRegexp = ImmutableSet.copyOf(requirement.getAllowlistRegexpList());
+    requirement.clearAllowlistRegexp().addAllAllowlistRegexp(allowlistRegexp);
 
     final Set<String> list3 = ImmutableSet.copyOf(requirement.getOnlyApplyToList());
     requirement.clearOnlyApplyTo().addAllOnlyApplyTo(list3);
@@ -209,8 +211,7 @@ public final class CheckConformance implements Callback, CompilerPass {
     requirement.clearOnlyApplyToRegexp().addAllOnlyApplyToRegexp(list4);
   }
 
-  private static Rule initRule(
-      AbstractCompiler compiler, Requirement requirement) {
+  private static Rule initRule(AbstractCompiler compiler, Requirement requirement) {
     try {
       switch (requirement.getType()) {
         case CUSTOM:
@@ -239,11 +240,10 @@ public final class CheckConformance implements Callback, CompilerPass {
         case RESTRICTED_PROPERTY_WRITE:
           return new ConformanceRules.RestrictedPropertyWrite(compiler, requirement);
         default:
-          reportInvalidRequirement(
-              compiler, requirement, "unknown requirement type");
+          reportInvalidRequirement(compiler, requirement, "unknown requirement type");
           return null;
       }
-    } catch (InvalidRequirementSpec e){
+    } catch (InvalidRequirementSpec e) {
       reportInvalidRequirement(compiler, requirement, e.getMessage());
       return null;
     }
@@ -259,13 +259,10 @@ public final class CheckConformance implements Callback, CompilerPass {
     }
   }
 
-  /**
-   * @param requirement
-   */
+  /** @param requirement */
   private static void reportInvalidRequirement(
       AbstractCompiler compiler, Requirement requirement, String reason) {
-    compiler.report(JSError.make(INVALID_REQUIREMENT_SPEC,
-        reason,
-        TextFormat.printToString(requirement)));
+    compiler.report(
+        JSError.make(INVALID_REQUIREMENT_SPEC, reason, TextFormat.printToString(requirement)));
   }
 }
