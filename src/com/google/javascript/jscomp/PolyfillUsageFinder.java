@@ -23,6 +23,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Collection;
@@ -264,14 +265,9 @@ final class PolyfillUsageFinder {
         // no polyfill exists for this name
         return;
       }
-      if (traversal.getScope().getVar(name) != null) {
-        // This class is only supposed to traverse over actual sources, not externs,
-        // so it shouldn't see the declarations of the things being polyfilled.
-        // If we see a declaration of the name, then it is defined by the source code,
-        // and we won't count it as a reference to our polyfill.
-        return;
-      }
-      if (includeGuardedUsages.shouldInclude(isGuarded(name))) {
+
+      if (isPolyfillVisibleInScope(traversal, name)
+          && includeGuardedUsages.shouldInclude(isGuarded(name))) {
         this.polyfillConsumer.accept(PolyfillUsage.createNonExplicit(polyfill, nameNode, name));
       }
     }
@@ -347,18 +343,37 @@ final class PolyfillUsageFinder {
     } else {
       Polyfill polyfill = polyfills.statics.get(fullName);
       if (polyfill != null) {
-        // This class is only supposed to traverse over actual sources, not externs,
-        // so it shouldn't see the declarations of the things being polyfilled.
         // If we see a declaration of the name, then it is defined by the source code,
         // and we won't count it as a reference to our polyfill.
         // Checking the scope is relatively expensive, so we don't want to do it until
         // we've confirmed that this node looks like it could be a polyfill reference.
-        if (traversal.getScope().getVar(rootName) == null) {
+        if (isPolyfillVisibleInScope(traversal, rootName)) {
           return PolyfillUsage.createNonExplicit(polyfill, getPropNode, polyfill.nativeSymbol);
         }
       }
     }
     return null;
+  }
+
+  /** @return Whether the Polyfill name is visible in the current scope. */
+  private boolean isPolyfillVisibleInScope(NodeTraversal t, String globalName) {
+    // This class is only supposed to traverse over actual sources, not externs,
+    // so it shouldn't see the declarations of the things being polyfilled.
+
+    // If the AST is normalized we can avoid building the scope (which is relatively expensive)
+    // and rely on the normalization guarantee that every name in AST is unique.
+
+    // NOTE: there is an edge case that we are purposely ignoring here.  This pass expects
+    // the traverse the AST without externs, this creates a distinction between undeclared variables
+    // (externs) and symbols in the global scope (internal globals).  So then against the
+    // un-normalized AST for detecting whether to inject Polyfills, it won't inject,  if there is a
+    // global declaration of the same name.  But when removing Polyfills (which happens when the
+    // AST is normalized), it won't try to remove these same Polyfills if they were present,
+    // because the scope distinction isn't used.  This doesn't change behavior because they
+    // wouldn't have been injected in the first place.
+
+    return (compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED
+        || t.getScope().getVar(globalName) == null);
   }
 
   @Nullable
