@@ -163,7 +163,7 @@ public final class ErrorToFixMapper {
     // b = 1;
     // var c = 2;  // This is the original var statement.
     List<Node> childrenOfAddedVarStatement = new ArrayList<>();
-    for (Node n : parent.children()) {
+    for (Node n = parent.getFirstChild(); n != null; n = n.getNext()) {
       if (n == name) {
         break;
       }

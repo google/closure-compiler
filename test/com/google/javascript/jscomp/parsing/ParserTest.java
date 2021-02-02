@@ -6500,7 +6500,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
           .that(node.getLength())
           .isAtLeast(0);
 
-      for (Node child : node.children()) {
+      for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
         deque.add(child);
       }
     }

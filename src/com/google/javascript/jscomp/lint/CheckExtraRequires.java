@@ -179,7 +179,9 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
     }
     Node namedImports = defaultImport.getNext();
     if (namedImports.isImportSpecs()) {
-      for (Node importSpec : namedImports.children()) {
+      for (Node importSpec = namedImports.getFirstChild();
+          importSpec != null;
+          importSpec = importSpec.getNext()) {
         visitRequire(importSpec.getLastChild().getString(), importNode);
       }
     }
@@ -194,7 +196,9 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
       visitRequire(parent.getString(), googRequireCall);
     } else if (parent.isDestructuringLhs() && parent.getFirstChild().isObjectPattern()) {
       if (parent.getFirstChild().hasChildren()) {
-        for (Node stringKey : parent.getFirstChild().children()) {
+        for (Node stringKey = parent.getFirstChild().getFirstChild();
+            stringKey != null;
+            stringKey = stringKey.getNext()) {
           Node importName = stringKey.getFirstChild();
           if (!importName.isName()) {
             // invalid reported elsewhere

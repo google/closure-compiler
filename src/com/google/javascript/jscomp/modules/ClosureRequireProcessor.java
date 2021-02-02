@@ -149,7 +149,7 @@ final class ClosureRequireProcessor {
   private ImmutableList<Require> getAllRequiresFromDestructuring(
       Node objectPattern, String namespace) {
     ImmutableList.Builder<Require> requireBuilder = ImmutableList.builder();
-    for (Node key : objectPattern.children()) {
+    for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
       if (!key.isStringKey()) {
         // Bad code, just ignore. We warn elsewhere.
         continue;

@@ -792,14 +792,14 @@ public final class SuggestedFix {
         script = script.getFirstChild();
       }
 
-      for (Node child : script.children()) {
+      for (Node child = script.getFirstChild(); child != null; child = child.getNext()) {
         if (NodeUtil.isExprCall(child)
             && Matchers.googRequirelike(namespace).matches(child.getFirstChild(), metadata)) {
           return child;
         }
       }
 
-      for (Node child : script.children()) {
+      for (Node child = script.getFirstChild(); child != null; child = child.getNext()) {
         if (NodeUtil.isNameDeclaration(child)
             // TODO(b/139953612): respect destructured goog.requires
             && !child.getFirstChild().isDestructuringLhs()

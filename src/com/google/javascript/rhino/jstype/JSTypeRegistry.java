@@ -2248,7 +2248,9 @@ public class JSTypeRegistry implements Serializable {
     }
 
     ArrayList<JSType> templateArgs = new ArrayList<>();
-    for (Node templateNode : typeList.children()) {
+    for (Node templateNode = typeList.getFirstChild();
+        templateNode != null;
+        templateNode = templateNode.getNext()) {
       templateArgs.add(createTypeFromCommentNode(templateNode, sourceName, scope));
     }
 

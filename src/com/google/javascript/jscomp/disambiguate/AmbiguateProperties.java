@@ -429,7 +429,7 @@ public class AmbiguateProperties implements CompilerPass {
           return;
         }
 
-        for (Node key : objectLiteral.children()) {
+        for (Node key = objectLiteral.getFirstChild(); key != null; key = key.getNext()) {
           processObjectProperty(objectLiteral, key, type);
         }
       }
@@ -509,7 +509,9 @@ public class AmbiguateProperties implements CompilerPass {
           possiblePrototypes.isEmpty()
               ? colorRegistry.get(NativeColorId.UNKNOWN)
               : Color.createUnion(possiblePrototypes);
-      for (Node member : NodeUtil.getClassMembers(classNode).children()) {
+      for (Node member = NodeUtil.getClassMembers(classNode).getFirstChild();
+          member != null;
+          member = member.getNext()) {
         if (member.isQuotedString()) {
           // ignore get 'foo'() {} and prevent property name collisions
           // Note that only getters/setters are represented as quoted strings, not 'foo'() {}

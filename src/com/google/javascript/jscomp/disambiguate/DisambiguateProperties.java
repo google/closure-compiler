@@ -420,7 +420,9 @@ public class DisambiguateProperties implements CompilerPass {
                 ? classType.toMaybeFunctionType().getPrototype()
                 : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
 
-        for (Node member : NodeUtil.getClassMembers(n).children()) {
+        for (Node member = NodeUtil.getClassMembers(n).getFirstChild();
+            member != null;
+            member = member.getNext()) {
           // possibilities are:
           //   MEMBER_FUNCTION_DEF (could be static)
           //   COMPUTED_PROP (ignore)
@@ -605,7 +607,9 @@ public class DisambiguateProperties implements CompilerPass {
               ? classType.toMaybeFunctionType().getInstanceType()
               : registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
 
-      for (Node member : NodeUtil.getClassMembers(classNode).children()) {
+      for (Node member = NodeUtil.getClassMembers(classNode).getFirstChild();
+          member != null;
+          member = member.getNext()) {
         // possibilities are:
         //   MEMBER_FUNCTION_DEF (could be static)
         //   COMPUTED_PROP (ignore)
@@ -673,7 +677,7 @@ public class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      for (Node key : objectLiteral.children()) {
+      for (Node key = objectLiteral.getFirstChild(); key != null; key = key.getNext()) {
         switch (key.getToken()) {
           case COMPUTED_PROP:
           case OBJECT_SPREAD:

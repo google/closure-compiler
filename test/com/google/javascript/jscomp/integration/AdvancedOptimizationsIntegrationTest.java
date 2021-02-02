@@ -1540,7 +1540,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     assertThat(script).isNotNull();
     ImmutableSet<Character> restrictedChars =
         CompilerOptions.getAngularPropertyReservedFirstChars();
-    for (Node expr : script.children()) {
+    for (Node expr = script.getFirstChild(); expr != null; expr = expr.getNext()) {
       NodeSubject.assertNode(expr).hasType(Token.EXPR_RESULT);
       NodeSubject.assertNode(expr.getFirstChild()).hasType(Token.ASSIGN);
       NodeSubject.assertNode(expr.getFirstFirstChild()).hasType(Token.GETPROP);

@@ -95,7 +95,9 @@ public final class CheckNoMutatedEs6Exports implements Callback, CompilerPass {
   private void visitExport(Node export) {
     if (export.hasOneChild() && export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
       // export {a, b as c};
-      for (Node exportSpec : export.getFirstChild().children()) {
+      for (Node exportSpec = export.getFirstChild().getFirstChild();
+          exportSpec != null;
+          exportSpec = exportSpec.getNext()) {
         checkState(exportSpec.hasTwoChildren());
         exportedLocalNames.add(exportSpec.getFirstChild().getString());
       }

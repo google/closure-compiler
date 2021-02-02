@@ -44,8 +44,8 @@ import javax.annotation.Nullable;
  *
  * <p>This is conceptually similar to the ijar tool[1] that bazel uses to shrink jars into minimal
  * versions that can be used equivalently for compilation of downstream dependencies.
-
- * [1] https://github.com/bazelbuild/bazel/blob/master/third_party/ijar/README.txt
+ *
+ * <p>[1] https://github.com/bazelbuild/bazel/blob/master/third_party/ijar/README.txt
  */
 public class ConvertToTypedInterface implements CompilerPass {
   static final DiagnosticType CONSTANT_WITH_SUGGESTED_TYPE =
@@ -63,7 +63,7 @@ public class ConvertToTypedInterface implements CompilerPass {
       DiagnosticType.warning(
           "JSC_GOOG_SCOPE_HIDDEN_TYPE",
           "Please do not use goog.scope to hide declarations.\n"
-      + "It is preferable to either create an @private namespaced declaration, or migrate "
+              + "It is preferable to either create an @private namespaced declaration, or migrate "
               + "to goog.module.");
 
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
@@ -448,12 +448,14 @@ public class ConvertToTypedInterface implements CompilerPass {
 
     private void processClass(Node n) {
       checkArgument(isClass(n));
-      for (Node member : n.getLastChild().children()) {
+      for (Node member = n.getLastChild().getFirstChild(); member != null; ) {
+        Node next = member.getNext();
         if (member.isEmpty()) {
           NodeUtil.deleteNode(member, compiler);
-          continue;
+        } else {
+          processFunction(member.getLastChild());
         }
-        processFunction(member.getLastChild());
+        member = next;
       }
     }
 
@@ -518,7 +520,5 @@ public class ConvertToTypedInterface implements CompilerPass {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       jsdocNode.setJSDocInfo(JsdocUtil.getUnusableTypeJSDoc(jsdoc));
     }
-
   }
-
 }

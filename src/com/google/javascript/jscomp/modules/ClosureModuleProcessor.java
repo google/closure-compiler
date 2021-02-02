@@ -256,7 +256,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
       return false;
     }
     // Look for `importName` in the exported object literal.
-    for (Node key : exportedValue.children()) {
+    for (Node key = exportedValue.getFirstChild(); key != null; key = key.getNext()) {
       if (key.isStringKey() && key.getString().equals(importName)) {
         return true;
       }
@@ -396,7 +396,7 @@ final class ClosureModuleProcessor implements ModuleProcessor {
     }
 
     private void initializeNamedExportsLiteral(Node objectLit) {
-      for (Node key : objectLit.children()) {
+      for (Node key = objectLit.getFirstChild(); key != null; key = key.getNext()) {
         addPropertyExport(key.getString(), key);
       }
     }

@@ -130,7 +130,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
 
   private List<Node> getChildrenBlocks(Node node) {
     List<Node> blocks = new ArrayList<>();
-    for (Node child : node.children()) {
+    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isBlock()) {
         blocks.add(child);
       }

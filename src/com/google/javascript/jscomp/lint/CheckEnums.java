@@ -108,7 +108,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
   // Reports a warning if the string enum value is not statically initialized
   private static void checkStringEnumInitializerValues(NodeTraversal t, Node enumNode) {
     checkArgument(enumNode.isObjectLit(), enumNode);
-    for (Node prop : enumNode.children()) {
+    for (Node prop = enumNode.getFirstChild(); prop != null; prop = prop.getNext()) {
       // valueNode is guaranteed to exist by this time, as shorthand `{A}`s are converted to `{A:A}`
       Node valueNode = prop.getLastChild();
       if (!valueNode.isString() && !(valueNode.isTemplateLit() && valueNode.hasOneChild())) {
@@ -119,7 +119,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
   }
 
   private void checkNamingAndAssignmentUsage(NodeTraversal t, Node objLit) {
-    for (Node child : objLit.children()) {
+    for (Node child = objLit.getFirstChild(); child != null; child = child.getNext()) {
       checkName(t, child);
     }
   }
@@ -141,7 +141,7 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
 
   private static void checkDuplicateEnumValues(NodeTraversal t, Node enumNode) {
     Set<String> values = new HashSet<>();
-    for (Node prop : enumNode.children()) {
+    for (Node prop = enumNode.getFirstChild(); prop != null; prop = prop.getNext()) {
       Node valueNode = prop.getLastChild();
       String value;
       if (valueNode == null) {

@@ -241,7 +241,7 @@ public final class RefasterJsScanner extends Scanner {
         return IR.name(alias);
       }
     }
-    for (Node child : templateNode.children()) {
+    for (Node child = templateNode.getFirstChild(); child != null; child = child.getNext()) {
       clone.addChildToBack(transformNode(child, templateNodeToMatchMap, scriptMetadata));
     }
     return clone;
@@ -264,7 +264,9 @@ public final class RefasterJsScanner extends Scanner {
     LinkedHashMap<String, Node> beforeTemplates = new LinkedHashMap<>();
     Map<String, SortedMap<Integer, Node>> afterTemplates = new HashMap<>();
     Set<String> hasChoices = new HashSet<>();
-    for (Node templateNode : scriptRoot.children()) {
+    for (Node templateNode = scriptRoot.getFirstChild();
+        templateNode != null;
+        templateNode = templateNode.getNext()) {
       if (templateNode.isFunction()) {
         String fnName = templateNode.getFirstChild().getQualifiedName();
         if (fnName.startsWith("before_")) {

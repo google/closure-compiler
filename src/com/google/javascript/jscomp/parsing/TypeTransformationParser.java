@@ -282,7 +282,7 @@ public final class TypeTransformationParser {
   private void fixLineNumbers(Node expr) {
     // TODO(tbreisacher): Also fix column numbers.
     expr.setLineno(expr.getLineno() + templateLineno);
-    for (Node child : expr.children()) {
+    for (Node child = expr.getFirstChild(); child != null; child = child.getNext()) {
       fixLineNumbers(child);
     }
   }
@@ -415,7 +415,7 @@ public final class TypeTransformationParser {
   private boolean validRecordParam(Node expr) {
     if (expr.isObjectLit()) {
       // Each value of a property must be a valid expression
-      for (Node prop : expr.children()) {
+      for (Node prop = expr.getFirstChild(); prop != null; prop = prop.getNext()) {
         if (prop.isShorthandProperty()) {
           warnInvalid("property, missing type");
           return false;

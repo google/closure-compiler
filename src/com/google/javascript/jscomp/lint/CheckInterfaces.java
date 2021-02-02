@@ -123,7 +123,9 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
   private static void checkClassMethods(NodeTraversal t, Node classNode, @Nullable Node ctorDef) {
     Node classMembers = classNode.getLastChild();
     checkState(classMembers.isClassMembers(), classMembers);
-    for (Node memberFuncDef : classMembers.children()) {
+    for (Node memberFuncDef = classMembers.getFirstChild();
+        memberFuncDef != null;
+        memberFuncDef = memberFuncDef.getNext()) {
       if (memberFuncDef.equals(ctorDef)) {
         continue; // constructor was already checked; don't check here.
       }

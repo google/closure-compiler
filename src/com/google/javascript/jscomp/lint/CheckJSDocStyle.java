@@ -359,7 +359,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   private void checkInlineParams(NodeTraversal t, Node function) {
     Node paramList = NodeUtil.getFunctionParameters(function);
 
-    for (Node param : paramList.children()) {
+    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
       JSDocInfo jsDoc =
           param.isDefaultValue() ? param.getFirstChild().getJSDocInfo() : param.getJSDocInfo();
       if (jsDoc == null) {
@@ -426,7 +426,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       // Inline return annotation.
       return true;
     }
-    for (Node param : NodeUtil.getFunctionParameters(function).children()) {
+    for (Node param = NodeUtil.getFunctionParameters(function).getFirstChild();
+        param != null;
+        param = param.getNext()) {
       if (param.getJSDocInfo() != null || isDefaultAssignedParamWithInlineJsDoc(param)) {
         return true;
       }
