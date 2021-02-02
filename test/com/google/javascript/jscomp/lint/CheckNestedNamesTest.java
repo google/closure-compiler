@@ -92,6 +92,9 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
     testWarning("goog.module('a'); function F() {}; F.C = class {};", NESTED_NAME_IN_GOOG_MODULE);
     testWarning(
         "goog.module('a'); let F = function() {}; F.E = class {};", NESTED_NAME_IN_GOOG_MODULE);
+    testWarning(
+        "goog.module('a'); let F = function() {}; /** something */ F.E = class {};",
+        NESTED_NAME_IN_GOOG_MODULE);
   }
 
   @Test

@@ -161,6 +161,7 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
     checkArgument(assign.isAssign(), assign);
     JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(lhs);
     if (jsDocInfo != null) {
+      // JSDoc present: check whether it's an enum, interface or typedef first.
       if (jsDocInfo.hasEnumParameterType()) {
         return DeclarationKind.ENUM;
       } else if (jsDocInfo.isInterface()) {
@@ -168,13 +169,13 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
       } else if (jsDocInfo.hasTypedefType()) {
         return DeclarationKind.TYPEDEF;
       }
-    } else {
-      Node rhs = assign.getLastChild();
-      if (rhs.isClass()) {
-        // `X.Y = class {...}`
-        return DeclarationKind.CLASS;
-      }
     }
+    Node rhs = assign.getLastChild();
+    if (rhs.isClass()) {
+      // `X.Y = class {...}`
+      return DeclarationKind.CLASS;
+    }
+
     return null;
   }
 }
