@@ -367,7 +367,7 @@ webCrypto.RsaPssParams.prototype.saltLength;
  */
 webCrypto.RsaOaepParams;
 /**
- * @type {!BufferSource}
+ * @type {undefined|!BufferSource}
  */
 webCrypto.RsaOaepParams.prototype.label;
 
@@ -514,11 +514,11 @@ webCrypto.AesGcmParams;
  */
 webCrypto.AesGcmParams.prototype.iv;
 /**
- * @type {!BufferSource}
+ * @type {undefined|!BufferSource}
  */
 webCrypto.AesGcmParams.prototype.additionalData;
 /**
- * @type {number}
+ * @type {undefined|number}
  */
 webCrypto.AesGcmParams.prototype.tagLength;
 
@@ -534,7 +534,7 @@ webCrypto.HmacImportParams;
  */
 webCrypto.HmacImportParams.prototype.hash;
 /**
- * @type {number}
+ * @type {undefined|number}
  */
 webCrypto.HmacImportParams.prototype.length;
 
@@ -566,7 +566,7 @@ webCrypto.HmacKeyGenParams;
  */
 webCrypto.HmacKeyGenParams.prototype.hash;
 /**
- * @type {number}
+ * @type {undefined|number}
  */
 webCrypto.HmacKeyGenParams.prototype.length;
 
