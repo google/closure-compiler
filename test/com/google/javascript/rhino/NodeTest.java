@@ -41,7 +41,6 @@ package com.google.javascript.rhino;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -216,7 +215,7 @@ public class NodeTest {
 
   @Test
   public void testCheckTreeTypeAwareEqualsColorsSame() {
-    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
+    ColorRegistry colorRegistry = ColorRegistry.createForTesting();
 
     Node node1 = Node.newString(Token.NAME, "f");
     node1.setColor(colorRegistry.get(NativeColorId.NUMBER));
@@ -234,7 +233,7 @@ public class NodeTest {
 
   @Test
   public void testCheckTreeTypeAwareEqualsColorsDifferent() {
-    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
+    ColorRegistry colorRegistry = ColorRegistry.createForTesting();
     Node node1 = Node.newString(Token.NAME, "f");
     node1.setColor(colorRegistry.get(NativeColorId.NUMBER));
     Node node2 = Node.newString(Token.NAME, "f");
@@ -244,7 +243,7 @@ public class NodeTest {
 
   @Test
   public void testCheckTreeTypeAwareEqualsColorsDifferentNull() {
-    ColorRegistry colorRegistry = ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
+    ColorRegistry colorRegistry = ColorRegistry.createForTesting();
     Node node1 = Node.newString(Token.NAME, "f");
     node1.setColor(colorRegistry.get(NativeColorId.NUMBER));
     Node node2 = Node.newString(Token.NAME, "f");

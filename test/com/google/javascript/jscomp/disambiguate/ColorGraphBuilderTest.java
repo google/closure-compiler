@@ -38,7 +38,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.DebugInfo;
-import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.colors.SingletonColorFields;
 import com.google.javascript.jscomp.disambiguate.ColorGraphBuilder.EdgeReason;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -66,8 +65,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
 
   private final Compiler compiler = new Compiler();
   private final ColorGraphNodeFactory graphNodeFactory =
-      ColorGraphNodeFactory.createFactory(
-          ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of(NativeColorId.UNKNOWN)));
+      ColorGraphNodeFactory.createFactory(ColorRegistry.createForTesting());
 
   private CompilerPass processor;
   private DiGraph<ColorGraphNode, Object> result;
@@ -506,9 +504,7 @@ public final class ColorGraphBuilderTest extends CompilerTestCase {
   private ColorGraphBuilder createBuilder(@Nullable StubLcaFinder optLcaFinder) {
     StubLcaFinder lcaFinder = (optLcaFinder == null) ? new StubLcaFinder() : optLcaFinder;
     return new ColorGraphBuilder(
-        this.graphNodeFactory,
-        lcaFinder::setGraph,
-        ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of(NativeColorId.UNKNOWN)));
+        this.graphNodeFactory, lcaFinder::setGraph, ColorRegistry.createForTesting());
   }
 
   /**

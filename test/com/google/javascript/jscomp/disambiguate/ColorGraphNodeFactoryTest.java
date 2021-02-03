@@ -38,8 +38,7 @@ public final class ColorGraphNodeFactoryTest {
 
   @Before
   public void initRegistry() {
-    this.colorRegistry =
-        ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of(NativeColorId.UNKNOWN));
+    this.colorRegistry = ColorRegistry.createForTesting();
   }
 
   @Test

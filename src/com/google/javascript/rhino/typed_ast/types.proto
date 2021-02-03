@@ -13,10 +13,8 @@ message TypePool {
   repeated SubtypingEdge disambiguation_edges = 2;
   // Human-readable representation of where this TypePool comes from.
   string source_name = 3;
-  // List of native types that are invalidating. Needed because native types may
-  // be not inherently invalidating, but invalidating because they were involved
-  // in a type mismatch in a given program.
-  repeated NativeType invalidating_native = 4;
+  // Lists the positions of various NativeObjectTypes in the type list.
+  NativeObjectTable native_object_table = 4;
 }
 
 // References a serialized type. Typically, any reference to a type that needs
@@ -82,8 +80,11 @@ message TypeProto {
 }
 
 /*
- * Types that are built-in to a JavaScript engine and other types that occur
- * very commonly in a JS program.
+ * Types that exist a priori in the type system and have no TypeProto
+ * representation.
+ *
+ * This set includes the JS primitives (string, number) and the type-system
+ * primitives UNKNOWN_TYPE and TOP_OBJECT_TYPE.
  *
  * To reference a NativeType in a TypePointer, create a TypePointer whose pool
  * offset equals the numeric value of the NativeType.
@@ -92,10 +93,10 @@ message TypeProto {
  * requires that the numeric values of this enum are sequential. Do not skip
  * numbers. This is also checked inside jscomp.serialization.JSTypeSerializer.
  */
-enum NativeType {
+enum PrimitiveType {
   // Type-system only type: The Closure '*' and '?', or TS 'any' and 'unknown'
-  // or the bottom type. (For the purposes of optimization we believe all these
-  // types may be treated identically)
+  // or the bottom type. (For the purposes of optimization, all these types may
+  // be treated identically)
   UNKNOWN_TYPE = 0;
 
   // JS primitive types
@@ -107,15 +108,29 @@ enum NativeType {
   SYMBOL_TYPE = 5;
   BIGINT_TYPE = 6;
 
-  // Top object type (supertype of all objects and invalidating)
+  // Top object type (supertype of all objects and invalidating). Corresponds to
+  // the TS "{}" type. This is omitted from the NativeObjectType proto since
+  // while it is technically an "object type", it is also a type-system
+  // primitive and does not appear in the list of type protos.
   TOP_OBJECT = 7;
+}
 
-  // Boxed scalars
-  BOOLEAN_OBJECT_TYPE = 8;
-  STRING_OBJECT_TYPE = 9;
-  NUMBER_OBJECT_TYPE = 10;
-  SYMBOL_OBJECT_TYPE = 11;
-  BIGINT_OBJECT_TYPE = 12;
+/**
+ * Types that appear as TypeProtos in the TypePool and have some special
+ * use case to the optimizer.
+ *
+ * This only includes object types because primitives are never serialized as
+ * TypeProtos.
+ *
+ * The TypePointers in this table have no special significance, unlike the
+ * TypePointers representing a PrimitiveType.
+ */
+message NativeObjectTable {
+  TypePointer boolean_object = 1;
+  TypePointer string_object = 2;
+  TypePointer number_object = 3;
+  TypePointer symbol_object = 4;
+  TypePointer bigint_object = 5;
 }
 
 // Used for testing only and possibly only temporary. Wraps type pools from

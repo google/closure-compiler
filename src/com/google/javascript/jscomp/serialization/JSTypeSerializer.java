@@ -41,7 +41,6 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import javax.annotation.Nullable;
 
 final class JSTypeSerializer {
@@ -61,7 +60,6 @@ final class JSTypeSerializer {
   private final LinkedHashMap<SimplifiedType, SeenTypeRecord> seenSerializableTypes =
       new LinkedHashMap<>();
   private final Multimap<TypePointer, TypePointer> disambiguateEdges = LinkedHashMultimap.create();
-  private final LinkedHashSet<NativeType> invalidatingNatives = new LinkedHashSet<>();
 
   private State state = State.COLLECTING_TYPES;
 
@@ -76,11 +74,11 @@ final class JSTypeSerializer {
           JSTypeNative.FUNCTION_FUNCTION_TYPE);
 
   /**
-   * The first N TypePointer pool offsets correspond to NativeType values
+   * The first N TypePointer pool offsets correspond to PrimitiveType values
    *
    * <p>Subtract 1 for the auto-generated UNRECOGNIZED element.
    */
-  static final int NATIVE_POOL_SIZE = NativeType.values().length - 1;
+  static final int PRIMITIVE_POOL_SIZE = PrimitiveType.values().length - 1;
 
   private enum State {
     COLLECTING_TYPES,
@@ -113,34 +111,10 @@ final class JSTypeSerializer {
     JSTypeSerializer serializer =
         new JSTypeSerializer(registry, invalidatingTypes, idGenerator, serializationMode);
 
-    serializer.addNativeTypePointers();
-    serializer.collectInvalidatingNatives(registry, invalidatingTypes);
+    serializer.addPrimitiveTypePointers();
     serializer.checkValid();
 
     return serializer;
-  }
-
-  /**
-   * Adds all invalidating native types to the type pool.
-   *
-   * <p>Native types are not explicitly serialized, since the only bit of information that differs
-   * between compilation units is their "invalidatingness".
-   *
-   * <p>TODO(lharker): switch to serializing native object types entirely and delete this method
-   */
-  private void collectInvalidatingNatives(
-      JSTypeRegistry registry, InvalidatingTypes invalidatingTypes) {
-    for (JSTypeNative jsTypeNative : JSTypeNative.values()) {
-      // First check if this type is also native in the colors
-      NativeType correspondingType = translateNativeType(jsTypeNative);
-      if (correspondingType == null) {
-        continue;
-      }
-      // Then check if it is invalidating
-      if (invalidatingTypes.isInvalidating(registry.getNativeType(jsTypeNative))) {
-        this.invalidatingNatives.add(correspondingType);
-      }
-    }
   }
 
   /** Returns a pointer to the given type. If it is not already serialized, serializes it too */
@@ -269,7 +243,7 @@ final class JSTypeSerializer {
         return TypeProto.newBuilder().setUnion(union).build();
       case SINGLE:
         // Primitive types should have been added to the "seenSerializableTypes" map in
-        // "serializeNativeTypes", as they do not have corresponding TypeProtos.
+        // "addPrimitiveTypePointers", as they do not have corresponding TypeProtos.
         ObjectType objectType =
             checkNotNull(
                 type.single().toMaybeObjectType(), "Unexpected non-object type %s", type.single());
@@ -415,35 +389,35 @@ final class JSTypeSerializer {
   }
 
   /**
-   * Inserts dummy pointers corresponding to all {@link NativeType}s in the type pool.
+   * Inserts dummy pointers corresponding to all {@link PrimitiveType}s in the type pool.
    *
    * <p>These types will never correspond to an actual {@link TypeProto}. Instead, all normal {@link
    * TypePointer} offsets into the pool are offset by a number equivalent to the number of {@link
-   * NativeType} enum elements.
+   * PrimitiveType} enum elements.
    */
-  private void addNativeTypePointers() {
-    for (NativeType nativeType : NativeType.values()) {
-      if (nativeType.equals(NativeType.UNRECOGNIZED)) {
+  private void addPrimitiveTypePointers() {
+    for (PrimitiveType primitive : PrimitiveType.values()) {
+      if (primitive.equals(PrimitiveType.UNRECOGNIZED)) {
         continue;
       }
       checkState(
-          nativeType.getNumber() == seenSerializableTypes.size(),
-          "Expected all NativeTypes to be added in order; %s added at index %s.",
-          nativeType,
+          primitive.getNumber() == seenSerializableTypes.size(),
+          "Expected all PrimitiveTypes to be added in order; %s added at index %s.",
+          primitive,
           seenSerializableTypes.size());
-      TypePointer.Builder pointer = TypePointer.newBuilder().setPoolOffset(nativeType.getNumber());
+      TypePointer.Builder pointer = TypePointer.newBuilder().setPoolOffset(primitive.getNumber());
 
       if (this.serializationMode.includeDebugInfo()) {
         pointer.setDebugInfo(
-            TypePointer.DebugInfo.newBuilder().setDescription(nativeType.toString()));
+            TypePointer.DebugInfo.newBuilder().setDescription(primitive.toString()));
       }
       SeenTypeRecord record = new SeenTypeRecord(pointer.build());
-      JSTypeNative jsTypeNative = canonicalizeNativeType(nativeType);
+      JSTypeNative jsTypeNative = canonicalizePrimitive(primitive);
       SimplifiedType simplified =
           SimplifiedType.ofJSType(this.registry.getNativeType(jsTypeNative));
       this.seenSerializableTypes.put(simplified, record);
     }
-    checkState(this.seenSerializableTypes.size() == NATIVE_POOL_SIZE);
+    checkState(this.seenSerializableTypes.size() == PRIMITIVE_POOL_SIZE);
   }
 
   /** Checks that this instance is in a valid state. */
@@ -477,9 +451,15 @@ final class JSTypeSerializer {
     checkValid();
     this.state = State.GENERATING_POOL;
 
-    TypePool.Builder builder = TypePool.newBuilder();
+    TypePool.Builder builder =
+        TypePool.newBuilder().setNativeObjectTable(this.createNativeObjectTable());
     for (SeenTypeRecord seen : this.seenSerializableTypes.values()) {
       if (seen.type == null) {
+        // seen.type is if and only this is a native type without a TypeProto representation.
+        checkState(
+            seen.pointer.getPoolOffset() < PRIMITIVE_POOL_SIZE,
+            "Missing .type for SeenTypeRecord %s",
+            seen);
         continue;
       }
       builder.addType(seen.type);
@@ -490,7 +470,7 @@ final class JSTypeSerializer {
             SubtypingEdge.newBuilder().setSubtype(subtype).setSupertype(supertype));
       }
     }
-    TypePool pool = builder.addAllInvalidatingNative(this.invalidatingNatives).build();
+    TypePool pool = builder.build();
 
     this.state = State.FINISHED;
     checkValid();
@@ -499,8 +479,8 @@ final class JSTypeSerializer {
 
   private static final class SeenTypeRecord {
     final TypePointer pointer;
-    // If null, indicates that this SeenTypeRecord either corresponds to a native type pointer or
-    // is an alias of a SeenTypeRecord with the same pool offset + a non-null TypeProto.
+    // If null, indicates that this SeenTypeRecord represents a native type pointer with no
+    // corresponding TypeProto.
     @Nullable TypeProto type;
 
     SeenTypeRecord(TypePointer pointer) {
@@ -543,8 +523,8 @@ final class JSTypeSerializer {
    * NativeType}. The {@link #simplifyTypeInternal(JSType)} is responsible for doing this
    * simplification.
    */
-  private static JSTypeNative canonicalizeNativeType(NativeType nativeType) {
-    switch (nativeType) {
+  private static JSTypeNative canonicalizePrimitive(PrimitiveType primitive) {
+    switch (primitive) {
       case BOOLEAN_TYPE:
         return JSTypeNative.BOOLEAN_TYPE;
       case BIGINT_TYPE:
@@ -569,17 +549,6 @@ final class JSTypeSerializer {
       case UNKNOWN_TYPE:
         return JSTypeNative.UNKNOWN_TYPE;
 
-      case BOOLEAN_OBJECT_TYPE:
-        return JSTypeNative.BOOLEAN_OBJECT_TYPE;
-      case BIGINT_OBJECT_TYPE:
-        return JSTypeNative.BIGINT_OBJECT_TYPE;
-      case NUMBER_OBJECT_TYPE:
-        return JSTypeNative.NUMBER_OBJECT_TYPE;
-      case STRING_OBJECT_TYPE:
-        return JSTypeNative.STRING_OBJECT_TYPE;
-      case SYMBOL_OBJECT_TYPE:
-        return JSTypeNative.SYMBOL_OBJECT_TYPE;
-
       case UNRECOGNIZED:
         throw new AssertionError();
     }
@@ -587,64 +556,20 @@ final class JSTypeSerializer {
   }
 
   /**
-   * Maps between {@link JSTypeNative} and {@link NativeType}.
-   *
-   * <p>Not one-to-one or onto. Some Closure native types are not natively serialized and multiple
-   * Closure native types correspond go the "UNKNOWN" serialized type.
-   *
-   * <p>TODO(lharker): remove this function once we no longer serialize invalidating natives
+   * Creates a table pointing from native objects to their {@link TypePointer} into the type pool
    */
-  private static NativeType translateNativeType(JSTypeNative nativeType) {
-    switch (nativeType) {
-      case BOOLEAN_TYPE:
-        return NativeType.BOOLEAN_TYPE;
-      case BIGINT_TYPE:
-        return NativeType.BIGINT_TYPE;
-
-      case NUMBER_TYPE:
-        return NativeType.NUMBER_TYPE;
-      case STRING_TYPE:
-        return NativeType.STRING_TYPE;
-
-      case SYMBOL_TYPE:
-        return NativeType.SYMBOL_TYPE;
-
-
-      case NULL_TYPE:
-      case VOID_TYPE:
-        return NativeType.NULL_OR_VOID_TYPE;
-
-        // The optimizer doesn't distinguish between any of these types: they are all
-        // invalidating objects.
-      case OBJECT_TYPE:
-      case OBJECT_FUNCTION_TYPE:
-      case OBJECT_PROTOTYPE:
-      case FUNCTION_PROTOTYPE:
-      case FUNCTION_TYPE:
-      case FUNCTION_FUNCTION_TYPE:
-        return NativeType.TOP_OBJECT;
-
-      case ALL_TYPE:
-      case UNKNOWN_TYPE:
-      case CHECKED_UNKNOWN_TYPE:
-      case NO_TYPE:
-      case NO_OBJECT_TYPE:
-      case NO_RESOLVED_TYPE:
-        return NativeType.UNKNOWN_TYPE;
-
-      case BOOLEAN_OBJECT_TYPE:
-        return NativeType.BOOLEAN_OBJECT_TYPE;
-      case BIGINT_OBJECT_TYPE:
-        return NativeType.BIGINT_OBJECT_TYPE;
-      case NUMBER_OBJECT_TYPE:
-        return NativeType.NUMBER_OBJECT_TYPE;
-      case STRING_OBJECT_TYPE:
-        return NativeType.STRING_OBJECT_TYPE;
-      case SYMBOL_OBJECT_TYPE:
-        return NativeType.SYMBOL_OBJECT_TYPE;
-
-      default:
-        return null;
-    }
+  private NativeObjectTable createNativeObjectTable() {
+    return NativeObjectTable.newBuilder()
+        .setBigintObject(
+            this.serializeType(registry.getNativeType(JSTypeNative.BIGINT_OBJECT_TYPE)))
+        .setBooleanObject(
+            this.serializeType(registry.getNativeType(JSTypeNative.BOOLEAN_OBJECT_TYPE)))
+        .setNumberObject(
+            this.serializeType(registry.getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE)))
+        .setStringObject(
+            this.serializeType(registry.getNativeType(JSTypeNative.STRING_OBJECT_TYPE)))
+        .setSymbolObject(
+            this.serializeType(registry.getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE)))
+        .build();
   }
 }

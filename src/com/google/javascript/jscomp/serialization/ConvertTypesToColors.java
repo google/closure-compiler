@@ -158,12 +158,12 @@ public final class ConvertTypesToColors implements CompilerPass {
      */
     private static String typePointerToId(TypePointer typePointer, TypePool typePool) {
       int poolOffset = typePointer.getPoolOffset();
-      if (poolOffset < JSTypeSerializer.NATIVE_POOL_SIZE) {
-        // TODO(b/169090854): standardize the NativeType UUIDs between here and ColorRegistry
-        return "<native type>: " + NativeType.forNumber(poolOffset).toString();
+      if (poolOffset < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
+        // TODO(b/169090854): standardize the PrimitiveType UUIDs between here and ColorRegistry
+        return "<native type>: " + PrimitiveType.forNumber(poolOffset).toString();
       }
 
-      int adjustedOffset = typePointer.getPoolOffset() - JSTypeSerializer.NATIVE_POOL_SIZE;
+      int adjustedOffset = typePointer.getPoolOffset() - JSTypeSerializer.PRIMITIVE_POOL_SIZE;
 
       TypeProto typeProto = typePool.getTypeList().get(adjustedOffset);
       switch (typeProto.getKindCase()) {

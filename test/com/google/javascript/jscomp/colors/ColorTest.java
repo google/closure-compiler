@@ -30,8 +30,7 @@ import org.junit.runners.JUnit4;
 public class ColorTest {
 
   // Immutable so safe to share among test instances
-  private final ColorRegistry colorRegistry =
-      ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
+  private final ColorRegistry colorRegistry = ColorRegistry.createForTesting();
 
   private final Color numberOrString =
       Color.createUnion(
@@ -173,29 +172,25 @@ public class ColorTest {
 
   @Test
   public void invalidatingIfContainsInvalidatingNativeColor() {
-    ColorRegistry registryInvalidatingUnknown =
-        ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of(NativeColorId.UNKNOWN));
+    ColorRegistry registry = ColorRegistry.createForTesting();
 
     Color nonInvalidatingObject =
         Color.createSingleton(SingletonColorFields.builder().setId("Bar").build());
     Color objects =
         Color.createUnion(
-            ImmutableSet.of(
-                registryInvalidatingUnknown.get(NativeColorId.UNKNOWN), nonInvalidatingObject));
+            ImmutableSet.of(registry.get(NativeColorId.UNKNOWN), nonInvalidatingObject));
 
     assertThat(objects).isInvalidating();
   }
 
   @Test
-  public void nativesInvalidatingOnlyIfExplicitlyMarkedInRegistry() {
-    ColorRegistry registryInvalidatingUnknown =
-        ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of(NativeColorId.UNKNOWN));
+  public void primitivesAreInvalidatingBasedOnNativeColorId() {
+    ColorRegistry registry = ColorRegistry.createForTesting();
 
-    assertThat(registryInvalidatingUnknown.get(NativeColorId.UNKNOWN)).isInvalidating();
-    ColorRegistry registryNotInvalidatingUnknown =
-        ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of());
-
-    assertThat(registryNotInvalidatingUnknown.get(NativeColorId.UNKNOWN)).isNotInvalidating();
+    assertThat(registry.get(NativeColorId.UNKNOWN)).isInvalidating();
+    assertThat(registry.get(NativeColorId.TOP_OBJECT)).isInvalidating();
+    assertThat(registry.get(NativeColorId.NUMBER)).isNotInvalidating();
+    assertThat(registry.get(NativeColorId.STRING)).isNotInvalidating();
   }
 
   @Test

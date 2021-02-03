@@ -33,46 +33,57 @@ import org.junit.runners.JUnit4;
 public class ColorDeserializerTest {
 
   @Test
-  public void deserializesNativeTypesFromEmptyTypePool() {
+  public void deserializesJavaScriptPrimitivesFromEmptyTypePool() {
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
 
-    assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.NUMBER_TYPE)))
+    assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)))
         .isNative(NativeColorId.NUMBER);
-    assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.NUMBER_TYPE)))
+    assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)))
         .isNotInvalidating();
-    assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.STRING_TYPE)))
+    assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.STRING_TYPE)))
         .isNative(NativeColorId.STRING);
-    assertThat(deserializer.pointerToColor(nativeTypePointer(NativeType.UNKNOWN_TYPE)))
+    assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.UNKNOWN_TYPE)))
         .isNative(NativeColorId.UNKNOWN);
   }
 
   @Test
-  public void deserializesNativeTypesFromInvalidatingDefinitionsInTypePool() {
-    ColorDeserializer deserializer =
-        ColorDeserializer.buildFromTypePool(
-            TypePool.newBuilder()
-                .addInvalidatingNative(NativeType.NUMBER_TYPE)
-                .addInvalidatingNative(NativeType.NUMBER_OBJECT_TYPE)
-                .build());
-
-    assertThat(deserializer.getRegistry().get(NativeColorId.NUMBER)).isInvalidating();
-    assertThat(deserializer.getRegistry().get(NativeColorId.NUMBER_OBJECT)).isInvalidating();
-    assertThat(deserializer.getRegistry().get(NativeColorId.STRING)).isNotInvalidating();
-  }
-
-  @Test
-  public void deserializesNativeObjectTypesFromEmptyTypePool() {
+  public void deserializesTopObjectTypeFromEmptyTypePool() {
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
 
-    Color object = deserializer.pointerToColor(nativeTypePointer(NativeType.TOP_OBJECT));
-    // while in practice the top object is always invalidating, we currently rely on the user-
-    // defined type pool to tell us it is invalidating instead of hardcoding this information.
-    assertThat(object).isNotInvalidating();
+    Color object = deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.TOP_OBJECT));
+    assertThat(object).isInvalidating();
     assertThat(object.getDisambiguationSupertypes()).isEmpty();
     assertThat(object.getInstanceColor()).isEmpty();
     assertThat(object.getPrototype()).isEmpty();
+  }
+
+  @Test
+  public void deserializesNativeObjectTableIntoNativeColor() {
+    TypePool typePool =
+        TypePool.newBuilder()
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder().setUuid("Number").setIsInvalidating(true))
+                    .build())
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(ObjectTypeProto.newBuilder().setUuid("Number.prototype"))
+                    .build())
+            .setNativeObjectTable(NativeObjectTable.newBuilder().setNumberObject(poolPointer(0)))
+            .addDisambiguationEdges(
+                // Number is a subtype of Number.prototype
+                SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
+            .build();
+    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+
+    Color numberObject = deserializer.getRegistry().get(NativeColorId.NUMBER_OBJECT);
+    assertThat(numberObject).isInvalidating();
+    assertThat(numberObject)
+        .hasDisambiguationSupertypes(deserializer.pointerToColor(poolPointer(1)));
+    assertThat(numberObject).isSameInstanceAs(deserializer.pointerToColor(poolPointer(0)));
   }
 
   @Test
@@ -197,14 +208,14 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
-                            .addUnionMember(nativeTypePointer(NativeType.STRING_TYPE))))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.STRING_TYPE))))
             .addType(
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
-                            .addUnionMember(nativeTypePointer(NativeType.BIGINT_TYPE))))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.BIGINT_TYPE))))
             .build();
 
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
@@ -228,15 +239,15 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
-                            .addUnionMember(nativeTypePointer(NativeType.STRING_TYPE))))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.STRING_TYPE))))
             // U1 := (U1, bigint)
             .addType(
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
                             .addUnionMember(poolPointer(0))
-                            .addUnionMember(nativeTypePointer(NativeType.BIGINT_TYPE))))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.BIGINT_TYPE))))
             .build();
 
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
@@ -264,7 +275,7 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
                             .addUnionMember(
                                 poolPointerBuilder(1)
                                     .setDebugInfo(
@@ -273,7 +284,7 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
                             .addUnionMember(
                                 poolPointerBuilder(0)
                                     .setDebugInfo(
@@ -305,7 +316,7 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))))
             .build();
 
     assertThrows(
@@ -325,8 +336,8 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setUnion(
                         UnionTypeProto.newBuilder()
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))
-                            .addUnionMember(nativeTypePointer(NativeType.NUMBER_TYPE))))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))
+                            .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))))
             .build();
 
     ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
@@ -335,8 +346,8 @@ public class ColorDeserializerTest {
     assertThat(deserializer.pointerToColor(poolPointer(0)).isUnion()).isFalse();
   }
 
-  private static TypePointer nativeTypePointer(NativeType nativeType) {
-    return TypePointer.newBuilder().setPoolOffset(nativeType.getNumber()).build();
+  private static TypePointer primitiveTypePointer(PrimitiveType primitive) {
+    return TypePointer.newBuilder().setPoolOffset(primitive.getNumber()).build();
   }
 
   private static TypePointer poolPointer(int offset) {
@@ -344,6 +355,6 @@ public class ColorDeserializerTest {
   }
 
   private static TypePointer.Builder poolPointerBuilder(int offset) {
-    return TypePointer.newBuilder().setPoolOffset(offset + JSTypeSerializer.NATIVE_POOL_SIZE);
+    return TypePointer.newBuilder().setPoolOffset(offset + JSTypeSerializer.PRIMITIVE_POOL_SIZE);
   }
 }

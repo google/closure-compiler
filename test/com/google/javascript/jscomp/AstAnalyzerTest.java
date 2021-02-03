@@ -76,7 +76,6 @@ import static com.google.javascript.rhino.Token.YIELD;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.ColorRegistry;
@@ -167,7 +166,7 @@ public final class AstAnalyzerTest {
               ImmutableMap.of(
                   "getter", PropertyAccessKind.GETTER_ONLY, //
                   "setter", PropertyAccessKind.SETTER_ONLY)));
-      compiler.setColorRegistry(ColorRegistry.createWithInvalidatingNatives(ImmutableSet.of()));
+      compiler.setColorRegistry(ColorRegistry.createForTesting());
     }
 
     private Node parseInternal(String js) {

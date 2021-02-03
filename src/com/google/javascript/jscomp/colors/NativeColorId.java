@@ -18,46 +18,124 @@ package com.google.javascript.jscomp.colors;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.errorprone.annotations.Immutable;
-
 /**
- * All color representing native JavaScript objects that have special behavior during optimizations.
+ * All colors that either exist a priori in the type system, including JS primitives and
+ * type-system-only types, or that otherwise have special behavior during optimizations.
  */
-@Immutable
 public enum NativeColorId {
 
   // Boxed primitive types
-  BIGINT_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
-  BOOLEAN_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
-  NUMBER_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
-  STRING_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
-  SYMBOL_OBJECT(/* isPrimitive= */ false, /* boxed= */ null),
+  BIGINT_OBJECT(
+      /* isJsPrimitive= */ false,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ false),
+  BOOLEAN_OBJECT(
+      /* isJsPrimitive= */ false,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ false),
+  NUMBER_OBJECT(
+      /* isJsPrimitive= */ false,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ false),
+  STRING_OBJECT(
+      /* isJsPrimitive= */ false,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ false),
+  SYMBOL_OBJECT(
+      /* isJsPrimitive= */ false,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ false),
 
   // JS primitive types
-  BIGINT(/* isPrimitive= */ true, BIGINT_OBJECT),
-  BOOLEAN(/* isPrimitive= */ true, BOOLEAN_OBJECT),
-  NUMBER(/* isPrimitive= */ true, NUMBER_OBJECT),
-  STRING(/* isPrimitive= */ true, STRING_OBJECT),
-  SYMBOL(/* isPrimitive= */ true, SYMBOL_OBJECT),
-  NULL_OR_VOID(/* isPrimitive= */ true, /* boxed= */ null),
+  BIGINT(
+      /* isJsPrimitive= */ true,
+      BIGINT_OBJECT,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ true),
+  BOOLEAN(
+      /* isJsPrimitive= */ true,
+      BOOLEAN_OBJECT,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ true),
+  NUMBER(
+      /* isJsPrimitive= */ true,
+      NUMBER_OBJECT,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ true),
+  STRING(
+      /* isJsPrimitive= */ true,
+      STRING_OBJECT,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ true),
+  SYMBOL(
+      /* isJsPrimitive= */ true,
+      SYMBOL_OBJECT,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ true),
+  NULL_OR_VOID(
+      /* isJsPrimitive= */ true,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ false,
+      /* isTypesystemPrimitive= */ true),
 
   // Equivalent to Closure '*'/'?' and TS unknown/any
-  UNKNOWN(/* isPrimitive= */ false, /* boxed= */ null),
+  UNKNOWN(
+      /* isJsPrimitive= */ false,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ true,
+      /* isTypesystemPrimitive= */ true),
   // The supertype of all objects but not primitives. Separate from UNKNOWN because some
   // optimizations back off on any non-object primitives + unknown but operate on the top object +
   // all other objects.
-  TOP_OBJECT(/* isPrimitive= */ false, /* boxed= */ null);
+  TOP_OBJECT(
+      /* isJsPrimitive= */ false,
+      /* boxed= */ null,
+      /* alwaysInvalidating= */ true,
+      /* isTypesystemPrimitive= */ true);
 
-  private final boolean isPrimitive;
+  private final boolean isJsPrimitive;
   private final NativeColorId boxed;
+  private final boolean alwaysInvalidating;
+  private final boolean isTypesystemPrimitive;
 
-  NativeColorId(boolean isPrimitive, NativeColorId boxed) {
-    this.isPrimitive = isPrimitive;
+  NativeColorId(
+      boolean isJsPrimitive,
+      NativeColorId boxed,
+      boolean alwaysInvalidating,
+      boolean isTypesystemPrimitive) {
+    this.isJsPrimitive = isJsPrimitive;
     this.boxed = boxed;
+    this.alwaysInvalidating = alwaysInvalidating;
+    this.isTypesystemPrimitive = isTypesystemPrimitive;
   }
 
+  /** Whether this is some JavaScript primitive type like number or string */
   final boolean isPrimitive() {
-    return this.isPrimitive;
+    return this.isJsPrimitive;
+  }
+
+  /**
+   * Whether this is some primitive type-system type that exists a priori in the colors, as opposed
+   * to the nativd object colors like Number whose properites may vary between compilations.
+   */
+  final boolean isTypesystemPrimitive() {
+    return this.isTypesystemPrimitive;
+  }
+
+  /**
+   * Whether this type is invalidating in every possible compiler invocation
+   *
+   * <p>Only call this from the ColorRegistry. It's possible that in a given compiler invocation,
+   * more native types (like NUMBER_OBJECT) are invalidating, which will be reflected in the actual
+   * {@link Color} corresponding to NUMBER_OBJECT.
+   */
+  final boolean alwaysInvalidating() {
+    return this.alwaysInvalidating;
   }
 
   public final NativeColorId box() {
