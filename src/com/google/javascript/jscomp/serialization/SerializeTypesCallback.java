@@ -62,4 +62,8 @@ final class SerializeTypesCallback extends AbstractPostOrderCallback {
   TypePool generateTypePool() {
     return jstypeSerializer.generateTypePool();
   }
+
+  JSTypeSerializer getSerializer() {
+    return this.jstypeSerializer;
+  }
 }
