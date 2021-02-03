@@ -386,7 +386,7 @@ public class NodeTraversal {
     // TODO(user): It is possible to get more information if currentNode or
     // its parent is missing. We still have the scope stack in which it is still
     // very useful to find out at least which function caused the exception.
-    if (inputId != null) {
+    if (currentScript != null) {
       message =
           unexpectedException.getMessage()
               + "\n"
@@ -773,6 +773,9 @@ public class NodeTraversal {
    * @return A string that may be empty, but not null
    */
   public String getSourceName() {
+    if (sourceName == null) {
+      sourceName = currentScript != null ? currentScript.getSourceFileName() : "";
+    }
     return sourceName;
   }
 
@@ -780,6 +783,7 @@ public class NodeTraversal {
    * Gets the current input source.
    */
   public CompilerInput getInput() {
+    InputId inputId = getInputId();
     if (compilerInput == null && inputId != null) {
       compilerInput = compiler.getInput(inputId);
     }
@@ -835,10 +839,10 @@ public class NodeTraversal {
       throw new RuntimeException(new InterruptedException());
     }
     setChangeScope(n);
-    setInputId(n.getInputId(), getSourceName(n));
 
     currentNode = n;
     currentScript = n;
+    clearScriptState();
     if (callback.shouldTraverse(this, n, parent)) {
       traverseChildren(n);
       currentNode = n;
@@ -1354,12 +1358,8 @@ public class NodeTraversal {
     Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(traversalRoot);
     setChangeScope(changeScope);
     Node script = getEnclosingScript(changeScope);
-    if (script != null) {
-      setInputId(script.getInputId(), script.getSourceFileName());
-    } else {
-      setInputId(null, "");
-    }
     currentScript = script;
+    clearScriptState();
   }
 
   /**
@@ -1390,17 +1390,25 @@ public class NodeTraversal {
     return false;
   }
 
-  private void setInputId(InputId id, String sourceName) {
-    inputId = id;
-    this.sourceName = sourceName;
+  /**
+   * This is used to clear any cached state with regard to the current script and should be called
+   *
+   * <p>before traversing a SCRIPT rootedß subtree.
+   */
+  private void clearScriptState() {
+    inputId = null;
+    sourceName = null;
     compilerInput = null;
   }
 
   InputId getInputId() {
+    if (currentScript != null && inputId == null) {
+      inputId = currentScript.getInputId();
+    }
     return inputId;
   }
 
   private String getBestSourceFileName(Node n) {
-    return n == null ? sourceName : n.getSourceFileName();
+    return n == null ? getSourceName() : n.getSourceFileName();
   }
 }
