@@ -181,7 +181,10 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
     //   - the parameter type nodes from the FunctionType on the FUNCTION node
     // Always visit every AST parameter once, regardless of how many IIFE arguments or
     // FunctionType param nodes there are.
-    for (Node astParameter : astParameters.children()) {
+    for (Node astParamItr = astParameters.getFirstChild();
+        astParamItr != null;
+        astParamItr = astParamItr.getNext()) {
+      Node astParam = astParamItr;
       if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
         // block inference on all parameters that might possibly be set by a spread, e.g. `z` in
         // (function f(x, y, z = 1))(...[1, 2], 'foo')
@@ -191,7 +194,7 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       // Running variable for the type of the param within the body of the function. We use the
       // existing type on the param node as the default, and then transform it according to the
       // declaration syntax.
-      JSType inferredType = getJSType(astParameter);
+      JSType inferredType = getJSType(astParam);
 
       if (iifeArgumentNode != null) {
         if (iifeArgumentNode.getJSType() != null) {
@@ -204,15 +207,15 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
       }
 
       Node defaultValue = null;
-      if (astParameter.isDefaultValue()) {
-        defaultValue = astParameter.getSecondChild();
+      if (astParam.isDefaultValue()) {
+        defaultValue = astParam.getSecondChild();
         // must call `traverse` to correctly type the default value
         entryFlowScope = traverse(defaultValue, entryFlowScope);
-        astParameter = astParameter.getFirstChild();
-      } else if (astParameter.isRest()) {
+        astParam = astParam.getFirstChild();
+      } else if (astParam.isRest()) {
         // e.g. `function f(p1, ...restParamName) {}`
-        // set astParameter = restParamName
-        astParameter = astParameter.getOnlyChild();
+        // set astParam = restParamName
+        astParam = astParam.getOnlyChild();
         // convert 'number' into 'Array<number>' for rest parameters
         inferredType =
             registry.createTemplatizedType(registry.getNativeObjectType(ARRAY_TYPE), inferredType);
@@ -225,15 +228,15 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
                 inferredType.restrictByNotUndefined(), getJSType(defaultValue));
       }
 
-      if (astParameter.isDestructuringPattern()) {
+      if (astParam.isDestructuringPattern()) {
         // even if the inferredType is null, we still need to type all the nodes inside the
         // destructuring pattern. (e.g. in computed properties or default value expressions)
-        entryFlowScope = updateDestructuringParameter(astParameter, inferredType, entryFlowScope);
+        entryFlowScope = updateDestructuringParameter(astParam, inferredType, entryFlowScope);
       } else {
         // for simple named parameters, we only need to update the scope/AST if we have a new
         // inferred type.
         entryFlowScope =
-            updateNamedParameter(astParameter, defaultValue != null, inferredType, entryFlowScope);
+            updateNamedParameter(astParam, defaultValue != null, inferredType, entryFlowScope);
       }
 
       parameter = parameterTypes.hasNext() ? parameterTypes.next() : null;
@@ -1364,7 +1367,9 @@ class TypeInference extends DataFlowAnalysis.BranchedForwardDataFlowAnalysis<Nod
   }
 
   private FlowScope traverseDeclaration(Node n, FlowScope scope) {
-    for (Node declarationChild : n.children()) {
+    for (Node declarationChild = n.getFirstChild();
+        declarationChild != null;
+        declarationChild = declarationChild.getNext()) {
       scope = traverseDeclarationChild(declarationChild, scope);
     }
 

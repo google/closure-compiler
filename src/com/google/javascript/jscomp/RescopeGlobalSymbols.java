@@ -402,7 +402,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
       //    ASSIGN
       //      NAME foo
       //      NUMBER 3
-      for (Node child : declaration.children()) {
+      for (Node child = declaration.getFirstChild(); child != null; ) {
+        final Node next = child.getNext();
         if (child.isName() && child.hasChildren()) {
           Node assign = IR.assign(child.cloneNode(), child.removeFirstChild());
           child.replaceWith(assign);
@@ -421,6 +422,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
             assign.setJSDocInfo(declaration.getJSDocInfo());
           }
         }
+        child = next;
       }
       compiler.reportChangeToEnclosingScope(declaration);
     }
@@ -535,7 +537,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       // because the previous traversal in RewriteScopeCallback creates
       // them.
       boolean allNameOrDestructuring = true;
-      for (Node c : n.children()) {
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (!c.isName() && !c.isDestructuringLhs()) {
           allNameOrDestructuring = false;
         }

@@ -53,7 +53,7 @@ public final class InjectTranspilationRuntimeLibraries extends AbstractPostOrder
   @Override
   public void process(Node externs, Node root) {
     FeatureSet used = FeatureSet.ES3;
-    for (Node script : root.children()) {
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       used = used.with(getScriptFeatures(script));
     }
 

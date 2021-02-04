@@ -248,7 +248,9 @@ public class J2clPropertyInlinerPass implements CompilerPass {
           Node getKey = null;
           Node setKey = null;
           boolean hasSetter = false;
-          for (Node innerKey : propertyLiteral.children()) {
+          for (Node innerKey = propertyLiteral.getFirstChild();
+              innerKey != null;
+              innerKey = innerKey.getNext()) {
             if (!innerKey.isStringKey()) {
               continue;
             }
@@ -282,7 +284,9 @@ public class J2clPropertyInlinerPass implements CompilerPass {
         Map<String, Node> getterDefByName = new LinkedHashMap<>();
 
         // Collect static setters and getters.
-        for (Node memberFunction : classMembers.children()) {
+        for (Node memberFunction = classMembers.getFirstChild();
+            memberFunction != null;
+            memberFunction = memberFunction.getNext()) {
           if (!memberFunction.isStaticMember()) {
             // The only getters and setters we care about are static.
             continue;

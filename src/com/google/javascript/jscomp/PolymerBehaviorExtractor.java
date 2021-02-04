@@ -95,7 +95,9 @@ final class PolymerBehaviorExtractor {
     }
 
     ImmutableList.Builder<BehaviorDefinition> behaviors = ImmutableList.builder();
-    for (Node behaviorName : behaviorArray.children()) {
+    for (Node behaviorName = behaviorArray.getFirstChild();
+        behaviorName != null;
+        behaviorName = behaviorName.getNext()) {
       if (behaviorName.isObjectLit()) {
         PolymerPassStaticUtils.switchDollarSignPropsToBrackets(behaviorName, compiler);
         PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorName, compiler);
@@ -418,7 +420,9 @@ final class PolymerBehaviorExtractor {
     checkState(behaviorObjLit.isObjectLit());
     ImmutableList.Builder<MemberDefinition> functionsToCopy = ImmutableList.builder();
 
-    for (Node keyNode : behaviorObjLit.children()) {
+    for (Node keyNode = behaviorObjLit.getFirstChild();
+        keyNode != null;
+        keyNode = keyNode.getNext()) {
       boolean isFunctionDefinition = (keyNode.isStringKey() && keyNode.getFirstChild().isFunction())
           || keyNode.isMemberFunctionDef();
       if (isFunctionDefinition && !BEHAVIOR_NAMES_NOT_TO_COPY.contains(keyNode.getString())) {
@@ -461,7 +465,9 @@ final class PolymerBehaviorExtractor {
     checkState(behaviorObjLit.isObjectLit());
     ImmutableList.Builder<MemberDefinition> membersToCopy = ImmutableList.builder();
 
-    for (Node keyNode : behaviorObjLit.children()) {
+    for (Node keyNode = behaviorObjLit.getFirstChild();
+        keyNode != null;
+        keyNode = keyNode.getNext()) {
       boolean isNonFunctionMember = keyNode.isGetterDef()
           || (keyNode.isStringKey() && !keyNode.getFirstChild().isFunction());
       if (isNonFunctionMember && !BEHAVIOR_NAMES_NOT_TO_COPY.contains(keyNode.getString())) {

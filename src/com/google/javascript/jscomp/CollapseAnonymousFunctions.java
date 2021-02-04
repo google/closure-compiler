@@ -114,7 +114,7 @@ class CollapseAnonymousFunctions extends AbstractPostOrderCallback implements Co
       return true;
     }
 
-    for (Node child : n.children()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (containsName(child, name)) {
         return true;
       }

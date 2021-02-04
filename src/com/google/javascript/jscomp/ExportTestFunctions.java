@@ -106,13 +106,15 @@ public class ExportTestFunctions implements CompilerPass {
           }
         }
       } else if (isTestSuiteArgument(n, t)) {
-        for (Node c : n.children()) {
+        for (Node c = n.getFirstChild(); c != null; ) {
+          final Node next = c.getNext();
           if (c.isStringKey() && !c.isQuotedString()) {
             c.setQuotedString();
             compiler.reportChangeToEnclosingScope(c);
           } else if (c.isMemberFunctionDef()) {
             rewriteMemberDefInObjLit(c, n);
           }
+          c = next;
         }
       }
     }
@@ -124,7 +126,9 @@ public class ExportTestFunctions implements CompilerPass {
 
     private void exportClass(Node scriptNode, Node classNode, String className, Node addAfter) {
       Node classMembers = classNode.getLastChild();
-      for (Node maybeMemberFunctionDef : classMembers.children()) {
+      for (Node maybeMemberFunctionDef = classMembers.getFirstChild();
+          maybeMemberFunctionDef != null;
+          maybeMemberFunctionDef = maybeMemberFunctionDef.getNext()) {
         if (maybeMemberFunctionDef.isMemberFunctionDef()) {
           String methodName = maybeMemberFunctionDef.getString();
           if (isTestFunction(methodName)) {

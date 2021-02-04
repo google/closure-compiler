@@ -130,7 +130,7 @@ class DeclaredGlobalExternsOnWindow implements CompilerPass, NodeTraversal.Callb
     if (n.isFunction()) {
       nodes.add(n.getFirstChild());
     } else if (n.isVar()) {
-      for (Node c : n.children()) {
+      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (c.getString().equals(WINDOW_NAME)) {
           windowInExterns = true;
           continue;

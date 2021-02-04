@@ -213,7 +213,9 @@ public final class TemplateAstMatcher {
       Preconditions.checkNotNull(info,
           "Missing JSDoc declaration for template function %s", fnName);
     }
-    for (Node paramNode : templateParametersNode.children()) {
+    for (Node paramNode = templateParametersNode.getFirstChild();
+        paramNode != null;
+        paramNode = paramNode.getNext()) {
       String name = paramNode.getString();
       JSTypeExpression expression = info.getParameterType(name);
       Preconditions.checkNotNull(expression,

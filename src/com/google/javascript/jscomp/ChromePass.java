@@ -250,7 +250,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private static Map<String, String> objectLitToMap(Node objectLit) {
     Map<String, String> res = new HashMap<>();
 
-    for (Node keyNode : objectLit.children()) {
+    for (Node keyNode = objectLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       String key = keyNode.getString();
 
       Node valueNode = keyNode.getFirstChild();

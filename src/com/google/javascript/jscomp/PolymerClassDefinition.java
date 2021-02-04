@@ -219,7 +219,7 @@ final class PolymerClassDefinition {
     }
 
     List<MemberDefinition> methods = new ArrayList<>();
-    for (Node keyNode : descriptor.children()) {
+    for (Node keyNode = descriptor.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       boolean isFunctionDefinition =
           keyNode.isMemberFunctionDef()
               || (keyNode.isStringKey() && keyNode.getFirstChild().isFunction());
@@ -306,7 +306,10 @@ final class PolymerClassDefinition {
         compiler.report(
             JSError.make(classNode, PolymerPassErrors.POLYMER_CLASS_PROPERTIES_NOT_STATIC));
       } else {
-        for (Node child : NodeUtil.getFunctionBody(propertiesGetter.getFirstChild()).children()) {
+        for (Node child =
+                NodeUtil.getFunctionBody(propertiesGetter.getFirstChild()).getFirstChild();
+            child != null;
+            child = child.getNext()) {
           if (child.isReturn()) {
             if (child.hasChildren() && child.getFirstChild().isObjectLit()) {
               propertiesDescriptor = child.getFirstChild();
@@ -348,7 +351,9 @@ final class PolymerClassDefinition {
             propertiesDescriptor, DefinitionType.ES6Class, compiler, constructor);
 
     List<MemberDefinition> methods = new ArrayList<>();
-    for (Node keyNode : NodeUtil.getClassMembers(classNode).children()) {
+    for (Node keyNode = NodeUtil.getClassMembers(classNode).getFirstChild();
+        keyNode != null;
+        keyNode = keyNode.getNext()) {
       if (!keyNode.isMemberFunctionDef()) {
         continue;
       }

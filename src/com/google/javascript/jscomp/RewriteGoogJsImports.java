@@ -259,7 +259,9 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     boolean valid = true;
     Node googImportNode = null;
 
-    for (Node child : scriptRoot.getFirstChild().children()) {
+    for (Node child = scriptRoot.getFirstChild().getFirstChild();
+        child != null;
+        child = child.getNext()) {
       if (child.isImport() && child.getLastChild().getString().endsWith("/goog.js")) {
         if (child.getFirstChild().isEmpty()
             && child.getSecondChild().isImportStar()
@@ -327,7 +329,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     ModulePath expectedGoogPath = null;
 
     // Find Closure's base.js file. goog.js should be right next to it.
-    for (Node script : root.children()) {
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       ImmutableList<String> provides = compiler.getInput(script.getInputId()).getProvides();
       if (provides.contains(EXPECTED_BASE_PROVIDE)) {
         // Use resolveModuleAsPath as if it is not part of the input we don't want to report an
@@ -341,7 +343,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     if (expectedGoogPath != null) {
       Node googScriptNode = null;
 
-      for (Node script : root.children()) {
+      for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
         if (compiler
             .getInput(script.getInputId())
             .getPath()
@@ -394,7 +396,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
       checkState(mode == Mode.LINT_ONLY);
     }
 
-    for (Node script : root.children()) {
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       rewriteImports(script);
     }
 

@@ -108,7 +108,7 @@ public final class GatherGetterAndSetterProperties implements CompilerPass {
      * }</pre>
      */
     private void visitDescriptor(String propertyName, Node descriptor) {
-      for (Node key : descriptor.children()) {
+      for (Node key = descriptor.getFirstChild(); key != null; key = key.getNext()) {
         if (key.isStringKey() || key.isMemberFunctionDef()) {
           if ("get".equals(key.getString())) {
             record(propertyName, PropertyAccessKind.GETTER_ONLY);
@@ -138,7 +138,7 @@ public final class GatherGetterAndSetterProperties implements CompilerPass {
         return;
       }
 
-      for (Node prop : props.children()) {
+      for (Node prop = props.getFirstChild(); prop != null; prop = prop.getNext()) {
         if (prop.isStringKey() && prop.hasOneChild() && prop.getFirstChild().isObjectLit()) {
           String propertyName = prop.getString();
           Node descriptor = prop.getFirstChild();

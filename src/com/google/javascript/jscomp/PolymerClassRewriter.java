@@ -516,7 +516,7 @@ final class PolymerClassRewriter {
   private void addTypesToFunctions(
       Node objLit, String thisType, PolymerClassDefinition.DefinitionType defType) {
     checkState(objLit.isObjectLit());
-    for (Node keyNode : objLit.children()) {
+    for (Node keyNode = objLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       Node value = keyNode.getLastChild();
       if (value != null && value.isFunction()) {
         JSDocInfo.Builder fnDoc = JSDocInfo.Builder.maybeCopyFrom(keyNode.getJSDocInfo());
@@ -925,8 +925,11 @@ final class PolymerClassRewriter {
           }
           // Remove any non-named parameters, which may reference locals.
           int paramIndex = 0;
-          for (Node param : NodeUtil.getFunctionParameters(fnValue).children()) {
+          for (Node param = NodeUtil.getFunctionParameters(fnValue).getFirstChild();
+              param != null; ) {
+            final Node next = param.getNext();
             makeParamSafe(param, paramIndex++);
+            param = next;
           }
         }
 
@@ -1226,7 +1229,9 @@ final class PolymerClassRewriter {
     Node getter = NodeUtil.getFirstGetterMatchingKey(classMembers, "observers");
     if (getter != null) {
       Node complexObservers = null;
-      for (Node child : NodeUtil.getFunctionBody(getter.getFirstChild()).children()) {
+      for (Node child = NodeUtil.getFunctionBody(getter.getFirstChild()).getFirstChild();
+          child != null;
+          child = child.getNext()) {
         if (child.isReturn()) {
           if (child.hasChildren() && child.getFirstChild().isArrayLit()) {
             complexObservers = child.getFirstChild();
@@ -1235,11 +1240,13 @@ final class PolymerClassRewriter {
         }
       }
       if (complexObservers != null) {
-        for (Node complexObserver : complexObservers.children()) {
+        for (Node complexObserver = complexObservers.getFirstChild(); complexObserver != null; ) {
+          final Node next = complexObserver.getNext();
           if (complexObserver.isString()) {
             propertySinkStatements.addAll(
                 replaceMethodStringWithReflectedCalls(cls.target, complexObserver));
           }
+          complexObserver = next;
         }
       }
     }

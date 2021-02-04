@@ -250,7 +250,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     if (part instanceof JsMessage.PlaceholderReference) {
       JsMessage.PlaceholderReference phRef = (JsMessage.PlaceholderReference) part;
 
-      for (Node node : argListNode.children()) {
+      for (Node node = argListNode.getFirstChild(); node != null; node = node.getNext()) {
         if (node.isName()) {
           String arg = node.getString();
 

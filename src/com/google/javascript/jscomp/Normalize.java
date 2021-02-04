@@ -448,10 +448,12 @@ class Normalize implements CompilerPass {
         } else {
           names = NodeUtil.findLhsNodesInNode(c);
           // Split up var declarations onto separate lines.
-          for (Node child : c.children()) {
-            c.removeChild(child);
+          for (Node child = c.getFirstChild(); child != null; ) {
+            final Node next = child.getNext();
+            child.detach();
             Node newDeclaration = new Node(c.getToken(), child).srcref(n);
             n.getParent().addChildBefore(newDeclaration, n);
+            child = next;
           }
         }
 

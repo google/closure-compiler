@@ -582,7 +582,7 @@ class TypeTransformation {
 
   private JSType evalRecord(Node record, NameResolver nameResolver) {
     Map<String, JSType> props = new LinkedHashMap<>();
-    for (Node propNode : record.children()) {
+    for (Node propNode = record.getFirstChild(); propNode != null; propNode = propNode.getNext()) {
       // If it is a computed property then find the property name using the resolver
       if (propNode.isComputedProp()) {
         String compPropName = getComputedPropName(propNode);

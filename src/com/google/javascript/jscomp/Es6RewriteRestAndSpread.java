@@ -102,7 +102,7 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
       case ARRAYLIT:
       case NEW:
       case CALL:
-        for (Node child : current.children()) {
+        for (Node child = current.getFirstChild(); child != null; child = child.getNext()) {
           if (child.isSpread()) {
             visitArrayLitOrCallWithSpread(current);
             break;
@@ -160,8 +160,10 @@ public final class Es6RewriteRestAndSpread extends NodeTraversal.AbstractPostOrd
     newBlock.addChildToFront(let);
     NodeUtil.addFeatureToScript(t.getCurrentScript(), Feature.LET_DECLARATIONS, compiler);
 
-    for (Node child : functionBody.children()) {
+    for (Node child = functionBody.getFirstChild(); child != null; ) {
+      final Node next = child.getNext();
       newBlock.addChildToBack(child.detach());
+      child = next;
     }
 
     Node newArrayDeclaration = IR.var(newArrayName.cloneTree(), arrayLitWithJSType());

@@ -244,7 +244,7 @@ public final class DestructuredTarget {
       JSTypeRegistry registry, Supplier<JSType> patternType, Node pattern) {
     checkArgument(pattern.isDestructuringPattern(), pattern);
     ImmutableList.Builder<DestructuredTarget> builder = ImmutableList.builder();
-    for (Node child : pattern.children()) {
+    for (Node child = pattern.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isEmpty()) {
         continue;
       }

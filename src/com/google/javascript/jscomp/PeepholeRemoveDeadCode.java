@@ -156,7 +156,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     Node ret = null;
-    for (Node child : block.children()) {
+    for (Node child = block.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isSyntheticBlock() && !child.hasChildren()) {
         // Uninteresting child.
       } else if (ret != null) {
@@ -705,7 +705,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       Node block = executingCase.getLastChild();
       checkState(block.isBlock());
       if (block.hasChildren()) {
-        for (Node blockChild : block.children()) {
+        for (Node blockChild = block.getFirstChild();
+            blockChild != null;
+            blockChild = blockChild.getNext()) {
           // If this is a block with a labelless break, it is useless.
           switch (blockChild.getToken()) {
             case BREAK:

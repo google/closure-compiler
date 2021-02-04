@@ -117,7 +117,7 @@ class AggressiveInlineAliases implements CompilerPass {
       if (!rhs.isQualifiedName()) {
         return false;
       }
-      for (Node key : objectPattern.children()) {
+      for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
         if (!key.isStringKey() || key.isQuotedString()) {
           return false;
         }
@@ -141,7 +141,7 @@ class AggressiveInlineAliases implements CompilerPass {
       Node destructuringLhs = n.getFirstChild();
       Node objectPattern = destructuringLhs.getFirstChild();
       Node rhs = destructuringLhs.getLastChild();
-      for (Node key : objectPattern.children()) {
+      for (Node key = objectPattern.getFirstChild(); key != null; key = key.getNext()) {
         Node identifier = key.getFirstChild();
         Node newRhs =
             IR.getprop(rhs.cloneTree(), IR.string(key.getString()).srcref(key)).srcref(identifier);

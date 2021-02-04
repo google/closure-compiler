@@ -123,7 +123,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
 
   private static Node getPlaceholderValue(
       Node placeholderValues, String placeholderName) {
-    for (Node key : placeholderValues.children()) {
+    for (Node key = placeholderValues.getFirstChild(); key != null; key = key.getNext()) {
       if (key.getString().equals(placeholderName)) {
         return key.getFirstChild().cloneTree();
       }

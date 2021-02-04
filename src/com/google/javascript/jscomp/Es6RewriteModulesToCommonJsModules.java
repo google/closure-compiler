@@ -60,7 +60,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    for (Node script : root.children()) {
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       if (Es6RewriteModules.isEs6ModuleRoot(script)) {
         NodeTraversal.traverse(compiler, script, new Rewriter(compiler, script));
         script.putBooleanProp(Node.TRANSPILED, true);
@@ -449,7 +449,9 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
       String moduleName = getVarNameOfImport(moduleIdentifier.getString());
 
-      for (Node exportSpec : export.getFirstChild().children()) {
+      for (Node exportSpec = export.getFirstChild().getFirstChild();
+          exportSpec != null;
+          exportSpec = exportSpec.getNext()) {
         exportedNameToLocalQName.put(
             exportSpec.getLastChild().getString(),
             new LocalQName(moduleName + "." + exportSpec.getFirstChild().getString(), exportSpec));
@@ -461,7 +463,9 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
     private void visitExportSpecs(NodeTraversal t, Node export, Node parent) {
       //     export {Foo};
-      for (Node exportSpec : export.getFirstChild().children()) {
+      for (Node exportSpec = export.getFirstChild().getFirstChild();
+          exportSpec != null;
+          exportSpec = exportSpec.getNext()) {
         String localName = exportSpec.getFirstChild().getString();
         Var var = t.getScope().getVar(localName);
         if (var != null && NodeUtil.isImportedName(var.getNameNode())) {

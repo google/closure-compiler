@@ -335,7 +335,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       return false;
     }
 
-    for (Node key : objlit.children()) {
+    for (Node key = objlit.getFirstChild(); key != null; key = key.getNext()) {
       if (key.isMemberFunctionDef()) {
         continue;
       }
@@ -374,7 +374,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
    * @return The first property in the objlit that matches the key.
    */
   private static Node extractProperty(Node objlit, String keyName) {
-    for (Node keyNode : objlit.children()) {
+    for (Node keyNode = objlit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       if (keyNode.getString().equals(keyName)) {
         return keyNode.getFirstChild();
       }
@@ -385,7 +385,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   private static List<MemberDefinition> objectLitToList(
       Node objlit) {
     List<MemberDefinition> result = new ArrayList<>();
-    for (Node keyNode : objlit.children()) {
+    for (Node keyNode = objlit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       Node name = keyNode;
       // The span of a member function def is the whole function. The NAME node should be the
       // first-first child, which will have a span for just the name of the function.

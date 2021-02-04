@@ -434,7 +434,9 @@ public class TranspilationPasses {
       AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
       FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
-      for (Node singleRoot : combinedRoot.children()) {
+      for (Node singleRoot = combinedRoot.getFirstChild();
+          singleRoot != null;
+          singleRoot = singleRoot.getNext()) {
 
         // Only run the transpilation if this file has features not in the compiler's target output
         // language. For example, if this file is purely ES6 and the output language is ES6, don't

@@ -1912,7 +1912,7 @@ public final class NodeUtil {
   @Nullable
   static Node getFirstPropMatchingKey(Node n, String keyName) {
     checkState(n.isObjectLit() || n.isClassMembers());
-    for (Node keyNode : n.children()) {
+    for (Node keyNode = n.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       if ((keyNode.isStringKey() || keyNode.isMemberFunctionDef())
           && keyNode.getString().equals(keyName)) {
         return keyNode.getFirstChild();
@@ -1925,7 +1925,7 @@ public final class NodeUtil {
   @Nullable
   static Node getFirstGetterMatchingKey(Node n, String keyName) {
     checkState(n.isClassMembers() || n.isObjectLit(), n);
-    for (Node keyNode : n.children()) {
+    for (Node keyNode = n.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       if (keyNode.isGetterDef() && keyNode.getString().equals(keyName)) {
         return keyNode;
       }
@@ -4100,7 +4100,7 @@ public final class NodeUtil {
     checkArgument(NodeUtil.isObjectDefinePropertiesDefinition(definePropertiesCall));
     List<Node> properties = new ArrayList<>();
     Node objectLiteral = definePropertiesCall.getLastChild();
-    for (Node key : objectLiteral.children()) {
+    for (Node key = objectLiteral.getFirstChild(); key != null; key = key.getNext()) {
       if (!key.isStringKey()) {
         continue;
       }

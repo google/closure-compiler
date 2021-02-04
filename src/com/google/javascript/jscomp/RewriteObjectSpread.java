@@ -72,7 +72,7 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
   }
 
   private void visitObject(NodeTraversal t, Node obj) {
-    for (Node child : obj.children()) {
+    for (Node child = obj.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isSpread()) {
         visitObjectWithSpread(t, obj);
         return;
@@ -99,7 +99,8 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
     // object literal in first position of the param list.
     Node trailingObjectLiteral = null;
 
-    for (Node child : obj.children()) {
+    for (Node child = obj.getFirstChild(); child != null; ) {
+      final Node next = child.getNext();
       if (child.isSpread()) {
         // Add the object directly to the param list.
         Node spreaded = child.removeFirstChild();
@@ -116,6 +117,7 @@ public final class RewriteObjectSpread implements NodeTraversal.Callback, HotSwa
         // Add the property to the object literal.
         trailingObjectLiteral.addChildToBack(child.detach());
       }
+      child = next;
     }
 
     result.useSourceInfoIfMissingFromForTree(obj);

@@ -87,7 +87,7 @@ final class PolymerPassStaticUtils {
    */
   static void switchDollarSignPropsToBrackets(Node def, final AbstractCompiler compiler) {
     checkState(def.isObjectLit() || def.isClassMembers());
-    for (Node keyNode : def.children()) {
+    for (Node keyNode = def.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       Node value = keyNode.getFirstChild();
       if (value != null && value.isFunction()) {
         NodeUtil.visitPostOrder(
@@ -121,7 +121,7 @@ final class PolymerPassStaticUtils {
    */
   static void quoteListenerAndHostAttributeKeys(Node objLit, AbstractCompiler compiler) {
     checkState(objLit.isObjectLit());
-    for (Node keyNode : objLit.children()) {
+    for (Node keyNode = objLit.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       if (keyNode.isComputedProp()) {
         continue;
       }
@@ -129,7 +129,9 @@ final class PolymerPassStaticUtils {
           && !keyNode.getString().equals("hostAttributes")) {
         continue;
       }
-      for (Node keyToQuote : keyNode.getFirstChild().children()) {
+      for (Node keyToQuote = keyNode.getFirstChild().getFirstChild();
+          keyToQuote != null;
+          keyToQuote = keyToQuote.getNext()) {
         if (!keyToQuote.isQuotedString()) {
           keyToQuote.setQuotedString();
           compiler.reportChangeToEnclosingScope(keyToQuote);
@@ -167,7 +169,7 @@ final class PolymerPassStaticUtils {
     }
 
     ImmutableList.Builder<MemberDefinition> members = ImmutableList.builder();
-    for (Node keyNode : properties.children()) {
+    for (Node keyNode = properties.getFirstChild(); keyNode != null; keyNode = keyNode.getNext()) {
       // The JSDoc for a Polymer property in the constructor should win over the JSDoc in the
       // Polymer properties configuration object.
       JSDocInfo constructorJsDoc = constructorPropertyJsDoc.get(keyNode.getString());
@@ -196,7 +198,7 @@ final class PolymerPassStaticUtils {
    */
   private static void collectConstructorPropertyJsDoc(Node node, Map<String, JSDocInfo> map) {
     checkNotNull(node);
-    for (Node child : node.children()) {
+    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isGetProp()
           && child.getFirstChild().isThis()
           && child.getSecondChild().isString()) {

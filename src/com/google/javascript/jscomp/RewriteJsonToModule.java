@@ -177,7 +177,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
    * track the entries in that object literal as module file replacements.
    */
   private void processBrowserFieldAdvancedUsage(String dirName, Node entry) {
-    for (Node child : entry.children()) {
+    for (Node child = entry.getFirstChild(); child != null; child = child.getNext()) {
       Node value = child.getFirstChild();
 
       checkState(child.isStringKey() && (value.isString() || value.isFalse()));

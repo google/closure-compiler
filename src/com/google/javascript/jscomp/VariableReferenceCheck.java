@@ -104,7 +104,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       return true;
     }
     if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
-      for (Node singleRoot : root.children()) {
+      for (Node singleRoot = root.getFirstChild();
+          singleRoot != null;
+          singleRoot = singleRoot.getNext()) {
         if (TranspilationPasses.isScriptEs6OrHigher(singleRoot)) {
           return true;
         }

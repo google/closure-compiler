@@ -355,7 +355,9 @@ final class CheckClosureImports implements HotSwapCompilerPass {
       if (!objectPattern.isObjectPattern()) {
         return false;
       }
-      for (Node stringKey : objectPattern.children()) {
+      for (Node stringKey = objectPattern.getFirstChild();
+          stringKey != null;
+          stringKey = stringKey.getNext()) {
         if (!stringKey.isStringKey()) {
           return false;
         }

@@ -158,7 +158,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     Node constructor = null;
     // Process all members of the class
     Node classMembers = classNode.getLastChild();
-    for (Node member : classMembers.children()) {
+    for (Node member = classMembers.getFirstChild(); member != null; ) {
+      final Node next = member.getNext();
       if ((member.isComputedProp()
               && (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
@@ -182,6 +183,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
             "Member variables should have been transpiled earlier:", member);
         visitMethod(member, metadata);
       }
+      member = next;
     }
     checkNotNull(
         constructor,

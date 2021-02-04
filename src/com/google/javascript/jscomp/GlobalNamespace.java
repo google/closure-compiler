@@ -290,7 +290,7 @@ class GlobalNamespace
       // e.g. if we change `const {x} = bar` to `const {x} = foo`, add a new reference to `foo.x`
       // attached to the STRING_KEY `x`
       Node pattern = n.getPrevious();
-      for (Node key : pattern.children()) {
+      for (Node key = pattern.getFirstChild(); key != null; key = key.getNext()) {
         if (key.isStringKey()) {
           scanFromNode(builder, module, scope, key);
         }

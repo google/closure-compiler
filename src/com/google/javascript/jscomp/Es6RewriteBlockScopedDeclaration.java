@@ -88,7 +88,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       letConsts.add(n);
     }
     if (NodeUtil.isNameDeclaration(n)) {
-      for (Node nameNode : n.children()) {
+      for (Node nameNode = n.getFirstChild(); nameNode != null; nameNode = nameNode.getNext()) {
         visitBlockScopedName(t, n, nameNode);
       }
     } else {

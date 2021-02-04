@@ -379,7 +379,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     } else if (importLhs.isDestructuringLhs() && nextQnamePart != null) {
       Node objPattern = importLhs.getFirstChild();
       checkState(objPattern.isObjectPattern(), objPattern);
-      for (Node strKey : objPattern.children()) {
+      for (Node strKey = objPattern.getFirstChild(); strKey != null; strKey = strKey.getNext()) {
         // const {foo: barFoo} = goog.require('ns.bar');
         // Should use the short name "barFoo" instead of "ns.bar.foo".
         if (strKey.hasOneChild() && strKey.getString().equals(nextQnamePart)) {
@@ -520,7 +520,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     if (!objectPattern.isObjectPattern()) {
       return false;
     }
-    for (Node stringKey : objectPattern.children()) {
+    for (Node stringKey = objectPattern.getFirstChild();
+        stringKey != null;
+        stringKey = stringKey.getNext()) {
       if (!stringKey.isStringKey()) {
         return false;
       } else if (!stringKey.getFirstChild().isName()) {

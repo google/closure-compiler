@@ -127,9 +127,9 @@ class CheckUnusedPrivateProperties
        }
 
        case OBJECTLIT: {
-         // Assume any object literal definition might be a reflection on the
-         // class property.
-         for (Node c : n.children()) {
+          // Assume any object literal definition might be a reflection on the
+          // class property.
+          for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
             if (c.isStringKey() || c.isGetterDef() || c.isSetterDef() || c.isMemberFunctionDef()) {
               used.add(c.getString());
             }

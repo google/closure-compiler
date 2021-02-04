@@ -1595,7 +1595,7 @@ public final class ConformanceRules {
         return true;
       } else if (typeExprNode.getToken() == Token.PIPE) {
         // Might be a union type including ? that's collapsed during checking.
-        for (Node child : typeExprNode.children()) {
+        for (Node child = typeExprNode.getFirstChild(); child != null; child = child.getNext()) {
           if (child.getToken() == Token.QMARK) {
             return true;
           }

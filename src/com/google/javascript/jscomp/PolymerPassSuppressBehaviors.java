@@ -62,7 +62,7 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
     }
 
     if (behaviorValue.isArrayLit()) {
-      for (Node child : behaviorValue.children()) {
+      for (Node child = behaviorValue.getFirstChild(); child != null; child = child.getNext()) {
         suppressBehavior(child, behaviorValue);
       }
     } else if (behaviorValue.isObjectLit()) {
@@ -118,7 +118,9 @@ final class PolymerPassSuppressBehaviors extends ExternsSkippingCallback {
   }
 
   private void addBehaviorSuppressions(Node behaviorValue) {
-    for (Node keyNode : behaviorValue.children()) {
+    for (Node keyNode = behaviorValue.getFirstChild();
+        keyNode != null;
+        keyNode = keyNode.getNext()) {
       if (keyNode.getFirstChild().isFunction()) {
         keyNode.removeProp(Node.JSDOC_INFO_PROP);
         JSDocInfo.Builder suppressDoc = JSDocInfo.builder().parseDocumentation();

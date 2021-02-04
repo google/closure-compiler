@@ -277,7 +277,9 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
               return;
             }
             // const {a, c:b} = goog.requireType('an.es6.namespace');
-            for (Node child : statementNode.getFirstFirstChild().children()) {
+            for (Node child = statementNode.getFirstFirstChild().getFirstChild();
+                child != null;
+                child = child.getNext()) {
               checkState(child.isStringKey());
               checkState(child.getFirstChild().isName());
               renameTable.put(
@@ -294,7 +296,9 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
             // const {a, c:b} = goog.require('an.es6.namespace');
             // const a = module$es6.a;
             // const b = module$es6.c;
-            for (Node child : statementNode.getFirstFirstChild().children()) {
+            for (Node child = statementNode.getFirstFirstChild().getFirstChild();
+                child != null;
+                child = child.getNext()) {
               checkState(child.isStringKey());
               checkState(child.getFirstChild().isName());
               GlobalizedModuleName globalName =
@@ -446,9 +450,11 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       // if not give a better error.
     }
 
-    for (Node child : importDecl.children()) {
+    for (Node child = importDecl.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isImportSpecs()) {
-        for (Node grandChild : child.children()) {
+        for (Node grandChild = child.getFirstChild();
+            grandChild != null;
+            grandChild = grandChild.getNext()) {
           maybeAddAliasToSymbolTable(grandChild.getFirstChild(), t.getSourceName());
           checkState(grandChild.hasTwoChildren());
         }
@@ -757,7 +763,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         }
       }
     }
-    for (Node child : typeNode.children()) {
+    for (Node child = typeNode.getFirstChild(); child != null; child = child.getNext()) {
       inlineAliasedTypes(t, child);
     }
   }
@@ -831,7 +837,9 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         if (parent.isDestructuringLhs()) {
           checkState(parent.getFirstChild().isObjectPattern());
           toDetach = parent.getParent();
-          for (Node child : parent.getFirstChild().children()) {
+          for (Node child = parent.getFirstChild().getFirstChild();
+              child != null;
+              child = child.getNext()) {
             checkState(child.isStringKey() && child.getFirstChild().isName(), child);
             GlobalizedModuleName rep =
                 getGlobalNameAndType(m, namespace, isFromFallbackMetadata)

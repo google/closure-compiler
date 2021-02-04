@@ -262,7 +262,7 @@ class MinimizedCondition {
       } else {
         MeasuredNode[] measuredChildren = new MeasuredNode[node.getChildCount()];
         int child = 0;
-        for (Node c : node.children()) {
+        for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
           measuredChildren[child++] = forNode(c);
         }
         return measuredChildren;

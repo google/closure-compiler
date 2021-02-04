@@ -2219,7 +2219,9 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         @Nullable
         private Node extractAssignmentsToCommaExpression(Node varDeclaration) {
           ArrayList<Node> assignments = new ArrayList<>();
-          for (Node varName : varDeclaration.children()) {
+          for (Node varName = varDeclaration.getFirstChild();
+              varName != null;
+              varName = varName.getNext()) {
             if (varName.hasChildren()) {
               Node copiedVarName = varName.cloneNode().setJSDocInfo(null);
               Node assign =

@@ -516,7 +516,7 @@ public final class JSDocInfoPrinter {
     }
     if (paramList != null) {
       boolean firstParam = true;
-      for (Node param : paramList.children()) {
+      for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
         if (!firstParam || hasNewOrThis) {
           sb.append(",");
         }

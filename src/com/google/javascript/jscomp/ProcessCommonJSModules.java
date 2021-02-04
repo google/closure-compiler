@@ -744,7 +744,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return;
       }
 
-      for (Node dep : dependencies.children()) {
+      for (Node dep = dependencies.getFirstChild(); dep != null; dep = dep.getNext()) {
         if (!dep.isString()) {
           compiler.report(
               JSError.make(

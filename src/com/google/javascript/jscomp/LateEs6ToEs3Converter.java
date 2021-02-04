@@ -167,7 +167,7 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
   }
 
   private void visitObject(Node obj) {
-    for (Node child : obj.children()) {
+    for (Node child = obj.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isComputedProp()) {
         visitObjectWithComputedProperty(obj);
         return;

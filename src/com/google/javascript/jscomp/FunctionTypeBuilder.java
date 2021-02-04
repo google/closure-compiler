@@ -311,7 +311,8 @@ final class FunctionTypeBuilder {
       boolean warnedAboutArgList = false;
       boolean oldParamsListHitOptArgs = false;
       for (Node currentParam = paramsParent.getFirstChild();
-           currentParam != null; currentParam = currentParam.getNext()) {
+          currentParam != null;
+          currentParam = currentParam.getNext()) {
         if (oldParams.hasNext()) {
           Parameter oldParam = oldParams.next();
 
@@ -599,26 +600,28 @@ final class FunctionTypeBuilder {
         (info == null) ? new HashSet<>() : new HashSet<>(info.getParameterNames());
     boolean isVarArgs = false;
     int paramIndex = 0;
-    for (Node param : paramsParent.children()) {
+    for (Node param = paramsParent.getFirstChild(); param != null; param = param.getNext()) {
       boolean isOptionalParam = false;
+      final Node paramLhs;
 
       if (param.isRest()) {
         isVarArgs = true;
-        param = param.getOnlyChild();
+        paramLhs = param.getOnlyChild();
       } else if (param.isDefaultValue()) {
         // The first child is the actual positional parameter
-        param = checkNotNull(param.getFirstChild(), param);
+        paramLhs = checkNotNull(param.getFirstChild(), param);
         isOptionalParam = true;
       } else {
         isVarArgs = isVarArgsParameterByConvention(param);
         isOptionalParam = isOptionalParameterByConvention(param);
+        paramLhs = param;
       }
 
       String paramName = null;
-      if (param.isName()) {
-        paramName = param.getString();
+      if (paramLhs.isName()) {
+        paramName = paramLhs.getString();
       } else {
-        checkState(param.isDestructuringPattern());
+        checkState(paramLhs.isDestructuringPattern());
         // Right now, the only way to match a JSDoc param to a destructuring parameter is through
         // ordering the JSDoc parameters. So the third formal parameter will correspond to the
         // third JSDoc parameter.
@@ -635,8 +638,8 @@ final class FunctionTypeBuilder {
         parameterType = parameterTypeExpression.evaluate(templateScope, typeRegistry);
         isOptionalParam = isOptionalParam || parameterTypeExpression.isOptionalArg();
         isVarArgs = isVarArgs || parameterTypeExpression.isVarArgs();
-      } else if (param.getJSDocInfo() != null && param.getJSDocInfo().hasType()) {
-        JSTypeExpression parameterTypeExpression = param.getJSDocInfo().getType();
+      } else if (paramLhs.getJSDocInfo() != null && paramLhs.getJSDocInfo().hasType()) {
+        JSTypeExpression parameterTypeExpression = paramLhs.getJSDocInfo().getType();
         parameterType = parameterTypeExpression.evaluate(templateScope, typeRegistry);
         isOptionalParam = parameterTypeExpression.isOptionalArg();
         isVarArgs = parameterTypeExpression.isVarArgs();

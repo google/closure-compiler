@@ -485,7 +485,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
   private void markGoogModuleExportsAsConst(Node moduleBody) {
     // TODO(lharker): Use the source nodes from the Bindings once we no longer rewrite before
     // typechecking. This is not feasible currently because a few places will rewrite exports = ...
-    for (Node statement : moduleBody.children()) {
+    for (Node statement = moduleBody.getFirstChild();
+        statement != null;
+        statement = statement.getNext()) {
       if (!NodeUtil.isExprAssign(statement)) {
         continue;
       }
@@ -494,7 +496,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         undeclaredNamesForClosure.add(lhs);
         // If this is full of named exports, add all the string key nodes.
         if (NodeUtil.isNamedExportsLiteral(lhs.getNext())) {
-          for (Node key : lhs.getNext().children()) {
+          for (Node key = lhs.getNext().getFirstChild(); key != null; key = key.getNext()) {
             undeclaredNamesForClosure.add(key);
           }
         }
@@ -1213,7 +1215,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         report(JSError.make(n, MULTIPLE_VAR_DEF));
       }
 
-      for (Node child : n.children()) {
+      for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
         defineVarChild(info, child, scope);
       }
       if (n.hasOneChild() && isValidTypedefDeclaration(n.getOnlyChild(), n.getJSDocInfo())) {
@@ -1239,7 +1241,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           // Define destructuring names here, since goog.require destructuring patterns can only
           // have one level and require some special handling.
           ScopedName defaultImport = moduleImportResolver.getClosureNamespaceTypeFromCall(value);
-          for (Node key : pattern.children()) {
+          for (Node key = pattern.getFirstChild(); key != null; key = key.getNext()) {
             defineModuleImport(key.getFirstChild(), defaultImport, key.getString(), scope);
           }
           return;
@@ -3265,7 +3267,9 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
         Iterator<Parameter> jsdocParameters = functionType.getParameters().iterator();
         Parameter jsDocParameter = jsdocParameters.hasNext() ? jsdocParameters.next() : null;
 
-        for (Node astParameter : astParameters.children()) {
+        for (Node astParameter = astParameters.getFirstChild();
+            astParameter != null;
+            astParameter = astParameter.getNext()) {
           if (iifeArgumentNode != null && iifeArgumentNode.isSpread()) {
             // don't try inferring types from spreads in iifes because we don't know how
             // many items are in the iterable.

@@ -1022,7 +1022,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         if (n.isObjectLit()) {
           JSType typ = getJSType(n);
-          for (Node key : n.children()) {
+          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             visitObjectOrClassLiteralKey(key, n, typ);
           }
         }
@@ -1469,7 +1469,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private void visitObjectPattern(Node pattern) {
     JSType patternType = getJSType(pattern);
     validator.expectObject(pattern, patternType, "cannot destructure 'null' or 'undefined'");
-    for (Node child : pattern.children()) {
+    for (Node child = pattern.getFirstChild(); child != null; child = child.getNext()) {
       DestructuredTarget target = DestructuredTarget.createTarget(typeRegistry, patternType, child);
 
       if (target.hasComputedProperty()) {
@@ -2325,7 +2325,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // on the NAME node. We probably want to wait for the parser
     // merge to fix this.
     JSDocInfo varInfo = n.hasOneChild() ? n.getJSDocInfo() : null;
-    for (Node child : n.children()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isName()) {
         Node value = child.getFirstChild();
 

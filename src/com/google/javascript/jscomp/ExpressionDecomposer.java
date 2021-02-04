@@ -617,7 +617,7 @@ class ExpressionDecomposer {
     //    var t1 = next();
     //    t1.foo = t1.foo + 2;
     if (isLhsOfAssignOp && NodeUtil.isNormalGet(expr)) {
-      for (Node n : expr.children()) {
+      for (Node n = expr.getFirstChild(); n != null; n = n.getNext()) {
         if (!n.isString() && !isConstantNameNode(n)) {
           Node extractedNode = extractExpression(n, injectionPoint);
           if (firstExtractedNode == null) {

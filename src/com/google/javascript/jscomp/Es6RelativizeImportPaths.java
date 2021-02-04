@@ -42,7 +42,7 @@ public class Es6RelativizeImportPaths implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    for (Node script : root.children()) {
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       if (Es6RewriteModules.isEs6ModuleRoot(script)) {
         NodeTraversal.traverse(compiler, script, new Rewriter());
         script.putBooleanProp(Node.TRANSPILED, true);

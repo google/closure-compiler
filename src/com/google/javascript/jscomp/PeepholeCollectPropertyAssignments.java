@@ -241,7 +241,9 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     // Check if the new property already exists in the object literal
     // Note: Duplicate keys are invalid in strict mode
     Node existingProperty = null;
-    for (Node currentProperty : objectLiteral.children()) {
+    for (Node currentProperty = objectLiteral.getFirstChild();
+        currentProperty != null;
+        currentProperty = currentProperty.getNext()) {
       if (currentProperty.isStringKey() || currentProperty.isMemberFunctionDef()) {
         // Get the name of the current property
         String currentPropertyName = currentProperty.getString();

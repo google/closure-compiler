@@ -349,7 +349,7 @@ class ReplaceIdGenerators implements CompilerPass {
         parent.replaceChild(n, IR.string(rename));
         t.reportCodeChange();
       } else if (arg.isObjectLit()) {
-        for (Node key : arg.children()) {
+        for (Node key = arg.getFirstChild(); key != null; key = key.getNext()) {
           if (key.isMemberFunctionDef()) {
             compiler.report(JSError.make(n, SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN));
             return;

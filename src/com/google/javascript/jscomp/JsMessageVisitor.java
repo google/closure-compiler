@@ -594,7 +594,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         }
       case ADD:
         StringBuilder sb = new StringBuilder();
-        for (Node child : node.children()) {
+        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
           sb.append(extractStringFromStringExprNode(child));
         }
         return sb.toString();
@@ -633,14 +633,16 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
   private void extractFromFunctionNode(Builder builder, Node node) throws MalformedException {
     Set<String> phNames = new HashSet<>();
 
-    for (Node fnChild : node.children()) {
+    for (Node fnChild = node.getFirstChild(); fnChild != null; fnChild = fnChild.getNext()) {
       switch (fnChild.getToken()) {
         case NAME:
           // This is okay. The function has a name, but it is empty.
           break;
         case PARAM_LIST:
           // Parse the placeholder names from the function argument list.
-          for (Node argumentNode : fnChild.children()) {
+          for (Node argumentNode = fnChild.getFirstChild();
+              argumentNode != null;
+              argumentNode = argumentNode.getNext()) {
             if (argumentNode.isName()) {
               String phName = argumentNode.getString();
               if (phNames.contains(phName)) {
@@ -658,7 +660,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
             throw new MalformedException(
                 "RETURN node expected; found: " + returnNode.getToken(), returnNode);
           }
-          for (Node child : returnNode.children()) {
+          for (Node child = returnNode.getFirstChild(); child != null; child = child.getNext()) {
             extractFromReturnDescendant(builder, child);
           }
 
@@ -697,7 +699,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback impleme
         builder.appendPlaceholderReference(node.getString());
         break;
       case ADD:
-        for (Node child : node.children()) {
+        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
           extractFromReturnDescendant(builder, child);
         }
         break;

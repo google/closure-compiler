@@ -1109,13 +1109,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (!fileNameRegexList.isEmpty()) {
       checkNotNull(externsRoot);
       checkNotNull(jsRoot);
-      for (Node fileNode : Iterables.concat(externsRoot.children(), jsRoot.children())) {
-        String fileName = fileNode.getSourceFileName();
-        for (String regex : fileNameRegexList) {
-          if (fileName.matches(regex)) {
-            String source = "// " + fileName + "\n" + toSource(fileNode);
-            builder.append(source);
-            break;
+      for (Node r : ImmutableList.of(externsRoot, jsRoot)) {
+        for (Node fileNode = r.getFirstChild(); fileNode != null; fileNode = fileNode.getNext()) {
+          String fileName = fileNode.getSourceFileName();
+          for (String regex : fileNameRegexList) {
+            if (fileName.matches(regex)) {
+              String source = "// " + fileName + "\n" + toSource(fileNode);
+              builder.append(source);
+              break;
+            }
           }
         }
       }
@@ -1166,7 +1168,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public Result getResult() {
     Set<SourceFile> transpiledFiles = new HashSet<>();
     if (jsRoot != null) {
-      for (Node scriptNode : jsRoot.children()) {
+      for (Node scriptNode = jsRoot.getFirstChild();
+          scriptNode != null;
+          scriptNode = scriptNode.getNext()) {
         if (scriptNode.getBooleanProp(Node.TRANSPILED)) {
           transpiledFiles.add(getSourceFileByName(scriptNode.getSourceFileName()));
         }

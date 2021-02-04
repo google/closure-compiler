@@ -484,14 +484,16 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
       return;
     }
 
-    for (Node child : node.children()) {
+    for (Node child = node.getFirstChild(); child != null; ) {
+      final Node next = child.getNext();
       if (child.isThis()) {
         Node newName = IR.name(name).useSourceInfoFrom(child).copyTypeFrom(child);
-        node.replaceChild(child, newName);
+        child.replaceWith(newName);
         compiler.reportChangeToEnclosingScope(newName);
       } else {
         replaceReferencesToThis(child, name);
       }
+      child = next;
     }
   }
 

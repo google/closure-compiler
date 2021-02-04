@@ -130,7 +130,9 @@ class FunctionArgumentInjector {
       argMap.put(THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
     }
 
-    for (Node fnParam : NodeUtil.getFunctionParameters(fnNode).children()) {
+    for (Node fnParam = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+        fnParam != null;
+        fnParam = fnParam.getNext()) {
       if (cArg != null) {
         if (fnParam.isRest()) {
           checkState(fnParam.getOnlyChild().isName(), fnParam.getOnlyChild());
@@ -232,7 +234,7 @@ class FunctionArgumentInjector {
       inInnerFunction = true;
     }
 
-    for (Node c : n.children()) {
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       findModifiedParameters(c, names, unsafe, inInnerFunction);
     }
 
@@ -573,7 +575,9 @@ class FunctionArgumentInjector {
    */
   private static ImmutableSet<String> getFunctionParameterSet(Node fnNode) {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    for (Node n : NodeUtil.getFunctionParameters(fnNode).children()) {
+    for (Node n = NodeUtil.getFunctionParameters(fnNode).getFirstChild();
+        n != null;
+        n = n.getNext()) {
       if (n.isRest()){
         builder.add(REST_MARKER);
       } else if (n.isDefaultValue() || n.isObjectPattern() || n.isArrayPattern()) {

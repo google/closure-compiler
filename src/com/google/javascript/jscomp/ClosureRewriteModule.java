@@ -1149,7 +1149,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
         maybeWarnForInvalidDestructuring(t, lhs.getParent(), namespaceId);
-        for (Node importSpec : lhs.getFirstChild().children()) {
+        for (Node importSpec = lhs.getFirstChild().getFirstChild();
+            importSpec != null;
+            importSpec = importSpec.getNext()) {
           checkState(importSpec.hasChildren(), importSpec);
           String importedProperty = importSpec.getString();
           Node aliasNode = importSpec.getFirstChild();
@@ -1865,7 +1867,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         if (getProp != null && getProp.isGetProp()) {
           // GETPROP always has two children: a name node and a string node. They should both take
           // on the source range of the original variable.
-          for (Node child : getProp.children()) {
+          for (Node child = getProp.getFirstChild(); child != null; child = child.getNext()) {
             child.setSourceEncodedPosition(sourcePosition);
             child.setLength(length);
           }

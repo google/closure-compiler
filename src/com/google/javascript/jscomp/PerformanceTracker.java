@@ -207,12 +207,12 @@ public final class PerformanceTracker {
   }
 
   private void recordInputCount() {
-    for (Node n : this.externsRoot.children()) {
+    for (Node n = this.externsRoot.getFirstChild(); n != null; n = n.getNext()) {
       this.externSources += 1;
       this.externLines += estimateLines(n);
     }
 
-    for (Node n : this.jsRoot.children()) {
+    for (Node n = this.jsRoot.getFirstChild(); n != null; n = n.getNext()) {
       this.jsSources += 1;
       this.jsLines += estimateLines(n);
     }

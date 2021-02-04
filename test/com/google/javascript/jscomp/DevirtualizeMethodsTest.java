@@ -343,6 +343,29 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testRewrite_replacesMultipleThisRefreences() {
+    test(
+        srcs(
+            lines(
+                "class Foo {",
+                "  a() {",
+                "     alert(this);",
+                "     alert(this, this);",
+                "  }",
+                "}",
+                "new Foo().a();")),
+        expected(
+            lines(
+                "var JSCompiler_StaticMethods_a = function(JSCompiler_StaticMethods_a$self) {",
+                "  alert(JSCompiler_StaticMethods_a$self);",
+                "  alert(JSCompiler_StaticMethods_a$self, JSCompiler_StaticMethods_a$self);",
+                "};",
+                "",
+                "class Foo { }",
+                "JSCompiler_StaticMethods_a(new Foo());")));
+  }
+
+  @Test
   public void testRewrite_defaultParams_usesThisReference() {
     test(
         srcs(

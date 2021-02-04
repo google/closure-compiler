@@ -156,7 +156,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
 
   private void makeTreeNonIndexable(Node n) {
     n.makeNonIndexable();
-    for (Node child : n.children()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       makeTreeNonIndexable(child);
     }
   }
