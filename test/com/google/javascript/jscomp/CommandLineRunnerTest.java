@@ -523,7 +523,8 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            "Illegal browser_featureset_year=2011. We support values 2012, 2019, and 2020 only");
+            "Illegal browser_featureset_year=2011. We support values 2012, 2019, 2020, and 2021"
+                + " only");
   }
 
   /** Giving a browser featureset year between 2012 and 2019 reports error */
@@ -534,7 +535,8 @@ public final class CommandLineRunnerTest {
     assertThat(e)
         .hasMessageThat()
         .isEqualTo(
-            "Illegal browser_featureset_year=2015. We support values 2012, 2019, and 2020 only");
+            "Illegal browser_featureset_year=2015. We support values 2012, 2019, 2020, and 2021"
+                + " only");
   }
 
   /** Giving a future year as the browser featureset year reports error */
@@ -549,7 +551,7 @@ public final class CommandLineRunnerTest {
         .isEqualTo(
             "Illegal browser_featureset_year="
                 + higherThanCurrentYear
-                + ". We support values 2012, 2019, and 2020 only");
+                + ". We support values 2012, 2019, 2020, and 2021 only");
   }
 
   /** Check that --browser_featureset_year = 2012 correctly sets the language out */

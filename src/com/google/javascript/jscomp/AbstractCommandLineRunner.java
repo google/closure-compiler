@@ -44,7 +44,6 @@ import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.jscomp.ijs.IjsErrors;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.TokenStream;
@@ -333,22 +332,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
-   * Validates whether --browser_featureset_year input value is legal
-   *
-   * @param inputYear integer value passed as input
-   */
-  @GwtIncompatible("java.time")
-  public void validateBrowserFeaturesetYearFlag(Integer inputYear) {
-    boolean validInputYear = inputYear == 2020 || inputYear == 2019 || inputYear == 2012;
-    if (!validInputYear) {
-      throw new FlagUsageException(
-          SimpleFormat.format(
-              "Illegal browser_featureset_year=%d. We support values 2012, 2019, and 2020 only",
-              inputYear));
-    }
-  }
-
-  /**
    * Sets options based on the configurations set flags API. Called during the run() run() method.
    * If you want to ignore the flags API, or interpret flags your own way, then you should override
    * this method.
@@ -371,8 +354,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     List<String> define = new ArrayList<>(config.define);
     if (config.browserFeaturesetYear != 0) {
-      validateBrowserFeaturesetYearFlag(config.browserFeaturesetYear);
-      options.setBrowserFeaturesetYear(config.browserFeaturesetYear);
+      try {
+        options.setBrowserFeaturesetYear(config.browserFeaturesetYear);
+      } catch (IllegalStateException e) {
+        throw new FlagUsageException(e.getMessage());
+      }
     }
 
     createDefineReplacements(define, options);
