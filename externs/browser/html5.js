@@ -5583,7 +5583,7 @@ InputDeviceCapabilities.prototype.firesTouchEvents;
 InputDeviceCapabilities.prototype.pointerMovementScrolls;
 
 /** @type {?InputDeviceCapabilities} */
-MouseEvent.prototype.sourceCapabilities;
+UIEvent.prototype.sourceCapabilities;
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport
