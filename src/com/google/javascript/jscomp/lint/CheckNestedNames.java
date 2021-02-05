@@ -110,14 +110,12 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
 
   @Override
   public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-    switch (n.getToken()) {
-      case SCRIPT:
-        // only traverse inside goog.modules
-        return n.getBooleanProp(Node.GOOG_MODULE);
-      default:
-        // only warn on static property assignments of module-level names
-        return nodeTraversal.inGlobalOrModuleScope();
+    if (n.isScript()) {
+      // only traverse inside goog.modules
+      return n.getBooleanProp(Node.GOOG_MODULE);
     }
+    // only warn on static property assignments of module-level names
+    return nodeTraversal.inGlobalOrModuleScope();
   }
 
   @Override

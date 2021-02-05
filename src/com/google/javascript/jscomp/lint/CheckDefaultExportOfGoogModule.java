@@ -55,12 +55,10 @@ public final class CheckDefaultExportOfGoogModule
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case SCRIPT:
-        return n.getBooleanProp(Node.GOOG_MODULE);
-      default:
-        return true;
+    if (n.isScript()) {
+      return n.getBooleanProp(Node.GOOG_MODULE);
     }
+    return true;
   }
 
   @Override

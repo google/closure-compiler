@@ -31,7 +31,6 @@ import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.Scope;
 import com.google.javascript.jscomp.Var;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -93,9 +92,9 @@ public final class CheckNoMutatedEs6Exports implements Callback, CompilerPass {
   }
 
   private void visitExport(Node export) {
-    if (export.hasOneChild() && export.getFirstChild().getToken() == Token.EXPORT_SPECS) {
+    if (export.hasOneChild() && export.getFirstChild().isExportSpecs()) {
       // export {a, b as c};
-      for (Node exportSpec = export.getFirstChild().getFirstChild();
+      for (Node exportSpec = export.getFirstFirstChild();
           exportSpec != null;
           exportSpec = exportSpec.getNext()) {
         checkState(exportSpec.hasTwoChildren());

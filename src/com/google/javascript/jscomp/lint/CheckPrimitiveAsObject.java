@@ -83,14 +83,11 @@ public final class CheckPrimitiveAsObject extends AbstractPostOrderCallback
   private void checkTypeNodeForPrimitiveObjectDeclaration(final NodeTraversal t, Node typeRoot) {
     NodeUtil.visitPreOrder(
         typeRoot,
-        new NodeUtil.Visitor() {
-          @Override
-          public void visit(Node node) {
-            if (node.isString()) {
-              String typeName = node.getString();
-              if (PRIMITIVE_OBJECT_CONSTRUCTORS.contains(typeName)) {
-                t.report(node, PRIMITIVE_OBJECT_DECLARATION, typeName);
-              }
+        node -> {
+          if (node.isString()) {
+            String typeName = node.getString();
+            if (PRIMITIVE_OBJECT_CONSTRUCTORS.contains(typeName)) {
+              t.report(node, PRIMITIVE_OBJECT_DECLARATION, typeName);
             }
           }
         });

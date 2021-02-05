@@ -78,7 +78,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
       throw new IllegalArgumentException("Invalid primitive name " + name);
     }
 
-    static ImportPrimitive WEAKEST = FORWARD_DECLARE;
+    static final ImportPrimitive WEAKEST = FORWARD_DECLARE;
 
     /**
      * Returns the stronger of two primitives.
@@ -377,7 +377,7 @@ public final class CheckRequiresSorted implements NodeTraversal.Callback {
     }
     // const {a: b, c} = goog.require('a');
     ImmutableList.Builder<DestructuringBinding> destructures = ImmutableList.builder();
-    for (Node name = parent.getFirstChild().getFirstChild(); name != null; name = name.getNext()) {
+    for (Node name = parent.getFirstFirstChild(); name != null; name = name.getNext()) {
       String exportedName = name.getString();
       String localName = name.getFirstChild().getString();
       destructures.add(DestructuringBinding.of(exportedName, localName));

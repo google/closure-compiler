@@ -289,12 +289,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       }
     }
 
-    if (function.getGrandparent().isObjectLit()
-        && NodeUtil.isCallTo(function.getGrandparent().getParent(), "Polymer")) {
-      return true;
-    }
-
-    return false;
+    return function.getGrandparent().isObjectLit()
+        && NodeUtil.isCallTo(function.getGrandparent().getParent(), "Polymer");
   }
 
   /** Whether this is a test method (test* or setup/teardown) that does not require JSDoc */
@@ -413,9 +409,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
   private static boolean isDefaultAssignedParamWithInlineJsDoc(Node param) {
     if (param.isDefaultValue()) {
       if (param.hasChildren() && param.getFirstChild().isName()) {
-        if (param.getFirstChild().getJSDocInfo() != null) {
-          return true;
-        }
+        return param.getFirstChild().getJSDocInfo() != null;
       }
     }
     return false;

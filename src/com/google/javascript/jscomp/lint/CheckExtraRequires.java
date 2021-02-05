@@ -196,7 +196,7 @@ public class CheckExtraRequires extends NodeTraversal.AbstractPostOrderCallback
       visitRequire(parent.getString(), googRequireCall);
     } else if (parent.isDestructuringLhs() && parent.getFirstChild().isObjectPattern()) {
       if (parent.getFirstChild().hasChildren()) {
-        for (Node stringKey = parent.getFirstChild().getFirstChild();
+        for (Node stringKey = parent.getFirstFirstChild();
             stringKey != null;
             stringKey = stringKey.getNext()) {
           Node importName = stringKey.getFirstChild();
