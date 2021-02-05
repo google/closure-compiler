@@ -1328,7 +1328,7 @@ google.maps.DirectionsGeocodedWaypoint = function() {};
 /**
  * Whether the geocoder did not return an exact match for the original waypoint,
  * though it was able to match part of the requested address.
- * @type {boolean}
+ * @type {boolean|undefined}
  */
 google.maps.DirectionsGeocodedWaypoint.prototype.partial_match;
 
@@ -1336,7 +1336,7 @@ google.maps.DirectionsGeocodedWaypoint.prototype.partial_match;
  * The place ID associated with the waypoint. Place IDs uniquely identify a
  * place in the Google Places database and on Google Maps. Learn more about <a
  * href="/places/place-id">Place IDs</a> in the Places API developer guide.
- * @type {string}
+ * @type {string|undefined}
  */
 google.maps.DirectionsGeocodedWaypoint.prototype.place_id;
 
@@ -1345,7 +1345,7 @@ google.maps.DirectionsGeocodedWaypoint.prototype.place_id;
  * list of possible strings, refer to the <a href=
  * "/maps/documentation/javascript/geocoding#GeocodingAddressTypes"> Address
  * Component Types</a> section of the Developer&#39;s Guide.
- * @type {Array<string>}
+ * @type {!Array<string>|undefined}
  */
 google.maps.DirectionsGeocodedWaypoint.prototype.types;
 
@@ -1361,28 +1361,28 @@ google.maps.DirectionsLeg = function() {};
 
 /**
  * An estimated arrival time for this leg. Only applicable for TRANSIT requests.
- * @type {google.maps.Time}
+ * @type {!google.maps.Time|undefined}
  */
 google.maps.DirectionsLeg.prototype.arrival_time;
 
 /**
  * An estimated departure time for this leg. Only applicable for TRANSIT
  * requests.
- * @type {google.maps.Time}
+ * @type {!google.maps.Time|undefined}
  */
 google.maps.DirectionsLeg.prototype.departure_time;
 
 /**
  * The total distance covered by this leg. This property may be undefined as the
  * distance may be unknown.
- * @type {google.maps.Distance}
+ * @type {!google.maps.Distance|undefined}
  */
 google.maps.DirectionsLeg.prototype.distance;
 
 /**
  * The total duration of this leg. This property may be undefined as the
  * duration may be unknown.
- * @type {google.maps.Duration}
+ * @type {!google.maps.Duration|undefined}
  */
 google.maps.DirectionsLeg.prototype.duration;
 
@@ -1392,7 +1392,7 @@ google.maps.DirectionsLeg.prototype.duration;
  * undefined as the duration may be unknown. Only available to Premium Plan
  * customers when <code>drivingOptions</code> is defined when making the
  * request.
- * @type {google.maps.Duration}
+ * @type {!google.maps.Duration|undefined}
  */
 google.maps.DirectionsLeg.prototype.duration_in_traffic;
 
@@ -1408,7 +1408,7 @@ google.maps.DirectionsLeg.prototype.end_address;
  * locations. <code>end_location</code> indicates the actual geocoded
  * destination, which may be different than the <code>end_location</code> of the
  * last step if, for example, the road is not near the destination of this leg.
- * @type {google.maps.LatLng}
+ * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsLeg.prototype.end_location;
 
@@ -1424,14 +1424,14 @@ google.maps.DirectionsLeg.prototype.start_address;
  * locations. <code>start_location</code> indicates the actual geocoded origin,
  * which may be different than the <code>start_location</code> of the first step
  * if, for example, the road is not near the origin of this leg.
- * @type {google.maps.LatLng}
+ * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsLeg.prototype.start_location;
 
 /**
  * An array of <code>DirectionsStep</code>s, each of which contains information
  * about the individual steps in this leg.
- * @type {Array<google.maps.DirectionsStep>}
+ * @type {!Array<!google.maps.DirectionsStep>}
  */
 google.maps.DirectionsLeg.prototype.steps;
 
@@ -1444,7 +1444,7 @@ google.maps.DirectionsLeg.prototype.steps;
  * disable dragging of alternative routes. Only the main route should be
  * draggable. Users can drag the main route until it matches an alternative
  * route.
- * @type {Array<google.maps.LatLng>}
+ * @type {!Array<!google.maps.LatLng>}
  */
 google.maps.DirectionsLeg.prototype.via_waypoints;
 
@@ -1749,7 +1749,7 @@ google.maps.DirectionsResult = function() {};
 /**
  * An array of <code>DirectionsGeocodedWaypoint</code>s, each of which contains
  * information about the geocoding of origin, destination and waypoints.
- * @type {Array<google.maps.DirectionsGeocodedWaypoint>}
+ * @type {!Array<!google.maps.DirectionsGeocodedWaypoint>|undefined}
  */
 google.maps.DirectionsResult.prototype.geocoded_waypoints;
 
@@ -1758,7 +1758,7 @@ google.maps.DirectionsResult.prototype.geocoded_waypoints;
  * about the legs and steps of which it is composed. There will only be one
  * route unless the <code>DirectionsRequest</code> was made with
  * <code>provideRouteAlternatives</code> set to <code>true</code>.
- * @type {Array<google.maps.DirectionsRoute>}
+ * @type {!Array<!google.maps.DirectionsRoute>}
  */
 google.maps.DirectionsResult.prototype.routes;
 
@@ -1773,7 +1773,7 @@ google.maps.DirectionsRoute = function() {};
 
 /**
  * The bounds for this route.
- * @type {google.maps.LatLngBounds}
+ * @type {!google.maps.LatLngBounds}
  */
 google.maps.DirectionsRoute.prototype.bounds;
 
@@ -1786,7 +1786,7 @@ google.maps.DirectionsRoute.prototype.copyrights;
 /**
  * The total fare for the whole transit trip. Only applicable to transit
  * requests.
- * @type {google.maps.TransitFare}
+ * @type {!google.maps.TransitFare|undefined}
  */
 google.maps.DirectionsRoute.prototype.fare;
 
@@ -1796,7 +1796,7 @@ google.maps.DirectionsRoute.prototype.fare;
  * stopover waypoint or destination specified. So a route with no stopover
  * waypoints will contain one <code>DirectionsLeg</code> and a route with one
  * stopover waypoint will contain two.
- * @type {Array<google.maps.DirectionsLeg>}
+ * @type {!Array<!google.maps.DirectionsLeg>}
  */
 google.maps.DirectionsRoute.prototype.legs;
 
@@ -1804,7 +1804,7 @@ google.maps.DirectionsRoute.prototype.legs;
  * An array of <code>LatLng</code>s representing the entire course of this
  * route. The path is simplified in order to make it suitable in contexts where
  * a small number of vertices is required (such as Static Maps API URLs).
- * @type {Array<google.maps.LatLng>}
+ * @type {!Array<!google.maps.LatLng>}
  */
 google.maps.DirectionsRoute.prototype.overview_path;
 
@@ -1818,7 +1818,7 @@ google.maps.DirectionsRoute.prototype.overview_polyline;
 
 /**
  * Warnings to be displayed when showing these directions.
- * @type {Array<string>}
+ * @type {!Array<string>}
  */
 google.maps.DirectionsRoute.prototype.warnings;
 
@@ -1834,7 +1834,7 @@ google.maps.DirectionsRoute.prototype.warnings;
  * of waypoints is zero-based.<br> If any of the input waypoints has
  * <code>stopover</code> set to <code>false</code>, this field will be empty,
  * since route optimization is not available for such queries.
- * @type {Array<number>}
+ * @type {!Array<number>}
  */
 google.maps.DirectionsRoute.prototype.waypoint_order;
 
@@ -1915,20 +1915,20 @@ google.maps.DirectionsStep = function() {};
 /**
  * The distance covered by this step. This property may be undefined as the
  * distance may be unknown.
- * @type {google.maps.Distance}
+ * @type {!google.maps.Distance|undefined}
  */
 google.maps.DirectionsStep.prototype.distance;
 
 /**
  * The typical time required to perform this step in seconds and in text form.
  * This property may be undefined as the duration may be unknown.
- * @type {google.maps.Duration}
+ * @type {!google.maps.Duration|undefined}
  */
 google.maps.DirectionsStep.prototype.duration;
 
 /**
  * The ending location of this step.
- * @type {google.maps.LatLng}
+ * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsStep.prototype.end_location;
 
@@ -1940,32 +1940,32 @@ google.maps.DirectionsStep.prototype.instructions;
 
 /**
  * A sequence of <code>LatLng</code>s describing the course of this step.
- * @type {Array<google.maps.LatLng>}
+ * @type {!Array<!google.maps.LatLng>}
  */
 google.maps.DirectionsStep.prototype.path;
 
 /**
  * The starting location of this step.
- * @type {google.maps.LatLng}
+ * @type {!google.maps.LatLng}
  */
 google.maps.DirectionsStep.prototype.start_location;
 
 /**
  * Sub-steps of this step. Specified for non-transit sections of transit routes.
- * @type {Array<google.maps.DirectionsStep>}
+ * @type {!Array<!google.maps.DirectionsStep>|undefined}
  */
 google.maps.DirectionsStep.prototype.steps;
 
 /**
  * Transit-specific details about this step. This property will be undefined
  * unless the travel mode of this step is <code>TRANSIT</code>.
- * @type {google.maps.TransitDetails}
+ * @type {!google.maps.TransitDetails|undefined}
  */
 google.maps.DirectionsStep.prototype.transit;
 
 /**
  * The mode of travel used in this step.
- * @type {google.maps.TravelMode}
+ * @type {!google.maps.TravelMode}
  */
 google.maps.DirectionsStep.prototype.travel_mode;
 
@@ -8792,6 +8792,20 @@ google.maps.places.AutocompletePrediction.prototype.terms;
 google.maps.places.AutocompletePrediction.prototype.types;
 
 /**
+ * An Autocomplete response returned by the call to {@link
+ * google.maps.places.AutocompleteService.getPlacePredictions} containing a list
+ * of {@link google.maps.places.AutocompletePrediction}s.
+ * @constructor
+ */
+google.maps.places.AutocompleteResponse = function() {};
+
+/**
+ * The list of {@link google.maps.places.AutocompletePrediction}s.
+ * @type {!Array<!google.maps.places.AutocompletePrediction>}
+ */
+google.maps.places.AutocompleteResponse.prototype.predictions;
+
+/**
  * Contains methods related to retrieving Autocomplete predictions.
  * @constructor
  */
@@ -8799,11 +8813,14 @@ google.maps.places.AutocompleteService = function() {};
 
 /**
  * Retrieves place autocomplete predictions based on the supplied autocomplete
- * request.
+ * request. <aside class="note">Note: <strong>For the beta release,
+ * <code>v=beta</code>, the callback is optional and a Promise is
+ * returned</strong>. More information is available in the <a
+ * href="/maps/documentation/javascript/promises">Promises guide</a>.</aside>
  * @param {!google.maps.places.AutocompletionRequest} request
- * @param {function(?Array<!google.maps.places.AutocompletePrediction>,
- *     !google.maps.places.PlacesServiceStatus): void} callback
- * @return {undefined}
+ * @param {(function(?Array<!google.maps.places.AutocompletePrediction>,
+ *     !google.maps.places.PlacesServiceStatus): void)=} callback
+ * @return {?Promise<!google.maps.places.AutocompleteResponse>}
  */
 google.maps.places.AutocompleteService.prototype.getPlacePredictions = function(
     request, callback) {};
