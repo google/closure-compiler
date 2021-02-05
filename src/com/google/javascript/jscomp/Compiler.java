@@ -30,19 +30,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
+import com.google.javascript.jscomp.JSModuleGraph.MissingModuleException;
+import com.google.javascript.jscomp.JSModuleGraph.ModuleDependenceException;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.deps.BrowserModuleResolver;
 import com.google.javascript.jscomp.deps.BrowserWithTransformedPrefixesModuleResolver;
 import com.google.javascript.jscomp.deps.JsFileRegexParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModuleResolverFactory;
+import com.google.javascript.jscomp.deps.ModuleLoader.PathResolver;
 import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.deps.WebpackModuleResolver;
@@ -52,10 +60,14 @@ import com.google.javascript.jscomp.instrumentation.CoverageInstrumentationPass.
 import com.google.javascript.jscomp.modules.ModuleMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.parsing.Config;
+import com.google.javascript.jscomp.parsing.Config.LanguageMode;
+import com.google.javascript.jscomp.parsing.Config.RunMode;
+import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
@@ -94,6 +106,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -146,7 +159,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private ModuleLoader moduleLoader;
 
   // Map of module names to module types - used for module rewriting
-  private final Map<String, CompilerInput.ModuleType> moduleTypesByName;
+  private final Map<String, ModuleType> moduleTypesByName;
 
   // error manager to which error management is delegated
   private ErrorManager errorManager;
@@ -495,7 +508,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Generate the module graph, and report any errors in the module specification as errors.
     try {
       this.moduleGraph = new JSModuleGraph(modules);
-    } catch (JSModuleGraph.ModuleDependenceException e) {
+    } catch (ModuleDependenceException e) {
       // problems with the module format.  Report as an error.  The
       // message gives all details.
       report(
@@ -1101,9 +1114,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
     List<String> moduleNameRegexList = options.chunksToPrintAfterEachPassRegexList;
+    final Set<String> qnameSet = new LinkedHashSet<>(options.qnameUsesToPrintAfterEachPassList);
     StringBuilder builder = new StringBuilder();
 
-    if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty()) {
+    if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty() && qnameSet.isEmpty()) {
       return toSource();
     }
     if (!fileNameRegexList.isEmpty()) {
@@ -1139,7 +1153,76 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         throw new RuntimeException("No modules matched any of: " + moduleNameRegexList);
       }
     }
+    if (!qnameSet.isEmpty()) {
+      // Keep track of how a qualified name we're interested in gets renamed.
+      // Note that a qname can actually be renamed multiple times during compilation,
+      // so we need a multimap here.
+      final Multimap<String, String> originalToNewQNameMap = LinkedHashMultimap.create();
+      // Get a stream of top level statement nodes that contain at least one reference to one of the
+      // qnames we are interested in. Take note of relevant renamings while we're at it.
+      final Stream<Node> statementStream =
+          getTopLevelStatements(jsRoot)
+              .filter(
+                  (Node statement) ->
+                      // filter to just those statements containing interesting qnames
+                      NodeUtil.has(
+                          statement,
+                          (Node n) -> {
+                            checkNotNull(n);
+                            if (!n.isQualifiedName()) {
+                              return false;
+                            }
+                            String qname = n.getQualifiedName();
+                            if (qnameSet.contains(qname)) {
+                              return true;
+                            }
+                            String originalQname = n.getOriginalQualifiedName();
+                            if (originalQname != null && qnameSet.contains(originalQname)) {
+                              originalToNewQNameMap.put(originalQname, qname);
+                              return true;
+                            } else {
+                              return false;
+                            }
+                          },
+                          node -> true));
+      builder.append("//\n");
+      builder.append("// closure-compiler: Printing all of the top-level statements\n");
+      builder.append("// that contain references to these qualified names.\n");
+      builder.append("//\n");
+      for (String qname : qnameSet) {
+        builder.append(SimpleFormat.format("// '%s'\n", qname));
+        for (String newName : originalToNewQNameMap.get(qname)) {
+          builder.append(SimpleFormat.format("// '%s' (originally '%s')\n", newName, qname));
+        }
+      }
+      builder.append("//\n");
+      statementStream.forEach(
+          (Node statement) ->
+              builder
+                  .append(SimpleFormat.format("// %s\n", statement.getLocation()))
+                  .append(toSource(statement))
+                  .append("\n"));
+    }
     return builder.toString();
+  }
+
+  private Stream<Node> getTopLevelStatements(Node root) {
+    Stream.Builder<Node> builder = Stream.builder();
+    NodeTraversal.traverse(
+        this,
+        root,
+        new AbstractPreOrderCallback() {
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            if (NodeUtil.isStatement(n)) {
+              builder.add(n);
+              return false;
+            } else {
+              return true;
+            }
+          }
+        });
+    return builder.build();
   }
 
   @Override
@@ -1583,7 +1666,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         processAMDModules(moduleGraph.getAllInputs());
       }
 
-      if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)
+      if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)
           || options.processCommonJSModules) {
 
         ModuleResolverFactory moduleResolverFactory = null;
@@ -1614,7 +1697,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 options.moduleRoots,
                 moduleGraph.getAllInputs(),
                 moduleResolverFactory,
-                ModuleLoader.PathResolver.RELATIVE,
+                PathResolver.RELATIVE,
                 options.getPathEscaper());
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
@@ -1636,8 +1719,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
         for (CompilerInput input : moduleGraph.getAllInputs()) {
           if (input.getKnownProvides().isEmpty()) {
-            ModuleLoader.ModulePath modPath =
-                moduleLoader.resolve(input.getSourceFile().getOriginalPath());
+            ModulePath modPath = moduleLoader.resolve(input.getSourceFile().getOriginalPath());
             inputModuleIdentifiers.put(modPath.toModuleName(), input);
           }
         }
@@ -1655,7 +1737,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
 
         for (CompilerInput input : inputsToRewrite.values()) {
-          input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
+          input.setJsModuleType(ModuleType.IMPORTED_SCRIPT);
         }
       }
 
@@ -1755,7 +1837,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         staleInputs = true;
       } catch (MissingProvideException e) {
         report(JSError.make(MISSING_ENTRY_ERROR, e.getMessage()));
-      } catch (JSModuleGraph.MissingModuleException e) {
+      } catch (MissingModuleException e) {
         report(JSError.make(MISSING_MODULE_ERROR, e.getMessage()));
       }
     }
@@ -1834,8 +1916,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // It's possible for a module to be included as both a script
       // and a module in the same compilation. In these cases, it should
       // be forced to be a module.
-      if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
-        input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
+      if (wasImportedByModule && input.getJsModuleType() == ModuleType.NONE) {
+        input.setJsModuleType(ModuleType.IMPORTED_SCRIPT);
       }
       return;
     }
@@ -1847,8 +1929,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // If this input was imported by another module, it is itself a module
     // so we force it to be detected as such.
-    if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
-      input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
+    if (wasImportedByModule && input.getJsModuleType() == ModuleType.NONE) {
+      input.setJsModuleType(ModuleType.IMPORTED_SCRIPT);
     }
     this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
 
@@ -1976,7 +2058,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       Node root = checkNotNull(input.getAstRoot(this));
-      input.setJsModuleType(CompilerInput.ModuleType.JSON);
+      input.setJsModuleType(ModuleType.JSON);
       rewriteJson.process(null, root);
     }
     return rewriteJson.getPackageJsonMainEntries();
@@ -1999,7 +2081,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       input.setCompiler(this);
       // Call getRequires to force regex-based dependency parsing to happen.
       input.getRequires();
-      input.setJsModuleType(CompilerInput.ModuleType.ES6);
+      input.setJsModuleType(ModuleType.ES6);
     }
     return filteredInputs;
   }
@@ -2555,32 +2637,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return convention;
   }
 
-  private Config.LanguageMode getParserConfigLanguageMode(
-      CompilerOptions.LanguageMode languageMode) {
+  private LanguageMode getParserConfigLanguageMode(CompilerOptions.LanguageMode languageMode) {
     switch (languageMode) {
       case ECMASCRIPT3:
-        return Config.LanguageMode.ECMASCRIPT3;
+        return LanguageMode.ECMASCRIPT3;
       case ECMASCRIPT5:
       case ECMASCRIPT5_STRICT:
-        return Config.LanguageMode.ECMASCRIPT5;
+        return LanguageMode.ECMASCRIPT5;
       case ECMASCRIPT_2015:
-        return Config.LanguageMode.ECMASCRIPT6;
+        return LanguageMode.ECMASCRIPT6;
       case ECMASCRIPT_2016:
-        return Config.LanguageMode.ECMASCRIPT7;
+        return LanguageMode.ECMASCRIPT7;
       case ECMASCRIPT_2017:
-        return Config.LanguageMode.ECMASCRIPT8;
+        return LanguageMode.ECMASCRIPT8;
       case ECMASCRIPT_2018:
-        return Config.LanguageMode.ECMASCRIPT_2018;
+        return LanguageMode.ECMASCRIPT_2018;
       case ECMASCRIPT_2019:
-        return Config.LanguageMode.ECMASCRIPT_2019;
+        return LanguageMode.ECMASCRIPT_2019;
       case ECMASCRIPT_2020:
-        return Config.LanguageMode.ECMASCRIPT_2020;
+        return LanguageMode.ECMASCRIPT_2020;
       case UNSUPPORTED:
-        return Config.LanguageMode.UNSUPPORTED;
+        return LanguageMode.UNSUPPORTED;
       case ECMASCRIPT_NEXT:
-        return Config.LanguageMode.ES_NEXT;
+        return LanguageMode.ES_NEXT;
       case ECMASCRIPT_NEXT_IN:
-        return Config.LanguageMode.ES_NEXT_IN;
+        return LanguageMode.ES_NEXT_IN;
       default:
         throw new IllegalStateException("Unexpected language mode: " + options.getLanguageIn());
     }
@@ -2591,15 +2672,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (parserConfig == null || externsParserConfig == null) {
       synchronized (this) {
         if (parserConfig == null) {
-          Config.LanguageMode configLanguageMode =
-              getParserConfigLanguageMode(options.getLanguageIn());
-          Config.StrictMode strictMode =
-              options.expectStrictModeInput() ? Config.StrictMode.STRICT : Config.StrictMode.SLOPPY;
+          LanguageMode configLanguageMode = getParserConfigLanguageMode(options.getLanguageIn());
+          StrictMode strictMode =
+              options.expectStrictModeInput() ? StrictMode.STRICT : StrictMode.SLOPPY;
           parserConfig = createConfig(configLanguageMode, strictMode);
           // Externs must always be parsed with at least ES5 language mode.
           externsParserConfig =
-              configLanguageMode.equals(Config.LanguageMode.ECMASCRIPT3)
-                  ? createConfig(Config.LanguageMode.ECMASCRIPT5, strictMode)
+              configLanguageMode.equals(LanguageMode.ECMASCRIPT3)
+                  ? createConfig(LanguageMode.ECMASCRIPT5, strictMode)
                   : parserConfig;
         }
       }
@@ -2610,13 +2690,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return parserConfig;
   }
 
-  protected Config createConfig(Config.LanguageMode mode, Config.StrictMode strictMode) {
+  protected Config createConfig(LanguageMode mode, StrictMode strictMode) {
     return ParserRunner.createConfig(
         mode,
         options.isParseJsDocDocumentation(),
-        options.canContinueAfterErrors()
-            ? Config.RunMode.KEEP_GOING
-            : Config.RunMode.STOP_AFTER_ERROR,
+        options.canContinueAfterErrors() ? RunMode.KEEP_GOING : RunMode.STOP_AFTER_ERROR,
         options.extraAnnotationNames,
         options.parseInlineSourceMaps,
         strictMode);
@@ -3600,7 +3678,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /** Returns the module type for the provided namespace. */
   @Override
   @Nullable
-  CompilerInput.ModuleType getModuleTypeByName(String moduleName) {
+  ModuleType getModuleTypeByName(String moduleName) {
     return moduleTypesByName.get(moduleName);
   }
 

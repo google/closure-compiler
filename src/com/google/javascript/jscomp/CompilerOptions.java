@@ -904,6 +904,7 @@ public class CompilerOptions implements Serializable {
   // empty the entire source is printed.
   List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
   List<String> chunksToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> qnameUsesToPrintAfterEachPassList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
@@ -920,6 +921,10 @@ public class CompilerOptions implements Serializable {
   @Deprecated
   public void setModulesToPrintAfterEachPassRegexList(List<String> chunkPathRegexList) {
     this.chunksToPrintAfterEachPassRegexList = chunkPathRegexList;
+  }
+
+  public void setQnameUsesToPrintAfterEachPassList(List<String> qnameRegexList) {
+    this.qnameUsesToPrintAfterEachPassList = qnameRegexList;
   }
 
   private TracerMode tracer;
@@ -2762,6 +2767,7 @@ public class CompilerOptions implements Serializable {
         .add("messageBundle", messageBundle)
         .add("moduleRoots", moduleRoots)
         .add("chunksToPrintAfterEachPassRegexList", chunksToPrintAfterEachPassRegexList)
+        .add("qnameUsesToPrintAfterEachPassRegexList", qnameUsesToPrintAfterEachPassList)
         .add(
             "rewriteGlobalDeclarationsForTryCatchWrapping",
             rewriteGlobalDeclarationsForTryCatchWrapping)
