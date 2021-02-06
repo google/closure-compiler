@@ -3698,33 +3698,40 @@ public final class NodeUtil {
   public static Node newQName(AbstractCompiler compiler, String name) {
     int endPos = name.indexOf('.');
     if (endPos == -1) {
-      return newName(compiler, name);
+      endPos = name.length();
     }
-    Node node;
+
+    Node qname;
     String nodeName = name.substring(0, endPos);
     if ("this".equals(nodeName)) {
-      node = IR.thisNode();
+      qname = IR.thisNode();
     } else if ("super".equals(nodeName)) {
-      node = IR.superNode();
+      qname = IR.superNode();
     } else {
-      node = newName(compiler, nodeName);
+      qname = newName(compiler, nodeName);
     }
-    int startPos;
-    do {
-      startPos = endPos + 1;
+    qname.setLength(endPos);
+
+    for (int startPos = endPos + 1; endPos < name.length(); startPos = endPos + 1) {
       endPos = name.indexOf('.', startPos);
-      String part = (endPos == -1 ? name.substring(startPos) : name.substring(startPos, endPos));
+      if (endPos == -1) {
+        endPos = name.length();
+      }
+
+      String part = name.substring(startPos, endPos);
+
       Node propNode = IR.string(part);
       propNode.setLength(part.length());
       if (compiler.getCodingConvention().isConstantKey(part)) {
         propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      int length = node.getLength() + ".".length() + part.length();
-      node = IR.getprop(node, propNode);
-      node.setLength(length);
-    } while (endPos != -1);
 
-    return node;
+      int length = qname.getLength() + part.length() + 1; // For the '.'
+      qname = IR.getprop(qname, propNode);
+      qname.setLength(length);
+    }
+
+    return qname;
   }
 
   /**
@@ -3740,7 +3747,7 @@ public final class NodeUtil {
   static Node newQName(
       AbstractCompiler compiler, String name, Node basisNode, String originalName) {
     Node node = newQName(compiler, name);
-    useSourceInfoForNewQName(node, basisNode);
+    node.useSourceInfoIfMissingFromForTree(basisNode);
     if (!originalName.equals(node.getOriginalName())) {
       // If basisNode already had the correct original name, then it will already be set correctly.
       // Setting it again will force the QName node to have a different property list from all of
@@ -3803,28 +3810,6 @@ public final class NodeUtil {
     checkState(type == Token.VAR || type == Token.LET || type == Token.CONST, type);
     Node nameNode = newQName(compiler, name);
     return getDeclarationFromName(nameNode, value, type, info);
-  }
-
-  /**
-   * Custom update new QName node with source info from another node.
-   *
-   * <p>This is very similar to {@link Node#useSourceInfoIfMissingFromForTree(Node)}, but it avoids
-   * overwriting the length field of the nodes. TODO(bradfordcsmith): Eliminate the need for this
-   * custom method.
-   */
-  private static void useSourceInfoForNewQName(Node newQName, Node basisNode) {
-    if (newQName.getStaticSourceFile() == null) {
-      newQName.setStaticSourceFileFrom(basisNode);
-      newQName.setSourceEncodedPosition(basisNode.getSourcePosition());
-    }
-
-    if (newQName.getOriginalName() == null) {
-      newQName.putProp(Node.ORIGINALNAME_PROP, basisNode.getOriginalName());
-    }
-
-    for (Node child = newQName.getFirstChild(); child != null; child = child.getNext()) {
-      useSourceInfoForNewQName(child, basisNode);
-    }
   }
 
   /** Gets the root node of a qualified name. Must be either NAME, THIS or SUPER. */

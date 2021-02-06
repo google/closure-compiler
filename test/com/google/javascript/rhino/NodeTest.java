@@ -556,36 +556,36 @@ public class NodeTest {
   @Test
   public void testUseSourceInfoIfMissingFrom() {
     Node assign = getAssignExpr("b", "c");
-    assign.setSourceEncodedPosition(99);
+    assign.setLineno(99);
     assign.setSourceFileForTesting("foo.js");
 
     Node lhs = assign.getFirstChild();
     lhs.useSourceInfoIfMissingFrom(assign);
-    assertThat(lhs.getSourcePosition()).isEqualTo(99);
+    assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
-    assign.setSourceEncodedPosition(101);
+    assign.setLineno(101);
     assign.setSourceFileForTesting("bar.js");
     lhs.useSourceInfoIfMissingFrom(assign);
-    assertThat(lhs.getSourcePosition()).isEqualTo(99);
+    assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
   }
 
   @Test
   public void testUseSourceInfoFrom() {
     Node assign = getAssignExpr("b", "c");
-    assign.setSourceEncodedPosition(99);
+    assign.setLineno(99);
     assign.setSourceFileForTesting("foo.js");
 
     Node lhs = assign.getFirstChild();
     lhs.useSourceInfoFrom(assign);
-    assertThat(lhs.getSourcePosition()).isEqualTo(99);
+    assertNode(lhs).hasLineno(99);
     assertThat(lhs.getSourceFileName()).isEqualTo("foo.js");
 
-    assign.setSourceEncodedPosition(101);
+    assign.setLineno(101);
     assign.setSourceFileForTesting("bar.js");
     lhs.useSourceInfoFrom(assign);
-    assertThat(lhs.getSourcePosition()).isEqualTo(101);
+    assertNode(lhs).hasLineno(101);
     assertThat(lhs.getSourceFileName()).isEqualTo("bar.js");
   }
 
@@ -593,7 +593,7 @@ public class NodeTest {
   public void testInvalidSourceOffset() {
     Node string = Node.newString("a");
 
-    string.setSourceEncodedPosition(-1);
+    string.setLineno(-1);
     assertThat(string.getSourceOffset()).isLessThan(0);
 
     string.setSourceFileForTesting("foo.js");

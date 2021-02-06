@@ -916,28 +916,20 @@ class ProcessClosureProvidesAndRequires implements HotSwapCompilerPass {
 
     /** Copy source info to the new node. */
     private void setSourceInfo(Node newNode) {
+      Node sourceInfoNode = firstNode;
+
       Node provideStringNode = getProvideStringNode();
-      int offset = provideStringNode == null ? 0 : getSourceInfoOffset();
-      Node sourceInfoNode = provideStringNode == null ? firstNode : provideStringNode;
-      newNode.useSourceInfoIfMissingFromForTree(sourceInfoNode);
-      if (offset != 0) {
-        newNode.setSourceEncodedPositionForTree(sourceInfoNode.getSourcePosition() + offset);
+      if (provideStringNode != null) {
         // Given namespace "foo.bar.baz" we create node for "baz" here and need to calculate
-        // length of the last component which is "baz".
-        int lengthOfLastComponent = namespace.length() - (namespace.lastIndexOf(".") + 1);
-        newNode.setLengthForTree(lengthOfLastComponent);
+        // length and start of the last component which is "baz".
+        int firstCharIndex = namespace.lastIndexOf('.') + 1; // If no dots, then 0.
+
+        sourceInfoNode = provideStringNode.cloneNode();
+        sourceInfoNode.setCharno(sourceInfoNode.getCharno() + firstCharIndex + 1); // +1 for quote
+        sourceInfoNode.setLength(namespace.length() - firstCharIndex);
       }
-    }
 
-    /** Get the offset into the provide node where the symbol appears. */
-    private int getSourceInfoOffset() {
-      int indexOfLastDot = namespace.lastIndexOf('.');
-
-      // +1 for the opening quote
-      // +1 for the dot
-      // if there's no dot, then the -1 index cancels it out
-      // so elegant!
-      return 2 + indexOfLastDot;
+      newNode.useSourceInfoFromForTree(sourceInfoNode);
     }
 
     private Node getProvideStringNode() {

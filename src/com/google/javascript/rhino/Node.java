@@ -1688,18 +1688,6 @@ public class Node implements Serializable {
       sourcePosition = mergeLineCharNo(getLineno(), charno);
   }
 
-  public final void setSourceEncodedPosition(int sourcePosition) {
-    this.sourcePosition = sourcePosition;
-  }
-
-  public final void setSourceEncodedPositionForTree(int sourcePosition) {
-    this.sourcePosition = sourcePosition;
-
-    for (Node child = first; child != null; child = child.next) {
-      child.setSourceEncodedPositionForTree(sourcePosition);
-    }
-  }
-
   /**
    * Merges the line number and character number in one integer. The Character
    * number takes the first 12 bits and the line number takes the rest. If
@@ -2469,10 +2457,11 @@ public class Node implements Serializable {
   }
 
   final <T extends Node> T copyNodeFields(T dst, boolean cloneTypeExprs) {
-    dst.setSourceEncodedPosition(this.sourcePosition);
-    dst.setLength(this.getLength());
-    dst.setJSType(this.jstype);
-    dst.setPropListHead(this.propListHead);
+    final Node dstNode = dst;
+    dstNode.sourcePosition = this.sourcePosition;
+    dstNode.length = this.length;
+    dstNode.jstype = this.jstype;
+    dstNode.propListHead = this.propListHead;
 
     // TODO(johnlenz): Remove this once JSTypeExpression are immutable
     if (cloneTypeExprs) {
