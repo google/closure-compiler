@@ -77,24 +77,6 @@ public abstract class CompilerTestCase {
   /** Libraries to inject before typechecking */
   final Set<String> librariesToInject;
 
-  /**
-   * If non-null, this object will be used to convert non-optional chains to optional ones
-   * immediately after parsing test JS code. Then it will be used to convert optional chains to
-   * non-optional ones in the result JS code before comparing it to the expected result.
-   *
-   * <p>The intent of this feature is to allow a developer to temporarily run all the existing tests
-   * for a pass as if they were written with lots of optional chains in them, in order to discover
-   * parts of the code that need updating to handle optional chains. No test cases should be checked
-   * in with this set to anything other than null.
-   *
-   * <p>TODO(b/145761297): Remove this when support for optional chaining is complete.
-   */
-  private AstChainOptionalizer astChainOptionalizer;
-
-  void setAstChainOptionalizer(AstChainOptionalizer astChainOptionalizer) {
-    this.astChainOptionalizer = astChainOptionalizer;
-  }
-
   /** Whether to include synthetic code when comparing actual to expected */
   private boolean compareSyntheticCode;
 
@@ -1442,13 +1424,6 @@ public abstract class CompilerTestCase {
     Node externsRootClone = rootClone.getFirstChild();
     Node mainRootClone = rootClone.getLastChild();
 
-    if (astChainOptionalizer != null) {
-      // Convert all non-optional chains to optional ones in order to use existing tests
-      // as if they had lots of optional chains in them.
-      // TODO(b/145761297): Remove this when support for optional chaining is complete.
-      astChainOptionalizer.optionalize(compiler, mainRoot);
-    }
-
     int numRepetitions = getNumRepetitions();
     ErrorManager[] errorManagers = new ErrorManager[numRepetitions];
     int aggregateWarningCount = 0;
@@ -1611,13 +1586,6 @@ public abstract class CompilerTestCase {
               .process(externsRoot, mainRoot);
         }
       }
-    }
-
-    if (astChainOptionalizer != null) {
-      // Convert all optional chains in the resulting JS back to non-optional ones before
-      // comparing with the expected result.
-      // TODO(b/145761297): Remove this when support for optional chaining is complete.
-      astChainOptionalizer.deoptionalize(compiler, mainRoot);
     }
 
     if (expectedErrors.isEmpty()) {
