@@ -1539,7 +1539,7 @@ AudioWorkletNodeOptions.prototype.outputChannelCount;
 /** @type {!Object<string, number>|undefined} */
 AudioWorkletNodeOptions.prototype.parameterData;
 
-/** @type {?} */
+/** @type {?|undefined} */
 AudioWorkletNodeOptions.prototype.processorOptions;
 
 /**
