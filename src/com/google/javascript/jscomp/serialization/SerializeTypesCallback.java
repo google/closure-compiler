@@ -30,9 +30,12 @@ final class SerializeTypesCallback extends AbstractPostOrderCallback {
 
   private final JSTypeSerializer jstypeSerializer;
   private final IdentityHashMap<JSType, TypePointer> typePointersByJstype = new IdentityHashMap<>();
+  private final StringPoolBuilder stringPoolBuilder;
 
-  private SerializeTypesCallback(JSTypeSerializer jstypeSerializer) {
+  private SerializeTypesCallback(
+      JSTypeSerializer jstypeSerializer, StringPoolBuilder stringPoolBuilder) {
     this.jstypeSerializer = jstypeSerializer;
+    this.stringPoolBuilder = stringPoolBuilder;
   }
 
   static SerializeTypesCallback create(
@@ -41,10 +44,11 @@ final class SerializeTypesCallback extends AbstractPostOrderCallback {
         new InvalidatingTypes.Builder(compiler.getTypeRegistry())
             .addAllTypeMismatches(compiler.getTypeMismatches())
             .build();
+    StringPoolBuilder stringPoolBuilder = new StringPoolBuilder();
     JSTypeSerializer jsTypeSerializer =
         JSTypeSerializer.create(
-            compiler.getTypeRegistry(), invalidatingTypes, serializationOptions);
-    return new SerializeTypesCallback(jsTypeSerializer);
+            compiler.getTypeRegistry(), invalidatingTypes, stringPoolBuilder, serializationOptions);
+    return new SerializeTypesCallback(jsTypeSerializer, stringPoolBuilder);
   }
 
   @Override
@@ -61,6 +65,10 @@ final class SerializeTypesCallback extends AbstractPostOrderCallback {
 
   TypePool generateTypePool() {
     return jstypeSerializer.generateTypePool();
+  }
+
+  StringPool generateStringPool() {
+    return stringPoolBuilder.build();
   }
 
   JSTypeSerializer getSerializer() {

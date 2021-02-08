@@ -35,7 +35,8 @@ public class ColorDeserializerTest {
   @Test
   public void deserializesJavaScriptPrimitivesFromEmptyTypePool() {
     ColorDeserializer deserializer =
-        ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
+        ColorDeserializer.buildFromTypePool(
+            TypePool.getDefaultInstance(), StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.NUMBER_TYPE)))
         .isNative(NativeColorId.NUMBER);
@@ -50,7 +51,8 @@ public class ColorDeserializerTest {
   @Test
   public void deserializesTopObjectTypeFromEmptyTypePool() {
     ColorDeserializer deserializer =
-        ColorDeserializer.buildFromTypePool(TypePool.getDefaultInstance());
+        ColorDeserializer.buildFromTypePool(
+            TypePool.getDefaultInstance(), StringPool.getDefaultInstance());
 
     Color object = deserializer.pointerToColor(primitiveTypePointer(PrimitiveType.TOP_OBJECT));
     assertThat(object).isInvalidating();
@@ -77,7 +79,8 @@ public class ColorDeserializerTest {
                 // Number is a subtype of Number.prototype
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(0)).setSupertype(poolPointer(1)))
             .build();
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     Color numberObject = deserializer.getRegistry().get(NativeColorId.NUMBER_OBJECT);
     assertThat(numberObject).isInvalidating();
@@ -92,7 +95,8 @@ public class ColorDeserializerTest {
         TypePool.newBuilder()
             .addType(TypeProto.newBuilder().setObject(ObjectTypeProto.newBuilder().setUuid("Foo")))
             .build();
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(0)).getId())
         .isEqualTo(ImmutableSet.of("Foo"));
@@ -117,7 +121,8 @@ public class ColorDeserializerTest {
                             .setInstanceType(poolPointer(1))
                             .setMarkedConstructor(true)))
             .build();
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(2)))
         .isEqualTo(
@@ -135,6 +140,30 @@ public class ColorDeserializerTest {
   }
 
   @Test
+  public void deserializesPropertiesFromStringPool() {
+    TypePool typePool =
+        TypePool.newBuilder()
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(
+                        ObjectTypeProto.newBuilder()
+                            .setUuid("Foo")
+                            .addOwnProperty(0)
+                            .addOwnProperty(1)))
+            .build();
+    StringPool stringPool = StringPool.newBuilder().addStrings("x").addStrings("y").build();
+    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool, stringPool);
+
+    assertThat(deserializer.pointerToColor(poolPointer(0)))
+        .isEqualTo(
+            Color.createSingleton(
+                createObjectColorBuilder()
+                    .setId("Foo")
+                    .setOwnProperties(ImmutableSet.of("x", "y"))
+                    .build()));
+  }
+
+  @Test
   public void deserializesInvalidatingObject() {
     TypePool typePool =
         TypePool.newBuilder()
@@ -142,7 +171,8 @@ public class ColorDeserializerTest {
                 TypeProto.newBuilder()
                     .setObject(ObjectTypeProto.newBuilder().setUuid("Foo").setIsInvalidating(true)))
             .build();
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(0))).isInvalidating();
     assertThat(deserializer.pointerToColor(poolPointer(0)).getId()).containsExactly("Foo");
@@ -158,7 +188,8 @@ public class ColorDeserializerTest {
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(0)))
             .build();
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(1)))
         .hasDisambiguationSupertypes(
@@ -179,7 +210,8 @@ public class ColorDeserializerTest {
             .addDisambiguationEdges(
                 SubtypingEdge.newBuilder().setSubtype(poolPointer(1)).setSupertype(poolPointer(2)))
             .build();
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(1)))
         .hasDisambiguationSupertypes(
@@ -197,7 +229,9 @@ public class ColorDeserializerTest {
             .build();
     assertThrows(
         InvalidSerializedFormatException.class,
-        () -> ColorDeserializer.buildFromTypePool(typePool).pointerToColor(poolPointer(0)));
+        () ->
+            ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance())
+                .pointerToColor(poolPointer(0)));
   }
 
   @Test
@@ -218,7 +252,8 @@ public class ColorDeserializerTest {
                             .addUnionMember(primitiveTypePointer(PrimitiveType.BIGINT_TYPE))))
             .build();
 
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(0)))
         .hasAlternates(
@@ -250,7 +285,8 @@ public class ColorDeserializerTest {
                             .addUnionMember(primitiveTypePointer(PrimitiveType.BIGINT_TYPE))))
             .build();
 
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(0)))
         .hasAlternates(
@@ -296,7 +332,9 @@ public class ColorDeserializerTest {
 
     assertThrows(
         InvalidSerializedFormatException.class,
-        () -> ColorDeserializer.buildFromTypePool(typePool).pointerToColor(poolPointer(0)));
+        () ->
+            ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance())
+                .pointerToColor(poolPointer(0)));
   }
 
   @Test
@@ -305,7 +343,9 @@ public class ColorDeserializerTest {
 
     assertThrows(
         InvalidSerializedFormatException.class,
-        () -> ColorDeserializer.buildFromTypePool(typePool).pointerToColor(poolPointer(0)));
+        () ->
+            ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance())
+                .pointerToColor(poolPointer(0)));
   }
 
   @Test
@@ -321,7 +361,22 @@ public class ColorDeserializerTest {
 
     assertThrows(
         InvalidSerializedFormatException.class,
-        () -> ColorDeserializer.buildFromTypePool(typePool).pointerToColor(poolPointer(0)));
+        () ->
+            ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance())
+                .pointerToColor(poolPointer(0)));
+  }
+
+  @Test
+  public void throwsExceptionOnOutOfBoundsStringPoolOffset() {
+    TypePool typePool =
+        TypePool.newBuilder()
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo").addOwnProperty(1001)))
+            .build();
+    assertThrows(
+        IndexOutOfBoundsException.class,
+        () -> ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance()));
   }
 
   private static SingletonColorFields.Builder createObjectColorBuilder() {
@@ -340,7 +395,8 @@ public class ColorDeserializerTest {
                             .addUnionMember(primitiveTypePointer(PrimitiveType.NUMBER_TYPE))))
             .build();
 
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(0))).isNative(NativeColorId.NUMBER);
     assertThat(deserializer.pointerToColor(poolPointer(0)).isUnion()).isFalse();

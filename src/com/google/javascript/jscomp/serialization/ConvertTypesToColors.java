@@ -95,7 +95,8 @@ public final class ConvertTypesToColors implements CompilerPass {
 
     // Step 2: Remove types and add colors
     TypePool typePool = serializeJstypes.generateTypePool();
-    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool);
+    StringPool stringPool = serializeJstypes.generateStringPool();
+    ColorDeserializer deserializer = ColorDeserializer.buildFromTypePool(typePool, stringPool);
     NodeTraversal.traverse(
         compiler,
         externsAndJsRoot,

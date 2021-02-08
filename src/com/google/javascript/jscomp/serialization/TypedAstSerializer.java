@@ -29,30 +29,33 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 /** Transforms a compiler AST into a serialized TypedAst object. */
 final class TypedAstSerializer {
 
   private final JSTypeSerializer jsTypeSerializer;
-  private final LinkedHashMap<String, Integer> stringPool = new LinkedHashMap<>();
+  private final StringPoolBuilder stringPool;
   private int previousLine;
   private int previousColumn;
 
-  private TypedAstSerializer(JSTypeSerializer jsTypeSerializer) {
+  private TypedAstSerializer(
+      JSTypeSerializer jsTypeSerializer, StringPoolBuilder stringPoolBuilder) {
     this.jsTypeSerializer = jsTypeSerializer;
+    this.stringPool = stringPoolBuilder;
   }
 
   static TypedAstSerializer createFromRegistryWithOptions(
       JSTypeRegistry registry,
       SerializationOptions serializationMode,
       ImmutableList<TypeMismatch> mismatches) {
+    StringPoolBuilder stringPoolBuilder = new StringPoolBuilder();
     JSTypeSerializer jsTypeSerializer =
         JSTypeSerializer.create(
             registry,
             new InvalidatingTypes.Builder(registry).addAllTypeMismatches(mismatches).build(),
+            stringPoolBuilder,
             serializationMode);
-    return new TypedAstSerializer(jsTypeSerializer);
+    return new TypedAstSerializer(jsTypeSerializer, stringPoolBuilder);
   }
 
   /** Transforms the given compiler AST root nodes into into a serialized TypedAst object */
@@ -71,7 +74,7 @@ final class TypedAstSerializer {
     }
     return builder
         .setTypePool(jsTypeSerializer.generateTypePool())
-        .setStringPool(StringPool.newBuilder().addAllStrings(this.stringPool.keySet()))
+        .setStringPool(this.stringPool.build())
         .build();
   }
 
@@ -113,13 +116,6 @@ final class TypedAstSerializer {
       builder.addChild(visit(child));
     }
     return builder.build();
-  }
-
-  private int stringToIndex(String string) {
-    checkNotNull(string);
-    int index = stringPool.getOrDefault(string, stringPool.size());
-    stringPool.put(string, index);
-    return index;
   }
 
   private ArrayList<NodeProperty> booleanPropTranslator(Node n) {
@@ -245,20 +241,20 @@ final class TypedAstSerializer {
       case GETTER_DEF:
       case SETTER_DEF:
       case LABEL_NAME:
-        builder.setStringValuePointer(stringToIndex(n.getString()));
+        builder.setStringValuePointer(this.stringPool.put(n.getString()));
         return;
       case TEMPLATELIT_STRING:
         builder.setTemplateStringValue(
             TemplateStringValue.newBuilder()
-                .setRawStringPointer(stringToIndex(n.getRawString()))
-                .setCookedStringPointer(stringToIndex(n.getCookedString()))
+                .setRawStringPointer(this.stringPool.put(n.getRawString()))
+                .setCookedStringPointer(this.stringPool.put(n.getCookedString()))
                 .build());
         return;
       case NUMBER:
         builder.setDoubleValue(n.getDouble());
         return;
       case BIGINT:
-        builder.setStringValuePointer(stringToIndex(n.getBigInt().toString()));
+        builder.setStringValuePointer(this.stringPool.put(n.getBigInt().toString()));
         return;
       default:
         // No value

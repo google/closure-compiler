@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.testing;
 import static com.google.common.truth.Truth.assertAbout;
 
 import com.google.common.truth.FailureMetadata;
+import com.google.common.truth.IterableSubject;
 import com.google.common.truth.Subject;
 import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.NativeColorId;
@@ -71,6 +72,10 @@ public final class ColorSubject extends Subject {
 
   public void propertiesKeepOriginalName() {
     check("propertiesKeepOriginalName").that(actualNonNull().propertiesKeepOriginalName()).isTrue();
+  }
+
+  public IterableSubject withOwnPropertiesSetThat() {
+    return check("getOwnProperties()").that(actualNonNull().getOwnProperties());
   }
 
   public void hasAlternates(Color... alternates) {

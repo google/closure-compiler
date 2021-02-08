@@ -55,6 +55,7 @@ final class JSTypeSerializer {
   private final ImmutableSet<JSType> topObjectLikeTypes;
 
   private final InvalidatingTypes invalidatingTypes;
+  private final StringPoolBuilder stringPoolBuilder;
   private final IdGenerator idGenerator;
   private final SerializationOptions serializationMode;
   private final LinkedHashMap<SimplifiedType, SeenTypeRecord> seenSerializableTypes =
@@ -89,6 +90,7 @@ final class JSTypeSerializer {
   private JSTypeSerializer(
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
+      StringPoolBuilder stringPoolBuilder,
       IdGenerator idGenerator,
       SerializationOptions serializationMode) {
     this.unknownType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
@@ -98,6 +100,7 @@ final class JSTypeSerializer {
         TOP_LIKE_OBJECT_IDS.stream().map(registry::getNativeType).collect(toImmutableSet());
     this.nullType = SimplifiedType.ofJSType(registry.getNativeType(JSTypeNative.NULL_TYPE));
     this.invalidatingTypes = invalidatingTypes;
+    this.stringPoolBuilder = stringPoolBuilder;
     this.idGenerator = idGenerator;
     this.serializationMode = serializationMode;
   }
@@ -105,11 +108,13 @@ final class JSTypeSerializer {
   public static JSTypeSerializer create(
       JSTypeRegistry registry,
       InvalidatingTypes invalidatingTypes,
+      StringPoolBuilder stringPoolBuilder,
       SerializationOptions serializationMode) {
     IdGenerator idGenerator = new IdGenerator();
 
     JSTypeSerializer serializer =
-        new JSTypeSerializer(registry, invalidatingTypes, idGenerator, serializationMode);
+        new JSTypeSerializer(
+            registry, invalidatingTypes, stringPoolBuilder, idGenerator, serializationMode);
 
     serializer.addPrimitiveTypePointers();
     serializer.checkValid();
@@ -307,6 +312,11 @@ final class JSTypeSerializer {
       if (!debugInfo.equals(ObjectTypeProto.DebugInfo.getDefaultInstance())) {
         objBuilder.setDebugInfo(debugInfo);
       }
+    }
+    for (String ownProperty : type.getOwnPropertyNames()) {
+      // TODO(b/169899789): consider omitting common, well-known properties like "prototype" to save
+      // space.
+      objBuilder.addOwnProperty(this.stringPoolBuilder.put(ownProperty));
     }
     return objBuilder
         .setIsInvalidating(invalidatingTypes.isInvalidating(type))

@@ -72,7 +72,7 @@ public final class ColorDeserializer {
    * <p>This method does all of the deserialization work in advance so that {@link #getRegistry()}
    * and {@link #pointerToColor(TypePointer)} willexecute in constant time.
    */
-  public static ColorDeserializer buildFromTypePool(TypePool typePool) {
+  public static ColorDeserializer buildFromTypePool(TypePool typePool, StringPool stringPool) {
     ImmutableMultimap.Builder<Integer, TypePointer> disambiguationEdges =
         ImmutableMultimap.builder();
     for (SubtypingEdge edge : typePool.getDisambiguationEdgesList()) {
@@ -98,7 +98,7 @@ public final class ColorDeserializer {
                     (nativeType) -> colorIdToColor.get(primitiveToColorId(nativeType))));
 
     ColorPoolBuilder colorPoolBuilder =
-        new ColorPoolBuilder(typePool, disambiguationEdges.build(), nativeTypeToColor);
+        new ColorPoolBuilder(typePool, stringPool, disambiguationEdges.build(), nativeTypeToColor);
 
     ImmutableMap<NativeColorId, Color> nativeObjectColors =
         gatherNativeObjects(typePool.getNativeObjectTable(), colorPoolBuilder);
@@ -141,13 +141,16 @@ public final class ColorDeserializer {
     // keys are indices into the type proto list and values are pointers to its supertypes
     private final ImmutableMultimap<Integer, TypePointer> disambiguationEdges;
     private final TypePool typePool;
+    private final StringPool stringPool;
     private final ImmutableMap<PrimitiveType, Color> nativeToColor;
 
     private ColorPoolBuilder(
         TypePool typePool,
+        StringPool stringPool,
         ImmutableMultimap<Integer, TypePointer> disambiguationEdges,
         ImmutableMap<PrimitiveType, Color> nativeToColor) {
       this.typePool = typePool;
+      this.stringPool = stringPool;
       this.colorPool = new ArrayList<>();
       this.disambiguationEdges = disambiguationEdges;
       this.colorPool.addAll(Collections.nCopies(typePool.getTypeCount(), null));
@@ -226,14 +229,18 @@ public final class ColorDeserializer {
                   DebugInfo.builder()
                       .setFilename(serializedDebugInfo.getFilename())
                       .setClassName(serializedDebugInfo.getClassName())
-                      .build());
+                      .build())
+              .setConstructor(serialized.getMarkedConstructor())
+              .setOwnProperties(
+                  serialized.getOwnPropertyList().stream()
+                      .map(stringOffset -> this.stringPool.getStringsList().get(stringOffset))
+                      .collect(toImmutableSet()));
       if (serialized.hasPrototype()) {
         builder.setPrototype(this.pointerToColor(serialized.getPrototype()));
       }
       if (serialized.hasInstanceType()) {
         builder.setInstanceColor(this.pointerToColor(serialized.getInstanceType()));
       }
-      builder.setConstructor(serialized.getMarkedConstructor());
       return Color.createSingleton(builder.build());
     }
 

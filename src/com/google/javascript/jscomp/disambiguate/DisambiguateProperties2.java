@@ -178,6 +178,9 @@ public final class DisambiguateProperties2 implements CompilerPass {
      *
      * <p>Good candidates are: props accessed by builtin functions, props accessed by syntax sugar,
      * props used in strange ways by the language spec, etc.
+     *
+     * <p>TODO(b/169899789): consider instead omitting these properties entirely from the serialized
+     * colors format.
      */
     ImmutableList<String> names = ImmutableList.of("prototype", "constructor", "then");
     for (String name : names) {

@@ -63,6 +63,9 @@ message ObjectTypeProto {
   // Whether this was declared as either a class constructor or Closure ES5-
   // style constructor.
   bool marked_constructor = 7;
+  // Property names declared on this object. Used for property disambiguation.
+  // Represented as offsets into a StringPool
+  repeated int32 own_property = 8;
 
   // Optional, doesn't contribute to type equality
   DebugInfo debug_info = 15;

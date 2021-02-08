@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.serialization;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,8 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   private static final ImmutableList<FieldDescriptor> COMMONLY_IGNORED_FIELDS =
       ImmutableList.of(
           TypePointer.getDescriptor().findFieldByName("pool_offset"),
-          ObjectTypeProto.getDescriptor().findFieldByName("uuid"));
+          ObjectTypeProto.getDescriptor().findFieldByName("uuid"),
+          ObjectTypeProto.getDescriptor().findFieldByName("own_property"));
 
   @Override
   @Before
@@ -159,8 +161,11 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testObjectTypeSerializationFormat() {
-    assertThat(compileToTypes("class Foo { m() {} } new Foo().m();"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+    TypedAst typedAst = compile("class Foo { m() {} } new Foo().m();");
+    assertThat(typedAst.getTypePool().getTypeList())
+        .ignoringFieldDescriptors(
+            TypePointer.getDescriptor().findFieldByName("pool_offset"),
+            ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
         .containsAtLeast(
             TypeProto.newBuilder()
                 .setObject(
@@ -174,10 +179,16 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
                             TypePointer.newBuilder()
                                 .setDebugInfo(
                                     TypePointer.DebugInfo.newBuilder().setDescription("Foo")))
-                        .setMarkedConstructor(true))
+                        .setMarkedConstructor(true)
+                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "prototype")))
                 .build(),
             TypeProto.newBuilder().setObject(namedObjectBuilder("Foo")).build(),
-            TypeProto.newBuilder().setObject(namedObjectBuilder("Foo.prototype")).build(),
+            TypeProto.newBuilder()
+                .setObject(
+                    namedObjectBuilder("Foo.prototype")
+                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "constructor"))
+                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "m")))
+                .build(),
             TypeProto.newBuilder()
                 .setObject(namedObjectBuilder("Foo.prototype.m").setIsInvalidating(true))
                 .build());
@@ -250,11 +261,17 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
 
   @Test
   public void testSerializeObjectLiteralTypesAsInvalidating() {
-    assertThat(compileToTypes("const /** {x: string} */ obj = {x: ''};"))
-        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+    TypedAst typedAst = compile("const /** {x: string} */ obj = {x: ''};");
+    assertThat(typedAst.getTypePool().getTypeList())
+        .ignoringFieldDescriptors(
+            TypePointer.getDescriptor().findFieldByName("pool_offset"),
+            ObjectTypeProto.getDescriptor().findFieldByName("uuid"))
         .contains(
             TypeProto.newBuilder()
-                .setObject(ObjectTypeProto.newBuilder().setIsInvalidating(true))
+                .setObject(
+                    ObjectTypeProto.newBuilder()
+                        .setIsInvalidating(true)
+                        .addOwnProperty(findInStringPool(typedAst.getStringPool(), "x")))
                 .build());
   }
 
@@ -585,6 +602,15 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   /** Returns the types that are serialized for every compilation, even given an empty source */
   private ImmutableList<TypeProto> nativeObjects() {
     return ImmutableList.copyOf(compileToTypes(""));
+  }
+
+  /**
+   * Returns the offset of the given string in the given pool, throwing an exception if not present
+   */
+  private static int findInStringPool(StringPool stringPool, String str) {
+    int offset = stringPool.getStringsList().indexOf(str);
+    checkState(offset != -1, "Could not find string '%s' in string pool %s", str, stringPool);
+    return offset;
   }
 
   private static int adjustPoolOffset(int offset) {

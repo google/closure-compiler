@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.colors;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
 import javax.annotation.Nullable;
 
@@ -55,6 +56,10 @@ public abstract class SingletonColorFields {
 
   abstract boolean isConstructor();
 
+  // property names 'declared' on an object (as opposed to being conceptually inherited from some
+  // supertype).
+  abstract ImmutableSet<String> getOwnProperties();
+
   @Nullable
   abstract NativeColorId getNativeColorId();
 
@@ -78,6 +83,8 @@ public abstract class SingletonColorFields {
 
     public abstract Builder setConstructor(boolean isConstructor);
 
+    public abstract Builder setOwnProperties(ImmutableSet<String> ownProperties);
+
     public abstract Builder setDebugInfo(DebugInfo debugInfo);
 
     public abstract Builder setNativeColorId(NativeColorId id);
@@ -97,6 +104,7 @@ public abstract class SingletonColorFields {
         .setInvalidating(false)
         .setPropertiesKeepOriginalName(false)
         .setDisambiguationSupertypes(ImmutableList.of())
-        .setConstructor(false);
+        .setConstructor(false)
+        .setOwnProperties(ImmutableSet.of());
   }
 }

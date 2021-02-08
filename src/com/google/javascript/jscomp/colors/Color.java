@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.Immutable;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 /** A simplified version of a Closure or TS type for use by optimizations */
@@ -116,6 +117,12 @@ public abstract class Color {
         return this.union().stream().allMatch(Color::isConstructor);
     }
     throw new AssertionError();
+  }
+
+  public ImmutableSet<String> getOwnProperties() {
+    return collect(this, SingletonColorFields::getOwnProperties).stream()
+        .flatMap(Set::stream)
+        .collect(toImmutableSet());
   }
 
   public final ImmutableSet<String> getId() {
