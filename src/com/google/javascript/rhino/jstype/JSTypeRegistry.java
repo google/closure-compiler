@@ -48,7 +48,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_OBJECT;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_STRING;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BIGINT_NUMBER_STRING_OBJECT;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -61,7 +60,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Table;
@@ -82,7 +80,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -227,15 +224,6 @@ public class JSTypeRegistry implements Serializable {
   // for de-duping.
   private transient Map<String, Map<String, ObjectType>> eachRefTypeIndexedByProperty =
       new LinkedHashMap<>();
-
-  // A map of properties to the greatest subtype on which those properties have
-  // been declared. This is filled lazily from the types declared in
-  // typesIndexedByProperty.
-  private final Map<String, JSType> greatestSubtypeByProperty = new HashMap<>();
-
-  // A map from interface name to types that implement it.
-  private transient Multimap<String, FunctionType> interfaceToImplementors =
-      LinkedHashMultimap.create();
 
   // A single empty TemplateTypeMap, which can be safely reused in cases where
   // there are no template types.
@@ -1102,9 +1090,6 @@ public class JSTypeRegistry implements Serializable {
     }
 
     addReferenceTypeIndexedByProperty(propertyName, type);
-
-    // Clear cached values that depend on typesIndexedByProperty.
-    greatestSubtypeByProperty.remove(propertyName);
   }
 
   private void addReferenceTypeIndexedByProperty(
@@ -1139,31 +1124,6 @@ public class JSTypeRegistry implements Serializable {
     if (typeSet != null) {
       typeSet.remove(type.toObjectType().getReferenceName());
     }
-  }
-
-  /**
-   * Gets the greatest subtype of the {@code type} that has a property {@code propertyName} defined
-   * on it.
-   *
-   * <p>NOTE: Building the returned union here is an n^2 operation of relatively expensive subtype
-   * checks: for common properties named such as those on some generated classes this can be
-   * extremely expensive (programs with thousands of protos isn't uncommon resulting in millions of
-   * subtype relationship checks for each common property name). Currently, this is only used by
-   * "disambiguate properties" and there is should be removed.
-   */
-  public JSType getGreatestSubtypeWithProperty(JSType type, String propertyName) {
-    JSType withProperty = greatestSubtypeByProperty.get(propertyName);
-    if (withProperty != null) {
-      return withProperty.getGreatestSubtype(type);
-    }
-    if (typesIndexedByProperty.containsKey(propertyName)) {
-      Collection<JSType> typesWithProp = typesIndexedByProperty.get(propertyName);
-      JSType built =
-          UnionType.builderForPropertyChecking(this).addAlternates(typesWithProp).build();
-      greatestSubtypeByProperty.put(propertyName, built);
-      return built.getGreatestSubtype(type);
-    }
-    return getNativeType(NO_TYPE);
   }
 
   /** A tristate value returned from canPropertyBeDefined. */
@@ -1287,39 +1247,6 @@ public class JSTypeRegistry implements Serializable {
       stack.add(current);
     }
     return stack;
-  }
-
-  /**
-   * Tells the type system that {@code type} implements interface {@code
-   * interfaceInstance}.
-   * {@code inter} must be an ObjectType for the instance of the interface as it
-   * could be a named type and not yet have the constructor.
-   */
-  void registerTypeImplementingInterface(
-      FunctionType type, ObjectType interfaceInstance) {
-    interfaceToImplementors.put(interfaceInstance.getReferenceName(), type);
-  }
-
-  /**
-   * Record that {@code aliasingType} is defined to be an alias for {@code originalInterface}.
-   *
-   * <p>Specifically, any class that declares it implements {@code aliasingType}, should
-   * also be considered an implementation of {@code originalInterface}.
-   */
-  public void registerInterfaceAlias(NamedType aliasingType, ObjectType originalInterface) {
-    interfaceToImplementors.putAll(
-        originalInterface.getReferenceName(),
-        interfaceToImplementors.get(aliasingType.getReferenceName()));
-  }
-
-  /**
-   * Returns a collection of types that directly implement {@code
-   * interfaceInstance}.  Subtypes of implementing types are not guaranteed to
-   * be returned.  {@code interfaceInstance} must be an ObjectType for the
-   * instance of the interface.
-   */
-  public Collection<FunctionType> getDirectImplementors(ObjectType interfaceInstance) {
-    return interfaceToImplementors.get(interfaceInstance.getReferenceName());
   }
 
   /**
@@ -2432,7 +2359,6 @@ public class JSTypeRegistry implements Serializable {
   @GwtIncompatible("ObjectOutputStream")
   public void saveContents(ObjectOutputStream out) throws IOException {
     out.writeObject(eachRefTypeIndexedByProperty);
-    out.writeObject(interfaceToImplementors);
     out.writeObject(typesIndexedByProperty);
   }
 
@@ -2446,7 +2372,6 @@ public class JSTypeRegistry implements Serializable {
   @GwtIncompatible("ObjectInputStream")
   public void restoreContents(ObjectInputStream in) throws IOException, ClassNotFoundException {
     eachRefTypeIndexedByProperty = (Map<String, Map<String, ObjectType>>) in.readObject();
-    interfaceToImplementors = (Multimap<String, FunctionType>) in.readObject();
     typesIndexedByProperty = (Multimap<String, JSType>) in.readObject();
   }
 

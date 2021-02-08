@@ -82,24 +82,16 @@ public class UnionType extends JSType {
    * Generally, if the best we can do is say "this object is one of thirty things", then we should
    * just give up and admit that we have no clue.
    */
-  private static final int DEFAULT_MAX_UNION_SIZE = 30;
+  private static final int MAX_UNION_SIZE = 30;
 
   /**
-   * A special case maximum size for use in the type registry.
+   * The types that are unioned.
    *
-   * <p>The registry uses a union type to track all the types that have a given property. In this
-   * scenario, there can be <em>many</em> alternates but it's still valuable to differentiate them.
-   *
-   * <p>This value was semi-randomly selected based on the Google+ FE project.
+   * <p>We use a List rather than a Set so that we can iterate by index. This is substantially more
+   * efficient than using the for-each idiom due to the overhead of allocating iterators. All loops
+   * over this collection should be indexed.
    */
-  private static final int PROPERTY_CHECKING_MAX_UNION_SIZE = 3000;
-
-  // NOTE: to avoid allocating iterators, all the loops below iterate over alternates by index
-  // instead of using the for-each loop idiom.
-
-
   private ImmutableList<JSType> alternates;
-  private final int maxUnionSize;
 
   /**
    * Creates a union.
@@ -107,10 +99,9 @@ public class UnionType extends JSType {
    * <p>This ctor is private because all instances are created using a {@link Builder}. The builder
    * is also responsible for setting the alternates, which is why they aren't passed as a parameter.
    */
-  private UnionType(JSTypeRegistry registry, ImmutableList<JSType> alternates, int maxUnionSize) {
+  private UnionType(JSTypeRegistry registry, ImmutableList<JSType> alternates) {
     super(registry);
     this.setAlternates(alternates);
-    this.maxUnionSize = maxUnionSize;
 
     registry.getResolver().resolveIfClosed(this, TYPE_CLASS);
   }
@@ -122,16 +113,7 @@ public class UnionType extends JSType {
 
   /** Creates a {@link Builder} for a new {@link UnionType}. */
   public static Builder builder(JSTypeRegistry registry) {
-    return new Builder(registry, DEFAULT_MAX_UNION_SIZE);
-  }
-
-  /**
-   * Creates a {@link Builder} for a new {@link UnionType}.
-   *
-   * <p>This is only supposed to be used within `JSTypeRegistry`.
-   */
-  static Builder builderForPropertyChecking(JSTypeRegistry registry) {
-    return new Builder(registry, PROPERTY_CHECKING_MAX_UNION_SIZE);
+    return new Builder(registry);
   }
 
   /**
@@ -148,7 +130,7 @@ public class UnionType extends JSType {
 
   /** Use a {@link Builder} to rebuild the list of alternates. */
   private void rebuildAlternates() {
-    setAlternates(new Builder(this, maxUnionSize).addAlternates(this.alternates).buildInternal());
+    setAlternates(new Builder(this).addAlternates(this.alternates).buildInternal());
   }
 
   private UnionType setAlternates(ImmutableList<JSType> alternates) {
@@ -640,7 +622,6 @@ public class UnionType extends JSType {
   public static final class Builder {
     private final UnionType rebuildTarget;
     private final JSTypeRegistry registry;
-    private final int maxUnionSize;
 
     private final List<JSType> alternates = new ArrayList<>();
     // If a union has ? or *, we do not care about any other types, except for undefined (for
@@ -674,17 +655,15 @@ public class UnionType extends JSType {
     private boolean hasBuilt = false;
 
     /** Creates a builder for a new union. */
-    private Builder(JSTypeRegistry registry, int maxUnionSize) {
+    private Builder(JSTypeRegistry registry) {
       this.rebuildTarget = null;
       this.registry = registry;
-      this.maxUnionSize = maxUnionSize;
     }
 
     /** Creates a re-builder for an existing union. */
-    private Builder(UnionType rebuildTarget, int maxUnionSize) {
+    private Builder(UnionType rebuildTarget) {
       this.rebuildTarget = rebuildTarget;
       this.registry = rebuildTarget.registry;
-      this.maxUnionSize = maxUnionSize;
     }
 
     private static boolean isSubtype(JSType rightType, JSType leftType) {
@@ -720,7 +699,7 @@ public class UnionType extends JSType {
         return this;
       }
 
-      if (alternates.size() > maxUnionSize) {
+      if (alternates.size() > MAX_UNION_SIZE) {
         return this;
       }
 
@@ -898,7 +877,7 @@ public class UnionType extends JSType {
       if (alternates.size() == 1) {
         return alternates.get(0);
       } else {
-        return new UnionType(registry, alternates, maxUnionSize);
+        return new UnionType(registry, alternates);
       }
     }
 
@@ -920,7 +899,7 @@ public class UnionType extends JSType {
         // To simplify the typesystem, empty union types are forbidden. Using a single `bottom`
         // makes it essentially a proxy instead.
         return ImmutableList.of(registry.getNativeType(NO_TYPE));
-      } else if (alternates.size() > maxUnionSize) {
+      } else if (alternates.size() > MAX_UNION_SIZE) {
         return ImmutableList.of(registry.getNativeType(UNKNOWN_TYPE));
       } else {
         return ImmutableList.copyOf(alternates);

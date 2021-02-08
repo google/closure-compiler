@@ -39,7 +39,6 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_GENERATOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ASYNC_ITERABLE_TYPE;
@@ -56,7 +55,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
-import static com.google.javascript.rhino.testing.TypeSubject.types;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -176,28 +174,6 @@ public class JSTypeRegistryTest {
     JSTypeRegistry typeRegistry2 = new JSTypeRegistry(null);
     assertThat(typeRegistry2.getType(null, name)).isEqualTo(null);
     assertType(registry.getType(null, name)).isEqualTo(type);
-  }
-
-  @Test
-  public void testPropertyOnManyTypes() {
-    this.closer.close(); // Force resolution to happen on the union.
-    // Given
-
-    // By default the UnionType.Builder will treat a union of more than 30
-    // types as an unknown type. We don't want that for property checking
-    // so test that the limit is higher.
-    for (int i = 0; i < 100; i++) {
-      JSType type = registry.createObjectType("type: " + i, null);
-
-      // When
-      registry.registerPropertyOnType("foo", type);
-
-      // Then
-      assertWithMessage("Registered property `foo` on <%s> types.", i + 1)
-          .about(types())
-          .that(registry.getGreatestSubtypeWithProperty(type, "foo"))
-          .isNotUnknown();
-    }
   }
 
   @Test

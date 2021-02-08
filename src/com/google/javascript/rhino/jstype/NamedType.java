@@ -287,12 +287,6 @@ public final class NamedType extends ProxyObjectType {
         return result;
       }
 
-      if (resultAsObject.isInstanceType() && resultAsObject.getConstructor().isInterface()) {
-        // Make sure the registry considers classes that declare they implement
-        // this NamedType as also implementing the resolved type.
-        registry.registerInterfaceAlias(this, resultAsObject);
-      }
-
       if (resolvedTypeArgs.isEmpty() || !resultAsObject.isRawTypeOfTemplatizedType()) {
         // No template parameters need to be resolved.
         return result;

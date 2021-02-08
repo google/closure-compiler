@@ -640,7 +640,9 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
     for (ObjectType type : implementedInterfaces) {
-      registry.registerTypeImplementingInterface(this, type);
+      if (type.getConstructor() != null) {
+        type.getConstructor().addSubType(this);
+      }
       typeOfThis.mergeSupertypeTemplateTypes(type);
     }
   }
@@ -1131,9 +1133,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
   }
 
   public final Iterable<FunctionType> getDirectSubTypes() {
-    return Iterables.concat(
-        subTypes != null ? subTypes : ImmutableList.<FunctionType>of(),
-        this.registry.getDirectImplementors(this));
+    return (subTypes != null) ? subTypes : ImmutableList.<FunctionType>of();
   }
 
   @Override

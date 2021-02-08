@@ -391,10 +391,6 @@ public abstract class JSType implements Serializable {
     return false;
   }
 
-  public JSType getGreatestSubtypeWithProperty(String propName) {
-    return this.registry.getGreatestSubtypeWithProperty(this, propName);
-  }
-
   /**
    * Downcasts this to a UnionType, or returns null if this is not a UnionType.
    *

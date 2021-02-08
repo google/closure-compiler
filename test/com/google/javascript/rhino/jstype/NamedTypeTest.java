@@ -43,7 +43,6 @@ import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static com.google.javascript.rhino.testing.MapBasedScope.emptyScope;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.EqualsTester;
 import com.google.javascript.rhino.ErrorReporter;
@@ -67,32 +66,6 @@ public class NamedTypeTest extends BaseJSTypeTestCase {
       this.fooCtorType = FunctionType.builder(registry).forConstructor().withName("Foo").build();
       this.fooType = fooCtorType.getInstanceType();
     }
-  }
-
-  @Test
-  public void testResolutionPropagatesImplementingClassesToResolvedType() {
-    final FunctionType originalInterface;
-    final FunctionType implementerType;
-
-    try (JSTypeResolver.Closer ignored = registry.getResolver().openForDefinition()) {
-      // Set up InterfaceAlias to resolve to OriginalInterface
-      originalInterface =
-          FunctionType.builder(registry).forInterface().withName("OriginalInterface").build();
-      StaticTypedScope aliasToOriginalScope =
-          new MapBasedScope(ImmutableMap.of("InterfaceAlias", originalInterface));
-      NamedType interfaceAlias =
-          namedTypeBuilder("InterfaceAlias").setScope(aliasToOriginalScope).build();
-
-      // class Impl declares that it implements InterfaceAlias
-      implementerType = FunctionType.builder(registry).forConstructor().withName("Impl").build();
-      implementerType.setImplementedInterfaces(ImmutableList.of(interfaceAlias));
-      assertThat(registry.getDirectImplementors(interfaceAlias)).containsExactly(implementerType);
-
-      // Before type resolution is done, nothing declares that it implements OriginalInterface
-      assertThat(registry.getDirectImplementors(originalInterface)).isEmpty();
-    }
-    // After type resolution the registry knows that class Impl implements OriginalInterface
-    assertThat(registry.getDirectImplementors(originalInterface)).containsExactly(implementerType);
   }
 
   @Test

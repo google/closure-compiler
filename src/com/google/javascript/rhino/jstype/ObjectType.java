@@ -300,17 +300,6 @@ public abstract class ObjectType extends JSType implements Serializable {
     return iproto == null ? null : iproto.getConstructor();
   }
 
-  /**
-   * Returns the top most type that defines the property.
-   *
-   * <p>Note: if you are doing type validation, you are probably looking for the closest definition
-   * of the property which could be resolved by {@link #getClosestDefiningType}.
-   */
-  public final ObjectType getTopMostDefiningType(String propertyName) {
-    OwnedProperty property = getPropertyMap().findTopMost(propertyName);
-    return property == null ? null : property.getOwner();
-  }
-
   /** Returns the closest ancestor that defines the property including this type itself. */
   public final ObjectType getClosestDefiningType(String propertyName) {
     OwnedProperty property = getPropertyMap().findClosest(propertyName);

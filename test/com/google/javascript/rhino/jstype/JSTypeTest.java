@@ -38,7 +38,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
@@ -60,7 +59,6 @@ import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import java.util.List;
-import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -5736,69 +5734,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testRegisterProperty() {
-    // Get a subset of our list of standard types to test containing just ObjectTypes and already
-    // cast to ObjectType.
-    ImmutableList<ObjectType> objectTypes =
-        types
-            .stream()
-            .map(JSType::toMaybeObjectType)
-            .filter(Objects::nonNull)
-            .collect(toImmutableList());
-    assertThat(objectTypes).isNotEmpty();
-
-    for (int i = 0; i < objectTypes.size(); i++) {
-      ObjectType type = objectTypes.get(i);
-      String propName = "ALF" + i;
-
-      type.defineDeclaredProperty(propName, UNKNOWN_TYPE, null);
-      type.defineDeclaredProperty("allHaz", UNKNOWN_TYPE, null);
-
-      // We exclude {a: number, b: string} because, for inline record types,
-      // we register their properties on a sentinel object literal in the registry.
-      if (!type.equals(this.recordType)) {
-        assertTypeEquals(type, registry.getGreatestSubtypeWithProperty(type, propName));
-      }
-
-      // We don't define property "GRRR" on any of our ObjectTypes.
-      assertTypeEquals(NO_TYPE, registry.getGreatestSubtypeWithProperty(type, "GRRR"));
-    }
-  }
-
-  @Test
-  public void testRegisterPropertyMemoization() {
-    ObjectType derived1 = registry.createObjectType("d1", namedGoogBar);
-    ObjectType derived2 = registry.createObjectType("d2", namedGoogBar);
-
-    derived1.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
-
-    assertTypeEquals(derived1,
-        registry.getGreatestSubtypeWithProperty(derived1, "propz"));
-    assertTypeEquals(NO_OBJECT_TYPE,
-        registry.getGreatestSubtypeWithProperty(derived2, "propz"));
-
-    derived2.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
-
-    assertTypeEquals(derived1,
-        registry.getGreatestSubtypeWithProperty(derived1, "propz"));
-    assertTypeEquals(derived2,
-        registry.getGreatestSubtypeWithProperty(derived2, "propz"));
-  }
-
-  /** Tests {@link JSTypeRegistry#getGreatestSubtypeWithProperty(JSType, String)}. */
-  @Test
-  public void testGreatestSubtypeWithProperty() {
-    ObjectType foo = registry.createObjectType("foo", OBJECT_TYPE);
-    ObjectType bar = registry.createObjectType("bar", namedGoogBar);
-
-    foo.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
-    bar.defineDeclaredProperty("propz", UNKNOWN_TYPE, null);
-
-    assertTypeEquals(bar,
-        registry.getGreatestSubtypeWithProperty(namedGoogBar, "propz"));
-  }
-
-  @Test
   public void testGoodSetPrototypeBasedOn() {
     FunctionType fun =
         withOpenRegistry(
@@ -6217,11 +6152,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertThat(googBar.getDirectSubTypes()).doesNotContain(googSubSubBar);
     assertThat(googSubBar.getDirectSubTypes()).doesNotContain(googSubBar);
     assertThat(googSubBar.getDirectSubTypes()).contains(googSubSubBar);
-  }
-
-  @Test
-  public void testImplementingType() {
-    assertThat(registry.getDirectImplementors(interfaceType.getInstanceType())).contains(googBar);
   }
 
   @Test

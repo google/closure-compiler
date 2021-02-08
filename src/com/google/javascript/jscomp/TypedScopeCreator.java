@@ -170,18 +170,6 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
           "The right-hand side of an extends clause must be a qualified name, or else @extends must"
               + " be specified in JSDoc");
 
-  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
-      DELEGATE_PROXY_SUFFIX,
-      MALFORMED_TYPEDEF,
-      ENUM_INITIALIZER,
-      CTOR_INITIALIZER,
-      IFACE_INITIALIZER,
-      CONSTRUCTOR_EXPECTED,
-      UNKNOWN_LENDS,
-      LENDS_ON_NON_OBJECT,
-      INCOMPATIBLE_ALIAS_ANNOTATION,
-      DYNAMIC_EXTENDS_WITHOUT_JSDOC);
-
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
   private final TypeValidator validator;
