@@ -509,11 +509,6 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
-    // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
-    if (!options.allowsHotswapReplaceScript()) {
-      passes.add(inlineTypeAliases);
-    }
-
     // i18n
     // If you want to customize the compiler to use a different i18n pass,
     // you can create a PassConfig that calls replacePassFactory
@@ -555,10 +550,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     passes.add(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
 
-    if (options.replaceIdGenerators) {
-      passes.add(replaceIdGenerators);
-    }
-
     // Optimizes references to the arguments variable.
     if (options.optimizeArgumentsArray) {
       passes.add(optimizeArgumentsArray);
@@ -574,7 +565,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clAssertRemovalPass);
     }
 
-    assertAllOneTimePasses(passes);
 
     // Inline aliases so that following optimizations don't have to understand alias chains.
     if (options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
@@ -583,7 +573,16 @@ public final class DefaultPassConfig extends PassConfig {
         passes.add(convertStaticInheritance);
       }
       passes.add(aggressiveInlineAliases);
+    } else {
+      // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
+      passes.add(inlineTypeAliases);
     }
+
+    if (options.replaceIdGenerators) {
+      passes.add(replaceIdGenerators);
+    }
+
+    assertAllOneTimePasses(passes);
 
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
     // from desugaring) don't block class stripping.
