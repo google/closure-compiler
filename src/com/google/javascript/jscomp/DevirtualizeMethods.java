@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
  * and other passes can do more.
  *
  * <p>To work effectively, this pass depends on {@link
- * com.google.javascript.jscomp.disambiguate.DisambiguateProperties} running first to do a lot of
+ * com.google.javascript.jscomp.disambiguate.DisambiguateProperties2} running first to do a lot of
  * heavy-lifting. It assumes that different methods will have unique names which in general isn't
  * true for source JavaScript.
  *

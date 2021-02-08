@@ -384,9 +384,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup TYPE_INVALIDATION =
       DiagnosticGroups.registerGroup(
-          "typeInvalidation",
-          PropertyRenamingDiagnostics.INVALIDATION,
-          DisambiguateProperties2.PROPERTY_INVALIDATION);
+          "typeInvalidation", DisambiguateProperties2.PROPERTY_INVALIDATION);
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",

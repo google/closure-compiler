@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.PropertyCollapseLevel;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ReplaceStrings.Result;
-import com.google.javascript.jscomp.disambiguate.DisambiguateProperties;
+import com.google.javascript.jscomp.disambiguate.DisambiguateProperties2;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 import java.util.Set;
@@ -134,7 +134,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
               new SourceInformationAnnotator("test", false /* checkAnnotated */);
           NodeTraversal.traverse(compiler, js, sia);
 
-          new DisambiguateProperties(compiler, ImmutableSet.of("foobar")).process(externs, js);
+          new DisambiguateProperties2(compiler, ImmutableSet.of("foobar")).process(externs, js);
         }
         pass.process(externs, js);
       }
