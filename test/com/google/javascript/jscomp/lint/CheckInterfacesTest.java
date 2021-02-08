@@ -120,6 +120,14 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInterfaceClass_callToSuperInConstructorAllowed() {
+    testSame("class D {} /** @interface */ class C extends D { constructor() { super(); } }");
+    testSame("class D {} /** @interface */ class C extends D { constructor() { super(x); } }");
+    testSame("class D {} /** @record */ class C extends D { constructor() { super(); } }");
+    testSame("class D {} /** @record */ class C extends D { constructor() { super(x); } }");
+  }
+
+  @Test
   public void testInterfaceComputedProperties() {
     testSame(
         "/** @interface */  class C { ['f']() { return 1; }}",
@@ -207,6 +215,19 @@ public final class CheckInterfacesTest extends CompilerTestCase {
             "  /** @type {number} */",
             "  this.bar;",
             "}"));
+  }
+
+  @Test
+  public void testRecordWithFieldDeclarationsMissingJSDoc() {
+    testSame(
+        lines(
+            "/** @record */",
+            "function R() {",
+            "  // This should have a JSDoc.",
+            "  this.noJSDoc;",
+            "",
+            "}"),
+        CheckInterfaces.NON_DECLARATION_STATEMENT_IN_RECORD);
   }
 
   @Test

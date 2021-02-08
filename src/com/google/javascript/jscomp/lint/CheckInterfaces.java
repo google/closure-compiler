@@ -153,21 +153,36 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
       return;
     }
 
-    if (jsDoc.usesImplicitMatch()) {
-      for (Node stmt = block.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
-        if (stmt.isExprResult()
-            && stmt.getFirstChild().isGetProp()
-            && stmt.getFirstFirstChild().isThis()
-            && stmt.getFirstChild().getJSDocInfo() != null) {
-          // Field declarations are expected.
-        } else {
+    for (Node stmt = block.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
+      if (jsDoc.usesImplicitMatch()) {
+        // @record
+        if (!isThisPropAccess(stmt) && !isCallToSuper(stmt)) {
+          // Field declarations or super() is expected inside @record.
           t.report(stmt, NON_DECLARATION_STATEMENT_IN_RECORD);
           break;
         }
+      } else {
+        // @interface
+        if (!isCallToSuper(stmt)) {
+          // only super stmt allowed inside @interface constructor
+          t.report(block.getFirstChild(), INTERFACE_CONSTRUCTOR_NOT_EMPTY);
+          break;
+        }
       }
-    } else {
-      t.report(block.getFirstChild(), INTERFACE_CONSTRUCTOR_NOT_EMPTY);
     }
+  }
+
+  private static boolean isThisPropAccess(Node stmt) {
+    return stmt.isExprResult()
+        && stmt.getFirstChild().isGetProp()
+        && stmt.getFirstFirstChild().isThis()
+        && stmt.getFirstChild().getJSDocInfo() != null;
+  }
+
+  private static boolean isCallToSuper(Node stmt) {
+    return stmt.isExprResult()
+        && stmt.getFirstChild().isCall()
+        && stmt.getFirstFirstChild().isSuper();
   }
 }
 
