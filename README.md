@@ -571,7 +571,7 @@ an encoding of structured data.</td>
 
   <tr>
     <td>Version</td>
-    <td>0.32</td>
+    <td>1.1</td>
   </tr>
 
   <tr>

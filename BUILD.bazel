@@ -203,6 +203,8 @@ gen_java_tests(
         "@com_google_guava_guava_testlib//jar",
         "@com_google_protobuf//:protobuf_java",
         "@com_google_re2j_re2j",
+        "@com_google_truth_extensions_truth_liteproto_extension",
+        "@com_google_truth_extensions_truth_proto_extension",
         "@google_bazel_common//third_party/java/auto:value",
         "@google_bazel_common//third_party/java/error_prone:annotations",
         "@google_bazel_common//third_party/java/jsr305_annotations",

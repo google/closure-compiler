@@ -1,0 +1,322 @@
+syntax = "proto3";
+
+package jscomp;
+
+import "src/com/google/javascript/rhino/typed_ast/optimization_jsdoc.proto";
+import "src/com/google/javascript/rhino/typed_ast/types.proto";
+
+option java_package = "com.google.javascript.jscomp.serialization";
+option java_multiple_files = true;
+
+// All of these proto definitions are in flux.  Please don't depend on them.
+message TypedAst {
+  // required
+  TypePool type_pool = 1;
+  // required
+  StringPool string_pool = 2;
+
+  repeated JavascriptFile extern_file = 3;
+  repeated JavascriptFile source_file = 4;
+}
+
+message StringPool {
+  repeated string strings = 1;
+}
+
+message JavascriptFile {
+  // required
+  string filename = 1;
+  // required
+  AstNode root = 2;
+}
+
+message AstNode {
+  NodeKind kind = 1;
+  repeated AstNode child = 2;
+  oneof value {
+    uint32 string_value_pointer = 3;
+    double double_value = 4;
+    TemplateStringValue template_string_value = 8;
+  }
+
+  // Relative line number compared to previous AST node in pre-order traversal.
+  // Relative to line 0 for the first AST node
+  sint32 relative_line = 5;
+  // Relative column compared to previous AST node in pre-order traversal
+  // Relative to column 0 for the first AST node
+  sint32 relative_column = 6;
+  OptimizationJsdoc jsdoc = 7;
+
+  repeated NodeProperty boolean_property = 14;
+  TypePointer type = 15;
+}
+
+message TemplateStringValue {
+  uint32 raw_string_pointer = 1;
+  uint32 cooked_string_pointer = 2;
+}
+
+enum NodeKind {
+  NODE_KIND_UNSPECIFIED = 0;
+
+  // Expressions
+  NUMBER_LITERAL = 201;
+  STRING_LITERAL = 202;
+  BIGINT_LITERAL = 203;
+  TRUE = 204;
+  FALSE = 205;
+  NULL = 206;
+  REGEX_LITERAL = 207;
+  ARRAY_LITERAL = 208;
+  OBJECT_LITERAL = 209;
+  TEMPLATELIT = 210;
+  TAGGED_TEMPLATELIT = 211;
+
+  IDENTIFIER = 214;
+  THIS = 215;
+  ASSIGNMENT = 216;
+  COMMA = 217;
+  CALL = 218;
+  NEW = 219;
+  YIELD = 220;
+  AWAIT = 221;
+  BOOLEAN_OR = 223;
+  BOOLEAN_AND = 224;
+  HOOK = 225;
+  PROPERTY_ACCESS = 226;
+  ELEMENT_ACCESS = 227;
+
+  LESS_THAN = 228;
+  LESS_THAN_EQUAL = 229;
+  GREATER_THAN = 230;
+  GREATER_THAN_EQUAL = 231;
+  EQUAL = 232;
+  TRIPLE_EQUAL = 233;
+  NOT_EQUAL = 234;
+  NOT_TRIPLE_EQUAL = 235;
+  NOT = 236;
+  TYPEOF = 237;
+  INSTANCEOF = 238;
+  IN = 239;
+
+  LEFT_SHIFT = 240;
+  RIGHT_SHIFT = 241;
+  UNSIGNED_RIGHT_SHIFT = 242;
+
+  ADD = 243;
+  SUBTRACT = 244;
+  MULTIPLY = 245;
+  DIVIDE = 246;
+  MODULO = 247;
+  EXPONENT = 248;
+
+  ASSIGN_ADD = 249;
+  ASSIGN_SUBTRACT = 250;
+  ASSIGN_MULTIPLY = 251;
+  ASSIGN_DIVIDE = 252;
+  ASSIGN_MODULO = 253;
+  ASSIGN_EXPONENT = 254;
+  ASSIGN_BITWISE_OR = 255;
+  ASSIGN_BITWISE_AND = 256;
+  ASSIGN_BITWISE_XOR = 257;
+  ASSIGN_LEFT_SHIFT = 258;
+  ASSIGN_RIGHT_SHIFT = 259;
+  ASSIGN_UNSIGNED_RIGHT_SHIFT = 260;
+
+  PRE_INCREMENT = 261;
+  POST_INCREMENT = 262;
+  PRE_DECREMENT = 263;
+  POST_DECREMENT = 264;
+
+  POSITIVE = 265;
+  NEGATIVE = 266;
+
+  BITWISE_OR = 267;
+  BITWISE_AND = 268;
+  BITWISE_XOR = 269;
+  BITWISE_NOT = 270;
+
+  VOID = 271;
+  DELETE = 272;
+
+  NEW_TARGET = 273;
+  COMPUTED_PROP = 274;
+  IMPORT_META = 275;
+  OPTCHAIN_PROPERTY_ACCESS = 276;
+  OPTCHAIN_CALL = 277;
+  OPTCHAIN_ELEMENT_ACCESS = 278;
+  COALESCE = 279;
+  DYNAMIC_IMPORT = 280;
+  // Next expression: 281
+
+  // Statements
+  BREAK_STATEMENT = 400;
+  CONTINUE_STATEMENT = 401;
+  DEBUGGER_STATEMENT = 402;
+  DO_STATEMENT = 403;
+  EXPRESSION_STATEMENT = 404;
+  FOR_AWAIT_OF_STATEMENT = 405;
+  FOR_IN_STATEMENT = 406;
+  FOR_OF_STATEMENT = 407;
+  FOR_STATEMENT = 408;
+  IF_STATEMENT = 409;
+  LABELED_STATEMENT = 410;
+  RETURN_STATEMENT = 411;
+  SWITCH_STATEMENT = 412;
+  THROW_STATEMENT = 413;
+  TRY_STATEMENT = 414;
+  WHILE_STATEMENT = 415;
+  BLOCK = 416;
+  EMPTY = 417;
+  IMPORT = 418;
+  EXPORT = 419;
+  WITH = 420;
+  // Next statement: 421
+
+  VAR_DECLARATION = 500;
+  LET_DECLARATION = 501;
+  CONST_DECLARATION = 502;
+  FUNCTION_LITERAL = 503;
+  CLASS_LITERAL = 504;
+  // Next declaration: 505
+
+  // Other
+  SOURCE_FILE = 600;
+  CASE = 601;
+  DEFAULT_CASE = 602;
+  CATCH = 603;
+  CLASS_MEMBERS = 604;
+  METHOD_DECLARATION = 605;
+  PARAMETER_LIST = 606;
+  RENAMABLE_STRING_KEY = 607;
+  QUOTED_STRING_KEY = 608;
+  LABELED_NAME = 609;
+  ARRAY_PATTERN = 610;
+  OBJECT_PATTERN = 611;
+  DESTRUCTURING_LHS = 612;
+  TEMPLATELIT_SUB = 613;
+  TEMPLATELIT_STRING = 614;
+  SUPER = 615;
+  DEFAULT_VALUE = 616;
+  GETTER_DEF = 617;
+  SETTER_DEF = 618;
+  IMPORT_SPECS = 619;
+  IMPORT_SPEC = 620;
+  IMPORT_STAR = 621;
+  EXPORT_SPECS = 622;
+  EXPORT_SPEC = 623;
+  ITER_REST = 624;
+  ITER_SPREAD = 625;
+  OBJECT_REST = 626;
+  OBJECT_SPREAD = 627;
+  // Next other: 628
+
+  CAST = 800;
+}
+
+// Rename to `BooleanNodeProperty` if/when we also need non-boolean properties
+enum NodeProperty {
+  NODE_PROPERTY_UNSPECIFIED = 0;
+
+  // Is this Node within parentheses
+  IS_PARENTHESIZED = 1;
+  // A synthetic block. Used to make processing simpler, and does not represent
+  // a real block in the source.
+  SYNTHETIC = 3;
+  // Used to indicate BLOCK that is added
+  ADDED_BLOCK = 4;
+  // Function or constructor call side effect flags.
+  SIDE_EFFECT_FLAGS = 5;
+  // The variable or property is constant.
+  // TODO(lukes): either document the differences or otherwise reconcile with
+  // CONSTANT_VAR_FLAGS
+  IS_CONSTANT_NAME = 6;
+  // The variable creates a namespace.
+  IS_NAMESPACE = 7;
+  // The ES5 directives on this node.
+  DIRECTIVES = 8;
+  // ES5 distinguishes between direct and indirect calls to eval.
+  DIRECT_EVAL = 9;
+  // A CALL without an explicit "this" value.
+  FREE_CALL = 10;
+  // Whether a STRING node contains a \v vertical tab escape. This is a total
+  // hack. See comments in IRFactory about this.
+  SLASH_V = 11;
+  // An object that's used for goog.object.reflect-style reflection.
+  REFLECTED_OBJECT = 12;
+  // Set if class member definition is static
+  STATIC_MEMBER = 13;
+  // Set if the node is a Generator function or member method.
+  GENERATOR_FN = 14;
+  // Set if the node is an arrow function.
+  ARROW_FN = 15;
+  // http://tc39.github.io/ecmascript-asyncawait/
+  ASYNC_FN = 16;
+  // Set if a yield is a "yield all"
+  YIELD_ALL = 17;
+  // Set if a export is a "default" export
+  EXPORT_DEFAULT = 18;
+  // Set if an export is a "*"
+  EXPORT_ALL_FROM = 19;
+  // A variable is inferred or declared as const meaning it is only ever
+  // assigned once at its declaration site. This is an int prop that holds a
+  // bitset of {@link ConstantVarFlags} values.
+  CONSTANT_VAR_FLAGS = 20;
+  // Used by the ES6-to-ES3 translator.
+  IS_GENERATOR_MARKER = 21;
+  // Used by the ES6-to-ES3 translator.
+  IS_GENERATOR_SAFE = 22;
+  // A computed property that has the method syntax
+  //   ( [prop]() {...} )
+  // rather than the property definition syntax
+  //   ( [prop]: value ).
+  COMPUTED_PROP_METHOD = 23;
+  // A computed property in a getter, e.g. var obj = { get [prop]() {...} };
+  COMPUTED_PROP_GETTER = 24;
+  // A computed property in a setter, e.g. var obj = 32;
+  COMPUTED_PROP_SETTER = 25;
+  // A computed property that's a variable, e.g. [prop]: string;
+  COMPUTED_PROP_VARIABLE = 26;
+  // Used to attach TypeDeclarationNode ASTs to Nodes which represent a typed
+  // NAME or FUNCTION.
+  DECLARED_TYPE_EXPR = 27;
+  // Indicates that this epxression was casted but we don't necessarily know to
+  // which type
+  COLOR_FROM_CAST = 28;
+  // Indicates the node should not be indexed by analysis tools.
+  NON_INDEXABLE = 29;
+  // Indicates that a SCRIPT node is a goog.module. Remains set after the
+  // goog.module is desugared.
+  GOOG_MODULE = 30;
+  // Attaches a FeatureSet to SCRIPT nodes.
+  FEATURE_SET = 32;
+  // Indicates a namespace that was provided at some point in the past.
+  WAS_PREVIOUSLY_PROVIDED = 33;
+  // Indicates that a SCRIPT represents a transpiled file
+  TRANSPILED = 34;
+  // For passes that work only on deleted funs.
+  DELETED = 35;
+  // Indicates that the node is an alias or a name from goog.require'd module or
+  // ES6 module. Aliases are desugared and inlined by compiler passes but we
+  // need to preserve them for building index.
+  MODULE_ALIAS = 36;
+  // Mark a parameter as unused. Used to defer work from RemovedUnusedVars to
+  // OptimizeParameters.
+  IS_UNUSED_PARAMETER = 37;
+  // Mark a property as a module export so that collase properties can act on
+  // it.
+  MODULE_EXPORT = 38;
+  // Indicates that a property {x:x} was originally parsed as {x}.
+  IS_SHORTHAND_PROPERTY = 39;
+  // Indicates that a SCRIPT node is or was an ES module. Remains set after the
+  // module is rewritten.
+  ES6_MODULE = 40;
+  // Original name of a goog.define call.
+  DEFINE_NAME = 41;
+  // Indicate that a OPTCHAIN_GETPROP, OPTCHAIN_GETELEM, or OPTCHAIN_CALL is the
+  // start of an optional chain.
+  START_OF_OPT_CHAIN = 42;
+  // Indicates a trailing comma in an array literal, object literal, parameter
+  // list, or argument list
+  TRAILING_COMMA = 43;
+}

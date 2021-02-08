@@ -48,6 +48,24 @@ maven_import(
     licenses = ["notice"],
 )
 
+maven_import(
+    # https://truth.dev/protobufs
+    group_id = "com.google.truth.extensions",
+    artifact_id = "truth-liteproto-extension",
+    version = "1.1",
+    sha256 = "f637de4743194a870316a55a1c50c89638355a2323d96b6ced363a22d6ced316",
+    licenses = ["notice"],
+)
+
+maven_import(
+    # https://truth.dev/protobufs
+    group_id = "com.google.truth.extensions",
+    artifact_id = "truth-proto-extension",
+    version = "1.1",
+    sha256 = "d2fa8736dcb541813f8f4090ecc0d634b85cb82bd6d486f1af975458d0238afe",
+    licenses = ["notice"],
+)
+
 git_repository(
     name = "protobuf_proto_rules",
     commit = "218ffa7dfa5408492dc86c01ee637614f8695c45",
