@@ -574,18 +574,15 @@ public class Parser {
 
     while (true) {
       Token token = peekToken();
-      switch (token.type) {
-        case SEMI_COLON:
-          // Ignore extraneous semicolons in class bodies.
-          eat(TokenType.SEMI_COLON);
-          continue;
-
-        default:
-          if (isClassElementStart(token)) {
-            break;
-          } else {
-            return result.build();
-          }
+      if (token.type == TokenType.SEMI_COLON) {
+        // Ignore extraneous semicolons in class bodies.
+        eat(TokenType.SEMI_COLON);
+        continue;
+      } else {
+        if (isClassElementStart(token)) {
+        } else {
+          return result.build();
+        }
       }
       result.add(parseClassElement());
     }

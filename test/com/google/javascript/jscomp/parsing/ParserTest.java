@@ -3939,6 +3939,15 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   @Test
+  public void testOctalEscapes() {
+    mode = LanguageMode.ECMASCRIPT3;
+    strictMode = SLOPPY;
+    Node n = parse("var x = 'This is a \251 copyright symbol.'"); // 251 is the octal value for "©"
+    assertNode(n.getFirstFirstChild()).isName("x");
+    assertNode(n.getFirstFirstChild().getFirstChild()).isString("This is a © copyright symbol.");
+  }
+
+  @Test
   public void testOldStyleOctalLiterals() {
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;

@@ -44,5 +44,5 @@ enum JsDocToken {
   EOC,
   QMARK,
   BANG,
-  EQUALS;
+  EQUALS
 }

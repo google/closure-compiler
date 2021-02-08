@@ -414,7 +414,7 @@ public final class SimpleFormat {
 
     private UnknownFormatConversionException unknownFormatConversionException() {
       if (conversionType == 't' || conversionType == 'T') {
-        throw new UnknownFormatConversionException(conversionType + "" + dateSuffix);
+        throw new UnknownFormatConversionException(conversionType + String.valueOf(dateSuffix));
       }
       throw new UnknownFormatConversionException(String.valueOf(conversionType));
     }
@@ -873,15 +873,13 @@ public final class SimpleFormat {
     int precision = formatToken.getPrecision();
 
     String s = arg.toString();
-    if (!s.contains(".")) {
-      result.append(s);
-    } else {
+    if (s.contains(".")) {
       int i = s.indexOf('.');
       if (i + precision < s.length()) {
         s = s.substring(0, i + precision + 1);
       }
-      result.append(s);
     }
+    result.append(s);
   }
 
   private void transformA() {

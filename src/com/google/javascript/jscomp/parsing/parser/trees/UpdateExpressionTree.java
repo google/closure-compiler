@@ -35,7 +35,7 @@ public class UpdateExpressionTree extends ParseTree {
    */
   public enum OperatorPosition {
     PREFIX,
-    POSTFIX;
+    POSTFIX
   }
 
   public final Token operator;

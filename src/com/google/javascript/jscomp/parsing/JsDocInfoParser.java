@@ -2202,19 +2202,19 @@ public final class JsDocInfoParser {
     final int startCharno = stream.getCharno();
     final int startOffset = stream.getCursor() - stream.getString().length();
 
-    String typeName = stream.getString();
+    StringBuilder typeName = new StringBuilder(stream.getString());
     int endOffset = stream.getCursor();
-    while (match(JsDocToken.EOL) && typeName.endsWith(".")) {
+    while (match(JsDocToken.EOL) && typeName.toString().endsWith(".")) {
       skipEOLs();
       if (match(JsDocToken.STRING)) {
         next();
         endOffset = stream.getCursor();
-        typeName += stream.getString();
+        typeName.append(stream.getString());
       }
     }
 
     // What we're doing by concatenating these tokens is really hacky. We want that to be obvious.
-    Node str = newStringNode(typeName);
+    Node str = newStringNode(typeName.toString());
     str.setLineno(startLineno);
     str.setCharno(startCharno);
     str.setLength(endOffset - startOffset);
@@ -2613,18 +2613,15 @@ public final class JsDocInfoParser {
    * ReservedIdentifier
    */
   private Node parseFieldName(JsDocToken token) {
-    switch (token) {
-      case STRING:
-        String s = stream.getString();
-        Node n = Node.newString(
-            Token.STRING_KEY, s, stream.getLineno(), stream.getCharno())
-            .clonePropsFrom(templateNode);
-        n.setLength(s.length());
-        return n;
-
-      default:
-        return null;
+    if (token != JsDocToken.STRING) {
+      return null;
     }
+    String s = stream.getString();
+    Node n =
+        Node.newString(Token.STRING_KEY, s, stream.getLineno(), stream.getCharno())
+            .clonePropsFrom(templateNode);
+    n.setLength(s.length());
+    return n;
   }
 
   private Node wrapNode(Token type, Node n) {
