@@ -18,23 +18,27 @@
  * @fileoverview Definitions for W3C's event Level 3 specification.
  *  This file depends on w3c_event.js.
  *  The whole file has been partially type annotated.
- *  Created from
- *   http://www.w3.org/TR/DOM-Level-3-Events/#ecma-script-binding-ecma-binding
+ *  Created from https://www.w3.org/TR/uievents/#ui-events-intro
  *
  * @externs
  */
 
 /**
  * @param {string} typeArg
- * @param {boolean} canBubbleArg
- * @param {boolean} cancelableArg
- * @param {Window} viewArg
- * @param {string} keyIdentifierArg
- * @param {number} keyLocationArg
- * @param {string} modifiersList
+ * @param {boolean=} canBubbleArg
+ * @param {boolean=} cancelableArg
+ * @param {?Window=} viewArg
+ * @param {string=} keyArg
+ * @param {number=} locationArg
+ * @param {boolean=} ctrlKey
+ * @param {boolean=} altKey
+ * @param {boolean=} shiftKey
+ * @param {boolean=} metaKey
  * @return {undefined}
  */
-KeyboardEvent.prototype.initKeyboardEvent = function(typeArg, canBubbleArg, cancelableArg, viewArg, keyIdentifierArg, keyLocationArg, modifiersList) {};
+KeyboardEvent.prototype.initKeyboardEvent = function(
+    typeArg, canBubbleArg, cancelableArg, viewArg, keyArg, locationArg, ctrlKey,
+    altKey, shiftKey, metaKey) {};
 
 /** @type {string} */
 KeyboardEvent.prototype.char;
