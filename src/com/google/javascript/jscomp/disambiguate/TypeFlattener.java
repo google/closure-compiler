@@ -55,11 +55,22 @@ class TypeFlattener {
     Object key = this.flattenInternal(type);
     FlatType flat = this.typeIndex.computeIfAbsent(key, this::newFlatType);
 
-    if (!flat.isInvalidating() && this.isInvalidating.test(type)) {
+    if (!flat.isInvalidating() && this.testIsInvalidating(key)) {
       flat.setInvalidating();
     }
 
     return flat;
+  }
+
+  /** @param key either a non-union JSType or an {@code ImmutableSet<FlatType> } */
+  @SuppressWarnings("unchecked")
+  private boolean testIsInvalidating(Object key) {
+    if (key instanceof JSType) {
+      return this.isInvalidating.test((JSType) key);
+    } else if (key instanceof ImmutableSet) {
+      return ((ImmutableSet<FlatType>) key).stream().anyMatch(FlatType::isInvalidating);
+    }
+    throw new AssertionError(key);
   }
 
   @SuppressWarnings("unchecked")

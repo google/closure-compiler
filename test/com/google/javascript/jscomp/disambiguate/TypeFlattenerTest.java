@@ -215,21 +215,16 @@ public final class TypeFlattenerTest {
   }
 
   @Test
-  public void invalidatingTypesAreChecked_duringFlattening() {
+  public void invalidatingTypesAreChecked_afterFlattening() {
     // Given
-    JSType numberType = this.registry.getNativeType(JSTypeNative.NUMBER_TYPE);
+    JSType numberObjectType = this.registry.getNativeType(JSTypeNative.NUMBER_OBJECT_TYPE);
+    TypeFlattener flattener = this.createFlattener(numberObjectType::equals);
 
-    TypeFlattener flattener = this.createFlattener(numberType::equals);
-
-    FlatType flatNumberObject = flattener.flatten(JSTypeNative.NUMBER_OBJECT_TYPE);
-    assertThat(flatNumberObject.isInvalidating()).isFalse();
-
-    // Given
-    FlatType flatNumber = flattener.flatten(numberType);
+    // When
+    FlatType flatNumber = flattener.flatten(JSTypeNative.NUMBER_TYPE);
 
     // Then
     assertThat(flatNumber.isInvalidating()).isTrue();
-    assertThat(flatNumber).isSameInstanceAs(flatNumberObject);
   }
 
   @Test
