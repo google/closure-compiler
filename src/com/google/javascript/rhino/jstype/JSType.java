@@ -710,6 +710,17 @@ public abstract class JSType implements Serializable {
   }
 
   /**
+   * Whether the {@code first} type is meaningfully same as {@code second} type for the purposes of
+   * data flow analysis.
+   */
+  public static final boolean areSimilar(@Nullable JSType first, @Nullable JSType second) {
+    if (first == null || second == null) {
+      return first == second;
+    }
+    return !first.differsFrom(second);
+  }
+
+  /**
    * Calculates a hash of the object as per {@link Object#hashCode()}.
    *
    * <p>This method is <em>unsafe</em> for multi-threaded use. The implementation mutates instance

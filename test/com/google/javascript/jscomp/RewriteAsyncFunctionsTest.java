@@ -502,6 +502,40 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
   }
 
   @Test
+  public void testMultipleSuperAccessesInAsyncFunction_havingNonIdenticalUnknownTypes() {
+    test(
+        lines(
+            "class UpdatingElement {",
+            "  getUpdateComplete() {",
+            "  }",
+            "}",
+            "",
+            "class TextFieldBase extends UpdatingElement {",
+            "  async _getUpdateComplete() {",
+            "    if (super.getUpdateComplete) {", // `?` type
+            "      await super.getUpdateComplete();", // `??` type
+            "    }",
+            "  }",
+            "}"),
+        lines(
+            "class UpdatingElement {",
+            "  getUpdateComplete() {",
+            "  }",
+            "}",
+            "class TextFieldBase extends UpdatingElement {",
+            "  _getUpdateComplete() {",
+            "    const $jscomp$async$this = this;",
+            "    const $jscomp$async$super$get$getUpdateComplete = () => super.getUpdateComplete;",
+            "    return $jscomp.asyncExecutePromiseGeneratorFunction(function*() {",
+            "      if ($jscomp$async$super$get$getUpdateComplete()) {",
+            "        yield $jscomp$async$super$get$getUpdateComplete().call($jscomp$async$this);",
+            "      }",
+            "    });",
+            "  }",
+            "}"));
+  }
+
+  @Test
   public void testInnerSuperCallStaticEs2015Out() {
     setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(

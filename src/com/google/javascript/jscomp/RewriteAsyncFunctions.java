@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -127,7 +126,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         // have the same type.  Make sure this is true.
         JSType existingJSType = superPropertyWrapperInfo.getPropertyType();
         checkState(
-            Objects.equals(existingJSType, propertyType),
+            JSType.areSimilar(existingJSType, propertyType),
             "Previous reference type: %s differs from current reference type: %s",
             existingJSType,
             propertyType);
