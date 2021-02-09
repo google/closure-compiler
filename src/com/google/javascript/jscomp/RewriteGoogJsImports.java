@@ -259,9 +259,7 @@ public class RewriteGoogJsImports implements HotSwapCompilerPass {
     boolean valid = true;
     Node googImportNode = null;
 
-    for (Node child = scriptRoot.getFirstChild().getFirstChild();
-        child != null;
-        child = child.getNext()) {
+    for (Node child = scriptRoot.getFirstFirstChild(); child != null; child = child.getNext()) {
       if (child.isImport() && child.getLastChild().getString().endsWith("/goog.js")) {
         if (child.getFirstChild().isEmpty()
             && child.getSecondChild().isImportStar()

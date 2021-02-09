@@ -449,7 +449,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
       String moduleName = getVarNameOfImport(moduleIdentifier.getString());
 
-      for (Node exportSpec = export.getFirstChild().getFirstChild();
+      for (Node exportSpec = export.getFirstFirstChild();
           exportSpec != null;
           exportSpec = exportSpec.getNext()) {
         exportedNameToLocalQName.put(
@@ -463,7 +463,7 @@ public class Es6RewriteModulesToCommonJsModules implements CompilerPass {
 
     private void visitExportSpecs(NodeTraversal t, Node export, Node parent) {
       //     export {Foo};
-      for (Node exportSpec = export.getFirstChild().getFirstChild();
+      for (Node exportSpec = export.getFirstFirstChild();
           exportSpec != null;
           exportSpec = exportSpec.getNext()) {
         String localName = exportSpec.getFirstChild().getString();

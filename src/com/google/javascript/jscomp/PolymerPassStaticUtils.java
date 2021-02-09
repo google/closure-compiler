@@ -129,7 +129,7 @@ final class PolymerPassStaticUtils {
           && !keyNode.getString().equals("hostAttributes")) {
         continue;
       }
-      for (Node keyToQuote = keyNode.getFirstChild().getFirstChild();
+      for (Node keyToQuote = keyNode.getFirstFirstChild();
           keyToQuote != null;
           keyToQuote = keyToQuote.getNext()) {
         if (!keyToQuote.isQuotedString()) {

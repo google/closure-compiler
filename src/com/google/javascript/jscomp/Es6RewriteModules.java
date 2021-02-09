@@ -837,9 +837,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
         if (parent.isDestructuringLhs()) {
           checkState(parent.getFirstChild().isObjectPattern());
           toDetach = parent.getParent();
-          for (Node child = parent.getFirstChild().getFirstChild();
-              child != null;
-              child = child.getNext()) {
+          for (Node child = parent.getFirstFirstChild(); child != null; child = child.getNext()) {
             checkState(child.isStringKey() && child.getFirstChild().isName(), child);
             GlobalizedModuleName rep =
                 getGlobalNameAndType(m, namespace, isFromFallbackMetadata)

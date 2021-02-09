@@ -321,7 +321,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
         && n.getFirstChild().isObjectLit()) {
       HashMap<String, Node> builder = new HashMap<>();
       builder.putAll(compiler.getDefaultDefineValues());
-      for (Node c = n.getFirstChild().getFirstChild(); c != null; c = c.getNext()) {
+      for (Node c = n.getFirstFirstChild(); c != null; c = c.getNext()) {
         if (c.isStringKey() && isValidDefineValue(c.getFirstChild())) {
           builder.put(c.getString(), c.getFirstChild().cloneTree());
         } else {

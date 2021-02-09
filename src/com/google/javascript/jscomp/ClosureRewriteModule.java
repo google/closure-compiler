@@ -1149,7 +1149,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
         maybeWarnForInvalidDestructuring(t, lhs.getParent(), namespaceId);
-        for (Node importSpec = lhs.getFirstChild().getFirstChild();
+        for (Node importSpec = lhs.getFirstFirstChild();
             importSpec != null;
             importSpec = importSpec.getNext()) {
           checkState(importSpec.hasChildren(), importSpec);
