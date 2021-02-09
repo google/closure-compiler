@@ -99,8 +99,10 @@ public final class JSTypeExpression implements Serializable {
     if (n == null) {
       return null;
     }
-    for (Node child : n.children()) {
+    for (Node child = n.getFirstChild(); child != null; ) {
+      final Node next = child.getNext();
       replaceNames(child, names);
+      child = next;
     }
     if (n.isString() && names.contains(n.getString())) {
       Node qMark = new Node(Token.QMARK);
@@ -132,7 +134,7 @@ public final class JSTypeExpression implements Serializable {
     if (n == null) {
       return;
     }
-    for (Node child : n.children()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       visitAllTypeNodes(child, visitor);
     }
     if (n.isString()) {
@@ -230,7 +232,7 @@ public final class JSTypeExpression implements Serializable {
       return;
     }
 
-    for (Node child : n.children()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       getRecordPropertyNamesRecursive(child, names);
     }
     if (n.isStringKey()) {

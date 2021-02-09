@@ -53,7 +53,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -894,16 +893,15 @@ public final class ConformanceRules {
         Node callOrNew,
         FunctionType functionType,
         boolean isCallInvocation) {
-      Iterator<Node> arguments = callOrNew.children().iterator();
-      arguments.next(); // skip the function name
-      if (isCallInvocation && arguments.hasNext()) {
-        arguments.next();
+      Node arg = callOrNew.getSecondChild(); // skip the function name
+      if (isCallInvocation && arg != null) {
+        arg = arg.getNext();
       }
 
       // Get all the annotated types of the argument nodes
       ImmutableList.Builder<JSType> argumentTypes = ImmutableList.builder();
-      while (arguments.hasNext()) {
-        JSType argType = arguments.next().getJSType();
+      for (; arg != null; arg = arg.getNext()) {
+        JSType argType = arg.getJSType();
         if (argType == null) {
           argType = compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
         }
@@ -1918,11 +1916,15 @@ public final class ConformanceRules {
             continue;
           }
           return violation;
-        } else if (Iterables.any(attrs.children(), Node::isComputedProp)) {
-          // We don't know if the computed property matches 'src' or not
-          return reportLooseTypeViolations
-              ? ConformanceResult.POSSIBLE_VIOLATION
-              : ConformanceResult.CONFORMANCE;
+        }
+
+        for (Node attr = attrs.getFirstChild(); attr != null; attr = attr.getNext()) {
+          if (attr.isComputedProp()) {
+            // We don't know if the computed property matches 'src' or not
+            return reportLooseTypeViolations
+                ? ConformanceResult.POSSIBLE_VIOLATION
+                : ConformanceResult.CONFORMANCE;
+          }
         }
       }
 

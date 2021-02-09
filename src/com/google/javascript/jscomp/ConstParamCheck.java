@@ -18,10 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Streams.stream;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -123,11 +121,15 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
       return true;
     } else if (argument.isTemplateLit()) {
       // Each templateLit child is either a TemplateLitString, or has children which are substituted
-      return stream(argument.children())
-          .filter(node -> !node.isTemplateLitString())
-          .map(Node::children)
-          .flatMap(Streams::stream)
-          .allMatch(node -> isSafeValue(scope, node));
+      for (Node sub = argument.getFirstChild(); sub != null; sub = sub.getNext()) {
+        if (sub.isTemplateLitString()) {
+          continue;
+        }
+        if (!isSafeValue(scope, sub.getOnlyChild())) {
+          return false;
+        }
+      }
+      return true;
     } else if (argument.isAdd()) {
       Node left = argument.getFirstChild();
       Node right = argument.getLastChild();

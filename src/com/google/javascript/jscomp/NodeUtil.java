@@ -5585,10 +5585,18 @@ public final class NodeUtil {
   static Iterable<Node> getInvocationArgsAsIterable(Node invocation) {
     if (invocation.isTaggedTemplateLit()) {
       return new TemplateArgsIterable(invocation.getLastChild());
-    } else {
-      checkState(isCallOrNew(invocation), invocation);
-      return invocation.hasOneChild() ? ImmutableList.of() : invocation.getSecondChild().siblings();
     }
+
+    checkState(isCallOrNew(invocation), invocation);
+    if (invocation.hasOneChild()) {
+      return ImmutableList.of();
+    }
+
+    ImmutableList.Builder<Node> list = ImmutableList.builder();
+    for (Node arg = invocation.getSecondChild(); arg != null; arg = arg.getNext()) {
+      list.add(arg);
+    }
+    return list.build();
   }
 
   /**

@@ -19,8 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.function.BiConsumer;
 
 /**
  * Rewrites an AMD module https://github.com/amdjs/amdjs-api/wiki/AMD to a
@@ -97,7 +96,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         }
         Node script = parent.getParent();
         Node requiresNode = null;
-        Node callback = null;
+        final Node callback;
         int defineArity = n.getChildCount() - 1;
         if (defineArity == 0) {
           unsupportedDefineError(t, n);
@@ -114,6 +113,8 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         } else if (defineArity >= 3) {
           unsupportedDefineError(t, n);
           return;
+        } else {
+          callback = null;
         }
 
         if (!callback.isFunction() ||
@@ -122,7 +123,10 @@ public final class TransformAMDToCJSModule implements CompilerPass {
           return;
         }
 
-        handleRequiresAndParamList(t, n, script, requiresNode, callback);
+        zipChildren(
+            callback.getSecondChild(),
+            requiresNode,
+            (param, moduleName) -> handleRequire(t, n, script, callback, param, moduleName));
 
         Node callbackBlock = callback.getChildAtIndex(2);
         NodeTraversal.traverse(compiler, callbackBlock,
@@ -147,23 +151,6 @@ public final class TransformAMDToCJSModule implements CompilerPass {
                   onlyExport))
           .useSourceInfoIfMissingFromForTree(onlyExport));
       t.reportCodeChange();
-    }
-
-    /**
-     * Rewrites the required modules to
-     * <code>var nameInParamList = require("nameFromRequireList");</code>
-     */
-    private void handleRequiresAndParamList(NodeTraversal t, Node defineNode,
-        Node script, Node requiresNode, Node callback) {
-      Iterator<Node> paramList = callback.getSecondChild().children().
-          iterator();
-      Iterator<Node> requires = requiresNode != null ?
-          requiresNode.children().iterator() : Collections.<Node>emptyIterator();
-      while (paramList.hasNext() || requires.hasNext()) {
-        Node aliasNode = paramList.hasNext() ? paramList.next() : null;
-        Node modNode = requires.hasNext() ? requires.next() : null;
-        handleRequire(t, defineNode, script, callback, aliasNode, modNode);
-      }
     }
 
     /**
@@ -300,6 +287,21 @@ public final class TransformAMDToCJSModule implements CompilerPass {
       if (n.isName() && from.equals(n.getString())) {
         n.setString(to);
         n.setOriginalName(from);
+      }
+    }
+  }
+
+  private static void zipChildren(Node leftParent, Node rightParent, BiConsumer<Node, Node> zip) {
+    Node left = (leftParent == null) ? null : leftParent.getFirstChild();
+    Node right = (rightParent == null) ? null : rightParent.getFirstChild();
+
+    while (left != null || right != null) {
+      zip.accept(left, right);
+      if (left != null) {
+        left = left.getNext();
+      }
+      if (right != null) {
+        right = right.getNext();
       }
     }
   }

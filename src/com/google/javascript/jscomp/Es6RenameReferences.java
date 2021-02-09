@@ -50,16 +50,19 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
 
     JSDocInfo info = n.getJSDocInfo();
     if (info != null) {
-      renameTypeNode(t, info.getTypeNodes());
+      for (Node root : info.getTypeNodes()) {
+        renameTypeNodeRecursive(t, root);
+      }
     }
   }
 
-  private void renameTypeNode(NodeTraversal t, Iterable<Node> typeNodes) {
-    for (Node type : typeNodes) {
-      if (type.isString()) {
-        renameReference(t, type, true);
-      }
-      renameTypeNode(t, type.children());
+  private void renameTypeNodeRecursive(NodeTraversal t, Node n) {
+    if (n.isString()) {
+      renameReference(t, n, true);
+    }
+
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      renameTypeNodeRecursive(t, child);
     }
   }
 

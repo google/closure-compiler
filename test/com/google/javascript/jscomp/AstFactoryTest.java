@@ -494,7 +494,7 @@ public class AstFactoryTest {
 
     assertNode(stringKeyNode).hasType(Token.STRING_KEY);
     assertThat(stringKeyNode.getString()).isEqualTo("key");
-    assertThat(stringKeyNode.children()).containsExactly(numberNode);
+    assertThat(childList(stringKeyNode)).containsExactly(numberNode);
     assertType(stringKeyNode.getJSType()).isNumber();
   }
 
@@ -507,7 +507,7 @@ public class AstFactoryTest {
     Node computedPropertyNode = astFactory.createComputedProperty(stringLiteral, numberNode);
 
     assertNode(computedPropertyNode).hasType(Token.COMPUTED_PROP);
-    assertThat(computedPropertyNode.children())
+    assertThat(childList(computedPropertyNode))
         .containsExactly(stringLiteral, numberNode)
         .inOrder();
     assertType(computedPropertyNode.getJSType()).isNumber();
@@ -553,7 +553,7 @@ public class AstFactoryTest {
     Node getElemNode = astFactory.createGetElem(objectName, stringLiteral);
 
     assertNode(getElemNode).hasType(Token.GETELEM);
-    assertThat(getElemNode.children()).containsExactly(objectName, stringLiteral).inOrder();
+    assertThat(childList(getElemNode)).containsExactly(objectName, stringLiteral).inOrder();
     // TODO(bradfordcsmith): When receiver is an Array<T> or an Object<K, V>, use the template type
     // here.
     assertType(getElemNode.getJSType()).isUnknown();
@@ -568,7 +568,7 @@ public class AstFactoryTest {
     Node commaNode = astFactory.createComma(stringNode, numberNode);
 
     assertNode(commaNode).hasType(Token.COMMA);
-    assertThat(commaNode.children()).containsExactly(stringNode, numberNode).inOrder();
+    assertThat(childList(commaNode)).containsExactly(stringNode, numberNode).inOrder();
     assertType(commaNode.getJSType()).isNumber();
   }
 
@@ -587,18 +587,18 @@ public class AstFactoryTest {
     // ("hi", 2112, true), false
     assertNode(stringNumberTrueFalse).hasType(Token.COMMA);
     Node stringNumberTrue = stringNumberTrueFalse.getFirstChild();
-    assertThat(stringNumberTrueFalse.children())
+    assertThat(childList(stringNumberTrueFalse))
         .containsExactly(stringNumberTrue, falseNode)
         .inOrder();
     assertType(stringNumberTrueFalse.getJSType()).isBoolean();
 
     // ("hi", 2112), true
     Node stringNumber = stringNumberTrue.getFirstChild();
-    assertThat(stringNumberTrue.children()).containsExactly(stringNumber, trueNode).inOrder();
+    assertThat(childList(stringNumberTrue)).containsExactly(stringNumber, trueNode).inOrder();
     assertType(stringNumberTrue.getJSType()).isBoolean();
 
     // "hi", 2112
-    assertThat(stringNumber.children()).containsExactly(stringNode, numberNode);
+    assertThat(childList(stringNumber)).containsExactly(stringNode, numberNode);
     assertType(stringNumber.getJSType()).isNumber();
   }
 
@@ -611,7 +611,7 @@ public class AstFactoryTest {
     Node n = astFactory.createIn(prop, obj);
     assertNode(n).hasType(Token.IN);
     assertType(n.getJSType()).isBoolean();
-    assertThat(n.children()).containsExactly(prop, obj).inOrder();
+    assertThat(childList(n)).containsExactly(prop, obj).inOrder();
   }
 
   @Test
@@ -623,7 +623,7 @@ public class AstFactoryTest {
     Node andNode = astFactory.createAnd(numberLiteral, stringLiteral);
 
     assertNode(andNode).hasType(Token.AND);
-    assertThat(andNode.children()).containsExactly(numberLiteral, stringLiteral).inOrder();
+    assertThat(childList(andNode)).containsExactly(numberLiteral, stringLiteral).inOrder();
     assertType(andNode.getJSType()).toStringIsEqualTo("(number|string)");
   }
 
@@ -636,7 +636,7 @@ public class AstFactoryTest {
     Node andNode = astFactory.createAnd(nullNode, stringLiteral);
 
     assertNode(andNode).hasType(Token.AND);
-    assertThat(andNode.children()).containsExactly(nullNode, stringLiteral).inOrder();
+    assertThat(childList(andNode)).containsExactly(nullNode, stringLiteral).inOrder();
     // NULL_TYPE doesn't contain any truthy values, so its type is the only possibility
     assertType(andNode.getJSType()).toStringIsEqualTo("null");
   }
@@ -650,7 +650,7 @@ public class AstFactoryTest {
     Node andNode = astFactory.createAnd(nonNullObject, stringLiteral);
 
     assertNode(andNode).hasType(Token.AND);
-    assertThat(andNode.children()).containsExactly(nonNullObject, stringLiteral).inOrder();
+    assertThat(childList(andNode)).containsExactly(nonNullObject, stringLiteral).inOrder();
     // OBJECT_TYPE doesn't contain any falsy values, so the RHS type is the only possibility
     assertType(andNode.getJSType()).toStringIsEqualTo("string");
   }
@@ -664,7 +664,7 @@ public class AstFactoryTest {
     Node andNode = astFactory.createOr(numberLiteral, stringLiteral);
 
     assertNode(andNode).hasType(Token.OR);
-    assertThat(andNode.children()).containsExactly(numberLiteral, stringLiteral).inOrder();
+    assertThat(childList(andNode)).containsExactly(numberLiteral, stringLiteral).inOrder();
     assertType(andNode.getJSType()).toStringIsEqualTo("(number|string)");
   }
 
@@ -677,7 +677,7 @@ public class AstFactoryTest {
     Node andNode = astFactory.createOr(nullLiteral, stringLiteral);
 
     assertNode(andNode).hasType(Token.OR);
-    assertThat(andNode.children()).containsExactly(nullLiteral, stringLiteral).inOrder();
+    assertThat(childList(andNode)).containsExactly(nullLiteral, stringLiteral).inOrder();
     // NULL_TYPE doesn't contain any truthy values, so the RHS type is the only possibility
     assertType(andNode.getJSType()).toStringIsEqualTo("string");
   }
@@ -691,7 +691,7 @@ public class AstFactoryTest {
     Node andNode = astFactory.createOr(nonNullObject, stringLiteral);
 
     assertNode(andNode).hasType(Token.OR);
-    assertThat(andNode.children()).containsExactly(nonNullObject, stringLiteral).inOrder();
+    assertThat(childList(andNode)).containsExactly(nonNullObject, stringLiteral).inOrder();
     // OBJECT_TYPE doesn't contain any falsy values, so the RHS won't be evaluated
     assertType(andNode.getJSType()).toStringIsEqualTo("Object");
   }
@@ -720,7 +720,7 @@ public class AstFactoryTest {
 
     assertNode(callNode).hasType(Token.CALL);
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isTrue();
-    assertThat(callNode.children()).containsExactly(callee, arg1, arg2).inOrder();
+    assertThat(childList(callNode)).containsExactly(callee, arg1, arg2).inOrder();
     assertType(callNode.getJSType()).isString();
   }
 
@@ -750,7 +750,7 @@ public class AstFactoryTest {
 
     assertNode(callNode).hasType(Token.CALL);
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isFalse();
-    assertThat(callNode.children()).containsExactly(callee, arg1, arg2).inOrder();
+    assertThat(childList(callNode)).containsExactly(callee, arg1, arg2).inOrder();
     assertType(callNode.getJSType()).isString();
   }
 
@@ -780,7 +780,7 @@ public class AstFactoryTest {
 
     assertNode(callNode).hasType(Token.CALL);
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isFalse();
-    assertThat(callNode.children()).containsExactly(callee, arg1, arg2).inOrder();
+    assertThat(childList(callNode)).containsExactly(callee, arg1, arg2).inOrder();
     assertType(callNode.getJSType()).isString();
   }
 
@@ -811,7 +811,7 @@ public class AstFactoryTest {
 
     assertNode(callNode).hasType(Token.CALL);
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isFalse();
-    assertThat(callNode.children()).containsExactly(callee, nullNode, arg1, arg2).inOrder();
+    assertThat(childList(callNode)).containsExactly(callee, nullNode, arg1, arg2).inOrder();
     assertType(callNode.getJSType()).isString();
   }
 
@@ -1003,7 +1003,7 @@ public class AstFactoryTest {
 
     assertNode(callNode).hasType(Token.CALL);
     assertThat(callNode.getBooleanProp(Node.FREE_CALL)).isTrue();
-    assertThat(callNode.children()).containsExactly(callee, arg1, arg2).inOrder();
+    assertThat(childList(callNode)).containsExactly(callee, arg1, arg2).inOrder();
     assertType(callNode.getJSType()).isEqualTo(classBInstanceType);
   }
 
@@ -1122,7 +1122,7 @@ public class AstFactoryTest {
     assertType(functionNode.getJSType()).isEqualTo(functionType);
     Node functionNameNode = functionNode.getFirstChild();
     assertNode(functionNameNode).isName("bar");
-    assertThat(functionNode.children())
+    assertThat(childList(functionNode))
         .containsExactly(functionNameNode, paramList, body)
         .inOrder();
   }
@@ -1396,5 +1396,13 @@ public class AstFactoryTest {
     // Then
     assertNode(newExpr).isEquivalentTo(expected);
     assertType(newExpr.getJSType()).isEqualTo(expected.getJSType());
+  }
+
+  private static ImmutableList<Node> childList(Node parent) {
+    ImmutableList.Builder<Node> list = ImmutableList.builder();
+    for (Node child = parent.getFirstChild(); child != null; child = child.getNext()) {
+      list.add(child);
+    }
+    return list.build();
   }
 }

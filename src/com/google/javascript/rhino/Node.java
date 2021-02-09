@@ -1619,7 +1619,7 @@ public class Node implements Serializable {
 
   public final void makeNonIndexableRecursive() {
     this.makeNonIndexable();
-    for (Node child : children()) {
+    for (Node child = this.first; child != null; child = child.getNext()) {
       child.makeNonIndexableRecursive();
     }
   }
@@ -1728,18 +1728,19 @@ public class Node implements Serializable {
     }
   }
 
-  //==========================================================================
+  // ==========================================================================
   // Iteration
 
   /**
-   * <p>Return an iterable object that iterates over this node's children.
-   * The iterator does not support the optional operation
-   * {@link Iterator#remove()}.</p>
+   * Return an iterable object that iterates over this node's children. The iterator does not
+   * support the optional operation {@link Iterator#remove()}.
    *
-   * <p>To iterate over a node's children, one can write</p>
+   * <p>To iterate over a node's children, one can write
+   *
    * <pre>Node n = ...;
    * for (Node child : n.children()) { ...</pre>
    */
+  @Deprecated
   public final Iterable<Node> children() {
     if (first == null) {
       return Collections.emptySet();
@@ -1749,16 +1750,17 @@ public class Node implements Serializable {
   }
 
   /**
-   * <p>Return an iterable object that iterates over this node's siblings,
-   * <b>including this Node</b> but not any siblings that are before this one.
+   * Return an iterable object that iterates over this node's siblings, <b>including this Node</b>
+   * but not any siblings that are before this one.
    *
-   * <p>The iterator does not support the optional
-   * operation {@link Iterator#remove()}.</p>
+   * <p>The iterator does not support the optional operation {@link Iterator#remove()}.
    *
-   * <p>To iterate over a node's siblings including itself, one can write</p>
+   * <p>To iterate over a node's siblings including itself, one can write
+   *
    * <pre>Node n = ...;
    * for (Node sibling : n.siblings()) { ...</pre>
    */
+  @Deprecated
   public final Iterable<Node> siblings() {
     return new SiblingNodeIterable(this);
   }

@@ -29,7 +29,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
@@ -743,18 +742,18 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // runs.
 
     Deque<ScriptDescription> scriptDescriptions = new ArrayDeque<>();
-    Iterable<Node> scriptNodes = Iterables.concat(externs.children(), root.children());
+    for (Node parent : ImmutableList.of(externs, root)) {
+      for (Node script = parent.getFirstChild(); script != null; script = script.getNext()) {
+        checkState(script.isScript(), script);
+        NodeTraversal.traverse(compiler, script, new UnwrapGoogLoadModule());
+        pushScript(new ScriptDescription()); // sets currentScript
 
-    for (Node c : scriptNodes) {
-      checkState(c.isScript(), c);
-      NodeTraversal.traverse(compiler, c, new UnwrapGoogLoadModule());
-      pushScript(new ScriptDescription()); // sets currentScript
-
-      currentScript.rootNode = c;
-      scriptDescriptions.addLast(currentScript);
-      NodeTraversal.traverse(compiler, c, new ScriptPreprocessor());
-      NodeTraversal.traverse(compiler, c, new ScriptRecorder());
-      popScript();
+        currentScript.rootNode = script;
+        scriptDescriptions.addLast(currentScript);
+        NodeTraversal.traverse(compiler, script, new ScriptPreprocessor());
+        NodeTraversal.traverse(compiler, script, new ScriptRecorder());
+        popScript();
+      }
     }
 
     reportUnrecognizedRequires();

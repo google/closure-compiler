@@ -39,12 +39,10 @@
 
 package com.google.javascript.rhino.testing;
 
-import static com.google.common.collect.Streams.stream;
 import static com.google.common.truth.Fact.fact;
 import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
 
-import com.google.common.collect.Streams;
 import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.StringSubject;
@@ -55,7 +53,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -139,43 +136,43 @@ public final class NodeSubject extends Subject {
     isNotNull();
     assertNode(expected).isNotNull();
 
-    findFirstMismatch(actual, expected, checkJsdoc)
-        .ifPresent(
-            (mismatch) -> {
-              ArrayList<Fact> facts = new ArrayList<>();
-              facts.add(fact("Actual", serializeNode(actual)));
-              facts.add(fact("Expected", serializeNode(expected)));
+    NodeMismatch mismatch = findFirstMismatch(actual, expected, checkJsdoc);
+    if (mismatch == null) {
+      return;
+    }
 
-              Node misActual = mismatch.actual;
-              Node misExpected = mismatch.expected;
-              String misActualStr = serializeNode(misActual);
-              String misExpectedStr = serializeNode(misExpected);
+    ArrayList<Fact> facts = new ArrayList<>();
+    facts.add(fact("Actual", serializeNode(actual)));
+    facts.add(fact("Expected", serializeNode(expected)));
 
-              facts.add(fact("Actual mismatch", misActualStr));
-              if (misActualStr.equals(misExpectedStr)) {
-                String misActualTreeStr = misActual.toStringTree();
-                if (!misActualTreeStr.equals(misActualStr)) {
-                  facts.add(fact("Actual mismatch AST", misActualTreeStr));
-                }
-                if (checkJsdoc) {
-                  facts.add(fact("Actual JSDoc", jsdocToStringNullsafe(misActual.getJSDocInfo())));
-                }
-              }
+    Node misActual = mismatch.actual;
+    Node misExpected = mismatch.expected;
+    String misActualStr = serializeNode(misActual);
+    String misExpectedStr = serializeNode(misExpected);
 
-              facts.add(fact("Expected mismatch", misExpectedStr));
-              if (misActualStr.equals(misExpectedStr)) {
-                String misExpectedTreeStr = misExpected.toStringTree();
-                if (!misExpectedTreeStr.equals(misExpectedStr)) {
-                  facts.add(fact("Expected mismatch AST", misExpectedTreeStr));
-                }
-                if (checkJsdoc) {
-                  facts.add(
-                      fact("Expected JSDoc", jsdocToStringNullsafe(misExpected.getJSDocInfo())));
-                }
-              }
+    facts.add(fact("Actual mismatch", misActualStr));
+    if (misActualStr.equals(misExpectedStr)) {
+      String misActualTreeStr = misActual.toStringTree();
+      if (!misActualTreeStr.equals(misActualStr)) {
+        facts.add(fact("Actual mismatch AST", misActualTreeStr));
+      }
+      if (checkJsdoc) {
+        facts.add(fact("Actual JSDoc", jsdocToStringNullsafe(misActual.getJSDocInfo())));
+      }
+    }
 
-              failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
-            });
+    facts.add(fact("Expected mismatch", misExpectedStr));
+    if (misActualStr.equals(misExpectedStr)) {
+      String misExpectedTreeStr = misExpected.toStringTree();
+      if (!misExpectedTreeStr.equals(misExpectedStr)) {
+        facts.add(fact("Expected mismatch AST", misExpectedTreeStr));
+      }
+      if (checkJsdoc) {
+        facts.add(fact("Expected JSDoc", jsdocToStringNullsafe(misExpected.getJSDocInfo())));
+      }
+    }
+
+    failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
   }
 
   public NodeSubject isEquivalentTo(Node other) {
@@ -401,21 +398,27 @@ public final class NodeSubject extends Subject {
    *
    * @param jsDoc Whether to check for differences in JSDoc.
    */
-  private static Optional<NodeMismatch> findFirstMismatch(
-      Node actual, Node expected, boolean jsDoc) {
+  @Nullable
+  private static NodeMismatch findFirstMismatch(Node actual, Node expected, boolean jsDoc) {
     if (!actual.isEquivalentTo(
         expected, /* compareType= */ false, /* recurse= */ false, jsDoc, /* sideEffect= */ false)) {
-      return Optional.of(new NodeMismatch(actual, expected));
+      return new NodeMismatch(actual, expected);
     }
 
     // `isEquivalentTo` confirms that the number of children is the same.
-    return Streams.zip(
-            stream(actual.children()),
-            stream(expected.children()),
-            (actualChild, expectedChild) -> findFirstMismatch(actualChild, expectedChild, jsDoc))
-        .filter(Optional::isPresent)
-        .findFirst()
-        .orElse(Optional.empty());
+    Node actualChild = actual.getFirstChild();
+    Node expectedChild = expected.getFirstChild();
+    while (actualChild != null) {
+      NodeMismatch mismatch = findFirstMismatch(actualChild, expectedChild, jsDoc);
+      if (mismatch != null) {
+        return mismatch;
+      }
+
+      actualChild = actualChild.getNext();
+      expectedChild = expectedChild.getNext();
+    }
+
+    return null;
   }
 
   /** A pair of nodes that were expected to match in some way but didn't. */
