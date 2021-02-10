@@ -104,10 +104,13 @@ public final class ConvertTypesToColors implements CompilerPass {
 
     compiler.setColorRegistry(deserializer.getRegistry());
 
-    // Log type mismatches, which may be relevant later during optimizations.
-    // Logging is done during type -> color conversion so that a) logging has access to the unique
-    // ID given to each color and b) the mismatches may safely be deleted from the compiler state
-    // during the "RemoveTypes" pass.
+    // Log information about how the JSTypes correspond to the colors. This may be useful later on
+    // in optimizations.
+    try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), "object_uuids.log")) {
+      log.log(() -> GSON.toJson(serializer.getObjectUuidMapForDebugging()));
+    }
+
+    // Log type mismatches, which contribute to the definition of an "invalidating" type
     try (LogFile log = this.compiler.createOrReopenLog(this.getClass(), "mismatches.log")) {
       log.log(
           () -> GSON.toJson(logTypeMismatches(compiler.getTypeMismatches(), serializer, typePool)));
@@ -127,7 +130,7 @@ public final class ConvertTypesToColors implements CompilerPass {
         .collect(toImmutableSortedSet(naturalOrder()));
   }
 
-  static final class TypeMismatchJson implements Comparable<TypeMismatchJson> {
+  private static final class TypeMismatchJson implements Comparable<TypeMismatchJson> {
     final String found;
     final String required;
     final String location;

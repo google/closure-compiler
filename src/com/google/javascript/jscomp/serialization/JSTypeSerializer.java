@@ -25,6 +25,7 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.auto.value.AutoOneOf;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -32,6 +33,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.IdGenerator;
 import com.google.javascript.jscomp.InvalidatingTypes;
+import com.google.javascript.jscomp.serialization.JSTypeSerializer.SimplifiedType.Kind;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -41,6 +43,7 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 final class JSTypeSerializer {
@@ -485,6 +488,26 @@ final class JSTypeSerializer {
     this.state = State.FINISHED;
     checkValid();
     return pool;
+  }
+
+  /**
+   * Returns a map from {@link ObjectTypeProto#getUuid()} to the originating {@link JSType}.
+   *
+   * <p>Excludes unions and primitive types as they do not have their own UUIDs
+   *
+   * <p>Only intended to be used for debug logging.
+   */
+  ImmutableMap<String, String> getObjectUuidMapForDebugging() {
+    ImmutableMap.Builder<String, String> uuidToType = ImmutableMap.builder();
+    for (Map.Entry<SimplifiedType, SeenTypeRecord> entry : this.seenSerializableTypes.entrySet()) {
+      if (entry.getKey().getKind().equals(Kind.SINGLE)
+          && entry.getValue().type != null
+          && entry.getValue().type.hasObject()) {
+        uuidToType.put(
+            entry.getValue().type.getObject().getUuid(), entry.getKey().single().toString());
+      }
+    }
+    return uuidToType.build();
   }
 
   private static final class SeenTypeRecord {
