@@ -574,8 +574,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(j2clAssertRemovalPass);
     }
 
-    assertAllOneTimePasses(passes);
-
     // Inline aliases so that following optimizations don't have to understand alias chains.
     if (options.getPropertyCollapseLevel() == PropertyCollapseLevel.ALL) {
       if (options.needsTranspilationFrom(ES6)) {
@@ -645,6 +643,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.computeFunctionSideEffects) {
       passes.add(markPureFunctions);
     }
+
+    assertAllOneTimePasses(passes);
 
     if (options.smartNameRemoval) {
       passes.addAll(getCodeRemovingPasses());
