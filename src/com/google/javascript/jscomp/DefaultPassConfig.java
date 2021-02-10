@@ -488,6 +488,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(externExports);
     }
 
+    if (options.runtimeTypeCheck) {
+      checks.add(runtimeTypeCheck);
+    }
+
     if (!options.checksOnly) {
       checks.add(removeWeakSources);
       checks.add(garbageCollectChecks);
@@ -547,10 +551,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.getInstrumentForCoverageOption() != InstrumentOption.NONE) {
       passes.add(instrumentForCodeCoverage);
-    }
-
-    if (options.runtimeTypeCheck) {
-      passes.add(runtimeTypeCheck);
     }
 
     passes.add(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
