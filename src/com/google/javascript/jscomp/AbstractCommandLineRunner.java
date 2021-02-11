@@ -646,7 +646,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         SourceFile newFile = SourceFile.fromFile(filename, inputCharset, kind);
         inputs.add(newFile);
       } else {
-        if (!allowStdIn) {
+        if (!config.defaultToStdin) {
           throw new FlagUsageException("Can't specify stdin.");
         }
         if (usingStdin) {
@@ -756,7 +756,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return inputsSupplierForTesting != null ? inputsSupplierForTesting.get()
           : null;
     }
-    if (files.isEmpty() && jsonFiles == null) {
+    if (files.isEmpty() && jsonFiles == null && config.defaultToStdin) {
       // Request to read from stdin.
       files = ImmutableList.of(new FlagEntry<JsSourceType>(JsSourceType.JS, "-"));
     }
@@ -2290,6 +2290,17 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         List<FlagEntry<JsSourceType>> mixedJsSources) {
       this.mixedJsSources.clear();
       this.mixedJsSources.addAll(mixedJsSources);
+      return this;
+    }
+
+    private boolean defaultToStdin = false;
+
+    /**
+     * Whether to read a single source file from standard input if no input files are explicitly
+     * specified.
+     */
+    public CommandLineConfig setDefaultToStdin() {
+      this.defaultToStdin = true;
       return this;
     }
 

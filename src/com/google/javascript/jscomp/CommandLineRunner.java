@@ -1754,6 +1754,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
           .setLoggingLevel(flags.loggingLevel)
           .setExterns(flags.externs)
           .setMixedJsSources(mixedSources)
+          .setDefaultToStdin()
           .setJsOutputFile(flags.jsOutputFile)
           .setSaveAfterChecksFileName(flags.saveAfterChecksFile)
           .setContinueSavedCompilationFileName(flags.continueSavedCompilationFile)
