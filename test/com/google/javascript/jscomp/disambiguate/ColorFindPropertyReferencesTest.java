@@ -75,7 +75,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
    */
   private HashBiMap<String, Color> labeledStatementMap;
 
-  private Map<String, ColorPropertyClustering> propIndex;
+  private Map<String, PropertyClustering> propIndex;
 
   @Before
   @Override
@@ -106,7 +106,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
 
   @After
   public void verifyProps_onlyHaveUseSitesWithCorrectName() {
-    for (ColorPropertyClustering prop : this.propIndex.values()) {
+    for (PropertyClustering prop : this.propIndex.values()) {
       assertThat(
               prop.getUseSites().keySet().stream()
                   .filter((n) -> !Objects.equals(prop.getName(), n.getString()))
@@ -117,8 +117,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
 
   @After
   public void verifyProps_trackOriginalNamedTypesCorrectly() {
-
-    for (ColorPropertyClustering prop : this.propIndex.values()) {
+    for (PropertyClustering prop : this.propIndex.values()) {
       ColorGraphNode originalNameRep = prop.getOriginalNameClusterRep();
       Set<ColorGraphNode> originalNameCluster =
           (originalNameRep == null)
@@ -476,7 +475,7 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
    * associations of property {@code name} and that color
    */
   private MultimapSubject assertThatUsesOf(String name) {
-    ColorPropertyClustering prop = this.propIndex.get(name);
+    PropertyClustering prop = this.propIndex.get(name);
 
     Map<ColorGraphNode, Color> nodeToColor = this.flattener.createdNodes.inverse();
     Map<Color, String> colorToLabel = this.labeledStatementMap.inverse();
@@ -497,11 +496,11 @@ public final class ColorFindPropertyReferencesTest extends CompilerTestCase {
   private ColorFindPropertyReferences finder;
   private StubColorGraphNodeFactory flattener;
 
-  private Map<String, ColorPropertyClustering> collectProperties(String externs, String src) {
+  private Map<String, PropertyClustering> collectProperties(String externs, String src) {
     return this.collectProperties(/* propertyReflectorNames= */ ImmutableSet.of(), externs, src);
   }
 
-  private Map<String, ColorPropertyClustering> collectProperties(
+  private Map<String, PropertyClustering> collectProperties(
       ImmutableSet<String> propertyReflectorNames, String externs, String src) {
 
     // Create a fresh statement map for each test case.

@@ -85,10 +85,10 @@ public final class UseSiteRenamerTest {
     Node name1c = IR.name(PROP_NAME);
     Node name2 = IR.name(PROP_NAME);
 
-    FlatType type1a = FlatType.createForTesting(-1);
-    FlatType type1b = FlatType.createForTesting(-2);
-    FlatType type1c = FlatType.createForTesting(-3);
-    FlatType type2 = FlatType.createForTesting(-4);
+    ColorGraphNode type1a = ColorGraphNode.createForTesting(-1);
+    ColorGraphNode type1b = ColorGraphNode.createForTesting(-2);
+    ColorGraphNode type1c = ColorGraphNode.createForTesting(-3);
+    ColorGraphNode type2 = ColorGraphNode.createForTesting(-4);
 
     this.prop.getUseSites().put(name1a, type1a);
     this.prop.getUseSites().put(name1b, type1b);
@@ -115,9 +115,9 @@ public final class UseSiteRenamerTest {
     Node name2 = IR.name(PROP_NAME);
     Node name3 = IR.name(PROP_NAME);
 
-    FlatType type1 = FlatType.createForTesting(-1);
-    FlatType type2 = FlatType.createForTesting(-2);
-    FlatType type3 = FlatType.createForTesting(-3);
+    ColorGraphNode type1 = ColorGraphNode.createForTesting(-1);
+    ColorGraphNode type2 = ColorGraphNode.createForTesting(-2);
+    ColorGraphNode type3 = ColorGraphNode.createForTesting(-3);
 
     this.prop.getUseSites().put(name1, type1);
     this.prop.getUseSites().put(name2, type2);
@@ -144,10 +144,10 @@ public final class UseSiteRenamerTest {
     Node externName3 = IR.name(PROP_NAME);
     Node srcName = IR.name(PROP_NAME);
 
-    FlatType externType1 = FlatType.createForTesting(-1);
-    FlatType externType2 = FlatType.createForTesting(-2);
-    FlatType externType3 = FlatType.createForTesting(-3);
-    FlatType srcType = FlatType.createForTesting(-4);
+    ColorGraphNode externType1 = ColorGraphNode.createForTesting(-1);
+    ColorGraphNode externType2 = ColorGraphNode.createForTesting(-2);
+    ColorGraphNode externType3 = ColorGraphNode.createForTesting(-3);
+    ColorGraphNode srcType = ColorGraphNode.createForTesting(-4);
 
     this.prop.getUseSites().put(externName1, externType1);
     this.prop.getUseSites().put(externName2, externType2);
@@ -177,9 +177,9 @@ public final class UseSiteRenamerTest {
     Node name2 = IR.name(PROP_NAME);
     Node name3 = IR.name(PROP_NAME);
 
-    FlatType type1 = FlatType.createForTesting(-1);
-    FlatType type2 = FlatType.createForTesting(-2);
-    FlatType type3 = FlatType.createForTesting(-3);
+    ColorGraphNode type1 = ColorGraphNode.createForTesting(-1);
+    ColorGraphNode type2 = ColorGraphNode.createForTesting(-2);
+    ColorGraphNode type3 = ColorGraphNode.createForTesting(-3);
 
     this.prop.getUseSites().put(name1, type1);
     this.prop.getUseSites().put(name2, type2);
@@ -203,9 +203,9 @@ public final class UseSiteRenamerTest {
     Node name1b = IR.name(PROP_NAME);
     Node name1c = IR.name(PROP_NAME);
 
-    FlatType type1a = FlatType.createForTesting(-1);
-    FlatType type1b = FlatType.createForTesting(-2);
-    FlatType type1c = FlatType.createForTesting(-3);
+    ColorGraphNode type1a = ColorGraphNode.createForTesting(-1);
+    ColorGraphNode type1b = ColorGraphNode.createForTesting(-2);
+    ColorGraphNode type1c = ColorGraphNode.createForTesting(-3);
 
     this.prop.getUseSites().put(name1a, type1a);
     this.prop.getUseSites().put(name1b, type1b);

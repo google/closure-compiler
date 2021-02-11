@@ -30,8 +30,8 @@ public final class ClusterPropagatorTest {
 
   private final ClusterPropagator propagator = new ClusterPropagator();
 
-  private final FlatType src = FlatType.createForTesting(-1);
-  private final FlatType dest = FlatType.createForTesting(-2);
+  private final ColorGraphNode src = ColorGraphNode.createForTesting(-1);
+  private final ColorGraphNode dest = ColorGraphNode.createForTesting(-2);
 
   private final PropertyClustering prop = new PropertyClustering("prop");
 
@@ -110,7 +110,7 @@ public final class ClusterPropagatorTest {
     }
   }
 
-  private static boolean areAssociated(PropertyClustering prop, FlatType flat) {
+  private static boolean areAssociated(PropertyClustering prop, ColorGraphNode flat) {
     if (prop.getClusters().elements().contains(flat)) {
       assertThat(flat.getAssociatedProps()).containsKey(prop);
       return true;
@@ -120,9 +120,9 @@ public final class ClusterPropagatorTest {
     return false;
   }
 
-  private static void associate(PropertyClustering prop, FlatType flat) {
-    flat.getAssociatedProps().put(prop, FlatType.PropAssociation.AST);
-    prop.getClusters().add(flat);
+  private static void associate(PropertyClustering prop, ColorGraphNode node) {
+    node.getAssociatedProps().put(prop, ColorGraphNode.PropAssociation.AST);
+    prop.getClusters().add(node);
   }
 
   private void propagateFromSrcToDest() {

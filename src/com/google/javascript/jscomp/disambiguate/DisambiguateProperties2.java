@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.disambiguate;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
@@ -37,20 +36,17 @@ import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.GatherGetterAndSetterProperties;
-import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.NodeTraversal;
-import com.google.javascript.jscomp.TypeMismatch;
+import com.google.javascript.jscomp.colors.Color;
+import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.diagnostic.LogFile;
-import com.google.javascript.jscomp.disambiguate.FlatType.Arity;
+import com.google.javascript.jscomp.disambiguate.ColorGraphNode.PropAssociation;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.LowestCommonAncestorFinder;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -67,32 +63,25 @@ public final class DisambiguateProperties2 implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final ImmutableSet<String> propertiesThatMustDisambiguate;
-  private final ImmutableSet<TypeMismatch> mismatches;
-  private final JSTypeRegistry registry;
-  private final InvalidatingTypes invalidations;
+  private final ColorRegistry registry;
 
   public DisambiguateProperties2(
       AbstractCompiler compiler, ImmutableSet<String> propertiesThatMustDisambiguate) {
     this.compiler = compiler;
     this.propertiesThatMustDisambiguate = propertiesThatMustDisambiguate;
-    this.registry = this.compiler.getTypeRegistry();
-
-    this.mismatches = ImmutableSet.copyOf(compiler.getTypeMismatches());
-    this.invalidations =
-        new InvalidatingTypes.Builder(this.registry).addAllTypeMismatches(this.mismatches).build();
+    this.registry = this.compiler.getColorRegistry();
   }
 
   @Override
   public void process(Node externs, Node root) {
     checkArgument(externs.getParent() == root.getParent());
 
-    TypeFlattener flattener = new TypeFlattener(this.registry, this.invalidations::isInvalidating);
-    FindPropertyReferences findRefs =
-        new FindPropertyReferences(
-            flattener,
-            this.compiler.getCodingConvention()::isPropertyRenameFunction);
-    TypeGraphBuilder graphBuilder =
-        new TypeGraphBuilder(flattener, LowestCommonAncestorFinder::new);
+    ColorGraphNodeFactory flattener = ColorGraphNodeFactory.createFactory(this.registry);
+    ColorFindPropertyReferences findRefs =
+        new ColorFindPropertyReferences(
+            flattener, this.compiler.getCodingConvention()::isPropertyRenameFunction);
+    ColorGraphBuilder graphBuilder =
+        new ColorGraphBuilder(flattener, LowestCommonAncestorFinder::new, this.registry);
     ClusterPropagator propagator = new ClusterPropagator();
     UseSiteRenamer renamer =
         new UseSiteRenamer(
@@ -112,22 +101,22 @@ public final class DisambiguateProperties2 implements CompilerPass {
                 .collect(toImmutableSortedMap(naturalOrder(), (x) -> x.name, (x) -> x)));
 
     graphBuilder.addAll(flattener.getAllKnownTypes());
-    DiGraph<FlatType, Object> graph = graphBuilder.build();
+    DiGraph<ColorGraphNode, Object> graph = graphBuilder.build();
 
     // Model legacy behavior from the old (pre-January 2021) disambiguator.
     // TODO(b/177695515): delete this section.
-    for (FlatType flatType : flattener.getAllKnownTypes()) {
-      if (graph.getOutEdges(flatType).isEmpty()) {
+    for (ColorGraphNode colorGraphNode : flattener.getAllKnownTypes()) {
+      if (graph.getOutEdges(colorGraphNode).isEmpty()) {
         // Skipping leaf types improves code size, especially as "namespace" types are all leaf
         // types and will often have their declared properties collapsed into variables.
         continue;
       }
-      if (flatType.getArity().equals(Arity.UNION)) {
-        // Only need this step for SINGLE FlatTypes because union types don't have "own" properties
+      if (colorGraphNode.getColor().isUnion()) {
+        // Only need this step for SINGLE ColorGraphNodes because
         // and we will add properties of each alternate elsewhere in this loop.
         continue;
       }
-      registerOwnDeclaredProperties(flatType, propIndex);
+      registerOwnDeclaredProperties(colorGraphNode, propIndex);
     }
 
     this.logForDiagnostics(
@@ -146,13 +135,6 @@ public final class DisambiguateProperties2 implements CompilerPass {
     propIndex.values().forEach(renamer::renameUses);
 
     this.logForDiagnostics("renaming_index", () -> buildRenamingIndex(propIndex, renamer));
-
-    this.logForDiagnostics(
-        "mismatches",
-        () ->
-            this.mismatches.stream()
-                .map((m) -> new TypeMismatchJson(m, flattener))
-                .collect(toImmutableSortedSet(naturalOrder())));
 
     GatherGetterAndSetterProperties.update(this.compiler, externs, root);
   }
@@ -190,9 +172,9 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private static void invalidateBasedOnType(TypeFlattener flattener) {
-    for (FlatType type : flattener.getAllKnownTypes()) {
-      if (type.isInvalidating()) {
+  private static void invalidateBasedOnType(ColorGraphNodeFactory flattener) {
+    for (ColorGraphNode type : flattener.getAllKnownTypes()) {
+      if (type.getColor().isInvalidating()) {
         for (PropertyClustering prop : type.getAssociatedProps().keySet()) {
           prop.invalidate(Invalidation.invalidatingType(type.getId()));
         }
@@ -202,45 +184,51 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private static void invalidateNonDeclaredPropertyAccesses(FlatType type) {
+  private static void invalidateNonDeclaredPropertyAccesses(ColorGraphNode colorGraphNode) {
+    Color color = colorGraphNode.getColor();
     checkArgument(
-        !type.isInvalidating(),
+        !color.isInvalidating(),
         "Not applicable to invalidating types. All their properties are invalidated");
-    // Invalidate all property accesses that cause "missing property" warnings. This behavior is not
+    // Invalidate all property accesses that cause "missing property" warnings. This behavior is
+    // not
     // inherently necessary for correctness. It only exists because the older version of the
     // disambiguator invalidated these properties and some projects began to rely on this.
     // TODO(b/177695515): delete this method.
-    for (PropertyClustering prop : type.getAssociatedProps().keySet()) {
+    for (PropertyClustering prop : colorGraphNode.getAssociatedProps().keySet()) {
       if (prop.isInvalidated()) {
         continue; // Skip unnecessary `hasProperty` lookups which can be expensive.
       }
 
-      boolean mayHaveProperty =
-          type.hasArity(Arity.SINGLE)
-              ? type.getTypeSingle().hasProperty(prop.getName())
-              : type.getTypeUnion().stream()
-                  .anyMatch(flatType -> flatType.getTypeSingle().hasProperty(prop.getName()));
-
-      if (!mayHaveProperty) {
-        prop.invalidate(Invalidation.undeclaredAccess(type.getId()));
+      if (!hasAssociatedProperty(color, prop.getName())) {
+        prop.invalidate(Invalidation.undeclaredAccess(colorGraphNode.getId()));
       }
     }
   }
 
-  private void registerOwnDeclaredProperties(
-      FlatType flatType, Map<String, PropertyClustering> propIndex) {
-    checkArgument(flatType.hasArity(Arity.SINGLE));
-    JSType single = flatType.getTypeSingle();
-    checkState(!single.isBoxableScalar(), single);
-    ObjectType obj = single.toMaybeObjectType();
-    if (obj == null) {
-      return;
+  /**
+   * Traverse all ancestors of the given color to see if they recorded the given property
+   *
+   * <p>Note: this method is put here instead of in the colors package because we'd like to delete
+   * the associated properties completely as part of b/177695515.
+   */
+  private static boolean hasAssociatedProperty(Color color, String propertyName) {
+    // implementation note: we're not caching the results of this call at all. That's because the
+    // type graph is generally shallow and so this isn't expected to be time-consuming.
+    if (color.getOwnProperties().contains(propertyName)) {
+      return true;
     }
+    return color.getDisambiguationSupertypes().stream()
+        .anyMatch(superType -> hasAssociatedProperty(superType, propertyName));
+  }
+
+  private void registerOwnDeclaredProperties(
+      ColorGraphNode colorGraphNode, Map<String, PropertyClustering> propIndex) {
+    checkArgument(!colorGraphNode.getColor().isUnion());
 
     // For each type, get the list of its "own properties" and add them to its clustering. This
     // is only to mimic the behavior of the old disambiguator and could be removed if we were
     // confident we could update all existing code to be compatible.
-    for (String propName : obj.getOwnPropertyNames()) {
+    for (String propName : colorGraphNode.getColor().getOwnProperties()) {
       PropertyClustering prop = propIndex.get(propName);
       if (prop == null) {
         // Ignore declared properties without any visible references to rename.
@@ -248,8 +236,8 @@ public final class DisambiguateProperties2 implements CompilerPass {
       } else if (prop.isInvalidated()) {
         continue;
       }
-      prop.getClusters().add(flatType);
-      flatType.getAssociatedProps().putIfAbsent(prop, FlatType.PropAssociation.TYPE_SYSTEM);
+      prop.getClusters().add(colorGraphNode);
+      colorGraphNode.getAssociatedProps().put(prop, PropAssociation.TYPE_SYSTEM);
     }
   }
 
@@ -280,7 +268,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     final String location;
     final int receiver;
 
-    PropertyReferenceJson(Node location, FlatType receiver) {
+    PropertyReferenceJson(Node location, ColorGraphNode receiver) {
       this.location =
           location.getSourceFileName() + ":" + location.getLineno() + ":" + location.getCharno();
       this.receiver = receiver.getId();
@@ -298,17 +286,16 @@ public final class DisambiguateProperties2 implements CompilerPass {
   private static final class TypeNodeJson {
     final int id;
     final boolean invalidating;
-    final String name;
+    final String colorUuid;
     final ImmutableSortedSet<TypeEdgeJson> edges;
-    final ImmutableSortedMap<String, FlatType.PropAssociation> props;
+    final ImmutableSortedMap<String, ColorGraphNode.PropAssociation> props;
 
-    TypeNodeJson(DiGraphNode<FlatType, Object> n) {
-      FlatType t = n.getValue();
+    TypeNodeJson(DiGraphNode<ColorGraphNode, Object> n) {
+      ColorGraphNode t = n.getValue();
 
       this.id = t.getId();
-      this.name =
-          (t.hasArity(FlatType.Arity.SINGLE) ? t.getTypeSingle() : t.getTypeUnion()).toString();
-      this.invalidating = t.isInvalidating();
+      this.colorUuid = t.getColor().getId().toString();
+      this.invalidating = t.getColor().isInvalidating();
       this.edges =
           n.getOutEdges().stream()
               .map(TypeEdgeJson::new)
@@ -325,7 +312,7 @@ public final class DisambiguateProperties2 implements CompilerPass {
     final int dest;
     final Object value;
 
-    TypeEdgeJson(DiGraphEdge<FlatType, Object> e) {
+    TypeEdgeJson(DiGraphEdge<ColorGraphNode, Object> e) {
       this.dest = e.getDestination().getValue().getId();
       this.value = e.getValue();
     }
@@ -337,24 +324,4 @@ public final class DisambiguateProperties2 implements CompilerPass {
     }
   }
 
-  private static final class TypeMismatchJson implements Comparable<TypeMismatchJson> {
-    final int found;
-    final int required;
-    final String location;
-
-    TypeMismatchJson(TypeMismatch x, TypeFlattener flattener) {
-      this.found = flattener.flatten(x.getFound()).getId();
-      this.required = flattener.flatten(x.getRequired()).getId();
-      this.location = x.getLocation().getLocation();
-    }
-
-    @Override
-    public int compareTo(TypeMismatchJson x) {
-      return ComparisonChain.start()
-          .compare(this.found, x.found)
-          .compare(this.required, x.required)
-          .compare(this.location, x.location)
-          .result();
-    }
-  }
 }

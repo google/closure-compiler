@@ -39,7 +39,7 @@ final class ColorGraphNode {
 
   private final Color color;
 
-  private final LinkedHashMap<ColorPropertyClustering, PropAssociation> associatedProps =
+  private final LinkedHashMap<PropertyClustering, PropAssociation> associatedProps =
       new LinkedHashMap<>();
 
   private final int id;
@@ -91,7 +91,7 @@ final class ColorGraphNode {
   }
 
   /** The set of properties that that might be accessed from this type. */
-  LinkedHashMap<ColorPropertyClustering, PropAssociation> getAssociatedProps() {
+  LinkedHashMap<PropertyClustering, PropAssociation> getAssociatedProps() {
     return this.associatedProps;
   }
 

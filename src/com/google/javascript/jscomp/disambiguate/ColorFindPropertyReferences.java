@@ -55,7 +55,7 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
     boolean test(String name);
   }
 
-  private LinkedHashMap<String, ColorPropertyClustering> propIndex = new LinkedHashMap<>();
+  private LinkedHashMap<String, PropertyClustering> propIndex = new LinkedHashMap<>();
 
   private final ColorGraphNodeFactory colorGraphNodeFactory;
   private final IsPropertyReflector isPropertyReflector;
@@ -66,8 +66,8 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
     this.isPropertyReflector = isPropertyReflector;
   }
 
-  LinkedHashMap<String, ColorPropertyClustering> getPropertyIndex() {
-    LinkedHashMap<String, ColorPropertyClustering> tmp = this.propIndex;
+  LinkedHashMap<String, PropertyClustering> getPropertyIndex() {
+    LinkedHashMap<String, PropertyClustering> tmp = this.propIndex;
     this.propIndex = null;
     return tmp;
   }
@@ -208,8 +208,8 @@ final class ColorFindPropertyReferences extends AbstractPostOrderCallback {
    * owner}.
    */
   private void registerPropertyUse(Node site, Color owner) {
-    ColorPropertyClustering prop =
-        this.propIndex.computeIfAbsent(site.getString(), ColorPropertyClustering::new);
+    PropertyClustering prop =
+        this.propIndex.computeIfAbsent(site.getString(), PropertyClustering::new);
     ColorGraphNode flatOwner = this.colorGraphNodeFactory.createNode(owner);
 
     // Set the initial condition for flowing this property along the graph.

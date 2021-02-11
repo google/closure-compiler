@@ -71,6 +71,8 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     this.enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
   }
 
   @Override
@@ -353,22 +355,22 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
         expected(
             lines(
                 "class Foo0 {",
-                "  JSC$7_a() { }",
+                "  JSC$5_a() { }",
                 "  JSC$1_b() { }",
                 "}",
                 "",
                 "class Foo1 {",
-                "  JSC$7_a() { }",
+                "  JSC$5_a() { }",
                 "  JSC$3_b() { }",
                 "}",
                 "",
                 "function mix(/** (!Foo0|!Foo1) */ x) {",
-                "  x.JSC$7_a();",
+                "  x.JSC$5_a();",
                 "}",
                 "",
                 "class Other {",
-                "  JSC$8_a() { }",
-                "  JSC$8_b() { }",
+                "  JSC$6_a() { }",
+                "  JSC$6_b() { }",
                 "}")));
   }
 
@@ -767,9 +769,9 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "}",
                 "",
                 "class Other {",
-                "  JSC$10_x() { }",
-                "  JSC$10_y() { }",
-                "  JSC$10_z() { }",
+                "  JSC$8_x() { }",
+                "  JSC$8_y() { }",
+                "  JSC$8_z() { }",
                 "}")));
   }
 
@@ -802,7 +804,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
         expected(
             lines(
                 "class Foo {",
-                "  JSC$6_x() { }",
+                "  JSC$4_x() { }",
                 "  y() { }",
                 "  JSC$1_z() { }",
                 "}",
@@ -811,15 +813,15 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
                 "function mix(/** (!Foo|!Bar) */ fooBar, /** !Bar */ bar) {",
                 // x is disambiguated while w and y are invalidated.
                 "  fooBar.w();",
-                "  fooBar.JSC$6_x();",
+                "  fooBar.JSC$4_x();",
                 "  bar.y();",
                 "}",
                 "",
                 "class Other {",
                 "  w() { }",
-                "  JSC$7_x() { }",
+                "  JSC$6_x() { }",
                 "  y() { }",
-                "  JSC$7_z() { }",
+                "  JSC$6_z() { }",
                 "}")));
   }
 
@@ -931,8 +933,7 @@ public final class DisambiguateProperties2Test extends CompilerTestCase {
 
   private static final class SilenceNoiseGuard extends WarningsGuard {
     private static final ImmutableSet<DiagnosticType> RELEVANT_DIAGNOSTICS =
-        ImmutableSet.of(
-            DisambiguateProperties2.PROPERTY_INVALIDATION);
+        ImmutableSet.of(DisambiguateProperties2.PROPERTY_INVALIDATION);
 
     @Override
     protected int getPriority() {

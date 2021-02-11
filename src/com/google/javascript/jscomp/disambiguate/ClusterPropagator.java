@@ -19,12 +19,13 @@ package com.google.javascript.jscomp.disambiguate;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 
 /** A callback to propagate clusterings across a type graph. */
-final class ClusterPropagator implements FixedPointGraphTraversal.EdgeCallback<FlatType, Object> {
+final class ClusterPropagator
+    implements FixedPointGraphTraversal.EdgeCallback<ColorGraphNode, Object> {
 
   ClusterPropagator() {}
 
   @Override
-  public boolean traverseEdge(FlatType src, Object unused, FlatType dest) {
+  public boolean traverseEdge(ColorGraphNode src, Object unused, ColorGraphNode dest) {
     int startDestPropCount = dest.getAssociatedProps().size();
 
     for (PropertyClustering prop : src.getAssociatedProps().keySet()) {
@@ -32,7 +33,7 @@ final class ClusterPropagator implements FixedPointGraphTraversal.EdgeCallback<F
         continue;
       }
 
-      dest.getAssociatedProps().putIfAbsent(prop, FlatType.PropAssociation.SUPERTYPE);
+      dest.getAssociatedProps().putIfAbsent(prop, ColorGraphNode.PropAssociation.SUPERTYPE);
       prop.getClusters().union(src, dest);
     }
 

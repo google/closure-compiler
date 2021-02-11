@@ -36,11 +36,11 @@ import javax.annotation.Nullable;
 final class PropertyClustering {
   private final String name;
 
-  @Nullable private LinkedHashMap<Node, FlatType> useSites = new LinkedHashMap<>();
+  @Nullable private LinkedHashMap<Node, ColorGraphNode> useSites = new LinkedHashMap<>();
 
-  @Nullable private StandardUnionFind<FlatType> clusters = new StandardUnionFind<>();
+  @Nullable private StandardUnionFind<ColorGraphNode> clusters = new StandardUnionFind<>();
 
-  @Nullable private FlatType originalNameClusterRep;
+  @Nullable private ColorGraphNode originalNameClusterRep;
 
   @Nullable private Invalidation lastInvalidation;
 
@@ -59,11 +59,11 @@ final class PropertyClustering {
    * <p>This index allows property references to be efficiently renamed once all clusters have been
    * found. It prevents us from re-traversing the code.
    */
-  LinkedHashMap<Node, FlatType> getUseSites() {
+  LinkedHashMap<Node, ColorGraphNode> getUseSites() {
     return checkNotNull(this.useSites);
   }
 
-  StandardUnionFind<FlatType> getClusters() {
+  StandardUnionFind<ColorGraphNode> getClusters() {
     return checkNotNull(this.clusters);
   }
 
@@ -91,7 +91,7 @@ final class PropertyClustering {
    * up code depending on the legacy no-renaming behavior.
    */
   @Nullable
-  FlatType getOriginalNameClusterRep() {
+  ColorGraphNode getOriginalNameClusterRep() {
     checkState(!this.isInvalidated());
     return (this.originalNameClusterRep == null)
         ? null
@@ -115,11 +115,12 @@ final class PropertyClustering {
   }
 
   /**
-   * Indicate that all property references off this {@link FlatType} must keep their original name.
+   * Indicate that all property references off this {@link ColorGraphNode} must keep their original
+   * name.
    *
    * <p>See {@link #getOriginalNameClusterRep()} for more details.
    */
-  void registerOriginalNameType(FlatType type) {
+  void registerOriginalNameType(ColorGraphNode type) {
     checkState(!this.isInvalidated());
     if (this.originalNameClusterRep == null) {
       this.originalNameClusterRep = type;

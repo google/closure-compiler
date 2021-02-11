@@ -624,20 +624,20 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(removeUnusedCodeOnce);
     }
 
-    // Property disambiguation should only run once and needs to be done
-    // soon after type checking, both so that it can make use of type
-    // information and so that other passes can take advantage of the renamed
-    // properties.
-    if (options.shouldDisambiguateProperties() && options.isTypecheckingEnabled()) {
-      passes.add(disambiguateProperties2);
-    }
-
     if (options.checkTypes || options.inferTypes) {
       passes.add(typesToColors);
     }
 
     if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
       passes.add(removeTypes);
+    }
+
+    // Property disambiguation should only run once and needs to be done
+    // soon after type checking, both so that it can make use of type
+    // information and so that other passes can take advantage of the renamed
+    // properties.
+    if (options.shouldDisambiguateProperties() && options.isTypecheckingEnabled()) {
+      passes.add(disambiguateProperties2);
     }
 
     if (options.computeFunctionSideEffects) {

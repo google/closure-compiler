@@ -65,7 +65,7 @@ final class UseSiteRenamer {
       return;
     }
 
-    ImmutableMap<FlatType, String> clusterNames = createAllClusterNames(prop);
+    ImmutableMap<ColorGraphNode, String> clusterNames = createAllClusterNames(prop);
 
     if (clusterNames.size() <= 1) {
       /**
@@ -77,9 +77,9 @@ final class UseSiteRenamer {
     }
 
     this.renamingIndex.putAll(prop.getName(), clusterNames.values());
-    for (Map.Entry<Node, FlatType> usage : prop.getUseSites().entrySet()) {
+    for (Map.Entry<Node, ColorGraphNode> usage : prop.getUseSites().entrySet()) {
       Node site = usage.getKey();
-      FlatType flatRep = prop.getClusters().find(usage.getValue());
+      ColorGraphNode flatRep = prop.getClusters().find(usage.getValue());
       String newName = clusterNames.get(flatRep);
       if (!Objects.equals(newName, site.getString())) {
         site.setString(newName);
@@ -96,12 +96,13 @@ final class UseSiteRenamer {
    * Creates a unique name for each cluster in {@code prop} and maps it to the cluster
    * representative.
    */
-  private static ImmutableMap<FlatType, String> createAllClusterNames(PropertyClustering prop) {
+  private static ImmutableMap<ColorGraphNode, String> createAllClusterNames(
+      PropertyClustering prop) {
     return prop.getClusters().allRepresentatives().stream()
         .collect(toImmutableMap(identity(), (r) -> createClusterName(prop, r)));
   }
 
-  private static String createClusterName(PropertyClustering prop, FlatType rep) {
+  private static String createClusterName(PropertyClustering prop, ColorGraphNode rep) {
     if (Objects.equals(prop.getOriginalNameClusterRep(), rep)) {
       return prop.getName();
     }
