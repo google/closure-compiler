@@ -1750,22 +1750,6 @@ public class Node implements Serializable {
   }
 
   /**
-   * Return an iterable object that iterates over this node's siblings, <b>including this Node</b>
-   * but not any siblings that are before this one.
-   *
-   * <p>The iterator does not support the optional operation {@link Iterator#remove()}.
-   *
-   * <p>To iterate over a node's siblings including itself, one can write
-   *
-   * <pre>Node n = ...;
-   * for (Node sibling : n.siblings()) { ...</pre>
-   */
-  @Deprecated
-  public final Iterable<Node> siblings() {
-    return new SiblingNodeIterable(this);
-  }
-
-  /**
    * @see Node#siblings()
    */
   private static final class SiblingNodeIterable implements Iterable<Node> {
