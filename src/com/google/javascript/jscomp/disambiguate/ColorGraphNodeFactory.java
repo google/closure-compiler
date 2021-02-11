@@ -28,12 +28,12 @@ import java.util.LinkedHashMap;
 import javax.annotation.Nullable;
 
 /** A factory and cache for {@link ColorGraphNode} instances. */
-final class ColorGraphNodeFactory {
+class ColorGraphNodeFactory {
 
   private final LinkedHashMap<Color, ColorGraphNode> typeIndex;
   private final ColorRegistry registry;
 
-  private ColorGraphNodeFactory(
+  protected ColorGraphNodeFactory(
       LinkedHashMap<Color, ColorGraphNode> initialTypeIndex, ColorRegistry registry) {
     this.typeIndex = initialTypeIndex;
     this.registry = registry;

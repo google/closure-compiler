@@ -24,6 +24,7 @@ import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.DoNotCall;
 import com.google.javascript.jscomp.colors.Color;
 import java.util.BitSet;
+import java.util.LinkedHashMap;
 
 /**
  * A struct representing a {@link Color} for use in ambiguation.
@@ -38,9 +39,24 @@ final class ColorGraphNode {
 
   private final Color color;
 
+  private final LinkedHashMap<ColorPropertyClustering, PropAssociation> associatedProps =
+      new LinkedHashMap<>();
+
   private final int id;
 
   private final BitSet subtypeIds = new BitSet();
+
+  /**
+   * Reasons a property name became associated with a type.
+   *
+   * <p>This information is only used for debugging. It doesn't affect the behaviour of the pass.
+   */
+  enum PropAssociation {
+    AST, // a property associated with a FlatType because of an AST access flatType.prop
+    TYPE_SYSTEM, // a property associated with a FlatType because the type system recorded such an
+    // association, despite no association being found in the AST
+    SUPERTYPE // a property inherited from a supertype in the type graph
+  }
 
   static ColorGraphNode create(Color single, int id) {
     checkNotNull(single);
@@ -72,6 +88,11 @@ final class ColorGraphNode {
    */
   int getId() {
     return this.id;
+  }
+
+  /** The set of properties that that might be accessed from this type. */
+  LinkedHashMap<ColorPropertyClustering, PropAssociation> getAssociatedProps() {
+    return this.associatedProps;
   }
 
   /** The IDs of other ColorGraphNodes that have been found to be subtypes of this type. */
