@@ -1248,17 +1248,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
      * option in this case because the order produced by {@code find} is unlikely to be sorted
      * correctly with respect to {@code goog.provide()} and {@code goog.requires()}.
      */
-    protected List<String> getJsFiles() throws CmdLineException, IOException {
-      List<String> patterns = new ArrayList<>();
-      patterns.addAll(js);
-      patterns.addAll(arguments);
-      List<String> allJsInputs = findJsFiles(patterns);
-      if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
-        throw new CmdLineException(parser, "No inputs matched");
-      }
-      return allJsInputs;
-    }
-
     protected List<FlagEntry<JsSourceType>> getMixedJsSources()
         throws CmdLineException, IOException {
       List<FlagEntry<JsSourceType>> mixedSources = new ArrayList<>();
