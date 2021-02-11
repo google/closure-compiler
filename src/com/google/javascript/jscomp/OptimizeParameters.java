@@ -232,7 +232,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       // Build a list of parameters to remove
       int lowestSpread = Integer.MAX_VALUE;
       for (Node n : refs) {
-        if (ReferenceMap.isNormalOrOptionalCallOrNewTarget(n)) {
+        if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
           Node param = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
           int paramIndex = 0;
           while (param != null) {
@@ -269,7 +269,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       }
 
       for (Node n : refs) {
-        if (ReferenceMap.isNormalOrOptionalCallOrNewTarget(n) && !alreadyRemoved(n)) {
+        if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n) && !alreadyRemoved(n)) {
           Node arg = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
           recordRemovalCallArguments(
               lowestUsedRest, removeAllAfterIndex, unused, unremovable, arg, 0);
@@ -404,7 +404,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       //   continue;
       // } else
 
-      if (ReferenceMap.isNormalOrOptionalCallOrNewTarget(n)) {
+      if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
         // TODO(johnlenz): filter .apply when we support it
         seenCandidateUse = true;
       } else if (isCandidateDefinition(n)) {
@@ -551,7 +551,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     int maxArgs = -1;
 
     for (Node n : refs) {
-      if (ReferenceMap.isNormalOrOptionalCallOrNewTarget(n)) {
+      if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
         int numArgs = 0;
         Node firstArg = ReferenceMap.getFirstArgumentForCallOrNewOrDotCall(n);
         for (Node c = firstArg; c != null; c = c.getNext()) {
@@ -606,7 +606,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
     // Found something to do, move the values from the call sites to the function definitions.
     for (Node n : refs) {
-      if (!alreadyRemoved(n) && ReferenceMap.isNormalOrOptionalCallOrNewTarget(n)) {
+      if (!alreadyRemoved(n) && ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
         optimizeCallSite(parameters, n);
       }
     }
@@ -626,7 +626,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
     // Build a list of parameters to remove
     boolean continueLooking = false;
     for (Node n : refs) {
-      if (ReferenceMap.isNormalOrOptionalCallOrNewTarget(n)) {
+      if (ReferenceMap.isNormalOrOptChainCallOrNewTarget(n)) {
         Node call = n.getParent();
         Node firstDotCallParam = call.getFirstChild();
         // Normally, we ignore the first parameter to a .call expression (the 'this' value)

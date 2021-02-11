@@ -309,7 +309,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
    * away these checks.
    */
   @Test
-  public void testDontRemoveWindowRefs_optionalChaining() {
+  public void testDontRemoveWindowRefs_optChain() {
     enableNormalize();
     // Don't fold the optional chain check on window
     testSame("x = window?.Object");

@@ -102,7 +102,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlinedAtRegularAndOptionalCallsBoth() {
+  public void testInlinedAtRegularAndOptChainCallsBoth() {
     // both regular and optional references are found and inlined
     test("function foo() {return 1;} foo(); foo?.();", "1;1;");
   }
@@ -125,7 +125,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineEmptyFunction1_optionalChaining() {
+  public void testInlineEmptyFunction1_optChain() {
     // Empty function, no params.
     test("function foo(){} foo?.();", "void 0;");
   }
@@ -137,7 +137,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineEmptyFunction2_optionalChaining() {
+  public void testInlineEmptyFunction2_optChain() {
     test("function foo(){}\n foo?.(1, new Date, function(){});", "void 0;");
   }
 
@@ -154,7 +154,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineEmptyFunction4_optionalChainingCall() {
+  public void testInlineEmptyFunction4_optChainCall() {
     // Empty function, params with side-effects forces block inlining.
     test(
         "function foo(){}\n foo?.(x());",
@@ -174,7 +174,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineEmptyFunction6_optionalChaining() {
+  public void testInlineEmptyFunction6_optChain() {
     test("if (window) { f?.(); function f() {} }", "if (window) { void 0; }");
   }
 
@@ -187,7 +187,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions1_optionalChaining() {
+  public void testInlineFunctions1_optChain() {
     // As simple a test as we can get.
     test(lines("function foo(){ return 4 }", "foo?.();"), "4");
   }
@@ -222,7 +222,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions3_optionalChaining() {
+  public void testInlineFunctions3_optChain() {
     // inline simple constants
     test(
         lines(
@@ -244,7 +244,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions4_optionalChaining() {
+  public void testInlineFunctions4_optChain() {
     // don't inline if there are multiple definitions (need DFA for that).
     test(
         lines(
@@ -265,7 +265,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions5_optionalChaining() {
+  public void testInlineFunctions5_optChain() {
     // inline additions
     test(
         lines(
@@ -284,7 +284,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions6_optionalChaining() {
+  public void testInlineFunctions6_optChain() {
     // more complex inlines
     test(
         lines(
@@ -303,7 +303,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions7_optionalChaining() {
+  public void testInlineFunctions7_optChain() {
     // inlines appearing multiple times
     test(lines("function FN(x,y,z){return x+x+y}", "var b=FN?.(1,2,3)"), "var b=1+1+2");
   }
@@ -327,7 +327,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions9_optionalChaining() {
+  public void testInlineFunctions9_optChain() {
     // don't inline if the input parameter is modified.
     test(
         "function INC(x){return x++} var y=INC?.(i)",
@@ -526,7 +526,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions19_optionalChaining() {
+  public void testInlineFunctions19_optChain() {
     // TRICKY ... test nested inlines
     // with block inlining possible
     test(
@@ -708,7 +708,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions34_optionalChaining() {
+  public void testInlineFunctions34_optChain() {
     test(
         lines(
             "class X {}",
@@ -760,7 +760,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testInlineFunctions35_optionalChaining() {
+  public void testInlineFunctions35_optChain() {
     test(
         lines(
             "class X {}",
@@ -821,7 +821,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMixedModeInlining2_optionalChaining() {
+  public void testMixedModeInlining2_optChain() {
     // Base line tests, block inlining. Block inlining is needed by possible-side-effect parameter.
     test(
         "function foo(){return 1} foo?.(x());",
@@ -843,7 +843,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testMixedModeInlining3_optionalChaining() {
+  public void testMixedModeInlining3_optChain() {
     // Inline using both modes.
     test(
         "function foo(){return 1} foo?.();foo?.(x?.());",
@@ -2488,7 +2488,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testLocalFunctionInlining4_optionalChaining() {
+  public void testLocalFunctionInlining4_optChain() {
     test("function _f(){ function g() {return 1} return g?.() }", "function _f(){ return 1 }");
   }
 
@@ -3782,8 +3782,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   @Test
-  public void
-      testSpreadCall_withArrayLiteral_isNotInlined_andFunctionIsPreserved_optionalChaining() {
+  public void testSpreadCall_withArrayLiteral_isNotInlined_andFunctionIsPreserved_optChain() {
     testSame(lines("function foo(x, y) {", "  return x + y;", "}", "foo?.(...[0, 1]);"));
   }
 
@@ -3904,7 +3903,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
 
   @Test
   public void
-      testSpreadCall_withBlockInlinableFunction_withPrecedingSpreadArg_isInlined_optionalChaining() {
+      testSpreadCall_withBlockInlinableFunction_withPrecedingSpreadArg_isInlined_optChain() {
     test(
         lines(
             "function foo(x) {", //

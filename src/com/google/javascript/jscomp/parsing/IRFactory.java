@@ -91,7 +91,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectSpreadTree;
-import com.google.javascript.jscomp.parsing.parser.trees.OptionalCallExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptChainCallExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
@@ -1543,7 +1543,7 @@ class IRFactory {
       }
     }
 
-    Node processOptChainFunctionCall(OptionalCallExpressionTree callNode) {
+    Node processOptChainFunctionCall(OptChainCallExpressionTree callNode) {
       maybeWarnForFeature(callNode, Feature.OPTIONAL_CHAINING);
       Node node = newNode(Token.OPTCHAIN_CALL, transform(callNode.operand));
       node.setTrailingComma(callNode.hasTrailingComma);
@@ -2845,7 +2845,7 @@ class IRFactory {
         case CALL_EXPRESSION:
           return processFunctionCall(node.asCallExpression());
         case OPT_CHAIN__CALL_EXPRESSION:
-          return processOptChainFunctionCall(node.asOptionalCallExpression());
+          return processOptChainFunctionCall(node.asOptChainCallExpression());
         case CASE_CLAUSE:
           return processSwitchCase(node.asCaseClause());
         case DEFAULT_CLAUSE:

@@ -457,7 +457,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   }
 
   @Test
-  public void optionalChaining() {
+  public void optChain() {
     testSame(
         lines(
             "function f(x) {",

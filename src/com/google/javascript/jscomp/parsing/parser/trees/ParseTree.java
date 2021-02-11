@@ -59,8 +59,8 @@ public class ParseTree {
   public BreakStatementTree asBreakStatement() { return (BreakStatementTree) this; }
   public CallExpressionTree asCallExpression() { return (CallExpressionTree) this; }
 
-  public OptionalCallExpressionTree asOptionalCallExpression() {
-    return (OptionalCallExpressionTree) this;
+  public OptChainCallExpressionTree asOptChainCallExpression() {
+    return (OptChainCallExpressionTree) this;
   }
 
   public CaseClauseTree asCaseClause() { return (CaseClauseTree) this; }

@@ -749,7 +749,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewrite_optionalChaining() {
+  public void testNoRewrite_optChain() {
     testSame(
         lines(
             NoRewriteNonCallReferenceTestInput.BASE, //
@@ -826,7 +826,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewrite_optionalChainGetProp() {
+  public void testNoRewrite_optChainGetProp() {
     String source =
         lines(
             "function a(){}",
@@ -859,7 +859,7 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testNoRewrite_optionalChainingGetElemAccess() {
+  public void testNoRewrite_optChainGetElemAccess() {
     String source =
         lines(
             "function a(){}",

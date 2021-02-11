@@ -159,7 +159,7 @@ public final class GuardedCallbackTest extends CompilerTestCase {
   }
 
   @Test
-  public void optionalChainTest() {
+  public void optChainTest() {
     final String externs = new TestExternsBuilder().addConsole().addPromise().build();
     testSame(
         externs(externs),

@@ -19,17 +19,17 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 /**
- * Creates a OptionalCallExpressionTree that represents a call expression within an optional chain.
+ * Creates a OptChainCallExpressionTree that represents a call expression within an optional chain.
  * Has an isOptionalChainStart field to indicate whether it is the start of an optional chain.
  */
-public class OptionalCallExpressionTree extends ParseTree {
+public class OptChainCallExpressionTree extends ParseTree {
 
   public final ParseTree operand;
   public final ArgumentListTree arguments;
   public final boolean isStartOfOptionalChain;
   public final boolean hasTrailingComma;
 
-  public OptionalCallExpressionTree(
+  public OptChainCallExpressionTree(
       SourceRange location,
       ParseTree operand,
       ArgumentListTree arguments,

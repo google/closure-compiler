@@ -756,7 +756,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
-  public void testOptionalCall() {
+  public void testOptChainCall() {
     String source = lines("function f() {return g?.()}", "function g() {return 42}", "f?.()");
     assertPureCallsMarked(source, ImmutableList.of("g", "f"));
   }
@@ -1821,7 +1821,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
-  public void testOptCallInConstructorThatModifiesThis() {
+  public void testOptChainCallInConstructorThatModifiesThis() {
     String source =
         lines(
             "/**@constructor*/function A(){this?.foo()}",

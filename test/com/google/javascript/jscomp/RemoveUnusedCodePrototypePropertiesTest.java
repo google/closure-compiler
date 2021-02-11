@@ -811,13 +811,13 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "  constructor() {",
             "    this.x = 1;",
             "  }",
-            "  optGetPropRef() {}",
-            "  optCallRef() {}",
+            "  optChainGetPropRef() {}",
+            "  optChainCallRef() {}",
             "  unreferenced() {}",
             "}",
             "var c = new C;",
-            "c?.optGetPropRef()",
-            "c.optCallRef?.()",
+            "c?.optChainGetPropRef()",
+            "c.optChainCallRef?.()",
             // no call to unreferenced()
             ""),
         lines(
@@ -825,13 +825,13 @@ public final class RemoveUnusedCodePrototypePropertiesTest extends CompilerTestC
             "  constructor() {",
             "    this.x = 1;",
             "  }",
-            "  optGetPropRef() {}", // kept
-            "  optCallRef() {}", // kept
+            "  optChainGetPropRef() {}", // kept
+            "  optChainCallRef() {}", // kept
             // unreferenced() removed
             "}",
             "var c = new C;",
-            "c?.optGetPropRef()",
-            "c.optCallRef?.()",
+            "c?.optChainGetPropRef()",
+            "c.optChainCallRef?.()",
             // no call to unreferenced()
             ""));
   }

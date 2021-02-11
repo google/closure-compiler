@@ -131,7 +131,7 @@ public final class MaybeReachingVariableUseTest {
   }
 
   @Test
-  public void optionalChaining() {
+  public void optChain() {
     // LHS always executed
     assertMatch("var x=0; var y; D:(x=1)?.y; U:x");
     assertMatch("var x=0; var y=0; D:(x=1)?.(y=0); U:x");

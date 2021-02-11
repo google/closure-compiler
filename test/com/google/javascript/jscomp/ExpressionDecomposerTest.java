@@ -127,14 +127,14 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void optionalChainingMovable() {
+  public void optChainMovable() {
     helperCanExposeExpression(DecompositionType.MOVABLE, "foo()?.x", exprMatchesStr("foo()"));
     helperCanExposeExpression(DecompositionType.MOVABLE, "foo()?.[x]", exprMatchesStr("foo()"));
     helperCanExposeExpression(DecompositionType.MOVABLE, "foo()?.()", exprMatchesStr("foo()"));
   }
 
   @Test
-  public void optionalChainingDecomposable() {
+  public void optChainDecomposable() {
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "x?.[foo()]", exprMatchesStr("foo()"));
     helperCanExposeExpression(
@@ -142,13 +142,13 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void optionalChainingAllowMethodCallDecomposable() {
+  public void optChainAllowMethodCallDecomposable() {
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE, "x?.y(foo())", exprMatchesStr("foo()"));
   }
 
   @Test
-  public void optionalChainingUnDecomposable() {
+  public void optChainUnDecomposable() {
     helperCanExposeExpression(
         DecompositionType.UNDECOMPOSABLE, "while(x = y?.[foo()]){}", exprMatchesStr("foo()"));
   }
@@ -680,7 +680,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void exposeExpressionOptionalCallChain() {
+  public void exposeExpressionOptChainCallChain() {
     helperExposeExpression(
         "a = x?.(a).y.z[foo()]",
         exprMatchesStr("foo()"),
@@ -697,7 +697,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void exposeExpressionOptionalCallChainNoResult() {
+  public void exposeExpressionOptChainCallChainNoResult() {
     helperExposeExpression(
         "x?.(a)[y].z[foo()]",
         exprMatchesStr("foo()"),
@@ -812,7 +812,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void exposeExpressionGetElemWithOptionalCall() {
+  public void exposeExpressionGetElemWithOptChainCall() {
     helperExposeExpression(
         "a = x.y[z]?.(foo(), d)",
         exprMatchesStr("foo()"),
@@ -866,7 +866,7 @@ public final class ExpressionDecomposerTest {
   }
 
   @Test
-  public void exposeExpressionGetPropWithOptionalCall() {
+  public void exposeExpressionGetPropWithOptChainCall() {
     helperExposeExpression(
         "a = x.y.z?.(foo())",
         exprMatchesStr("foo()"),

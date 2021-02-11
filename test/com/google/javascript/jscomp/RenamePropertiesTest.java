@@ -80,7 +80,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPrototypeProperties_optionalChaining() {
+  public void testPrototypeProperties_optChain() {
     test(
         lines(
             "Bar.prototype.getA = function(){}; bar?.getA();",

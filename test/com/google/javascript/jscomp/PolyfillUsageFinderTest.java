@@ -185,7 +185,7 @@ public final class PolyfillUsageFinderTest {
   }
 
   @Test
-  public void optionalChainCoverageTest() {
+  public void optChainCoverageTest() {
     final TestPolyfillUsageFinder testPolyfillUsageFinder =
         TestPolyfillUsageFinder.builder()
             .withPolyfillTableLines("Array.from es6 es3 es6/array/from")

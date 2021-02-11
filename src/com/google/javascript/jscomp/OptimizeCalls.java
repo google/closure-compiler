@@ -317,7 +317,7 @@ class OptimizeCalls implements CompilerPass {
      * .call expressions. For example, returns true for 'x' in 'x.call()'.
      */
     // TODO(rishipal): Remove this function's usage; use
-    //  `isNormalOrOptionalCallOrNewTarget` instead.
+    //  `isNormalOrOptChainCallOrNewTarget` instead.
     static boolean isCallOrNewTarget(Node n) {
       return isCallTarget(n) || isNewTarget(n);
     }
@@ -326,8 +326,8 @@ class OptimizeCalls implements CompilerPass {
      * Whether the provided node acts as the target function in a new or call or optional chain call
      * expression including .call expressions. For example, returns true for 'x' in 'x?.call()'.
      */
-    static boolean isNormalOrOptionalCallOrNewTarget(Node n) {
-      return isCallTarget(n) || isNewTarget(n) || isOptionalCallTarget(n);
+    static boolean isNormalOrOptChainCallOrNewTarget(Node n) {
+      return isCallTarget(n) || isNewTarget(n) || isOptChainCallTarget(n);
     }
 
     /**
@@ -347,7 +347,7 @@ class OptimizeCalls implements CompilerPass {
      * Whether the provided node acts as the target function in an optional chain call expression
      * including .call expressions. For example, returns true for 'x' in 'x?.call()'.
      */
-    static boolean isOptionalCallTarget(Node n) {
+    static boolean isOptChainCallTarget(Node n) {
       Node parent = n.getParent();
       return ((parent.getFirstChild() == n) && parent.isOptChainCall()) // e.g. a?.();
           || (parent.isOptChainGetProp() // e.g. a?.call();
@@ -363,7 +363,7 @@ class OptimizeCalls implements CompilerPass {
     }
 
     /**
-     * Finds the associated call node for a node for which isNormalOrOptionalCallOrNewTarget returns
+     * Finds the associated call node for a node for which isNormalOrOptChainCallOrNewTarget returns
      * true.
      */
     static Node getCallOrNewNodeForTarget(Node n) {
@@ -388,7 +388,7 @@ class OptimizeCalls implements CompilerPass {
 
     /**
      * Finds the call argument node matching the first parameter of the called function for a node
-     * for which isNormalOrOptionalCallOrNewTarget returns true. Specifically, corrects for the
+     * for which isNormalOrOptChainCallOrNewTarget returns true. Specifically, corrects for the
      * additional argument provided to .call expressions.
      */
     static Node getFirstArgumentForCallOrNewOrDotCall(Node n) {
@@ -397,7 +397,7 @@ class OptimizeCalls implements CompilerPass {
 
     /**
      * Finds the call argument node matching the parameter at the specified index of the called
-     * function for a node for which isNormalOrOptionalCallOrNewTarget returns true. Specifically,
+     * function for a node for which isNormalOrOptChainCallOrNewTarget returns true. Specifically,
      * corrects for the additional argument provided to .call expressions.
      */
     static Node getArgumentForCallOrNewOrDotCall(Node n, int index) {

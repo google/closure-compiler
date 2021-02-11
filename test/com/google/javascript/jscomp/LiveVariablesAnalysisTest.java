@@ -120,7 +120,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   @Test
-  public void optionalChainingGetProp() {
+  public void optChainGetProp() {
     // Reading the var on lhs of opt chain makes the variable live.
     assertNotLiveBeforeX("var a,b; X:if(b) {}", "a");
     assertLiveBeforeX("var a,b; X:if(a?.b) {}", "a");
@@ -134,7 +134,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   @Test
-  public void optionalChainingCall() {
+  public void optChainCall() {
     // conditionally accessing var keeps it live
     assertLiveBeforeX("var a,b; X:if(b?.(a)){}", "a");
 
@@ -152,7 +152,7 @@ public final class LiveVariablesAnalysisTest {
   }
 
   @Test
-  public void optionalChainingGetElem() {
+  public void optChainGetElem() {
     // conditionally accessing var keeps it live
     assertLiveBeforeX("var a,b; X:if(b?.[a]) {}", "a");
 

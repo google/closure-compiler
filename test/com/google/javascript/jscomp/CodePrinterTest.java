@@ -152,7 +152,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void optionalChaining() {
+  public void optChain() {
     languageMode = LanguageMode.UNSUPPORTED;
     assertPrintSame("a.b?.c");
     assertPrintSame("a.b?.[\"c\"]");
@@ -2456,7 +2456,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void freeCallOptChainOptCall() {
+  public void freeCallOptChainOptChainCall() {
     Node n = parse("(a?.b)?.()");
     Node call = n.getFirstFirstChild();
     assertThat(call.isOptChainCall()).isTrue();
@@ -2465,7 +2465,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   @Test
-  public void optionalChainCalleeForNewRequiresParentheses() {
+  public void optChainCalleeForNewRequiresParentheses() {
     assertPrintSame("new (a?.b)");
   }
 

@@ -508,7 +508,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testCallOrApply_optionalChain() {
+  public void testCallOrApply_optChain() {
     test(
         "function a() {return 1}; a?.call(new foo);", //
         "function a() {return  }; a?.call(new foo);");
@@ -554,7 +554,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
 
   // optional chaining version of the above test
   @Test
-  public void testReturnNotRemovedFromRecursiveNamedFunctionExpression_optionalChain() {
+  public void testReturnNotRemovedFromRecursiveNamedFunctionExpression_optChain() {
     testSame(
         lines(
             "let x = function innerName(n) {",

@@ -953,7 +953,7 @@ public final class GlobalNamespaceTest {
   }
 
   @Test
-  public void testCannotCollapseObjectLitPropertyEscapedWithOptionalCall() {
+  public void testCannotCollapseObjectLitPropertyEscapedWithOptChainCall() {
     GlobalNamespace namespace = parse("var foo = {prop: 0}; use?.(foo);");
 
     Name fooProp = namespace.getSlot("foo.prop");

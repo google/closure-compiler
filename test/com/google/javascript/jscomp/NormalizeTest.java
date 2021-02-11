@@ -928,7 +928,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPropertyIsConstant1_optionalChaining() {
+  public void testPropertyIsConstant1_optChain() {
     testSame("var a = {}; a.CONST = 3; var b = a?.CONST;");
     Node n = getLastCompiler().getRoot();
 
@@ -952,7 +952,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPropertyIsConstant2_optionalChaining() {
+  public void testPropertyIsConstant2_optChain() {
     testSame("var a = {CONST: 3}; var b = a?.CONST;");
     Node n = getLastCompiler().getRoot();
 
@@ -976,7 +976,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testGetterPropertyIsConstant_optionalChaining() {
+  public void testGetterPropertyIsConstant_optChain() {
     testSame("var a = { get CONST() {return 3} }; var b = a?.CONST;");
     Node n = getLastCompiler().getRoot();
 
@@ -1001,7 +1001,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   @Test
-  public void testSetterPropertyIsConstant_optionalChaining() {
+  public void testSetterPropertyIsConstant_optChain() {
     // Verifying that a SET is properly annotated.
     testSame("var a = { set CONST(b) {throw 'invalid'} }; var c = a?.CONST;");
     Node n = getLastCompiler().getRoot();

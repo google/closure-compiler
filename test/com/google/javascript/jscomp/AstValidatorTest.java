@@ -786,7 +786,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void superInvalidWithOptionalCall() {
+  public void superInvalidWithOptChainCall() {
     Node superNode = IR.superNode();
     Node optChainCallNode = IR.startOptChainCall(superNode);
 
@@ -1197,7 +1197,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFeatureValidation_optionalChaining() {
+  public void testFeatureValidation_optChain() {
     setAcceptedLanguage(LanguageMode.UNSUPPORTED);
 
     testFeatureValidation("x?.y", Feature.OPTIONAL_CHAINING);

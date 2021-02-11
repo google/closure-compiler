@@ -78,7 +78,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpression
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectRestTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectSpreadTree;
-import com.google.javascript.jscomp.parsing.parser.trees.OptionalCallExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptChainCallExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.OptionalMemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
@@ -2937,7 +2937,7 @@ public class Parser {
         case OPEN_PAREN:
           ArgumentListTree arguments = parseArguments();
           operand =
-              new OptionalCallExpressionTree(
+              new OptChainCallExpressionTree(
                   getTreeLocation(start),
                   operand,
                   arguments,
@@ -3003,7 +3003,7 @@ public class Parser {
         case OPEN_PAREN:
           ArgumentListTree arguments = parseArguments();
           optionalExpression =
-              new OptionalCallExpressionTree(
+              new OptChainCallExpressionTree(
                   getTreeLocation(start),
                   optionalExpression,
                   arguments,

@@ -428,7 +428,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   }
 
   @Test
-  public void optionalChaining() {
+  public void optChain() {
     setLanguage(UNSUPPORTED, UNSUPPORTED);
     testBehavior(
         "var x = 0; var y = x?.(x = 1)",

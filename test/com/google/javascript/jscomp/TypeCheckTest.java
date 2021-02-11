@@ -633,7 +633,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
-  public void optionalChaining() {
+  public void optChain() {
     // TODO(b/151248857): Calculate the appropriate type here
     testTypes("/**@type {?} */var x = a?.b;");
   }
@@ -16058,7 +16058,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // since optional chaining is a property test (tests for the existence of x.y), no warnings
   // about missing properties are emitted
   @Test
-  public void optionalChainGetPropAllowLoosePropertyAccess() {
+  public void optChainGetPropAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16085,7 +16085,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // since optional chaining is a property test (tests for the existence of x.y), no warnings
   // about missing properties are emitted
   @Test
-  public void optionalChainGetElemAllowLoosePropertyAccess() {
+  public void optChainGetElemAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16112,7 +16112,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // since optional chaining is a property test (tests for the existence of x.y), no warnings
   // about missing properties are emitted
   @Test
-  public void optionalChainCallAllowLoosePropertyAccess() {
+  public void optChainCallAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(
@@ -16139,7 +16139,7 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   // prop.access?.() is property test and should allow loose property access
   // but x?.(prop.access) is not
   @Test
-  public void getNotFirstChildOfOptionalCallNotAllowLoosePropertyAccess() {
+  public void getNotFirstChildOfOptChainCallNotAllowLoosePropertyAccess() {
     disableStrictMissingPropertyChecks();
     testTypes(
         lines(

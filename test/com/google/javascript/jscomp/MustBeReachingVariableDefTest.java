@@ -78,7 +78,7 @@ public final class MustBeReachingVariableDefTest {
   }
 
   @Test
-  public void optionalChaining() {
+  public void optChain() {
     // LHS is always executed so the definition of x = 1 must be reached
     assertMatch("var x=0,y; D:(x=1)?.y; U:x");
     assertMatch("var x=0,y; D:(x=1)?.[y]; U:x");

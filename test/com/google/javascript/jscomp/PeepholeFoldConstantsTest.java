@@ -704,7 +704,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testFoldOptChaining() {
+  public void testFoldOptChain() {
     // can't fold when optional part may execute
     testSame("a = x?.y");
     testSame("a = x?.()");

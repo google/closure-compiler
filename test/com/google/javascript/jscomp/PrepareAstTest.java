@@ -74,7 +74,7 @@ public final class PrepareAstTest extends CompilerTestCase {
   }
 
   @Test
-  public void optionalChainFreeCall() {
+  public void optChainFreeCall() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     Node root = parseExpectedJs("x?.foo();");
     Node script = root.getFirstChild();

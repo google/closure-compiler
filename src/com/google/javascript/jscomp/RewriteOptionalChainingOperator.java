@@ -72,7 +72,7 @@ final class RewriteOptionalChainingOperator implements HotSwapCompilerPass {
   private class TranspilationCallback implements NodeTraversal.Callback {
     private final OptionalChainRewriter.Builder rewriterBuilder =
         OptionalChainRewriter.builder(compiler);
-    private final ArrayList<OptionalChainRewriter> optionalChains = new ArrayList<>();
+    private final ArrayList<OptionalChainRewriter> optChains = new ArrayList<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -86,16 +86,16 @@ final class RewriteOptionalChainingOperator implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isEndOfFullOptChain(n)) {
-        optionalChains.add(rewriterBuilder.build(n));
+        optChains.add(rewriterBuilder.build(n));
       } else if (n.isScript()) {
         // We transpile all of the optional chains in a single script as a batch because,
         // rewriting changes the AST in ways that could interfere with traversal
         // if we change the chains as we visit them.
-        if (!optionalChains.isEmpty()) {
-          for (OptionalChainRewriter optionalChain : optionalChains) {
-            optionalChain.rewrite();
+        if (!optChains.isEmpty()) {
+          for (OptionalChainRewriter optChain : optChains) {
+            optChain.rewrite();
           }
-          optionalChains.clear();
+          optChains.clear();
         }
       }
     }
