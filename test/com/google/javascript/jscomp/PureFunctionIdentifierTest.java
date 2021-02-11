@@ -1140,8 +1140,32 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   @Test
+  public void testDeleteOperator1_getProp() {
+    String source = lines("var x = {y:2};", "function f() {delete x.y}", "f()");
+    assertNoPureCalls(source);
+  }
+
+  @Test
+  public void testDeleteOperator1_optChainGetProp() {
+    String source = lines("var x = {y:2};", "function f() {delete x?.y}", "f()");
+    assertNoPureCalls(source);
+  }
+
+  @Test
   public void testDeleteOperator2() {
     String source = lines("function f() {var x = {}; delete x}", "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  @Test
+  public void testDeleteOperator2_getProp() {
+    String source = lines("function f() {var x = {y:2}; delete x.y}", "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  @Test
+  public void testDeleteOperator2_optChainGetProp() {
+    String source = lines("function f() {var x = {y:2}; delete x?.y}", "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 

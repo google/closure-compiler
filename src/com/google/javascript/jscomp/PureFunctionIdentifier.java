@@ -956,7 +956,10 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         List<Node> lhsNodes,
         Predicate<Node> hasLocalRhs) {
       for (Node lhs : lhsNodes) {
-        if (NodeUtil.isNormalGet(lhs)) {
+        if (NodeUtil.isNormalOrOptChainGet(lhs)) {
+          // Although OPTCHAIN_GETPROP can not be an LHS of an assign, it can be a child to DELPROP.
+          // e.g. `delete obj?.prop` <==> `obj == null ?  true : delete obj.prop;`
+          // Hence the enclosing function's side effects must be recorded.
           if (lhs.getFirstChild().isThis()) {
             encloserSummary.setMutatesThis();
           } else {
