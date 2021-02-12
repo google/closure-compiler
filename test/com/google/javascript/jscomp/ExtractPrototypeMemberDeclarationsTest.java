@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import org.junit.Before;
@@ -93,6 +94,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   // script node.
   @Test
   public void testEs6Module() {
+    ignoreWarnings(LOAD_WARNING);
     String importStatement = "import {someValue} from './another_module.js';";
     testSame(importStatement + generatePrototypeDeclarations("x", 17));
   }

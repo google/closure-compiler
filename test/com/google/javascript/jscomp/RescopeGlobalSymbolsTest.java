@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
+
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -944,6 +946,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   @Test
   public void testEs6Modules() {
+    ignoreWarnings(LOAD_WARNING);
     // Test that this pass does nothing to ES6 modules.
     testSame("var a = 3; a; export default a;");
 

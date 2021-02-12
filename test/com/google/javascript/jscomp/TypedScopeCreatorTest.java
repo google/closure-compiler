@@ -6184,6 +6184,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testEsModule_importStarMissingModule() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
     // Make sure this does not crash the typechecker.
     testError("import * as x from './invalid_path;'; X: x; export {x};", ModuleLoader.LOAD_WARNING);
 
@@ -6196,6 +6197,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testEsModule_importSpecsMissingModule() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
     // Make sure this does not crash the typechecker.
     testError("import {x} from './invalid_path;'; X: x; export {x};", ModuleLoader.LOAD_WARNING);
 

@@ -60,6 +60,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
     super.setUp();
     injectableLibraries.clear();
     polyfillTable.clear();
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
   @Override

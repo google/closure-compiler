@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader.PathEscaper;
@@ -59,6 +61,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
 
   @Test
   public void testLocalRelativePathStayTheSame() {
+    ignoreWarnings(LOAD_WARNING);
     testSame(ImmutableList.of(SourceFile.fromCode("/file.js", "import './foo.js';")));
 
     testSame(ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import './foo.js';")));
@@ -71,6 +74,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
 
   @Test
   public void testRelativeParentPathStayTheSame() {
+    ignoreWarnings(LOAD_WARNING);
     testSame(ImmutableList.of(SourceFile.fromCode("/nested/file.js", "import '../foo.js';")));
 
     testSame(
@@ -106,6 +110,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
 
   @Test
   public void testRootedPathsBecomeRelative() {
+    ignoreWarnings(LOAD_WARNING);
     test(
         ImmutableList.of(SourceFile.fromCode("/file.js", "import '/foo.js';")),
         ImmutableList.of(SourceFile.fromCode("/file.js", "import './foo.js';")));
@@ -162,6 +167,7 @@ public class Es6RelativizeImportPathsTest extends CompilerTestCase {
 
   @Test
   public void testModuleRootsBecomeRelative() {
+    ignoreWarnings(LOAD_WARNING);
     moduleRoots = ImmutableList.of("root1", "root2");
 
     test(

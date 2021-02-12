@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VAR
 import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE_ERROR;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1027,6 +1028,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   @Test
   public void testRedeclareVariableFromImport() {
+    ignoreWarnings(ModuleLoader.INVALID_MODULE_PATH);
     assertRedeclareError("import {x} from 'whatever'; let x = 0;");
     assertRedeclareError("import {x} from 'whatever'; const x = 0;");
     assertRedeclareError("import {x} from 'whatever'; var x = 0;");

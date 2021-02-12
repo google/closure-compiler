@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
+
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -113,6 +115,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
 
   @Test
   public void testMissingRequire_inEsModuleImport() throws Exception {
+    ignoreWarnings(LOAD_WARNING);
     checkRequireWarning(
         "foo.Bar",
         lines(
@@ -309,6 +312,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
 
   @Test
   public void testMissingRequireType_inEsModuleExport() throws Exception {
+    ignoreWarnings(LOAD_WARNING);
     checkRequireTypeWarning(
         "foo.Bar",
         lines(
@@ -324,6 +328,7 @@ public final class CheckMissingRequiresTest extends CompilerTestCase {
 
   @Test
   public void testMissingRequireType_inEsModuleImport() throws Exception {
+    ignoreWarnings(LOAD_WARNING);
     checkRequireTypeWarning(
         "foo.Bar",
         lines(

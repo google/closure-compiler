@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.VariableReferenceCheck.EARLY_REFERENCE;
 import static com.google.javascript.jscomp.VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT;
+import static com.google.javascript.jscomp.deps.ModuleLoader.INVALID_MODULE_PATH;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,12 @@ import org.junit.runners.JUnit4;
  */
 @RunWith(JUnit4.class)
 public final class UnusedLocalsCheckTest extends CompilerTestCase {
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    ignoreWarnings(INVALID_MODULE_PATH);
+  }
 
   @Override
   public CompilerOptions getOptions() {

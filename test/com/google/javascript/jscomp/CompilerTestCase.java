@@ -617,7 +617,7 @@ public abstract class CompilerTestCase {
     this.expectedSymbolTableError = null;
     this.gatherExternPropertiesEnabled = false;
     this.inferConsts = false;
-    this.languageOut = LanguageMode.ECMASCRIPT5;
+    this.languageOut = LanguageMode.NO_TRANSPILE;
     this.multistageCompilation = true;
     this.normalizeEnabled = false;
     this.parseTypeInfo = false;
@@ -746,9 +746,9 @@ public abstract class CompilerTestCase {
     setLanguageOut(langOut);
   }
 
-  protected final void setLanguageOut(LanguageMode acceptedLanguage) {
+  protected final void setLanguageOut(LanguageMode langOut) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    this.languageOut = acceptedLanguage;
+    this.languageOut = langOut;
   }
 
   protected final void setModuleResolutionMode(ModuleLoader.ResolutionMode moduleResolutionMode) {

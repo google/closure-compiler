@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,7 @@ public final class Es6SplitVariableDeclarationsTest extends CompilerTestCase {
     super.setUp();
     enableTypeCheck();
     enableTypeInfoValidation();
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     // there are a lot of 'property x never defined on ?' warnings caused by object destructuring
     ignoreWarnings(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY);

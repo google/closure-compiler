@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.GatherModuleMetadata.INVALID_NAMESPACE_OR_MODULE_ID;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap;
 import com.google.javascript.jscomp.modules.ModuleMetadataMap.ModuleMetadata;
@@ -42,6 +43,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     entryPoints = ImmutableList.of();
     rewriteScriptsToModules = false;
     sortOnly = false;
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
   @Override

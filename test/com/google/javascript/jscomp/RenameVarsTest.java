@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -935,6 +936,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   @Test
   public void testImport1() {
+    ignoreWarnings(LOAD_WARNING);
     test("import name from './other.js'; use(name);", "import a from './other.js'; use(a);");
 
     test(
@@ -948,6 +950,7 @@ public final class RenameVarsTest extends CompilerTestCase {
 
   @Test
   public void testImport2() {
+    ignoreWarnings(LOAD_WARNING);
     withNormalize = true;
     test(
         "import {name} from './other.js'; use(name);",

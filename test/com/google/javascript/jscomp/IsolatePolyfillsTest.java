@@ -59,6 +59,7 @@ public final class IsolatePolyfillsTest extends CompilerTestCase {
     polyfillsToInject.clear();
     disableCompareSyntheticCode();
     allowExternsChanges();
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
   @Override

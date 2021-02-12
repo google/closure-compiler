@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ConvertChunksToESModules.ASSIGNMENT_TO_IMPORT;
 import static com.google.javascript.jscomp.ConvertChunksToESModules.UNABLE_TO_COMPUTE_RELATIVE_PATH;
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.Test;
@@ -34,6 +35,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testVarDeclarations_acrossModules() {
+    ignoreWarnings(LOAD_WARNING);
     test(
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -65,6 +67,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testMultipleInputsPerChunk() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -86,6 +89,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathReferenceAbsolute() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -107,6 +111,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathReferenceAbsoluteWithRelative1() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -123,6 +128,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathReferenceAbsoluteWithRelative2() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -139,6 +145,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathAmbiguous() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -160,6 +167,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathMixedDepth1() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -181,6 +189,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathMixedDepth2() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")
@@ -202,6 +211,7 @@ public final class ConvertChunksToESModulesTest extends CompilerTestCase {
 
   @Test
   public void testImportPathMixedDepth3() {
+    ignoreWarnings(LOAD_WARNING);
     JSModule[] original =
         JSChunkGraphBuilder.forStar() //
             .addChunk("var a = 1;")

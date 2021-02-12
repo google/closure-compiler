@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.PARTIAL_NAMESPACE_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.RECEIVER_AFFECTED_BY_COLLAPSE;
+import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
@@ -3898,6 +3899,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testDoesNotCollapseInEs6ModuleScope() {
     testSame("var a = {}; a.b = {}; a.b.c = 5; export default function() {};");
 
+    ignoreWarnings(LOAD_WARNING);
     test(
         new String[] {"import * as a from './a.js'; let b = a.b;", "var a = {}; a.b = 5;"},
         new String[] {

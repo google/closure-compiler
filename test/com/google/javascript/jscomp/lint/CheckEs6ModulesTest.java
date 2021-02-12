@@ -22,12 +22,19 @@ import static com.google.javascript.jscomp.lint.CheckEs6Modules.NO_DEFAULT_EXPOR
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class CheckEs6ModulesTest extends CompilerTestCase {
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    ignoreWarnings(ModuleLoader.INVALID_MODULE_PATH);
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
