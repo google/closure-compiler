@@ -2631,8 +2631,8 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
 
       String singletonGetterClassName = codingConvention.getSingletonGetterClassName(n);
       if (singletonGetterClassName != null) {
-        ObjectType objectType = ObjectType.cast(
-            typeRegistry.getType(currentScope, singletonGetterClassName));
+        ObjectType objectType =
+            ObjectType.cast(typeRegistry.getType(currentScope, singletonGetterClassName));
         if (objectType != null) {
           FunctionType functionType = objectType.getConstructor();
 
@@ -2666,21 +2666,20 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       }
     }
 
-    /**
-     * Apply special properties that only apply to delegates.
-     */
-    private void applyDelegateRelationship(
-        DelegateRelationship delegateRelationship) {
+    /** Apply special properties that only apply to delegates. */
+    private void applyDelegateRelationship(DelegateRelationship delegateRelationship) {
       ObjectType delegatorObject =
-          ObjectType.cast(typeRegistry.getType(currentScope, delegateRelationship.delegator));
+          ObjectType.cast(
+              typeRegistry.getType(
+                  currentScope, delegateRelationship.delegator.getQualifiedName()));
       ObjectType delegateBaseObject =
-          ObjectType.cast(typeRegistry.getType(currentScope, delegateRelationship.delegateBase));
+          ObjectType.cast(
+              typeRegistry.getType(
+                  currentScope, delegateRelationship.delegateBase.getQualifiedName()));
       ObjectType delegateSuperObject =
           ObjectType.cast(
               typeRegistry.getType(currentScope, codingConvention.getDelegateSuperclassName()));
-      if (delegatorObject != null
-          && delegateBaseObject != null
-          && delegateSuperObject != null) {
+      if (delegatorObject != null && delegateBaseObject != null && delegateSuperObject != null) {
         FunctionType delegatorCtor = delegatorObject.getConstructor();
         FunctionType delegateBaseCtor = delegateBaseObject.getConstructor();
         FunctionType delegateSuperCtor = delegateSuperObject.getConstructor();

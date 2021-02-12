@@ -6146,15 +6146,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   @Test
-  public void testObjectGetSubTypes() {
-    assertThat(OBJECT_FUNCTION_TYPE.getDirectSubTypes()).contains(googBar);
-    assertThat(googBar.getDirectSubTypes()).contains(googSubBar);
-    assertThat(googBar.getDirectSubTypes()).doesNotContain(googSubSubBar);
-    assertThat(googSubBar.getDirectSubTypes()).doesNotContain(googSubBar);
-    assertThat(googSubBar.getDirectSubTypes()).contains(googSubSubBar);
-  }
-
-  @Test
   public void testIsTemplatedType() {
     assertThat(new TemplateType(registry, "T").hasAnyTemplateTypes()).isTrue();
     assertThat(ARRAY_TYPE.hasAnyTemplateTypes()).isFalse();

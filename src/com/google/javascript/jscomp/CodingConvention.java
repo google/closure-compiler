@@ -441,13 +441,15 @@ public interface CodingConvention extends Serializable {
    * optional code derived from the delegate class in the base code.
    */
   static class DelegateRelationship {
-    /** The subclass in the base code. */
-    final String delegateBase;
+    /** The subclass in the base code. Must be a qualified name. */
+    final Node delegateBase;
 
-    /** The class in the base code. */
-    final String delegator;
+    /** The class in the base code. Must be a qualified name. */
+    final Node delegator;
 
-    DelegateRelationship(String delegateBase, String delegator) {
+    DelegateRelationship(Node delegateBase, Node delegator) {
+      checkArgument(delegateBase.isQualifiedName(), delegateBase);
+      checkArgument(delegator.isQualifiedName(), delegator);
       this.delegateBase = delegateBase;
       this.delegator = delegator;
     }

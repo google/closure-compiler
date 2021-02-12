@@ -150,20 +150,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
    */
   private ImmutableList<ObjectType> extendedInterfaces = ImmutableList.of();
 
-  /**
-   * The types which are subtypes of this function. It is lazily initialized and only relevant for
-   * constructors. In all other cases it is {@code null}.
-   */
-  private List<FunctionType> subTypes = null;
-
-  /**
-   * Whether this constructor was added to its superclass constructor's subtypes list, to avoid a
-   * limited amount of duplication that can happen from unresolved supertypes. This only tracks
-   * classes extending classes (no interfaces), since there is no way to duplicate interfaces via
-   * methods accessible outside this class.
-   */
-  private boolean wasAddedToExtendedConstructorSubtypes = false;
-
   /** The primitive id associated with this FunctionType, or null if none. */
   private final ClosurePrimitive closurePrimitive;
 
@@ -549,22 +535,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       oldPrototype.setOwnerFunction(null);
     }
 
-    if (isConstructor() || isInterface()) {
-      FunctionType superClass = getSuperClassConstructor();
-      if (superClass != null) {
-        superClass.addSubType(this);
-        wasAddedToExtendedConstructorSubtypes = true;
-      }
-
-      if (isInterface()) {
-        for (ObjectType interfaceType : getExtendedInterfaces()) {
-          if (interfaceType.getConstructor() != null) {
-            interfaceType.getConstructor().addSubType(this);
-          }
-        }
-      }
-    }
-
     if (replacedPrototype) {
       clearCachedValues();
     }
@@ -640,9 +610,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
 
     this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
     for (ObjectType type : implementedInterfaces) {
-      if (type.getConstructor() != null) {
-        type.getConstructor().addSubType(this);
-      }
       typeOfThis.mergeSupertypeTemplateTypes(type);
     }
   }
@@ -1084,42 +1051,12 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
     this.source = source;
   }
 
-  /** Adds a type to the list of subtypes for this type. */
-  private void addSubType(FunctionType subType) {
-    if (subTypes == null) {
-      subTypes = new ArrayList<>();
-    }
-    subTypes.add(subType);
-  }
-
-  /**
-   * Restricted package-accessible version of {@link #addSubType}, which ensures subtypes are not
-   * duplicated. Generally subtypes are added internally and are guaranteed not to be duplicated,
-   * but this has the possibility of missing unresolved supertypes (typically from externs). To
-   * handle that case, {@link PrototypeObjectType} also adds subclasses after resolution. This
-   * method only adds a subclass to the list if it didn't already add itself to its superclass in
-   * the earlier pass. Ideally, "subclass" here would only refer to classes, but there's an edge
-   * case where interfaces have the {@code Object} constructor added as its "superclass".
-   */
-  final void addSubClassAfterResolution(FunctionType subClass) {
-    checkArgument(JSType.areIdentical(this, subClass.getSuperClassConstructor()));
-    if (!subClass.wasAddedToExtendedConstructorSubtypes) {
-      addSubType(subClass);
-    }
-  }
-
   // NOTE(sdh): One might assume that immediately after calling this, hasCachedValues() should
   // always return false.  This is not the case, since hasCachedValues() will return true if
   // prototypeSlot is non-null, and this override does nothing to change that state.
   @Override
   public final void clearCachedValues() {
     super.clearCachedValues();
-
-    if (subTypes != null) {
-      for (FunctionType subType : subTypes) {
-        subType.clearCachedValues();
-      }
-    }
 
     if (!isNativeObjectType()) {
       if (hasInstanceType()) {
@@ -1130,10 +1067,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         ((ObjectType) prototypeSlot.getType()).clearCachedValues();
       }
     }
-  }
-
-  public final Iterable<FunctionType> getDirectSubTypes() {
-    return (subTypes != null) ? subTypes : ImmutableList.<FunctionType>of();
   }
 
   @Override
@@ -1174,13 +1107,6 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
         resolveTypeListHelper(extendedInterfaces, reporter);
     if (resolvedExtended != null) {
       extendedInterfaces = resolvedExtended;
-    }
-
-    if (subTypes != null) {
-      for (int i = 0; i < subTypes.size(); i++) {
-        FunctionType subType = subTypes.get(i);
-        subTypes.set(i, JSType.toMaybeFunctionType(subType.resolve(reporter)));
-      }
     }
 
     return super.resolveInternal(reporter);

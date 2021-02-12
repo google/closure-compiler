@@ -438,17 +438,7 @@ public class PrototypeObjectType extends ObjectType {
   JSType resolveInternal(ErrorReporter reporter) {
     ObjectType implicitPrototype = getImplicitPrototype();
     if (implicitPrototype != null) {
-      implicitPrototypeFallback =
-          (ObjectType) implicitPrototype.resolve(reporter);
-      FunctionType ctor = getConstructor();
-      if (ctor != null) {
-        FunctionType superCtor = ctor.getSuperClassConstructor();
-        if (superCtor != null) {
-          // If the super ctor of this prototype object was not known before resolution, then the
-          // subTypes would not have been set. Update them.
-          superCtor.addSubClassAfterResolution(ctor);
-        }
-      }
+      implicitPrototypeFallback = (ObjectType) implicitPrototype.resolve(reporter);
     }
     for (Property prop : properties.values()) {
       prop.setType(safeResolve(prop.getType(), reporter));

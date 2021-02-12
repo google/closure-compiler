@@ -16,14 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.rhino.testing.BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.ObjectType;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -158,21 +153,5 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         srcs(""),
         warning(TypeValidator.TYPE_MISMATCH_WARNING)
             .withMessage("initializing variable\n" + "found   : number\n" + "required: string"));
-  }
-
-  @Test
-  public void testExternSubTypes() {
-    testSame(externs(ALL_NATIVE_EXTERN_TYPES), srcs(""));
-
-    List<FunctionType> subtypes =
-        ImmutableList.copyOf(
-            ((ObjectType) getLastCompiler().getTypeRegistry().getGlobalType("Error"))
-                .getConstructor().getDirectSubTypes());
-    for (FunctionType type : subtypes) {
-      String typeName = type.getInstanceType().toString();
-      FunctionType typeInRegistry = ((ObjectType) getLastCompiler()
-          .getTypeRegistry().getGlobalType(typeName)).getConstructor();
-      assertThat(typeInRegistry).isSameInstanceAs(type);
-    }
   }
 }
