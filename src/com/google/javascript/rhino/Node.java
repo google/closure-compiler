@@ -2140,7 +2140,7 @@ public class Node implements Serializable {
    */
   @Nullable
   private StringBuilder getQualifiedNameForGetProp(int reserve) {
-    String propName = getLastChild().getString();
+    String propName = getGetpropString(this);
     reserve += 1 + propName.length();  // +1 for the '.'
     StringBuilder builder;
     if (first.isGetProp()) {
@@ -2182,9 +2182,11 @@ public class Node implements Serializable {
       if (left == null) {
         return null;
       }
-      String right = getLastChild().getOriginalName();
+
+      Node stringNode = getGetpropStringNode(this);
+      String right = stringNode.getOriginalName();
       if (right == null) {
-        right = getLastChild().getString();
+        right = stringNode.getString();
       }
 
       return left + "." + right;
@@ -2273,7 +2275,7 @@ public class Node implements Serializable {
       case SUPER:
         return start == 0 && 5 == endIndex && qname.startsWith("super");
       case GETPROP:
-        String prop = getLastChild().getString();
+        String prop = getGetpropString(this);
         return start > 1
             && prop.length() == endIndex - start
             && prop.regionMatches(0, qname, start, endIndex - start)
@@ -2305,7 +2307,7 @@ public class Node implements Serializable {
         return true;
       case GETPROP:
         // ==, rather than equal as it is intern'd in setString
-        return getLastChild().getString() == n.getLastChild().getString()
+        return getGetpropString(this) == getGetpropString(n)
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
 
       case MEMBER_FUNCTION_DEF:
@@ -3750,5 +3752,26 @@ public class Node implements Serializable {
     }
     value |= current << shift;
     return value;
+  }
+
+  public static boolean isStringGetprop(Node getprop) {
+    checkState(getprop.isGetProp() || getprop.isOptChainGetProp(), getprop);
+    return getprop.hasOneChild();
+  }
+
+  public static boolean isGetpropButNotStringGetprop(Node getprop) {
+    return (getprop.isGetProp() || getprop.isOptChainGetProp()) && !isStringGetprop(getprop);
+  }
+
+  public static String getGetpropString(Node getprop) {
+    return getGetpropStringNode(getprop).getString();
+  }
+
+  public static Node getGetpropStringNode(Node getprop) {
+    return isStringGetprop(getprop) ? getprop : getprop.getSecondChild();
+  }
+
+  public static void setGetpropString(Node getprop, String value) {
+    getGetpropStringNode(getprop).setString(value);
   }
 }

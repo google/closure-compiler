@@ -4447,8 +4447,10 @@ public final class NodeUtil {
   public static void visitPostOrder(
       Node node, Visitor visitor, Predicate<Node> traverseChildrenPred) {
     if (traverseChildrenPred.apply(node)) {
-      for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+      for (Node c = node.getFirstChild(); c != null; ) {
+        Node next = c.getNext();
         visitPostOrder(c, visitor, traverseChildrenPred);
+        c = next;
       }
     }
 
