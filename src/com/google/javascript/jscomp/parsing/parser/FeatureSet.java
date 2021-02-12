@@ -288,54 +288,11 @@ public final class FeatureSet implements Serializable {
   /**
    * Returns a string representation useful for debugging.
    *
-   * <p>This is not suitable for encoding in deps.js or depgraph files, because it may return
-   * strings like 'otiSupported' and 'ntiSupported' which are not real language modes.
+   * @deprecated Please use {@link #version()} instead.
    */
+  @Deprecated
   public String versionForDebugging() {
-    if (ES3.contains(this)) {
-      return "es3";
-    }
-    if (ES5.contains(this)) {
-      return "es5";
-    }
-    if (ES6_MODULES.contains(this)) {
-      return "es6";
-    }
-    if (ES7_MODULES.contains(this)) {
-      return "es7";
-    }
-    if (ES8_MODULES.contains(this)) {
-      return "es8";
-    }
-    if (ES2018_MODULES.contains(this)) {
-      return "es9";
-    }
-    if (ES2019_MODULES.contains(this)) {
-      return "es_2019";
-    }
-    if (ES2020_MODULES.contains(this)) {
-      return "es_2020";
-    }
-    // Note that this method will not return "es_next" when ES_NEXT contains only features that
-    // are part of an official ES spec release. It will return the name of that release instead.
-    if (ES_NEXT.contains(this)) {
-      return "es_next";
-    }
-    if (ES_NEXT_IN.contains(this)) {
-      return "es_next_in";
-    }
-    // Note that this method will not return "es_unsupported" when ES_UNSUPPORTED
-    // contains the same features as ES_NEXT. It will return es_next.
-    if (ES_UNSUPPORTED.contains(this)) {
-      return "es_unsupported";
-    }
-    if (TYPESCRIPT.contains(this)) {
-      return "ts";
-    }
-    if (TS_UNSUPPORTED.contains(this)) {
-      return "ts_unsupported";
-    }
-    throw new IllegalStateException(this.toString());
+    return version();
   }
 
   public FeatureSet without(Feature featureToRemove, Feature... moreFeaturesToRemove) {
