@@ -1024,9 +1024,6 @@ public class CompilerOptions implements Serializable {
   /** Charset to use when generating code. If null, then output ASCII. */
   transient Charset outputCharset;
 
-  /** Transitional option. */
-  boolean enforceAccessControlCodingConventions;
-
   /** When set, assume that apparently side-effect free code is meaningful. */
   private boolean protectHiddenSideEffects;
 
@@ -2715,7 +2712,6 @@ public class CompilerOptions implements Serializable {
         .add("devMode", devMode)
         .add("disambiguateProperties", disambiguateProperties)
         .add("enableModuleRewriting", enableModuleRewriting)
-        .add("enforceAccessControlCodingConventions", enforceAccessControlCodingConventions)
         .add("environment", getEnvironment())
         .add("errorFormat", errorFormat)
         .add("errorHandler", errorHandler)

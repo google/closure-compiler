@@ -218,15 +218,15 @@ public class DiagnosticGroups {
           CheckJSDocStyle.UNDERSCORE_DIAGNOSTICS);
 
   public static final DiagnosticGroup VISIBILITY =
-      DiagnosticGroups.registerGroup("visibility",
+      DiagnosticGroups.registerGroup(
+          "visibility",
           CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS,
           CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS,
           CheckAccessControls.BAD_PACKAGE_PROPERTY_ACCESS,
           CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
           CheckAccessControls.EXTEND_FINAL_CLASS,
           CheckAccessControls.PRIVATE_OVERRIDE,
-          CheckAccessControls.VISIBILITY_MISMATCH,
-          CheckAccessControls.CONVENTION_MISMATCH);
+          CheckAccessControls.VISIBILITY_MISMATCH);
 
   // TODO(tbreisacher): Deprecate this and keep just the "visibility" group.
   public static final DiagnosticGroup ACCESS_CONTROLS =

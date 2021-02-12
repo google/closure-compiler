@@ -123,8 +123,5 @@ public enum WarningLevel {
     // Kindly tell the user that they have JsDocs that we don't understand.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
         CheckLevel.WARNING);
-
-    // Transitional.
-    options.enforceAccessControlCodingConventions = true;
   }
 }

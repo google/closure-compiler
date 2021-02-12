@@ -78,24 +78,21 @@ public final class AccessControlUtils {
   }
 
   /**
-   * Returns the effective visibility of the given property. This can differ
-   * from the property's declared visibility if the property is inherited from
-   * a superclass, or if the file's {@code @fileoverview} JsDoc specifies
-   * a default visibility.
+   * Returns the effective visibility of the given property. This can differ from the property's
+   * declared visibility if the property is inherited from a superclass, or if the file's
+   * {@code @fileoverview} JsDoc specifies a default visibility.
    *
    * @param property The property to compute effective visibility for.
    * @param referenceType The JavaScript type of the property.
-   * @param fileVisibilityMap A map of {@code @fileoverview} visibility
-   *     annotations, used to compute the property's default visibility.
-   * @param codingConvention The coding convention in effect (if any),
-   *     used to determine whether the property is private by lexical convention
-   *     (example: trailing underscore).
+   * @param fileVisibilityMap A map of {@code @fileoverview} visibility annotations, used to compute
+   *     the property's default visibility.
+   * @param codingConvention The coding convention in effect (if any), used to determine whether the
+   *     property is private by lexical convention (example: trailing underscore).
    */
   static Visibility getEffectivePropertyVisibility(
       Node property,
       ObjectType referenceType,
-      ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap,
-      @Nullable CodingConvention codingConvention) {
+      ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {
     String propertyName = property.getLastChild().getString();
     StaticSourceFile definingSource = getDefiningSource(
         property, referenceType, propertyName);
@@ -110,10 +107,10 @@ public final class AccessControlUtils {
       Visibility overridden = getOverriddenPropertyVisibility(
           objectType, propertyName);
       return getEffectiveVisibilityForOverriddenProperty(
-          overridden, fileOverviewVisibility, propertyName, codingConvention);
+          overridden, fileOverviewVisibility, propertyName);
     } else {
       return getEffectiveVisibilityForNonOverriddenProperty(
-          property, objectType, fileOverviewVisibility, codingConvention);
+          property, objectType, fileOverviewVisibility);
     }
   }
 
@@ -164,13 +161,7 @@ public final class AccessControlUtils {
    * inherits the visibility of the property it overrides.
    */
   static Visibility getEffectiveVisibilityForOverriddenProperty(
-      Visibility visibility,
-      @Nullable Visibility fileOverviewVisibility,
-      String propertyName,
-      @Nullable CodingConvention codingConvention) {
-    if (codingConvention != null && codingConvention.isPrivate(propertyName)) {
-      return Visibility.PRIVATE;
-    }
+      Visibility visibility, @Nullable Visibility fileOverviewVisibility, String propertyName) {
     return (fileOverviewVisibility != null
         && visibility == Visibility.INHERITED)
         ? fileOverviewVisibility
@@ -178,20 +169,13 @@ public final class AccessControlUtils {
   }
 
   /**
-   * Returns the effective visibility of the given non-overridden property.
-   * Non-overridden properties without an explicit visibility annotation
-   * receive the default visibility declared in the file's {@code @fileoverview}
-   * block, if one exists.
+   * Returns the effective visibility of the given non-overridden property. Non-overridden
+   * properties without an explicit visibility annotation receive the default visibility declared in
+   * the file's {@code @fileoverview} block, if one exists.
    */
   private static Visibility getEffectiveVisibilityForNonOverriddenProperty(
-      Node getprop,
-      ObjectType objectType,
-      @Nullable Visibility fileOverviewVisibility,
-      @Nullable CodingConvention codingConvention) {
+      Node getprop, ObjectType objectType, @Nullable Visibility fileOverviewVisibility) {
     String propertyName = getprop.getLastChild().getString();
-    if (codingConvention != null && codingConvention.isPrivate(propertyName)) {
-      return Visibility.PRIVATE;
-    }
     Visibility raw = Visibility.INHERITED;
     if (objectType != null) {
       raw = objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility();

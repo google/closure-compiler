@@ -1924,7 +1924,7 @@ public final class SymbolTable {
         ObjectType referenceType = ObjectType.cast(jsType.dereference());
         Visibility v =
             AccessControlUtils.getEffectivePropertyVisibility(
-                getprop, referenceType, fileVisibilityMap, codingConvention);
+                getprop, referenceType, fileVisibilityMap);
         if (v == null) {
           return;
         }

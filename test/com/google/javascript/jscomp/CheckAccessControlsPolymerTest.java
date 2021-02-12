@@ -52,7 +52,7 @@ public final class CheckAccessControlsPolymerTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CheckAccessControls(compiler, true);
+    return new CheckAccessControls(compiler);
   }
 
   @Override

@@ -1811,9 +1811,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory checkAccessControls =
       PassFactory.builderForHotSwap()
           .setName("checkAccessControls")
-          .setInternalFactory(
-              (compiler) ->
-                  new CheckAccessControls(compiler, options.enforceAccessControlCodingConventions))
+          .setInternalFactory((compiler) -> new CheckAccessControls(compiler))
           .setFeatureSetForChecks()
           .build();
 

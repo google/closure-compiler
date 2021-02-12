@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROPERTY_OVER
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_DELETED;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE;
-import static com.google.javascript.jscomp.CheckAccessControls.CONVENTION_MISMATCH;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_CLASS_REASON;
 import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME;
@@ -75,7 +74,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CheckAccessControls(compiler, true);
+    return new CheckAccessControls(compiler);
   }
 
   @Override
@@ -454,9 +453,9 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testPrivateAccessForNames2() {
-    // Private by convention
+    // Not private by convention
     testSame("function foo_() {}; foo_();");
-    testError(srcs("function foo_() {};", "foo_();"), BAD_PRIVATE_GLOBAL_ACCESS);
+    testSame(srcs("function foo_() {};", "foo_();"));
   }
 
   @Test
@@ -2204,109 +2203,41 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPrivatePropertyByConvention1() {
-    testError(
+  public void testNoPrivatePropertyByConvention1() {
+    testSame(
         srcs(
             "/** @constructor */ function Foo() {}\n"
                 + "/** @type {number} */ Foo.prototype.length_;\n",
-            "/** @param {?Foo} x */ function f(x) { return x.length_; }\n"),
-        BAD_PRIVATE_PROPERTY_ACCESS);
+            "/** @param {?Foo} x */ function f(x) { return x.length_; }\n"));
   }
 
   @Test
-  public void testPrivatePropertyByConvention2() {
-    testError(
+  public void testNoPrivatePropertyByConvention2() {
+    testSame(
         srcs(
             "/** @constructor */ function Foo() {\n"
                 + "  /** @type {number} */ this.length_ = 1;\n"
                 + "}\n"
                 + "/** @type {number} */ Foo.prototype.length_;\n",
-            "/** @param {Foo} x */ function f(x) { return x.length_; }\n"),
-        BAD_PRIVATE_PROPERTY_ACCESS);
+            "/** @param {Foo} x */ function f(x) { return x.length_; }\n"));
   }
 
   @Test
   public void testDeclarationAndConventionConflict1() {
-    testError(
-        "/** @constructor */ function Foo() {} /** @protected */ Foo.prototype.length_;",
-        CONVENTION_MISMATCH);
+    // "private" convention is no longer recognized
+    testSame("/** @constructor */ function Foo() {} /** @protected */ Foo.prototype.length_;");
   }
 
   @Test
   public void testDeclarationAndConventionConflict2() {
-    testError(
-        "/** @constructor */ function Foo() {}\n"
-            + "/** @public {number} */ Foo.prototype.length_;\n",
-        CONVENTION_MISMATCH);
+    // "private" convention is no longer recognized
+    testSame("/** @constructor */ function Foo() {  /** @protected */ this.length_ = 1;\n}\n");
   }
 
   @Test
   public void testDeclarationAndConventionConflict3() {
-    testError(
-        "/** @constructor */ function Foo() {  /** @protected */ this.length_ = 1;\n}\n",
-        CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict4a() {
-
-    testError(
-        "/** @constructor */ function Foo() {}"
-            + "Foo.prototype = { /** @protected */ length_: 1 }\n"
-            + "new Foo().length_",
-        CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict4b() {
-
-    testError(
-        "/** @const */ var NS = {}; /** @constructor */ NS.Foo = function() {};"
-            + "NS.Foo.prototype = { /** @protected */ length_: 1 };\n"
-            + "(new NS.Foo()).length_;",
-        CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict5() {
-
-    testError(
-        "/** @constructor */ function Foo() {}\n"
-            + "Foo.prototype = { /** @protected */ get length_() { return 1; } }\n",
-        CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict6() {
-
-    testError(
-        "/** @constructor */ function Foo() {}\n"
-            + "Foo.prototype = { /** @protected */ set length_(x) { } }\n",
-        CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict7() {
-    testError("/** @public */ var Foo_;", CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict8() {
-    testError("/** @package */ var Foo_;", CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict9() {
-    testError("/** @protected */ var Foo_;", CONVENTION_MISMATCH);
-  }
-
-  @Test
-  public void testDeclarationAndConventionConflict10() {
-    testError(
-        lines(
-            "/** @constructor */ function Foo() {}",
-            "Foo.prototype = { /** @protected */ length_() { return 1; } }"),
-        CONVENTION_MISMATCH);
+    // "private" convention is no longer recognized
+    testSame("/** @protected */ var Foo_;");
   }
 
   @Test
@@ -2366,13 +2297,12 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantPropertyByConvention_reassignmentWarns() {
-    testError(
+  public void testNoConstantPropertyByConvention() {
+    testSame(
         "/** @constructor */ function A() {"
-        + "this.BAR = 3;}"
-        + "/** @constructor */ function B() {"
-        + "this.BAR = 3;this.BAR += 4;}",
-        CONST_PROPERTY_REASSIGNED_VALUE);
+            + "this.BAR = 3;}"
+            + "/** @constructor */ function B() {"
+            + "this.BAR = 3;this.BAR += 4;}");
   }
 
   @Test
@@ -2386,13 +2316,12 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantPropertyByConventionOnPrototype_reassignmentWarns() {
-    testError(
+  public void testConstantPropertyByConventionOnPrototype_notEnforced() {
+    testSame(
         "/** @constructor */ function Foo() {}"
-        + "Foo.prototype.PROP = 2;"
-        + "var foo = new Foo();"
-        + "foo.PROP = 3;",
-        CONST_PROPERTY_REASSIGNED_VALUE);
+            + "Foo.prototype.PROP = 2;"
+            + "var foo = new Foo();"
+            + "foo.PROP = 3;");
   }
 
   @Test
@@ -2447,15 +2376,18 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantPropertyOnObjectLiteralByConvention_reassignmentWarns() {
-    testError(lines("var o = {", "  XYZ: 1", " };", "o.XYZ = 2;"), CONST_PROPERTY_REASSIGNED_VALUE);
+  public void testConstantPropertyOnObjectLiteralByConvention_notEnforced() {
+    testSame(lines("var o = {", "  XYZ: 1", " };", "o.XYZ = 2;"));
   }
 
   @Test
-  public void testConstantPropertyOnConstObjectLiteralByConvention_reassignmentWarns() {
-    testError(
-        lines("/** @const */ var o = {", "  XYZ: 1", "};", "o.XYZ = 2;"),
-        CONST_PROPERTY_REASSIGNED_VALUE);
+  public void testConstantPropertyOnConstObjectLiteralByConvention_notEnforced() {
+    testSame(
+        lines(
+            "/** @const */ var o = {", //
+            "  XYZ: 1",
+            "};",
+            "o.XYZ = 2;"));
   }
 
   @Test
@@ -2469,11 +2401,11 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   @Test
   public void testConstantProperty4b() {
-    testError(
-        "/** @constructor */ function cat(name) {}"
-        + "cat.TEST = 1;"
-        + "cat.TEST *= 2;",
-        CONST_PROPERTY_REASSIGNED_VALUE);
+    testSame(
+        lines(
+            "/** @constructor */ function cat(name) {}", //
+            "cat.TEST = 1;",
+            "cat.TEST *= 2;"));
   }
 
   @Test
@@ -2600,39 +2532,36 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantProperty15a() {
-    testError(
+  public void testConstantProperty_convention_not_enforced1() {
+    testSame(
         "/** @constructor */ function Foo() { this.CONST = 100; };\n"
-        + "/** @type {Foo} */\n"
-        + "var foo = new Foo();\n"
-        + "/** @type {number} */\n"
-        + "foo.CONST = 0;",
-        CONST_PROPERTY_REASSIGNED_VALUE);
+            + "/** @type {Foo} */\n"
+            + "var foo = new Foo();\n"
+            + "/** @type {number} */\n"
+            + "foo.CONST = 0;");
   }
 
   @Test
-  public void testConstantProperty15b() {
-    testError(
+  public void testConstantProperty_convention_not_enforced2() {
+    testSame(
         "/** @constructor */ function Foo() {};\n"
-        + "Foo.prototype.CONST = 100;\n"
-        + "/** @type {Foo} */\n"
-        + "var foo = new Foo();\n"
-        + "/** @type {number} */\n"
-        + "foo.CONST = 0;",
-        CONST_PROPERTY_REASSIGNED_VALUE);
+            + "Foo.prototype.CONST = 100;\n"
+            + "/** @type {Foo} */\n"
+            + "var foo = new Foo();\n"
+            + "/** @type {number} */\n"
+            + "foo.CONST = 0;");
   }
 
   @Test
-  public void testConstantProperty15c() {
-    testError(
+  public void testConstantProperty_convention_not_enforced3() {
+    testSame(
         ""
-        + "/** @constructor */ function Bar() {this.CONST = 100;};\n"
-        + "/** @constructor \n @extends {Bar} */ function Foo() {};\n"
-        + "/** @type {Foo} */\n"
-        + "var foo = new Foo();\n"
-        + "/** @type {number} */\n"
-        + "foo.CONST = 0;",
-        CONST_PROPERTY_REASSIGNED_VALUE);
+            + "/** @constructor */ function Bar() {this.CONST = 100;};\n"
+            + "/** @constructor \n @extends {Bar} */ function Foo() {};\n"
+            + "/** @type {Foo} */\n"
+            + "var foo = new Foo();\n"
+            + "/** @type {number} */\n"
+            + "foo.CONST = 0;");
   }
 
   @Test
@@ -2730,16 +2659,15 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testConstantPropertyOnStructuralInterfaceByConvention_reassignmentWarns() {
-    testError(
+  public void testConstantPropertyOnStructuralInterfaceByConvention_noReassignmentWarns() {
+    testSame(
         lines(
             "/** @record */",
             "function Foo() {",
             "  /** @type {number} */ this.BAR;",
             "}",
             "var /** !Foo */ foo = {BAR: 1};",
-            "foo.BAR = 2;"),
-        CONST_PROPERTY_REASSIGNED_VALUE);
+            "foo.BAR = 2;"));
   }
 
   @Test

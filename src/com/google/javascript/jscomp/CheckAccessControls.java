@@ -123,14 +123,8 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         "JSC_CONSTANT_PROPERTY_DELETED",
         "constant property {0} cannot be deleted");
 
-  static final DiagnosticType CONVENTION_MISMATCH =
-      DiagnosticType.warning(
-          "JSC_CONVENTION_MISMATCH",
-          "Declared access conflicts with access convention.");
-
   private final AbstractCompiler compiler;
   private final JSTypeRegistry typeRegistry;
-  private final boolean enforceCodingConventions;
 
   // State about the current traversal.
   private int deprecationDepth = 0;
@@ -142,13 +136,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
   private final Multimap<JSType, String> initializedConstantProperties;
 
-
-  CheckAccessControls(
-      AbstractCompiler compiler, boolean enforceCodingConventions) {
+  CheckAccessControls(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();
     this.initializedConstantProperties = HashMultimap.create();
-    this.enforceCodingConventions = enforceCodingConventions;
   }
 
   @Override
@@ -398,24 +389,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       checkNameVisibility(scope, node);
     }
 
-    if (node.getParent().isObjectLit()) {
-      // TODO(b/80580110): Eventually object literals should be covered by `PropertyReference`s.
-      // However, doing so initially would have caused too many errors in existing code and
-      // delayed support for class syntax.
-
-      switch (node.getToken()) {
-        case STRING_KEY:
-        case GETTER_DEF:
-        case SETTER_DEF:
-        case MEMBER_FUNCTION_DEF:
-          checkKeyVisibilityConvention(node, node.getParent());
-          break;
-
-        default:
-          break;
-      }
-    }
-
     if (propRef != null && !identifierBehaviour.equals(IdentifierBehaviour.ES5_CLASS_NAMESPACE)) {
       checkPropertyVisibility(propRef);
     }
@@ -505,41 +478,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     }
   }
 
-  private boolean isPrivateByConvention(String name) {
-    return enforceCodingConventions
-        && compiler.getCodingConvention().isPrivate(name);
-  }
-
-  /**
-   * Determines whether the given OBJECTLIT property visibility violates the coding convention.
-   *
-   * @param key The objectlit key node (STRING_KEY, GETTER_DEF, SETTER_DEF, MEMBER_FUNCTION_DEF).
-   */
-  private void checkKeyVisibilityConvention(Node key, Node parent) {
-    JSDocInfo info = key.getJSDocInfo();
-    if (info == null) {
-      return;
-    }
-    if (!isPrivateByConvention(key.getString())) {
-      return;
-    }
-    Node assign = parent.getParent();
-    if (assign == null || !assign.isAssign()) {
-      return;
-    }
-    Node left = assign.getFirstChild();
-    if (!left.isGetProp()
-        || !left.getLastChild().getString().equals("prototype")) {
-      return;
-    }
-    Visibility declaredVisibility = info.getVisibility();
-    // Visibility is declared to be something other than private.
-    if (declaredVisibility != Visibility.INHERITED
-        && declaredVisibility != Visibility.PRIVATE) {
-      compiler.report(JSError.make(key, CONVENTION_MISMATCH));
-    }
-  }
-
   /**
    * Reports an error if the given name is not visible in the current context.
    *
@@ -556,9 +494,8 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       return;
     }
 
-    Visibility v = checkPrivateNameConvention(
-        AccessControlUtils.getEffectiveNameVisibility(
-            name, var, defaultVisibilityForFiles), name);
+    Visibility v =
+        AccessControlUtils.getEffectiveNameVisibility(name, var, defaultVisibilityForFiles);
 
     switch (v) {
       case PACKAGE:
@@ -586,22 +523,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         // (which is irrelevant for names).
         break;
     }
-  }
-
-  /**
-   * Returns the effective visibility of the given name, reporting an error
-   * if there is a contradiction in the various sources of visibility
-   * (example: a variable with a trailing underscore that is declared
-   * {@code @public}).
-   */
-  private Visibility checkPrivateNameConvention(Visibility v, Node name) {
-    if (isPrivateByConvention(name.getString())) {
-      if (v != Visibility.PRIVATE && v != Visibility.INHERITED) {
-        compiler.report(JSError.make(name, CONVENTION_MISMATCH));
-      }
-      return Visibility.PRIVATE;
-    }
-    return v;
   }
 
   private static boolean isPrivateAccessAllowed(Var var, Node name) {
@@ -799,12 +720,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
     ObjectType referenceType = castToObject(rawReferenceType);
 
     String propertyName = propRef.getName();
-    boolean isPrivateByConvention = isPrivateByConvention(propertyName);
-
-    if (isPrivateByConvention && propertyIsDeclaredButNotPrivate(propRef)) {
-      compiler.report(JSError.make(propRef.getSourceNode(), CONVENTION_MISMATCH));
-      return;
-    }
 
     StaticSourceFile definingSource =
         AccessControlUtils.getDefiningSource(propRef.getSourceNode(), referenceType, propertyName);
@@ -820,11 +735,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         defaultVisibilityForFiles.get(definingSource);
 
     Visibility visibility =
-        getEffectivePropertyVisibility(
-            propRef,
-            referenceType,
-            defaultVisibilityForFiles,
-            enforceCodingConventions ? compiler.getCodingConvention() : null);
+        getEffectivePropertyVisibility(propRef, referenceType, defaultVisibilityForFiles);
 
     if (isOverride) {
       Visibility overriding = getOverridingPropertyVisibility(propRef);
@@ -843,7 +754,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       }
       reportType = objectType;
       definingSource = node.getStaticSourceFile();
-    } else if (!isPrivateByConvention && fileOverviewVisibility == null) {
+    } else if (fileOverviewVisibility == null) {
       // We can only check visibility references if we know what file
       // it was defined in.
       // Otherwise just assume the property is public.
@@ -900,10 +811,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         // This function defaults to `INHERITED` which isn't what we want here, but it does handle
         // combining inline and `@fileoverview` visibilities.
         getEffectiveVisibilityForNonOverriddenProperty(
-            fauxCtorRef,
-            prototypeType,
-            defaultVisibilityForFiles.get(definingSource),
-            enforceCodingConventions ? compiler.getCodingConvention() : null);
+            fauxCtorRef, prototypeType, defaultVisibilityForFiles.get(definingSource));
     Visibility effectiveCtorVisibility =
         annotatedCtorVisibility.equals(Visibility.INHERITED)
             ? Visibility.PUBLIC
@@ -915,19 +823,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
         ctorType,
         target.getStaticSourceFile(),
         definingSource);
-  }
-
-  private static boolean propertyIsDeclaredButNotPrivate(PropertyReference propRef) {
-    if (!propRef.isDocumentedDeclaration() && !propRef.isOverride()) {
-      return false;
-    }
-
-    Visibility declaredVisibility = propRef.getJSDocInfo().getVisibility();
-    if (declaredVisibility == Visibility.PRIVATE || declaredVisibility == Visibility.INHERITED) {
-      return false;
-    }
-
-    return true;
   }
 
   private void checkPropertyOverrideVisibility(
@@ -1167,10 +1062,6 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
    */
   private boolean isPropertyDeclaredConstant(
       ObjectType objectType, String prop) {
-    if (enforceCodingConventions
-        && compiler.getCodingConvention().isConstant(prop)) {
-      return true;
-    }
     for (; objectType != null; objectType = objectType.getImplicitPrototype()) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(prop);
       if (docInfo != null && docInfo.isConstant()) {
@@ -1491,8 +1382,7 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   static Visibility getEffectivePropertyVisibility(
       PropertyReference propRef,
       ObjectType referenceType,
-      ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap,
-      @Nullable CodingConvention codingConvention) {
+      ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {
     String propertyName = propRef.getName();
     boolean isOverride = propRef.isOverride();
 
@@ -1506,10 +1396,10 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
       Visibility overridden =
           AccessControlUtils.getOverriddenPropertyVisibility(objectType, propertyName);
       return AccessControlUtils.getEffectiveVisibilityForOverriddenProperty(
-          overridden, fileOverviewVisibility, propertyName, codingConvention);
+          overridden, fileOverviewVisibility, propertyName);
     } else {
       return getEffectiveVisibilityForNonOverriddenProperty(
-          propRef, objectType, fileOverviewVisibility, codingConvention);
+          propRef, objectType, fileOverviewVisibility);
     }
   }
 
@@ -1524,12 +1414,8 @@ class CheckAccessControls implements Callback, HotSwapCompilerPass {
   private static Visibility getEffectiveVisibilityForNonOverriddenProperty(
       PropertyReference propRef,
       ObjectType objectType,
-      @Nullable Visibility fileOverviewVisibility,
-      @Nullable CodingConvention codingConvention) {
+      @Nullable Visibility fileOverviewVisibility) {
     String propertyName = propRef.getName();
-    if (codingConvention != null && codingConvention.isPrivate(propertyName)) {
-      return Visibility.PRIVATE;
-    }
     Visibility raw = Visibility.INHERITED;
     if (objectType != null) {
       JSDocInfo jsdoc = objectType.getOwnPropertyJSDocInfo(propertyName);

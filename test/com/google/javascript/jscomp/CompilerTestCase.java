@@ -1573,7 +1573,7 @@ public abstract class CompilerTestCase {
         }
 
         if (checkAccessControls) {
-          (new CheckAccessControls(compiler, false)).process(externsRoot, mainRoot);
+          (new CheckAccessControls(compiler)).process(externsRoot, mainRoot);
         }
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
