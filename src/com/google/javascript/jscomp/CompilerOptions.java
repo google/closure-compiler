@@ -1128,7 +1128,7 @@ public class CompilerOptions implements Serializable {
           // resulting in a reported path of "some/file.js". For generated files, we only strip the
           // first two segments, leaving "genfiles/some/file.js".
           Pattern.compile(
-              "^((.*/)?google3/)?((^/)?(blaze|bazel)-out/[^/]+/(bin/|(?=genfiles/)))?"));
+              "^((.*/)?google3/)?(/?(blaze|bazel)-out/[^/]+/(bin/|(?=genfiles/)))?"));
 
   public void setConformanceRemoveRegexFromPath(Optional<Pattern> pattern) {
     conformanceRemoveRegexFromPath = pattern;

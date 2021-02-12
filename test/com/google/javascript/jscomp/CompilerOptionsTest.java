@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -127,5 +128,26 @@ public final class CompilerOptionsTest {
     assertThat(options.shouldAmbiguateProperties()).isFalse();
     assertThat(options.optimizeArgumentsArray).isTrue();
     assertThat(options.getOutputCharset()).isEqualTo(US_ASCII);
+  }
+
+  @Test
+  public void testRemoveRegexFromPath() {
+    CompilerOptions options = new CompilerOptions();
+    Pattern pattern = options.getConformanceRemoveRegexFromPath().get();
+    assertThat(pattern.matcher("/blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
+        .isEqualTo("some/path");
+    assertThat(pattern.matcher("blaze-out/k8-fastbin/bin/some/path").replaceAll(""))
+        .isEqualTo("some/path");
+    assertThat(pattern.matcher("google3/bazel-out/k8-fastbin/bin/some/path").replaceAll(""))
+        .isEqualTo("some/path");
+    assertThat(pattern.matcher("google3/blaze-out/k8-fastbin/genfiles/some/path").replaceAll(""))
+        .isEqualTo("genfiles/some/path");
+    assertThat(pattern.matcher("somethin/google3/blaze-out/k8-fastbin/some/path").replaceAll(""))
+        .isEqualTo("blaze-out/k8-fastbin/some/path");
+
+    assertThat(pattern.matcher("google3/foo/blaze-out/some/path").replaceAll(""))
+        .isEqualTo("foo/blaze-out/some/path");
+    assertThat(pattern.matcher("google3/blaze-out/foo/blaze-out/some/path").replaceAll(""))
+        .isEqualTo("blaze-out/foo/blaze-out/some/path");
   }
 }
