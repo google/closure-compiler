@@ -513,11 +513,6 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
-    // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
-    if (!options.allowsHotswapReplaceScript()) {
-      passes.add(inlineTypeAliases);
-    }
-
     // i18n
     // If you want to customize the compiler to use a different i18n pass,
     // you can create a PassConfig that calls replacePassFactory
@@ -530,13 +525,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Defines in code always need to be processed.
     passes.add(processDefinesOptimize);
-
-    if (options.getTweakProcessing().shouldStrip()
-        || !options.stripTypes.isEmpty()
-        || !options.stripNameSuffixes.isEmpty()
-        || !options.stripNamePrefixes.isEmpty()) {
-      passes.add(stripCode);
-    }
 
     passes.add(normalize);
 
@@ -554,10 +542,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     passes.add(createEmptyPass(PassNames.BEFORE_STANDARD_OPTIMIZATIONS));
-
-    if (options.replaceIdGenerators) {
-      passes.add(replaceIdGenerators);
-    }
 
     // Optimizes references to the arguments variable.
     if (options.optimizeArgumentsArray) {
@@ -581,6 +565,20 @@ public final class DefaultPassConfig extends PassConfig {
         passes.add(convertStaticInheritance);
       }
       passes.add(aggressiveInlineAliases);
+    } else {
+      // TODO(b/124915436): Remove this pass completely after cleaning up the codebase.
+      passes.add(inlineTypeAliases);
+    }
+
+    if (options.getTweakProcessing().shouldStrip()
+        || !options.stripTypes.isEmpty()
+        || !options.stripNameSuffixes.isEmpty()
+        || !options.stripNamePrefixes.isEmpty()) {
+      passes.add(stripCode);
+    }
+
+    if (options.replaceIdGenerators) {
+      passes.add(replaceIdGenerators);
     }
 
     // Inline getters/setters in J2CL classes so that Object.defineProperties() calls (resulting
