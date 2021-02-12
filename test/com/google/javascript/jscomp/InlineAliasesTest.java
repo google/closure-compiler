@@ -246,12 +246,6 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   @Test
-  public void testPrivateVariablesAreNotInlined() {
-    testSame("/** @private */ var x = 0; var /** @const */ alias = x; var y = alias;");
-    testSame("var x_ = 0; var /** @const */ alias = x_; var y = alias;");
-  }
-
-  @Test
   public void testShadowedAliasesNotRenamed() {
     testSame(
         lines(

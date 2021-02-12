@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.ExternsSkippingCallback;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -99,8 +98,7 @@ final class InlineAliases implements CompilerPass {
           if (lhsName != null
               && lhsName.calculateInlinability().shouldInlineUsages()
               && rhsName != null
-              && rhsName.calculateInlinability().shouldInlineUsages()
-              && !isPrivate(rhsName.getDeclaration().getNode())) {
+              && rhsName.calculateInlinability().shouldInlineUsages()) {
             aliases.put(lhs.getQualifiedName(), rhs.getQualifiedName());
           }
         }
@@ -112,15 +110,6 @@ final class InlineAliases implements CompilerPass {
         return true;
       }
       return lhs.getParent().isConst();
-    }
-
-    private boolean isPrivate(Node nameNode) {
-      if (nameNode.isQualifiedName()
-          && compiler.getCodingConvention().isPrivate(nameNode.getQualifiedName())) {
-        return true;
-      }
-      JSDocInfo info = NodeUtil.getBestJSDocInfo(nameNode);
-      return info != null && info.getVisibility().equals(Visibility.PRIVATE);
     }
   }
 
