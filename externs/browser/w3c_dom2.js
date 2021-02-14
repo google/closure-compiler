@@ -435,6 +435,13 @@ HTMLElement.prototype.dir;
 HTMLElement.prototype.className;
 
 /**
+ * @return {undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/click
+ * @override
+ */
+HTMLElement.prototype.click = function() {};
+
+/**
  * @type {number}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-40676705
  */
