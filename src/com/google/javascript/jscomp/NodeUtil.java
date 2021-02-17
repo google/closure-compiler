@@ -2873,7 +2873,7 @@ public final class NodeUtil {
   }
 
   static boolean isFunctionBlock(Node n) {
-    return n.isBlock() && n.getParent() != null && n.getParent().isFunction();
+    return n.isBlock() && n.hasParent() && n.getParent().isFunction();
   }
 
   /**
@@ -5394,7 +5394,7 @@ public final class NodeUtil {
         && n.getFirstChild().matchesQualifiedName("goog.loadModule"))) {
       return false;
     }
-    return n.getParent() != null
+    return n.hasParent()
         && n.getParent().isExprResult()
         && n.getGrandparent() != null
         && n.getGrandparent().isScript();

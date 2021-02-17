@@ -77,7 +77,7 @@ public final class AstValidator implements CompilerPass {
                     + ". Reference node:\n"
                     + n.toStringTree()
                     + "\n Parent node:\n"
-                    + ((n.getParent() != null) ? n.getParent().toStringTree() : " no parent "));
+                    + (n.hasParent() ? n.getParent().toStringTree() : " no parent "));
           }
         },
         validateScriptFeatures);

@@ -381,7 +381,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
   private Node getBaseQualifiedNameNode(Node n) {
     Node refParent = n;
-    while (refParent.getParent() != null && refParent.getParent().isQualifiedName()) {
+    while (refParent.hasParent() && refParent.getParent().isQualifiedName()) {
       refParent = refParent.getParent();
     }
 
@@ -964,7 +964,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // then block rather than the "if" itself.
           if (parent.isIf()
               && parent.getSecondChild() == n
-              && parent.getParent() != null
+              && parent.hasParent()
               && parent.getParent().isBlock()
               && parent.getNext() == null
               && umdTestInfo.activeBranch == parent.getParent()) {
@@ -1480,7 +1480,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && root.getGrandparent().isExprResult()
           && rValueVar != null
           && (NodeUtil.getEnclosingScript(rValueVar.getNameNode()) == null
-              || (rValueVar.getNameNode().getParent() != null && !rValueVar.isParam()))
+              || (rValueVar.getNameNode().hasParent() && !rValueVar.isParam()))
           && export.isInSupportedScope
           && (rValueVar.getNameNode().getParent() == null
               || !NodeUtil.isLhsByDestructuring(rValueVar.getNameNode()))) {
@@ -1600,7 +1600,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         visitExport(t, newExport);
 
         // Export statements can be removed in visitExport
-        if (expr != null && expr.getParent() != null) {
+        if (expr != null && expr.hasParent()) {
           insertionRef = expr;
         }
 
@@ -1635,7 +1635,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     private void maybeUpdateName(NodeTraversal t, Node n, Var var) {
       checkNotNull(var);
       checkState(n.isName() || n.isGetProp());
-      checkState(n.getParent() != null);
+      checkState(n.hasParent());
       String importedModuleName = getModuleImportName(t, var.getNode());
       String name = n.getQualifiedName();
 

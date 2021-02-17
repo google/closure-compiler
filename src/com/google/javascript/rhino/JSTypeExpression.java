@@ -107,7 +107,7 @@ public final class JSTypeExpression implements Serializable {
     if (n.isString() && names.contains(n.getString())) {
       Node qMark = new Node(Token.QMARK);
       qMark.addChildrenToBack(n.removeChildren());
-      if (n.getParent() != null) {
+      if (n.hasParent()) {
         n.replaceWith(qMark);
       }
       return qMark;

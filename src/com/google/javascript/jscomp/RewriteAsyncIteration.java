@@ -498,7 +498,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     String iteratorTempName = FOR_AWAIT_ITERATOR_TEMP_NAME + forAwaitId;
     String resultTempName = FOR_AWAIT_RESULT_TEMP_NAME + forAwaitId;
 
-    checkState(forAwaitOf.getParent() != null, "Cannot replace parentless for-await-of");
+    checkState(forAwaitOf.hasParent(), "Cannot replace parentless for-await-of");
 
     Node lhs = forAwaitOf.removeFirstChild();
     Node rhs = forAwaitOf.removeFirstChild();

@@ -466,7 +466,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     checkArgument(externsRoot == null || externsRoot.isRoot(), externsRoot);
     checkArgument(jsRoot.isRoot(), jsRoot);
 
-    checkState(jsRoot.getParent() != null && jsRoot.getParent().isRoot(), jsRoot.getParent());
+    checkState(jsRoot.hasParent() && jsRoot.getParent().isRoot(), jsRoot.getParent());
     checkState(
         externsRoot == null || externsRoot.getNext() == jsRoot,
         "externs root must be the preceding sibling of the js root");

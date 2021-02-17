@@ -1812,6 +1812,10 @@ public class Node implements Serializable {
     return parent;
   }
 
+  public final boolean hasParent() {
+    return parent != null;
+  }
+
   @Nullable
   public final Node getGrandparent() {
     return parent == null ? null : parent.parent;

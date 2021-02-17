@@ -207,7 +207,7 @@ public class ChangeVerifier {
       }
     }
 
-    if (thisNode.getParent() != null && thisNode.getParent().isParamList()) {
+    if (thisNode.hasParent() && thisNode.getParent().isParamList()) {
       if (thisNode.isUnusedParameter() != thatNode.isUnusedParameter()) {
         return false;
       }

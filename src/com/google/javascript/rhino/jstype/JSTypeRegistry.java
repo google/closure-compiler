@@ -2158,7 +2158,7 @@ public class JSTypeRegistry implements Serializable {
       // Template types represent the substituted type exactly and should
       // not be wrapped.
       return type;
-    } else if (n.getParent() != null && n.getParent().getToken() == Token.BANG) {
+    } else if (n.hasParent() && n.getParent().getToken() == Token.BANG) {
       // Names parsed from beneath a BANG never need nullability added.
       return type;
     } else {

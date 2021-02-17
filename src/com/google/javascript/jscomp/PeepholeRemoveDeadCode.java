@@ -441,7 +441,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         break;
     }
 
-    if (expr.getParent() != null) {
+    if (expr.hasParent()) {
       expr.detach();
     }
 

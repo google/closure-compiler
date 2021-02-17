@@ -61,7 +61,7 @@ class MinimizedCondition {
    * minimization.
    */
   static MinimizedCondition fromConditionNode(Node n) {
-    checkState(n.getParent() != null);
+    checkState(n.hasParent());
     switch (n.getToken()) {
       case NOT:
       case AND:
@@ -366,7 +366,7 @@ class MinimizedCondition {
 
     /** Detach a node only IIF it is in the tree */
     private Node safeDetach(Node n) {
-      return (n.getParent() != null) ? n.detach() : n;
+      return n.hasParent() ? n.detach() : n;
     }
 
     /**

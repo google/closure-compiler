@@ -302,8 +302,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         if (NodeUtil.isLoopStructure(scopeRoot)) {
           loopNode = scopeRoot;
           break;
-        } else if (scopeRoot.getParent() != null
-            && NodeUtil.isLoopStructure(scopeRoot.getParent())) {
+        } else if (scopeRoot.hasParent() && NodeUtil.isLoopStructure(scopeRoot.getParent())) {
           loopNode = scopeRoot.getParent();
           break;
         } else if (s.isFunctionBlockScope() || s.isGlobal()) {

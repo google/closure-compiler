@@ -272,7 +272,7 @@ public class ConvertToTypedInterface implements CompilerPass {
         case FOR_AWAIT_OF:
         case IF:
         case SWITCH:
-          if (n.getParent() != null) {
+          if (n.hasParent()) {
             Node children = n.removeChildren();
             parent.addChildrenAfter(children, n);
             NodeUtil.removeChild(parent, n);

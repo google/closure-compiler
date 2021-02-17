@@ -48,7 +48,7 @@ final class BasicBlock implements Serializable {
 
     this.isFunction = root.isFunction();
 
-    if (root.getParent() != null) {
+    if (root.hasParent()) {
       Token pType = root.getParent().getToken();
       this.isLoop =
           pType == Token.DO

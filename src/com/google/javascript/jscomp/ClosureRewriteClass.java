@@ -316,7 +316,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   }
 
   private static Node maybeDetach(Node node) {
-    if (node != null && node.getParent() != null) {
+    if (node != null && node.hasParent()) {
       node.detach();
     }
     return node;

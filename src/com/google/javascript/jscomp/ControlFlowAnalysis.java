@@ -300,9 +300,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
           break;
       }
       // Don't traverse further in an arrow function expression
-      if (parent.getParent() != null
-          && parent.getParent().isArrowFunction()
-          && !parent.isBlock()) {
+      if (parent.hasParent() && parent.getParent().isArrowFunction() && !parent.isBlock()) {
         return false;
       }
     }
@@ -660,7 +658,7 @@ public final class ControlFlowAnalysis implements Callback, CompilerPass {
         }
         lastJump = cur;
       }
-      checkState(cur.getParent() != null, "Cannot find continue target.");
+      checkState(cur.hasParent(), "Cannot find continue target.");
       previous = cur;
     }
     Node iter = cur;

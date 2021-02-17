@@ -58,7 +58,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
         break;
 
       case BLOCK:
-        if (n.getParent() != null && n.getParent().isFunction()) {
+        if (n.hasParent() && n.getParent().isFunction()) {
           tryMinimizeExits(n, Token.RETURN, null);
         }
         break;
