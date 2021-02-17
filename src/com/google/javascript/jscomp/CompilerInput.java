@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -48,14 +49,14 @@ import java.util.TreeMap;
  */
 public class CompilerInput extends DependencyInfo.Base implements SourceAst {
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 2L;
 
   // Info about where the file lives.
   private JSModule module;
   private final InputId id;
 
-  // The AST.
-  private final SourceAst ast;
+  // The AST. Transient so we don't accidentally serialize RecoverableJsAst instances.
+  private transient SourceAst ast;
 
   // DependencyInfo to delegate to.
   private DependencyInfo dependencyInfo;
@@ -350,6 +351,22 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
           .setHasNoCompileAnnotation(info != null && info.isNoCompile())
           .build();
     }
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(java.io.ObjectOutputStream oos) throws IOException {
+    oos.defaultWriteObject();
+    SourceAst unwrappedAst = ast;
+    if (unwrappedAst instanceof RecoverableJsAst) {
+      unwrappedAst = ((RecoverableJsAst) unwrappedAst).unwrapRealSourceAst();
+    }
+    oos.writeObject(unwrappedAst);
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    ast = (SourceAst) in.readObject();
   }
 
   private static class DepsFinder {

@@ -1253,6 +1253,55 @@ public final class CompilerTest {
   }
 
   @Test
+  public void testCheckSaveRestoreRecoverableJsAst() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setCheckTypes(true);
+    options.setStrictModeInput(true);
+    options.setEmitUseStrict(true);
+    options.setPreserveDetailedSourceInfo(true);
+    options.setCheckTypes(true);
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    JSModule m = new JSModule("m");
+    SourceFile inputSourceFile =
+        SourceFile.fromCode(
+            "input.js",
+            Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"));
+    JsAst realAst = new JsAst(inputSourceFile);
+    m.add(new CompilerInput(new RecoverableJsAst(realAst, /* reportParseErrors = */ true)));
+    compiler.initModules(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "externs.js",
+                Joiner.on('\n').join("", "var console = {};", " console.log = function() {};"))),
+        ImmutableList.of(m),
+        options);
+
+    compiler.parse();
+    compiler.check();
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    compiler.saveState(byteArrayOutputStream);
+    byteArrayOutputStream.close();
+
+    compiler = new Compiler(new TestErrorManager());
+    compiler.options = options;
+    try (ByteArrayInputStream byteArrayInputStream =
+        new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
+      compiler.restoreState(byteArrayInputStream);
+    }
+
+    compiler.performOptimizations();
+    String source = compiler.toSource();
+    assertThat(source).isEqualTo("'use strict';console.log(2);");
+  }
+
+  @Test
   public void testStrictnessWithNonStrictOutputLanguage() {
     Compiler compiler = new Compiler(new TestErrorManager());
 

@@ -49,6 +49,13 @@ public class JsAst implements SourceAst {
     this.fileName = sourceFile.getName();
   }
 
+  JsAst cloneWithRoot(Node newRoot) {
+    JsAst cloned = new JsAst(sourceFile);
+    cloned.root = newRoot;
+    cloned.features = features;
+    return cloned;
+  }
+
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
     if (!isParsed()) {

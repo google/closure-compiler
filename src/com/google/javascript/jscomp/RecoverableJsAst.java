@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.JsAst.ParseResult;
 import com.google.javascript.jscomp.JsAst.RhinoError;
 import com.google.javascript.rhino.ErrorReporter;
@@ -73,6 +74,19 @@ public class RecoverableJsAst implements SourceAst {
     return checkNotNull(root);
   }
 
+  public SourceAst unwrapRealSourceAst() {
+    if (root == null) {
+      // If the AST root for this SourceAst hasn't been accessed, then all important data is already
+      // in the realSource. We can return it directly without losing data.
+      return realSource;
+    }
+    if (realSource instanceof JsAst) {
+      return ((JsAst) realSource).cloneWithRoot(root);
+    }
+    // Fail loudly if we cannot preserve the root node while returning the real source.
+    throw new UnsupportedOperationException();
+  }
+
   private void replay(AbstractCompiler compiler, ParseResult result) {
     ErrorReporter reporter = compiler.getDefaultErrorReporter();
     for (RhinoError error : result.errors) {
@@ -107,6 +121,13 @@ public class RecoverableJsAst implements SourceAst {
   public void setSourceFile(SourceFile file) {
     // Explicitly forbid this operation through this interface; this
     // RecoverableJsAst is a proxy view only.
+    throw new UnsupportedOperationException();
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(java.io.ObjectOutputStream oos) {
+    // Explicitly forbid this operation through this interface; serialization should use the "real"
+    // AST instead.
     throw new UnsupportedOperationException();
   }
 }
