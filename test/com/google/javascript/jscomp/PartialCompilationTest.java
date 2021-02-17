@@ -71,7 +71,6 @@ public class PartialCompilationTest {
         });
     CompilerOptions options = new CompilerOptions();
     options.setAssumeForwardDeclaredForMissingTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setStrictModeInput(true);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPreserveDetailedSourceInfo(true);

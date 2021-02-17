@@ -41,7 +41,6 @@ public class ReportBigIntLiteralTranspilationUnsupportedTest extends CompilerTes
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2020);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     return options;
   }

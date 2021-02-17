@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.JsMessage.Style;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -101,7 +100,6 @@ public final class JsMessageVisitorTest {
   @Test
   public void testJsMessageOnLet() {
     compilerOptions = new CompilerOptions();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     extractMessagesSafely(
         "/** @desc Hello */ let MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
@@ -116,7 +114,6 @@ public final class JsMessageVisitorTest {
   @Test
   public void testJsMessageOnConst() {
     compilerOptions = new CompilerOptions();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     extractMessagesSafely(
         "/** @desc Hello */ const MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
@@ -362,7 +359,6 @@ public final class JsMessageVisitorTest {
   @Test
   public void testTemplateLiteral() {
     compilerOptions = new CompilerOptions();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
 
     extractMessages("/** @desc Hello */ var MSG_HELLO = goog.getMsg(`hello`);");
     assertThat(compiler.getErrors()).isEmpty();
@@ -377,7 +373,6 @@ public final class JsMessageVisitorTest {
   @Test
   public void testTemplateLiteralWithSubstitution() {
     compilerOptions = new CompilerOptions();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
 
     extractMessages("/** @desc Hello */ var MSG_HELLO = goog.getMsg(`hello ${name}`);");
     assertThat(compiler.getErrors()).hasSize(1);

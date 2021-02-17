@@ -1014,7 +1014,6 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
   @Test
   public void testAsyncReplaceScript() {
     CompilerOptions options = getOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT);
     // async functions require iterables and Symbols from the default externs
     testExterns = DEFAULT_EXTERNS;

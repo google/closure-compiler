@@ -420,7 +420,6 @@ public final class NodeTraversalTest {
   public void testTraverseAtScopeWithForScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
@@ -457,7 +456,6 @@ public final class NodeTraversalTest {
   public void testTraverseAtScopeWithSwitchScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
@@ -520,7 +518,6 @@ public final class NodeTraversalTest {
   public void testGetVarAccessible() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     AccessibleCallback callback = new AccessibleCallback();

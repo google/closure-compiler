@@ -47,7 +47,6 @@ public class RemoveTrailingCommaFromParamListTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     // ES 2017 started allowing trailing commas in parameter lists and argument lists
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2016);
     // Trailing commas are only printed in pretty-print mode
     options.setPrettyPrint(true);

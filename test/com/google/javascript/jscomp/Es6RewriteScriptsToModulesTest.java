@@ -36,7 +36,6 @@ public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
     return options;
   }

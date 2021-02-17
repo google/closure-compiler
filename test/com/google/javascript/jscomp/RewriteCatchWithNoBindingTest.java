@@ -45,7 +45,6 @@ public class RewriteCatchWithNoBindingTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
     return options;
   }

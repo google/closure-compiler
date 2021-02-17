@@ -156,7 +156,6 @@ public class ConformanceAllowlisterTest {
     CompilerOptions options = new CompilerOptions();
     options.setCheckTypes(true);
     // TODO(bangert): Support banned property on OBJECT even if types are not checked.
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setChecksOnly(true);
     List<SourceFile> externs =

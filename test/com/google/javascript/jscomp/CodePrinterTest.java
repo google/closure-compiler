@@ -3655,7 +3655,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "});\n";
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
     checkWithOriginalName(code, expectedCode, compilerOptions);
   }
@@ -3672,7 +3671,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "});\n";
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
     checkWithOriginalName(code, expectedCode, compilerOptions);
   }
@@ -3770,7 +3768,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testEscapeDollarInTemplateLiteralInOutput() {
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
 
     checkWithOriginalName(
@@ -3793,7 +3790,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testEscapeDollarInTemplateLiteralEs5Output() {
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     checkWithOriginalName(
@@ -3815,7 +3811,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testDoNotEscapeDollarInRegex() {
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
     checkWithOriginalName("var x = /\\$qux/;", "var x = /\\$qux/;\n", compilerOptions);
     checkWithOriginalName("var x = /$qux/;", "var x = /$qux/;\n", compilerOptions);
@@ -3827,7 +3822,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     String expectedCode = "var x = '$qux';\n";
     CompilerOptions compilerOptions = new CompilerOptions();
     compilerOptions.skipAllCompilerPasses();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
     checkWithOriginalName(code, expectedCode, compilerOptions);
     checkWithOriginalName("var x = '\\$qux';", "var x = '$qux';\n", compilerOptions);

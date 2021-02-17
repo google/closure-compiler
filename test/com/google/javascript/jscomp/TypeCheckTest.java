@@ -12542,7 +12542,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // Some code assumes that an object literal must have a object type,
     // while because of the cast, it could have any type (including
     // a union).
-    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
 
     // This test is specifically checking loose property check behavior.
     disableStrictMissingPropertyChecks();
@@ -12567,7 +12566,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
     // Some code assumes that an object literal must have a object type,
     // while because of the cast, it could have any type (including
     // a union).
-    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testTypes(
         lines(
             "for (var i = 0; i < 10; i++) {",
@@ -12955,7 +12953,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
 
   @Test
   public void testConstDecl2() {
-    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testTypes(
         "/** @param {?number} x */"
             + "function f(x) { "

@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -633,7 +632,6 @@ public final class TemplateAstMatcherTest {
     Compiler compiler = lastCompiler = new Compiler();
     compiler.disableThreads();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setChecksOnly(true);
     options.setPreserveDetailedSourceInfo(true);

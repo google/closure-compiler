@@ -96,7 +96,6 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   @Test
   public void testBasicClass() {
-    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     PolymerClassDefinition def =
         parseAndExtractClassDefFromClass(
             lines(
