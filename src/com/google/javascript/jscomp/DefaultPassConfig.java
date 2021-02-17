@@ -495,6 +495,9 @@ public final class DefaultPassConfig extends PassConfig {
     if (!options.checksOnly) {
       checks.add(removeWeakSources);
       checks.add(garbageCollectChecks);
+      // Gather property names in externs so they can be queried by the optimizing passes.
+      // See b/180424427 for why this runs in stage 1 and not stage 2.
+      checks.add(gatherExternProperties);
     }
 
     assertAllOneTimePasses(checks);
@@ -529,9 +532,6 @@ public final class DefaultPassConfig extends PassConfig {
     passes.add(normalize);
 
     passes.add(gatherGettersAndSetters);
-    // Gather property names in externs so they can be queried by the
-    // optimizing passes.
-    passes.add(gatherExternProperties);
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clUtilGetDefineRewriterPass);
