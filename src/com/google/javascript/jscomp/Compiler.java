@@ -1136,7 +1136,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
       }
       if (builder.toString().isEmpty()) {
-        throw new RuntimeException("No files matched any of: " + fileNameRegexList);
+        builder.append("// No files matched any of: ").append(fileNameRegexList);
       }
     }
     if (!moduleNameRegexList.isEmpty()) {
