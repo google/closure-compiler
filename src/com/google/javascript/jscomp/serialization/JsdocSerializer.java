@@ -102,6 +102,31 @@ public final class JsdocSerializer {
     if (jsdoc.isInterface()) {
       builder.addKind(JsdocTag.JSDOC_INTERFACE);
     }
+
+    // Used by ClosureCodeRemoval
+    if (jsdoc.isAbstract()) {
+      builder.addKind(JsdocTag.JSDOC_ABSTRACT);
+    }
+
+    // Used by Normalize
+    if (jsdoc.isExpose()) {
+      builder.addKind(JsdocTag.JSDOC_EXPOSE);
+    }
+
+    // Used by ReplaceMessages
+    if (jsdoc.isHidden()) {
+      builder.addKind(JsdocTag.JSDOC_HIDDEN);
+    }
+    if (jsdoc.getDescription() != null) {
+      builder.setDescription(jsdoc.getDescription());
+    }
+    if (jsdoc.getAlternateMessageId() != null) {
+      builder.setAlternateMessageId(jsdoc.getAlternateMessageId());
+    }
+    if (jsdoc.getMeaning() != null) {
+      builder.setMeaning(jsdoc.getMeaning());
+    }
+
     OptimizationJsdoc result = builder.build();
     if (OptimizationJsdoc.getDefaultInstance().equals(result)) {
       return null;
@@ -139,6 +164,16 @@ public final class JsdocSerializer {
     if (!license.isEmpty()) {
       builder.addLicense(license);
     }
+    if (!serializedJsdoc.getMeaning().isEmpty()) {
+      builder.recordMeaning(serializedJsdoc.getMeaning());
+    }
+    if (!serializedJsdoc.getDescription().isEmpty()) {
+      builder.recordDescription(serializedJsdoc.getDescription());
+    }
+    if (!serializedJsdoc.getAlternateMessageId().isEmpty()) {
+      builder.recordAlternateMessageId(serializedJsdoc.getAlternateMessageId());
+    }
+
     TreeSet<String> modifies = new TreeSet<>();
     for (JsdocTag tag : serializedJsdoc.getKindList()) {
       switch (tag) {
@@ -193,6 +228,18 @@ public final class JsdocSerializer {
           continue;
         case JSDOC_ID_GENERATOR_INCONSISTENT:
           builder.recordIdGenerator();
+          continue;
+
+        case JSDOC_EXPOSE:
+          builder.recordExpose();
+          continue;
+
+        case JSDOC_ABSTRACT:
+          builder.recordAbstract();
+          continue;
+
+        case JSDOC_HIDDEN:
+          builder.recordHiddenness();
           continue;
 
         case JSDOC_UNSPECIFIED:

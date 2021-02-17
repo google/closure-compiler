@@ -8,6 +8,11 @@ option java_multiple_files = true;
 message OptimizationJsdoc {
   repeated JsdocTag kind = 1;
   string license_text = 2;
+
+  // Tags used by i18n messages.
+  string description = 3;
+  string meaning = 4;
+  string alternate_message_id = 5;
 }
 
 enum JsdocTag {
@@ -38,4 +43,14 @@ enum JsdocTag {
   JSDOC_ID_GENERATOR_STABLE = 16;
   JSDOC_ID_GENERATOR_MAPPED = 17;
   JSDOC_ID_GENERATOR_XID = 18;
+
+  // Used by ClosureCodeRemoval
+  JSDOC_ABSTRACT = 19;
+
+  // Used by Normalize
+  // TODO(b/180010003): delete this tag
+  JSDOC_EXPOSE = 20;
+
+  // Used by ReplaceMessage i18n
+  JSDOC_HIDDEN = 21;
 }
