@@ -605,6 +605,14 @@ public final class DefaultPassConfig extends PassConfig {
     // for that the pass needs to understand constant properties as well. See b/31301233#comment10
     passes.add(checkConstParams);
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
     // more effective if code that would prevent disambiguation can be removed.
     // TODO(b/66971163): Rename options since we're not actually using smartNameRemoval here now.
@@ -620,14 +628,6 @@ public final class DefaultPassConfig extends PassConfig {
       }
 
       passes.add(removeUnusedCodeOnce);
-    }
-
-    if (options.checkTypes || options.inferTypes) {
-      passes.add(typesToColors);
-    }
-
-    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
-      passes.add(removeTypes);
     }
 
     // Property disambiguation should only run once and needs to be done
