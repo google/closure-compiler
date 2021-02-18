@@ -800,12 +800,9 @@ public class CodeGenerator {
 
       case OPTCHAIN_GETPROP:
         {
-          checkState(
-              childCount == 2, "Bad OPTCHAIN_GETPROP: expected 2 children, but got %s", childCount);
-          checkState(last.isString(), "Bad OPTCHAIN_GETPROP: RHS should be STRING");
           addExpr(first, NodeUtil.precedence(type), context);
           add(node.isOptionalChainStart() ? "?." : ".");
-          addIdentifier(last);
+          addIdentifier(Node.getGetpropString(node));
           break;
         }
 
@@ -826,8 +823,6 @@ public class CodeGenerator {
             addIdentifier(node.getOriginalName());
             break;
           }
-          checkState(childCount == 2, "Bad GETPROP: expected 2 children, but got %s", childCount);
-          checkState(last.isString(), "Bad GETPROP: RHS should be STRING");
           // We need parentheses to distinguish
           // `a?.b.c` from `(a?.b).c`
           boolean breakOutOfOptionalChain = NodeUtil.isOptChainNode(first);
@@ -840,16 +835,16 @@ public class CodeGenerator {
           if (needsParens) {
             add(")");
           }
-          if (quoteKeywordProperties && TokenStream.isKeyword(last.getString())) {
+          if (quoteKeywordProperties && TokenStream.isKeyword(Node.getGetpropString(node))) {
             // NOTE: We don't have to worry about quoting keyword properties in the
             // OPTCHAIN_GETPROP case above, because we only need to quote keywords for
             // ES3-compatible output.
-            add("[");
-            add(last);
-            add("]");
+            //
+            // Must be a single call to `add` otherwise the generator will add a trailing space.
+            add("[\"" + Node.getGetpropString(node) + "\"]");
           } else {
             add(".");
-            addIdentifier(last);
+            addIdentifier(Node.getGetpropStringNode(node));
           }
           break;
         }

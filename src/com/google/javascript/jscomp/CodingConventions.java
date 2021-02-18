@@ -509,7 +509,7 @@ public final class CodingConventions {
       Node target = call.getFirstChild();
       if (target.isGetProp()) {
         Node src = target.getFirstChild();
-        String prop = target.getLastChild().getString();
+        String prop = Node.getGetpropString(target);
         if (src.isName() && src.getString() == "Array" && prop == "isArray") {
           return true;
         }
@@ -569,8 +569,7 @@ public final class CodingConventions {
         }
       }
 
-      if (callTarget.isGetProp()
-          && callTarget.getLastChild().getString().equals("bind")) {
+      if (callTarget.isGetProp() && Node.getGetpropString(callTarget).equals("bind")) {
         Node maybeFn = callTarget.getFirstChild();
         com.google.javascript.rhino.jstype.JSType maybeFnType =
             maybeFn.getJSType();

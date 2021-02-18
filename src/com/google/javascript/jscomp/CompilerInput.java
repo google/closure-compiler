@@ -407,7 +407,7 @@ public class CompilerInput extends DependencyInfo.Base implements SourceAst {
 
             Node callee = n.getFirstChild();
             Node argument = n.getLastChild();
-            switch (callee.getLastChild().getString()) {
+            switch (Node.getGetpropString(callee)) {
               case "module":
                 loadFlags.put("module", "goog");
                 // Fall-through

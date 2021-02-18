@@ -303,7 +303,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
               t,
               n,
               n.getQualifiedName(),
-              parent.isGetProp() ? parent.getSecondChild().getString() : null);
+              parent.isGetProp() ? Node.getGetpropString(parent) : null);
         }
         break;
       default:

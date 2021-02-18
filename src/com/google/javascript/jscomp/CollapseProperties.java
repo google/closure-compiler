@@ -417,8 +417,8 @@ class CollapseProperties implements CompilerPass {
     // AFTER:
     //   name a$b$c
     Node ref = NodeUtil.newName(compiler, alias, n, originalName).copyTypeFrom(n);
-    NodeUtil.copyNameAnnotations(n.getLastChild(), ref);
-    if (NodeUtil.isNormalOrOptChainCall(parent) && n == parent.getFirstChild()) {
+    NodeUtil.copyNameAnnotations(Node.isStringGetprop(n) ? n : n.getSecondChild(), ref);
+    if (NodeUtil.isNormalOrOptChainCall(parent) && n.isFirstChildOf(parent)) {
       // The node was a call target. We are deliberately flattening these as
       // the "this" isn't provided by the namespace. Mark it as such:
       parent.putBooleanProp(Node.FREE_CALL, true);
@@ -480,7 +480,7 @@ class CollapseProperties implements CompilerPass {
     // Create the new alias node.
     Node nameNode =
         NodeUtil.newName(compiler, alias, grandparent.getFirstChild(), refName.getFullName());
-    NodeUtil.copyNameAnnotations(ref.getNode().getLastChild(), nameNode);
+    NodeUtil.copyNameAnnotations(Node.getGetpropStringNode(ref.getNode()), nameNode);
 
     // BEFORE:
     // ... (x.y = 3);
@@ -603,11 +603,15 @@ class CollapseProperties implements CompilerPass {
       Node nameNode =
           NodeUtil.newName(compiler, alias, ref.getNode().getAncestor(2), n.getFullName());
 
-      JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.getNode().getParent());
-      if (ref.getNode().getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)
-          || (info != null && info.hasConstAnnotation())) {
-        nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+      Node constPropNode = ref.getNode();
+      if (!Node.isStringGetprop(constPropNode)) {
+        constPropNode = constPropNode.getSecondChild();
       }
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.getNode().getParent());
+      nameNode.putBooleanProp(
+          Node.IS_CONSTANT_NAME,
+          (info != null && info.hasConstAnnotation())
+              || constPropNode.getBooleanProp(Node.IS_CONSTANT_NAME));
 
       if (info != null) {
         varNode.setJSDocInfo(info);
@@ -902,20 +906,26 @@ class CollapseProperties implements CompilerPass {
       return;
     }
     for (Name p : n.props) {
-      if (p.needsToBeStubbed()) {
-        String propAlias = appendPropForAlias(alias, p.getBaseName());
-        Node nameNode = IR.name(propAlias);
-        Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(addAfter);
-        parent.addChildAfter(newVar, addAfter);
-        addAfter = newVar;
-        compiler.reportChangeToEnclosingScope(newVar);
-        // Determine if this is a constant var by checking the first
-        // reference to it. Don't check the declaration, as it might be null.
-        if (p.getFirstRef().getNode().getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
-          nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-          compiler.reportChangeToEnclosingScope(nameNode);
-        }
+      if (!p.needsToBeStubbed()) {
+        continue;
       }
+
+      String propAlias = appendPropForAlias(alias, p.getBaseName());
+      Node nameNode = IR.name(propAlias);
+      Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(addAfter);
+      parent.addChildAfter(newVar, addAfter);
+
+      // Determine if this is a constant var by checking the first
+      // reference to it. Don't check the declaration, as it might be null.
+      Node constPropNode = p.getFirstRef().getNode();
+      if (!Node.isStringGetprop(constPropNode)) {
+        constPropNode = constPropNode.getSecondChild();
+      }
+      nameNode.putBooleanProp(
+          Node.IS_CONSTANT_NAME, constPropNode.getBooleanProp(Node.IS_CONSTANT_NAME));
+
+      compiler.reportChangeToEnclosingScope(newVar);
+      addAfter = newVar;
     }
   }
 

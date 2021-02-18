@@ -433,7 +433,7 @@ class DevirtualizeMethods implements OptimizeCalls.CallGraphCompilerPass {
     switch (definitionSite.getToken()) {
       case GETPROP:
         function = definitionSite.getParent().getLastChild();
-        nameSource = definitionSite.getLastChild();
+        nameSource = Node.getGetpropStringNode(definitionSite);
         subtreeToRemove = NodeUtil.getEnclosingStatement(definitionSite);
         break;
 

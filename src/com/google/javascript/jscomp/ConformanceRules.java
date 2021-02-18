@@ -810,6 +810,9 @@ public final class ConformanceRules {
           break;
 
         case GETPROP:
+          name = Node.getGetpropString(n);
+          break;
+
         case GETELEM:
           {
             Node string = n.getSecondChild();
@@ -1002,7 +1005,7 @@ public final class ConformanceRules {
               return ConformanceResult.VIOLATION;
             }
           } else if (n.isGetProp()
-              && n.getLastChild().getString().equals("call")
+              && Node.getGetpropString(n).equals("call")
               && n.getFirstChild().matchesQualifiedName(r.name)) {
             if (!ConformanceUtil.validateCall(
                 compiler, n.getParent(), r.restrictedCallType, true)) {
@@ -1072,25 +1075,27 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (NodeUtil.isNormalGet(n)
-          && ConformanceUtil.isCallTarget(n)
-          && n.getLastChild().isString()) {
-        for (int i = 0; i < restrictions.size(); i++) {
-          Restriction r = restrictions.get(i);
-          ConformanceResult result = ConformanceResult.CONFORMANCE;
-          if (matchesProp(n, r)) {
-            result = checkConformance(t, n, r, false);
-          } else if (n.getLastChild().getString().equals("call")
-              && matchesProp(n.getFirstChild(), r)) {
-            // handle .call invocation
-            result = checkConformance(t, n, r, true);
-          }
-          // TODO(johnlenz): should "apply" always be a possible violation?
-          if (result.level != ConformanceLevel.CONFORMANCE) {
-            return result;
-          }
+      if (!n.isGetProp() || !ConformanceUtil.isCallTarget(n)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      for (int i = 0; i < restrictions.size(); i++) {
+        Restriction r = restrictions.get(i);
+        ConformanceResult result = ConformanceResult.CONFORMANCE;
+
+        if (matchesProp(n, r)) {
+          result = checkConformance(t, n, r, false);
+        } else if (Node.getGetpropString(n).equals("call") && matchesProp(n.getFirstChild(), r)) {
+          // handle .call invocation
+          result = checkConformance(t, n, r, true);
+        }
+
+        // TODO(johnlenz): should "apply" always be a possible violation?
+        if (result.level != ConformanceLevel.CONFORMANCE) {
+          return result;
         }
       }
+
       return ConformanceResult.CONFORMANCE;
     }
 
@@ -1119,7 +1124,7 @@ public final class ConformanceRules {
     }
 
     private boolean matchesProp(Node n, Restriction r) {
-      return n.isGetProp() && n.getLastChild().getString().equals(r.property);
+      return n.isGetProp() && Node.getGetpropString(n).equals(r.property);
     }
   }
 
@@ -1174,7 +1179,7 @@ public final class ConformanceRules {
         if (rhsType != null && targetType != null) {
           JSType targetNotNullType = null;
           for (Restriction r : restrictions) {
-            if (n.getLastChild().getString() == r.property) { // Both strings are interned.
+            if (Node.getGetpropString(n) == r.property) { // Both strings are interned.
               if (!rhsType.isSubtypeOf(r.restrictedType)) {
                 if (ConformanceUtil.isLooseType(targetType)) {
                   if (reportLooseTypeViolations) {
@@ -1504,7 +1509,7 @@ public final class ConformanceRules {
 
     private static boolean isExplicitlyUnknown(Node n) {
       ObjectType owner = ObjectType.cast(n.getFirstChild().getJSType());
-      Property prop = owner != null ? owner.getSlot(n.getLastChild().getString()) : null;
+      Property prop = owner != null ? owner.getSlot(Node.getGetpropString(n)) : null;
       return prop != null && !prop.isTypeInferred();
     }
   }
@@ -1530,17 +1535,15 @@ public final class ConformanceRules {
     }
 
     @Override
-    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      Node getprop = n.getParent();
+    protected ConformanceResult checkConformance(NodeTraversal t, Node getprop) {
       if (getprop.isGetProp()
-          && n.isSecondChildOf(getprop)
           && isUnknown(getprop)
           && isUsed(getprop) // skip most assignments, etc
           && !isTypeImmediatelyTightened(getprop)
           && isCheckablePropertySource(getprop.getFirstChild()) // not a cascading unknown
           && !isTemplateType(getprop)
           && !isDeclaredUnknown(getprop)) {
-        String propName = n.getString();
+        String propName = Node.getGetpropString(getprop);
         String typeName = getprop.getFirstChild().getJSType().toString();
         return new ConformanceResult(
             ConformanceLevel.VIOLATION,
@@ -1582,7 +1585,7 @@ public final class ConformanceRules {
         return false;
       }
 
-      JSDocInfo info = targetType.getPropertyJSDocInfo(n.getLastChild().getString());
+      JSDocInfo info = targetType.getPropertyJSDocInfo(Node.getGetpropString(n));
       if (info == null || !info.hasType()) {
         return false;
       }
@@ -1792,7 +1795,7 @@ public final class ConformanceRules {
       if (!target.isGetProp()) {
         return ConformanceResult.CONFORMANCE;
       }
-      String functionName = target.getLastChild().getString();
+      String functionName = Node.getGetpropString(target);
       if (!"createElement".equals(functionName) && !"createDom".equals(functionName)) {
         return ConformanceResult.CONFORMANCE;
       }
@@ -1935,7 +1938,7 @@ public final class ConformanceRules {
       if (tag.isString()) {
         return ImmutableSet.of(tag.getString().toLowerCase(Locale.ROOT));
       } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
-        return ImmutableSet.of(tag.getLastChild().getString().toLowerCase(Locale.ROOT));
+        return ImmutableSet.of(Node.getGetpropString(tag).toLowerCase(Locale.ROOT));
       }
       // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
       JSType type = tag.getJSType();
@@ -2039,7 +2042,7 @@ public final class ConformanceRules {
       if (!target.isGetProp()) {
         return false;
       }
-      if (!"createDom".equals(target.getLastChild().getString())) {
+      if (!"createDom".equals(Node.getGetpropString(target))) {
         return false;
       }
 

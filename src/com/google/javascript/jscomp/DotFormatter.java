@@ -236,7 +236,11 @@ public final class DotFormatter {
       builder.append(formatNodeName(key));
       builder.append(" [label=\"");
       builder.append(n.getToken().toString());
-      if (n.isName() || n.isString() || n.isImportStar() || n.isStringKey()) {
+      if (n.isName()
+          || n.isString()
+          || (n.isGetProp() && Node.isStringGetprop(n))
+          || n.isImportStar()
+          || n.isStringKey()) {
         builder.append(getNodeLabel(n));
       }
       JSType type = n.getJSType();

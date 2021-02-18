@@ -351,7 +351,7 @@ final class Es6RewriteGenerators implements HotSwapCompilerPass {
         checkState(changeScopeNode.isFunction(), changeScopeNode);
 
         // asyncExecutePromiseGeneratorFunction   =>   asyncExecutePromiseGeneratorProgram
-        callTarget.getSecondChild().setString("asyncExecutePromiseGeneratorProgram");
+        Node.setGetpropString(callTarget, "asyncExecutePromiseGeneratorProgram");
         JSType oldType = callTarget.getJSType();
         if (oldType != null && oldType.isFunctionType()) {
           callTarget.setJSType(
