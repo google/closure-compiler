@@ -2052,7 +2052,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       input.setCompiler(this);
       try {
         // JSON objects need wrapped in parens to parse properly
-        input.getSourceFile().setCode("(" + input.getSourceFile().getCode() + ")");
+        input.getSourceFile().setCodeDeprecated("(" + input.getSourceFile().getCode() + ")");
       } catch (IOException e) {
         continue;
       }

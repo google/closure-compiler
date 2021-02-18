@@ -73,21 +73,21 @@ public final class SourceFileTest {
 
   @Test
   public void testLineOffset() {
-    SourceFile sf = SourceFile.fromCode("test.js", "");
-    assertThat(sf.getLineOfOffset(0)).isEqualTo(1);
-    assertThat(sf.getColumnOfOffset(0)).isEqualTo(0);
-    assertThat(sf.getLineOfOffset(10)).isEqualTo(1);
-    assertThat(sf.getColumnOfOffset(10)).isEqualTo(10);
+    SourceFile f0 = SourceFile.fromCode("test.js", "");
+    assertThat(f0.getLineOfOffset(0)).isEqualTo(1);
+    assertThat(f0.getColumnOfOffset(0)).isEqualTo(0);
+    assertThat(f0.getLineOfOffset(10)).isEqualTo(1);
+    assertThat(f0.getColumnOfOffset(10)).isEqualTo(10);
 
-    sf.setCode("'1';\n'2';\n'3'\n");
-    assertThat(sf.getLineOffset(1)).isEqualTo(0);
-    assertThat(sf.getLineOffset(2)).isEqualTo(5);
-    assertThat(sf.getLineOffset(3)).isEqualTo(10);
+    SourceFile f1 = SourceFile.fromCode("test.js", "'1';\n'2';\n'3'\n");
+    assertThat(f1.getLineOffset(1)).isEqualTo(0);
+    assertThat(f1.getLineOffset(2)).isEqualTo(5);
+    assertThat(f1.getLineOffset(3)).isEqualTo(10);
 
-    sf.setCode("'100';\n'200;'\n'300'\n");
-    assertThat(sf.getLineOffset(1)).isEqualTo(0);
-    assertThat(sf.getLineOffset(2)).isEqualTo(7);
-    assertThat(sf.getLineOffset(3)).isEqualTo(14);
+    SourceFile f2 = SourceFile.fromCode("test.js", "'100';\n'200;'\n'300'\n");
+    assertThat(f2.getLineOffset(1)).isEqualTo(0);
+    assertThat(f2.getLineOffset(2)).isEqualTo(7);
+    assertThat(f2.getLineOffset(3)).isEqualTo(14);
   }
 
   @Test

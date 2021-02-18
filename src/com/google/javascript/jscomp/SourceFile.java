@@ -25,6 +25,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.io.CharStreams;
+import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.io.File;
 import java.io.FileInputStream;
@@ -144,16 +145,34 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     }
   }
 
-  private void resetLineOffsets() {
-    lineOffsets = null;
+  /** Gets all the code in this source file. */
+  public final String getCode() throws IOException {
+    if (this.code == null) {
+      // Only synchronize if we need to
+      synchronized (this) {
+        // Make sure another thread hasn't loaded the code while we waited.
+        if (this.code == null) {
+          this.setCodeAndDoBookkeeping(this.loadUncachedCode());
+        }
+      }
+    }
+
+    return this.code;
+  }
+
+  @Deprecated
+  final void setCodeDeprecated(String code) {
+    this.setCodeAndDoBookkeeping(code);
   }
 
   /**
-   * Gets all the code in this source file.
+   * Return the source text of this file from its original storage.
+   *
+   * <p>The implementation may be a slow operation such as reading from a file. SourceFile
+   * guarantees that this method is only called under synchronization.
    */
-  public String getCode() throws IOException {
-    return code;
-  }
+  @ForOverride
+  abstract String loadUncachedCode() throws IOException;
 
   /**
    * Gets a reader for the code in this source file.
@@ -163,25 +182,32 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     return new StringReader(getCode());
   }
 
-  void setCode(String sourceCode) {
-    code =
-        sourceCode != null && sourceCode.startsWith(UTF8_BOM)
-            ? sourceCode.substring(UTF8_BOM.length())
-            : sourceCode;
-    resetLineOffsets();
+  private void setCodeAndDoBookkeeping(String sourceCode) {
+    this.lineOffsets = null;
+    this.code = null;
+
+    if (sourceCode != null) {
+      if (sourceCode.startsWith(UTF8_BOM)) {
+        sourceCode = sourceCode.substring(UTF8_BOM.length());
+      }
+
+      this.code = sourceCode;
+      this.findLineOffsets();
+    }
   }
 
   public String getOriginalPath() {
     return originalPath != null ? originalPath : fileName;
   }
 
-  // For SourceFile types which cache source code that can be regenerated
-  // easily, flush the cache.  We maintain the cache mostly to speed up
-  // generating source when displaying error messages, so dumping the file
-  // contents after the compile is a fine thing to do.
+  /**
+   * For SourceFile types which cache source code that can be regenerated easily, flush the cache.
+   *
+   * <p>We maintain the cache mostly to speed up generating source when displaying error messages,
+   * so dumping the file contents after the compile is a fine thing to do.
+   */
   public void clearCachedSource() {
-    // By default, do nothing.  Not all kinds of SourceFiles can regenerate
-    // code.
+    this.setCodeAndDoBookkeeping(null);
   }
 
   boolean hasSourceInMemory() {
@@ -583,29 +609,23 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
   // Implementations
 
   /** A source file where the code has been preloaded. */
-  private static class Preloaded extends SourceFile {
+  private static final class Preloaded extends SourceFile {
     private static final long serialVersionUID = 2L;
+    private final String preloadedCode;
 
     Preloaded(String fileName, String originalPath, String code, SourceKind kind) {
       super(fileName, originalPath, kind);
-      super.setCode(code);
+      this.preloadedCode = code;
     }
 
-    @GwtIncompatible("ObjectOutputStream")
-    private void writeObject(ObjectOutputStream os) throws Exception {
-      os.defaultWriteObject();
-      os.writeObject(getCode());
-    }
-
-    @GwtIncompatible("ObjectInputStream")
-    private void readObject(ObjectInputStream in) throws Exception {
-      in.defaultReadObject();
-      super.setCode((String) in.readObject());
+    @Override
+    String loadUncachedCode() {
+      return this.preloadedCode;
     }
   }
 
   /** A source file where the code will be dynamically generated from the injected interface. */
-  private static class Generated extends SourceFile {
+  private static final class Generated extends SourceFile {
     // Avoid serializing generator and remove the burden to make classes that implement
     // Generator serializable. There should be no need to obtain generated source in the
     // second stage of compilation. Making the generator transient relies on not clearing the
@@ -619,21 +639,8 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     }
 
     @Override
-    public synchronized String getCode() throws IOException {
-      String cachedCode = super.getCode();
-
-      if (cachedCode == null) {
-        cachedCode = generator.getCode();
-        super.setCode(cachedCode);
-      }
-      return cachedCode;
-    }
-
-    // Clear out the generated code when finished with a compile; we can
-    // regenerate it if we ever need it again.
-    @Override
-    public void clearCachedSource() {
-      super.setCode(null);
+    String loadUncachedCode() {
+      return generator.getCode();
     }
 
     @Override
@@ -648,7 +655,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
    * delay loading the code into memory as long as possible.
    */
   @GwtIncompatible("com.google.common.io.CharStreams")
-  private static class OnDisk extends SourceFile {
+  private static final class OnDisk extends SourceFile {
     private static final long serialVersionUID = 1L;
     // TODO(b/180553215): We shouldn't store this Path. We already have to reconstruct it from a
     // string during deserialization.
@@ -662,22 +669,13 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     }
 
     @Override
-    public synchronized String getCode() throws IOException {
-      String cachedCode = super.getCode();
-
-      if (cachedCode == null) {
-        try (Reader r = getCodeReader()) {
-          cachedCode = CharStreams.toString(r);
-        } catch (MalformedInputException e) {
-          throw new IOException(
-              "Failed to read: " + this.relativePath + ", is this input UTF-8 encoded?", e);
-        }
-
-        super.setCode(cachedCode);
-        // Byte Order Mark can be removed by setCode
-        cachedCode = super.getCode();
+    String loadUncachedCode() throws IOException {
+      try (Reader r = getCodeReader()) {
+        return CharStreams.toString(r);
+      } catch (MalformedInputException e) {
+        throw new IOException(
+            "Failed to read: " + this.relativePath + ", is this input UTF-8 encoded?", e);
       }
-      return cachedCode;
     }
 
     /**
@@ -693,13 +691,6 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
       }
     }
 
-    // Flush the cached code after the compile; we can read it off disk
-    // if we need it again.
-    @Override
-    public void clearCachedSource() {
-      super.setCode(null);
-    }
-
     @GwtIncompatible("ObjectOutputStream")
     private void writeObject(ObjectOutputStream out) throws Exception {
       out.defaultWriteObject();
@@ -712,9 +703,6 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
       in.defaultReadObject();
       inputCharset = Charset.forName((String) in.readObject());
       this.relativePath = Paths.get((String) in.readObject());
-
-      // Code will be reread or restored.
-      super.setCode(null);
     }
   }
 
@@ -723,7 +711,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
    * try to delay loading the code into memory as long as possible.
    */
   @GwtIncompatible("java.io.File")
-  private static class AtZip extends SourceFile {
+  private static final class AtZip extends SourceFile {
     private static final long serialVersionUID = 1L;
     private final ZipEntryReader zipEntryReader;
     private transient Charset inputCharset;
@@ -735,16 +723,8 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     }
 
     @Override
-    public synchronized String getCode() throws IOException {
-      String cachedCode = super.getCode();
-
-      if (cachedCode == null) {
-        cachedCode = zipEntryReader.read(inputCharset);
-        super.setCode(cachedCode);
-        // Byte Order Mark can be removed by setCode
-        cachedCode = super.getCode();
-      }
-      return cachedCode;
+    String loadUncachedCode() throws IOException {
+      return zipEntryReader.read(inputCharset);
     }
 
     /**
@@ -760,13 +740,6 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
       }
     }
 
-    // Flush the cached code after the compile; we can read it from the URL
-    // if we need it again.
-    @Override
-    public void clearCachedSource() {
-      super.setCode(null);
-    }
-
     @GwtIncompatible("ObjectOutputStream")
     private void writeObject(ObjectOutputStream os) throws Exception {
       os.defaultWriteObject();
@@ -777,19 +750,11 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
       inputCharset = Charset.forName((String) in.readObject());
-
-      // Code will be reread or restored.
-      super.setCode(null);
     }
   }
 
   public void restoreFrom(SourceFile sourceFile) {
     this.code = sourceFile.code;
-  }
-
-  @GwtIncompatible("ObjectInputStream")
-  private void readObject(ObjectInputStream in) throws Exception {
-    in.defaultReadObject();
-    code = "<UNAVAILABLE>";
+    this.lineOffsets = sourceFile.lineOffsets;
   }
 }
