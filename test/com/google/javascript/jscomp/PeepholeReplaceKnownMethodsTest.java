@@ -191,7 +191,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   public void testFoldStringSubstr() {
     fold("x = 'abcde'.substr(0,2)", "x = 'ab'");
     fold("x = 'abcde'.substr(1,2)", "x = 'bc'");
-    fold("x = 'abcde'['substr'](1,3)", "x = 'bcd'");
     fold("x = 'abcde'.substr(2)", "x = 'cde'");
 
     // we should be leaving negative indexes alone for now
@@ -209,7 +208,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   public void testFoldStringSubstring() {
     fold("x = 'abcde'.substring(0,2)", "x = 'ab'");
     fold("x = 'abcde'.substring(1,2)", "x = 'b'");
-    fold("x = 'abcde'['substring'](1,3)", "x = 'bc'");
     fold("x = 'abcde'.substring(2)", "x = 'cde'");
 
     // we should be leaving negative, out-of-bound, and inverted indices alone for now
@@ -228,7 +226,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   public void testFoldStringSlice() {
     fold("x = 'abcde'.slice(0,2)", "x = 'ab'");
     fold("x = 'abcde'.slice(1,2)", "x = 'b'");
-    fold("x = 'abcde'['slice'](1,3)", "x = 'bc'");
     fold("x = 'abcde'.slice(2)", "x = 'cde'");
 
     // we should be leaving negative, out-of-bound, and inverted indices alone for now
@@ -443,7 +440,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
     fold("Math.abs('-1')", "1");
     fold("Math.abs(-2)", "2");
-    fold("Math['abs']('-3')", "3");
     fold("Math.abs(null)", "0");
     fold("Math.abs('')", "0");
     fold("Math.abs([])", "0");
