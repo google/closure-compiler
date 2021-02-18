@@ -102,13 +102,6 @@ class RhinoErrorReporter {
   static final DiagnosticType UNSUPPORTED_LANGUAGE_FEATURE =
       DiagnosticType.error("JSC_UNSUPPORTED_LANGUAGE_FEATURE", "{0}.");
 
-  static final DiagnosticType ES6_TYPED =
-      DiagnosticType.error("JSC_ES6_TYPED", "{0}. This syntax is only available in unit tests.");
-
-  static final DiagnosticType MISPLACED_TYPE_SYNTAX =
-      DiagnosticType.error(
-          "JSC_MISPLACED_TYPE_SYNTAX", "Can only have JSDoc or inline type annotations, not both");
-
   static final DiagnosticType UNSUPPORTED_BOUNDED_GENERIC_TYPES =
       DiagnosticType.error(
           "JSC_UNSUPPORTED_BOUNDED_GENERIC_TYPES",
@@ -167,8 +160,6 @@ class RhinoErrorReporter {
                   "^This language feature is not currently supported by the internalReporter:"
                       + " .*"),
               UNSUPPORTED_LANGUAGE_FEATURE)
-          .put(Pattern.compile("^type syntax is only supported in ES6 typed mode.*"), ES6_TYPED)
-          .put(Pattern.compile("^Can only have JSDoc or inline type.*"), MISPLACED_TYPE_SYNTAX)
           .put(
               Pattern.compile("Bounded generic semantics are currently still in development"),
               UNSUPPORTED_BOUNDED_GENERIC_TYPES)

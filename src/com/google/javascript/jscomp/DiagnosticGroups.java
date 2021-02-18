@@ -722,7 +722,7 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup(
         "invalidProvide", ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
 
-    DiagnosticGroups.registerGroup("es6Typed", RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
+    DiagnosticGroups.registerDeprecatedGroup("es6Typed");
 
     DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
 
