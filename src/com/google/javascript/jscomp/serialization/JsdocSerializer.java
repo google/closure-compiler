@@ -102,6 +102,9 @@ public final class JsdocSerializer {
     if (jsdoc.isInterface()) {
       builder.addKind(JsdocTag.JSDOC_INTERFACE);
     }
+    if (jsdoc.getSuppressions().contains("partialAlias")) {
+      builder.addKind(JsdocTag.JSDOC_SUPPRESS_PARTIAL_ALIAS);
+    }
 
     // Used by ClosureCodeRemoval
     if (jsdoc.isAbstract()) {
@@ -125,6 +128,9 @@ public final class JsdocSerializer {
     }
     if (jsdoc.getMeaning() != null) {
       builder.setMeaning(jsdoc.getMeaning());
+    }
+    if (jsdoc.getSuppressions().contains("messageConventions")) {
+      builder.addKind(JsdocTag.JSDOC_SUPPRESS_MESSAGE_CONVENTION);
     }
 
     OptimizationJsdoc result = builder.build();
@@ -175,6 +181,7 @@ public final class JsdocSerializer {
     }
 
     TreeSet<String> modifies = new TreeSet<>();
+    TreeSet<String> suppressions = new TreeSet<>();
     for (JsdocTag tag : serializedJsdoc.getKindList()) {
       switch (tag) {
         case JSDOC_CONST:
@@ -213,6 +220,9 @@ public final class JsdocSerializer {
         case JSDOC_INTERFACE:
           builder.recordInterface();
           continue;
+        case JSDOC_SUPPRESS_PARTIAL_ALIAS:
+          suppressions.add("partialAlias");
+          continue;
 
         case JSDOC_ID_GENERATOR_CONSISTENT:
           builder.recordConsistentIdGenerator();
@@ -242,6 +252,12 @@ public final class JsdocSerializer {
           builder.recordHiddenness();
           continue;
 
+          // TODO(lharker): stage 2 passes ideally shouldn't report diagnostics, so this could be
+          // moved to stage 1.
+        case JSDOC_SUPPRESS_MESSAGE_CONVENTION:
+          suppressions.add("messageConventions");
+          continue;
+
         case JSDOC_UNSPECIFIED:
         case UNRECOGNIZED:
           throw new InvalidSerializedFormatException(
@@ -251,6 +267,10 @@ public final class JsdocSerializer {
     if (!modifies.isEmpty()) {
       builder.recordModifies(modifies);
     }
+    if (!suppressions.isEmpty()) {
+      builder.recordSuppressions(suppressions);
+    }
+
     return builder.build();
   }
 }
