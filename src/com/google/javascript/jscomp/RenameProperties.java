@@ -328,15 +328,11 @@ class RenameProperties implements CompilerPass {
           break;
         case GETPROP:
         case OPTCHAIN_GETPROP:
-          Node propNode = n.getSecondChild();
-          if (propNode.isString()) {
-            if (compiler.getCodingConvention().blockRenamingForProperty(
-                propNode.getString())) {
-              externedNames.add(propNode.getString());
+          if (compiler.getCodingConvention().blockRenamingForProperty(Node.getGetpropString(n))) {
+            externedNames.add(Node.getGetpropString(n));
               break;
             }
-            maybeMarkCandidate(propNode);
-          }
+          maybeMarkCandidate(n);
           break;
         case OBJECTLIT:
         case OBJECT_PATTERN:
@@ -464,6 +460,10 @@ class RenameProperties implements CompilerPass {
      * @param n The STRING node for a property
      */
     private void maybeMarkCandidate(Node n) {
+      if (Node.isGetpropButNotStringGetprop(n)) {
+        n = n.getSecondChild();
+      }
+
       String name = n.getString();
       if (!externedNames.contains(name)) {
         stringNodesToRename.add(n);

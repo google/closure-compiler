@@ -642,8 +642,8 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     checkArgument(ctx.function != null, "Cannot prepend declarations to root scope");
     checkNotNull(ctx.thisSuperArgsContext);
 
-    Node propertyName = n.getNext();
-    String propertyReplacementNameText = superPropGetterPrefix + propertyName.getString();
+    String propertyName = Node.getGetpropString(parent);
+    String propertyReplacementNameText = superPropGetterPrefix + propertyName;
 
     // super.x   =>   $super$get$x()
     Node getPropReplacement =
@@ -658,7 +658,7 @@ public final class RewriteAsyncIteration implements NodeTraversal.Callback, HotS
     }
     getPropReplacement.useSourceInfoFromForTree(parent);
     grandparent.replaceChild(parent, getPropReplacement);
-    ctx.thisSuperArgsContext.usedSuperProperties.add(propertyName.getString());
+    ctx.thisSuperArgsContext.usedSuperProperties.add(propertyName);
     compiler.reportChangeToChangeScope(ctx.function);
   }
 

@@ -449,7 +449,7 @@ final class PolymerBehaviorExtractor {
       if (left == null) {
         return null;
       }
-      String right = node.getLastChild().getString();
+      String right = Node.getGetpropString(node);
       return left + "." + right;
     } else if (node.isCast()) {
       return getQualifiedNameThroughCast(node.getFirstChild());

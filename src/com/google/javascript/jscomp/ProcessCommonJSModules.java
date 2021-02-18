@@ -327,8 +327,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     Node callParentTarget = callParent.getFirstFirstChild().getFirstChild();
 
     if (callParentTarget.matchesQualifiedName(WEBPACK_REQUIRE + ".e")
-        && callParent.getFirstChild().getSecondChild().isString()
-        && callParent.getFirstChild().getSecondChild().getString().equals("then")) {
+        && Node.getGetpropString(callParent.getFirstChild()).equals("then")) {
       return true;
     } else if (callParentTarget.matchesQualifiedName("Promise.all")
         && callParentTarget.getNext() != null
@@ -428,8 +427,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       fnc = n.getFirstFirstChild();
     } else if (call.getFirstChild().isGetProp()
         && call.getFirstFirstChild().isFunction()
-        && call.getFirstFirstChild().getNext().isString()
-        && call.getFirstFirstChild().getNext().getString().equals("call")) {
+        && Node.getGetpropString(call.getFirstChild()).equals("call")) {
       fnc = call.getFirstFirstChild();
 
       // We only support explicitly binding "this" to the parent "this" or "exports"
@@ -980,14 +978,26 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             new NodeUtil.Visitor() {
               @Override
               public void visit(Node node) {
-                if ((node.isName()
-                        && (node.getString().equals(MODULE) || node.getString().equals("define")))
-                    || (node.isGetProp() && node.matchesQualifiedName("window.define"))
-                    || (node.isString()
-                        && node.getString().equals("amd")
-                        && node.getParent().isIn())) {
-                  umdTests.add(node);
+                switch (node.getToken()) {
+                  case NAME:
+                    if (node.getString().equals(MODULE) || node.getString().equals("define")) {
+                      break;
+                    }
+                    return;
+                  case GETPROP:
+                    if (node.matchesQualifiedName("window.define")) {
+                      break;
+                    }
+                    return;
+                  case STRING:
+                    if (node.getParent().isIn() && node.getString().equals("amd")) {
+                      break;
+                    }
+                    return;
+                  default:
+                    return;
                 }
+                umdTests.add(node);
               }
             });
 
@@ -2062,10 +2072,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             getBasePropertyImport(
                 getImportedModuleName(t, rValue.getFirstChild()), rValue.getFirstChild());
 
-        String suffix =
-            rValue.getSecondChild().isGetProp()
-                ? rValue.getSecondChild().getQualifiedName()
-                : rValue.getSecondChild().getString();
+        String suffix = Node.getGetpropString(rValue);
 
         return importName + "." + suffix + propSuffix;
       }

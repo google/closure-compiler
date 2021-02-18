@@ -140,15 +140,14 @@ class PeepholeSubstituteAlternateSyntax
 
     if (node.getFirstChild().isName()) {
       Node nameNode = node.getFirstChild();
-      Node stringNode = node.getLastChild();
 
       // Since normalization has run we know we're referring to the global window.
       if ("window".equals(nameNode.getString())
-          && BUILTIN_EXTERNS.contains(stringNode.getString())) {
-        Node newNameNode = IR.name(stringNode.getString());
+          && BUILTIN_EXTERNS.contains(Node.getGetpropString(node))) {
+        Node newNameNode = IR.name(Node.getGetpropString(node));
         Node parentNode = node.getParent();
 
-        newNameNode.useSourceInfoFrom(stringNode);
+        newNameNode.useSourceInfoFrom(node);
         parentNode.replaceChild(node, newNameNode);
 
         if (parentNode.isCall() || parentNode.isOptChainCall()) {

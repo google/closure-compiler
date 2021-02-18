@@ -571,8 +571,7 @@ class RemoveUnusedCode implements CompilerPass {
   private void traverseNormalOrOptChainGetProp(Node getProp, Scope scope) {
     checkState(NodeUtil.isNormalOrOptChainGetProp(getProp), getProp);
     Node objectNode = getProp.getFirstChild();
-    Node propertyNameNode = objectNode.getNext();
-    String propertyName = propertyNameNode.getString();
+    String propertyName = Node.getGetpropString(getProp);
 
     if (polyfills.containsKey(propertyName)) {
       for (PolyfillInfo info : polyfills.get(propertyName)) {
@@ -591,7 +590,7 @@ class RemoveUnusedCode implements CompilerPass {
       // this.propName;
       // We don't want to consider this a real usage that should prevent removal.
       RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
-      considerForIndependentRemoval(builder.buildUnusedReadReference(getProp, propertyNameNode));
+      considerForIndependentRemoval(builder.buildUnusedReadReference(getProp, getProp));
     } else if (isDotPrototype(objectNode)) {
       // (objExpression).prototype.propName;
       RemovableBuilder builder = new RemovableBuilder().setIsPrototypeDotPropertyReference(true);
@@ -599,7 +598,7 @@ class RemoveUnusedCode implements CompilerPass {
       if (objExpression.isName()) {
         // name.prototype.propName;
         VarInfo varInfo = traverseNameNode(objExpression, scope);
-        varInfo.addRemovable(builder.buildUnusedReadReference(getProp, propertyNameNode));
+        varInfo.addRemovable(builder.buildUnusedReadReference(getProp, getProp));
       } else {
         // (objExpression).prototype.propName;
         if (astAnalyzer.mayHaveSideEffects(objExpression)) {
@@ -607,7 +606,7 @@ class RemoveUnusedCode implements CompilerPass {
         } else {
           builder.addContinuation(new Continuation(objExpression, scope));
         }
-        considerForIndependentRemoval(builder.buildUnusedReadReference(getProp, propertyNameNode));
+        considerForIndependentRemoval(builder.buildUnusedReadReference(getProp, getProp));
       }
     } else {
       // TODO(bradfordcsmith): add removal of `varName.propName;`
@@ -625,14 +624,13 @@ class RemoveUnusedCode implements CompilerPass {
       traverseNode(arg, scope);
     } else if (arg.isGetProp()) {
       Node getPropObj = arg.getFirstChild();
-      Node propertyNameNode = arg.getLastChild();
 
       if (considerForAccessorSideEffects(arg, PropertyAccessKind.GETTER_AND_SETTER)) {
         traverseNode(getPropObj, scope); // Don't re-traverse the GETPROP as a read.
       } else if (getPropObj.isThis()) {
         // this.propName++
         RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
-        considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode, null));
+        considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, arg, null));
       } else if (isDotPrototype(getPropObj)) {
         // someExpression.prototype.propName++
         Node exprObj = getPropObj.getFirstChild();
@@ -640,7 +638,7 @@ class RemoveUnusedCode implements CompilerPass {
         if (exprObj.isName()) {
           // varName.prototype.propName++
           VarInfo varInfo = traverseNameNode(exprObj, scope);
-          varInfo.addRemovable(builder.buildIncOrDepOp(incOrDecOp, propertyNameNode, null));
+          varInfo.addRemovable(builder.buildIncOrDepOp(incOrDecOp, arg, null));
         } else {
           // (someExpression).prototype.propName++
           Node toPreserve = null;
@@ -650,8 +648,7 @@ class RemoveUnusedCode implements CompilerPass {
           } else {
             builder.addContinuation(new Continuation(exprObj, scope));
           }
-          considerForIndependentRemoval(
-              builder.buildIncOrDepOp(incOrDecOp, propertyNameNode, toPreserve));
+          considerForIndependentRemoval(builder.buildIncOrDepOp(incOrDecOp, arg, toPreserve));
         }
       } else {
         // someExpression.propName++ is not removable except in the cases covered above
@@ -679,8 +676,8 @@ class RemoveUnusedCode implements CompilerPass {
           && !NodeUtil.isExpressionResultUsed(compoundAssignNode)) {
       RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
       traverseRemovableAssignValue(valueNode, builder, scope);
-      considerForIndependentRemoval(
-          builder.buildNamedPropertyAssign(compoundAssignNode, targetNode.getLastChild()));
+        considerForIndependentRemoval(
+            builder.buildNamedPropertyAssign(compoundAssignNode, targetNode));
       } else {
         traverseNode(targetNode, scope);
         traverseNode(valueNode, scope);
@@ -774,7 +771,7 @@ class RemoveUnusedCode implements CompilerPass {
         return n.getString().equals("$jscomp$polyfill") && n.getNext().isString();
       case GETPROP:
         // Need to work correctly without CollapseProperties.
-        return n.getLastChild().getString().equals("polyfill")
+        return Node.getGetpropString(n).equals("polyfill")
             && n.getFirstChild().isName()
             && n.getFirstChild().getString().equals("$jscomp")
             && n.getNext().isString();
@@ -912,8 +909,7 @@ class RemoveUnusedCode implements CompilerPass {
 
   /** True for `someExpression.prototype`. */
   private static boolean isDotPrototype(Node n) {
-    return NodeUtil.isNormalOrOptChainGetProp(n)
-        && n.getLastChild().getString().equals("prototype");
+    return NodeUtil.isNormalOrOptChainGetProp(n) && Node.getGetpropString(n).equals("prototype");
   }
 
   private void traverseCatch(Node catchNode, Scope scope) {
@@ -1079,7 +1075,6 @@ class RemoveUnusedCode implements CompilerPass {
       }
     } else if (lhs.isGetProp()) {
       Node getPropLhs = lhs.getFirstChild();
-      Node propNameNode = lhs.getLastChild();
       // Assignments `Foo.prototype.bar = function() {`
       boolean isDotPrototypeLhs = isDotPrototype(getPropLhs);
       boolean isPrototypeMethodDef = isDotPrototypeLhs && valueNode.isFunction();
@@ -1097,7 +1092,7 @@ class RemoveUnusedCode implements CompilerPass {
         VarInfo varInfo = traverseNameNode(getPropLhs, scope);
         RemovableBuilder builder = new RemovableBuilder();
         traverseRemovableAssignValue(valueNode, builder, scope);
-        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode, varInfo));
+        varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, lhs, varInfo));
       } else if (isDotPrototypeLhs) {
         // objExpression.prototype.propertyName = someValue
         Node objExpression = getPropLhs.getFirstChild();
@@ -1106,7 +1101,7 @@ class RemoveUnusedCode implements CompilerPass {
         if (objExpression.isName()) {
           // varName.prototype.propertyName = someValue
           VarInfo varInfo = traverseNameNode(getPropLhs.getFirstChild(), scope);
-          varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, propNameNode, varInfo));
+          varInfo.addRemovable(builder.buildNamedPropertyAssign(assignNode, lhs, varInfo));
         } else {
           // (someExpression).prototype.propertyName = someValue
           if (astAnalyzer.mayHaveSideEffects(objExpression)) {
@@ -1116,13 +1111,13 @@ class RemoveUnusedCode implements CompilerPass {
           }
           considerForIndependentRemoval(
               builder.buildAnonymousPrototypeNamedPropertyAssign(
-                  assignNode, propNameNode.getString()));
+                  assignNode, Node.getGetpropString(lhs)));
         }
       } else if (getPropLhs.isThis()) {
         // this.propertyName = someValue
         RemovableBuilder builder = new RemovableBuilder().setIsThisDotPropertyReference(true);
         traverseRemovableAssignValue(valueNode, builder, scope);
-        considerForIndependentRemoval(builder.buildNamedPropertyAssign(assignNode, propNameNode));
+        considerForIndependentRemoval(builder.buildNamedPropertyAssign(assignNode, lhs));
       } else {
         traverseNode(lhs, scope);
         traverseNode(valueNode, scope);
@@ -1146,7 +1141,7 @@ class RemoveUnusedCode implements CompilerPass {
   private boolean isNameDotPrototype(Node n) {
     return n.isGetProp()
         && n.getFirstChild().isName()
-        && n.getLastChild().getString().equals("prototype");
+        && Node.getGetpropString(n).equals("prototype");
   }
 
   private void traverseObjectPattern(Node pattern, Scope scope) {
@@ -1474,7 +1469,7 @@ class RemoveUnusedCode implements CompilerPass {
   private boolean considerForAccessorSideEffects(Node getprop, PropertyAccessKind usage) {
     // Other node types may make sense in the future.
     checkState(NodeUtil.isNormalOrOptChainGetProp(getprop), getprop);
-    String propName = getprop.getSecondChild().getString();
+    String propName = Node.getGetpropString(getprop);
     PropertyAccessKind recorded = compiler.getAccessorSummary().getKind(propName);
     if ((recorded.hasGetter() && usage.hasGetter() && !assumeGettersArePure)
         || (recorded.hasSetter() && usage.hasSetter())) {
@@ -1961,7 +1956,7 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     Assign buildNamedPropertyAssign(Node assignNode, Node propertyNode, @Nullable VarInfo varInfo) {
-      this.propertyName = propertyNode.getString();
+      this.propertyName = Node.getGetpropString(propertyNode);
       return new Assign(this, assignNode, Kind.NAMED_PROPERTY, propertyNode, varInfo);
     }
 
@@ -1988,12 +1983,12 @@ class RemoveUnusedCode implements CompilerPass {
     }
 
     IncOrDecOp buildIncOrDepOp(Node incOrDecOp, Node propertyNode, @Nullable Node toPreseve) {
-      this.propertyName = propertyNode.getString();
+      this.propertyName = Node.getGetpropString(propertyNode);
       return new IncOrDecOp(this, incOrDecOp, toPreseve);
     }
 
     UnusedReadReference buildUnusedReadReference(Node referenceNode, Node propertyNode) {
-      this.propertyName = propertyNode.getString();
+      this.propertyName = Node.getGetpropString(propertyNode);
       return new UnusedReadReference(this, referenceNode);
     }
 
@@ -2178,7 +2173,7 @@ class RemoveUnusedCode implements CompilerPass {
     @Override
     String getPropertyName() {
       checkState(targetNode.isGetProp(), targetNode);
-      return targetNode.getLastChild().getString();
+      return Node.getGetpropString(targetNode);
     }
 
     @Override
@@ -2550,7 +2545,8 @@ class RemoveUnusedCode implements CompilerPass {
       } else {
         checkArgument(propertyNode != null, "missing property node");
         if (kind == Kind.NAMED_PROPERTY) {
-          checkArgument(propertyNode.isString(), "property name is not a string: %s", propertyNode);
+          checkArgument(
+              propertyNode.isGetProp(), "property name is not a GETPROP: %s", propertyNode);
         }
       }
       this.assignNode = assignNode;
@@ -2680,8 +2676,7 @@ class RemoveUnusedCode implements CompilerPass {
       Node objDotPrototype = lhs.getFirstChild();
       checkState(objDotPrototype.isGetProp(), objDotPrototype);
       Node objExpression = objDotPrototype.getFirstChild();
-      Node prototype = objDotPrototype.getLastChild();
-      checkState(prototype.getString().equals("prototype"), prototype);
+      checkState(Node.getGetpropString(objDotPrototype).equals("prototype"), objDotPrototype);
 
       boolean mustPreserveRhs =
           astAnalyzer.mayHaveSideEffects(rhs) || NodeUtil.isExpressionResultUsed(assignNode);

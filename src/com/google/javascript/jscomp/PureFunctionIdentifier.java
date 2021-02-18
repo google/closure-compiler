@@ -797,7 +797,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         case OPTCHAIN_GETPROP:
         case GETPROP:
           // Assumption: GETELEM and OPTCHAIN_GETELEM are never side-effectful.
-          if (getPropertyKind(node.getLastChild().getString()).hasGetterOrSetter()) {
+          if (getPropertyKind(Node.getGetpropString(node)).hasGetterOrSetter()) {
             encloserSummary.setMutatesGlobalStateAndAllOtherFlags();
           }
           break;
@@ -1063,7 +1063,7 @@ class PureFunctionIdentifier implements OptimizeCalls.CallGraphCompilerPass {
         return nameRef.getString();
       case GETPROP:
       case OPTCHAIN_GETPROP:
-        return PROP_NAME_PREFIX + nameRef.getSecondChild().getString();
+        return PROP_NAME_PREFIX + Node.getGetpropString(nameRef);
       default:
         throw new IllegalStateException("Unexpected name reference: " + nameRef);
     }

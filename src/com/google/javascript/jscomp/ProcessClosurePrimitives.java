@@ -237,7 +237,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // For the sake of simplicity, we report code changes
     // when we see a provides/requires, and don't worry about
     // reporting the change when we actually do the replacement.
-    String methodName = receiver.getNext().getString();
+    String methodName = Node.getGetpropString(callee);
     switch (methodName) {
       case "define":
         processDefineCall(t, call, call.getParent());
@@ -389,12 +389,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback implements HotS
     // structure is what we expect it to be.
 
     Node callTarget = n.getFirstChild();
-    if (!callTarget.isGetProp()) {
-      return;
-    }
-
-    Node targetName = callTarget.getSecondChild();
-    if (!targetName.getString().equals("base")) {
+    if (!callTarget.isGetProp() || !Node.getGetpropString(callTarget).equals("base")) {
       return;
     }
 

@@ -286,7 +286,7 @@ final class PolyfillUsageFinder {
         // several possible method polyfills.
         // e.g. `obj.includes(x)` could be a usage of `Array.prototype.includes` or
         // `String.prototype.includes`.
-        final String propertyName = getPropNode.getSecondChild().getString();
+        final String propertyName = Node.getGetpropString(getPropNode);
         Collection<Polyfill> methodPolyfills = polyfills.methods.get(propertyName);
         // Note that we use ".foo" as the guard check for methods to keep them distinct in case
         // there is also a static "foo" polyfill.
@@ -305,7 +305,7 @@ final class PolyfillUsageFinder {
   private PolyfillUsage maybeCreateStaticPolyfillUsageForGetPropChain(
       NodeTraversal traversal, final Node getPropNode) {
     checkArgument(getPropNode.isGetProp() || getPropNode.isOptChainGetProp(), getPropNode);
-    final String lastComponent = getPropNode.getSecondChild().getString();
+    final String lastComponent = Node.getGetpropString(getPropNode);
     if (!polyfills.suffixes.contains(lastComponent)) {
       // Save execution time by bailing out early if the property name at the end of the chain
       // doesn't match any of the known polyfills.
@@ -319,7 +319,7 @@ final class PolyfillUsageFinder {
     for (ownerNode = getPropNode.getFirstChild();
         ownerNode.isGetProp() || ownerNode.isOptChainGetProp();
         ownerNode = ownerNode.getFirstChild()) {
-      components.addFirst(ownerNode.getSecondChild().getString());
+      components.addFirst(Node.getGetpropString(ownerNode));
     }
     if (!ownerNode.isName()) {
       // Static polyfills are always fully qualified names beginning with a NAME node.

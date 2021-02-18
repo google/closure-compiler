@@ -52,7 +52,7 @@ final class PolymerPassStaticUtils {
     // `module$polymer$polymer_legacy.Polymer`.
     return name.matchesName("Polymer")
         || "Polymer".equals(name.getOriginalQualifiedName())
-        || (name.isGetProp() && name.getLastChild().getString().equals("Polymer"));
+        || (name.isGetProp() && Node.getGetpropString(name).equals("Polymer"));
   }
 
   /** @return Whether the class extends PolymerElement. */
@@ -75,8 +75,7 @@ final class PolymerPassStaticUtils {
         && (heritage.matchesQualifiedName("Polymer.Element")
             || heritage.matchesName("PolymerElement")
             || "PolymerElement".equals(heritage.getOriginalQualifiedName())
-            || (heritage.isGetProp()
-                && heritage.getLastChild().getString().equals("PolymerElement")));
+            || (heritage.isGetProp() && Node.getGetpropString(heritage).equals("PolymerElement")));
   }
 
   /**
@@ -95,21 +94,27 @@ final class PolymerPassStaticUtils {
             new NodeUtil.Visitor() {
               @Override
               public void visit(Node n) {
-                if (n.isString()
-                    && n.getString().equals("$")
-                    && n.getParent().isGetProp()
-                    && n.getGrandparent().isGetProp()) {
-
-                  // Some libraries like Mojo JS Bindings and jQuery place methods in a "$" member
-                  // e.g. "foo.$.closePipe()". Avoid converting to brackets for these cases.
-                  if (n.getAncestor(3).isCall() && n.getAncestor(3).hasOneChild()) {
-                    return;
-                  }
-
-                  Node dollarChildProp = n.getGrandparent();
-                  dollarChildProp.setToken(Token.GETELEM);
-                  compiler.reportChangeToEnclosingScope(dollarChildProp);
+                if (!n.isGetProp()) {
+                  return;
                 }
+
+                Node dollarSign = n.getFirstChild();
+                if (!dollarSign.isGetProp() || !Node.getGetpropString(dollarSign).equals("$")) {
+                  return;
+                }
+
+                // Some libraries like Mojo JS Bindings and jQuery place methods in a "$" member
+                // e.g. "foo.$.closePipe()". Avoid converting to brackets for these cases.
+                if (n.getParent().isCall() && n.getParent().hasOneChild()) {
+                  return;
+                }
+
+                Node key =
+                    IR.string(Node.getGetpropString(n)).clonePropsFrom(n).useSourceInfoFrom(n);
+                Node getelem =
+                    IR.getelem(dollarSign.detach(), key).clonePropsFrom(n).useSourceInfoFrom(n);
+                n.replaceWith(getelem);
+                compiler.reportChangeToEnclosingScope(getelem);
               }
             });
       }
@@ -199,11 +204,9 @@ final class PolymerPassStaticUtils {
   private static void collectConstructorPropertyJsDoc(Node node, Map<String, JSDocInfo> map) {
     checkNotNull(node);
     for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
-      if (child.isGetProp()
-          && child.getFirstChild().isThis()
-          && child.getSecondChild().isString()) {
+      if (child.isGetProp() && child.getFirstChild().isThis()) {
         // We found a "this.foo" expression. Map "foo" to its JSDoc.
-        map.put(child.getSecondChild().getString(), NodeUtil.getBestJSDocInfo(child));
+        map.put(Node.getGetpropString(child), NodeUtil.getBestJSDocInfo(child));
       } else {
         // Recurse through every other kind of node, because properties are not necessarily declared
         // at the top level of the constructor body; e.g. they could be declared as part of an
