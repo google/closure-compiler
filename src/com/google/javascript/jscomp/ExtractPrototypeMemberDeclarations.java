@@ -352,7 +352,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     private static Node getPrototypeClassName(Node qName) {
       Node cur = qName;
       while (cur.isGetProp()) {
-        if (cur.getLastChild().getString().equals("prototype")) {
+        if (Node.getGetpropString(cur).equals("prototype")) {
           return cur.getFirstChild();
         } else {
           cur = cur.getFirstChild();
@@ -369,7 +369,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       if (lvalue.isGetProp()) {
         Node cur = lvalue.getFirstChild();
         while (cur.isGetProp()) {
-          if (cur.getLastChild().getString().equals("prototype")) {
+          if (Node.getGetpropString(cur).equals("prototype")) {
             return cur.isQualifiedName();
           }
           cur = cur.getFirstChild();

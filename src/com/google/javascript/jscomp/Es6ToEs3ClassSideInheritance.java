@@ -121,7 +121,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
 
     void addStaticMember(Node node) {
       staticMembers.add(node);
-      staticMemberNames.add(node.getFirstChild().getLastChild().getString());
+      staticMemberNames.add(Node.getGetpropString(node.getFirstChild()));
     }
   }
 
@@ -173,7 +173,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
       JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
     for (Node staticGetProp : superClass.staticFieldAccess) {
       checkState(staticGetProp.isGetProp());
-      String memberName = staticGetProp.getLastChild().getString();
+      String memberName = Node.getGetpropString(staticGetProp);
       // We only copy declarations that have corresponding Object.defineProperties
       if (!superClass.definedProperties.contains(memberName)) {
         continue;
@@ -205,7 +205,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
       FindStaticMembers findStaticMembers) {
     for (Node staticMember : superClass.staticMembers) {
       checkState(staticMember.isAssign(), staticMember);
-      String memberName = staticMember.getFirstChild().getLastChild().getString();
+      String memberName = Node.getGetpropString(staticMember.getFirstChild());
       if (superClass.definedProperties.contains(memberName)) {
         continue;
       }

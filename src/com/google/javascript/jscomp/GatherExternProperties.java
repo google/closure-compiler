@@ -55,10 +55,7 @@ final class GatherExternProperties extends AbstractPostOrderCallback implements 
     switch (n.getToken()) {
       case GETPROP:
         // Gathers "name" from (someObject.name).
-        Node dest = n.getSecondChild();
-        if (dest.isString()) {
-          externProperties.add(dest.getString());
-        }
+        externProperties.add(Node.getGetpropString(n));
         break;
       case STRING_KEY:
         if (parent.isObjectLit()) {

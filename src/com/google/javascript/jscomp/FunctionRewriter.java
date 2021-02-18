@@ -424,13 +424,14 @@ class FunctionRewriter implements CompilerPass {
         return node;
       }
 
-      Node propName = getGetPropertyName(node);
-      if (propName != null) {
-        if (!propName.isString()) {
-          throw new IllegalStateException("Expected STRING, got " + propName.getToken());
+      Node getprop = getGetPropertyName(node);
+      if (getprop != null) {
+        if (!getprop.isGetProp()) {
+          throw new IllegalStateException("Expected GETPROP, got " + getprop.getToken());
         }
 
-        return buildCallNode(FACTORY_METHOD_NAME, propName, node);
+        Node arg = IR.string(Node.getGetpropString(getprop)).useSourceInfoFrom(getprop);
+        return buildCallNode(FACTORY_METHOD_NAME, arg, node);
       } else {
         return node;
       }
@@ -448,7 +449,7 @@ class FunctionRewriter implements CompilerPass {
       if (value != null &&
           value.isGetProp() &&
           value.getFirstChild().isThis()) {
-        return value.getLastChild();
+        return value;
       }
       return null;
     }
@@ -525,9 +526,10 @@ class FunctionRewriter implements CompilerPass {
       Node lhs = assign.getFirstChild();
       if (lhs.isGetProp() && lhs.getFirstChild().isThis()) {
         Node rhs = assign.getLastChild();
-        if (rhs.isName() &&
-            rhs.getString().equals(paramNode.getString())) {
-          return lhs.getLastChild();
+        if (rhs.isName() && rhs.getString().equals(paramNode.getString())) {
+          return Node.isStringGetprop(lhs)
+              ? IR.string(lhs.getString()).clonePropsFrom(lhs).useSourceInfoFrom(lhs)
+              : lhs.getLastChild();
         }
       }
       return null;

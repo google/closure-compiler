@@ -1002,15 +1002,13 @@ class GlobalNamespace
       if (!callNode.hasTwoChildren()) {
         return false;
       }
-      Node fn = callNode.getFirstChild();
-      if (!fn.isGetProp()) {
+      Node callee = callNode.getFirstChild();
+      if (!callee.isGetProp()) {
         return false;
       }
-      Node callee = fn.getFirstChild();
-      Node method = fn.getSecondChild();
-      return method.isString()
-          && "hasOwnProperty".equals(method.getString())
-          && callee.isQualifiedName();
+      Node receiver = callee.getFirstChild();
+      return "hasOwnProperty".equals(Node.getGetpropString(callee))
+          && receiver.isQualifiedName();
     }
 
     /**

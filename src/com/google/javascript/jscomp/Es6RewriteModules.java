@@ -985,7 +985,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
       while (binding.isModuleNamespace()
           && binding.metadata().isEs6Module()
           && n.getParent().isGetProp()) {
-        String propertyName = n.getParent().getSecondChild().getString();
+        String propertyName = Node.getGetpropString(n.getParent());
         Module m = moduleMap.getModule(binding.metadata().path());
         if (m.namespace().containsKey(propertyName)) {
           binding = m.namespace().get(propertyName);
@@ -1011,7 +1011,7 @@ public final class Es6RewriteModules implements HotSwapCompilerPass, NodeTravers
 
       // For kythe: the new node only represents the last name it replaced, not all the names.
       // e.g. if we rewrite `a.b.c.d.e` to `x.d.e`, then `x` should map to `c`, not `a.b.c`.
-      Node forSourceInfo = n.isGetProp() ? n.getSecondChild() : n;
+      Node forSourceInfo = (n.isName() || Node.isStringGetprop(n)) ? n : n.getSecondChild();
 
       n.replaceWith(newNode);
       newNode.srcrefTree(forSourceInfo);

@@ -110,7 +110,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
             mode = Mode.EXPORT;
           } else if (allowLocalExports && n.getFirstChild().isGetProp()) {
             Node target = n.getFirstChild();
-            export = target.getLastChild().getString();
+            export = Node.getGetpropString(target);
             mode = Mode.EXTERN;
           }
         }
@@ -135,7 +135,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           // This means that the top-level code we want to rewrite works by accident, only when
           // allowLocalExports happens to be true.
           if (allowLocalExports && parent.isExprResult()) {
-            export = n.getLastChild().getString();
+            export = Node.getGetpropString(n);
             mode = Mode.EXTERN;
           }
           break;
