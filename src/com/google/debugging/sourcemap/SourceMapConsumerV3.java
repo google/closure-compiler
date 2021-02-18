@@ -52,7 +52,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
       reverseSourceMapping;
   private String sourceRoot;
   private final Map<String, Object> extensions = new LinkedHashMap<>();
-
+  private boolean approximateMappings;
+  
   static class DefaultSourceMapSupplier implements SourceMapSupplier {
     @Override
     public String getSourceMap(String url) {
@@ -65,6 +66,11 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
    */
   @Override
   public void parse(String contents) throws SourceMapParseException {
+    parse(contents, true);
+  }
+  
+  public void parse(String contents, boolean approximateMappings) throws SourceMapParseException {
+    this.approximateMappings = approximateMappings;
     SourceMapObject sourceMapObject = SourceMapObjectParser.parse(contents);
     parse(sourceMapObject, null);
   }
@@ -173,6 +179,10 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
     }
 
     int index = search(entries, column, 0, entries.size() - 1);
+    if (!approximateMappings && index == -1) {
+      return null;
+    }
+    
     Preconditions.checkState(index >= 0, "unexpected:%s", index);
     return getOriginalMappingForEntry(entries.get(index));
   }
@@ -392,26 +402,22 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
    * Perform a binary search on the array to find a section that covers
    * the target column.
    */
-  private static int search(ArrayList<Entry> entries, int target, int start, int end) {
-    while (true) {
-      int mid = ((end - start) / 2) + start;
+  private int search(ArrayList<Entry> entries, int target, int start, int end) {
+    int mid = end;
+    while (start <= end) {
+      mid = ((end - start) / 2) + start;
       int compare = compareEntry(entries, mid, target);
       if (compare == 0) {
         return mid;
       } else if (compare < 0) {
         // it is in the upper half
         start = mid + 1;
-        if (start > end) {
-          return end;
-        }
       } else {
         // it is in the lower half
         end = mid - 1;
-        if (end < start) {
-          return end;
-        }
       }
     }
+    return (approximateMappings) ? mid : -1;
   }
 
   /**
@@ -426,6 +432,9 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
    * such entry exists.
    */
   private OriginalMapping getPreviousMapping(int lineNumber) {
+    if (!approximateMappings) {
+      return null;
+    }
     do {
       if (lineNumber == 0) {
         return null;
