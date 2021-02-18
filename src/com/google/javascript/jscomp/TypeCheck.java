@@ -1272,14 +1272,13 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (lvalue.isGetProp()) {
       Node object = lvalue.getFirstChild();
       JSType objectJsType = getJSType(object);
-      Node property = lvalue.getLastChild();
-      String pname = property.getString();
+      String pname = Node.getGetpropString(lvalue);
 
       // the first name in this getprop refers to an interface
       // we perform checks in addition to the ones below
       if (object.isGetProp()) {
         JSType jsType = getJSType(object.getFirstChild());
-        if (jsType.isInterface() && object.getLastChild().getString().equals("prototype")) {
+        if (jsType.isInterface() && Node.getGetpropString(object).equals("prototype")) {
           visitInterfacePropertyAssignment(object, lvalue);
         }
       }
@@ -1351,12 +1350,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (lvalue.isGetProp()) {
       JSType objType = getJSType(lvalue.getFirstChild());
       if (!objType.isEmptyType() && !objType.isUnknownType()) {
-        Node prop = lvalue.getLastChild();
-        String propName = prop.getString();
+        String propName = Node.getGetpropString(lvalue);
         PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objType, propName);
         if (!kind.equals(PropDefinitionKind.KNOWN)) {
           if (objType.isStruct()) {
-            report(prop, ILLEGAL_PROPERTY_CREATION);
+            report(lvalue, ILLEGAL_PROPERTY_CREATION);
           } else {
             // null checks are reported elsewhere
             if (!objType.isNoType()
@@ -1365,8 +1363,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               return;
             }
 
-            reportMissingProperty(
-                lvalue.getFirstChild(), objType, lvalue.getSecondChild(), kind, true);
+            reportMissingProperty(lvalue.getFirstChild(), objType, lvalue, kind, true);
           }
         }
       }
@@ -1385,7 +1382,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     //
     // As-is, this misses many other ways to override a property.
 
-    if (object.isGetProp() && object.getSecondChild().getString().equals("prototype")) {
+    if (object.isGetProp() && Node.getGetpropString(object).equals("prototype")) {
       // ASSIGN = assign
       //   GETPROP
       //     GETPROP = object
@@ -1992,7 +1989,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // Lots of types can appear on the left, a call to a void function can
     // never be on the left. getPropertyType will decide what is acceptable
     // and what isn't.
-    Node property = n.getLastChild();
+    Node property = Node.isStringGetprop(n) ? n : n.getLastChild();
     Node objNode = n.getFirstChild();
     JSType childType = getJSType(objNode);
 
@@ -2029,11 +2026,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     checkArgument(getProp.isGetProp() || getProp.isOptChainGetProp(), getProp);
     Node objNode = getProp.getFirstChild();
     JSType objType = getJSType(objNode);
-    Node propNode = getProp.getSecondChild();
     JSType propType = getJSType(getProp);
 
     checkAbstractPropertyAccess(getProp);
-    checkPropertyAccess(objType, getProp, propType, propNode, objNode);
+    checkPropertyAccess(objType, getProp, propType, objNode);
   }
 
   private void checkPropertyAccessForDestructuring(
@@ -2053,7 +2049,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         && pattern.getNext() != null) {
       objNode = pattern.getNext();
     }
-    checkPropertyAccess(objectType, /* getProp= */ null, inferredPropType, stringKey, objNode);
+    checkPropertyAccess(objectType, stringKey, inferredPropType, objNode);
   }
 
   /**
@@ -2099,7 +2095,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       // even if the `this` object changes. So `super` will never resolve to a concrete subclass.
       report(method, ABSTRACT_SUPER_METHOD_NOT_USABLE, methodType.getDisplayName());
     } else if (objectNode.isGetProp()) {
-      String objectProp = objectNode.getSecondChild().getString();
+      String objectProp = Node.getGetpropString(objectNode);
       if (objectProp.equals("prototype") // case (b), e.g. `Foo.prototype.bar`
           || compiler.getCodingConvention().isSuperClassReference(objectProp)) { // case (c)
         report(method, ABSTRACT_SUPER_METHOD_NOT_USABLE, methodType.getDisplayName());
@@ -2119,16 +2115,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    *
    * @param objNode the actual node representing the object we're accessing. optional because
    *     destructuring accesses MAY not have an actual object node
-   * @param getProp the GETPROP node representing this property access. optional because
-   *     destructuring accesses don't have actual getprops.
    */
   private void checkPropertyAccess(
-      JSType childType,
-      @Nullable Node getProp,
-      JSType propType,
-      Node propNode,
-      @Nullable Node objNode) {
-    String propName = propNode.getString();
+      JSType childType, Node propNode, JSType propType, @Nullable Node objNode) {
+    final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
+    final String propName = isGetprop ? Node.getGetpropString(propNode) : propNode.getString();
+
     if (propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
       childType = childType.autobox();
       ObjectType objectType = ObjectType.cast(childType);
@@ -2139,17 +2131,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         if (!objectType.hasProperty(propName)
             || objectType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
           if (objectType instanceof EnumType) {
-            report(getProp != null ? getProp : propNode, INEXISTENT_ENUM_ELEMENT, propName);
+            report(propNode, INEXISTENT_ENUM_ELEMENT, propName);
           } else {
-            checkPropertyAccessHelper(objectType, propNode, objNode, getProp, false);
+            checkPropertyAccessHelper(objectType, propNode, objNode, false);
           }
         }
       } else {
-        checkPropertyAccessHelper(childType, propNode, objNode, getProp, false);
+        checkPropertyAccessHelper(childType, propNode, objNode, false);
       }
-    } else if (childType.isUnionType() && getProp != null && !isLValueGetProp(getProp)) {
+    } else if (childType.isUnionType() && isGetprop && !isLValueGetProp(propNode)) {
       // NOTE: strict property assignment checks are done on assignment.
-      checkPropertyAccessHelper(childType, propNode, objNode, getProp, true);
+      checkPropertyAccessHelper(childType, propNode, objNode, true);
     }
   }
 
@@ -2165,14 +2157,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    *     properties" checks are enabled.
    */
   private void checkPropertyAccessHelper(
-      JSType objectType, Node propNode, @Nullable Node objNode, Node getProp, boolean strictCheck) {
+      JSType objectType, Node propNode, @Nullable Node objNode, boolean strictCheck) {
+    final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
+    final String propName = isGetprop ? Node.getGetpropString(propNode) : propNode.getString();
+
     if (!reportMissingProperties
         || objectType.isEmptyType()
-        || (getProp != null && allowStrictPropertyAccessOnNode(getProp))) {
+        || (isGetprop && allowStrictPropertyAccessOnNode(propNode))) {
       return;
     }
 
-    String propName = propNode.getString();
     PropDefinitionKind kind = typeRegistry.canPropertyBeDefined(objectType, propName);
     if (kind.equals(PropDefinitionKind.KNOWN)) {
       return;
@@ -2188,11 +2182,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     boolean isStruct = objectType.isStruct();
-    boolean loosePropertyDeclaration =
-        getProp != null && isQNameAssignmentTarget(getProp) && !isStruct;
+    boolean loosePropertyDeclaration = !isStruct && isGetprop && isQNameAssignmentTarget(propNode);
     // always false for destructuring
     boolean maybePropExistenceCheck =
-        !isStruct && getProp != null && allowLoosePropertyAccessOnNode(getProp);
+        !isStruct && isGetprop && allowLoosePropertyAccessOnNode(propNode);
     // Traditionally, we would not report a warning for "loose" properties, but we want to be
     // able to be more strict, so introduce an optional warning.
     boolean strictReport =
@@ -2207,7 +2200,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       Node propNode,
       PropDefinitionKind kind,
       boolean strictReport) {
-    String propName = propNode.getString();
+    final boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(propNode);
+    final String propName = isGetprop ? Node.getGetpropString(propNode) : propNode.getString();
+
     boolean isObjectType = objectType.equals(getNativeType(OBJECT_TYPE));
     boolean lowConfidence = objectType.isUnknownType() || objectType.isAllType() || isObjectType;
 
