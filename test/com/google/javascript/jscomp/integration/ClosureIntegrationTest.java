@@ -256,7 +256,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testUnresolvedDefine() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCheckTypes(true);
     DiagnosticGroup[] warnings = {
@@ -308,7 +307,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testDisableModuleRewriting() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
     options.setEnableModuleRewriting(false);
@@ -329,7 +327,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testDisableModuleRewriting_doesntCrashWhenFirstInputIsModule_andGoogScopeUsed() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
     options.setEnableModuleRewriting(false);
@@ -763,7 +760,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
     test(
@@ -799,7 +795,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   public void testGoogModuleDuplicateExport() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setStrictModeInput(true);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.ERROR);
@@ -820,7 +815,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testGoogModuleOuterLegacyInner() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
 
@@ -869,7 +863,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testLegacyGoogModuleExport1() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
     options.setGenerateExports(true);
@@ -906,7 +899,6 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
   @Test
   public void testLegacyGoogModuleExport2() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
     options.setGenerateExports(true);

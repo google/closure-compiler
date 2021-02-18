@@ -420,7 +420,6 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
   @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCodingConvention(new GoogleCodingConvention());
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);

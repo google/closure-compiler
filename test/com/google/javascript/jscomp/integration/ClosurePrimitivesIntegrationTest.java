@@ -155,7 +155,6 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
   @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     if (useSimpleMode) {
       CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);

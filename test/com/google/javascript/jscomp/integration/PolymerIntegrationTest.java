@@ -86,7 +86,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     addPolymerExterns();
@@ -124,7 +123,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
@@ -163,7 +161,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
@@ -201,7 +198,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     addPolymerExterns();
@@ -233,7 +229,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setClosurePass(true);
@@ -263,7 +258,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_ALL_COMMENTS);
     options.setClosurePass(true);
@@ -294,7 +288,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
@@ -331,7 +324,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
@@ -346,7 +338,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setClosurePass(true);
     addPolymerExterns();
@@ -377,7 +368,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setClosurePass(true);
     addPolymerExterns();
@@ -430,7 +420,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setClosurePass(true);
     addPolymerExterns();
@@ -472,7 +461,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
@@ -570,7 +558,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymer2Externs();
 
@@ -619,7 +606,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymer2Externs();
 
@@ -659,7 +645,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
@@ -679,7 +664,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
@@ -708,7 +692,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
@@ -738,7 +721,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     addPolymerExterns();
 
@@ -765,7 +747,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
   @Test
   public void testPolymerExportPolicyExportAllClassBased() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
@@ -807,7 +788,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
   @Test
   public void testPolymerExportPolicyExportAllLegacyElement() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);
@@ -849,7 +829,6 @@ public final class PolymerIntegrationTest extends IntegrationTestCase {
   @Test
   public void testPolymerPropertyDeclarationsWithConstructor() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPolymerVersion(2);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR);

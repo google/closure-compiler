@@ -228,7 +228,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testUnusedTaggedTemplateLiteralGetsRemoved() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
@@ -314,7 +313,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testForOfDoesNotFoolSideEffectDetection() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     options.setVariableRenaming(VariableRenamingPolicy.OFF);
@@ -427,7 +425,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // An extra pass of RemoveUnusedCode used to be conditional.  This specific code pattern
     // wasn't removed without it.  Verify it is removed.
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
@@ -444,7 +441,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testBug139862607() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
@@ -571,7 +567,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
     options.setRewritePolyfills(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
 
     useNoninjectingCompiler = true;
@@ -587,7 +582,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testWindowIsTypedEs6() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
@@ -616,7 +610,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     String code =
         "class Foo { get xx() {}; set yy(v) {}; static get init() {}; static set prop(v) {} }";
 
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(options, code, "");
@@ -628,7 +621,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
@@ -642,7 +634,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
@@ -656,7 +647,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     test(
         options,
@@ -679,7 +669,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPrettyPrint(true);
 
@@ -1210,7 +1199,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testNoDuplicateClassNameForLocalBaseClasses() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
@@ -1235,7 +1223,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   // Tests that unused classes are removed, even if they are passed to $jscomp.inherits.
   private void testES6UnusedClassesAreRemoved(CodingConvention convention) {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setCodingConvention(convention);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -1263,7 +1250,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
    */
   private void testES6StaticsAreRemoved(String js) {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = compile(options, js);
@@ -1478,7 +1464,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testSpreadArgumentsPassedToSuperDoesNotPreventRemoval() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
@@ -1513,7 +1498,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testAngularPropertyNameRestrictions() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setAngularPass(true);
@@ -1561,7 +1545,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testInlineRestParam() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
@@ -1579,7 +1562,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testInlineRestParamNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
@@ -1597,7 +1579,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testDefaultParameters() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
@@ -1614,7 +1595,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void disabled_testDefaultParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
 
     test(
@@ -1631,7 +1611,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testRestObjectPatternParameters() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     externs = DEFAULT_EXTERNS;
 
@@ -1655,7 +1634,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void disabled_testRestObjectPatternParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     externs = DEFAULT_EXTERNS;
 
@@ -1672,7 +1650,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testQuotedDestructuringNotRenamed() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
@@ -1687,7 +1664,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   @Test
   public void testObjectLiteralPropertyNamesUsedInDestructuringAssignment() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
@@ -1771,7 +1747,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testRestDoesntBlockPropertyDisambiguation() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
 
     // TODO(b/116532470): the compiler should compile this down to nothing.
     test(
@@ -1792,7 +1767,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testObjectSpreadAndRest_optimizeAndTypecheck() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 
@@ -1831,7 +1805,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testObjectSpreadAndRest_inlineAndCollapseProperties() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2018);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2018);
     options.setPrettyPrint(true);
     options.setGeneratePseudoNames(true);
@@ -1883,7 +1856,6 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testOptionalCatchBinding_optimizeAndTypecheck() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2019);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2019);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
 

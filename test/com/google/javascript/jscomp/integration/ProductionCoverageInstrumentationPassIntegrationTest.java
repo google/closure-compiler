@@ -189,7 +189,6 @@ public final class ProductionCoverageInstrumentationPassIntegrationTest
     CompilerOptions options = createCompilerOptions();
     declareIstArrExtern();
 
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2020);
     options.setLanguageOut(LanguageMode.NO_TRANSPILE);
 
     String source = lines("someObj ?? 24");
