@@ -37,7 +37,6 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
@@ -651,13 +650,15 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
   @GwtIncompatible("com.google.common.io.CharStreams")
   private static class OnDisk extends SourceFile {
     private static final long serialVersionUID = 1L;
-    private transient Path path;
+    // TODO(b/180553215): We shouldn't store this Path. We already have to reconstruct it from a
+    // string during deserialization.
+    private transient Path relativePath;
     private transient Charset inputCharset;
 
-    OnDisk(Path path, String originalPath, Charset c, SourceKind kind) {
-      super(path.toString(), originalPath, kind);
-      this.path = path;
+    OnDisk(Path relativePath, String originalPath, Charset c, SourceKind kind) {
+      super(relativePath.toString(), originalPath, kind);
       this.inputCharset = c;
+      this.relativePath = relativePath;
     }
 
     @Override
@@ -668,7 +669,8 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
         try (Reader r = getCodeReader()) {
           cachedCode = CharStreams.toString(r);
         } catch (MalformedInputException e) {
-          throw new IOException("Failed to read: " + path + ", is this input UTF-8 encoded?", e);
+          throw new IOException(
+              "Failed to read: " + this.relativePath + ", is this input UTF-8 encoded?", e);
         }
 
         super.setCode(cachedCode);
@@ -687,7 +689,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
         return super.getCodeReader();
       } else {
         // If we haven't pulled the code into memory yet, don't.
-        return Files.newBufferedReader(path, inputCharset);
+        return Files.newBufferedReader(this.relativePath, inputCharset);
       }
     }
 
@@ -702,14 +704,14 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
     private void writeObject(ObjectOutputStream out) throws Exception {
       out.defaultWriteObject();
       out.writeObject(inputCharset.name());
-      out.writeObject(path.toUri());
+      out.writeObject(this.relativePath.toString());
     }
 
     @GwtIncompatible("ObjectInputStream")
     private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
       inputCharset = Charset.forName((String) in.readObject());
-      path = Paths.get((URI) in.readObject());
+      this.relativePath = Paths.get((String) in.readObject());
 
       // Code will be reread or restored.
       super.setCode(null);
