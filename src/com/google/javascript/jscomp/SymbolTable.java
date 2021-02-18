@@ -1634,7 +1634,7 @@ public final class SymbolTable {
       if (n.isGetProp()) {
         JSType owner = n.getFirstChild().getJSType();
         if (owner != null) {
-          boolean defined = maybeDefineTypedReference(n, n.getLastChild().getString(), owner);
+          boolean defined = maybeDefineTypedReference(n, Node.getGetpropString(n), owner);
 
           if (defined) {
             tryRemoveLexicalQualifiedNameRef(n.getQualifiedName(), n);
@@ -1899,7 +1899,7 @@ public final class SymbolTable {
     }
 
     private void visitProperty(Node getprop, Node parent) {
-      String propertyName = getprop.getLastChild().getString();
+      String propertyName = Node.getGetpropString(getprop);
       Symbol symbol = symbols.get(getprop, propertyName);
       if (symbol == null) {
         return;

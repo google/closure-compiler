@@ -225,19 +225,18 @@ class StrictModeCheck extends AbstractPostOrderCallback
     /** Checks that the arguments.callee is not used. */
     private void checkGetProp(Node n) {
       Node target = n.getFirstChild();
-      Node prop = n.getLastChild();
-      if (prop.getString().equals("callee")) {
+      String name = Node.getGetpropString(n);
+      if (name.equals("callee")) {
         if (target.isName() && target.getString().equals("arguments")) {
           report(n, ARGUMENTS_CALLEE_FORBIDDEN);
         }
-      } else if (prop.getString().equals("caller")) {
+      } else if (name.equals("caller")) {
         if (target.isName() && target.getString().equals("arguments")) {
           report(n, ARGUMENTS_CALLER_FORBIDDEN);
         } else if (isFunctionType(target)) {
           report(n, FUNCTION_CALLER_FORBIDDEN);
         }
-      } else if (prop.getString().equals("arguments")
-          && isFunctionType(target)) {
+      } else if (name.equals("arguments") && isFunctionType(target)) {
         report(n, FUNCTION_ARGUMENTS_PROP_FORBIDDEN);
       }
     }

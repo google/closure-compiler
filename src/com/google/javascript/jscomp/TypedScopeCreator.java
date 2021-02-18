@@ -1688,7 +1688,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       Node call = extendsNode;
       ArrayList<String> properties = new ArrayList<>();
       while (!call.isCall()) {
-        properties.add(0, call.getSecondChild().getString());
+        properties.add(0, Node.getGetpropString(call));
         call = call.getFirstChild();
       }
       ScopedName extendsCall = moduleImportResolver.getClosureNamespaceTypeFromCall(call);
@@ -2733,7 +2733,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
       Node ownerNode = n.getFirstChild();
       String ownerName = ownerNode.getQualifiedName();
       String qName = n.getQualifiedName();
-      String propName = n.getLastChild().getString();
+      String propName = Node.getGetpropString(n);
       checkArgument(qName != null && ownerName != null);
 
       // Precedence of type information on GETPROPs:
@@ -2992,7 +2992,7 @@ final class TypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVa
      */
     void resolveStubDeclaration(Node n, boolean isExtern, String ownerName) {
       String qName = n.getQualifiedName();
-      String propName = n.getLastChild().getString();
+      String propName = Node.getGetpropString(n);
 
       // TODO(b/111216910): should this be getLValueRoot(n).hasOwnSlot(qName)?
       if (currentScope.hasOwnSlot(qName)) {
