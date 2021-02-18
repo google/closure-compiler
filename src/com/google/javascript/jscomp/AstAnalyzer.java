@@ -125,7 +125,7 @@ public class AstAnalyzer {
       }
     } else if (callee.isGetProp() || callee.isOptChainGetProp()) {
       if (callNode.hasOneChild()
-          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(callee.getLastChild().getString())) {
+          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(Node.getGetpropString(callee))) {
         return false;
       }
 
@@ -140,7 +140,7 @@ public class AstAnalyzer {
       if (callee.getFirstChild().isName()
           && callee.isQualifiedName()
           && callee.getFirstChild().getString().equals("Math")) {
-        switch (callee.getLastChild().getString()) {
+        switch (Node.getGetpropString(callee)) {
           case "abs":
           case "acos":
           case "acosh":
@@ -182,13 +182,13 @@ public class AstAnalyzer {
 
       if (!compiler.hasRegExpGlobalReferences()) {
         if (callee.getFirstChild().isRegExp()
-            && REGEXP_METHODS.contains(callee.getLastChild().getString())) {
+            && REGEXP_METHODS.contains(Node.getGetpropString(callee))) {
           return false;
         } else if (isTypedAsString(callee.getFirstChild())) {
           // Unlike regexs, string methods don't need to be hosted on a string literal
           // to avoid leaking mutating global state changes, it is just necessary that
           // the regex object can't be referenced.
-          String method = callee.getLastChild().getString();
+          String method = Node.getGetpropString(callee);
           Node param = callee.getNext();
           if (param != null) {
             if (param.isString()) {
@@ -411,7 +411,7 @@ public class AstAnalyzer {
         break;
       case GETPROP:
       case OPTCHAIN_GETPROP:
-        if (getPropertyKind(n.getLastChild().getString()).hasGetterOrSetter()) {
+        if (getPropertyKind(Node.getGetpropString(n)).hasGetterOrSetter()) {
           // TODO(b/135640150): Use the parent nodes to determine whether this is a get or set.
           return true;
         }
@@ -554,7 +554,7 @@ public class AstAnalyzer {
         break;
       case GETPROP:
       case OPTCHAIN_GETPROP:
-        return getPropertyKind(n.getLastChild().getString()).hasGetterOrSetter();
+        return getPropertyKind(Node.getGetpropString(n)).hasGetterOrSetter();
 
       default:
         break;

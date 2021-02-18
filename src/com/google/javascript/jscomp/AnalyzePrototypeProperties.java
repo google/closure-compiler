@@ -268,11 +268,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
           break;
 
         case OPTCHAIN_GETPROP:
-          addSymbolUse(n.getSecondChild().getString(), t.getModule(), PROPERTY);
+          addSymbolUse(Node.getGetpropString(n), t.getModule(), PROPERTY);
           break;
 
         case GETPROP:
-          String propName = n.getSecondChild().getString();
+          String propName = Node.getGetpropString(n);
 
           if (n.isQualifiedName()) {
             if (propName.equals("prototype")) {
@@ -516,17 +516,14 @@ class AnalyzePrototypeProperties implements CompilerPass {
       switch (n.getToken()) {
           // Foo.prototype.getBar = function() { ... }
         case GETPROP:
-          Node dest = n.getSecondChild();
           Node parent = n.getParent();
           Node grandParent = parent.getParent();
 
-          if (dest.isString()
-              && NodeUtil.isExprAssign(grandParent)
+          if (NodeUtil.isExprAssign(grandParent)
               && NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
-            String name = dest.getString();
             PrototypeProperty prop =
                 new AssignmentPrototypeProperty(grandParent, maybeGetVar(t, root), t.getModule());
-            getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
+            getNameInfoForName(Node.getGetpropString(n), PROPERTY).getDeclarations().add(prop);
             return true;
           }
           break;
@@ -588,7 +585,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
         symbolGraph.connect(
-            externNode, firstModule, getNameInfoForName(n.getLastChild().getString(), PROPERTY));
+            externNode, firstModule, getNameInfoForName(Node.getGetpropString(n), PROPERTY));
       } else if (n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef()) {
         // As of 2019-08-29 the only user of this class is CrossChunkMethodMotion, which never
         // moves static methods, but that could change. So, we're intentionally including static

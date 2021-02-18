@@ -58,7 +58,7 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
   /** Reports the property definitions that should use the @const annotation. */
   private void reportMissingConst(NodeTraversal t) {
     for (Node n : candidates) {
-      String propName = n.getLastChild().getString();
+      String propName = n.getString();
       if (!modified.contains(propName)) {
         t.report(n, MISSING_CONST_PROPERTY, propName);
       }
@@ -77,20 +77,21 @@ class CheckConstPrivateProperties extends NodeTraversal.AbstractPostOrderCallbac
 
       case GETELEM:
       case GETPROP:
-        // GETELEM is anytime a property is accessed on an object using the '["${key}"]' syntax.
-        // GETPROP is anytime a property is accessed on an object using the '.' syntax.
-        Node lastChild = n.getLastChild();
-        if (!lastChild.isString()) {
+        final Node propNode;
+        if (n.isGetProp()) {
+          propNode = Node.getGetpropStringNode(n);
+        } else if (n.getLastChild().isString()) {
+          propNode = n.getLastChild();
+        } else {
           return;
         }
-        String propName = lastChild.getString();
 
         // Only consider non-const @private class properties as candidates
         if (isCandidatePropertyDefinition(n)) {
-          candidates.add(n);
+          candidates.add(propNode);
         } else if (isModificationOp(n)) {
           // Mark any other modification operation as a modified property, to deal with lambdas, etc
-          modified.add(propName);
+          modified.add(propNode.getString());
         }
         break;
 

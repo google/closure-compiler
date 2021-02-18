@@ -1579,22 +1579,34 @@ public final class AstValidator implements CompilerPass {
 
   private void validateGetProp(Node n) {
     validateNodeType(Token.GETPROP, n);
-    validateChildCount(n);
     validatePropertyReferenceTarget(n.getFirstChild());
-    Node prop = n.getLastChild();
-    validateNodeType(Token.STRING, prop);
-    validateNonEmptyString(prop);
+
+    if (Node.isStringGetprop(n)) {
+      validateChildCount(n, 1);
+      validateNonEmptyString(n);
+    } else {
+      validateChildCount(n, 2);
+      Node prop = n.getLastChild();
+      validateNodeType(Token.STRING, prop);
+      validateNonEmptyString(prop);
+    }
   }
 
   private void validateOptChainGetProp(Node node) {
     validateFeature(Feature.OPTIONAL_CHAINING, node);
     validateNodeType(Token.OPTCHAIN_GETPROP, node);
-    validateChildCount(node);
     validateExpression(node.getFirstChild());
-    Node prop = node.getLastChild();
-    validateNodeType(Token.STRING, prop);
-    validateNonEmptyString(prop);
     validateFirstNodeOfOptChain(node);
+
+    if (Node.isStringGetprop(node)) {
+      validateChildCount(node, 1);
+      validateNonEmptyString(node);
+    } else {
+      validateChildCount(node, 2);
+      Node prop = node.getLastChild();
+      validateNodeType(Token.STRING, prop);
+      validateNonEmptyString(prop);
+    }
   }
 
   private void validatePropertyReferenceTarget(Node objectNode) {

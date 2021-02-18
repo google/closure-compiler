@@ -93,7 +93,7 @@ public final class AccessControlUtils {
       Node property,
       ObjectType referenceType,
       ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {
-    String propertyName = property.getLastChild().getString();
+    String propertyName = Node.getGetpropString(property);
     StaticSourceFile definingSource = getDefiningSource(
         property, referenceType, propertyName);
     Visibility fileOverviewVisibility = fileVisibilityMap.get(definingSource);
@@ -175,7 +175,7 @@ public final class AccessControlUtils {
    */
   private static Visibility getEffectiveVisibilityForNonOverriddenProperty(
       Node getprop, ObjectType objectType, @Nullable Visibility fileOverviewVisibility) {
-    String propertyName = getprop.getLastChild().getString();
+    String propertyName = Node.getGetpropString(getprop);
     Visibility raw = Visibility.INHERITED;
     if (objectType != null) {
       raw = objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility();

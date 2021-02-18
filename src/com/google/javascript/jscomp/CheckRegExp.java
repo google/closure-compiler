@@ -96,7 +96,7 @@ class CheckRegExp extends AbstractPostOrderCallback implements CompilerPass {
             || parentType == Token.CASE
             || (parentType == Token.GETPROP
                 && first
-                && !REGEXP_PROPERTY_SKIPLIST.contains(parent.getLastChild().getString())))) {
+                && !REGEXP_PROPERTY_SKIPLIST.contains(Node.getGetpropString(parent))))) {
           t.report(n, REGEXP_REFERENCE);
           globalRegExpPropertiesUsed = true;
         }
