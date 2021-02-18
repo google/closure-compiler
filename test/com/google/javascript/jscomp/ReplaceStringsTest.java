@@ -110,9 +110,10 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         n.setString("renamed_" + originalName);
         t.reportCodeChange();
       } else if (n.isGetProp()) {
-        String originalName = n.getLastChild().getString();
-        n.getLastChild().setOriginalName(originalName);
-        n.getLastChild().setString("renamed_" + originalName);
+        Node nameNode = Node.isStringGetprop(n) ? n : n.getLastChild();
+        String originalName = nameNode.getString();
+        nameNode.setOriginalName(originalName);
+        nameNode.setString("renamed_" + originalName);
         t.reportCodeChange();
       }
     }

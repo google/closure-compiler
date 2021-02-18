@@ -149,7 +149,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     JSType methodType = classCPrototypeType.getPropertyType("method");
 
     // `C.prototype.method`
-    Node cPrototypeMethod = getNodeWithName(getLastCompiler().getJsRoot(), "method").getParent();
+    Node cPrototypeMethod = getNodeWithName(getLastCompiler().getJsRoot(), "method");
     assertNode(cPrototypeMethod).matchesQualifiedName("C.prototype.method");
     assertType(cPrototypeMethod.getJSType()).isEqualTo(methodType);
 
@@ -2568,7 +2568,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     Node sourceMethodFunction = sourceMethodMemberDef.getOnlyChild();
 
     // `C.prototype.method` has source info matching `method`
-    Node cPrototypeMethod = getNodeWithName(expectedRoot, "method").getParent();
+    Node cPrototypeMethod = getNodeWithName(expectedRoot, "method");
     assertNode(cPrototypeMethod).hasEqualSourceInfoTo(sourceMethodMemberDef);
 
     // `C.prototype` has source info matching `method`
@@ -2796,6 +2796,13 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   /** Returns the first node (preorder) in the given AST that matches the given qualified name */
   private Node getNodeWithName(Node root, String name) {
     switch (root.getToken()) {
+      case GETPROP:
+      case OPTCHAIN_GETPROP:
+        if (Node.getGetpropString(root).equals(name)) {
+          return root;
+        }
+        break;
+
       case NAME:
       case STRING:
       case MEMBER_FUNCTION_DEF:

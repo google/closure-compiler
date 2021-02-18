@@ -136,8 +136,15 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
   }
 
   private String getPropertyName(Node node) {
-    Node rightName = node.getFirstChild().getSecondChild();
-    return rightName.isFunction()
-        ? node.getFirstFirstChild().getSecondChild().getString() : rightName.getString();
+    node = node.getFirstChild();
+
+    Node rvalue = node.getSecondChild();
+    if (rvalue != null && rvalue.isFunction() && !node.isGetProp()) {
+      node = node.getFirstChild();
+    }
+
+    return Node.isGetpropButNotStringGetprop(node)
+        ? node.getSecondChild().getString()
+        : node.getString();
   }
 }

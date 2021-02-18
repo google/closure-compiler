@@ -17,14 +17,13 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Correspondence;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -176,7 +175,7 @@ public final class OptimizeCallsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testReferenceCollection_findsSuperCalls() {
+  public void testReferenceCollection_findsSuperCalls_simpleNames() {
     considerExterns = true;
 
     test(
@@ -187,8 +186,6 @@ public final class OptimizeCallsTest extends CompilerTestCase {
                 "}",
                 "class SubClass extends SuperClass {",
                 "  constructor() {",
-                // This call must be recorded as a call to SuperClass(), in order for
-                // parameter optimization to work correctly.
                 "    super();",
                 "  }",
                 "}",
@@ -200,25 +197,55 @@ public final class OptimizeCallsTest extends CompilerTestCase {
         ImmutableMap.copyOf(references.getNameReferences());
     assertThat(nameToRefs.keySet()).containsExactly("SuperClass", "SubClass");
 
-    final ArrayList<Node> superClassRefNodes = nameToRefs.get("SuperClass");
+    assertThat(nameToRefs.get("SuperClass"))
+        .comparingElementsUsing(HAS_TOKEN)
+        .containsExactly(Token.NAME, Token.NAME, Token.SUPER, Token.NAME)
+        .inOrder();
 
-    // The references to `SuperClass` are
-    // 1. `class SuperClass {`
-    // 2. `class SubClass extends SuperClass {`
-    // 3. `super()` call inside of the `SubClass` constructor
-    // 4. `new SuperClass()`
-    assertThat(superClassRefNodes).hasSize(4);
-    // Specifically check for `super()`. The others are adequately covered by other test cases.
-    Optional<Node> optSuperNode = superClassRefNodes.stream().filter(Node::isSuper).findFirst();
-    assertWithMessage("no super reference found").that(optSuperNode.isPresent()).isTrue();
+    assertThat(nameToRefs.get("SubClass"))
+        .comparingElementsUsing(HAS_TOKEN)
+        .containsExactly(Token.NAME, Token.NAME)
+        .inOrder();
+  }
 
-    final ArrayList<Node> subClassRefNodes = nameToRefs.get("SubClass");
-    // the references to `SubClass` are
-    // 1. `class SubClass extends SuperClass {`
-    // 2. `new SubClass()`
-    assertThat(subClassRefNodes).hasSize(2);
+  @Test
+  public void testReferenceCollection_findsSuperCalls_qualifiedNames() {
+    considerExterns = true;
+
+    test(
+        srcs(
+            lines(
+                "const ns = {};",
+                "ns.SuperClass = class {",
+                "  constructor() {}",
+                "}",
+                "ns.SubClass = class extends ns.SuperClass {",
+                "  constructor() {",
+                "    super();",
+                "  }",
+                "}",
+                "new ns.SuperClass();",
+                "new ns.SubClass();",
+                "")));
+
+    final ImmutableMap<String, ArrayList<Node>> nameToRefs =
+        ImmutableMap.copyOf(references.getPropReferences());
+    assertThat(nameToRefs.keySet()).containsExactly("SuperClass", "SubClass", "constructor");
+
+    assertThat(nameToRefs.get("SuperClass"))
+        .comparingElementsUsing(HAS_TOKEN)
+        .containsExactly(Token.GETPROP, Token.GETPROP, Token.SUPER, Token.GETPROP)
+        .inOrder();
+
+    assertThat(nameToRefs.get("SubClass"))
+        .comparingElementsUsing(HAS_TOKEN)
+        .containsExactly(Token.GETPROP, Token.GETPROP)
+        .inOrder();
   }
 
   private static final Correspondence<Map.Entry<String, Node>, String> KEY_EQUALITY =
       Correspondence.transforming(Map.Entry::getKey, "has key");
+
+  private static final Correspondence<Node, Token> HAS_TOKEN =
+      Correspondence.transforming(Node::getToken, "has token");
 }
