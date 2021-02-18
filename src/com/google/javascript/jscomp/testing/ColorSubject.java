@@ -78,6 +78,14 @@ public final class ColorSubject extends Subject {
     return check("getOwnProperties()").that(actualNonNull().getOwnProperties());
   }
 
+  public void mayHaveProperty(String property) {
+    check("mayHaveProperty()").that(actualNonNull().mayHaveProperty(property)).isTrue();
+  }
+
+  public void doesNotHaveProperty(String property) {
+    check("mayHaveProperty()").that(actualNonNull().mayHaveProperty(property)).isFalse();
+  }
+
   public void hasAlternates(Color... alternates) {
     isUnion();
     check("getAlternates().containsExactly()")

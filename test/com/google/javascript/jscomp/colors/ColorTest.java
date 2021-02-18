@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.ColorSubject.assertThat;
 import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -203,5 +204,55 @@ public class ColorTest {
   public void objectEqualityFalseIfInvalidatingMismatch() {
     assertThat(SingletonColorFields.builder().setId("Foo").setInvalidating(true).build())
         .isNotEqualTo(SingletonColorFields.builder().setId("Foo").build());
+  }
+
+  @Test
+  public void mayHaveProperty_looksAtSingletonProperty() {
+    Color bar =
+        Color.createSingleton(
+            SingletonColorFields.builder()
+                .setId("Bar")
+                .setOwnProperties(ImmutableSet.of("barProperty"))
+                .build());
+
+    assertThat(bar).mayHaveProperty("barProperty");
+    assertThat(bar).doesNotHaveProperty("z");
+  }
+
+  @Test
+  public void mayHaveProperty_checksForAnyUnionAlternateWithProperty() {
+    Color bar =
+        Color.createSingleton(
+            SingletonColorFields.builder()
+                .setId("Bar")
+                .setOwnProperties(ImmutableSet.of("barProperty"))
+                .build());
+    Color foo = Color.createSingleton(SingletonColorFields.builder().setId("Foo").build());
+    Color fooBar = Color.createUnion(ImmutableSet.of(foo, bar));
+
+    assertThat(fooBar).mayHaveProperty("barProperty");
+    assertThat(fooBar).doesNotHaveProperty("y");
+  }
+
+  @Test
+  public void mayHaveProperty_checksForDisambiguationSupertypeWithProperty() {
+    Color bar =
+        Color.createSingleton(
+            SingletonColorFields.builder()
+                .setId("Bar")
+                .setOwnProperties(ImmutableSet.of("barProperty"))
+                .build());
+
+    Color subBar =
+        Color.createSingleton(
+            SingletonColorFields.builder()
+                .setId("SubBar")
+                .setOwnProperties(ImmutableSet.of("subBarProperty"))
+                .setDisambiguationSupertypes(ImmutableList.of(bar))
+                .build());
+
+    assertThat(subBar).mayHaveProperty("barProperty");
+    assertThat(subBar).mayHaveProperty("subBarProperty");
+    assertThat(subBar).doesNotHaveProperty("z");
   }
 }

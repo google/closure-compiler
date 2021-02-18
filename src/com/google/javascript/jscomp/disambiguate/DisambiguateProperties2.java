@@ -199,26 +199,10 @@ public final class DisambiguateProperties2 implements CompilerPass {
         continue; // Skip unnecessary `hasProperty` lookups which can be expensive.
       }
 
-      if (!hasAssociatedProperty(color, prop.getName())) {
+      if (!color.mayHaveProperty(prop.getName())) {
         prop.invalidate(Invalidation.undeclaredAccess(colorGraphNode.getId()));
       }
     }
-  }
-
-  /**
-   * Traverse all ancestors of the given color to see if they recorded the given property
-   *
-   * <p>Note: this method is put here instead of in the colors package because we'd like to delete
-   * the associated properties completely as part of b/177695515.
-   */
-  private static boolean hasAssociatedProperty(Color color, String propertyName) {
-    // implementation note: we're not caching the results of this call at all. That's because the
-    // type graph is generally shallow and so this isn't expected to be time-consuming.
-    if (color.getOwnProperties().contains(propertyName)) {
-      return true;
-    }
-    return color.getDisambiguationSupertypes().stream()
-        .anyMatch(superType -> hasAssociatedProperty(superType, propertyName));
   }
 
   private void registerOwnDeclaredProperties(

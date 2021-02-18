@@ -125,6 +125,29 @@ public abstract class Color {
         .collect(toImmutableSet());
   }
 
+  /**
+   * Returns true if the color or any of its ancestors has the given property
+   *
+   * <p>If this is a union, returns true if /any/ union alternate has the property.
+   *
+   * <p>TODO(b/177695515): delete this method
+   */
+  public boolean mayHaveProperty(String propertyName) {
+    // implementation note: we're not caching the results of this call at all. That's because the
+    // type graph is generally shallow and so this isn't expected to be time-consuming.
+    switch (kind()) {
+      case SINGLETON:
+        if (this.singleton().getOwnProperties().contains(propertyName)) {
+          return true;
+        }
+        return this.singleton().getDisambiguationSupertypes().stream()
+            .anyMatch(element -> element.mayHaveProperty(propertyName));
+      case UNION:
+        return this.union().stream().anyMatch(element -> element.mayHaveProperty(propertyName));
+    }
+    throw new AssertionError();
+  }
+
   public final ImmutableSet<String> getId() {
     return collect(this, SingletonColorFields::getId);
   }
