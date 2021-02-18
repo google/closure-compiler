@@ -51,7 +51,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
   private static final String CR_DEFINE_PROPERTY = "cr.defineProperty";
   private static final String VIRTUAL_FILE = "<ChromePass.java>";
   private static final Node VIRTUAL_NODE =
-      IR.empty().setStaticSourceFile(new SourceFile(VIRTUAL_FILE, SourceKind.EXTERN));
+      IR.empty().setStaticSourceFile(SourceFile.fromCode(VIRTUAL_FILE, "", SourceKind.EXTERN));
 
   private static final String CR_DEFINE_COMMON_EXPLANATION =
       "It should be called like this:"

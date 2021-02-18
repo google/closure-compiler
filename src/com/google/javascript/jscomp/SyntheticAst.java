@@ -46,13 +46,13 @@ public final class SyntheticAst implements SourceAst {
 
   SyntheticAst(String sourceName, SourceKind kind) {
     this.inputId = new InputId(sourceName);
-    this.sourceFile = new SourceFile(sourceName, kind);
+    this.sourceFile = SourceFile.fromCode(sourceName, "", kind);
     clearAst();
   }
 
   public SyntheticAst(Node root) {
     this.inputId = new InputId(root.getSourceFileName());
-    this.sourceFile = new SourceFile(root.getSourceFileName(), SourceKind.STRONG);
+    this.sourceFile = SourceFile.fromCode(root.getSourceFileName(), "", SourceKind.STRONG);
     this.root = checkNotNull(root);
   }
 

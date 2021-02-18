@@ -31,12 +31,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,7 +55,7 @@ import java.util.zip.ZipInputStream;
  * The source file can be loaded from various locations, such as from disk or from a preloaded
  * string.
  */
-public class SourceFile implements StaticSourceFile, Serializable {
+public abstract class SourceFile implements StaticSourceFile, Serializable {
 
   private static final long serialVersionUID = 1L;
   private static final String UTF8_BOM = "\uFEFF";
@@ -70,40 +73,41 @@ public class SourceFile implements StaticSourceFile, Serializable {
    */
   private static final int SOURCE_EXCERPT_REGION_LENGTH = 5;
 
+  /**
+   * The file name of the source file.
+   *
+   * <p>It does not necessarily need to correspond to a real path. But it should be unique. Will
+   * appear in warning messages emitted by the compiler.
+   */
   private final String fileName;
+
   private SourceKind kind;
 
-  // The fileName may not always identify the original file - for example,
-  // supersourced Java inputs, or Java inputs that come from Jar files. This
-  // is an optional field that the creator of an AST or SourceFile can set.
-  // It could be a path to the original file, or in case this SourceFile came
-  // from a Jar, it could be the path to the Jar.
-  private String originalPath = null;
+  /**
+   * The fileName may not always identify the original file.
+   *
+   * <p>For example, supersourced Java inputs, or Java inputs that come from Jar files. This is an
+   * optional field that the creator of an AST or SourceFile can set. It could be a path to the
+   * original file, or in case this SourceFile came from a Jar, it could be the path to the Jar.
+   */
+  private final String originalPath;
 
   // Source Line Information
   private transient int[] lineOffsets = null;
 
   private transient String code = null;
 
-  /**
-   * Construct a new abstract source file.
-   *
-   * @param fileName The file name of the source file. It does not necessarily need to correspond to
-   *     a real path. But it should be unique. Will appear in warning messages emitted by the
-   *     compiler.
-   * @param kind The source kind.
-   */
-  public SourceFile(String fileName, SourceKind kind) {
+  private SourceFile(String fileName, String originalPath, SourceKind kind) {
     if (isNullOrEmpty(fileName)) {
       throw new IllegalArgumentException("a source must have a name");
     }
 
     if (!"/".equals(Platform.getFileSeperator())) {
-      this.fileName = fileName.replace(Platform.getFileSeperator(), "/");
-    } else {
-      this.fileName = fileName;
+      fileName = fileName.replace(Platform.getFileSeperator(), "/");
     }
 
+    this.fileName = fileName;
+    this.originalPath = originalPath;
     this.kind = kind;
   }
 
@@ -147,7 +151,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   /**
    * Gets all the code in this source file.
-   * @throws IOException
    */
   public String getCode() throws IOException {
     return code;
@@ -171,10 +174,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   public String getOriginalPath() {
     return originalPath != null ? originalPath : fileName;
-  }
-
-  public void setOriginalPath(String originalPath) {
-    this.originalPath = originalPath;
   }
 
   // For SourceFile types which cache source code that can be regenerated
@@ -589,19 +588,18 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private static final long serialVersionUID = 2L;
 
     Preloaded(String fileName, String originalPath, String code, SourceKind kind) {
-      super(fileName, kind);
-      super.setOriginalPath(originalPath);
+      super(fileName, originalPath, kind);
       super.setCode(code);
     }
 
     @GwtIncompatible("ObjectOutputStream")
-    private void writeObject(java.io.ObjectOutputStream os) throws Exception {
+    private void writeObject(ObjectOutputStream os) throws Exception {
       os.defaultWriteObject();
       os.writeObject(getCode());
     }
 
     @GwtIncompatible("ObjectInputStream")
-    private void readObject(java.io.ObjectInputStream in) throws Exception {
+    private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
       super.setCode((String) in.readObject());
     }
@@ -617,8 +615,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     // Not private, so that LazyInput can extend it.
     Generated(String fileName, String originalPath, Generator generator, SourceKind kind) {
-      super(fileName, kind);
-      super.setOriginalPath(originalPath);
+      super(fileName, originalPath, kind);
       this.generator = generator;
     }
 
@@ -658,10 +655,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private transient Charset inputCharset;
 
     OnDisk(Path path, String originalPath, Charset c, SourceKind kind) {
-      super(path.toString(), kind);
+      super(path.toString(), originalPath, kind);
       this.path = path;
       this.inputCharset = c;
-      setOriginalPath(originalPath);
     }
 
     @Override
@@ -671,7 +667,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       if (cachedCode == null) {
         try (Reader r = getCodeReader()) {
           cachedCode = CharStreams.toString(r);
-        } catch (java.nio.charset.MalformedInputException e) {
+        } catch (MalformedInputException e) {
           throw new IOException("Failed to read: " + path + ", is this input UTF-8 encoded?", e);
         }
 
@@ -703,14 +699,14 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
 
     @GwtIncompatible("ObjectOutputStream")
-    private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+    private void writeObject(ObjectOutputStream out) throws Exception {
       out.defaultWriteObject();
       out.writeObject(inputCharset.name());
       out.writeObject(path.toUri());
     }
 
     @GwtIncompatible("ObjectInputStream")
-    private void readObject(java.io.ObjectInputStream in) throws Exception {
+    private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
       inputCharset = Charset.forName((String) in.readObject());
       path = Paths.get((URI) in.readObject());
@@ -731,10 +727,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private transient Charset inputCharset;
 
     AtZip(ZipEntryReader zipEntryReader, String originalPath, Charset c, SourceKind kind) {
-      super(originalPath, kind);
+      super(originalPath, originalPath, kind);
       this.inputCharset = c;
       this.zipEntryReader = zipEntryReader;
-      setOriginalPath(originalPath);
     }
 
     @Override
@@ -771,13 +766,13 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
 
     @GwtIncompatible("ObjectOutputStream")
-    private void writeObject(java.io.ObjectOutputStream os) throws Exception {
+    private void writeObject(ObjectOutputStream os) throws Exception {
       os.defaultWriteObject();
       os.writeObject(inputCharset.name());
     }
 
     @GwtIncompatible("ObjectInputStream")
-    private void readObject(java.io.ObjectInputStream in) throws Exception {
+    private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
       inputCharset = Charset.forName((String) in.readObject());
 
@@ -791,7 +786,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   @GwtIncompatible("ObjectInputStream")
-  private void readObject(java.io.ObjectInputStream in) throws Exception {
+  private void readObject(ObjectInputStream in) throws Exception {
     in.defaultReadObject();
     code = "<UNAVAILABLE>";
   }
