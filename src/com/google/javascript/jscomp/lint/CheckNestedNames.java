@@ -151,7 +151,7 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
 
   /** True for `someExpression.prototype`. */
   private static boolean isDotPrototype(Node getProp) {
-    return getProp.isGetProp() && getProp.getLastChild().getString().equals("prototype");
+    return getProp.isGetProp() && Node.getGetpropString(getProp).equals("prototype");
   }
 
   private static DeclarationKind getNestedDeclarationKind(Node lhs, Node assign) {

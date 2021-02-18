@@ -457,8 +457,7 @@ public final class Matchers {
         && jsType.isSubtypeOf(providedJsType)) {
       if (node.isName() && propertyName.equals(node.getString())) {
         return true;
-      } else if (node.isGetProp()
-          && propertyName.equals(node.getLastChild().getString())) {
+      } else if (node.isGetProp() && propertyName.equals(Node.getGetpropString(node))) {
         return true;
       }
     }
@@ -467,7 +466,8 @@ public final class Matchers {
 
   private static Matcher matcherForPrototypeDeclaration(final boolean requireFunctionType) {
     return new Matcher() {
-      @Override public boolean matches(Node node, NodeMetadata metadata) {
+      @Override
+      public boolean matches(Node node, NodeMetadata metadata) {
         // TODO(mknichel): Figure out which node is the best to return for this
         // function: the GETPROP node, or the ASSIGN node when the property is
         // being assigned to.
@@ -476,9 +476,9 @@ public final class Matchers {
         //   bar: 1
         // };
         Node firstChild = node.getFirstChild();
-        if (node.isGetProp() && firstChild.isGetProp()
-            && firstChild.getLastChild().isString()
-            && "prototype".equals(firstChild.getLastChild().getString())) {
+        if (node.isGetProp()
+            && firstChild.isGetProp()
+            && "prototype".equals(Node.getGetpropString(firstChild))) {
           JSType fnJsType = getJsType(metadata, JSTypeNative.FUNCTION_FUNCTION_TYPE);
           JSType jsType = node.getJSType();
           if (jsType == null) {

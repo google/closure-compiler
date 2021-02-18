@@ -1672,6 +1672,26 @@ public class Node implements Serializable {
     return file.getLineOffset(lineno) + getCharno();
   }
 
+  public final int getPropnameSourceOffset() {
+    checkState(this.isGetProp() || this.isOptChainGetProp(), this);
+
+    if (this.length == -1) {
+      return -1;
+    }
+
+    int sourceOffset = this.getSourceOffset();
+    if (sourceOffset == -1) {
+      return -1;
+    }
+
+    String name = this.getOriginalName();
+    if (name == null) {
+      name = Node.getGetpropString(this);
+    }
+
+    return sourceOffset + this.length - name.length();
+  }
+
   public final int getSourcePosition() {
     return sourcePosition;
   }

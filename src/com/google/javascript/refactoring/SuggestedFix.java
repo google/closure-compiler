@@ -316,34 +316,46 @@ public final class SuggestedFix {
      *     it is true, it will be renamed to {@code bar()}.
      */
     public Builder rename(Node n, String name, boolean replaceEntireName) {
-      Node nodeToRename = null;
-      if (n.isCall() || n.isTaggedTemplateLit()) {
-        Node child = n.getFirstChild();
-        nodeToRename = child;
-        if (!replaceEntireName && child.isGetProp()) {
-          nodeToRename = child.getLastChild();
-        }
-      } else if (n.isGetProp()) {
-        nodeToRename = n.getLastChild();
-        if (replaceEntireName) {
-          // Trace up from the property access to the root.
-          while (nodeToRename.getParent().isGetProp()) {
-            nodeToRename = nodeToRename.getParent();
+      final Node nodeToRename;
+      switch (n.getToken()) {
+        case CALL:
+        case TAGGED_TEMPLATELIT:
+          return this.rename(n.getFirstChild(), name, replaceEntireName);
+
+        case GETPROP:
+          if (replaceEntireName) {
+            while (n.getParent().isGetProp()) {
+              n = n.getParent();
+            }
           }
-        }
-      } else if (n.isStringKey() || n.isName()) {
-        nodeToRename = n;
-      } else if (n.isString()) {
-        checkState(n.getParent().isGetProp(), n);
-        nodeToRename = n;
-      } else {
-        // TODO(mknichel): Implement the rest of this function.
-        throw new UnsupportedOperationException(
-            "Rename is not implemented for this node type: " + n);
+          nodeToRename = n;
+          break;
+
+        case STRING:
+          checkState(n.getParent().isGetProp(), n);
+          // Fall through
+        case STRING_KEY:
+        case NAME:
+          nodeToRename = n;
+          break;
+
+        default:
+          throw new UnsupportedOperationException(
+              "Rename is not implemented for this node type: " + n);
       }
+
+      int offset = nodeToRename.getSourceOffset();
+      int length = nodeToRename.getLength();
+
+      if (!replaceEntireName && nodeToRename.isGetProp()) {
+        int propOffset = nodeToRename.getPropnameSourceOffset();
+        checkState(propOffset >= 0, nodeToRename);
+        length = offset + length - propOffset;
+        offset = propOffset;
+      }
+
       replacements.put(
-          nodeToRename.getSourceFileName(),
-          CodeReplacement.create(nodeToRename.getSourceOffset(), nodeToRename.getLength(), name));
+          nodeToRename.getSourceFileName(), CodeReplacement.create(offset, length, name));
       return this;
     }
 
