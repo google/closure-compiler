@@ -38,7 +38,7 @@ final class ClassUtil {
 
   static String getPrototypeNameOfThisProp(Node getprop) {
     String className = checkNotNull(getClassNameOfThisProp(getprop));
-    return className + ".prototype." + getprop.getLastChild().getString();
+    return className + ".prototype." + Node.getGetpropString(getprop);
   }
 
   @Nullable

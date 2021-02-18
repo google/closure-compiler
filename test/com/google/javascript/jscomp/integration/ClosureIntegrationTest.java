@@ -1161,7 +1161,10 @@ public final class ClosureIntegrationTest extends IntegrationTestCase {
     Node modulecontentsFooMethod = callNode.getFirstChild();
     // Verify this is actually "Foo.method" - it used to be "Foo.foo".
     assertThat(modulecontentsFooMethod.getOriginalQualifiedName()).isEqualTo("Foo.method");
-    assertThat(modulecontentsFooMethod.getSecondChild().getOriginalName()).isNull();
+    assertThat(modulecontentsFooMethod.getOriginalName()).isEqualTo("method");
+    if (!Node.isStringGetprop(modulecontentsFooMethod)) {
+      assertThat(modulecontentsFooMethod.getSecondChild().getOriginalName()).isNull();
+    }
   }
 
   @Test

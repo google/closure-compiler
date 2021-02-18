@@ -435,6 +435,8 @@ public final class NodeSubject extends Subject {
   private String serializeNode(Node node) {
     if (serializer != null) {
       return serializer.apply(node);
+    } else if (node == null) {
+      return "<Java null>";
     } else {
       return node.toStringTree();
     }

@@ -1395,7 +1395,7 @@ public class JSTypeRegistry implements Serializable {
     if (n.isGetProp()) {
       ObjectType objectType = getJSTypeOrUnknown(n.getFirstChild()).dereference();
       if (objectType != null) {
-        String propName = n.getLastChild().getString();
+        String propName = Node.getGetpropString(n);
         objectType = objectType.getClosestDefiningType(propName);
 
         // Don't show complex function names or anonymous types.

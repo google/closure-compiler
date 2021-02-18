@@ -192,7 +192,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       if (!lhs.isGetProp()) {
         return;
       }
-      name = lhs.getLastChild().getString();
+      name = Node.getGetpropString(lhs);
     }
 
     if (jsDoc != null && name != null) {

@@ -392,9 +392,8 @@ public class AmbiguateProperties implements CompilerPass {
     }
 
     private void processGetProp(Node getProp) {
-      Node propNode = getProp.getSecondChild();
       Color type = getColor(getProp.getFirstChild());
-      maybeMarkCandidate(propNode, type);
+      maybeMarkCandidate(getProp, type);
       if (NodeUtil.isLhsOfAssign(getProp) || NodeUtil.isStatement(getProp.getParent())) {
         graphNodeFactory.createNode(type);
       }
@@ -546,6 +545,9 @@ public class AmbiguateProperties implements CompilerPass {
      * @param n The STRING node for a property
      */
     private void maybeMarkCandidate(Node n, Color type) {
+      if (Node.isGetpropButNotStringGetprop(n)) {
+        n = n.getSecondChild();
+      }
       String name = n.getString();
       if (!externedNames.contains(name)) {
         stringNodesToRename.add(n);
