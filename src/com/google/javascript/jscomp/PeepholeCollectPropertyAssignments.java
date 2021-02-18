@@ -224,18 +224,23 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     Node lhs = assignment.getFirstChild();
     Node rhs = lhs.getNext();
     Node obj = lhs.getFirstChild();
-    Node property = obj.getNext();
+    checkState(lhs.isGetProp() || lhs.isGetElem(), lhs);
 
     // The property must be statically known.
-    if (lhs.isGetElem() && !property.isString() && !property.isNumber()) {
-      return false;
-    }
-
-    String propertyName;
-    if (property.isNumber()) {
-      propertyName = getSideEffectFreeStringValue(property);
+    final String propertyName;
+    if (lhs.isGetElem()) {
+      Node property = obj.getNext();
+      if (property.isNumber()) {
+        propertyName = getSideEffectFreeStringValue(property);
+      } else if (property.isString()) {
+        propertyName = property.getString();
+      } else {
+        return false;
+      }
+    } else if (lhs.isGetProp()) {
+      propertyName = Node.getGetpropString(lhs);
     } else {
-      propertyName = property.getString();
+      return false;
     }
 
     // Check if the new property already exists in the object literal
@@ -270,8 +275,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
       }
     }
 
-    Node newProperty = IR.stringKey(propertyName)
-        .useSourceInfoIfMissingFrom(property);
+    Node newProperty = IR.stringKey(propertyName).useSourceInfoIfMissingFrom(propertyCandidate);
     // Preserve the quotedness of a property reference
     if (lhs.isGetElem()) {
       newProperty.setQuotedString();

@@ -97,7 +97,7 @@ final class InlineProperties implements CompilerPass {
       final String propName;
 
       if (n.isGetProp()) {
-        propName = n.getLastChild().getString();
+        propName = Node.getGetpropString(n);
         if (parent.isAssign()) {
           invalidatingPropRef = !maybeRecordCandidateDefinition(t, n, parent);
         } else if (NodeUtil.isLValue(n)) {
@@ -138,7 +138,7 @@ final class InlineProperties implements CompilerPass {
     private boolean maybeRecordCandidateDefinition(NodeTraversal t, Node n, Node parent) {
       checkState(n.isGetProp() && parent.isAssign(), n);
       Node src = n.getFirstChild();
-      String propName = n.getLastChild().getString();
+      String propName = Node.getGetpropString(n);
 
       Node value = parent.getLastChild();
       if (src.isThis()) {
@@ -151,7 +151,7 @@ final class InlineProperties implements CompilerPass {
         return false;
       } else if (t.inGlobalHoistScope()
           && src.isGetProp()
-          && src.getLastChild().getString().equals("prototype")) {
+          && Node.getGetpropString(src).equals("prototype")) {
         // This is a prototype assignment like:
         //    x.prototype.foo = 1;
         Color instanceType = getColor(src);
@@ -212,7 +212,7 @@ final class InlineProperties implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp() && !NodeUtil.isLValue(n)) {
         Node target = n.getFirstChild();
-        String propName = n.getLastChild().getString();
+        String propName = Node.getGetpropString(n);
         PropertyInfo info = props.get(propName);
         if (info != null && info != INVALIDATED && isMatchingType(target, info.color)) {
           Node replacement = info.value.cloneTree();

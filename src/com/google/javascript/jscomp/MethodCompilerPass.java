@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Finds all method declarations and pulls them into data structures
@@ -120,31 +121,28 @@ abstract class MethodCompilerPass implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case GETPROP:
-        case GETELEM: {
-          Node dest = n.getSecondChild();
+        case GETELEM:
+          {
+            String name = getPropName(n);
+            if (name == null) {
+              return;
+            }
 
-          if (!dest.isString()) {
-            return;
+            // We have a signature. Parse tree of the form:
+            // assign                       <- parent
+            //      getprop                 <- n
+            //          name methods
+            //          string setTimeout
+            //      function
+            if (parent.isAssign() && n.isFirstChildOf(parent) && n.getNext().isFunction()) {
+              addSignature(name, n.getNext(), t.getSourceName());
+            } else {
+              getSignatureStore().removeSignature(name);
+              externMethodsWithoutSignatures.add(name);
+            }
+
+            externMethods.add(name);
           }
-
-          String name = dest.getString();
-
-          // We have a signature. Parse tree of the form:
-          // assign                       <- parent
-          //      getprop                 <- n
-          //          name methods
-          //          string setTimeout
-          //      function
-          if (parent.isAssign() && parent.getFirstChild() == n && n.getNext().isFunction()) {
-
-            addSignature(name, n.getNext(), t.getSourceName());
-          } else {
-            getSignatureStore().removeSignature(name);
-            externMethodsWithoutSignatures.add(name);
-          }
-
-          externMethods.add(name);
-        }
         break;
 
         case CLASS_MEMBERS:
@@ -177,23 +175,24 @@ abstract class MethodCompilerPass implements CompilerPass {
       switch (n.getToken()) {
         case GETPROP:
         case GETELEM:
-          Node dest = n.getSecondChild();
+          String name = getPropName(n);
+          if (name == null) {
+            return;
+          }
 
-          if (dest.isString()) {
-            if (dest.getString().equals("prototype")) {
-              processPrototypeParent(t, parent);
-            } else {
-              // Static methods of the form Foo.bar = function() {} or
-              // Static methods of the form Foo.bar = baz (where baz is a
-              // function name). Parse tree looks like:
-              // assign                 <- parent
-              //      getprop           <- n
-              //          name Foo
-              //          string bar
-              //      function or name  <- n.getNext()
-              if (parent.isAssign() && parent.getFirstChild() == n) {
-                addPossibleSignature(dest.getString(), n.getNext(), t);
-              }
+          if (name.equals("prototype")) {
+            processPrototypeParent(t, parent);
+          } else {
+            // Static methods of the form Foo.bar = function() {} or
+            // Static methods of the form Foo.bar = baz (where baz is a
+            // function name). Parse tree looks like:
+            // assign                 <- parent
+            //      getprop           <- n
+            //          name Foo
+            //          string bar
+            //      function or name  <- n.getNext()
+            if (parent.isAssign() && n.isFirstChildOf(parent)) {
+              addPossibleSignature(name, n.getNext(), t);
             }
           }
           break;
@@ -242,18 +241,27 @@ abstract class MethodCompilerPass implements CompilerPass {
         //     function or name            <- assignee
         case GETPROP:
         case GETELEM:
-          Node dest = n.getSecondChild();
-          Node parent = n.getGrandparent();
-
-          if (dest.isString() && parent.isAssign()) {
-            Node assignee = parent.getSecondChild();
-
-            addPossibleSignature(dest.getString(), assignee, t);
+      Node grandparent = n.getGrandparent();
+          String name = getPropName(n);
+          if (name != null && grandparent.isAssign()) {
+            Node assignee = grandparent.getSecondChild();
+            addPossibleSignature(name, assignee, t);
           }
           break;
         default:
           break;
       }
+    }
+  }
+
+  @Nullable
+  private static String getPropName(Node getPropElem) {
+    if (getPropElem.isGetProp()) {
+      return Node.getGetpropString(getPropElem);
+    } else if (getPropElem.getSecondChild().isString()) {
+      return getPropElem.getSecondChild().getString();
+    } else {
+      return null;
     }
   }
 }

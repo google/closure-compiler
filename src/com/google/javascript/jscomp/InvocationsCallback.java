@@ -40,20 +40,12 @@ abstract class InvocationsCallback extends AbstractPostOrderCallback {
       return;
     }
 
-    Node function = n.getFirstChild();
-
-    if (!function.isGetProp()) {
+    Node callee = n.getFirstChild();
+    if (!callee.isGetProp()) {
       return;
     }
 
-    Node nameNode = function.getSecondChild();
-
-    // Don't care about numerical or variable indexes
-    if (!nameNode.isString()) {
-      return;
-    }
-
-    visit(t, n, parent, nameNode.getString());
+    visit(t, n, parent, Node.getGetpropString(callee));
   }
 
   /**

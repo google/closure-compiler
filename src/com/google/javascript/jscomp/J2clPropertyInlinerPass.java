@@ -378,6 +378,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
                     .build();
             Node inlinedCall =
                 injector.inline(
+                    // TODO(b/180623451): checkstate(n.isCall()) We should not pass a GETPROP here.
                     new Reference(n, t.getScope(), t.getModule(), InliningMode.DIRECT),
                     null,
                     prop.getKey.getFirstChild());

@@ -79,10 +79,9 @@ final class ModuleImportResolver {
       return false;
     }
     Node owner = callee.getFirstChild();
-    Node property = callee.getSecondChild();
     return (owner.isName()
             && owner.getString().equals(GOOG)
-            && GOOG_DEPENDENCY_CALLS.contains(property.getString()))
+            && GOOG_DEPENDENCY_CALLS.contains(Node.getGetpropString(callee)))
         || GOOG_MODULE_GET.matches(callee);
   }
 

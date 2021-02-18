@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -137,13 +138,13 @@ class Normalize implements CompilerPass {
         Node assign = n.getFirstChild();
         Node lhs = assign.getFirstChild();
         if (lhs.isGetProp() && isMarkedExpose(assign)) {
-          exposedProperties.add(lhs.getLastChild().getString());
+          exposedProperties.add(Node.getGetpropString(lhs));
         }
       } else if (n.isStringKey() && isMarkedExpose(n)) {
         exposedProperties.add(n.getString());
       } else if (n.isGetProp() && n.getParent().isExprResult()
                   && isMarkedExpose(n)) {
-        exposedProperties.add(n.getLastChild().getString());
+        exposedProperties.add(Node.getGetpropString(n));
       }
     }
 
@@ -167,12 +168,15 @@ class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
-        String propName = n.getLastChild().getString();
+        String propName = Node.getGetpropString(n);
         if (exposedProperties.contains(propName)) {
+          Node string =
+              Node.isStringGetprop(n)
+                  ? IR.string(propName).clonePropsFrom(n).useSourceInfoFrom(n)
+                  : n.getSecondChild().detach();
           Node obj = n.removeFirstChild();
-          Node prop = n.removeFirstChild();
           compiler.reportChangeToEnclosingScope(n);
-          n.replaceWith(IR.getelem(obj, prop));
+          n.replaceWith(IR.getelem(obj, string));
         }
       } else if (n.isStringKey()) {
         String propName = n.getString();
@@ -306,9 +310,12 @@ class Normalize implements CompilerPass {
         Boolean value = constantMap.get(name);
         if (value == null) {
           constantMap.put(name, isConst);
-        } else {
-          Preconditions.checkState(value.booleanValue() == isConst,
-              "The name %s is not consistently annotated as constant.", name);
+        } else if (value.booleanValue() != isConst) {
+          throw new IllegalStateException(
+              "The name "
+                  + name
+                  + " is not consistently annotated as constant. Expected "
+                  + ImmutableMap.copyOf(constantMap));
         }
       }
     }
@@ -373,10 +380,11 @@ class Normalize implements CompilerPass {
           break;
 
         case NAME:
-        case STRING:
+        case GETPROP:
+        case OPTCHAIN_GETPROP:
         case GETTER_DEF:
         case SETTER_DEF:
-          annotateConstantsByConvention(n, parent);
+          annotateConstantsByConvention(n);
           break;
 
         case CAST:
@@ -389,12 +397,15 @@ class Normalize implements CompilerPass {
       }
     }
 
-    /**
-     * Mark names and properties that are constants by convention.
-     */
-    private void annotateConstantsByConvention(Node n, Node parent) {
+    /** Mark names and properties that are constants by convention. */
+    private void annotateConstantsByConvention(Node n) {
       checkState(
-          n.isName() || n.isString() || n.isStringKey() || n.isGetterDef() || n.isSetterDef());
+          n.isName()
+              || n.isOptChainGetProp()
+              || n.isGetProp()
+              || n.isStringKey()
+              || n.isGetterDef()
+              || n.isSetterDef());
 
       // Need to check that variables have not been renamed, to determine whether
       // coding conventions still apply.
@@ -405,25 +416,17 @@ class Normalize implements CompilerPass {
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP (or OPTCHAIN_GETPROP)
       // or an OBJECTLIT key.
-      boolean isObjLitKey = NodeUtil.mayBeObjectLitKey(n);
-      boolean isProperty =
-          isObjLitKey || (NodeUtil.isNormalOrOptChainGetProp(parent) && parent.getLastChild() == n);
-      if (n.isName() || isProperty) {
-        boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
-        if (!isMarkedConstant
-            && NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n)) {
-          if (assertOnChange) {
-            String name = n.getString();
-            throw new IllegalStateException(
-                "Unexpected const change.\n"
-                    + "  name: "
-                    + name
-                    + "\n"
-                    + "  parent:"
-                    + n.getParent().toStringTree());
-          }
-          n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        }
+      boolean isGetprop = NodeUtil.isNormalOrOptChainGetProp(n);
+      if (!n.isName() && !NodeUtil.mayBeObjectLitKey(n) && !isGetprop) {
+        return;
+      }
+
+      Node annotatedNode = (isGetprop && !Node.isStringGetprop(n)) ? n.getSecondChild() : n;
+      boolean isMarkedConstant = annotatedNode.getBooleanProp(Node.IS_CONSTANT_NAME);
+
+      if (!isMarkedConstant && NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n)) {
+        checkState(!assertOnChange, "Unexpected const change: %s", annotatedNode);
+        annotatedNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
     }
 

@@ -229,8 +229,11 @@ class IsolatePolyfills implements CompilerPass {
       rewritePolyfillInCall(polyfillAccess);
     } else {
       // e.g. [].includes.call(myIter, 0)
+      Node methodName =
+          Node.isStringGetprop(polyfillAccess)
+              ? IR.string(polyfillAccess.getString()).useSourceInfoFrom(polyfillAccess)
+              : polyfillAccess.getSecondChild().detach();
       Node receiver = polyfillAccess.removeFirstChild();
-      Node methodName = polyfillAccess.removeFirstChild();
       polyfillAccess.replaceWith(
           createPolyfillMethodLookup(receiver, methodName).srcrefTree(polyfillAccess));
     }
@@ -253,8 +256,12 @@ class IsolatePolyfills implements CompilerPass {
    */
   private void rewritePolyfillInCall(Node callee) {
     final Node callNode = callee.getParent();
-    final Node receiver = callee.removeFirstChild();
-    final Node methodName = callee.removeFirstChild();
+    final Node methodName =
+        Node.isStringGetprop(callee)
+            ? IR.string(callee.getString()).useSourceInfoFrom(callee)
+            : callee.getSecondChild().detach();
+    final Node receiver = callee.getFirstChild().detach();
+
     boolean requiresTemp = compiler.getAstAnalyzer().mayEffectMutableState(receiver);
 
     final Node polyfilledMethod;

@@ -269,10 +269,13 @@ final class MustBeReachingVariableDef
         }
         return;
 
+      case OPTCHAIN_GETPROP:
+        computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
+        return;
+
       case AND:
       case OR:
       case COALESCE:
-      case OPTCHAIN_GETPROP:
       case OPTCHAIN_GETELEM:
         computeMustDef(n.getFirstChild(), cfgNode, output, conditional);
         computeMustDef(n.getLastChild(), cfgNode, output, true);

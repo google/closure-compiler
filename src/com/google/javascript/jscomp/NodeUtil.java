@@ -3041,9 +3041,11 @@ public final class NodeUtil {
    */
   static boolean isObjectCallMethod(Node callNode, String methodName) {
     if (callNode.isCall() || callNode.isOptChainCall()) {
-      Node functionIndentifyingExpression = callNode.getFirstChild();
-      if (isNormalOrOptChainGet(functionIndentifyingExpression)) {
-        Node last = functionIndentifyingExpression.getLastChild();
+      Node callee = callNode.getFirstChild();
+      if (isNormalOrOptChainGetProp(callee)) {
+        return Node.getGetpropString(callee).equals(methodName);
+      } else if (isNormalOrOptChainGet(callee)) {
+        Node last = callee.getLastChild();
         if (last != null && last.isString()) {
           String propName = last.getString();
           return (propName.equals(methodName));
@@ -4045,13 +4047,12 @@ public final class NodeUtil {
     if (!n.isCall() || !n.hasXChildren(3)) {
       return false;
     }
-    Node first = n.getFirstChild();
-    if (!first.isGetProp()) {
+    Node getprop = n.getFirstChild();
+    if (!getprop.isGetProp()) {
       return false;
     }
-    Node prop = first.getLastChild();
-    return prop.getString().equals("defineProperties")
-        && isKnownGlobalObjectReference(first.getFirstChild());
+    return Node.getGetpropString(getprop).equals("defineProperties")
+        && isKnownGlobalObjectReference(getprop.getFirstChild());
   }
 
   private static boolean isKnownGlobalObjectReference(Node n) {
@@ -4071,13 +4072,12 @@ public final class NodeUtil {
     if (!n.isCall() || !n.hasXChildren(4)) {
       return false;
     }
-    Node first = n.getFirstChild();
-    if (!first.isGetProp()) {
+    Node getprop = n.getFirstChild();
+    if (!getprop.isGetProp()) {
       return false;
     }
-    Node prop = first.getLastChild();
-    return prop.getString().equals("defineProperty")
-        && isKnownGlobalObjectReference(first.getFirstChild());
+    return Node.getGetpropString(getprop).equals("defineProperty")
+        && isKnownGlobalObjectReference(getprop.getFirstChild());
   }
 
   /** @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call */
@@ -4105,7 +4105,7 @@ public final class NodeUtil {
       return false;
     }
     Node recv = n.getFirstChild();
-    return recv.isGetProp() && recv.getLastChild().getString().equals("prototype");
+    return recv.isGetProp() && Node.getGetpropString(recv).equals("prototype");
   }
 
   /** @return Whether the node represents a prototype method. */
@@ -4126,8 +4126,8 @@ public final class NodeUtil {
     }
     Node parent = getProp.getParent();
     return parent.isAssign()
-        && parent.getFirstChild() == getProp
-        && parent.getFirstChild().getLastChild().getString().equals("prototype");
+        && getProp.isFirstChildOf(parent)
+        && Node.getGetpropString(getProp).equals("prototype");
   }
 
   /**
@@ -4212,11 +4212,11 @@ public final class NodeUtil {
     if (!qName.isGetProp()) {
       return null;
     }
-    if (qName.getLastChild().getString().equals("prototype")) {
+    if (Node.getGetpropString(qName).equals("prototype")) {
       return qName.getFirstChild();
     }
     Node recv = qName.getFirstChild();
-    if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
+    if (recv.isGetProp() && Node.getGetpropString(recv).equals("prototype")) {
       return recv.getFirstChild();
     }
     return null;
@@ -4620,9 +4620,8 @@ public final class NodeUtil {
    */
   @Deprecated
   static boolean isConstantByConvention(CodingConvention convention, Node node) {
-    Node parent = node.getParent();
-    if (isNormalOrOptChainGetProp(parent) && node == parent.getLastChild()) {
-      return convention.isConstantKey(node.getString());
+    if (isNormalOrOptChainGetProp(node)) {
+      return convention.isConstantKey(Node.getGetpropString(node));
     } else if (mayBeObjectLitKey(node)) {
       return convention.isConstantKey(node.getString());
     } else if (node.isName()) {
@@ -4944,11 +4943,20 @@ public final class NodeUtil {
 
   private static boolean isToStringMethodCall(Node call) {
     Node getNode = call.getFirstChild();
-    if (isNormalOrOptChainGet(getNode)) {
+    final String name;
+    if (isNormalOrOptChainGetProp(getNode)) {
+      name = Node.getGetpropString(getNode);
+    } else if (isNormalOrOptChainGet(getNode)) {
       Node propNode = getNode.getLastChild();
-      return propNode.isString() && "toString".equals(propNode.getString());
+      if (!propNode.isString()) {
+        return false;
+      }
+      name = propNode.getString();
+    } else {
+      return false;
     }
-    return false;
+
+    return "toString".equals(name);
   }
 
   /** Return declared JSDoc type for the given name declaration, or null if none present. */
