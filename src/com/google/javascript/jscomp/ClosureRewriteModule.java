@@ -1862,6 +1862,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Receiver and prop string should both use the position of the source name.
     getProp.getFirstChild().useSourceInfoFrom(sourceName);
     getProp.getFirstChild().setLength(name.length());
+    getProp.setLength(name.length());
     if (!Node.isStringGetprop(getProp)) {
       getProp.getSecondChild().useSourceInfoFrom(sourceName);
       getProp.getSecondChild().setLength(name.length());
