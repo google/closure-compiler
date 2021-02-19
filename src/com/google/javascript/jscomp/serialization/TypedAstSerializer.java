@@ -234,6 +234,12 @@ final class TypedAstSerializer {
 
   private void valueTranslator(AstNode.Builder builder, Node n) {
     switch (n.getToken()) {
+      case GETPROP:
+      case OPTCHAIN_GETPROP:
+        if (Node.isStringGetprop(n)) {
+          builder.setStringValuePointer(this.stringPool.put(n.getString()));
+        }
+        return;
       case MEMBER_FUNCTION_DEF:
       case NAME:
       case STRING:

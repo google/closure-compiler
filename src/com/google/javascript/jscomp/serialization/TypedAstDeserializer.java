@@ -144,7 +144,12 @@ final class TypedAstDeserializer {
       case NEW:
         return new Node(Token.NEW);
       case PROPERTY_ACCESS:
-        return new Node(Token.GETPROP);
+        switch (n.getValueCase()) {
+          case STRING_VALUE_POINTER:
+            return Node.newString(Token.GETPROP, getString(n));
+          default:
+            return new Node(Token.GETPROP);
+        }
       case ELEMENT_ACCESS:
         return new Node(Token.GETELEM);
 
@@ -279,7 +284,9 @@ final class TypedAstDeserializer {
         return new Node(Token.IMPORT_META);
       case OPTCHAIN_PROPERTY_ACCESS:
         currentFileFeatures = currentFileFeatures.with(Feature.OPTIONAL_CHAINING);
-        return new Node(Token.OPTCHAIN_GETPROP);
+        return n.hasStringValuePointer()
+            ? Node.newString(Token.OPTCHAIN_GETPROP, getString(n))
+            : new Node(Token.OPTCHAIN_GETPROP);
       case OPTCHAIN_CALL:
         currentFileFeatures = currentFileFeatures.with(Feature.OPTIONAL_CHAINING);
         return new Node(Token.OPTCHAIN_CALL);
