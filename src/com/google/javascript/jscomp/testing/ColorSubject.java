@@ -70,6 +70,10 @@ public final class ColorSubject extends Subject {
     check("isInvalidating").that(actualNonNull().isInvalidating()).isFalse();
   }
 
+  public void isClosureAssert() {
+    check("isClosureAssert()").that(actualNonNull().isClosureAssert()).isTrue();
+  }
+
   public void propertiesKeepOriginalName() {
     check("propertiesKeepOriginalName").that(actualNonNull().propertiesKeepOriginalName()).isTrue();
   }

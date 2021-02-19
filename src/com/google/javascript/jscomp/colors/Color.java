@@ -69,6 +69,20 @@ public abstract class Color {
     throw new AssertionError();
   }
 
+  /**
+   * Whether this type is some Closure assertion function removable by Closure-specific
+   * optimizations.
+   */
+  public final boolean isClosureAssert() {
+    switch (kind()) {
+      case SINGLETON:
+        return this.singleton().isClosureAssert();
+      case UNION:
+        return union().stream().allMatch(Color::isClosureAssert);
+    }
+    throw new AssertionError();
+  }
+
   public final boolean isUnion() {
     return kind().equals(Kind.UNION);
   }

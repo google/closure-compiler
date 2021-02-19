@@ -260,6 +260,29 @@ public final class SerializeTypedAstPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void marksClosureAssertions() {
+    assertThat(
+            compileToTypes(
+                lines(
+                    "/** @closurePrimitive {asserts.truthy} */",
+                    "function assert(x) { if (!x) { throw new Error(); }}",
+                    "",
+                    "/** @closurePrimitive {asserts.fail} */",
+                    "function fail() { throw new Error(); }")))
+        .ignoringFieldDescriptors(COMMONLY_IGNORED_FIELDS)
+        .containsAtLeast(
+            TypeProto.newBuilder()
+                .setObject(
+                    namedObjectBuilder("assert").setClosureAssert(true).setIsInvalidating(true))
+                .build(),
+            TypeProto.newBuilder()
+                .setObject(
+                    // ClosurePrimitive.ASSERTS_FAIL is not a removable Closure assertion
+                    namedObjectBuilder("fail").setClosureAssert(false).setIsInvalidating(true))
+                .build());
+  }
+
+  @Test
   public void testSerializeObjectLiteralTypesAsInvalidating() {
     TypedAst typedAst = compile("const /** {x: string} */ obj = {x: ''};");
     assertThat(typedAst.getTypePool().getTypeList())

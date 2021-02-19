@@ -111,8 +111,8 @@ public abstract class CompilerTestCase {
   private boolean typeCheckEnabled;
 
   /**
-   * If true, run the ConvertTypesToColors pass and the {@link RemoveTypes} pass . Only works if
-   * enableTypeCheck() is on.
+   * If true, run the ConvertTypesToColors pass and the {@link RemoveTypes} pass, which removes
+   * references to JSTypes and converts JSDoc to its simplified optimization form.
    */
   private boolean replaceTypesWithColors;
 
@@ -1540,8 +1540,10 @@ public abstract class CompilerTestCase {
         }
 
         if (replaceTypesWithColors) {
-          new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
-              .process(externsRoot, mainRoot);
+          if (typeCheckEnabled) {
+            new ConvertTypesToColors(compiler, SerializationOptions.INCLUDE_DEBUG_INFO)
+                .process(externsRoot, mainRoot);
+          }
           new RemoveTypes(compiler).process(externsRoot, mainRoot);
         }
 

@@ -179,7 +179,14 @@ final class ClosureCodeRemoval implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall() && assertionNames.lookupByCallee(n.getFirstChild()) != null) {
+      if (!n.isCall()) {
+        return;
+      }
+
+      Node callee = n.getFirstChild();
+
+      if (assertionNames.lookupByCallee(callee) != null // type-based
+          || (callee.getColor() != null && callee.getColor().isClosureAssert())) { // color-based
         assertionCalls.add(n);
       }
     }

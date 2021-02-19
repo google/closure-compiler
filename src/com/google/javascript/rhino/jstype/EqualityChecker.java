@@ -310,7 +310,8 @@ final class EqualityChecker {
         return false;
       case ORDINARY:
         return this.areEqualCaching(left.getTypeOfThis(), right.getTypeOfThis())
-            && this.areEqualCaching(left.getInternalArrowType(), right.getInternalArrowType());
+            && this.areEqualCaching(left.getInternalArrowType(), right.getInternalArrowType())
+            && Objects.equals(left.getClosurePrimitive(), right.getClosurePrimitive());
       default:
         throw new AssertionError();
     }

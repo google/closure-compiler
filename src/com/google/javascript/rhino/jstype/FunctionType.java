@@ -897,6 +897,7 @@ public class FunctionType extends PrototypeObjectType implements Serializable {
       case ORDINARY:
         hc = 31 * hc + typeOfThis.hashCode();
         hc = 31 * hc + call.hashCode();
+        hc = 31 * hc + Objects.hashCode(getClosurePrimitive());
         return hc;
       default:
         throw new AssertionError();

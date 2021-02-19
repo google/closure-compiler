@@ -34,6 +34,7 @@ import com.google.common.collect.Streams;
 import com.google.javascript.jscomp.IdGenerator;
 import com.google.javascript.jscomp.InvalidatingTypes;
 import com.google.javascript.jscomp.serialization.JSTypeSerializer.SimplifiedType.Kind;
+import com.google.javascript.rhino.ClosurePrimitive;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -309,6 +310,7 @@ final class JSTypeSerializer {
           objBuilder.setMarkedConstructor(true);
         }
       }
+      objBuilder.setClosureAssert(isClosureAssert(fnType.getClosurePrimitive()));
     }
     if (this.serializationMode.includeDebugInfo()) {
       ObjectTypeProto.DebugInfo debugInfo = getDebugInfo(type);
@@ -604,5 +606,25 @@ final class JSTypeSerializer {
         .setSymbolObject(
             this.serializeType(registry.getNativeType(JSTypeNative.SYMBOL_OBJECT_TYPE)))
         .build();
+  }
+
+  /**
+   * Returns whether this is some assertion call that should be removed by optimizations when
+   * --remove_closure_asserts is enabled.
+   */
+  private static boolean isClosureAssert(@Nullable ClosurePrimitive primitive) {
+    if (primitive == null) {
+      return false;
+    }
+
+    switch (primitive) {
+      case ASSERTS_TRUTHY:
+      case ASSERTS_MATCHES_RETURN:
+        return true;
+
+      case ASSERTS_FAIL: // technically an assertion function, but not removed by ClosureCodeRemoval
+        return false;
+    }
+    throw new AssertionError();
   }
 }

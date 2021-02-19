@@ -33,7 +33,10 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
       lines(
           "const asserts = {};",
           "/** @closurePrimitive {asserts.truthy} */",
-          "asserts.assert = function(...args) {};");
+          "asserts.assert = function(...args) {};",
+          "",
+          "/** @closurePrimitive {asserts.fail} */",
+          "asserts.fail = function(...args) {};");
 
   public ClosureCodeRemovalTest() {
     super(EXTERNS);
@@ -165,6 +168,30 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
   public void testClosurePrimitiveAssertionRemoval4() {
     enableTypeCheck();
     test(ASSERTIONS + "var x = asserts.assert();", ASSERTIONS + "var x = void 0;");
+  }
+
+  @Test
+  public void testClosurePrimitiveAssertionRemoval_keepsAssertsFail() {
+    enableTypeCheck();
+    testSame(ASSERTIONS + "var x = asserts.fail();");
+  }
+
+  @Test
+  public void testClosurePrimitiveAssertionRemoval_worksWithColors() {
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+
+    test(ASSERTIONS + "var x = asserts.assert(y(), 'message');", ASSERTIONS + "var x = y();");
+  }
+
+  @Test
+  public void testClosurePrimitiveAssertionRemoval_keepsAssertsFailWithColors() {
+    enableTypeCheck();
+    replaceTypesWithColors();
+    disableCompareJsDoc();
+
+    testSame(ASSERTIONS + "var x = asserts.fail();");
   }
 
   @Test

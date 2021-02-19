@@ -98,8 +98,8 @@ public class ColorDeserializerTest {
     ColorDeserializer deserializer =
         ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
-    assertThat(deserializer.pointerToColor(poolPointer(0)).getId())
-        .isEqualTo(ImmutableSet.of("Foo"));
+    assertThat(deserializer.pointerToColor(poolPointer(0)))
+        .isEqualTo(Color.createSingleton(SingletonColorFields.builder().setId("Foo").build()));
   }
 
   @Test
@@ -164,7 +164,7 @@ public class ColorDeserializerTest {
   }
 
   @Test
-  public void deserializesInvalidatingObject() {
+  public void marksInvalidatingObject() {
     TypePool typePool =
         TypePool.newBuilder()
             .addType(
@@ -175,6 +175,21 @@ public class ColorDeserializerTest {
         ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
 
     assertThat(deserializer.pointerToColor(poolPointer(0))).isInvalidating();
+    assertThat(deserializer.pointerToColor(poolPointer(0)).getId()).containsExactly("Foo");
+  }
+
+  @Test
+  public void marksClosureAssert() {
+    TypePool typePool =
+        TypePool.newBuilder()
+            .addType(
+                TypeProto.newBuilder()
+                    .setObject(ObjectTypeProto.newBuilder().setUuid("Foo").setClosureAssert(true)))
+            .build();
+    ColorDeserializer deserializer =
+        ColorDeserializer.buildFromTypePool(typePool, StringPool.getDefaultInstance());
+
+    assertThat(deserializer.pointerToColor(poolPointer(0))).isClosureAssert();
     assertThat(deserializer.pointerToColor(poolPointer(0)).getId()).containsExactly("Foo");
   }
 

@@ -67,6 +67,11 @@ message ObjectTypeProto {
   // Represented as offsets into a StringPool
   repeated int32 own_property = 8;
 
+  // Identifies assertion functions with special type-system handling that
+  // should be removed when --remove_closure_asserts is enabled.
+  // TODO(b/180648361): remove this option
+  bool closure_assert = 9;
+
   // Optional, doesn't contribute to type equality
   DebugInfo debug_info = 15;
   message DebugInfo {

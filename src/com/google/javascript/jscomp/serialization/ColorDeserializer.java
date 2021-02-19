@@ -222,6 +222,7 @@ public final class ColorDeserializer {
       SingletonColorFields.Builder builder =
           SingletonColorFields.builder()
               .setId(serialized.getUuid())
+              .setClosureAssert(serialized.getClosureAssert())
               .setInvalidating(serialized.getIsInvalidating())
               .setPropertiesKeepOriginalName(serialized.getPropertiesKeepOriginalName())
               .setDisambiguationSupertypes(directSupertypes)
