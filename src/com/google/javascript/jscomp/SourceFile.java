@@ -129,19 +129,27 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
   }
 
   private void findLineOffsets() {
-    if (lineOffsets != null) {
+    if (this.lineOffsets != null) {
       return;
     }
-    try {
-      String[] sourceLines = getCode().split("\n", -1);
-      lineOffsets = new int[sourceLines.length];
-      for (int ii = 1; ii < sourceLines.length; ++ii) {
-        lineOffsets[ii] =
-            lineOffsets[ii - 1] + sourceLines[ii - 1].length() + 1;
+
+    if (this.code == null) {
+      try {
+        // Loading the code calls `findLineOffsets`.
+        // It's possible to have lineOffsets without code after deserialization.
+        this.getCode();
+      } catch (IOException e) {
+        this.lineOffsets = new int[1];
       }
-    } catch (IOException e) {
-      lineOffsets = new int[1];
-      lineOffsets[0] = 0;
+
+      checkNotNull(this.lineOffsets);
+      return;
+    }
+
+    String[] sourceLines = this.code.split("\n", -1);
+    this.lineOffsets = new int[sourceLines.length];
+    for (int ii = 1; ii < sourceLines.length; ++ii) {
+      this.lineOffsets[ii] = this.lineOffsets[ii - 1] + sourceLines[ii - 1].length() + 1;
     }
   }
 
@@ -183,8 +191,8 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
   }
 
   private void setCodeAndDoBookkeeping(String sourceCode) {
-    this.lineOffsets = null;
     this.code = null;
+    this.lineOffsets = null;
 
     if (sourceCode != null) {
       if (sourceCode.startsWith(UTF8_BOM)) {
@@ -192,6 +200,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
       }
 
       this.code = sourceCode;
+
       this.findLineOffsets();
     }
   }
@@ -615,7 +624,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
 
     Preloaded(String fileName, String originalPath, String code, SourceKind kind) {
       super(fileName, originalPath, kind);
-      this.preloadedCode = code;
+      this.preloadedCode = checkNotNull(code);
     }
 
     @Override
@@ -756,5 +765,66 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
   public void restoreFrom(SourceFile sourceFile) {
     this.code = sourceFile.code;
     this.lineOffsets = sourceFile.lineOffsets;
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(ObjectOutputStream os) throws Exception {
+    os.defaultWriteObject();
+    os.writeInt((this.lineOffsets == null) ? -1 : this.lineOffsets.length);
+    os.writeObject(this.lineOffsetsToVarintDeltas());
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(ObjectInputStream in) throws Exception {
+    in.defaultReadObject();
+    this.lineOffsets = varintDeltasToLineOffsets(in.readInt(), (byte[]) in.readObject());
+  }
+
+  private static final int SEVEN_BITS = 0b01111111;
+
+  private byte[] lineOffsetsToVarintDeltas() {
+    if (this.lineOffsets == null) {
+      return null;
+    }
+
+    int byteIndex = 0;
+    byte[] bytes = new byte[this.lineOffsets.length * 5]; // Max 4 bytes and 4 continuation bits.
+
+    byteIndex++; // The first offset is always 0.
+    for (int intIndex = 1; intIndex < this.lineOffsets.length; intIndex++) {
+      int delta = this.lineOffsets[intIndex] - this.lineOffsets[intIndex - 1];
+      while (delta > SEVEN_BITS) {
+        bytes[byteIndex++] = (byte) ((delta & SEVEN_BITS) | ~SEVEN_BITS);
+        delta = delta >>> 7;
+      }
+      bytes[byteIndex++] = (byte) delta;
+    }
+
+    return Arrays.copyOf(bytes, byteIndex);
+  }
+
+  private static int[] varintDeltasToLineOffsets(int lineCount, byte[] bytes) {
+    if (lineCount == -1) {
+      return null;
+    }
+
+    int[] lineOffsets = new int[lineCount];
+    int byteIndex = 1; // The first offset is always 0.
+
+    for (int intIndex = 1; intIndex < lineCount; intIndex++) {
+      int delta = 0;
+      int shift = 0;
+      while (true) {
+        byte segment = bytes[byteIndex++];
+        delta |= (segment & SEVEN_BITS) << shift;
+        shift += 7;
+        if (segment >= 0) {
+          break;
+        }
+      }
+      lineOffsets[intIndex] = delta + lineOffsets[intIndex - 1];
+    }
+
+    return lineOffsets;
   }
 }

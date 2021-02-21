@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.rhino.testing.Asserts.assertThrows;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.Iterables;
@@ -29,12 +30,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.List;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Rule;
@@ -73,21 +76,63 @@ public final class SourceFileTest {
 
   @Test
   public void testLineOffset() {
-    SourceFile f0 = SourceFile.fromCode("test.js", "");
+    testLineOffsetHelper((code) -> SourceFile.fromCode("test.js", code));
+  }
+
+  @Test
+  public void testLineOffset_serialization() {
+    testLineOffsetHelper((code) -> serializeRoundTrip(SourceFile.fromCode("test.js", code)));
+  }
+
+  @Test
+  public void testLineOffset_serialization_noReloadingSource() {
+    testLineOffsetHelper(
+        (code) -> {
+          SourceFile inMemory = SourceFile.fromCode("test.js", code);
+          assertThat(inMemory.getLineOfOffset(0)).isEqualTo(1); // Trigger line offset generation
+          SourceFile fakeOnDisk = SourceFile.fromFile("fake_on_disk.js");
+
+          fakeOnDisk.restoreFrom(inMemory);
+          assertThat(fakeOnDisk.getLineOfOffset(0)).isEqualTo(1);
+
+          return serializeRoundTrip(fakeOnDisk);
+        });
+  }
+
+  private void testLineOffsetHelper(Function<String, SourceFile> factory) {
+    SourceFile f0 = factory.apply("");
     assertThat(f0.getLineOfOffset(0)).isEqualTo(1);
     assertThat(f0.getColumnOfOffset(0)).isEqualTo(0);
     assertThat(f0.getLineOfOffset(10)).isEqualTo(1);
     assertThat(f0.getColumnOfOffset(10)).isEqualTo(10);
 
-    SourceFile f1 = SourceFile.fromCode("test.js", "'1';\n'2';\n'3'\n");
+    SourceFile f1 = factory.apply("'1';\n'2';\n'3'\n");
     assertThat(f1.getLineOffset(1)).isEqualTo(0);
     assertThat(f1.getLineOffset(2)).isEqualTo(5);
     assertThat(f1.getLineOffset(3)).isEqualTo(10);
 
-    SourceFile f2 = SourceFile.fromCode("test.js", "'100';\n'200;'\n'300'\n");
+    SourceFile f2 = factory.apply("'100';\n'200;'\n'300'\n");
     assertThat(f2.getLineOffset(1)).isEqualTo(0);
     assertThat(f2.getLineOffset(2)).isEqualTo(7);
     assertThat(f2.getLineOffset(3)).isEqualTo(14);
+
+    String longLine = stringOfLength(300);
+    SourceFile f3 = factory.apply(longLine + "\n" + longLine + "\n" + longLine + "\n");
+    assertThat(f3.getLineOffset(1)).isEqualTo(0);
+    assertThat(f3.getLineOffset(2)).isEqualTo(301);
+    assertThat(f3.getLineOffset(3)).isEqualTo(602);
+
+    assertThat(f3.getLineOfOffset(0)).isEqualTo(1);
+    assertThat(f3.getLineOfOffset(300)).isEqualTo(1);
+    assertThat(f3.getLineOfOffset(301)).isEqualTo(2);
+    assertThat(f3.getLineOfOffset(601)).isEqualTo(2);
+    assertThat(f3.getLineOfOffset(602)).isEqualTo(3);
+    assertThat(f3.getLineOfOffset(902)).isEqualTo(3);
+    assertThat(f3.getLineOfOffset(903)).isEqualTo(4);
+
+    // TODO(nickreid): This seems like a bug.
+    assertThat(f3.getLineOfOffset(-1)).isEqualTo(0);
+    assertThrows(Exception.class, () -> f3.getColumnOfOffset(-1));
   }
 
   @Test
@@ -345,5 +390,29 @@ public final class SourceFileTest {
     assertThat(sourceFile.getLines(-20, 1).getSourceExcerpt()).isEqualTo("const a = 0;");
     assertThat(sourceFile.getLines(0, 1).getSourceExcerpt()).isEqualTo("const a = 0;");
     assertThat(sourceFile.getLines(4, 1)).isNull();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T extends Serializable> T serializeRoundTrip(T t) {
+    try {
+      ByteArrayOutputStream outBytes = new ByteArrayOutputStream();
+      ObjectOutputStream outObjects = new ObjectOutputStream(outBytes);
+      outObjects.writeObject(t);
+      outObjects.close();
+
+      ByteArrayInputStream inBytes = new ByteArrayInputStream(outBytes.toByteArray());
+      ObjectInputStream inObjects = new ObjectInputStream(inBytes);
+      return (T) inObjects.readObject();
+    } catch (Exception e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private static String stringOfLength(int length) {
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < length; i++) {
+      builder.append('a');
+    }
+    return builder.toString();
   }
 }
