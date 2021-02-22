@@ -770,61 +770,62 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
   @GwtIncompatible("ObjectOutputStream")
   private void writeObject(ObjectOutputStream os) throws Exception {
     os.defaultWriteObject();
-    os.writeInt((this.lineOffsets == null) ? -1 : this.lineOffsets.length);
-    os.writeObject(this.lineOffsetsToVarintDeltas());
+    this.serializeLineOffsetsToVarintDeltas(os);
   }
 
   @GwtIncompatible("ObjectInputStream")
   private void readObject(ObjectInputStream in) throws Exception {
     in.defaultReadObject();
-    this.lineOffsets = varintDeltasToLineOffsets(in.readInt(), (byte[]) in.readObject());
+    this.deserializeVarintDeltasToLineOffsets(in);
   }
 
   private static final int SEVEN_BITS = 0b01111111;
 
-  private byte[] lineOffsetsToVarintDeltas() {
+  @GwtIncompatible("ObjectOutputStream")
+  private void serializeLineOffsetsToVarintDeltas(ObjectOutputStream os) throws Exception {
     if (this.lineOffsets == null) {
-      return null;
+      os.writeInt(-1);
+      return;
     }
 
-    int byteIndex = 0;
-    byte[] bytes = new byte[this.lineOffsets.length * 5]; // Max 4 bytes and 4 continuation bits.
+    os.writeInt(this.lineOffsets.length);
 
-    byteIndex++; // The first offset is always 0.
+    // The first offset is always 0.
     for (int intIndex = 1; intIndex < this.lineOffsets.length; intIndex++) {
       int delta = this.lineOffsets[intIndex] - this.lineOffsets[intIndex - 1];
       while (delta > SEVEN_BITS) {
-        bytes[byteIndex++] = (byte) ((delta & SEVEN_BITS) | ~SEVEN_BITS);
+        os.writeByte(delta | ~SEVEN_BITS);
         delta = delta >>> 7;
       }
-      bytes[byteIndex++] = (byte) delta;
+      os.writeByte(delta);
     }
-
-    return Arrays.copyOf(bytes, byteIndex);
   }
 
-  private static int[] varintDeltasToLineOffsets(int lineCount, byte[] bytes) {
+  @GwtIncompatible("ObjectInputStream")
+  private void deserializeVarintDeltasToLineOffsets(ObjectInputStream in) throws Exception {
+    int lineCount = in.readInt();
     if (lineCount == -1) {
-      return null;
+      this.lineOffsets = null;
+      return;
     }
 
     int[] lineOffsets = new int[lineCount];
-    int byteIndex = 1; // The first offset is always 0.
 
+    // The first offset is always 0.
     for (int intIndex = 1; intIndex < lineCount; intIndex++) {
       int delta = 0;
       int shift = 0;
-      while (true) {
-        byte segment = bytes[byteIndex++];
+
+      byte segment = in.readByte();
+      for (; segment < 0; segment = in.readByte()) {
         delta |= (segment & SEVEN_BITS) << shift;
         shift += 7;
-        if (segment >= 0) {
-          break;
-        }
       }
+      delta |= segment << shift;
+
       lineOffsets[intIndex] = delta + lineOffsets[intIndex - 1];
     }
 
-    return lineOffsets;
+    this.lineOffsets = lineOffsets;
   }
 }
