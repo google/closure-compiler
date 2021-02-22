@@ -1491,7 +1491,6 @@ public final class CompilerTest {
     List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.setDependencyOptions(DependencyOptions.pruneLegacyForEntryPoints(entryPoints));
 
     List<SourceFile> externs =
@@ -1891,8 +1890,6 @@ public final class CompilerTest {
   private static CompilerOptions createNewFlagBasedOptions() {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setEmitUseStrict(false);
     return options;
   }

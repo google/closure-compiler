@@ -59,7 +59,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testDisambiguationOfForwardReferencedAliasedInterface() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setDisambiguateProperties(true);
     options.setPrettyPrint(true);
     options.setPreserveTypeAnnotations(true);
@@ -123,7 +123,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
     // of the interface.
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setDisambiguateProperties(true);
     options.setPrettyPrint(true);
     options.setPreserveTypeAnnotations(true);
@@ -453,7 +453,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
   public void testReferenceToInternalClassName() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setEmitUseStrict(false); // 'use strict'; is just noise here
     options.setPrettyPrint(true);
     options.setGeneratePseudoNames(true);

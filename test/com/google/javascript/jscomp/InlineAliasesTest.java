@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.InlineAliases.ALIAS_CYCLE;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,7 +36,6 @@ public class InlineAliasesTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     enableTypeInfoValidation();
     enableTypeCheck();
-    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
     return options;
   }
 
