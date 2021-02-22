@@ -595,8 +595,7 @@ public abstract class CompilerTestCase {
 
     // TODO(sdh): Initialize *all* the options here, but first we must ensure no subclass
     // is changing them in the constructor, rather than in their own setUp method.
-    this.acceptedLanguage =
-        LanguageMode.ECMASCRIPT_NEXT_IN; // TODO(nickreid): Consider ES_UNSUPPORTED
+    this.acceptedLanguage = LanguageMode.UNSUPPORTED;
     this.moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     this.parseJsDocDocumentation = JsDocParsing.TYPES_ONLY;
     this.allowExternsChanges = false;
