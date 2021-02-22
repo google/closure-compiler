@@ -211,6 +211,7 @@ gen_java_tests(
         "@google_bazel_common//third_party/java/junit",
         "@google_bazel_common//third_party/java/mockito",
         "@google_bazel_common//third_party/java/truth",
+        "@io_github_java_diff_utils_java_diff_utils",
     ],
 )
 

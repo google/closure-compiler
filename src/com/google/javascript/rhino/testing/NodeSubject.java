@@ -39,7 +39,6 @@
 
 package com.google.javascript.rhino.testing;
 
-import static com.google.common.truth.Fact.fact;
 import static com.google.common.truth.Fact.simpleFact;
 import static com.google.common.truth.Truth.assertAbout;
 
@@ -53,6 +52,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -142,36 +142,34 @@ public final class NodeSubject extends Subject {
     }
 
     ArrayList<Fact> facts = new ArrayList<>();
-    facts.add(fact("Actual", serializeNode(actual)));
-    facts.add(fact("Expected", serializeNode(expected)));
-
-    Node misActual = mismatch.actual;
-    Node misExpected = mismatch.expected;
-    String misActualStr = serializeNode(misActual);
-    String misExpectedStr = serializeNode(misExpected);
-
-    facts.add(fact("Actual mismatch", misActualStr));
-    if (misActualStr.equals(misExpectedStr)) {
-      String misActualTreeStr = misActual.toStringTree();
-      if (!misActualTreeStr.equals(misActualStr)) {
-        facts.add(fact("Actual mismatch AST", misActualTreeStr));
-      }
-      if (checkJsdoc) {
-        facts.add(fact("Actual JSDoc", jsdocToStringNullsafe(misActual.getJSDocInfo())));
+    final String expectedOutputJs = serializeNode(expected);
+    final String actualOutputJs = serializeNode(actual);
+    if (expectedOutputJs.equals(actualOutputJs)) {
+      // The output code looks identical, so diff the AST instead to show what properties
+      // are different.
+      facts.addAll(
+          new TextDiffFactsBuilder("AST diff")
+              .expectedText(expected.toStringTree())
+              .actualText(actual.toStringTree())
+              .build());
+    } else {
+      facts.addAll(
+          new TextDiffFactsBuilder("JS diff")
+              .expectedText(expectedOutputJs)
+              .actualText(actualOutputJs)
+              .build());
+    }
+    if (checkJsdoc) {
+      final String expectedJSDoc = jsdocToStringNullsafe(mismatch.expected.getJSDocInfo());
+      final String actualJSDoc = jsdocToStringNullsafe(mismatch.actual.getJSDocInfo());
+      if (!Objects.equals(expectedJSDoc, actualJSDoc)) {
+        facts.addAll(
+            new TextDiffFactsBuilder("JSDoc diff")
+                .expectedText(expectedJSDoc)
+                .actualText(actualJSDoc)
+                .build());
       }
     }
-
-    facts.add(fact("Expected mismatch", misExpectedStr));
-    if (misActualStr.equals(misExpectedStr)) {
-      String misExpectedTreeStr = misExpected.toStringTree();
-      if (!misExpectedTreeStr.equals(misExpectedStr)) {
-        facts.add(fact("Expected mismatch AST", misExpectedTreeStr));
-      }
-      if (checkJsdoc) {
-        facts.add(fact("Expected JSDoc", jsdocToStringNullsafe(misExpected.getJSDocInfo())));
-      }
-    }
-
     failWithoutActual(simpleFact("Node tree inequality"), facts.toArray(new Fact[0]));
   }
 
@@ -257,18 +255,18 @@ public final class NodeSubject extends Subject {
   }
 
   /**
-   * indicates whether the node we are asserting is the start of an optional chain
-   * e.g. `a?.b` of `a?.b.c`
-   * */
+   * indicates whether the node we are asserting is the start of an optional chain e.g. `a?.b` of
+   * `a?.b.c`
+   */
   public NodeSubject isOptionalChainStart() {
     check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isTrue();
     return this;
   }
 
   /**
-   * indicates whether the node we are asserting is the start of an optional chain
-   * e.g. `b.c` of `a?.b.c`
-   * */
+   * indicates whether the node we are asserting is the start of an optional chain e.g. `b.c` of
+   * `a?.b.c`
+   */
   public NodeSubject isNotOptionalChainStart() {
     check("isOptionalChainStart()").that(actual.isOptionalChainStart()).isFalse();
     return this;

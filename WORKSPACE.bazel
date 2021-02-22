@@ -22,6 +22,15 @@ maven_import(
 )
 
 maven_import(
+    # https://github.com/java-diff-utils/java-diff-utils
+    group_id = "io.github.java-diff-utils",
+    artifact_id = "java-diff-utils",
+    version = "4.0",
+    sha256 = "810232374e76a954949f0e2185cd7d9515addb918cf3da3481f77e07c356b49a",
+    licenses = ["notice"],
+)
+
+maven_import(
     # https://github.com/google/gson
     group_id = "com.google.code.gson",
     artifact_id = "gson",
