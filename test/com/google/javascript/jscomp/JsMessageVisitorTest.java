@@ -1036,7 +1036,7 @@ public final class JsMessageVisitorTest {
   private class CollectMessages extends JsMessageVisitor {
 
     private CollectMessages(Compiler compiler) {
-      super(compiler, true, mode, null);
+      super(compiler, mode, null);
     }
 
     @Override
@@ -1049,7 +1049,7 @@ public final class JsMessageVisitorTest {
   private static class DummyJsVisitor extends JsMessageVisitor {
 
     private DummyJsVisitor(Style style) {
-      super(null, true, style, null);
+      super(null, style, null);
     }
 
     @Override

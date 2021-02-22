@@ -1324,8 +1324,6 @@ public final class DefaultPassConfig extends PassConfig {
                   new ReplaceMessages(
                       compiler,
                       options.messageBundle,
-                      /* warn about message dupes */
-                      true,
                       /* allow messages with goog.getMsg */
                       JsMessage.Style.CLOSURE,
                       /* if we can't find a translation, don't worry about it. */
@@ -1341,8 +1339,6 @@ public final class DefaultPassConfig extends PassConfig {
                   new ReplaceMessagesForChrome(
                       compiler,
                       new GoogleJsMessageIdGenerator(options.tcProjectId),
-                      /* warn about message dupes */
-                      true,
                       /* allow messages with goog.getMsg */
                       JsMessage.Style.CLOSURE))
           .setFeatureSetForOptimizations()

@@ -81,7 +81,7 @@ public final class JsMessageExtractor {
     private final List<JsMessage> messages = new ArrayList<>();
 
     private ExtractMessagesVisitor(AbstractCompiler compiler) {
-      super(compiler, true, style, idGenerator);
+      super(compiler, style, idGenerator);
     }
 
     @Override

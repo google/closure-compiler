@@ -20,12 +20,12 @@ import com.google.javascript.rhino.Node;
 
 /** GWT compatible no-op replacement for {@code ReplaceMessages} */
 final class ReplaceMessages implements CompilerPass {
-  ReplaceMessages(AbstractCompiler compiler, MessageBundle bundle,
-      boolean checkDuplicatedMessages, JsMessage.Style style,
-      boolean strictReplacement) {
-  }
+  ReplaceMessages(
+      AbstractCompiler compiler,
+      MessageBundle bundle,
+      JsMessage.Style style,
+      boolean strictReplacement) {}
 
   @Override
-  public void process(Node externs, Node root) {
-  }
+  public void process(Node externs, Node root) {}
 }

@@ -20,12 +20,9 @@ import com.google.javascript.rhino.Node;
 
 /** GWT compatible no-op replacement for {@code ReplaceMessagesForChrome} */
 final class ReplaceMessagesForChrome implements CompilerPass {
-  ReplaceMessagesForChrome(AbstractCompiler compiler,
-      JsMessage.IdGenerator idGenerator,
-      boolean checkDuplicatedMessages, JsMessage.Style style) {
-  }
+  ReplaceMessagesForChrome(
+      AbstractCompiler compiler, JsMessage.IdGenerator idGenerator, JsMessage.Style style) {}
 
   @Override
-  public void process(Node externs, Node root) {
-  }
+  public void process(Node externs, Node root) {}
 }

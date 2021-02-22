@@ -38,8 +38,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new ReplaceMessages(
-        compiler, new SimpleMessageBundle(), false, style, strictReplacement);
+    return new ReplaceMessages(compiler, new SimpleMessageBundle(), style, strictReplacement);
   }
 
   @Override

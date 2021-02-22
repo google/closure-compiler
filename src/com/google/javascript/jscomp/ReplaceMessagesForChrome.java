@@ -33,11 +33,10 @@ import java.util.List;
 @GwtIncompatible("JsMessage")
 class ReplaceMessagesForChrome extends JsMessageVisitor {
 
-  ReplaceMessagesForChrome(AbstractCompiler compiler,
-      JsMessage.IdGenerator idGenerator,
-      boolean checkDuplicatedMessages, JsMessage.Style style) {
+  ReplaceMessagesForChrome(
+      AbstractCompiler compiler, JsMessage.IdGenerator idGenerator, JsMessage.Style style) {
 
-    super(compiler, checkDuplicatedMessages, style, idGenerator);
+    super(compiler, style, idGenerator);
   }
 
   private static Node getChromeI18nGetMessageNode(String messageId) {

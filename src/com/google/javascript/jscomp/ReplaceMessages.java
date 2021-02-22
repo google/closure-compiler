@@ -54,10 +54,9 @@ final class ReplaceMessages extends JsMessageVisitor {
   ReplaceMessages(
       AbstractCompiler compiler,
       MessageBundle bundle,
-      boolean checkDuplicatedMessages,
       JsMessage.Style style,
       boolean strictReplacement) {
-    super(compiler, checkDuplicatedMessages, style, bundle.idGenerator());
+    super(compiler, style, bundle.idGenerator());
 
     this.bundle = bundle;
     this.strictReplacement = strictReplacement;
