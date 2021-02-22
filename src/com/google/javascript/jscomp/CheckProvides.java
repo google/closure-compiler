@@ -45,23 +45,19 @@ class CheckProvides implements HotSwapCompilerPass {
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    CheckProvidesCallback callback =
-        new CheckProvidesCallback(codingConvention);
+    CheckProvidesCallback callback = new CheckProvidesCallback();
     NodeTraversal.traverse(compiler, scriptRoot, callback);
   }
 
   private class CheckProvidesCallback implements Callback {
     private final Map<String, Node> provides = new HashMap<>();
     private final Map<String, Node> ctors = new HashMap<>();
-    private final CodingConvention convention;
     private boolean containsRequires = false;
 
-    CheckProvidesCallback(CodingConvention convention){
-      this.convention = convention;
-    }
+    CheckProvidesCallback() {}
 
     @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+    public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       // We do want to traverse the name of a named function, but we don't
       // want to traverse the arguments or body. We also don't care about modules.
       if (n.isModuleBody()) {
@@ -115,11 +111,9 @@ class CheckProvides implements HotSwapCompilerPass {
       }
       if (name != null && name.isQualifiedName()) {
         String qualifiedName = name.getQualifiedName();
-        if (!this.convention.isPrivate(qualifiedName)) {
-          Visibility visibility = info.getVisibility();
-          if (!visibility.equals(JSDocInfo.Visibility.PRIVATE)) {
-            ctors.put(qualifiedName, name);
-          }
+        Visibility visibility = info.getVisibility();
+        if (!visibility.equals(JSDocInfo.Visibility.PRIVATE)) {
+          ctors.put(qualifiedName, name);
         }
       }
     }
@@ -133,10 +127,7 @@ class CheckProvides implements HotSwapCompilerPass {
 
     private boolean isPrivate(Node classOrFn) {
       JSDocInfo info = NodeUtil.getBestJSDocInfo(classOrFn);
-      if (info != null && info.getVisibility().equals(JSDocInfo.Visibility.PRIVATE)) {
-        return true;
-      }
-      return compiler.getCodingConvention().isPrivate(NodeUtil.getName(classOrFn));
+      return (info != null && info.getVisibility().equals(JSDocInfo.Visibility.PRIVATE));
     }
 
     private void visitScriptNode() {
