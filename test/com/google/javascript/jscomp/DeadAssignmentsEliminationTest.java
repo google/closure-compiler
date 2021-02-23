@@ -40,12 +40,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    return options;
-  }
-
-  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return (externs, js) ->
         NodeTraversal.traverse(compiler, js, new DeadAssignmentsElimination(compiler));

@@ -72,7 +72,7 @@ import org.apache.tools.ant.types.resources.FileResource;
  */
 public final class CompileTask
     extends Task {
-  private CompilerOptions.LanguageMode languageIn;
+  private final CompilerOptions.LanguageMode languageIn;
   private CompilerOptions.LanguageMode languageOut;
   private WarningLevel warningLevel;
   private boolean debugOptions;

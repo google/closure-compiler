@@ -31,12 +31,6 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
     enableGatherExternProperties();
   }
 
-  @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    return options;
-  }
-
   @Test
   public void testBasic() {
     testSame(lines(

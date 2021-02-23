@@ -43,12 +43,6 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    return options;
-  }
-
-  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new Es6RewriteBlockScopedDeclaration(compiler);
   }

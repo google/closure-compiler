@@ -39,12 +39,6 @@ public class MarkUntranspilableFeaturesAsRemovedTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    return options;
-  }
-
-  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new MarkUntranspilableFeaturesAsRemoved(compiler, languageOut.toFeatureSet());
   }

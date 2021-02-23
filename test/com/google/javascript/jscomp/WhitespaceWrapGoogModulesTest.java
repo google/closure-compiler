@@ -44,12 +44,6 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
     return new WhitespaceWrapGoogModules(compiler);
   }
 
-  @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    return options;
-  }
-
   @Test
   public void testGoogModuleRewrite() {
     test(

@@ -17,11 +17,12 @@
 package com.google.javascript.jscomp.serialization;
 
 import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
+import static com.google.common.collect.Streams.stream;
 import static java.util.Comparator.naturalOrder;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
 import com.google.gson.Gson;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
@@ -33,7 +34,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.serialization.SerializationOptions;
 import java.util.IdentityHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Pass to convert JSType objects from TypeChecking that are attached to the AST into Color objects
@@ -125,7 +125,7 @@ public final class ConvertTypesToColors implements CompilerPass {
    */
   private ImmutableSet<TypeMismatchJson> logTypeMismatches(
       Iterable<TypeMismatch> typeMismatches, JSTypeSerializer serializer, TypePool typePool) {
-    return Streams.stream(typeMismatches)
+    return stream(typeMismatches)
         .map(mismatch -> TypeMismatchJson.create(mismatch, serializer, typePool))
         .collect(toImmutableSortedSet(naturalOrder()));
   }
@@ -164,7 +164,7 @@ public final class ConvertTypesToColors implements CompilerPass {
       int poolOffset = typePointer.getPoolOffset();
       if (poolOffset < JSTypeSerializer.PRIMITIVE_POOL_SIZE) {
         // TODO(b/169090854): standardize the PrimitiveType UUIDs between here and ColorRegistry
-        return "<native type>: " + PrimitiveType.forNumber(poolOffset).toString();
+        return "<native type>: " + PrimitiveType.forNumber(poolOffset);
       }
 
       int adjustedOffset = typePointer.getPoolOffset() - JSTypeSerializer.PRIMITIVE_POOL_SIZE;
@@ -175,7 +175,7 @@ public final class ConvertTypesToColors implements CompilerPass {
           return typeProto.getUnion().getUnionMemberList().stream()
               .map(pointer -> typePointerToId(pointer, typePool))
               .distinct()
-              .collect(Collectors.joining(","));
+              .collect(joining(","));
         case OBJECT:
           return typeProto.getObject().getUuid();
         case KIND_NOT_SET:

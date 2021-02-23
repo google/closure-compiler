@@ -33,12 +33,6 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    return options;
-  }
-
-  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(compiler, getName(), new MinimizeExitPoints());
   }

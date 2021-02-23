@@ -67,12 +67,6 @@ public final class TypeCheckTest extends TypeCheckTestCase {
           + " to a struct instance after it is constructed. (If you already declared the property,"
           + " make sure to give it a type.)";
 
-  @Override
-  protected CompilerOptions getDefaultOptions() {
-    CompilerOptions options = super.getDefaultOptions();
-    return options;
-  }
-
   @Test
   public void testInitialTypingScope() {
     TypedScope s =
