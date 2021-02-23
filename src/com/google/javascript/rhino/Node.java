@@ -54,6 +54,7 @@ import com.google.javascript.rhino.StaticSourceFile.SourceKind;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -484,7 +485,7 @@ public class Node implements Serializable {
     }
 
     @GwtIncompatible("ObjectInputStream")
-    private void readObject(java.io.ObjectInputStream in) throws Exception {
+    private void readObject(ObjectInputStream in) throws Exception {
       in.defaultReadObject();
 
       this.str = this.str.intern();
@@ -564,6 +565,13 @@ public class Node implements Serializable {
       clone.raw = raw;
       clone.cooked = cooked;
       return copyNodeFields(clone, cloneTypeExprs);
+    }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(ObjectInputStream in) throws Exception {
+      in.defaultReadObject();
+
+      this.raw = this.raw.intern();
     }
   }
 
@@ -3681,7 +3689,7 @@ public class Node implements Serializable {
   }
 
   @GwtIncompatible("ObjectInputStream")
-  private void readObject(java.io.ObjectInputStream in) throws Exception {
+  private void readObject(ObjectInputStream in) throws Exception {
     // Do not call in.defaultReadObject() as all the fields are transient and this class does not
     // have a superclass.
 
