@@ -37,7 +37,6 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    enableNormalize();
     enableTypeCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }

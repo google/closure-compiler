@@ -41,8 +41,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return (Node externs, Node root) -> {
-      new Normalize.PropagateConstantAnnotationsOverVars(compiler, /* forbidChanges= */ false)
-          .process(externs, root);
+      new InferConsts(compiler).process(externs, root);
       new ConstCheck(compiler, compiler.getModuleMetadataMap()).process(externs, root);
     };
   }
@@ -253,15 +252,9 @@ public final class ConstCheckTest extends CompilerTestCase {
     testSame("/** @const */ var xyz = 1; /** @suppress {const} */ xyz += 1;");
   }
 
-  // If there are two 'var' statements for the same variable, and both are in the JS
-  // (not in externs), the second will be normalized to an assignment, and the
-  // JSDoc with the suppression will be on the new node.
   @Test
   public void testConstSuppressionOnVar() {
-    enableNormalize();
-    String before = "/** @const */ var xyz = 1;\n/** @suppress {const} */ var xyz = 3;";
-    String after = "/** @const */ var xyz = 1;\n/** @suppress {const} */ xyz = 3;";
-    test(before, after);
+    testSame("/** @const */ var xyz = 1;\n/** @suppress {const} */ var xyz = 3;");
   }
 
   // If there are two 'var' statements for the same variable, one in externs and

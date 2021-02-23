@@ -47,7 +47,6 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     super.setUp();
     enableTypeCheck();
     disableLineNumberCheck();
-    enableNormalize();
   }
 
   @Test
@@ -347,8 +346,9 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             " return x;",
             "})"),
         lines(
-            "/** @type {?function(number):number} */ (/** @param {number} x */ function(x) {",
-            "  $jscomp.typecheck.checkType(x,[$jscomp.typecheck.valueChecker('number')]);",
+            "/** @param {number} x */",
+            "(function(x) {",
+            "  $jscomp.typecheck.checkType(x, [$jscomp.typecheck.valueChecker('number')]);",
             "  return x;",
             "})"));
   }
@@ -431,7 +431,8 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "}",
             "function g() {",
             "  /** @constructor */ function inner$jscomp$1() {}",
-            "  inner$jscomp$1.prototype['instance_of__inner$jscomp$1'] = true;",
+            // TODO(b/181031194): use a different string from f's 'inner' function.
+            "  inner$jscomp$1.prototype['instance_of__inner'] = true;",
             "}"));
   }
 
@@ -449,7 +450,8 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "}",
             "function g() {",
             "  class inner$jscomp$1 {",
-            "    ['instance_of__inner$jscomp$1']() { }",
+            // TODO(b/181031194): use a different string from f's 'inner' function.
+            "    ['instance_of__inner']() { }",
             "  }",
             "}"));
   }
