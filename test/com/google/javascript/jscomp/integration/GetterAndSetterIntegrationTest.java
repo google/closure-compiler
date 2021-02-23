@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.integration;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.GoogleCodingConvention;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
@@ -60,7 +59,6 @@ public final class GetterAndSetterIntegrationTest extends IntegrationTestCase {
   @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());

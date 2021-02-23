@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.integration;
 import com.google.javascript.jscomp.ClosureCodingConvention;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.WarningLevel;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -155,7 +154,6 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
   @Override
   public CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     if (useSimpleMode) {
       CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     } else {

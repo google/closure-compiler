@@ -19,7 +19,6 @@ import static com.google.javascript.jscomp.lint.CheckProvidesSorted.PROVIDES_NOT
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.NodeTraversal;
@@ -52,7 +51,6 @@ public final class CheckProvidesSortedTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
     options.setParseJsDocDocumentation(JsDocParsing.INCLUDE_DESCRIPTIONS_WITH_WHITESPACE);
     options.setPreserveDetailedSourceInfo(true);
     options.setPrettyPrint(true);
