@@ -6216,7 +6216,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         srcs(
             lines("const x = 'oops, you did not export me.';"),
             lines(
-                "import {x} from './input0';", //
+                "import {x} from './testcode0';", //
                 "X: x;")));
 
     assertScope(getLabeledStatement("X").enclosingScope).declares("x").withTypeThat().isUnknown();
@@ -6240,7 +6240,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "let /** number */ num;", //
                 "export {num as y};"),
             lines(
-                "import {y as x} from './input0';", //
+                "import {y as x} from './testcode0';", //
                 "X: x;")));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
@@ -6255,7 +6255,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "/** @return {number} */ const f = () => 0;", //
                 "export const y = f();"),
             lines(
-                "import {y as x} from './input0';", //
+                "import {y as x} from './testcode0';", //
                 "X: x;")));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
@@ -6271,7 +6271,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "const num = f();",
                 "export {num as y};"),
             lines(
-                "import {y as x} from './input0';", //
+                "import {y as x} from './testcode0';", //
                 "X: x;")));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
@@ -6286,7 +6286,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "/** @typedef {number} */ let numType;", //
                 "export {numType};"),
             lines(
-                "import {numType} from './input0';", //
+                "import {numType} from './testcode0';", //
                 "var /** !numType */ x;",
                 "X: x;")));
 
@@ -6321,21 +6321,21 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   @Test
   public void testEsModule_exportDefault() {
-    testSame(srcs("export default 0;", "import x from './input0'; X: x;"));
+    testSame(srcs("export default 0;", "import x from './testcode0'; X: x;"));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
 
   @Test
   public void testEsModule_exportDefaultImportedWithSpecs() {
-    testSame(srcs("export default 0;", "import {default as x} from './input0'; X: x;"));
+    testSame(srcs("export default 0;", "import {default as x} from './testcode0'; X: x;"));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
 
   @Test
   public void testEsModule_importDefault_exportedUsingDefaultNamedKey() {
-    testSame(srcs("const x = 0; export {x as default};", "import x from './input0'; X: x;"));
+    testSame(srcs("const x = 0; export {x as default};", "import x from './testcode0'; X: x;"));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
@@ -6345,7 +6345,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             "export default class Button {}; const /** !Button */ b = new Button(); B1: b;",
-            "import Button from './input0'; const /** !Button */ b = new Button(); B2: b;"));
+            "import Button from './testcode0'; const /** !Button */ b = new Button(); B2: b;"));
 
     assertNode(getLabeledStatement("B1").statementNode.getOnlyChild())
         .hasJSTypeThat()
@@ -6360,9 +6360,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             "export const x = 0; export class Button {}",
-            "export {x, Button} from './input0';",
+            "export {x, Button} from './testcode0';",
             lines(
-                "import {x as y, Button} from './input0';",
+                "import {x as y, Button} from './testcode0';",
                 "Y: y;",
                 "const /** !Button */ b = new Button();")));
 
@@ -6374,9 +6374,9 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             "export const x = 0; export class Button {}",
-            "export * from './input0';",
+            "export * from './testcode0';",
             lines(
-                "import {x as y, Button} from './input0';",
+                "import {x as y, Button} from './testcode0';",
                 "Y: y;",
                 "const /** !Button */ b = new Button();")));
 
@@ -6389,7 +6389,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         srcs(
             "export let /** number */ x;",
             lines(
-                "import * as ns from './input0';", //
+                "import * as ns from './testcode0';", //
                 "NS: ns;",
                 "X: ns.x;")));
 
@@ -6406,7 +6406,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
                 "/** @return {number} */ const f = () => 0;", //
                 "export const x = f();"),
             lines(
-                "import * as ns from './input0';", //
+                "import * as ns from './testcode0';", //
                 "NS: ns;",
                 "X: ns.x;")));
 
@@ -6420,7 +6420,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             "/** @typedef {number} */ let numType; export {numType};",
-            "import * as ns from './input0'; var /** !ns.numType */ x; X: x;"));
+            "import * as ns from './testcode0'; var /** !ns.numType */ x; X: x;"));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
@@ -6430,7 +6430,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             "/** @typedef {number} */ export let numType;",
-            "import * as ns from './input0'; var /** !ns.numType */ x; X: x;"));
+            "import * as ns from './testcode0'; var /** !ns.numType */ x; X: x;"));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
@@ -6440,8 +6440,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             "/** @typedef {number} */ export let numType;",
-            "import * as mod from './input0'; export {mod};",
-            "import {mod} from './input1'; var /** !mod.numType */ x; X: x;"));
+            "import * as mod from './testcode0'; export {mod};",
+            "import {mod} from './testcode1'; var /** !mod.numType */ x; X: x;"));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
@@ -6451,8 +6451,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             "/** @typedef {number} */ export let numType;",
-            "import * as mod0 from './input0'; export {mod0};",
-            "import * as mod1 from './input1'; var /** !mod1.mod0.numType */ x; X: x;"));
+            "import * as mod0 from './testcode0'; export {mod0};",
+            "import * as mod1 from './testcode1'; var /** !mod1.mod0.numType */ x; X: x;"));
 
     assertNode(getLabeledStatement("X").statementNode.getOnlyChild()).hasJSTypeThat().isNumber();
   }
@@ -6512,12 +6512,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             lines(
-                "import {Bar} from './input1';", //
+                "import {Bar} from './testcode1';", //
                 "var /** !Bar */ b;",
                 "BAR: b;",
                 "export class Foo {}"),
             lines(
-                "import {Foo} from './input0';", //
+                "import {Foo} from './testcode0';", //
                 "var /** !Foo */ f;",
                 "FOO: f;",
                 "export class Bar {}")));
@@ -6535,12 +6535,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             lines(
-                "import {Bar as BarLocal} from './input1';", //
+                "import {Bar as BarLocal} from './testcode1';", //
                 "var /** !BarLocal */ b;",
                 "BAR: b;",
                 "export class Foo {}"),
             lines(
-                "import {Foo as FooLocal} from './input0';", //
+                "import {Foo as FooLocal} from './testcode0';", //
                 "var /** !FooLocal */ f;",
                 "FOO: f;",
                 "export class Bar {}")));
@@ -6558,12 +6558,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             lines(
-                "import * as mod from './input1';", //
+                "import * as mod from './testcode1';", //
                 "var /** !mod.Bar */ b;",
                 "BAR: b;",
                 "export class Foo {}"),
             lines(
-                "import {Foo} from './input0';", //
+                "import {Foo} from './testcode0';", //
                 "var /** !Foo */ f;",
                 "FOO: f;",
                 "export class Bar {}")));
@@ -6581,13 +6581,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             lines(
-                "import * as mod from './input1';", //
+                "import * as mod from './testcode1';", //
                 "function f() {",
                 "  BAR1: new mod.Bar();",
                 "}",
                 "export {mod};"),
             lines(
-                "import {mod} from './input0';", //
+                "import {mod} from './testcode0';", //
                 "var /** !mod.Bar */ b;",
                 "BAR: b;",
                 "function f() {",
@@ -6611,12 +6611,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         srcs(
             lines(
-                "import * as mod from './input1';",
+                "import * as mod from './testcode1';",
                 "var /** !mod.Bar */ b;",
                 "BAR: b;",
                 "export class Foo {}"),
             lines(
-                "import * as mod from './input0';",
+                "import * as mod from './testcode0';",
                 "var /** !mod.Foo */ f;",
                 "FOO: f;",
                 "export class Bar {}")));

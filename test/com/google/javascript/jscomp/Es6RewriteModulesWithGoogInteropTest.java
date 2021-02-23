@@ -1113,7 +1113,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "use(is.missing, is.missing.x);", //
-                "/** @const */ var module$input1 = {};")));
+                "/** @const */ var module$testcode1 = {};")));
 
     test(
         srcs(
@@ -1126,7 +1126,7 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "use(is.missing.prop, is.missing.prop.x);", //
-                "/** @const */ var module$input1 = {};")));
+                "/** @const */ var module$testcode1 = {};")));
 
     test(
         srcs(
@@ -1139,6 +1139,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
             new TestExternsBuilder().addClosureExterns().build(),
             lines(
                 "use(is.missing, is.missing.x, is.missing.y);", //
-                "/** @const */ var module$input1 = {};")));
+                "/** @const */ var module$testcode1 = {};")));
   }
 }

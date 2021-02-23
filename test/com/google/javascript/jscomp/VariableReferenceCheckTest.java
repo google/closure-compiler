@@ -699,7 +699,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
       "var x;",
       "function x() {}",
     };
-    String message = "Variable x declared more than once. First occurrence: input0";
+    String message = "Variable x declared more than once. First occurrence: testcode0";
     testError(srcs(js), error(VarCheck.VAR_MULTIPLY_DECLARED_ERROR).withMessage(message));
   }
 
@@ -709,7 +709,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
       "function x() {}",
       "var x;",
     };
-    String message = "Variable x declared more than once. First occurrence: input0";
+    String message = "Variable x declared more than once. First occurrence: testcode0";
     testError(srcs(js), error(VarCheck.VAR_MULTIPLY_DECLARED_ERROR).withMessage(message));
   }
 

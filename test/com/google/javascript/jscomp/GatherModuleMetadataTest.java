@@ -496,11 +496,11 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
     // duplicate of provide in earlier file
     test(
         srcs("goog.provide('duplicated');", "goog.module('duplicated')"),
-        error(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE).withMessageContaining("input0"));
+        error(ClosurePrimitiveErrors.DUPLICATE_NAMESPACE).withMessageContaining("testcode0"));
     // duplicate of module in earlier file
     test(
         srcs("goog.module('duplicated');", "goog.module('duplicated')"),
-        error(ClosurePrimitiveErrors.DUPLICATE_MODULE).withMessageContaining("input0"));
+        error(ClosurePrimitiveErrors.DUPLICATE_MODULE).withMessageContaining("testcode0"));
   }
 
   @Test
@@ -534,7 +534,7 @@ public final class GatherModuleMetadataTest extends CompilerTestCase {
   @Test
   public void testGoogInOtherScriptGoogIsClosure() {
     testSame(srcs("/** @provideGoog */ var goog = {};", "goog.isArray(foo);"));
-    ModuleMetadata m = metadataMap().getModulesByPath().get("input1");
+    ModuleMetadata m = metadataMap().getModulesByPath().get("testcode1");
     assertThat(m.usesClosure()).isTrue();
   }
 

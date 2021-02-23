@@ -71,6 +71,14 @@ public abstract class CompilerTestCase {
 
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
+  // The file name is included in the AST display string attached to each node.
+  // Consistently using the same name for src or externs generated files avoids spurious differences
+  // in the diffs displayed when a test case fails.
+  // TODO(bradfordcsmith): "testcode" and "externs" are magical strings.
+  // Other testing code assumes these names are used and expects them.
+  public static final String GENERATED_SRC_NAME = "testcode";
+  public static final String GENERATED_EXTERNS_NAME = "externs";
+
   /** Externs for the test */
   final List<SourceFile> externsInputs;
 
@@ -575,7 +583,7 @@ public abstract class CompilerTestCase {
    * @param externs Externs JS as a string
    */
   protected CompilerTestCase(String externs) {
-    this.externsInputs = ImmutableList.of(SourceFile.fromCode("externs", externs));
+    this.externsInputs = ImmutableList.of(SourceFile.fromCode(GENERATED_EXTERNS_NAME, externs));
     librariesToInject = new HashSet<>();
   }
 
@@ -1817,7 +1825,7 @@ public abstract class CompilerTestCase {
   }
 
   protected Node parseExpectedJs(String expected) {
-    return parseExpectedJs(ImmutableList.of(SourceFile.fromCode("expected", expected)));
+    return parseExpectedJs(ImmutableList.of(SourceFile.fromCode(GENERATED_SRC_NAME, expected)));
   }
 
   /** Parses expected JS inputs and returns the root of the parse tree. */
@@ -1873,7 +1881,9 @@ public abstract class CompilerTestCase {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.init(
-        maybeCreateSources("extern", extern), maybeCreateSources("input", input), options);
+        maybeCreateSources(GENERATED_EXTERNS_NAME, extern),
+        maybeCreateSources(GENERATED_SRC_NAME, input),
+        options);
     compiler.parseInputs();
 
     if (createModuleMap) {
@@ -2019,11 +2029,11 @@ public abstract class CompilerTestCase {
   }
 
   protected static Sources srcs(String srcText) {
-    return new FlatSources(maybeCreateSources("testcode", srcText));
+    return new FlatSources(maybeCreateSources(GENERATED_SRC_NAME, srcText));
   }
 
   protected static Sources srcs(String... srcTexts) {
-    return new FlatSources(createSources("input", srcTexts));
+    return new FlatSources(createSources(GENERATED_SRC_NAME, srcTexts));
   }
 
   protected static Sources srcs(List<SourceFile> files) {
@@ -2039,11 +2049,11 @@ public abstract class CompilerTestCase {
   }
 
   protected static Expected expected(String srcText) {
-    return new Expected(maybeCreateSources("expected", srcText));
+    return new Expected(maybeCreateSources(GENERATED_SRC_NAME, srcText));
   }
 
   protected static Expected expected(String... srcTexts) {
-    return new Expected(createSources("expected", srcTexts));
+    return new Expected(createSources(GENERATED_SRC_NAME, srcTexts));
   }
 
   protected static Expected expected(List<SourceFile> files) {
@@ -2069,11 +2079,11 @@ public abstract class CompilerTestCase {
   }
 
   protected static Externs externs(String externSrc) {
-    return new Externs(maybeCreateSources("externs", externSrc));
+    return new Externs(maybeCreateSources(GENERATED_EXTERNS_NAME, externSrc));
   }
 
   protected static Externs externs(String... srcTexts) {
-    return new Externs(createSources("externs", srcTexts));
+    return new Externs(createSources(GENERATED_EXTERNS_NAME, srcTexts));
   }
 
   protected static Externs externs(SourceFile... externs) {
