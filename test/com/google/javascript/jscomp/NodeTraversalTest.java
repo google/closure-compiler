@@ -22,7 +22,6 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallbackInterface;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
@@ -388,7 +387,6 @@ public final class NodeTraversalTest {
   public void testTraverseAtScopeWithBlockScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
@@ -491,7 +489,6 @@ public final class NodeTraversalTest {
   public void testTraverseAtScopeWithModuleScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     compiler.initOptions(options);
     SyntacticScopeCreator creator = new SyntacticScopeCreator(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();

@@ -97,7 +97,6 @@ public class CheckClosureImportsTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
-    options.setLanguageIn(languageMode);
     return options;
   }
 

@@ -95,7 +95,6 @@ public final class CompilerOptionsTest {
   public void testEmitUseStrictWorksInEs3() {
     CompilerOptions options = new CompilerOptions();
     options.setEmitUseStrict(true);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
 
     assertThat(options.shouldEmitUseStrict()).isTrue();
   }

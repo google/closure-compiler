@@ -47,7 +47,6 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageOut(languageOut);
     return options;
   }
 

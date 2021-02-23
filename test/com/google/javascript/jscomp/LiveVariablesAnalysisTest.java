@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -645,7 +644,6 @@ public final class LiveVariablesAnalysisTest {
     // Set up compiler
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);

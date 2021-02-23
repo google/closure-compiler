@@ -53,7 +53,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.GoogRequire;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -106,7 +105,6 @@ public final class NodeUtilTest {
 
     private Node parse(String js) {
       CompilerOptions options = new CompilerOptions();
-      options.setLanguageIn(LanguageMode.UNSUPPORTED);
 
       // To allow octal literals such as 0123 to be parsed.
       options.setStrictModeInput(false);

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2017;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 
 import org.junit.Before;
@@ -115,7 +114,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testNoCrashInliningObjectLiteral_conditionalAssignmentToObject_es2017() {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
-    getOptions().setLanguageOut(ECMASCRIPT_2017);
 
     String src = "{let a;if(Math.random()){a={x:''};console.log(a.x)}};";
     String expected =
@@ -134,7 +132,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testNoInlining_propertyAccessOnVar_unconditionalAssignmentToObject_es2017() {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
-    getOptions().setLanguageOut(ECMASCRIPT_2017);
 
     // `var` declaration corresponds to global scope: ineligible for inlining object literal
     String src = "{var a; a={x:\"\"};console.log(a.x);}";
@@ -145,7 +142,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testNoCrashInliningObjectLiteral_unconditionalAssignmentToObject_es2017() {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
-    getOptions().setLanguageOut(ECMASCRIPT_2017);
 
     String src = "{let a; a={x:\"\"};console.log(a.x);}";
     String expected =
@@ -162,7 +158,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testNoInliningObjectLiteral_conditionalAssignmentToReturnValue_es2017() {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
-    getOptions().setLanguageOut(ECMASCRIPT_2017);
 
     String src =
         lines(
@@ -183,7 +178,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Test
   public void testNoInliningObjectLiteral_unconditionalAssignmentToReturnValue_es2017() {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(getOptions());
-    getOptions().setLanguageOut(ECMASCRIPT_2017);
 
     String src =
         lines(

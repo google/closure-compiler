@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +30,6 @@ public final class TypeCheckNoTranspileTest extends TypeCheckTestCase {
   @Override
   protected CompilerOptions getDefaultOptions() {
     CompilerOptions options = super.getDefaultOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     options.setWarningLevel(DiagnosticGroups.TOO_MANY_TYPE_PARAMS, CheckLevel.WARNING);
     return options;
   }

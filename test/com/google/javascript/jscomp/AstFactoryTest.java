@@ -23,7 +23,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.rhino.IR;
@@ -72,7 +71,6 @@ public class AstFactoryTest {
   private Node parseWithoutTypes(String externs, String source) {
     // parse the test code
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("externs", externs)),
         ImmutableList.of(SourceFile.fromCode("source", source)),

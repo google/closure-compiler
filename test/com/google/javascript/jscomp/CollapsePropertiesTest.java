@@ -68,8 +68,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   private void setupModuleExportsOnly() {
-    this.setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    this.setLanguageOut(LanguageMode.ECMASCRIPT5);
     enableProcessCommonJsModules();
     enableTranspile();
     propertyCollapseLevel = PropertyCollapseLevel.MODULE_EXPORT;

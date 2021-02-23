@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CompilerTypeTestCase.lines;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import java.util.Optional;
 import org.junit.Test;
@@ -228,7 +227,6 @@ public class OptionalChainTypeCheckTest {
     @Override
     protected CompilerOptions getDefaultOptions() {
       CompilerOptions options = super.getDefaultOptions();
-      options.setLanguageIn(LanguageMode.UNSUPPORTED);
       options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
       return options;
     }
@@ -314,7 +312,6 @@ public class OptionalChainTypeCheckTest {
     @Override
     protected CompilerOptions getDefaultOptions() {
       CompilerOptions options = super.getDefaultOptions();
-      options.setLanguageIn(LanguageMode.UNSUPPORTED);
       options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
       return options;
     }
@@ -351,7 +348,6 @@ public class OptionalChainTypeCheckTest {
     @Override
     protected CompilerOptions getDefaultOptions() {
       CompilerOptions options = super.getDefaultOptions();
-      options.setLanguageIn(LanguageMode.UNSUPPORTED);
       options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
       return options;
     }
@@ -531,7 +527,6 @@ public class OptionalChainTypeCheckTest {
     @Override
     protected CompilerOptions getDefaultOptions() {
       CompilerOptions options = super.getDefaultOptions();
-      options.setLanguageIn(LanguageMode.UNSUPPORTED);
       options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
       return options;
     }
@@ -552,7 +547,6 @@ public class OptionalChainTypeCheckTest {
     @Override
     protected CompilerOptions getDefaultOptions() {
       CompilerOptions options = super.getDefaultOptions();
-      options.setLanguageIn(LanguageMode.UNSUPPORTED);
       options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_PROPERTIES, CheckLevel.WARNING);
       return options;
     }

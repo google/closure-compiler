@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.common.testing.EqualsTester;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
@@ -64,7 +63,6 @@ public final class SymbolTableTest {
   public void setUp() throws Exception {
 
     options = new CompilerOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCodingConvention(new ClosureCodingConvention());
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
@@ -1353,7 +1351,6 @@ public final class SymbolTableTest {
   public void testSymbolSuperclassStaticInheritance() {
     // set this option so that typechecking sees untranspiled classes.
     // TODO(b/76025401): remove this option after class transpilation is always post-typechecking
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     options.setSkipUnsupportedPasses(false);
 
     SymbolTable table =

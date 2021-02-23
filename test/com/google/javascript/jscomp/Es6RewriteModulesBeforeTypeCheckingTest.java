@@ -80,7 +80,6 @@ public final class Es6RewriteModulesBeforeTypeCheckingTest extends CompilerTestC
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     // ECMASCRIPT5 to Trigger module processing after parsing.
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
 
     if (moduleRoots != null) {

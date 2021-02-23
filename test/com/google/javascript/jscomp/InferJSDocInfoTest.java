@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -60,8 +59,6 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setParseJsDocDocumentation(INCLUDE_DESCRIPTIONS_NO_WHITESPACE);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT);
     return options;
   }
 

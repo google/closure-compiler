@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.NamedType;
@@ -72,7 +71,6 @@ public class PartialCompilationTest {
     CompilerOptions options = new CompilerOptions();
     options.setAssumeForwardDeclaredForMissingTypes(true);
     options.setStrictModeInput(true);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPreserveDetailedSourceInfo(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     compiler.init(

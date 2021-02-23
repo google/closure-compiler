@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Inlinability;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -1296,8 +1295,6 @@ public final class GlobalNamespaceTest {
     options.setWrapGoogModulesForWhitespaceOnly(false);
     // Test the latest features supported for input and don't transpile, because we want to test how
     // GlobalNamespace deals with the language features actually present in `js`.
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setAssumeStaticInheritanceRequired(assumeStaticInheritanceRequired);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     // Disabling transpilation also disables these passes that we need to have run when
@@ -1320,8 +1317,6 @@ public final class GlobalNamespaceTest {
     options.setSkipNonTranspilationPasses(true);
     // Test the latest features supported for input and don't transpile, because we want to test how
     // GlobalNamespace deals with the language features actually present in `js`.
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    options.setLanguageOut(LanguageMode.NO_TRANSPILE);
     options.setAssumeStaticInheritanceRequired(assumeStaticInheritanceRequired);
     compiler.compile(SourceFile.fromCode("ex.js", ""), SourceFile.fromCode("test.js", js), options);
     assertThat(compiler.getErrors()).isEmpty();

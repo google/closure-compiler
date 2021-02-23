@@ -49,7 +49,6 @@ public final class Es6RewriteModulesToCommonJsModulesTest extends CompilerTestCa
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     // ECMASCRIPT5 to Trigger module processing after parsing.
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
     options.setModuleRoots(moduleRoots);
     options.setModuleResolutionMode(resolutionMode);

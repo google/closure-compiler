@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CompilerTestCase.lines;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
@@ -156,7 +155,6 @@ public class ConformanceAllowlisterTest {
     CompilerOptions options = new CompilerOptions();
     options.setCheckTypes(true);
     // TODO(bangert): Support banned property on OBJECT even if types are not checked.
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setChecksOnly(true);
     List<SourceFile> externs =
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());

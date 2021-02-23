@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -55,8 +54,6 @@ final class ReachingUseDefTester {
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
     return compiler;

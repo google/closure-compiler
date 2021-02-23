@@ -41,7 +41,6 @@ public class Es6RewriteBlockScopedDeclarationEs6LangOutTest extends CompilerTest
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     return options;
   }
 

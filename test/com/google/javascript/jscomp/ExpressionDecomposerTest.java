@@ -24,7 +24,6 @@ import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -1971,7 +1970,6 @@ public final class ExpressionDecomposerTest {
   private Compiler getCompiler() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT_IN);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setPrettyPrint(true);
     // Don't prefix the compiler output with `"use strict";`.

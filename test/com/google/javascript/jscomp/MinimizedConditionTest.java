@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ public final class MinimizedConditionTest {
         ImmutableList.of(SourceFile.fromCode("code", code));
     List<SourceFile> externs = new ArrayList<>();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     compiler.init(externs, input, options);
     Node root = compiler.parseInputs();
     assertWithMessage("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()))

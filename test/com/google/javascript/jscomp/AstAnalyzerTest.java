@@ -77,7 +77,6 @@ import static com.google.javascript.rhino.Token.YIELD;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AccessorSummary.PropertyAccessKind;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.colors.ColorRegistry;
 import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
@@ -152,7 +151,6 @@ public final class AstAnalyzerTest {
 
     private void resetCompiler() {
       CompilerOptions options = new CompilerOptions();
-      options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
 
       // To allow octal literals such as 0123 to be parsed.
       options.setStrictModeInput(false);
