@@ -1814,6 +1814,14 @@ RTCReceivedRtpStreamStats.prototype.gapLossRate;
 /** @const {number} */
 RTCReceivedRtpStreamStats.prototype.gapDiscardRate;
 
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.framesDropped;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.partialFramesLost;
+
+/** @const {number} */
+RTCReceivedRtpStreamStats.prototype.fullFramesLost;
 
 
 /**
