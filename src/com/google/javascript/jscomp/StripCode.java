@@ -16,13 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Locale;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -41,14 +45,15 @@ import javax.annotation.Nullable;
  */
 class StripCode implements CompilerPass {
 
-  // TODO(user): Try eliminating the need for a list of strip names by instead
-  // recording which field names are assigned to debug types in each JS input.
   private final AbstractCompiler compiler;
-  private final Set<String> stripTypes;
-  private final Set<String> stripNameSuffixes;
-  private final Set<String> stripTypePrefixes;
-  private final Set<String> stripNamePrefixes;
-  private final Set<Var> varsToRemove;
+  private final ImmutableSet<String> stripNameSuffixes;
+  private final ImmutableSet<String> stripNamePrefixes;
+  private final IdentityHashMap<String, String> varsToRemove = new IdentityHashMap<>();
+
+  private final String[] stripTypesList;
+  private final String[] stripTypePrefixesList;
+  private final String[] stripNamePrefixesLowerCaseList;
+  private final String[] stripNameSuffixesLowerCaseList;
 
   static final DiagnosticType STRIP_TYPE_INHERIT_ERROR = DiagnosticType.error(
       "JSC_STRIP_TYPE_INHERIT_ERROR",
@@ -63,37 +68,63 @@ class StripCode implements CompilerPass {
    *
    * @param compiler The compiler
    */
-  StripCode(AbstractCompiler compiler,
-            Set<String> stripTypes,
-            Set<String> stripNameSuffixes,
-            Set<String> stripNamePrefixes) {
+  StripCode(
+      AbstractCompiler compiler,
+      ImmutableSet<String> stripTypes,
+      ImmutableSet<String> stripNameSuffixes,
+      ImmutableSet<String> stripNamePrefixes,
+      boolean enableTweakStripping) {
 
     this.compiler = compiler;
-    this.stripTypes = new HashSet<>(stripTypes);
-    this.stripNameSuffixes = new HashSet<>(stripNameSuffixes);
-    this.stripNamePrefixes = new HashSet<>(stripNamePrefixes);
-    this.stripTypePrefixes = new HashSet<>();
 
-    this.varsToRemove = new HashSet<>();
-  }
+    this.stripNameSuffixes = stripNameSuffixes;
+    this.stripNamePrefixes = stripNamePrefixes;
 
-  /**
-   * Enables stripping of goog.tweak functions.
-   */
-  public void enableTweakStripping() {
-    stripTypes.add("goog.tweak");
-  }
+    // Add "tweak" class stripping if requested
+    ImmutableSet<String> stripTypesAdjusted =
+        maybeEnableTweakStripping(enableTweakStripping, stripTypes);
 
-  @Override
-  public void process(Node externs, Node root) {
+    // Iteration overhead was a high cost in this pass. Using a native array
+    // is trivial and avoid those costs.
+    this.stripTypesList = stripTypesAdjusted.toArray(new String[0]);
+
     // Always strip types that defined on a type that is being stripped, otherwise the
     // resulting code will be invalid, so add "prefix" stripping that isn't a partial name.
     // TODO(johnlenz): I'm not sure what the original intent of "type prefix" stripping was.
     // Verify that we can always assume a complete namespace and simplify this logic.
-    for (String type : stripTypes) {
+    HashSet<String> stripTypePrefixes = new HashSet<>();
+    for (String type : stripTypesAdjusted) {
       stripTypePrefixes.add(type + ".");
     }
+    this.stripTypePrefixesList = stripTypePrefixes.toArray(new String[0]);
 
+    // Precalculate the lowercase versions of the string to avoid repeated
+    // lowercase conversions.
+    ArrayList<String> stripNamePrefixesTemp = new ArrayList<>();
+    for (String stripName : stripNamePrefixes) {
+      stripNamePrefixesTemp.add(stripName.toLowerCase(Locale.ROOT));
+    }
+    this.stripNamePrefixesLowerCaseList = stripNamePrefixesTemp.toArray(new String[0]);
+
+    ArrayList<String> stripNameSuffixesTemp = new ArrayList<>();
+    for (String stripName : stripNameSuffixes) {
+      stripNameSuffixesTemp.add(stripName.toLowerCase(Locale.ROOT));
+    }
+    this.stripNameSuffixesLowerCaseList = stripNameSuffixesTemp.toArray(new String[0]);
+  }
+
+  /** Enables stripping of goog.tweak functions. */
+  private ImmutableSet<String> maybeEnableTweakStripping(
+      boolean enableTweakStripping, ImmutableSet<String> types) {
+    if (enableTweakStripping) {
+      return ImmutableSet.<String>builder().addAll(types).add("goog.tweak").build();
+    }
+    return types;
+  }
+
+  @Override
+  public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverse(compiler, root, new Strip());
   }
 
@@ -174,8 +205,7 @@ class StripCode implements CompilerPass {
         if (isStripName(name)
             || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
           // Remove the NAME.
-          Scope scope = t.getScope();
-          varsToRemove.add(scope.getVar(name));
+          varsToRemove.put(name, name);
           n.removeChild(nameNode);
           NodeUtil.markFunctionsDeleted(nameNode, compiler);
         }
@@ -456,12 +486,11 @@ class StripCode implements CompilerPass {
      * @return Whether the call's return value should be stripped
      */
     boolean isCallWhoseReturnValueShouldBeStripped(@Nullable Node n) {
-      return n != null &&
-          (n.isCall() ||
-           n.isNew()) &&
-          n.hasChildren() &&
-          (qualifiedNameBeginsWithStripType(n.getFirstChild()) ||
-              nameIncludesFieldNameToStrip(n.getFirstChild()));
+      return n != null
+          && (n.isCall() || n.isNew())
+          && n.hasChildren()
+          && (qualifiedNameBeginsWithStripType(n.getFirstChild())
+              || nameIncludesFieldNameToStrip(n.getFirstChild()));
     }
 
     /**
@@ -489,12 +518,12 @@ class StripCode implements CompilerPass {
      */
     boolean qualifiedNameBeginsWithStripType(String name) {
       if (name != null) {
-        for (String type : stripTypes) {
+        for (String type : stripTypesList) {
           if (name.equals(type)) {
             return true;
           }
         }
-        for (String type : stripTypePrefixes) {
+        for (String type : stripTypePrefixesList) {
           if (name.startsWith(type)) {
             return true;
           }
@@ -512,10 +541,7 @@ class StripCode implements CompilerPass {
      * @return Whether the variable was removed
      */
     boolean isReferenceToRemovedVar(NodeTraversal t, Node n) {
-      String name = n.getString();
-      Scope scope = t.getScope();
-      Var var = scope.getVar(name);
-      return varsToRemove.contains(var);
+      return varsToRemove.containsKey(n.getString());
     }
 
     /**
@@ -628,14 +654,14 @@ class StripCode implements CompilerPass {
       }
 
       String lcName = name.toLowerCase(Locale.ROOT);
-      for (String stripName : stripNamePrefixes) {
-        if (lcName.startsWith(stripName.toLowerCase(Locale.ROOT))) {
+      for (String stripName : stripNamePrefixesLowerCaseList) {
+        if (lcName.startsWith(stripName)) {
           return true;
         }
       }
 
-      for (String stripName : stripNameSuffixes) {
-        if (lcName.endsWith(stripName.toLowerCase(Locale.ROOT))) {
+      for (String stripName : stripNameSuffixesLowerCaseList) {
+        if (lcName.endsWith(stripName)) {
           return true;
         }
       }

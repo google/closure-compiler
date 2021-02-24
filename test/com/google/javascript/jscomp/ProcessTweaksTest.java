@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +40,7 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     defaultValueOverrides = new HashMap<>();
     stripTweaks = false;
   }
@@ -54,9 +54,10 @@ public final class ProcessTweaksTest extends CompilerTestCase {
         processTweak.process(externs, root);
 
         if (stripTweaks) {
-          Set<String> emptySet = ImmutableSet.of();
-          final StripCode stripCode = new StripCode(compiler, emptySet, emptySet, emptySet);
-          stripCode.enableTweakStripping();
+          ImmutableSet<String> emptySet = ImmutableSet.of();
+          final StripCode stripCode =
+              new StripCode(
+                  compiler, emptySet, emptySet, emptySet, /* enableTweakStripping */ true);
           stripCode.process(externs, root);
         }
       }

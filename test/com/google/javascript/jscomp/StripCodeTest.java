@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -42,29 +42,26 @@ public final class StripCodeTest extends CompilerTestCase {
    * @return A new {@link StripCode} instance
    */
   private static StripCode createLoggerInstance(Compiler compiler) {
-    Set<String> stripTypes = ImmutableSet.of(
-        "goog.debug.DebugWindow",
-        "goog.debug.FancyWindow",
-        "goog.debug.Formatter",
-        "goog.debug.HtmlFormatter",
-        "goog.debug.TextFormatter",
-        "goog.debug.Logger",
-        "goog.debug.LogManager",
-        "goog.debug.LogRecord",
-        "goog.net.BrowserChannel.LogSaver",
-        "GA_GoogleDebugger");
+    ImmutableSet<String> stripTypes =
+        ImmutableSet.of(
+            "goog.debug.DebugWindow",
+            "goog.debug.FancyWindow",
+            "goog.debug.Formatter",
+            "goog.debug.HtmlFormatter",
+            "goog.debug.TextFormatter",
+            "goog.debug.Logger",
+            "goog.debug.LogManager",
+            "goog.debug.LogRecord",
+            "goog.net.BrowserChannel.LogSaver",
+            "GA_GoogleDebugger");
 
-    Set<String> stripNames = ImmutableSet.of(
-        "logger",
-        "logger_",
-        "debugWindow",
-        "debugWindow_",
-        "logFormatter_",
-        "logBuffer_");
+    ImmutableSet<String> stripNames =
+        ImmutableSet.of(
+            "logger", "logger_", "debugWindow", "debugWindow_", "logFormatter_", "logBuffer_");
 
-    Set<String> stripNamePrefixes = ImmutableSet.of("trace");
+    ImmutableSet<String> stripNamePrefixes = ImmutableSet.of("trace");
 
-    return new StripCode(compiler, stripTypes, stripNames, stripNamePrefixes);
+    return new StripCode(compiler, stripTypes, stripNames, stripNamePrefixes, false);
   }
 
   @Override
@@ -99,6 +96,13 @@ public final class StripCodeTest extends CompilerTestCase {
             "  }",
             "}",
             "let a = new A;"));
+  }
+
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
   }
 
   @Test

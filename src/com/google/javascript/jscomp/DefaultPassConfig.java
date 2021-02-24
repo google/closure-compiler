@@ -1997,10 +1997,9 @@ public final class DefaultPassConfig extends PassConfig {
                               compiler,
                               options.stripTypes,
                               options.stripNameSuffixes,
-                              options.stripNamePrefixes);
-                      if (options.getTweakProcessing().shouldStrip()) {
-                        pass.enableTweakStripping();
-                      }
+                              options.stripNamePrefixes,
+                              options.getTweakProcessing().shouldStrip());
+
                       pass.process(externs, jsRoot);
                     }
                   })
