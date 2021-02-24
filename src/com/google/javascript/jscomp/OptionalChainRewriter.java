@@ -57,6 +57,7 @@ class OptionalChainRewriter {
   final Node chainParent;
   final Node wholeChain;
   final Node enclosingStatement;
+  final ArrayDeque<Node> deletesToDelete;
 
   /** Creates unique names to be used for temporary variables. */
   interface TmpVarNameCreator {
@@ -107,6 +108,7 @@ class OptionalChainRewriter {
     this.wholeChain = wholeChain;
     this.chainParent = checkNotNull(wholeChain.getParent(), wholeChain);
     this.enclosingStatement = NodeUtil.getEnclosingStatement(wholeChain);
+    this.deletesToDelete = new ArrayDeque<>();
   }
 
   /** Rewrites the optional chain as a hook with temporary variables introduced as needed. */
@@ -159,6 +161,30 @@ class OptionalChainRewriter {
       chainParent.addChildToFront(dotCallNode);
     }
 
+    // Report changes here; chainParent can get deleted below this.
+    compiler.reportChangeToEnclosingScope(chainParent);
+
+    if (chainParent.isDelProp()) {
+      // With rewriting above,
+      // `delete a?.b?.c`
+      //  synthesizes additional deletes
+      // `delete (tmp0 = a) == null ? true : delete (tmp1 = tmp0.b) == null ? true : delete tmp1.c;`
+      //  ^^^^^^                             ^^^^^^
+      //
+      // But we must generate only:
+      // `(tmp0 = a) == null ? true : (tmp1 = tmp0.b) == null ? true : delete tmp1.c;`
+      // That is, the preceding deletes for every hook must be removed.
+
+      while (!deletesToDelete.isEmpty()) {
+        Node delete = deletesToDelete.removeFirst();
+        checkState(delete.getFirstChild().isHook(), delete);
+        Node hook = delete.getFirstChild();
+        hook.detach();
+        delete.replaceWith(hook);
+        compiler.reportChangeToEnclosingScope(hook);
+      }
+    }
+
     // Transpilation of the optional chain adds `let` declarations for temporary variables.
     // NOTE: If this class is being used before transpilation, it's OK to use `let`, since it will
     // be transpiled away, if necessary. If it is being used after transpilation, then using `let`
@@ -166,8 +192,6 @@ class OptionalChainRewriter {
     // did.
     final Node enclosingScript = NodeUtil.getEnclosingScript(enclosingStatement);
     NodeUtil.addFeatureToScript(enclosingScript, Feature.LET_DECLARATIONS, compiler);
-
-    compiler.reportChangeToEnclosingScope(chainParent);
   }
 
   /**
@@ -184,6 +208,21 @@ class OptionalChainRewriter {
    *     : tmp0.b.c?d;
    * }</pre>
    *
+   * If this optional chain is under a delete, the l-r rewriting must synthesize another `delete` to
+   * ensure the next chain(if present), knows that it must delete the `fullChainEnd`.
+   *
+   * <p>e.g. * *
+   *
+   * <pre>{@code
+   * * delete a?.b.c?.d;
+   * * // becomes
+   * * let tmp0;
+   * * (tmp0 = a()) == null
+   * *     ? void 0
+   * *     : delete tmp0.b.c?d;
+   * *
+   * }</pre>
+   *
    * @param fullChainStart The very first `?.` node
    * @param fullChainEnd The very last optional chain node.
    * @return The hook expression that replaced the chain.
@@ -194,6 +233,12 @@ class OptionalChainRewriter {
     // for `a?.b.c?.d`, this will be `a?.b.c`, because the NodeUtil method finds the end
     // of the sub-chain, not the full chain.
     final Node initialChainEnd = NodeUtil.getEndOfOptChainSegment(fullChainStart);
+
+    // Is this optional chain under delete
+    boolean isBeingDeleted = fullChainEnd.getParent().isDelProp();
+    if (isBeingDeleted) {
+      deletesToDelete.addLast(fullChainEnd.getParent());
+    }
 
     // If the receiver is an optional chain, we weren't really given the start of a full
     // chain.
@@ -232,9 +277,10 @@ class OptionalChainRewriter {
         astFactory
             .createHook(
                 astFactory.createEq(receiverNode, astFactory.createNull()),
-                astFactory.createUndefinedValue(),
-                fullChainEnd)
+                isBeingDeleted ? astFactory.createBoolean(true) : astFactory.createUndefinedValue(),
+                isBeingDeleted ? astFactory.createDelProp(fullChainEnd) : fullChainEnd)
             .useSourceInfoIfMissingFromForTree(fullChainEnd);
+
     placeholder.replaceWith(optChainReplacement);
 
     return optChainReplacement;

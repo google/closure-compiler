@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
@@ -319,6 +320,74 @@ public final class RewriteOptionalChainingOperatorTest {
     @Test
     public void doTest() {
       test(externs(TEST_BASE_EXTERNS), srcs(jsSrc), expected(jsOutput));
+    }
+  }
+
+  @RunWith(JUnit4.class)
+  public static class DeleteOptChainTests extends CompilerTestCase {
+    @Override
+    @Before
+    public void setUp() throws Exception {
+      super.setUp();
+      setLanguage(LanguageMode.ECMASCRIPT_NEXT_IN, LanguageMode.ECMASCRIPT_2019);
+      enableTypeCheck();
+      enableTypeInfoValidation();
+    }
+
+    @Override
+    protected CompilerPass getProcessor(Compiler compiler) {
+      // Just name temporary variables "tmp0", "tmp1", etc. to make the tests clearer.
+      TmpVarNameCreator testVarNameCreator =
+          new TmpVarNameCreator() {
+            int counter = 0;
+
+            @Override
+            public String createTmpVarName() {
+              return "tmp" + counter++;
+            }
+          };
+      return new RewriteOptionalChainingOperator(compiler, testVarNameCreator);
+    }
+
+    @Test
+    public void testDeleteOptChainGetProp() {
+      test(
+          externs(TEST_BASE_EXTERNS),
+          srcs(lines("delete obj?.num;")),
+          expected(lines("let tmp0;", "(tmp0 = obj) == null ? true : delete tmp0.num;")));
+    }
+
+    @Test
+    public void testDeleteOptChainGetProp2() {
+      test(
+          externs(TEST_BASE_EXTERNS),
+          srcs(lines("delete this?.obj?.num;")),
+          expected(
+              lines(
+                  "let tmp0;",
+                  "let tmp1",
+                  "(tmp0 = this) == null ? true : (tmp1 = tmp0.obj) == null ? true : delete"
+                      + " tmp1.num;")));
+    }
+
+    @Test
+    public void testDeleteOptChainGetProp3() {
+      test(
+          externs(TEST_BASE_EXTERNS),
+          srcs(
+              lines(
+                  "delete getFun()?.(num).num" // get the num-th !TestObject inside `ary`, and
+                  // delete
+                  // its `num` prop
+                  )),
+          expected(
+              lines(
+                  "", //
+                  "let tmp0;",
+                  "(tmp0 = getFun()) == null",
+                  "    ? true",
+                  "    : delete tmp0(num).num",
+                  "")));
     }
   }
 }
