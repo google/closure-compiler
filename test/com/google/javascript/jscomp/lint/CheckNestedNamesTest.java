@@ -98,6 +98,16 @@ public final class CheckNestedNamesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testNestedNames_noRHS() {
+    testNoWarning("goog.module('a'); class C {}; C.E;");
+    testWarning("goog.module('a'); class C {}; /** @interface */ C.E;", NESTED_NAME_IN_GOOG_MODULE);
+    testWarning(
+        "goog.module('a'); class C {}; /** @enum {string} */ C.E;", NESTED_NAME_IN_GOOG_MODULE);
+    testWarning(
+        "goog.module('a'); class C {}; /** @typedef {{a:2}} */ C.T;", NESTED_NAME_IN_GOOG_MODULE);
+  }
+
+  @Test
   public void testNestedEnum() {
     testWarning(
         "goog.module('a'); let obj = {}; /** @enum */ obj.E = {};",

@@ -125,7 +125,9 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
       return;
     }
     Node targetGetProp = getTargetGetProp(n);
-    if (parent.isAssign() && n.isFirstChildOf(parent) && !isDotPrototype(targetGetProp)) {
+    if ((parent.isAssign() || parent.isExprResult())
+        && n.isFirstChildOf(parent)
+        && !isDotPrototype(targetGetProp)) {
       Node owner = targetGetProp.getFirstChild();
       if (!owner.isName() || owner.getString().equals("exports")) {
         return; //  For example `this` or `super` or `exports.SomeEnum = {}`
@@ -154,9 +156,8 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
     return getProp.isGetProp() && Node.getGetpropString(getProp).equals("prototype");
   }
 
-  private static DeclarationKind getNestedDeclarationKind(Node lhs, Node assign) {
-    checkArgument(lhs.isFirstChildOf(assign), lhs);
-    checkArgument(assign.isAssign(), assign);
+  private static DeclarationKind getNestedDeclarationKind(Node lhs, Node parent) {
+    checkArgument(lhs.isFirstChildOf(parent), lhs);
     JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(lhs);
     if (jsDocInfo != null) {
       // JSDoc present: check whether it's an enum, interface or typedef first.
@@ -168,10 +169,12 @@ public final class CheckNestedNames implements HotSwapCompilerPass, NodeTraversa
         return DeclarationKind.TYPEDEF;
       }
     }
-    Node rhs = assign.getLastChild();
-    if (rhs.isClass()) {
-      // `X.Y = class {...}`
-      return DeclarationKind.CLASS;
+    if (parent.isAssign()) {
+      Node rhs = parent.getLastChild();
+      if (rhs.isClass()) {
+        // `X.Y = class {...}`
+        return DeclarationKind.CLASS;
+      }
     }
 
     return null;
