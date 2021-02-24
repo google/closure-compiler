@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -624,7 +625,7 @@ public abstract class SourceFile implements StaticSourceFile, Serializable {
 
     Preloaded(String fileName, String originalPath, String code, SourceKind kind) {
       super(fileName, originalPath, kind);
-      this.preloadedCode = checkNotNull(code);
+      this.preloadedCode = nullToEmpty(code);
     }
 
     @Override
