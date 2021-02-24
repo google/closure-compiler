@@ -260,7 +260,7 @@ class IsolatePolyfills implements CompilerPass {
         Node.isStringGetprop(callee)
             ? IR.string(callee.getString()).useSourceInfoFrom(callee)
             : callee.getSecondChild().detach();
-    final Node receiver = callee.getFirstChild().detach();
+    final Node receiver = callee.removeFirstChild();
 
     boolean requiresTemp = compiler.getAstAnalyzer().mayEffectMutableState(receiver);
 
