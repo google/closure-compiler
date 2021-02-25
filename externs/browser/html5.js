@@ -39,6 +39,19 @@ Node.prototype.assignedSlot;
 Element.prototype.slot;
 
 /**
+ * @param {!{mode: string}} options
+ * @return {!ShadowRoot}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/attachShadow
+ */
+Element.prototype.attachShadow = function(options) {};
+
+/**
+ * @see http://www.w3.org/TR/shadow-dom/
+ * @type {ShadowRoot}
+ */
+Element.prototype.shadowRoot;
+
+/**
  * Note: In IE, the contains() method only exists on Elements, not Nodes.
  * Therefore, it is recommended that you use the Conformance framework to
  * prevent calling this on Nodes which are not Elements.
@@ -1722,12 +1735,6 @@ HTMLElement.observedAttributes;
 HTMLElement.prototype.adoptedCallback = function(oldDocument, newDocument) {};
 
 /**
- * @param {!{mode: string}} options
- * @return {!ShadowRoot}
- */
-HTMLElement.prototype.attachShadow = function(options) {};
-
-/**
  * @param {string} attributeName
  * @param {?string} oldValue
  * @param {?string} newValue
@@ -1791,12 +1798,6 @@ HTMLElement.prototype.createShadowRoot;
  * @return {!ShadowRoot}
  */
 HTMLElement.prototype.webkitCreateShadowRoot;
-
-/**
- * @see http://www.w3.org/TR/shadow-dom/
- * @type {ShadowRoot}
- */
-HTMLElement.prototype.shadowRoot;
 
 /**
  * @see http://www.w3.org/TR/shadow-dom/
