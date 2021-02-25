@@ -51,25 +51,32 @@ $jscomp.polyfill('String.prototype.matchAll', function(orig) {
     var /** boolean */ finished = false;
     var matchAllIterator = {
       next: function() {
-        var result = {};
-        var previousIndex = regexCopy.lastIndex;
         if (finished) {
           return {value: undefined, done: true};
         }
+
         var match = regexCopy.exec(matchString);
         if (!match) {
           finished = true;
           return {value: undefined, done: true};
         }
-        if (regexCopy.lastIndex === previousIndex) {
-          // matchAll() is not allowed to get "stuck" returning an empty
-          // string match infinitely, so we must make sure lastIndex always
-          // increases.
+        if (match[0] === '') {
+          /**
+           * See https://262.ecma-international.org/10.0/#sec-advancestringindex
+           * and
+           * https://github.com/ljharb/String.prototype.matchAll/blob/5e1a234e65d03e5312ea1d3cb617444f4ffa6e23/helpers/RegExpStringIterator.js#L71
+           *
+           * matchAll() is not allowed to get "stuck" returning an empty
+           * string match infinitely, so we must make sure lastIndex always
+           * increases.
+           *
+           * Also assume that `fullUnicode === false`. Any browser that supports
+           * unicode regexes should not need this polyfill.
+           */
           regexCopy.lastIndex += 1;
         }
-        result.value = match;
-        result.done = false;
-        return result;
+
+        return {value: match, done: false};
       }
     };
     matchAllIterator[Symbol.iterator] = function() { return matchAllIterator; };

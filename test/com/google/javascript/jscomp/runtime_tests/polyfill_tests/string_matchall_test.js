@@ -189,4 +189,30 @@ testSuite({
     // iterator should continue to report done, if next() is called again
     assertObjectEquals(endOfIterator, matchAllIterator.next());
   },
+
+  testMatchAll_noLoopingZeroWidthMatches_matchesOverlap() {
+    let regex = /(?=start_(\d) (.+?) end_\1)/g;  // Notice the lookahead wrapper
+    let testString = 'start_0 start_1 middle end_1 end_0';
+
+    let matchAllIterator = testString.matchAll(regex);
+    let first = resultBuilder(['', '0', 'start_1 middle end_1'], 0, testString);
+    let second = resultBuilder(['', '1', 'middle'], 8, testString);
+
+    assertMatchAllEquals(first, matchAllIterator.next());
+    assertMatchAllEquals(second, matchAllIterator.next());
+    assertObjectEquals(endOfIterator, matchAllIterator.next());
+  },
+
+  testMatchAll_noLoopingZeroWidthMatches_matchesDontOverlap() {
+    let regex = /\b/g;
+    let testString = 'hello world';
+
+    let itr = testString.matchAll(regex);
+
+    assertMatchAllEquals(resultBuilder([''], 0, testString), itr.next());
+    assertMatchAllEquals(resultBuilder([''], 5, testString), itr.next());
+    assertMatchAllEquals(resultBuilder([''], 6, testString), itr.next());
+    assertMatchAllEquals(resultBuilder([''], 11, testString), itr.next());
+    assertObjectEquals(endOfIterator, itr.next());
+  },
 });
