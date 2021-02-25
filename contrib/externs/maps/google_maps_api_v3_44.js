@@ -2464,7 +2464,7 @@ google.maps.GeocoderAddressComponent.prototype.short_name;
  * An array of strings denoting the type of this address component. A list of
  * valid types can be found <a
  * href="/maps/documentation/javascript/geocoding#GeocodingAddressTypes">here</a>
- * @type {Array<string>}
+ * @type {!Array<string>}
  */
 google.maps.GeocoderAddressComponent.prototype.types;
 
@@ -2517,26 +2517,26 @@ google.maps.GeocoderGeometry = function() {};
 
 /**
  * The precise bounds of this <code>GeocoderResult</code>, if applicable
- * @type {google.maps.LatLngBounds}
+ * @type {!google.maps.LatLngBounds|undefined}
  */
 google.maps.GeocoderGeometry.prototype.bounds;
 
 /**
  * The latitude/longitude coordinates of this result
- * @type {google.maps.LatLng}
+ * @type {!google.maps.LatLng}
  */
 google.maps.GeocoderGeometry.prototype.location;
 
 /**
  * The type of location returned in <code>location</code>
- * @type {google.maps.GeocoderLocationType}
+ * @type {!google.maps.GeocoderLocationType}
  */
 google.maps.GeocoderGeometry.prototype.location_type;
 
 /**
  * The bounds of the recommended viewport for displaying this
  * <code>GeocoderResult</code>
- * @type {google.maps.LatLngBounds}
+ * @type {!google.maps.LatLngBounds}
  */
 google.maps.GeocoderGeometry.prototype.viewport;
 
@@ -2656,7 +2656,7 @@ google.maps.GeocoderResult = function() {};
 
 /**
  * An array of <code>GeocoderAddressComponent</code>s
- * @type {Array<google.maps.GeocoderAddressComponent>}
+ * @type {!Array<!google.maps.GeocoderAddressComponent>}
  */
 google.maps.GeocoderResult.prototype.address_components;
 
@@ -2668,14 +2668,15 @@ google.maps.GeocoderResult.prototype.formatted_address;
 
 /**
  * A <code>GeocoderGeometry</code> object
- * @type {google.maps.GeocoderGeometry}
+ * @type {!google.maps.GeocoderGeometry}
  */
 google.maps.GeocoderResult.prototype.geometry;
 
 /**
  * Whether the geocoder did not return an exact match for the original request,
- * though it was able to match part of the requested address.
- * @type {boolean}
+ * though it was able to match part of the requested address. If an exact match,
+ * the value will be undefined.
+ * @type {boolean|undefined}
  */
 google.maps.GeocoderResult.prototype.partial_match;
 
@@ -2691,7 +2692,7 @@ google.maps.GeocoderResult.prototype.place_id;
  * An array of strings denoting all the localities contained in a postal code.
  * This is only present when the result is a postal code that contains multiple
  * localities. This array can contain up to 10 localities.
- * @type {Array<string>}
+ * @type {!Array<string>|undefined}
  */
 google.maps.GeocoderResult.prototype.postcode_localities;
 
@@ -2700,7 +2701,7 @@ google.maps.GeocoderResult.prototype.postcode_localities;
  * list of possible strings, refer to the <a href=
  * "/maps/documentation/javascript/geocoding#GeocodingAddressTypes"> Address
  * Component Types</a> section of the Developer&#39;s Guide.
- * @type {Array<string>}
+ * @type {!Array<string>}
  */
 google.maps.GeocoderResult.prototype.types;
 
