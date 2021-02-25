@@ -376,12 +376,11 @@ public class J2clPropertyInlinerPass implements CompilerPass {
                     .assumeStrictThis(true)
                     .assumeMinimumCapture(true)
                     .build();
-            Node inlinedCall =
-                injector.inline(
-                    // TODO(b/180623451): checkstate(n.isCall()) We should not pass a GETPROP here.
-                    new Reference(n, t.getScope(), t.getModule(), InliningMode.DIRECT),
-                    null,
-                    prop.getKey.getFirstChild());
+            Node functionCall = IR.call(IR.name("inlined_j2cl_getter"));
+            n.replaceWith(functionCall);
+            Reference reference =
+                new Reference(functionCall, t.getScope(), t.getModule(), InliningMode.DIRECT);
+            Node inlinedCall = injector.inline(reference, null, prop.getKey.getFirstChild());
             t.getCompiler().reportChangeToEnclosingScope(inlinedCall);
           }
         }
@@ -399,8 +398,8 @@ public class J2clPropertyInlinerPass implements CompilerPass {
                       .assumeMinimumCapture(true)
                       .build();
               assignmentValue.detach();
-              Node functionCall = IR.call(IR.empty(), assignmentValue);
-              parent.replaceChild(n, functionCall);
+              Node functionCall = IR.call(IR.name("inlined_j2cl_setter"), assignmentValue);
+              n.replaceWith(functionCall);
               Reference reference =
                   new Reference(functionCall, t.getScope(), t.getModule(), InliningMode.BLOCK);
               injector.maybePrepareCall(reference);
