@@ -10613,36 +10613,6 @@ chrome.serial.onReceiveError;
 ////////////////////////////////////////////////////////////////////////////////
 
 
-/** @const */
-chrome.screenlockPrivate = {};
-
-
-/**
- * @param {string} message Displayed on the unlock screen.
- * @return {undefined}
- */
-chrome.screenlockPrivate.showMessage = function(message) {};
-
-
-/**
- * @param {function(boolean)} callback
- * @return {undefined}
- */
-chrome.screenlockPrivate.getLocked = function(callback) {};
-
-
-/**
- * @param {boolean} locked If true and the screen is unlocked, locks the screen.
- *     If false and the screen is locked, unlocks the screen.
- * @return {undefined}
- */
-chrome.screenlockPrivate.setLocked = function(locked) {};
-
-
-/** @type {!ChromeBooleanEvent} */
-chrome.screenlockPrivate.onChanged;
-
-
 /**
  * @const
  */
