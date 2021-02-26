@@ -427,29 +427,27 @@ public class TranspilationPasses {
    *
    * @param compiler An AbstractCompiler
    * @param combinedRoot The combined root for all JS files.
-   * @param featureSet The features which this pass helps transpile.
+   * @param featureSet Ignored
    * @param callbacks The callbacks that should be invoked if a file has ES6 features.
    */
   static void processTranspile(
       AbstractCompiler compiler, Node combinedRoot, FeatureSet featureSet, Callback... callbacks) {
-    if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
-      FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
-      for (Node singleRoot = combinedRoot.getFirstChild();
-          singleRoot != null;
-          singleRoot = singleRoot.getNext()) {
+    FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
+    for (Node singleRoot = combinedRoot.getFirstChild();
+        singleRoot != null;
+        singleRoot = singleRoot.getNext()) {
 
-        // Only run the transpilation if this file has features not in the compiler's target output
-        // language. For example, if this file is purely ES6 and the output language is ES6, don't
-        // run any transpilation passes on it.
-        // TODO(lharker): We could save time by being more selective about what files we transpile.
-        // e.g. if a file has async functions but not `**`, don't run `**` transpilation on it.
-        // Right now we know what features were in a file at parse time, but not what features were
-        // added to that file by other transpilation passes.
-        if (doesScriptHaveUnsupportedFeatures(singleRoot, languageOutFeatures)) {
-          for (Callback callback : callbacks) {
-            singleRoot.putBooleanProp(Node.TRANSPILED, true);
-            NodeTraversal.traverse(compiler, singleRoot, callback);
-          }
+      // Only run the transpilation if this file has features not in the compiler's target output
+      // language. For example, if this file is purely ES6 and the output language is ES6, don't
+      // run any transpilation passes on it.
+      // TODO(lharker): We could save time by being more selective about what files we transpile.
+      // e.g. if a file has async functions but not `**`, don't run `**` transpilation on it.
+      // Right now we know what features were in a file at parse time, but not what features were
+      // added to that file by other transpilation passes.
+      if (doesScriptHaveUnsupportedFeatures(singleRoot, languageOutFeatures)) {
+        for (Callback callback : callbacks) {
+          singleRoot.putBooleanProp(Node.TRANSPILED, true);
+          NodeTraversal.traverse(compiler, singleRoot, callback);
         }
       }
     }
@@ -461,18 +459,16 @@ public class TranspilationPasses {
    *
    * @param compiler An AbstractCompiler
    * @param scriptRoot The SCRIPT root for the JS file.
-   * @param featureSet The features which this pass helps transpile.
+   * @param featureSet Ignored
    * @param callbacks The callbacks that should be invoked if the file has ES6 features.
    */
   static void hotSwapTranspile(
       AbstractCompiler compiler, Node scriptRoot, FeatureSet featureSet, Callback... callbacks) {
-    if (compiler.getOptions().needsTranspilationFrom(featureSet)) {
-      FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
-      if (doesScriptHaveUnsupportedFeatures(scriptRoot, languageOutFeatures)) {
-        for (Callback callback : callbacks) {
-          scriptRoot.putBooleanProp(Node.TRANSPILED, true);
-          NodeTraversal.traverse(compiler, scriptRoot, callback);
-        }
+    FeatureSet languageOutFeatures = compiler.getOptions().getOutputFeatureSet();
+    if (doesScriptHaveUnsupportedFeatures(scriptRoot, languageOutFeatures)) {
+      for (Callback callback : callbacks) {
+        scriptRoot.putBooleanProp(Node.TRANSPILED, true);
+        NodeTraversal.traverse(compiler, scriptRoot, callback);
       }
     }
   }
