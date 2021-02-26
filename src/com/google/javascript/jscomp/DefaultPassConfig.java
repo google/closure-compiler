@@ -516,6 +516,14 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
+    if (options.checkTypes || options.inferTypes) {
+      passes.add(typesToColors);
+    }
+
+    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
+      passes.add(removeTypes);
+    }
+
     // i18n
     // If you want to customize the compiler to use a different i18n pass,
     // you can create a PassConfig that calls replacePassFactory
@@ -604,14 +612,6 @@ public final class DefaultPassConfig extends PassConfig {
     // TODO(b/160616664): this should be in getChecks() instead of getOptimizations(). But
     // for that the pass needs to understand constant properties as well. See b/31301233#comment10
     passes.add(checkConstParams);
-
-    if (options.checkTypes || options.inferTypes) {
-      passes.add(typesToColors);
-    }
-
-    if (!options.shouldUnsafelyPreserveTypesForDebugging()) {
-      passes.add(removeTypes);
-    }
 
     // Running RemoveUnusedCode before disambiguate properties allows disambiguate properties to be
     // more effective if code that would prevent disambiguation can be removed.
