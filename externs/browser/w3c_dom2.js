@@ -2957,15 +2957,20 @@ Window.prototype.print = function() {};
  */
 Window.prototype.stop = function() {};
 
+/** @typedef {boolean|!AttributionSourceParams} */
+var BoolOrAttributionSourceParams;
+
 /**
  * @param {*=} url
  * @param {string=} windowName
  * @param {string=} windowFeatures
- * @param {boolean=} replace
+ * @param {!BoolOrAttributionSourceParams=} replaceOrAttributionParams
  * @return {Window}
+ * @see https://github.com/WICG/conversion-measurement-api
  * @see http://msdn.microsoft.com/en-us/library/ms536651(VS.85).aspx
  */
-Window.prototype.open = function(url, windowName, windowFeatures, replace) {};
+Window.prototype.open = function(
+    url, windowName, windowFeatures, replaceOrAttributionParams) {};
 
 /**
  * @type {string}
@@ -2980,3 +2985,44 @@ Element.prototype.innerHTML;
  * @see https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
  */
 Element.prototype.outerHTML;
+
+/**
+ * AttributionSourceParams is a dictionary which contains the same attributes
+ * used by attribution source anchor tags as seen in the link below.
+ * @record
+ * @see https://github.com/WICG/conversion-measurement-api
+ */
+function AttributionSourceParams() {}
+
+/**
+ * The event-level data associated with this source. This will be limited to 64
+ * bits of information but the value can vary for browsers that want a higher
+ * level of privacy.
+ * @type {string}
+ * @see https://github.com/WICG/conversion-measurement-api
+ */
+AttributionSourceParams.prototype.attributionSourceEventId;
+
+/**
+ * The eTLD+1 where attribution will be triggered for this source.
+ * @type {string}
+ * @see https://github.com/WICG/conversion-measurement-api
+ */
+AttributionSourceParams.prototype.attributeOn;
+
+/**
+ * The desired endpoint that the attribution report for this source should go
+ * to. Default is the top level origin of the page.
+ * @type {string|undefined}
+ * @see https://github.com/WICG/conversion-measurement-api
+ */
+AttributionSourceParams.prototype.attributionReportTo;
+
+/**
+ * Expiry in milliseconds for when the source should be deleted. Default is 30
+ * days, with a maximum value of 30 days. The maximum expiry can also vary
+ * between browsers.
+ * @type {number|undefined}
+ * @see https://github.com/WICG/conversion-measurement-api
+ */
+AttributionSourceParams.prototype.attributionExpiry;
