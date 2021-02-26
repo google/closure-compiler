@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.CheckSuper.SUPER_ACCESS_BEFORE_SUPER_
 import static com.google.javascript.jscomp.CheckSuper.SUPER_CALL_IN_ARROW;
 import static com.google.javascript.jscomp.CheckSuper.THIS_BEFORE_SUPER;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,7 +84,6 @@ public final class CheckSuperTest extends CompilerTestCase {
   // just verifying that import.meta doesn't cause problems with super
   @Test
   public void testImportMeta() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     testSame("class C extends D { constructor() { super(import.meta); } }");
   }
 

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import java.util.function.Consumer;
@@ -38,7 +37,6 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableTypeCheck();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override

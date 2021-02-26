@@ -31,7 +31,6 @@ import static com.google.javascript.jscomp.modules.EsModuleProcessor.NAMESPACE_I
 import static com.google.javascript.jscomp.modules.ModuleMapCreator.MISSING_NAMESPACE_IMPORT;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -105,7 +104,6 @@ public final class Es6RewriteModulesWithGoogInteropTest extends CompilerTestCase
   public void setUp() throws Exception {
     super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
-    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     enableTypeInfoValidation();
     enableCreateModuleMap();
   }

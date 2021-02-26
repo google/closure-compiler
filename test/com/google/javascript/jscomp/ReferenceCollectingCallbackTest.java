@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.UNSUPPORTED;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.truth.Correspondence;
@@ -39,7 +37,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
     behavior = null;
   }
 
@@ -409,7 +406,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void nullishCoalesce() {
-    setLanguage(UNSUPPORTED, UNSUPPORTED);
     testBehavior(
         "var x = 0; var y = x ?? (x = 1)",
         new Behavior() {
@@ -429,7 +425,6 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
 
   @Test
   public void optChain() {
-    setLanguage(UNSUPPORTED, UNSUPPORTED);
     testBehavior(
         "var x = 0; var y = x?.(x = 1)",
         new Behavior() {

@@ -29,7 +29,6 @@ import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_SUPPRESS;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.JsDocParsing;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +50,6 @@ public final class CheckJsDocTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -112,7 +110,6 @@ public final class CheckJsDocTest extends CompilerTestCase {
   // just here to make sure import.meta doesn't break anything
   @Test
   public void testImportMeta() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     testSame("var /** number */ x = foo; import.meta.foo = x");
   }
 

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckProvides.MISSING_PROVIDE_WARNING;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +32,6 @@ public final class CheckProvidesTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override

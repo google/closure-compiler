@@ -443,8 +443,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testEs6ObjectShorthand() {
-    setLanguage(
-        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     testModules(
         "test.js",
         lines("function foo() {}", "module.exports = {", "  prop: 'value',", "  foo", "};"),
@@ -570,8 +568,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testClassRewriting() {
-    setLanguage(
-        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     testModules(
         "test.js",
         lines("class foo extends Array {}", "module.exports = foo;"),
@@ -603,8 +599,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testMultipleAssignments() {
-    setLanguage(
-        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
 
     JSModule module = new JSModule("out");
     module.add(SourceFile.fromCode("other.js", "goog.provide('module$other');"));
@@ -630,8 +624,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testDestructuringImports() {
-    setLanguage(
-        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     testModules(
         "test.js",
         lines("const {foo, bar} = require('./other');", "var baz = foo + bar;"),
@@ -642,8 +634,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testDestructuringImports2() {
-    setLanguage(
-        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     testModules(
         "test.js",
         lines("const {foo, bar: {baz}} = require('./other');", "module.exports = true;"),
@@ -655,8 +645,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Test
   public void testAnnotationsCopied() {
-    setLanguage(
-        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     testModules(
         "test.js",
         lines(

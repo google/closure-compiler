@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +37,6 @@ public final class ConstParamCheckTest extends CompilerTestCase {
     super.setUp();
     enableInferConsts();
     enableNormalize();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -159,7 +157,6 @@ public final class ConstParamCheckTest extends CompilerTestCase {
 
   @Test
   public void testNullishCoalesceArgument() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     // Although `'foo' ?? 'bar'` does definitely resolve to a string literal, it's also
     // nonsensical code to put into a const declaration, so it deserves an error.
     testError(

@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.RewriteGoogJsImports.GOOG_JS_REEXPORT
 import static com.google.javascript.jscomp.deps.ModuleLoader.LOAD_WARNING;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.RewriteGoogJsImports.Mode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.modules.ModuleMapCreator;
@@ -213,7 +212,6 @@ public final class RewriteGoogJsImportsTest extends CompilerTestCase {
   /** this is just to make sure the presence of import.meta does not cause a compiler failure */
   @Test
   public void testImportMeta() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     test(
         srcs(
             BASE,

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckSuspiciousCode.SUSPICIOUS_LEFT_OPERAND_OF_LOGICAL_OPERATOR;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,13 +37,11 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     enableParseTypeInfo();
   }
 
   @Test
   public void suspiciousBreakingOutOfOptionalChain() {
-    setAcceptedLanguage(LanguageMode.UNSUPPORTED);
     final DiagnosticType e = CheckSuspiciousCode.SUSPICIOUS_BREAKING_OUT_OF_OPTIONAL_CHAIN;
 
     testSame("a?.b.c");

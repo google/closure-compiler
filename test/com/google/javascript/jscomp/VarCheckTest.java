@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.VarCheck.UNDEFINED_VAR_ERROR;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 import static com.google.javascript.jscomp.testing.ScopeSubject.assertScope;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
@@ -54,7 +53,6 @@ public final class VarCheckTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     // Setup value set by individual tests to the appropriate defaults.
     allowExternsChanges();
     strictModuleDepErrorLevel = CheckLevel.OFF;
@@ -104,7 +102,6 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("var x = {y};", VarCheck.UNDEFINED_VAR_ERROR);
     testSame("var {x} = {x: 5}; let y = x;");
 
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     testError("var {...x} = {...y};", VarCheck.UNDEFINED_VAR_ERROR);
     testSame("let y; var {...x} = {...y} = {};");
     testSame("var {...x} = {x: 5}; let y = x;");
@@ -157,7 +154,6 @@ public final class VarCheckTest extends CompilerTestCase {
 
   @Test
   public void testNullishCoalesce() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     testSame("let x; x = 0 ?? true");
     testError("let x; x = a ?? \"hi\"", VarCheck.UNDEFINED_VAR_ERROR);
   }

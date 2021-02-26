@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosureOptimizePrimitives.DUPLICATE_SET_MEMBER;
 import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +43,6 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     disableScriptFeatureValidation();
   }
 

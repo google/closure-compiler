@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 
 import com.google.javascript.jscomp.testing.JSChunkGraphBuilder;
 import org.junit.After;
@@ -40,7 +39,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
-    setAcceptedLanguage(ECMASCRIPT_NEXT);
   }
 
   @Override

@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT_IN;
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableList;
@@ -41,7 +39,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
-    setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
   }
 
   @Override
@@ -161,7 +158,6 @@ public final class CrossChunkReferenceCollectorTest extends CompilerTestCase {
 
   @Test
   public void nullishCoalesce() {
-    setAcceptedLanguage(ECMASCRIPT_NEXT_IN);
     testSame("var x = 0; var y = x ?? (x = 1)");
     ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
     Var xVar = globalVariableNamesMap.get("x");

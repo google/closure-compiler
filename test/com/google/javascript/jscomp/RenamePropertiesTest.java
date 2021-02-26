@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -721,7 +720,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Test
   public void testObjectMethodProperty() {
     // ES5 version
-    setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
     test(
         lines(
             "var foo = { ",
@@ -742,7 +740,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         );
 
     //ES6 version
-    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
     test(
         lines(
             "var foo = { ",

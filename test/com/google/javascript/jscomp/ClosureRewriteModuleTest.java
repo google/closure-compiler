@@ -28,7 +28,6 @@ import static com.google.javascript.jscomp.modules.ModuleMapCreator.DOES_NOT_HAV
 import static com.google.javascript.rhino.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Predicates;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.TestExternsBuilder;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -71,7 +70,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     preserveClosurePrimitives = false;
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableCreateModuleMap();
     enableTypeInfoValidation();
   }
@@ -3049,7 +3047,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "/** @constructor @implements {B} */",
                 "function A() {}")));
 
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     testNoWarning(
         externs(
             lines(

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -263,13 +262,11 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   }
 
   private void testMissingInShorthandFunction(String returnType, String body) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     String js = createShorthandFunctionInObjLit(returnType, body);
     testWarning(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   private void testNotMissingInShorthandFunction(String returnType, String body) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(createShorthandFunctionInObjLit(returnType, body));
   }
 
@@ -295,25 +292,21 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunctions_noReturn() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testNoWarning(lines("/** @return {undefined} */", "() => {}"));
   }
 
   @Test
   public void testArrowFunctions_expressionBody1() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(lines("/** @return {number} */", "() => 1"));
   }
 
   @Test
   public void testArrowFunctions_expressionBody2() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(lines("/** @return {number} */", "(a) => (a > 3) ? 1 : 0"));
   }
 
   @Test
   public void testArrowFunctions_block() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         lines(
             "/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { return 0; }}"));
@@ -321,7 +314,6 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunctions_blockMissingReturn() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testWarning(
         lines("/** @return {number} */", "(a) => { if (a > 3) { return 1; } else { } }"),
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
@@ -329,13 +321,11 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunctions_objectLiteralExpression() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("(a) => ({foo: 1});");
   }
 
   @Test
   public void testGeneratorFunctionDoesntWarn() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testNoWarning("function *gen() {}");
 
     testNoWarning(
@@ -358,26 +348,22 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
   @Test
   public void testAsyncFunction_noJSDoc() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     // Note: we add the alert because CheckMissingReturn never warns on functions with empty bodies.
     testNoWarning("async function foo() { alert(1); }");
   }
 
   @Test
   public void testAsyncFunction_returnsUndefined() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     testNoWarning("/** @return {!Promise<undefined>} */ async function foo() { alert(1); }");
   }
 
   @Test
   public void testAsyncFunction_returnsUnknown() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     testNoWarning("/** @return {!Promise<?>} */ async function foo() { alert(1); }");
   }
 
   @Test
   public void testAsyncFunction_returnsNumber() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     testNoWarning("/** @return {!Promise<number>} */ async function foo() { return 1; }");
 
     testWarning(

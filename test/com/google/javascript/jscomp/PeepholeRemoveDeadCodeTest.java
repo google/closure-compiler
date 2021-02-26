@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -1461,7 +1460,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   @Test
   public void testEmptyKeyInObjectPatternNotRemovedWithObjectRest() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2018);
     foldSame("const {f: {}, ...g} = foo()");
     foldSame("const {f: [], ...g} = foo()");
   }

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -96,7 +95,6 @@ public final class CheckRegExpTest extends CompilerTestCase {
     testReference("f(RegExp);", true);
     testReference("new f(RegExp);", true);
     testReference("var x = RegExp; x.test()", true);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testReference("let x = RegExp;", true);
     testReference("const x = RegExp;", true);
 
@@ -112,7 +110,6 @@ public final class CheckRegExpTest extends CompilerTestCase {
     testReference("var x = {RegExp: {}}; x.RegExp.$1;", false);
 
     // Class property is also OK.
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testReference(lines(
         "class x {",
         "  constructor() {this.RegExp = {};}",

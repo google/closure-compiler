@@ -23,7 +23,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill;
 import com.google.javascript.jscomp.PolyfillUsageFinder.Polyfill.Kind;
 import com.google.javascript.jscomp.PolyfillUsageFinder.PolyfillUsage;
@@ -263,7 +262,6 @@ public final class PolyfillUsageFinderTest {
         final CompilerOptions options = new CompilerOptions();
         // Don't include `"use strict";` when printing the AST as source text
         options.setEmitUseStrict(false);
-        options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
         compiler = new Compiler();
         compiler.init(
             ImmutableList.of(new TestExternsBuilder().buildExternsFile("externs.js")),

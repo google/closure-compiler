@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -299,26 +298,22 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   @Test
   public void testArrowFunction1() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("var a = () => this.foo;");
   }
 
   @Test
   public void testArrowFunction2() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("(() => this.foo)();");
   }
 
   @Test
   public void testArrowFunction3() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("function Foo() {} " +
         "Foo.prototype.getFoo = () => this.foo;");
   }
 
   @Test
   public void testArrowFunction4() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("function Foo() {} " +
         "Foo.prototype.setFoo = (f) => { this.foo = f; };");
   }
@@ -352,7 +347,6 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   @Test
   public void testInnerFunctionInEs6ClassMethod() {
     // TODO(user): It would be nice to warn for using 'this' here
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(lines(
         "class Foo {",
         "  constructor() {",

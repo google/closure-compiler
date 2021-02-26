@@ -30,8 +30,6 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    languageOut = LanguageMode.ECMASCRIPT_2015;
 
     disableCompareAsTree();
     // otherwise "use strict" in the expected output moves,

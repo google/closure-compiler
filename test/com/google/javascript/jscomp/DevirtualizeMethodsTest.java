@@ -333,7 +333,6 @@ public final class DevirtualizeMethodsTest extends CompilerTestCase {
 
   @Test
   public void testRewrite_preservesAsyncGenerator() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2018);
     testRewritePreservesFunctionKind("async function*");
   }
 

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +35,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     enableNormalize();
-    setAcceptedLanguage(ECMASCRIPT_NEXT);
   }
 
   @Override

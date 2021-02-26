@@ -71,7 +71,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   private void testRewrite(String code, String expected, LanguageMode lang) {
-    setAcceptedLanguage(lang);
     test(code, expected);
   }
 
@@ -81,7 +80,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   private void testRewriteError(String js, DiagnosticType error, LanguageMode lang) {
-    setAcceptedLanguage(lang);
     testError(js, error);
   }
 
@@ -92,7 +90,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   private void testRewriteWarning(String code, String expected,
                                   Diagnostic warning, LanguageMode lang) {
-    setAcceptedLanguage(lang);
     test(code, expected, warning);
   }
 

@@ -50,7 +50,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionLookup;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeInference.BigIntPresence;
@@ -121,7 +120,6 @@ public final class TypeInferenceTest {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     compiler.initOptions(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_NEXT_IN);
     registry = compiler.getTypeRegistry();
     assumptions = new HashMap<>();
     returnScope = null;

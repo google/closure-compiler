@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
@@ -77,7 +76,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     removeConst = false;
     invert = false;
     useDefaultRenamer = false;
@@ -121,7 +119,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   @Test
   public void testMakeDeclaredNamesUniqueNullishCoalesce() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     this.useDefaultRenamer = true;
 
     test(

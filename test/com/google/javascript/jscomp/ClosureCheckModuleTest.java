@@ -40,7 +40,6 @@ import static com.google.javascript.jscomp.ClosureCheckModule.USE_OF_GOOG_PROVID
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.INVALID_DESTRUCTURING_FORWARD_DECLARE;
 import static com.google.javascript.jscomp.ClosurePrimitiveErrors.MODULE_USES_GOOG_MODULE_GET;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +63,6 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override

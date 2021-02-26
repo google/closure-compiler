@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static java.util.Arrays.stream;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import java.util.HashSet;
 import java.util.Set;
@@ -43,7 +42,6 @@ public final class InferConstsTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
   }
 
   @Override

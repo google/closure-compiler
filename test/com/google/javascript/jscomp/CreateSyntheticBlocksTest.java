@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +36,6 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
     super.setUp();
     // Can't use compare as a tree because of the added synthetic blocks.
     disableCompareAsTree();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     disableLineNumberCheck();
   }
 

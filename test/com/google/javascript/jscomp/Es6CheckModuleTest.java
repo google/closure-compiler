@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +42,6 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
   }
 
   @Test
@@ -74,7 +72,6 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
   // just here to make sure import.meta doesn't break anything
   @Test
   public void testImportMeta() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     testSame(
         lines(
             "class Foo {",

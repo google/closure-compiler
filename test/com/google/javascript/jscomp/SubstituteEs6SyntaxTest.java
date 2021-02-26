@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +29,6 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     disableScriptFeatureValidation();
   }
 
@@ -41,14 +39,12 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
 
   @Test
   public void nullishCoalesceFunctions() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     test("()=>{ return x ?? y; }", "()=> x??y");
     testSame("(function() { this.x = a??b; })");
   }
 
   @Test
   public void nullishCoalesceObjectPattern() {
-    setLanguage(LanguageMode.UNSUPPORTED, LanguageMode.UNSUPPORTED);
     // Tree comparisons don't fail on node property differences, so compare as strings instead.
     disableCompareAsTree();
     test("const {x:x}=a??b", "const {x}=a??b");
