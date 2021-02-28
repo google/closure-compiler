@@ -381,6 +381,35 @@ public final class DepsGeneratorTest {
   }
 
   @Test
+  public void testExterns() throws Exception {
+    List<SourceFile> srcs = new ArrayList<>();
+    srcs.add(SourceFile.fromCode("/base/javascript/foo/externs.js", "/** @externs */"));
+    srcs.add(SourceFile.fromCode("/base/javascript/foo/nonexterns.js", ""));
+    DepsGenerator depsGenerator =
+        new DepsGenerator(
+            ImmutableList.of(),
+            srcs,
+            DepsGenerator.InclusionStrategy.ALWAYS,
+            "/base/javascript/closure",
+            errorManager,
+            new ModuleLoader(
+                null,
+                ImmutableList.of("/base/"),
+                ImmutableList.of(),
+                BrowserModuleResolver.FACTORY,
+                ModuleLoader.PathResolver.ABSOLUTE));
+    String output = depsGenerator.computeDependencyCalls();
+
+    assertNoWarnings();
+
+    assertWithMessage("There should be output").that(output).isNotEmpty();
+
+    String expected = LINE_JOINER.join("goog.addDependency('../foo/nonexterns.js', [], []);", "");
+
+    assertThat(output).isEqualTo(expected);
+  }
+
+  @Test
   public void testMergeStrategyAlways() throws Exception {
     String result = testMergeStrategyHelper(DepsGenerator.InclusionStrategy.ALWAYS);
     assertThat(result).contains("['a']");

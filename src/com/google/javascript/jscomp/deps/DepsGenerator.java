@@ -474,6 +474,11 @@ public class DepsGenerator {
                 file.getCode());
         depInfo = new LazyParsedDependencyInfo(depInfo, new JsAst(file), compiler);
 
+        // Skip externs files, which should never be loaded.
+        if (depInfo.getHasExternsAnnotation()) {
+          continue;
+        }
+
         // Kick the source out of memory.
         file.clearCachedSource();
         parsedFiles.put(closureRelativePath, depInfo);
