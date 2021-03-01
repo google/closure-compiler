@@ -213,7 +213,7 @@ ReadableStream.prototype.cancel = function(reason) {};
 
 /**
  * @param {!ReadableStreamIteratorOptions=} options
- * @return {!AsyncIterator}
+ * @return {!AsyncIterator<VALUE>}
  * @see https://streams.spec.whatwg.org/#rs-get-iterator
  */
 ReadableStream.prototype.getIterator = function(options) {};
