@@ -22,7 +22,9 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -86,7 +88,7 @@ import javax.annotation.Nullable;
 class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   // The name of variable that will temporary hold the pointer to the prototype
-  // object. Of cause, we assume that it'll be renamed by RenameVars.
+  // object. Of course, we assume that it'll be renamed by RenameVars.
   private static final String PROTOTYPE_ALIAS = "JSCompiler_prototypeAlias";
 
   private final AbstractCompiler compiler;
@@ -96,6 +98,19 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
   enum Pattern {
     USE_GLOBAL_TEMP(
         // Global Overhead.
+        // We need a temp variable to hold all the prototype.
+        "var t;".length(),
+        // Per Extract overhead:
+        // Every extraction instance must first use the temp variable to point
+        // to the prototype object.
+        "t=y.prototype;".length(),
+        // TODO(user): Check to to see if AliasExterns is on
+        // The gain we get per prototype declaration. Assuming it can be
+        // aliased.
+        "t.y=".length() - "x[p].y=".length()),
+
+    USE_CHUNK_TEMP(
+        // Per Chunk Overhead.
         // We need a temp variable to hold all the prototype.
         "var t;".length(),
         // Per Extract overhead:
@@ -138,17 +153,18 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
   public void process(Node externs, Node root) {
     GatherExtractionInfo extractionInfo = new GatherExtractionInfo();
     NodeTraversal.traverse(compiler, root, extractionInfo);
-    if (extractionInfo.shouldExtract()) {
-      doExtraction(extractionInfo);
-    }
+    maybeDoExtraction(extractionInfo);
   }
 
   /**
-   * Declares the temp variable to point to prototype objects and iterates
-   * through all ExtractInstance and performs extraction there.
+   * Declares the temp variable to point to prototype objects and iterates through all
+   * ExtractInstance and performs extraction there.
    */
-  private void doExtraction(GatherExtractionInfo info) {
-    // Insert a global temp if we are using the USE_GLOBAL_TEMP pattern.
+  private void maybeDoExtraction(GatherExtractionInfo info) {
+    if ((pattern == Pattern.USE_IIFE || pattern == pattern.USE_GLOBAL_TEMP) &&
+        !info.shouldExtractGlobal()) {
+      return;
+    }
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       Node injectionPoint = compiler.getNodeForCodeInsertion(null);
 
@@ -159,39 +175,52 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       compiler.reportChangeToEnclosingScope(var);
     }
     // Go through all extraction instances and extract each of them.
-    for (ExtractionInstance instance : info.instances) {
-      extractInstance(instance);
+    for (Map.Entry<JSModule, ExtractionInstanceInfo> entry : info.instancesByModule.entrySet()) {
+      String alias = PROTOTYPE_ALIAS;
+      if (pattern == Pattern.USE_CHUNK_TEMP) {
+        // Rather than a truly global variable, use a unique variable per output chunk.
+        // This prevents RescopeGlobalSymbolNames from converting these references to
+        // namespace properties which reduces the benefit of the alias.
+        if (info.shouldExtractModule(entry.getKey())) {
+          Node injectionPoint = compiler.getNodeForCodeInsertion(entry.getKey());
+          alias = PROTOTYPE_ALIAS + entry.getKey().getIndex();
+          Node var =
+              NodeUtil.newVarNode(alias, null).useSourceInfoIfMissingFromForTree(injectionPoint);
+
+          injectionPoint.addChildToFront(var);
+          compiler.reportChangeToEnclosingScope(var);
+        } else {
+          continue;
+        }
+      }
+
+      for (ExtractionInstance instance : entry.getValue().instances) {
+        extractInstance(instance, alias);
+      }
     }
   }
 
   /**
-   * At a given ExtractionInstance, stores and prototype object in the temp
-   * variable and rewrite each member declaration to assign to the temp variable
-   * instead.
+   * At a given ExtractionInstance, stores and prototype object in the temp variable and rewrite
+   * each member declaration to assign to the temp variable instead.
    */
-  private void extractInstance(ExtractionInstance instance) {
+  private void extractInstance(ExtractionInstance instance, String alias) {
     PrototypeMemberDeclaration first = instance.declarations.get(0);
     String className = first.qualifiedClassName;
-    if (pattern == Pattern.USE_GLOBAL_TEMP) {
+    if (pattern == Pattern.USE_GLOBAL_TEMP || pattern == Pattern.USE_CHUNK_TEMP) {
       // Use the temp variable to hold the prototype.
       Node classNameNode = NodeUtil.newQName(compiler, className);
       classNameNode.putBooleanProp(Node.IS_CONSTANT_NAME, first.constant);
       Node stmt =
           IR.exprResult(
-              IR.assign(
-                  IR.name(PROTOTYPE_ALIAS),
-                  IR.getprop(
-                      classNameNode, IR.string("prototype"))))
-          .useSourceInfoIfMissingFromForTree(first.node);
+                  IR.assign(IR.name(alias), IR.getprop(classNameNode, IR.string("prototype"))))
+              .useSourceInfoIfMissingFromForTree(first.node);
 
       instance.parent.addChildBefore(stmt, first.node);
       compiler.reportChangeToEnclosingScope(stmt);
     } else if (pattern == Pattern.USE_IIFE) {
       Node block = IR.block();
-      Node func = IR.function(
-           IR.name(""),
-           IR.paramList(IR.name(PROTOTYPE_ALIAS)),
-           block);
+      Node func = IR.function(IR.name(""), IR.paramList(IR.name(alias)), block);
 
       Node call = IR.call(func,
            NodeUtil.newQName(
@@ -211,22 +240,18 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     // Go through each member declaration and replace it with an assignment
     // to the prototype variable.
     for (PrototypeMemberDeclaration declar : instance.declarations) {
-      replacePrototypeMemberDeclaration(declar);
+      replacePrototypeMemberDeclaration(declar, alias);
     }
   }
 
-  /**
-   * Replaces a member declaration to an assignment to the temp prototype
-   * object.
-   */
-  private void replacePrototypeMemberDeclaration(PrototypeMemberDeclaration declar) {
+  /** Replaces a member declaration to an assignment to the temp prototype object. */
+  private void replacePrototypeMemberDeclaration(PrototypeMemberDeclaration declar, String alias) {
     // x.prototype.y = ...  ->  t.y = ...
     Node assignment = declar.node.getFirstChild();
     Node lhs = assignment.getFirstChild();
-    Node name = NodeUtil.newQName(
-        compiler,
-        PROTOTYPE_ALIAS + "." + declar.memberName, declar.node,
-        declar.memberName);
+    Node name =
+        NodeUtil.newQName(
+            compiler, alias + "." + declar.memberName, declar.node, declar.memberName);
 
     // Save the full prototype path on the left hand side of the assignment for debugging purposes.
     // declar.lhs = x.prototype.y so first child of the first child is 'x'.
@@ -241,13 +266,17 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     compiler.reportChangeToEnclosingScope(name);
   }
 
+  /** Per-chunk info needed for prototype extraction */
+  private static class ExtractionInstanceInfo {
+    final List<ExtractionInstance> instances = new ArrayList<>();
+    int totalDelta = 0;
+  }
+
   /**
    * Collects all the possible extraction instances in a node traversal.
    */
   private class GatherExtractionInfo extends AbstractShallowCallback {
-
-    private final List<ExtractionInstance> instances = new ArrayList<>();
-    private int totalDelta = pattern.globalOverhead;
+    private final Map<JSModule, ExtractionInstanceInfo> instancesByModule = new HashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -270,18 +299,37 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
         // Only add it to our work list if the extraction at this instance makes the code smaller.
         if (instance.isFavorable()) {
-          instances.add(instance);
-          totalDelta += instance.delta;
+          instancesByModule.computeIfAbsent(
+              t.getModule(), (JSModule k) -> new ExtractionInstanceInfo());
+          ExtractionInstanceInfo instanceInfo = instancesByModule.get(t.getModule());
+          instanceInfo.instances.add(instance);
+          instanceInfo.totalDelta += instance.delta;
         }
       }
     }
 
     /**
-     * @return {@code true} if the sum of all the extraction instance gain
-     * outweighs the overhead of the temp variable declaration.
+     * @return {@code true} if the sum of all the extraction instance gain outweighs the overhead of
+     *     the temp variable declaration.
      */
-    private boolean shouldExtract() {
-      return totalDelta < 0;
+    private boolean shouldExtractGlobal() {
+      int allModulesDelta = 0;
+      for (ExtractionInstanceInfo instanceInfo : instancesByModule.values()) {
+        allModulesDelta += instanceInfo.totalDelta;
+      }
+      return allModulesDelta + pattern.globalOverhead < 0;
+    }
+
+    /**
+     * @return {@code true} if the sum of all the extraction instance gain outweighs the overhead of
+     *     the temp variable declaration.
+     */
+    private boolean shouldExtractModule(JSModule module) {
+      ExtractionInstanceInfo instanceInfo = instancesByModule.get(module);
+      if (instanceInfo == null) {
+        return false;
+      }
+      return instanceInfo.totalDelta + pattern.globalOverhead < 0;
     }
   }
 

@@ -458,6 +458,7 @@ public class CompilerOptions implements Serializable {
   public enum ExtractPrototypeMemberDeclarationsMode {
     OFF,
     USE_GLOBAL_TEMP,
+    USE_CHUNK_TEMP,
     USE_IIFE
   }
 

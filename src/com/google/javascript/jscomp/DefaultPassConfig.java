@@ -2450,6 +2450,9 @@ public final class DefaultPassConfig extends PassConfig {
                   case USE_GLOBAL_TEMP:
                     pattern = Pattern.USE_GLOBAL_TEMP;
                     break;
+                  case USE_CHUNK_TEMP:
+                    pattern = Pattern.USE_CHUNK_TEMP;
+                    break;
                   case USE_IIFE:
                     pattern = Pattern.USE_IIFE;
                     break;
