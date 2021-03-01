@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -373,11 +372,6 @@ class InlineVariables implements CompilerPass {
       compiler.reportChangeToEnclosingScope(toRemove);
 
       // Help type-based optimizations by propagating more specific types from type assertions
-      JSType typeBeforeCast = toRemove.getJSTypeBeforeCast();
-      if (typeBeforeCast != null) {
-        toInsert.setJSTypeBeforeCast(typeBeforeCast);
-        toInsert.setJSType(toRemove.getJSType());
-      }
       if (toRemove.getColor() != null && toRemove.isColorFromTypeCast()) {
         toInsert.setColor(toRemove.getColor());
         toInsert.setColorFromTypeCast();

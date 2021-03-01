@@ -1000,14 +1000,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("x = (p2 + 'a') + (1 + p1 + p2)");
     testSame("x = (p2 + 'a') + (1 + (p1 + p2))");
   }
-
-  @Test
-  public void testStringAdd_identity_withJSTypes() {
-    enableTypeCheck();
-    foldStringTypes("x + ''", "x");
-    foldStringTypes("'' + x", "x");
-  }
-
   @Test
   public void testStringAdd_identity() {
     enableTypeCheck();
@@ -2148,64 +2140,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testAlgebraicIdentities_usingJSTypes() {
-    enableTypeCheck();
-
-    foldNumericTypes("x+0", "x");
-    foldNumericTypes("0+x", "x");
-    foldNumericTypes("x+0+0+x+x+0", "x+x+x");
-
-    foldNumericTypes("x-0", "x");
-    foldNumericTypes("x-0-0-0", "x");
-    // 'x-0' is numeric even if x isn't
-    test("var x='a'; x-0-0", "var x='a';x-0");
-    foldNumericTypes("0-x", "-x");
-    test("for (var i = 0; i < 5; i++) var x = 0 + i * 1", "for(var i=0; i < 5; i++) var x=i");
-
-    foldNumericTypes("x*1", "x");
-    foldNumericTypes("1*x", "x");
-    // can't optimize these without a non-NaN prover
-    testSame("x*0");
-    testSame("0*x");
-    testSame("0/x");
-
-    foldNumericTypes("x/1", "x");
-
-    test("(doSomething(),0)*1", "(doSomething(),0)");
-    test("1*(doSomething(),0)", "(doSomething(),0)");
-    testSame("(0,doSomething())*1");
-    testSame("1*(0,doSomething())");
-  }
-
-  @Test
-  public void testBigIntAlgebraicIdentities_usingJSTypes() {
-    enableTypeCheck();
-
-    foldBigIntTypes("x+0n", "x");
-    foldBigIntTypes("0n+x", "x");
-    foldBigIntTypes("x+0n+0n+x+x+0n", "x+x+x");
-
-    foldBigIntTypes("x-0n", "x");
-    foldBigIntTypes("0n-x", "-x");
-    foldBigIntTypes("x-0n-0n-0n", "x");
-
-    foldBigIntTypes("x*1n", "x");
-    foldBigIntTypes("1n*x", "x");
-    foldBigIntTypes("x*1n*1n*x*x*1n", "x*x*x");
-
-    foldBigIntTypes("x/1n", "x");
-    foldBigIntTypes("x/0n", "x/0n");
-
-    test("for (var i = 0n; i < 5n; i++) var x = 0n + i * 1n", "for(var i=0n; i < 5n; i++) var x=i");
-
-    test("(doSomething(),0n)*1n", "(doSomething(),0n)");
-    test("1n*(doSomething(),0n)", "(doSomething(),0n)");
-    ignoreWarnings(DiagnosticGroups.CHECK_TYPES);
-    testSame("(0n,doSomething())*1n");
-    testSame("1n*(0n,doSomething())");
-  }
-
-  @Test
   public void testAlgebraicIdentities() {
     enableTypeCheck();
     replaceTypesWithColors();
@@ -2323,4 +2257,3 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     return compiler.toSource(mainRoot);
   }
 }
-

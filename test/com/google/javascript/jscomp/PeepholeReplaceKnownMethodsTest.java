@@ -629,66 +629,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Test
-  public void testReplaceWithCharAt_withJSTypes() {
-    enableTypeCheck();
-
-    foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
-    foldSameStringTyped("a.substring(-4, -3)");
-    foldSameStringTyped("a.substring(i, j + 1)");
-    foldSameStringTyped("a.substring(i, i + 1)");
-    foldSameStringTyped("a.substring(1, 2, 3)");
-    foldSameStringTyped("a.substring()");
-    foldSameStringTyped("a.substring(1)");
-    foldSameStringTyped("a.substring(1, 3, 4)");
-    foldSameStringTyped("a.substring(-1, 3)");
-    foldSameStringTyped("a.substring(2, 1)");
-    foldSameStringTyped("a.substring(3, 1)");
-
-    foldStringTyped("a.slice(4, 5)", "a.charAt(4)");
-    foldSameStringTyped("a.slice(-2, -1)");
-    foldStringTyped("var /** number */ i; a.slice(0, 1)", "var /** number */ i; a.charAt(0)");
-    foldSameStringTyped("a.slice(i, j + 1)");
-    foldSameStringTyped("a.slice(i, i + 1)");
-    foldSameStringTyped("a.slice(1, 2, 3)");
-    foldSameStringTyped("a.slice()");
-    foldSameStringTyped("a.slice(1)");
-    foldSameStringTyped("a.slice(1, 3, 4)");
-    foldSameStringTyped("a.slice(-1, 3)");
-    foldSameStringTyped("a.slice(2, 1)");
-    foldSameStringTyped("a.slice(3, 1)");
-
-    foldStringTyped("a.substr(0, 1)", "a.charAt(0)");
-    foldStringTyped("a.substr(2, 1)", "a.charAt(2)");
-    foldSameStringTyped("a.substr(-2, 1)");
-    foldSameStringTyped("a.substr(bar(), 1)");
-    foldSameStringTyped("''.substr(bar(), 1)");
-    foldSameStringTyped("a.substr(2, 1, 3)");
-    foldSameStringTyped("a.substr(1, 2, 3)");
-    foldSameStringTyped("a.substr()");
-    foldSameStringTyped("a.substr(1)");
-    foldSameStringTyped("a.substr(1, 2)");
-    foldSameStringTyped("a.substr(1, 2, 3)");
-
-    foldSame("function f(/** ? */ a) { a.substring(0, 1); }");
-    foldSame("function f(/** ? */ a) { a.substr(0, 1); }");
-    foldSame(
-        lines(
-            "/** @constructor */ function A() {};",
-            "A.prototype.substring = function(begin, end) {};",
-            "function f(/** !A */ a) { a.substring(0, 1); }"));
-    foldSame(
-        lines(
-            "/** @constructor */ function A() {};",
-            "A.prototype.slice = function(begin, end) {};",
-            "function f(/** !A */ a) { a.slice(0, 1); }"));
-
-    useTypes = false;
-    foldSameStringTyped("a.substring(0, 1)");
-    foldSameStringTyped("a.substr(0, 1)");
-    foldSameStringTyped("''.substring(i, i + 1)");
-  }
-
-  @Test
   public void testReplaceWithCharAt() {
     enableTypeCheck();
     replaceTypesWithColors();

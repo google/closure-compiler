@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.colors.Color;
 import com.google.javascript.jscomp.colors.NativeColorId;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 
 /** An optimization pass to re-write J2CL Equality.$same. */
 public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
@@ -118,23 +117,18 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
   private boolean canOnlyBeObject(Node n) {
     Color color = n.getColor();
     // Safe as long as the color is a) not the UNKNOWN native color and b) not any primitive
-    if (color != null) {
-      if (color.isUnion()) {
-        // ignore null/undefined
-        Color nonNullVoid = color.subtractNullOrVoid();
-        // In theory we could allow unions of multiple objects here
-        return !nonNullVoid.isUnion()
-            && !nonNullVoid.isPrimitive()
-            && !nonNullVoid.is(NativeColorId.UNKNOWN);
-      }
-      return !color.isPrimitive() && !color.is(NativeColorId.UNKNOWN);
-    }
-    JSType type = n.getJSType();
-    if (type == null) {
+    if (color == null) {
       return false;
     }
-    type = type.restrictByNotNullOrUndefined();
-    return !type.isUnknownType() && !type.isEmptyType() && !type.isAllType() && type.isObjectType();
+    if (color.isUnion()) {
+      // ignore null/undefined
+      Color nonNullVoid = color.subtractNullOrVoid();
+      // In theory we could allow unions of multiple objects here
+      return !nonNullVoid.isUnion()
+          && !nonNullVoid.isPrimitive()
+          && !nonNullVoid.is(NativeColorId.UNKNOWN);
+    }
+    return !color.isPrimitive() && !color.is(NativeColorId.UNKNOWN);
   }
 
   private Node rewriteAsStrictEq(Node firstExpr, Node secondExpr) {

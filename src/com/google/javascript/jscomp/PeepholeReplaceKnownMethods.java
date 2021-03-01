@@ -270,8 +270,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     if (useTypes
         && firstArg != null
         && (isStringLiteral
-            || (stringNode.getColor() != null && stringNode.getColor().is(NativeColorId.STRING))
-            || (stringNode.getJSType() != null && stringNode.getJSType().isStringValueType()))) {
+            || (stringNode.getColor() != null && stringNode.getColor().is(NativeColorId.STRING)))) {
       if (subtree.hasXChildren(3)) {
         Double maybeStart = getSideEffectFreeNumberValue(firstArg);
         if (maybeStart != null) {

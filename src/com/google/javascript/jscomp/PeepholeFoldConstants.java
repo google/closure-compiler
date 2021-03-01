@@ -975,8 +975,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return (n.getColor() != null && n.getColor().is(NativeColorId.NUMBER))
-          || (n.getJSType() != null && n.getJSType().isNumberValueType());
+      return n.getColor() != null && n.getColor().is(NativeColorId.NUMBER);
     }
     return false;
   }
@@ -986,8 +985,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return (n.getColor() != null && n.getColor().is(NativeColorId.BIGINT))
-          || (n.getJSType() != null && n.getJSType().isBigIntValueType());
+      return n.getColor() != null && n.getColor().is(NativeColorId.BIGINT);
     }
     return false;
   }
@@ -1098,8 +1096,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return true;
     }
     if (shouldUseTypes) {
-      return (n.getColor() != null && n.getColor().is(NativeColorId.STRING))
-          || (n.getJSType() != null && n.getJSType().isStringValueType());
+      return n.getColor() != null && n.getColor().is(NativeColorId.STRING);
     }
     return false;
   }

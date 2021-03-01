@@ -99,46 +99,6 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
   }
 
   @Test
-  public void testRewriteEqualitySame_useTypes() {
-    useTypes = true;
-    test(
-        lines(
-            "var b = {};",
-            "Equality.$same(b, null);",
-            "Equality.$same(null, b);",
-            "Equality.$same(b, undefined);",
-            "Equality.$same(b, 0);",
-            "Equality.$same(b, -0);",
-            "Equality.$same(b, NaN);",
-            "Equality.$same(b, Infinity);",
-            "var c = 5;",
-            "Equality.$same(c, null);",
-            "Equality.$same(null, c);",
-            "Equality.$same(c, undefined);",
-            "var d = 5n;",
-            "Equality.$same(d, null);",
-            "Equality.$same(null, d);",
-            "Equality.$same(d, undefined);"),
-        lines(
-            "var b = {};",
-            "!b",
-            "!b;",
-            "!b;",
-            "b === 0;",
-            "b === -0;",
-            "b === NaN;",
-            "b === Infinity;",
-            "var c = 5;",
-            "c == null;", // Note that the semantics are preserved for number.
-            "c == null;",
-            "c == undefined;",
-            "var d = 5n;",
-            "d == null;",
-            "d == null;",
-            "d == undefined;"));
-  }
-
-  @Test
   public void testRewriteEqualitySame_useColors() {
     useTypes = true;
     replaceTypesWithColors();
@@ -201,47 +161,6 @@ public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
             "function hasSideEffects(){};",
             // Note that the first parameter has value 'undefined' but it has side effects.
             "Equality.$same(void hasSideEffects(), hasSideEffects());"));
-  }
-
-  @Test
-  public void testNotRewriteEqualitySame_useTypes() {
-    useTypes = true;
-    testSame(
-        lines(
-            "/** @type {number|undefined} */",
-            "var num1 = 5;",
-            "/** @type {?number} */",
-            "var num2 = 5;",
-            "Equality.$same(num1, num2);",
-            "/** @type {string} */",
-            "var str1 = '';",
-            "/** @type {string|undefined} */",
-            "var str2 = 'abc';",
-            "Equality.$same(str1, str2);",
-            "/** @type {bigint} */",
-            "var bigint1 = 0n;",
-            "/** @type {bigint|undefined} */",
-            "var bigint2 = 5n;",
-            "Equality.$same(bigint1, bigint2);",
-            "/** @type {!Object} */",
-            "var obj1 = {};",
-            "/** @type {Object} */",
-            "var obj2 = null;",
-            "Equality.$same(obj1, obj2);",
-            "Equality.$same(obj1, str2);",
-            "Equality.$same(obj1, num2);",
-            "Equality.$same(obj1, bigint2);",
-            "/** @type {number} */",
-            "var num3 = 5;",
-            "Equality.$same(num3, 0);",
-            "Equality.$same(num3, -0);",
-            "Equality.$same(num3, NaN);",
-            "Equality.$same(0/0, NaN);",
-            "/** @type {*} */",
-            "var allType1 = 1;",
-            "/** @type {*} */",
-            "var allType2 = '1';",
-            "Equality.$same(allType1, allType2);"));
   }
 
   @Test
